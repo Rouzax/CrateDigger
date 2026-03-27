@@ -118,3 +118,17 @@ def test_album_poster_not_needed_when_exists(tmp_path):
     (tmp_path / "folder.jpg").write_bytes(b"\xff\xd8")
     op = AlbumPosterOperation(config=load_config())
     assert op.is_needed(video, _make_mf()) is False
+
+
+def test_keyboard_interrupt_propagates_from_nfo(tmp_path):
+    """KeyboardInterrupt during NFO generation propagates, not swallowed."""
+    import pytest
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf()
+    op = NfoOperation(load_config())
+
+    with patch("festival_organizer.nfo.generate_nfo", side_effect=KeyboardInterrupt):
+        with pytest.raises(KeyboardInterrupt):
+            op.execute(video, mf)

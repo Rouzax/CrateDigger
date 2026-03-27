@@ -1,6 +1,7 @@
 """Composable operations with gap detection."""
 from __future__ import annotations
 
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -79,7 +80,7 @@ class NfoOperation(Operation):
         try:
             generate_nfo(media_file, file_path, self.config)
             return OperationResult(self.name, "done")
-        except Exception as e:
+        except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))
 
 
@@ -102,7 +103,7 @@ class ArtOperation(Operation):
             if result:
                 return OperationResult(self.name, "done")
             return OperationResult(self.name, "error", "no embedded art, no frames")
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError) as e:
             return OperationResult(self.name, "error", str(e))
 
 
@@ -143,7 +144,7 @@ class PosterOperation(Operation):
                 detail=mf.stage or mf.location or "",
             )
             return OperationResult(self.name, "done")
-        except Exception as e:
+        except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))
 
 
@@ -183,7 +184,7 @@ class AlbumPosterOperation(Operation):
                 thumb_paths=thumb_paths if thumb_paths else None,
             )
             return OperationResult(self.name, "done")
-        except Exception as e:
+        except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))
 
 
@@ -210,5 +211,5 @@ class TagsOperation(Operation):
             if success:
                 return OperationResult(self.name, "done")
             return OperationResult(self.name, "error", "embed_tags returned False")
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError) as e:
             return OperationResult(self.name, "error", str(e))
