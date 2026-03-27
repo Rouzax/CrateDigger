@@ -10,7 +10,8 @@ from festival_organizer.classifier import classify
 from festival_organizer.config import load_config
 from festival_organizer.executor import execute_actions
 from festival_organizer.logging_util import ActionLogger
-from festival_organizer.metadata import MEDIAINFO_PATH, FFPROBE_PATH
+from festival_organizer import metadata
+from festival_organizer.metadata import configure_tools
 from festival_organizer.nfo import generate_nfo
 from festival_organizer.planner import plan_actions
 from festival_organizer.scanner import scan_folder
@@ -52,6 +53,17 @@ def build_parser() -> argparse.ArgumentParser:
     art_p = sub.add_parser("extract-art", help="Extract cover art without moving")
     add_common(art_p)
 
+    # chapters
+    chap_p = sub.add_parser("chapters", help="Add tracklist chapters to MKV files")
+    chap_p.add_argument("root", type=str, help="File or folder to process")
+    chap_p.add_argument("--tracklist", "-t", type=str, help="Tracklist URL, ID, or search query")
+    chap_p.add_argument("--auto-select", action="store_true", help="Auto-select best match")
+    chap_p.add_argument("--ignore-stored-url", action="store_true", help="Force fresh search")
+    chap_p.add_argument("--preview", action="store_true", help="Show chapters without embedding")
+    chap_p.add_argument("--delay", type=int, help="Delay between files in seconds")
+    chap_p.add_argument("--config", type=str, help="Path to config.json")
+    chap_p.add_argument("--quiet", "-q", action="store_true", help="Suppress per-file output")
+
     return parser
 
 
@@ -74,8 +86,16 @@ def run(argv: list[str] | None = None) -> int:
     config = load_config(config_path if config_path.exists() else None)
 
     # Override layout if specified
-    if args.layout:
+    if getattr(args, "layout", None):
         config._data["default_layout"] = args.layout
+
+    # Re-resolve tool paths with config overrides
+    configure_tools(config)
+
+    # Handle chapters subcommand separately (different workflow)
+    if args.command == "chapters":
+        from festival_organizer.tracklists.cli_handler import run_chapters
+        return run_chapters(args, config)
 
     output = Path(args.output) if args.output else root
     verbose = not args.quiet
@@ -89,10 +109,10 @@ def run(argv: list[str] | None = None) -> int:
     print(f"Output:  {output}")
     print(f"Mode:    {mode}")
     print(f"Layout:  {config.default_layout}")
-    if MEDIAINFO_PATH:
-        print(f"Tool:    MediaInfo ({MEDIAINFO_PATH})")
-    elif FFPROBE_PATH:
-        print(f"Tool:    ffprobe ({FFPROBE_PATH})")
+    if metadata.MEDIAINFO_PATH:
+        print(f"Tool:    MediaInfo ({metadata.MEDIAINFO_PATH})")
+    elif metadata.FFPROBE_PATH:
+        print(f"Tool:    ffprobe ({metadata.FFPROBE_PATH})")
     else:
         print(f"Tool:    NONE (filename parsing only)")
     print(f"{'=' * 60}\n")
