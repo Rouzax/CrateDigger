@@ -1,5 +1,6 @@
 """1001Tracklists API — session management, search, and tracklist export."""
 import json
+import logging
 import random
 import re
 import time
@@ -7,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 from festival_organizer.tracklists.scoring import SearchResult
 
@@ -173,6 +176,9 @@ class TracklistSession:
                         wait = min(2 ** attempt + random.uniform(0, 3), 30)
                         time.sleep(wait)
                         continue
+                    raise TracklistError(
+                        f"Server error {resp.status_code} after {max_retries} attempts"
+                    )
 
                 return resp
 
@@ -254,7 +260,8 @@ class TracklistSession:
             if "logout" in text or "/my/" in resp.url:
                 return True
             return False
-        except Exception:
+        except (requests.RequestException, OSError) as e:
+            logger.debug("Session validation failed: %s", e)
             return False
 
     def _save_cookies(self, email: str) -> None:
@@ -277,8 +284,8 @@ class TracklistSession:
             }
 
             self._cookie_path.write_text(json.dumps(cache, indent=2), encoding="utf-8")
-        except Exception:
-            pass  # Cookie caching is best-effort
+        except (OSError, TypeError) as e:
+            logger.debug("Cookie save failed: %s", e)
 
     def _restore_cookies(self, email: str) -> bool:
         """Restore cookies from cache. Returns True if cache was valid."""
@@ -311,7 +318,8 @@ class TracklistSession:
             names = {c.name for c in self._session.cookies}
             return "sid" in names and "uid" in names
 
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError, TypeError) as e:
+            logger.debug("Cookie restore failed: %s", e)
             return False
 
 

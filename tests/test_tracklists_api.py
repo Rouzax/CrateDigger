@@ -1,5 +1,6 @@
 """Tests for 1001Tracklists API layer (all mocked, no real network calls)."""
 import json
+import logging
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock, PropertyMock
@@ -8,6 +9,7 @@ import pytest
 
 from festival_organizer.tracklists.api import (
     TracklistSession,
+    TracklistError,
     AuthenticationError,
     RateLimitError,
     ExportError,
@@ -180,6 +182,17 @@ def test_login_success():
                 session._session.cookies.set("sid", "test", domain="www.1001tracklists.com")
                 session._session.cookies.set("uid", "test", domain="www.1001tracklists.com")
                 session.login("test@test.com", "pass")
+
+
+def test_cookie_save_failure_logged(tmp_path, caplog):
+    """Cookie save failure is logged at debug level."""
+    # Point cookie path to a non-existent subdirectory so write fails with OSError
+    session = TracklistSession(cookie_cache_path=tmp_path / "nonexistent_subdir" / "cookies.json")
+
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.api"):
+        session._save_cookies("test@example.com")
+    # Should not crash, should log
+    assert any("save" in r.message.lower() or "cookie" in r.message.lower() for r in caplog.records)
 
 
 def test_login_failure_no_cookies():
