@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
     NfoOperation, ArtOperation, PosterOperation, TagsOperation,
-    OrganizeOperation,
+    OrganizeOperation, AlbumPosterOperation,
 )
 from festival_organizer.config import load_config
 
@@ -101,3 +101,20 @@ def test_organize_op_not_needed_when_at_target(tmp_path):
     target.write_bytes(b"")
     op = OrganizeOperation(target=target)
     assert op.is_needed(target, _make_mf()) is False
+
+
+def test_album_poster_needed_when_missing(tmp_path):
+    """Album poster needed when folder.jpg doesn't exist."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    op = AlbumPosterOperation(config=load_config())
+    assert op.is_needed(video, _make_mf()) is True
+
+
+def test_album_poster_not_needed_when_exists(tmp_path):
+    """Album poster not needed when folder.jpg exists."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    (tmp_path / "folder.jpg").write_bytes(b"\xff\xd8")
+    op = AlbumPosterOperation(config=load_config())
+    assert op.is_needed(video, _make_mf()) is False

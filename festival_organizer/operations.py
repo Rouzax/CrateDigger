@@ -144,6 +144,46 @@ class PosterOperation(Operation):
             return OperationResult(self.name, "error", str(e))
 
 
+class AlbumPosterOperation(Operation):
+    name = "album_poster"
+
+    def __init__(self, config: Config, force: bool = False):
+        self.config = config
+        self.force = force
+
+    def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
+        folder_jpg = file_path.parent / "folder.jpg"
+        if self.force:
+            return True
+        return not folder_jpg.exists()
+
+    def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
+        from festival_organizer.poster import generate_album_poster
+        try:
+            folder_jpg = file_path.parent / "folder.jpg"
+            mf = media_file
+            festival_display = mf.festival
+            if mf.location:
+                festival_display = self.config.get_festival_display(
+                    mf.festival, mf.location
+                )
+            date_or_year = mf.date or mf.year or ""
+
+            # Collect existing thumbs in folder for color extraction
+            thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
+
+            generate_album_poster(
+                output_path=folder_jpg,
+                festival=festival_display or mf.artist or "Unknown",
+                date_or_year=date_or_year,
+                detail=mf.stage or mf.location or "",
+                thumb_paths=thumb_paths if thumb_paths else None,
+            )
+            return OperationResult(self.name, "done")
+        except Exception as e:
+            return OperationResult(self.name, "error", str(e))
+
+
 class TagsOperation(Operation):
     name = "tags"
 

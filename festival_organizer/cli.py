@@ -11,7 +11,7 @@ from festival_organizer import metadata
 from festival_organizer.metadata import configure_tools
 from festival_organizer.operations import (
     OrganizeOperation, NfoOperation, ArtOperation,
-    PosterOperation, TagsOperation,
+    PosterOperation, AlbumPosterOperation, TagsOperation,
 )
 from festival_organizer.progress import ProgressPrinter
 from festival_organizer.runner import run_pipeline
@@ -209,6 +209,7 @@ def run(argv: list[str] | None = None) -> int:
                 ops.append(ArtOperation(force=force))
             if not only or "posters" in only:
                 ops.append(PosterOperation(config, force=force))
+                ops.append(AlbumPosterOperation(config, force=force))
             if not only or "tags" in only:
                 ops.append(TagsOperation(force=force))
 
