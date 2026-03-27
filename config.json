@@ -1,12 +1,20 @@
 {
-    "default_layout": "artist_first",
+    "default_layout": "artist_flat",
 
     "layouts": {
-        "artist_first": {
+        "artist_flat": {
+            "festival_set": "{artist}",
+            "concert_film": "{artist}"
+        },
+        "festival_flat": {
+            "festival_set": "{festival}",
+            "concert_film": "{artist}"
+        },
+        "artist_nested": {
             "festival_set": "{artist}/{festival}/{year}",
             "concert_film": "{artist}/{year} - {title}"
         },
-        "festival_first": {
+        "festival_nested": {
             "festival_set": "{festival}/{year}/{artist}",
             "concert_film": "{artist}/{year} - {title}"
         }
@@ -117,5 +125,12 @@
         "chapter_language": "eng",
         "auto_select": false,
         "delay_seconds": 5
+    },
+
+    "tracklists": {
+        "email": "",
+        "password": "",
+        "delay_seconds": 5,
+        "chapter_language": "eng"
     }
 }
