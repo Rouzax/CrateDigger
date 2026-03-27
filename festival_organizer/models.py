@@ -64,3 +64,5 @@ class FileAction:
     error: str = ""
     generate_nfo: bool = False
     extract_art: bool = False
+    generate_posters: bool = False
+    embed_tags: bool = False

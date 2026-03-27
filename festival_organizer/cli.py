@@ -13,13 +13,15 @@ from festival_organizer.logging_util import ActionLogger
 from festival_organizer import metadata
 from festival_organizer.metadata import configure_tools
 from festival_organizer.models import FileAction
+from festival_organizer.embed_tags import embed_tags as embed_tags_fn
 from festival_organizer.nfo import generate_nfo
 from festival_organizer.planner import plan_actions
+from festival_organizer.poster import generate_set_poster
 from festival_organizer.scanner import scan_folder
 
 
 def _run_post_processing(action: FileAction, config) -> None:
-    """Run NFO generation and art extraction for a completed or skipped action.
+    """Run post-processing steps for a completed or skipped action.
 
     For 'done' actions the file is at action.target.
     For 'skipped' actions the file is at action.source (it never moved).
@@ -28,12 +30,34 @@ def _run_post_processing(action: FileAction, config) -> None:
         return
 
     file_path = action.target if action.status == "done" else action.source
+    mf = action.media_file
 
+    # 1. NFO
     if action.generate_nfo:
-        generate_nfo(action.media_file, file_path, config)
+        generate_nfo(mf, file_path, config)
 
-    if action.extract_art and action.media_file.has_cover:
-        extract_cover(file_path, file_path.parent)
+    # 2. Thumb (no has_cover gate — frame_sampler handles fallback)
+    thumb_path = None
+    if action.extract_art:
+        thumb_path = extract_cover(file_path, file_path.parent)
+
+    # 3. Set poster (needs thumb as source image)
+    if action.generate_posters and thumb_path:
+        poster_path = file_path.with_name(f"{file_path.stem}-poster.jpg")
+        festival_display = config.get_festival_display(mf.festival, mf.location) if mf.location else mf.festival
+        generate_set_poster(
+            source_image_path=thumb_path,
+            output_path=poster_path,
+            artist=mf.artist or "Unknown",
+            festival=festival_display or mf.title or "",
+            date=mf.date,
+            year=mf.year,
+            detail=mf.stage or mf.location or "",
+        )
+
+    # 4. Embed tags
+    if action.embed_tags:
+        embed_tags_fn(mf, file_path)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -63,6 +87,8 @@ def build_parser() -> argparse.ArgumentParser:
     exec_p.add_argument("--rename-only", action="store_true", help="Rename in place only")
     exec_p.add_argument("--generate-nfo", action="store_true", help="Generate Kodi NFO files")
     exec_p.add_argument("--extract-art", action="store_true", help="Extract cover art from MKV")
+    exec_p.add_argument("--generate-posters", action="store_true", help="Generate set poster images")
+    exec_p.add_argument("--embed-tags", action="store_true", help="Embed Plex tags via mkvpropedit")
 
     # nfo (generate NFOs only)
     nfo_p = sub.add_parser("nfo", help="Generate Kodi NFO files without moving")
@@ -160,6 +186,8 @@ def run(argv: list[str] | None = None) -> int:
 
     gen_nfo = hasattr(args, "generate_nfo") and args.generate_nfo
     ext_art = hasattr(args, "extract_art") and args.extract_art
+    gen_posters = hasattr(args, "generate_posters") and args.generate_posters
+    emb_tags = hasattr(args, "embed_tags") and args.embed_tags
 
     # Handle nfo/extract-art subcommands
     if args.command == "nfo":
@@ -174,6 +202,8 @@ def run(argv: list[str] | None = None) -> int:
         layout_name=args.layout,
         generate_nfo=gen_nfo,
         extract_art=ext_art,
+        generate_posters=gen_posters,
+        embed_tags=emb_tags,
     )
 
     # Log

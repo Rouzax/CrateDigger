@@ -14,6 +14,8 @@ def plan_actions(
     layout_name: str | None = None,
     generate_nfo: bool = False,
     extract_art: bool = False,
+    generate_posters: bool = False,
+    embed_tags: bool = False,
 ) -> list[FileAction]:
     """Build a list of FileActions for all files.
 
@@ -25,6 +27,8 @@ def plan_actions(
         layout_name: Override layout (default uses config.default_layout)
         generate_nfo: Whether to generate Kodi NFO files
         extract_art: Whether to extract cover art
+        generate_posters: Whether to generate set poster images
+        embed_tags: Whether to embed Plex tags via mkvpropedit
     """
     actions = []
 
@@ -45,6 +49,8 @@ def plan_actions(
             action=action,
             generate_nfo=generate_nfo,
             extract_art=extract_art,
+            generate_posters=generate_posters,
+            embed_tags=embed_tags,
         ))
 
     return actions
