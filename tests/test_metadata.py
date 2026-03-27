@@ -1,5 +1,7 @@
 import json
+import logging
 import platform
+import subprocess as subprocess_mod
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 from festival_organizer.metadata import (
@@ -143,3 +145,19 @@ def test_get_install_hint_windows():
     with patch("platform.system", return_value="Windows"):
         hint = get_install_hint("mediainfo")
     assert "winget install" in hint
+
+
+def test_mediainfo_failure_is_logged(tmp_path, caplog):
+    """When mediainfo subprocess fails, a debug message is logged."""
+    from festival_organizer.metadata import _extract_mediainfo
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+
+    with patch("festival_organizer.metadata.MEDIAINFO_PATH", "/usr/bin/mediainfo"):
+        with patch("festival_organizer.metadata.subprocess.run",
+                   side_effect=subprocess_mod.SubprocessError("oops")):
+            with caplog.at_level(logging.DEBUG, logger="festival_organizer.metadata"):
+                result = _extract_mediainfo(video)
+    assert result == {}
+    assert "oops" in caplog.text

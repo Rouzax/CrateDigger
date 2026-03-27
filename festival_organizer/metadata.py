@@ -1,10 +1,13 @@
 """Metadata extraction via MediaInfo CLI and ffprobe fallback."""
 import json
+import logging
 import platform
 import re
 import shutil
 import subprocess
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 # Package → tool names for install hints
@@ -137,7 +140,8 @@ def _extract_mediainfo(filepath: Path) -> dict:
             return {}
         data = json.loads(result.stdout)
         return parse_mediainfo_json(data)
-    except Exception:
+    except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as e:
+        logger.debug("mediainfo failed for %s: %s", filepath, e)
         return {}
 
 
@@ -183,7 +187,8 @@ def _extract_ffprobe(filepath: Path) -> dict:
             "audio_sampling_rate": audio.get("sample_rate", ""),
             "has_cover": False,  # ffprobe doesn't easily report attachments
         }
-    except Exception:
+    except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as e:
+        logger.debug("ffprobe failed for %s: %s", filepath, e)
         return {}
 
 
