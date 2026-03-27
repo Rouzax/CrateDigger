@@ -2,20 +2,19 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock, call
 from festival_organizer.artwork import extract_cover
-from festival_organizer.metadata import _find_mkvtoolnix_tool
+from festival_organizer.metadata import find_tool
 
 
 def test_find_mkvextract():
-    with patch("os.path.isfile", side_effect=lambda p: "MKVToolNix" in p):
-        result = _find_mkvtoolnix_tool("mkvextract")
+    with patch("shutil.which", return_value="/usr/bin/mkvextract"):
+        result = find_tool("mkvextract")
         assert result is not None
         assert "mkvextract" in result.lower()
 
 
 def test_find_mkvextract_not_installed():
     with patch("shutil.which", return_value=None):
-        with patch("os.path.isfile", return_value=False):
-            assert _find_mkvtoolnix_tool("mkvextract") is None
+        assert find_tool("mkvextract") is None
 
 
 def test_extract_cover_no_tool(tmp_path):
