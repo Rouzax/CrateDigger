@@ -205,3 +205,16 @@ def test_login_failure_no_cookies():
         with patch.object(session._session, "post", return_value=mock_resp):
             with pytest.raises(AuthenticationError, match="missing session cookies"):
                 session.login("test@test.com", "wrong")
+
+
+def test_request_raises_on_persistent_5xx():
+    """After all retries on 502/503/504, raise TracklistError instead of returning bad response."""
+    session = TracklistSession()
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 502
+    mock_resp.text = "Bad Gateway"
+
+    with patch.object(session._session, "get", return_value=mock_resp):
+        with pytest.raises(TracklistError, match="502"):
+            session._request("GET", "http://example.com", max_retries=2)
