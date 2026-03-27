@@ -1,6 +1,9 @@
 """Cover art extraction from MKV attachments + frame sampling fallback."""
+import logging
 import subprocess
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from PIL import Image
 
@@ -57,7 +60,8 @@ def _extract_mkvattachment(source: Path, thumb_path: Path) -> bool:
 
         return thumb_path.exists()
 
-    except Exception:
+    except (OSError, subprocess.SubprocessError) as e:
+        logger.debug("MKV attachment extraction failed for %s: %s", source, e)
         return False
     finally:
         if temp_path.exists():
@@ -81,7 +85,7 @@ def _sample_frame_fallback(source: Path, thumb_path: Path) -> bool:
         return thumb_path.exists()
 
     except ImportError:
-        # OpenCV not available
         return False
-    except Exception:
+    except (OSError, subprocess.SubprocessError) as e:
+        logger.debug("Frame sampling failed for %s: %s", source, e)
         return False

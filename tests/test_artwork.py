@@ -1,3 +1,5 @@
+import logging
+import subprocess as subprocess_mod
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock, call
@@ -145,6 +147,23 @@ def test_extract_cover_frame_sampler_fallback_direct(tmp_path):
                 result = extract_cover(source, target_dir)
                 assert result == thumb_path
                 mock_fallback.assert_called_once_with(source, thumb_path)
+
+
+def test_mkvextract_failure_logged(tmp_path, caplog):
+    """MKV extraction failure is logged at debug level."""
+    from festival_organizer.artwork import _extract_mkvattachment
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    thumb = tmp_path / "test-thumb.jpg"
+
+    with patch("festival_organizer.artwork.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
+        with patch("festival_organizer.artwork.subprocess.run",
+                   side_effect=subprocess_mod.SubprocessError("fail")):
+            with caplog.at_level(logging.DEBUG, logger="festival_organizer.artwork"):
+                result = _extract_mkvattachment(video, thumb)
+    assert result is False
+    assert "fail" in caplog.text
 
 
 def test_extract_cover_skip_existing(tmp_path):
