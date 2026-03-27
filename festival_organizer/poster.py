@@ -22,21 +22,21 @@ PAD_LINE_TO_FEST = 30
 PAD_FEST_TO_YEAR = 22
 PAD_YEAR_TO_DETAIL = 22
 
-# Font paths (Windows)
-FONT_PATHS = {
-    "bold": "C:/Windows/Fonts/segoeuib.ttf",
-    "light": "C:/Windows/Fonts/segoeuil.ttf",
-    "semilight": "C:/Windows/Fonts/segoeuisl.ttf",
-    "regular": "C:/Windows/Fonts/segoeui.ttf",
-}
+from festival_organizer.fonts import get_font_path
+
+_font_overrides: dict[str, str] | None = None
+
+
+def configure_fonts(overrides: dict[str, str] | None = None) -> None:
+    """Set font path overrides from user config."""
+    global _font_overrides
+    _font_overrides = overrides
 
 
 def get_font(name: str, size: int) -> ImageFont.FreeTypeFont:
-    """Load a Segoe UI font variant by name."""
-    try:
-        return ImageFont.truetype(FONT_PATHS.get(name, name), size)
-    except OSError:
-        return ImageFont.truetype(FONT_PATHS["bold"], size)
+    """Load a font variant by name using bundled fonts or config overrides."""
+    path = get_font_path(name, overrides=_font_overrides)
+    return ImageFont.truetype(path, size)
 
 
 def auto_fit(text: str, font_name: str, max_width: int, start: int = 120, minimum: int = 40):

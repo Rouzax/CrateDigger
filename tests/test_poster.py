@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from PIL import Image
 
+from festival_organizer.fonts import get_font_path
 from festival_organizer.poster import (
     split_artist,
     get_accent_color,
@@ -163,3 +164,35 @@ def test_generate_album_poster_with_thumbs(tmp_path):
     assert output.exists()
     with Image.open(output) as img:
         assert img.size == (POSTER_W, POSTER_H)
+
+
+# --- font resolver tests ---
+
+def test_get_font_path_returns_bundled():
+    """Bundled font path exists and is a real file."""
+    path = get_font_path("bold")
+    assert Path(path).is_file()
+
+
+def test_get_font_path_all_weights():
+    """All four font weights resolve to existing files."""
+    for weight in ("bold", "light", "semilight", "regular"):
+        path = get_font_path(weight)
+        assert Path(path).is_file(), f"Missing font for weight: {weight}"
+
+
+def test_get_font_path_config_override(tmp_path):
+    """Config override takes priority over bundled fonts."""
+    fake_font = tmp_path / "custom.ttf"
+    fake_font.write_bytes(b"fake")
+    overrides = {"bold": str(fake_font)}
+    path = get_font_path("bold", overrides=overrides)
+    assert path == str(fake_font)
+
+
+def test_get_font_path_config_override_missing_falls_back(tmp_path):
+    """Missing config override file falls back to bundled."""
+    overrides = {"bold": "/nonexistent/font.ttf"}
+    path = get_font_path("bold", overrides=overrides)
+    # Falls back to bundled — must be a real file
+    assert Path(path).is_file()
