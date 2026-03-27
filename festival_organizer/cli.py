@@ -98,6 +98,10 @@ def build_parser() -> argparse.ArgumentParser:
     art_p = sub.add_parser("extract-art", help="Extract cover art without moving")
     add_common(art_p)
 
+    # posters (generate set posters only)
+    poster_p = sub.add_parser("posters", help="Generate set posters without moving")
+    add_common(poster_p)
+
     # chapters
     chap_p = sub.add_parser("chapters", help="Add tracklist chapters to MKV files")
     chap_p.add_argument("root", type=str, help="File or folder to process")
@@ -203,6 +207,8 @@ def run(argv: list[str] | None = None) -> int:
         return _run_nfo_only(media_files, output, config, verbose)
     if args.command == "extract-art":
         return _run_extract_art_only(media_files, output, config, verbose)
+    if args.command == "posters":
+        return _run_posters_only(media_files, output, config, verbose)
 
     # Plan
     actions = plan_actions(
@@ -268,10 +274,39 @@ def _run_extract_art_only(media_files, output, config, verbose):
     """Extract cover art from all files without moving them."""
     count = 0
     for mf in media_files:
-        if mf.has_cover:
-            result = extract_cover(mf.source_path, mf.source_path.parent)
-            if result and verbose:
+        result = extract_cover(mf.source_path, mf.source_path.parent)
+        if result:
+            if verbose:
                 print(f"  [ART] {result}")
-                count += 1
+            count += 1
     print(f"\nExtracted {count} cover art file(s).")
+    return 0
+
+
+def _run_posters_only(media_files, output, config, verbose):
+    """Generate set posters for all files without moving them."""
+    count = 0
+    for mf in media_files:
+        # Need thumb first
+        thumb_path = extract_cover(mf.source_path, mf.source_path.parent)
+        if not thumb_path:
+            if verbose:
+                print(f"  [SKIP] {mf.source_path.name} — no thumb available")
+            continue
+
+        poster_path = mf.source_path.with_name(f"{mf.source_path.stem}-poster.jpg")
+        festival_display = config.get_festival_display(mf.festival, mf.location) if mf.location else mf.festival
+        generate_set_poster(
+            source_image_path=thumb_path,
+            output_path=poster_path,
+            artist=mf.artist or "Unknown",
+            festival=festival_display or mf.title or "",
+            date=mf.date,
+            year=mf.year,
+            detail=mf.stage or mf.location or "",
+        )
+        if verbose:
+            print(f"  [POSTER] {poster_path}")
+        count += 1
+    print(f"\nGenerated {count} poster(s).")
     return 0
