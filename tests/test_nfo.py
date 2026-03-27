@@ -46,6 +46,9 @@ def test_generate_nfo_festival_set():
         assert root.find("genre").text == "Electronic"
         assert root.find("premiered").text == "2024-10-19"
         assert "1001tracklists" in root.find("plot").text
+        thumb = root.find("thumb")
+        assert thumb is not None
+        assert thumb.text == "2024 - AMF - Martin Garrix-thumb.jpg"
 
 
 def test_generate_nfo_concert_film():
@@ -103,3 +106,6 @@ def test_generate_nfo_with_streamdetails():
         assert vstream.find("codec").text == "VP9"
         assert vstream.find("width").text == "3840"
         assert vstream.find("height").text == "2160"
+        thumb = root.find("thumb")
+        assert thumb is not None
+        assert thumb.text == "test-thumb.jpg"

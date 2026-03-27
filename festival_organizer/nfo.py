@@ -64,10 +64,9 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
         runtime_min = int(media_file.duration_seconds) // 60
         _add_element(root, "runtime", str(runtime_min))
 
-    # Poster reference (if cover art will be extracted)
-    if media_file.has_cover:
-        thumb = ET.SubElement(root, "thumb", aspect="poster")
-        thumb.text = "poster.png"
+    # Thumbnail reference (extracted cover or sampled frame)
+    thumb = ET.SubElement(root, "thumb", aspect="poster")
+    thumb.text = f"{video_path.stem}-thumb.jpg"
 
     # Stream details
     if media_file.video_format or media_file.audio_format:
