@@ -61,3 +61,26 @@ def test_scan_skips_dolby_pattern():
 def test_scan_empty_folder():
     with tempfile.TemporaryDirectory() as tmp:
         assert scan_folder(Path(tmp), CFG) == []
+
+
+def test_scan_folder_permission_denied(tmp_path):
+    """Scanner skips unreadable directories instead of crashing."""
+    import os
+
+    from festival_organizer.config import load_config
+
+    config = load_config()
+
+    # Create a readable file and an unreadable subdirectory
+    (tmp_path / "good.mkv").write_bytes(b"")
+    bad_dir = tmp_path / "noaccess"
+    bad_dir.mkdir()
+    (bad_dir / "hidden.mkv").write_bytes(b"")
+    os.chmod(bad_dir, 0o000)
+
+    try:
+        files = scan_folder(tmp_path, config)
+        # Should find the good file without crashing
+        assert any("good.mkv" in str(f) for f in files)
+    finally:
+        os.chmod(bad_dir, 0o755)
