@@ -62,7 +62,3 @@ class FileAction:
     action: str = "move"       # "move" | "copy" | "rename"
     status: str = "pending"    # "pending" | "done" | "skipped" | "error"
     error: str = ""
-    generate_nfo: bool = False
-    extract_art: bool = False
-    generate_posters: bool = False
-    embed_tags: bool = False

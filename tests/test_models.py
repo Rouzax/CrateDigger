@@ -51,7 +51,3 @@ def test_file_action_defaults():
     assert fa.action == "move"
     assert fa.status == "pending"
     assert fa.error == ""
-    assert fa.generate_nfo == False
-    assert fa.extract_art == False
-    assert fa.generate_posters == False
-    assert fa.embed_tags == False
