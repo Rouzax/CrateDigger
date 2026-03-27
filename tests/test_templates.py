@@ -6,7 +6,7 @@ from festival_organizer.models import MediaFile
 CFG = Config(DEFAULT_CONFIG)
 
 
-def test_render_folder_artist_first_festival():
+def test_render_folder_artist_flat_festival():
     mf = MediaFile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
@@ -15,10 +15,22 @@ def test_render_folder_artist_first_festival():
         content_type="festival_set",
     )
     result = render_folder(mf, CFG)
+    assert result == "Martin Garrix"
+
+
+def test_render_folder_artist_nested_festival():
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        festival="AMF",
+        year="2024",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG, layout_name="artist_nested")
     assert result == "Martin Garrix/AMF/2024"
 
 
-def test_render_folder_artist_first_concert():
+def test_render_folder_artist_nested_concert():
     mf = MediaFile(
         source_path=Path("test.mkv"),
         artist="Coldplay",
@@ -26,11 +38,11 @@ def test_render_folder_artist_first_concert():
         year="2018",
         content_type="concert_film",
     )
-    result = render_folder(mf, CFG)
+    result = render_folder(mf, CFG, layout_name="artist_nested")
     assert result == "Coldplay/2018 - A Head Full of Dreams"
 
 
-def test_render_folder_festival_first():
+def test_render_folder_festival_nested():
     mf = MediaFile(
         source_path=Path("test.mkv"),
         artist="Hardwell",
@@ -39,7 +51,7 @@ def test_render_folder_festival_first():
         location="Belgium",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG, layout_name="festival_first")
+    result = render_folder(mf, CFG, layout_name="festival_nested")
     # Tomorrowland has location_in_name, so becomes "Tomorrowland Belgium"
     assert result == "Tomorrowland Belgium/2025/Hardwell"
 
@@ -53,7 +65,7 @@ def test_render_folder_with_location_in_festival_name():
         location="Brasil",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG)
+    result = render_folder(mf, CFG, layout_name="artist_nested")
     assert result == "Alok/Tomorrowland Brasil/2025"
 
 
@@ -64,7 +76,7 @@ def test_render_folder_missing_artist():
         year="2024",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG)
+    result = render_folder(mf, CFG, layout_name="artist_nested")
     assert "Unknown Artist" in result
 
 
@@ -74,7 +86,7 @@ def test_render_folder_unknown_content():
         artist="Someone",
         content_type="unknown",
     )
-    result = render_folder(mf, CFG)
+    result = render_folder(mf, CFG, layout_name="artist_nested")
     assert "_Needs Review" in result
 
 

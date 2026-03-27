@@ -7,7 +7,7 @@ CFG = Config(DEFAULT_CONFIG)
 OUTPUT = Path("C:/Output")
 
 
-def test_plan_festival_set_artist_first():
+def test_plan_festival_set_artist_flat():
     mf = MediaFile(
         source_path=Path("C:/Input/file.mkv"),
         artist="Martin Garrix",
@@ -19,7 +19,7 @@ def test_plan_festival_set_artist_first():
     actions = plan_actions([mf], OUTPUT, CFG)
     assert len(actions) == 1
     a = actions[0]
-    assert a.target == OUTPUT / "Martin Garrix" / "AMF" / "2024" / "2024 - AMF - Martin Garrix.mkv"
+    assert a.target == OUTPUT / "Martin Garrix" / "2024 - AMF - Martin Garrix.mkv"
     assert a.action == "move"
 
 
@@ -34,7 +34,7 @@ def test_plan_concert_film():
     )
     actions = plan_actions([mf], OUTPUT, CFG)
     a = actions[0]
-    assert a.target == OUTPUT / "Coldplay" / "2018 - A Head Full of Dreams" / "Coldplay - A Head Full of Dreams.mkv"
+    assert a.target == OUTPUT / "Coldplay" / "Coldplay - A Head Full of Dreams.mkv"
 
 
 def test_plan_unknown_goes_to_needs_review():
@@ -62,7 +62,7 @@ def test_plan_with_set_title():
     actions = plan_actions([mf], OUTPUT, CFG)
     a = actions[0]
     assert "WE1" in a.target.name
-    assert "Tomorrowland Belgium" in str(a.target)
+    assert "Hardwell" in str(a.target)
 
 
 def test_plan_action_type_copy():

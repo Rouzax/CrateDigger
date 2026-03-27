@@ -7,13 +7,21 @@ from pathlib import Path
 
 # Default config embedded so the tool works without a config file
 DEFAULT_CONFIG = {
-    "default_layout": "artist_first",
+    "default_layout": "artist_flat",
     "layouts": {
-        "artist_first": {
+        "artist_flat": {
+            "festival_set": "{artist}",
+            "concert_film": "{artist}",
+        },
+        "festival_flat": {
+            "festival_set": "{festival}",
+            "concert_film": "{artist}",
+        },
+        "artist_nested": {
             "festival_set": "{artist}/{festival}/{year}",
             "concert_film": "{artist}/{year} - {title}",
         },
-        "festival_first": {
+        "festival_nested": {
             "festival_set": "{festival}/{year}/{artist}",
             "concert_film": "{artist}/{year} - {title}",
         },
@@ -111,6 +119,12 @@ DEFAULT_CONFIG = {
         "auto_select": False,
         "delay_seconds": 5,
     },
+    "tracklists": {
+        "email": "",
+        "password": "",
+        "delay_seconds": 5,
+        "chapter_language": "eng",
+    },
 }
 
 
@@ -165,6 +179,15 @@ class Config:
     def tracklists_settings(self) -> dict:
         """Settings for tracklist chapter operations."""
         return self._data.get("tracklists_settings", {})
+
+    @property
+    def tracklists_credentials(self) -> tuple[str, str]:
+        """Return (email, password) — env vars override config."""
+        import os
+        tl = self._data.get("tracklists", {})
+        email = os.environ.get("TRACKLISTS_EMAIL") or tl.get("email", "")
+        password = os.environ.get("TRACKLISTS_PASSWORD") or tl.get("password", "")
+        return (email, password)
 
     @property
     def media_extensions(self) -> set[str]:
@@ -242,14 +265,52 @@ class Config:
         return False
 
 
-def load_config(config_path: Path | None = None) -> Config:
-    """Load config from file, merging with defaults."""
-    merged = deepcopy(DEFAULT_CONFIG)
+def load_config(
+    config_path: Path | None = None,
+    user_config_dir: Path | None = None,
+    library_config_dir: Path | None = None,
+) -> Config:
+    """Load config with three-layer merge: built-in < user < library.
+
+    If config_path is provided (legacy), loads from that file as user layer.
+    Otherwise:
+      - user_config_dir defaults to ~/.cratedigger/
+      - library_config_dir is typically .cratedigger/ at library root
+    """
+    data = deepcopy(DEFAULT_CONFIG)
+
+    # Legacy path support
     if config_path and config_path.exists():
         with open(config_path, "r", encoding="utf-8") as f:
-            user_data = json.load(f)
-        _deep_merge(merged, user_data)
-    return Config(merged)
+            _deep_merge(data, json.load(f))
+        _migrate_layout_names(data)
+        return Config(data)
+
+    # Layer 2: User config
+    if user_config_dir is None:
+        user_config_dir = Path.home() / ".cratedigger"
+    user_file = user_config_dir / "config.json"
+    if user_file.exists():
+        with open(user_file, "r", encoding="utf-8") as f:
+            _deep_merge(data, json.load(f))
+
+    # Layer 3: Library config
+    if library_config_dir is not None:
+        lib_file = library_config_dir / "config.json"
+        if lib_file.exists():
+            with open(lib_file, "r", encoding="utf-8") as f:
+                _deep_merge(data, json.load(f))
+
+    _migrate_layout_names(data)
+    return Config(data)
+
+
+def _migrate_layout_names(data: dict) -> None:
+    """Backward compatibility: map old layout names to new."""
+    if data.get("default_layout") == "artist_first":
+        data["default_layout"] = "artist_nested"
+    elif data.get("default_layout") == "festival_first":
+        data["default_layout"] = "festival_nested"
 
 
 def _deep_merge(base: dict, override: dict) -> None:

@@ -10,14 +10,14 @@ from festival_organizer.models import MediaFile
 CFG = Config(DEFAULT_CONFIG)
 
 
-def test_generate_album_nfo_festival_first():
+def test_generate_album_nfo_festival_nested():
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
         files = [
             MediaFile(source_path=folder / "a.mkv", artist="Martin Garrix", festival="AMF", year="2024", content_type="festival_set"),
             MediaFile(source_path=folder / "b.mkv", artist="Tiesto", festival="AMF", year="2024", content_type="festival_set"),
         ]
-        nfo_path = generate_album_nfo(folder, files, CFG, layout_name="festival_first")
+        nfo_path = generate_album_nfo(folder, files, CFG, layout_name="festival_nested")
 
         assert nfo_path.exists()
         tree = ET.parse(nfo_path)
