@@ -1,0 +1,90 @@
+{
+    "default_layout": "artist_first",
+
+    "layouts": {
+        "artist_first": {
+            "festival_set": "{artist}/{festival}/{year}",
+            "concert_film": "{artist}/{year} - {title}"
+        },
+        "festival_first": {
+            "festival_set": "{festival}/{year}/{artist}",
+            "concert_film": "{artist}/{year} - {title}"
+        }
+    },
+
+    "filename_templates": {
+        "festival_set": "{year} - {festival} - {artist}",
+        "concert_film": "{artist} - {title}"
+    },
+
+    "festival_aliases": {
+        "AMF": "AMF",
+        "Amsterdam Music Festival": "AMF",
+        "EDC": "EDC Las Vegas",
+        "EDC Las Vegas": "EDC Las Vegas",
+        "Electric Daisy Carnival": "EDC Las Vegas",
+        "Ultra": "Ultra Music Festival",
+        "Ultra Music Festival": "Ultra Music Festival",
+        "Ultra Music Festival Miami": "Ultra Music Festival",
+        "Tomorrowland": "Tomorrowland",
+        "Tomorrowland Weekend 1": "Tomorrowland",
+        "Tomorrowland Weekend 2": "Tomorrowland",
+        "Mysteryland": "Mysteryland",
+        "Glastonbury": "Glastonbury",
+        "Red Rocks": "Red Rocks",
+        "Red Rocks Amphitheatre": "Red Rocks",
+        "Dreamstate": "Dreamstate",
+        "We Belong Here": "We Belong Here",
+        "We Belong Here Miami": "We Belong Here",
+        "Defqon.1": "Defqon.1",
+        "Creamfields": "Creamfields",
+        "Lollapalooza": "Lollapalooza",
+        "Untold": "Untold"
+    },
+
+    "festival_config": {
+        "Tomorrowland": {
+            "location_in_name": true,
+            "known_locations": ["Belgium", "Brasil", "Brazil"]
+        },
+        "EDC": {
+            "location_in_name": true,
+            "known_locations": ["Las Vegas", "Mexico", "Orlando"]
+        }
+    },
+
+    "content_type_rules": {
+        "force_concert": [
+            "Adele/*",
+            "Buena Vista Social Club/*",
+            "Coldplay/*",
+            "Ed Sheeran*",
+            "Michael Buble*",
+            "Robbie Williams/*",
+            "U2/*"
+        ],
+        "force_festival": []
+    },
+
+    "skip_patterns": [
+        "*/BDMV/*",
+        "Dolby*"
+    ],
+
+    "media_extensions": {
+        "video": [".mp4", ".mkv", ".webm", ".avi", ".mov", ".m2ts", ".ts"],
+        "audio": [".mp3", ".m4a", ".flac", ".wav", ".aac", ".ogg", ".opus"]
+    },
+
+    "fallback_values": {
+        "unknown_artist": "Unknown Artist",
+        "unknown_festival": "_Needs Review",
+        "unknown_year": "Unknown Year",
+        "unknown_title": "Unknown Title"
+    },
+
+    "nfo_settings": {
+        "genre_festival": "Electronic",
+        "genre_concert": "Live"
+    }
+}
