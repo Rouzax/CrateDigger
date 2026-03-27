@@ -12,9 +12,28 @@ from festival_organizer.executor import execute_actions
 from festival_organizer.logging_util import ActionLogger
 from festival_organizer import metadata
 from festival_organizer.metadata import configure_tools
+from festival_organizer.models import FileAction
 from festival_organizer.nfo import generate_nfo
 from festival_organizer.planner import plan_actions
 from festival_organizer.scanner import scan_folder
+
+
+def _run_post_processing(action: FileAction, config) -> None:
+    """Run NFO generation and art extraction for a completed or skipped action.
+
+    For 'done' actions the file is at action.target.
+    For 'skipped' actions the file is at action.source (it never moved).
+    """
+    if action.status not in ("done", "skipped"):
+        return
+
+    file_path = action.target if action.status == "done" else action.source
+
+    if action.generate_nfo:
+        generate_nfo(action.media_file, file_path, config)
+
+    if action.extract_art and action.media_file.has_cover:
+        extract_cover(file_path, file_path.parent)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -169,13 +188,7 @@ def run(argv: list[str] | None = None) -> int:
         execute_actions(actions)
         for a in actions:
             logger.log_action(a)
-
-            # Post-move tasks
-            if a.status == "done":
-                if a.generate_nfo:
-                    generate_nfo(a.media_file, a.target, config)
-                if a.extract_art and a.media_file.has_cover:
-                    extract_cover(a.source, a.target.parent)
+            _run_post_processing(a, config)
 
     # Save log
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
