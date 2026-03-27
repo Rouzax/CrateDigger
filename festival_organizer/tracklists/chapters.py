@@ -2,6 +2,7 @@
 
 Handles Matroska chapter/tag XML for MKV files via mkvextract/mkvpropedit.
 """
+import logging
 import os
 import random
 import re
@@ -10,6 +11,8 @@ import tempfile
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from festival_organizer import metadata
 from festival_organizer.embed_tags import xml_escape
@@ -169,7 +172,8 @@ def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
 
         return chapters if chapters else None
 
-    except Exception:
+    except (OSError, subprocess.SubprocessError, ET.ParseError) as e:
+        logger.debug("Chapter extraction failed for %s: %s", filepath, e)
         return None
     finally:
         try:
@@ -230,7 +234,8 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
             return {"url": url, "title": title}
         return None
 
-    except Exception:
+    except (OSError, subprocess.SubprocessError, ET.ParseError, ValueError) as e:
+        logger.debug("Stored tracklist extraction failed for %s: %s", filepath, e)
         return None
     finally:
         try:
@@ -305,7 +310,8 @@ def embed_chapters(
 
         return result.returncode == 0
 
-    except Exception:
+    except (OSError, subprocess.SubprocessError) as e:
+        logger.debug("Chapter embedding failed for %s: %s", filepath, e)
         return False
     finally:
         for f in [chapter_file, tags_file]:

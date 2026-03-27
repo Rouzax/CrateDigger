@@ -1,4 +1,6 @@
 """Tests for chapter XML generation and parsing."""
+import logging
+import subprocess as subprocess_mod
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from unittest.mock import patch
@@ -9,6 +11,7 @@ from festival_organizer.tracklists.chapters import (
     build_chapter_xml,
     build_tags_xml,
     chapters_are_identical,
+    extract_existing_chapters,
     Chapter,
 )
 import pytest
@@ -187,3 +190,19 @@ def test_chapters_identical_millis_ignored():
     b = [Chapter("00:03:45.456", "Track")]
     # Same to mm:ss precision
     assert chapters_are_identical(a, b) is True
+
+
+# --- extract_existing_chapters error logging ---
+
+def test_extract_chapters_failure_logged(tmp_path, caplog):
+    """Chapter extraction failure is logged at debug level."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+
+    with patch("festival_organizer.tracklists.chapters.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
+        with patch("festival_organizer.tracklists.chapters.subprocess.run",
+                   side_effect=subprocess_mod.SubprocessError("timeout")):
+            with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.chapters"):
+                result = extract_existing_chapters(video)
+    assert result is None
+    assert "timeout" in caplog.text
