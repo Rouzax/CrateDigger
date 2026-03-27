@@ -1,5 +1,9 @@
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
 from festival_organizer.executor import execute_actions, resolve_collision
 from festival_organizer.models import FileAction, MediaFile
 
@@ -111,3 +115,18 @@ def test_execute_error_handling():
     results = execute_actions([action])
     assert results[0].status == "error"
     assert results[0].error != ""
+
+
+def test_keyboard_interrupt_propagates(tmp_path):
+    """KeyboardInterrupt during file move propagates, not swallowed."""
+    source = tmp_path / "test.mkv"
+    source.write_bytes(b"data")
+    target = tmp_path / "dest" / "test.mkv"
+
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   festival="TML", year="2024", content_type="festival_set")
+    action = FileAction(source=source, target=target, action="move", media_file=mf)
+
+    with patch("festival_organizer.executor.shutil.move", side_effect=KeyboardInterrupt):
+        with pytest.raises(KeyboardInterrupt):
+            execute_actions([action])

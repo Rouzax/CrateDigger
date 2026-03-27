@@ -50,7 +50,7 @@ def execute_actions(actions: list[FileAction]) -> list[FileAction]:
 
             action.status = "done"
 
-        except Exception as e:
+        except OSError as e:
             action.status = "error"
             action.error = str(e)
 
