@@ -94,6 +94,17 @@ def run(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
 
+    try:
+        return _run_command(args)
+    except KeyboardInterrupt:
+        print("\nAborted.", file=sys.stderr)
+        return 130
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+def _run_command(args) -> int:
     # Resolve config layers
     config_path = Path(args.config) if getattr(args, "config", None) else None
     root = Path(args.root)
