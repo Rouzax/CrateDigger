@@ -4,9 +4,12 @@ Set posters use embedded cover art or sampled frames as source image.
 Album posters use gradient backgrounds derived from thumbnail colors.
 Layout uses a line-anchored system: accent line at 2/3 down, artist builds UP, metadata builds DOWN.
 """
+import logging
 import re
 from colorsys import hsv_to_rgb, rgb_to_hsv
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageStat
@@ -207,7 +210,10 @@ def generate_set_poster(
     Returns:
         Path to the generated poster
     """
-    frame = Image.open(source_image_path).convert("RGB")
+    try:
+        frame = Image.open(source_image_path).convert("RGB")
+    except (OSError, ValueError) as e:
+        raise OSError(f"Cannot open source image {source_image_path}: {e}") from e
     accent = get_accent_color(frame)
 
     # Blurred + darkened background fills entire poster
@@ -324,7 +330,8 @@ def get_dominant_color_from_thumbs(thumb_paths: list[Path]) -> tuple[int, int, i
             total_s += stat.mean[1]
             total_v += stat.mean[2]
             valid += 1
-        except Exception:
+        except (OSError, ValueError) as e:
+            logger.debug("Could not read thumbnail %s: %s", path, e)
             continue
 
     if valid == 0:
