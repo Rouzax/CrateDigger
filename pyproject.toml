@@ -1,0 +1,25 @@
+[project]
+name = "cratedigger"
+version = "0.1.0"
+description = "Festival set & concert library manager"
+requires-python = ">=3.10"
+dependencies = [
+    "Pillow>=10.0",
+    "numpy>=1.24",
+    "requests>=2.28",
+]
+
+[project.optional-dependencies]
+vision = [
+    "opencv-python-headless>=4.8",
+]
+all = [
+    "cratedigger[vision]",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-mock>=3.10",
+]
+
+[project.scripts]
+cratedigger = "festival_organizer.cli:run"

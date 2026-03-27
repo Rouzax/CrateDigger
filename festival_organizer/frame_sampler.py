@@ -2,12 +2,20 @@
 
 Samples evenly-spaced frames, scores by vibrancy (brightness * saturation),
 with soft bonuses for sharpness and exposure quality. Skips near-black frames.
+
+Requires opencv-python-headless and numpy (optional dependencies).
 """
+from __future__ import annotations
+
 import math
 from pathlib import Path
 
-import cv2
-import numpy as np
+try:
+    import cv2
+    import numpy as np
+    _HAS_CV2 = True
+except ImportError:
+    _HAS_CV2 = False
 
 
 def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | None:
@@ -24,6 +32,9 @@ def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | N
         Path to the saved PNG frame, or None on failure
     """
     video_path = Path(video_path)
+
+    if not _HAS_CV2:
+        return None
 
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
