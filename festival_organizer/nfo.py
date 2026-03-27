@@ -1,5 +1,6 @@
 """Kodi musicvideo NFO XML generation."""
 import xml.etree.ElementTree as ET
+from datetime import datetime
 from pathlib import Path
 from xml.dom import minidom
 
@@ -8,86 +9,115 @@ from festival_organizer.models import MediaFile
 
 
 def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Path:
-    """Generate a Kodi-compatible NFO XML file alongside a video file.
+    """Generate a Kodi-compatible musicvideo NFO file alongside a video file.
 
+    Follows the Kodi v20+ spec: https://kodi.wiki/view/NFO_files/Music_videos
     Returns the path to the generated .nfo file.
     """
     nfo_path = video_path.with_suffix(".nfo")
+    mf = media_file
     nfo_settings = config.nfo_settings
 
     root = ET.Element("musicvideo")
 
-    # Title — use the rendered filename stem
-    _add_element(root, "title", video_path.stem)
-
-    # Artist
-    _add_element(root, "artist", media_file.artist or "Unknown Artist")
-
-    # Album — festival name for sets, title for concerts
-    if media_file.content_type == "festival_set":
-        album = media_file.festival or media_file.title or ""
-        if media_file.location:
-            display = config.get_festival_display(media_file.festival, media_file.location)
-            if display != media_file.festival:
-                album = display
+    # Title — clean descriptor, not the full filename
+    if mf.content_type == "festival_set":
+        title = mf.artist or "Unknown Artist"
     else:
-        album = media_file.title or media_file.festival or ""
-    _add_element(root, "album", album)
+        title = mf.title or mf.artist or "Unknown"
+    _add(root, "title", title)
 
-    # Year
-    if media_file.year:
-        _add_element(root, "year", media_file.year)
+    # Artist (required)
+    _add(root, "artist", mf.artist or "Unknown Artist")
+
+    # Album — grouping key: festival + year
+    if mf.content_type == "festival_set":
+        album_parts = []
+        festival_display = mf.festival
+        if mf.location:
+            festival_display = config.get_festival_display(mf.festival, mf.location)
+        if festival_display:
+            album_parts.append(festival_display)
+        if mf.year:
+            album_parts.append(mf.year)
+        album = " ".join(album_parts) if album_parts else ""
+    else:
+        album = mf.title or mf.festival or ""
+    if album:
+        _add(root, "album", album)
+
+    # Premiered (replaces deprecated year tag)
+    if mf.date:
+        _add(root, "premiered", mf.date)
+    elif mf.year:
+        _add(root, "premiered", f"{mf.year}-01-01")
 
     # Genre
-    if media_file.content_type == "festival_set":
-        _add_element(root, "genre", nfo_settings.get("genre_festival", "Electronic"))
+    if mf.content_type == "festival_set":
+        _add(root, "genre", nfo_settings.get("genre_festival", "Electronic"))
     else:
-        _add_element(root, "genre", nfo_settings.get("genre_concert", "Live"))
+        _add(root, "genre", nfo_settings.get("genre_concert", "Live"))
 
-    # Premiered (date)
-    if media_file.date:
-        _add_element(root, "premiered", media_file.date)
+    # Tags — for Kodi smart playlists
+    if mf.content_type:
+        _add(root, "tag", mf.content_type)
+    if mf.festival:
+        _add(root, "tag", mf.festival)
+    if mf.location:
+        _add(root, "tag", mf.location)
 
-    # Plot — tracklist URL or description
+    # Studio — stage name for sets, venue for concerts
+    if mf.stage:
+        _add(root, "studio", mf.stage)
+
+    # Plot — rich description without 1001TL URL
     plot_parts = []
-    if media_file.stage:
-        plot_parts.append(f"Stage: {media_file.stage}")
-    if media_file.location:
-        plot_parts.append(f"Location: {media_file.location}")
-    if media_file.tracklists_url:
-        plot_parts.append(f"Tracklist: {media_file.tracklists_url}")
+    if mf.stage:
+        plot_parts.append(f"Stage: {mf.stage}")
+    if mf.location:
+        plot_parts.append(f"Location: {mf.location}")
+    if mf.set_title:
+        plot_parts.append(f"Edition: {mf.set_title}")
     if plot_parts:
-        _add_element(root, "plot", "\n".join(plot_parts))
+        _add(root, "plot", "\n".join(plot_parts))
 
     # Runtime (minutes)
-    if media_file.duration_seconds:
-        runtime_min = int(media_file.duration_seconds) // 60
-        _add_element(root, "runtime", str(runtime_min))
+    if mf.duration_seconds:
+        runtime_min = int(mf.duration_seconds) // 60
+        _add(root, "runtime", str(runtime_min))
 
-    # Thumbnail reference (extracted cover or sampled frame)
-    thumb = ET.SubElement(root, "thumb", aspect="poster")
+    # Thumbnails — both thumb and poster references
+    thumb = ET.SubElement(root, "thumb", aspect="thumb")
     thumb.text = f"{video_path.stem}-thumb.jpg"
+    poster = ET.SubElement(root, "thumb", aspect="poster")
+    poster.text = f"{video_path.stem}-poster.jpg"
+
+    # Date added
+    _add(root, "dateadded", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     # Stream details
-    if media_file.video_format or media_file.audio_format:
+    if mf.video_format or mf.audio_format:
         fileinfo = ET.SubElement(root, "fileinfo")
         streamdetails = ET.SubElement(fileinfo, "streamdetails")
 
-        if media_file.video_format:
+        if mf.video_format:
             video = ET.SubElement(streamdetails, "video")
-            _add_element(video, "codec", media_file.video_format)
-            if media_file.width:
-                _add_element(video, "width", str(media_file.width))
-            if media_file.height:
-                _add_element(video, "height", str(media_file.height))
+            _add(video, "codec", mf.video_format)
+            if mf.width and mf.height:
+                _add(video, "aspect", f"{mf.width / mf.height:.2f}")
+                _add(video, "width", str(mf.width))
+                _add(video, "height", str(mf.height))
+            if mf.duration_seconds:
+                _add(video, "durationinseconds", str(int(mf.duration_seconds)))
 
-        if media_file.audio_format:
+        if mf.audio_format:
             audio = ET.SubElement(streamdetails, "audio")
-            _add_element(audio, "codec", media_file.audio_format)
+            _add(audio, "codec", mf.audio_format)
 
-    # Write with pretty-printing
-    xml_str = minidom.parseString(ET.tostring(root, encoding="unicode")).toprettyxml(indent="  ")
-    # Remove the XML declaration that minidom adds (Kodi prefers without)
+    # Pretty-print without XML declaration
+    xml_str = minidom.parseString(
+        ET.tostring(root, encoding="unicode")
+    ).toprettyxml(indent="  ")
     lines = xml_str.split("\n")
     if lines[0].startswith("<?xml"):
         xml_str = "\n".join(lines[1:])
@@ -96,7 +126,7 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
     return nfo_path
 
 
-def _add_element(parent: ET.Element, tag: str, text: str) -> ET.Element:
+def _add(parent: ET.Element, tag: str, text: str) -> ET.Element:
     """Add a child element with text content."""
     elem = ET.SubElement(parent, tag)
     elem.text = text

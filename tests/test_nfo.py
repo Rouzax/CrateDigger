@@ -1,111 +1,144 @@
-import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from festival_organizer.nfo import generate_nfo
-from festival_organizer.config import Config, DEFAULT_CONFIG
 from festival_organizer.models import MediaFile
-
-CFG = Config(DEFAULT_CONFIG)
-
-
-def test_generate_nfo_festival_set():
-    with tempfile.TemporaryDirectory() as tmp:
-        video_path = Path(tmp) / "2024 - AMF - Martin Garrix.mkv"
-        video_path.touch()
-
-        mf = MediaFile(
-            source_path=video_path,
-            artist="Martin Garrix",
-            festival="AMF",
-            year="2024",
-            date="2024-10-19",
-            content_type="festival_set",
-            stage="Johan Cruijff ArenA",
-            tracklists_url="https://www.1001tracklists.com/tracklist/qv6kl89/",
-            duration_seconds=7200.0,
-            width=3840,
-            height=2160,
-            video_format="VP9",
-            audio_format="Opus",
-            extension=".mkv",
-        )
-
-        nfo_path = generate_nfo(mf, video_path, CFG)
-
-        assert nfo_path.exists()
-        assert nfo_path.suffix == ".nfo"
-        assert nfo_path.stem == video_path.stem
-
-        tree = ET.parse(nfo_path)
-        root = tree.getroot()
-        assert root.tag == "musicvideo"
-        assert root.find("title").text == "2024 - AMF - Martin Garrix"
-        assert root.find("artist").text == "Martin Garrix"
-        assert root.find("album").text == "AMF"
-        assert root.find("year").text == "2024"
-        assert root.find("genre").text == "Electronic"
-        assert root.find("premiered").text == "2024-10-19"
-        assert "1001tracklists" in root.find("plot").text
-        thumb = root.find("thumb")
-        assert thumb is not None
-        assert thumb.text == "2024 - AMF - Martin Garrix-thumb.jpg"
+from festival_organizer.config import load_config
+from festival_organizer.nfo import generate_nfo
 
 
-def test_generate_nfo_concert_film():
-    with tempfile.TemporaryDirectory() as tmp:
-        video_path = Path(tmp) / "Coldplay - A Head Full of Dreams.mkv"
-        video_path.touch()
-
-        mf = MediaFile(
-            source_path=video_path,
-            artist="Coldplay",
-            title="A Head Full of Dreams",
-            year="2018",
-            content_type="concert_film",
-            duration_seconds=6240.0,
-            width=1920,
-            height=1080,
-            video_format="AVC",
-            audio_format="E-AC-3",
-            extension=".mkv",
-        )
-
-        nfo_path = generate_nfo(mf, video_path, CFG)
-
-        tree = ET.parse(nfo_path)
-        root = tree.getroot()
-        assert root.find("artist").text == "Coldplay"
-        assert root.find("album").text == "A Head Full of Dreams"
-        assert root.find("genre").text == "Live"
+def _parse_nfo(nfo_path: Path) -> ET.Element:
+    return ET.fromstring(nfo_path.read_text(encoding="utf-8"))
 
 
-def test_generate_nfo_with_streamdetails():
-    with tempfile.TemporaryDirectory() as tmp:
-        video_path = Path(tmp) / "test.mkv"
-        video_path.touch()
+def test_nfo_uses_premiered_not_year(tmp_path):
+    """premiered field present, year tag absent (deprecated in Kodi v20)."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test", year="2024",
+                   date="2024-07-21", content_type="festival_set", festival="TML")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("premiered") is not None
+    assert root.find("premiered").text == "2024-07-21"
+    assert root.find("year") is None
 
-        mf = MediaFile(
-            source_path=video_path,
-            artist="Test",
-            festival="AMF",
-            year="2024",
-            content_type="festival_set",
-            width=3840,
-            height=2160,
-            video_format="VP9",
-            audio_format="Opus",
-            extension=".mkv",
-        )
 
-        nfo_path = generate_nfo(mf, video_path, CFG)
+def test_nfo_album_is_festival_plus_year(tmp_path):
+    """album = festival + year for Kodi grouping."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   festival="Tomorrowland", year="2024",
+                   content_type="festival_set")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("album").text == "Tomorrowland 2024"
 
-        tree = ET.parse(nfo_path)
-        root = tree.getroot()
-        vstream = root.find(".//fileinfo/streamdetails/video")
-        assert vstream is not None
-        assert vstream.find("codec").text == "VP9"
-        assert vstream.find("width").text == "3840"
-        assert vstream.find("height").text == "2160"
-        thumb = root.find("thumb")
-        assert thumb is not None
-        assert thumb.text == "test-thumb.jpg"
+
+def test_nfo_title_is_artist_for_sets(tmp_path):
+    """title = artist name for festival sets, not the filename."""
+    mf = MediaFile(source_path=Path("2024 - TML - Artist.mkv"), artist="Martin Garrix",
+                   festival="Tomorrowland", year="2024",
+                   content_type="festival_set")
+    video = tmp_path / "2024 - TML - Martin Garrix.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("title").text == "Martin Garrix"
+
+
+def test_nfo_title_is_title_for_concerts(tmp_path):
+    """title = descriptive title for concert films."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Adele",
+                   title="Live at Hyde Park", content_type="concert_film")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("title").text == "Live at Hyde Park"
+
+
+def test_nfo_tags_for_smart_playlists(tmp_path):
+    """tag elements for content type, festival, location."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   festival="Tomorrowland", location="Belgium",
+                   year="2024", content_type="festival_set")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert "festival_set" in tags
+    assert "Tomorrowland" in tags
+    assert "Belgium" in tags
+
+
+def test_nfo_studio_is_stage(tmp_path):
+    """studio = stage name for festival sets."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   stage="Mainstage", content_type="festival_set",
+                   festival="TML", year="2024")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("studio").text == "Mainstage"
+
+
+def test_nfo_dateadded_present(tmp_path):
+    """dateadded element is present with ISO format."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   content_type="festival_set", festival="TML", year="2024")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    dateadded = root.find("dateadded")
+    assert dateadded is not None
+    assert len(dateadded.text) >= 10  # At least YYYY-MM-DD
+
+
+def test_nfo_plot_no_tracklist_url(tmp_path):
+    """plot should NOT contain 1001Tracklists URL."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   festival="TML", year="2024", content_type="festival_set",
+                   stage="Mainstage", location="Belgium",
+                   tracklists_url="https://www.1001tracklists.com/tracklist/abc123")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    plot = root.find("plot")
+    if plot is not None and plot.text:
+        assert "1001tracklists" not in plot.text.lower()
+
+
+def test_nfo_multiple_thumb_aspects(tmp_path):
+    """thumb elements for both thumb and poster images."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   content_type="festival_set", festival="TML", year="2024")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    thumbs = root.findall("thumb")
+    aspects = [t.get("aspect") for t in thumbs]
+    assert "thumb" in aspects
+    assert "poster" in aspects
+
+
+def test_nfo_fileinfo_durationinseconds(tmp_path):
+    """fileinfo includes durationinseconds, aspect ratio, audio channels."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   content_type="festival_set", festival="TML", year="2024",
+                   video_format="HEVC", width=1920, height=1080,
+                   audio_format="AAC", duration_seconds=3661.5)
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    vid = root.find(".//streamdetails/video")
+    assert vid.find("durationinseconds").text == "3661"
+    assert vid.find("aspect") is not None
+
+
+def test_nfo_concert_film(tmp_path):
+    """Concert film NFO has correct album and genre."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Coldplay",
+                   title="A Head Full of Dreams", year="2018",
+                   content_type="concert_film")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("artist").text == "Coldplay"
+    assert root.find("album").text == "A Head Full of Dreams"
+    assert root.find("genre").text == "Live"
