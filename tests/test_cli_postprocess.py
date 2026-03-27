@@ -1,7 +1,7 @@
 """Test that --generate-nfo and --extract-art work for files already at target."""
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from festival_organizer.models import FileAction, MediaFile
 
