@@ -1,0 +1,94 @@
+from pathlib import Path
+from festival_organizer.planner import plan_actions
+from festival_organizer.config import Config, DEFAULT_CONFIG
+from festival_organizer.models import MediaFile, FileAction
+
+CFG = Config(DEFAULT_CONFIG)
+OUTPUT = Path("C:/Output")
+
+
+def test_plan_festival_set_artist_first():
+    mf = MediaFile(
+        source_path=Path("C:/Input/file.mkv"),
+        artist="Martin Garrix",
+        festival="AMF",
+        year="2024",
+        content_type="festival_set",
+        extension=".mkv",
+    )
+    actions = plan_actions([mf], OUTPUT, CFG)
+    assert len(actions) == 1
+    a = actions[0]
+    assert a.target == OUTPUT / "Martin Garrix" / "AMF" / "2024" / "2024 - AMF - Martin Garrix.mkv"
+    assert a.action == "move"
+
+
+def test_plan_concert_film():
+    mf = MediaFile(
+        source_path=Path("C:/Input/file.mkv"),
+        artist="Coldplay",
+        title="A Head Full of Dreams",
+        year="2018",
+        content_type="concert_film",
+        extension=".mkv",
+    )
+    actions = plan_actions([mf], OUTPUT, CFG)
+    a = actions[0]
+    assert a.target == OUTPUT / "Coldplay" / "2018 - A Head Full of Dreams" / "Coldplay - A Head Full of Dreams.mkv"
+
+
+def test_plan_unknown_goes_to_needs_review():
+    mf = MediaFile(
+        source_path=Path("C:/Input/mystery.mkv"),
+        content_type="unknown",
+        extension=".mkv",
+    )
+    actions = plan_actions([mf], OUTPUT, CFG)
+    a = actions[0]
+    assert "_Needs Review" in str(a.target)
+
+
+def test_plan_with_set_title():
+    mf = MediaFile(
+        source_path=Path("C:/Input/file.mkv"),
+        artist="Hardwell",
+        festival="Tomorrowland",
+        year="2025",
+        location="Belgium",
+        set_title="WE1",
+        content_type="festival_set",
+        extension=".mkv",
+    )
+    actions = plan_actions([mf], OUTPUT, CFG)
+    a = actions[0]
+    assert "WE1" in a.target.name
+    assert "Tomorrowland Belgium" in str(a.target)
+
+
+def test_plan_action_type_copy():
+    mf = MediaFile(
+        source_path=Path("C:/Input/file.mkv"),
+        artist="Test",
+        festival="AMF",
+        year="2024",
+        content_type="festival_set",
+        extension=".mkv",
+    )
+    actions = plan_actions([mf], OUTPUT, CFG, action="copy")
+    assert actions[0].action == "copy"
+
+
+def test_plan_action_type_rename():
+    mf = MediaFile(
+        source_path=Path("C:/Input/file.mkv"),
+        artist="Test",
+        festival="AMF",
+        year="2024",
+        content_type="festival_set",
+        extension=".mkv",
+    )
+    actions = plan_actions([mf], OUTPUT, CFG, action="rename")
+    a = actions[0]
+    assert a.action == "rename"
+    # Rename keeps the file in its original directory
+    assert a.target.parent == Path("C:/Input")
