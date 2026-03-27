@@ -3,6 +3,7 @@
 Embeds artist, title, and date into MKV file tags so Plex can read them.
 Only operates on destination files — never modifies source collection.
 """
+import logging
 import os
 import subprocess
 import tempfile
@@ -10,6 +11,8 @@ from pathlib import Path
 
 from festival_organizer import metadata
 from festival_organizer.models import MediaFile
+
+logger = logging.getLogger(__name__)
 
 
 def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
@@ -46,7 +49,8 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
 
         return result.returncode == 0
 
-    except Exception:
+    except (OSError, subprocess.SubprocessError) as e:
+        logger.debug("Tag embedding failed for %s: %s", target_path, e)
         return False
     finally:
         try:
