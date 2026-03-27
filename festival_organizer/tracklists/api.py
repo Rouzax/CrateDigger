@@ -57,6 +57,9 @@ class TracklistSession:
             if self._validate_session():
                 return
 
+        # Visit site first to get initial cookies (guid)
+        self._request("GET", f"{BASE_URL}/")
+
         # Fresh login
         resp = self._request("POST", f"{BASE_URL}/action/login.html", data={
             "email": email,

@@ -76,18 +76,9 @@ def run(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
 
-    root = Path(args.root)
-    if not root.exists():
-        print(f"Error: folder does not exist: {root}", file=sys.stderr)
-        return 1
-
     # Load config
-    config_path = Path(args.config) if args.config else Path("config.json")
+    config_path = Path(getattr(args, "config", None) or "config.json")
     config = load_config(config_path if config_path.exists() else None)
-
-    # Override layout if specified
-    if getattr(args, "layout", None):
-        config._data["default_layout"] = args.layout
 
     # Re-resolve tool paths with config overrides
     configure_tools(config)
@@ -96,6 +87,15 @@ def run(argv: list[str] | None = None) -> int:
     if args.command == "chapters":
         from festival_organizer.tracklists.cli_handler import run_chapters
         return run_chapters(args, config)
+
+    root = Path(args.root)
+    if not root.exists():
+        print(f"Error: folder does not exist: {root}", file=sys.stderr)
+        return 1
+
+    # Override layout if specified
+    if getattr(args, "layout", None):
+        config._data["default_layout"] = args.layout
 
     output = Path(args.output) if args.output else root
     verbose = not args.quiet
