@@ -154,12 +154,21 @@ def run(argv: list[str] | None = None) -> int:
     print(f"Output:  {output}")
     print(f"Mode:    {mode}")
     print(f"Layout:  {config.default_layout}")
+    tools = []
     if metadata.MEDIAINFO_PATH:
-        print(f"Tool:    MediaInfo ({metadata.MEDIAINFO_PATH})")
-    elif metadata.FFPROBE_PATH:
-        print(f"Tool:    ffprobe ({metadata.FFPROBE_PATH})")
+        tools.append(f"MediaInfo ({metadata.MEDIAINFO_PATH})")
+    if metadata.FFPROBE_PATH:
+        tools.append(f"ffprobe ({metadata.FFPROBE_PATH})")
+    if metadata.MKVEXTRACT_PATH:
+        tools.append(f"mkvextract ({metadata.MKVEXTRACT_PATH})")
+    if metadata.MKVPROPEDIT_PATH:
+        tools.append(f"mkvpropedit ({metadata.MKVPROPEDIT_PATH})")
+    if tools:
+        print(f"Tools:   {tools[0]}")
+        for t in tools[1:]:
+            print(f"         {t}")
     else:
-        print(f"Tool:    NONE (filename parsing only)")
+        print(f"Tools:   NONE (filename parsing only)")
     print(f"{'=' * 60}\n")
 
     # Scan
