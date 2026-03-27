@@ -7,8 +7,28 @@ import subprocess
 from pathlib import Path
 
 
-def find_tool(name: str, fallback_paths: list[str]) -> str | None:
-    """Find a CLI tool by name in PATH or at known locations."""
+MEDIAINFO_FALLBACKS = [
+    r"C:\Program Files\MediaInfo CLI\MediaInfo.exe",
+    r"C:\Program Files (x86)\MediaInfo CLI\MediaInfo.exe",
+    r"C:\Program Files\WinGet\Links\mediainfo.exe",
+]
+
+FFPROBE_FALLBACKS = [
+    r"C:\Program Files\ffmpeg\bin\ffprobe.exe",
+    r"C:\ffmpeg\bin\ffprobe.exe",
+    r"C:\Program Files\WinGet\Links\ffprobe.exe",
+]
+
+MKVTOOLNIX_FALLBACKS = [
+    r"C:\Program Files\MKVToolNix",
+    r"C:\Program Files (x86)\MKVToolNix",
+]
+
+
+def find_tool(name: str, fallback_paths: list[str], configured_path: str | None = None) -> str | None:
+    """Find a CLI tool by name. Checks configured path first, then PATH, then fallbacks."""
+    if configured_path and os.path.isfile(configured_path):
+        return configured_path
     found = shutil.which(name)
     if found:
         return found
@@ -18,18 +38,39 @@ def find_tool(name: str, fallback_paths: list[str]) -> str | None:
     return None
 
 
-# Locate tools at import time
-MEDIAINFO_PATH = find_tool("mediainfo", [
-    r"C:\Program Files\MediaInfo\MediaInfo.exe",
-    r"C:\Program Files (x86)\MediaInfo\MediaInfo.exe",
-    r"C:\Program Files\WinGet\Links\mediainfo.exe",
-])
+# Resolved at import time (no config); reconfigured via configure_tools()
+MEDIAINFO_PATH = find_tool("mediainfo", MEDIAINFO_FALLBACKS)
+FFPROBE_PATH = find_tool("ffprobe", FFPROBE_FALLBACKS)
 
-FFPROBE_PATH = find_tool("ffprobe", [
-    r"C:\Program Files\ffmpeg\bin\ffprobe.exe",
-    r"C:\ffmpeg\bin\ffprobe.exe",
-    r"C:\Program Files\WinGet\Links\ffprobe.exe",
-])
+
+def _find_mkvtoolnix_tool(name: str, configured_path: str | None = None) -> str | None:
+    """Find an MKVToolNix tool (mkvextract, mkvpropedit, mkvmerge)."""
+    if configured_path and os.path.isfile(configured_path):
+        return configured_path
+    found = shutil.which(name)
+    if found:
+        return found
+    for base in MKVTOOLNIX_FALLBACKS:
+        candidate = os.path.join(base, f"{name}.exe")
+        if os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+MKVEXTRACT_PATH = _find_mkvtoolnix_tool("mkvextract")
+MKVPROPEDIT_PATH = _find_mkvtoolnix_tool("mkvpropedit")
+MKVMERGE_PATH = _find_mkvtoolnix_tool("mkvmerge")
+
+
+def configure_tools(config) -> None:
+    """Re-resolve tool paths using config-provided overrides."""
+    global MEDIAINFO_PATH, FFPROBE_PATH, MKVEXTRACT_PATH, MKVPROPEDIT_PATH, MKVMERGE_PATH
+    tool_paths = config.tool_paths if hasattr(config, "tool_paths") else {}
+    MEDIAINFO_PATH = find_tool("mediainfo", MEDIAINFO_FALLBACKS, tool_paths.get("mediainfo"))
+    FFPROBE_PATH = find_tool("ffprobe", FFPROBE_FALLBACKS, tool_paths.get("ffprobe"))
+    MKVEXTRACT_PATH = _find_mkvtoolnix_tool("mkvextract", tool_paths.get("mkvextract"))
+    MKVPROPEDIT_PATH = _find_mkvtoolnix_tool("mkvpropedit", tool_paths.get("mkvpropedit"))
+    MKVMERGE_PATH = _find_mkvtoolnix_tool("mkvmerge", tool_paths.get("mkvmerge"))
 
 
 def parse_mediainfo_json(data: dict) -> dict:

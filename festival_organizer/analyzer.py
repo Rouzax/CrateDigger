@@ -104,6 +104,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         location=info.get("location", ""),
         youtube_id=info.get("youtube_id", ""),
         tracklists_url=meta.get("tracklists_url", ""),
+        tracklists_title=meta.get("tracklists_title", ""),
         metadata_source=metadata_source,
         content_type="",  # Set by classifier
         extension=ext,

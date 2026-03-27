@@ -23,6 +23,7 @@ class MediaFile:
     # Identifiers
     youtube_id: str = ""
     tracklists_url: str = ""
+    tracklists_title: str = ""
 
     # Technical metadata
     extension: str = ""

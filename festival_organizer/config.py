@@ -83,6 +83,34 @@ DEFAULT_CONFIG = {
         "genre_festival": "Electronic",
         "genre_concert": "Live",
     },
+    "tool_paths": {
+        "mediainfo": None,
+        "ffprobe": None,
+        "mkvextract": None,
+        "mkvpropedit": None,
+        "mkvmerge": None,
+    },
+    "tracklists_aliases": {
+        "amf": "Amsterdam Music Festival",
+        "ade": "Amsterdam Dance Event",
+        "edc": "Electric Daisy Carnival",
+        "umf": "Ultra Music Festival",
+        "asot": "A State of Trance",
+        "abgt": "Above & Beyond Group Therapy",
+        "wao138": "Who's Afraid of 138",
+        "fsoe": "Future Sound of Egypt",
+        "gdjb": "Global DJ Broadcast",
+        "sw4": "South West Four",
+        "tml": "Tomorrowland",
+        "tl": "Tomorrowland",
+        "dwp": "Djakarta Warehouse Project",
+        "mmw": "Miami Music Week",
+    },
+    "tracklists_settings": {
+        "chapter_language": "eng",
+        "auto_select": False,
+        "delay_seconds": 5,
+    },
 }
 
 
@@ -123,6 +151,20 @@ class Config:
     @property
     def nfo_settings(self) -> dict:
         return self._data.get("nfo_settings", {})
+
+    @property
+    def tool_paths(self) -> dict:
+        return self._data.get("tool_paths", {})
+
+    @property
+    def tracklists_aliases(self) -> dict[str, str]:
+        """Lowercase-keyed abbreviation -> full name mappings for tracklist scoring."""
+        return self._data.get("tracklists_aliases", {})
+
+    @property
+    def tracklists_settings(self) -> dict:
+        """Settings for tracklist chapter operations."""
+        return self._data.get("tracklists_settings", {})
 
     @property
     def media_extensions(self) -> set[str]:

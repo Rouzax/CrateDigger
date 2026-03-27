@@ -86,5 +86,36 @@
     "nfo_settings": {
         "genre_festival": "Electronic",
         "genre_concert": "Live"
+    },
+
+    "tool_paths": {
+        "mediainfo": null,
+        "ffprobe": null,
+        "mkvextract": null,
+        "mkvpropedit": null,
+        "mkvmerge": null
+    },
+
+    "tracklists_aliases": {
+        "amf": "Amsterdam Music Festival",
+        "ade": "Amsterdam Dance Event",
+        "edc": "Electric Daisy Carnival",
+        "umf": "Ultra Music Festival",
+        "asot": "A State of Trance",
+        "abgt": "Above & Beyond Group Therapy",
+        "wao138": "Who's Afraid of 138",
+        "fsoe": "Future Sound of Egypt",
+        "gdjb": "Global DJ Broadcast",
+        "sw4": "South West Four",
+        "tml": "Tomorrowland",
+        "tl": "Tomorrowland",
+        "dwp": "Djakarta Warehouse Project",
+        "mmw": "Miami Music Week"
+    },
+
+    "tracklists_settings": {
+        "chapter_language": "eng",
+        "auto_select": false,
+        "delay_seconds": 5
     }
 }

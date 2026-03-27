@@ -4,29 +4,12 @@ Embeds artist, title, and date into MKV file tags so Plex can read them.
 Only operates on destination files — never modifies source collection.
 """
 import os
-import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 
+from festival_organizer import metadata
 from festival_organizer.models import MediaFile
-
-
-def find_mkvpropedit() -> str | None:
-    """Locate mkvpropedit executable."""
-    found = shutil.which("mkvpropedit")
-    if found:
-        return found
-    for candidate in [
-        r"C:\Program Files\MKVToolNix\mkvpropedit.exe",
-        r"C:\Program Files (x86)\MKVToolNix\mkvpropedit.exe",
-    ]:
-        if os.path.isfile(candidate):
-            return candidate
-    return None
-
-
-MKVPROPEDIT_PATH = find_mkvpropedit()
 
 
 def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
@@ -39,7 +22,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
     Returns:
         True if successful, False otherwise
     """
-    if not MKVPROPEDIT_PATH:
+    if not metadata.MKVPROPEDIT_PATH:
         return False
 
     if not target_path.exists() or target_path.suffix.lower() != ".mkv":
@@ -56,7 +39,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
 
         # Run mkvpropedit
         result = subprocess.run(
-            [MKVPROPEDIT_PATH, str(target_path), "--tags", f"global:{tag_file}"],
+            [metadata.MKVPROPEDIT_PATH, str(target_path), "--tags", f"global:{tag_file}"],
             capture_output=True, text=True, timeout=30,
             encoding="utf-8", errors="replace",
         )
@@ -77,17 +60,17 @@ def _build_tag_xml(media_file: MediaFile) -> str:
     tags = []
 
     if media_file.artist:
-        tags.append(f'    <Simple><Name>ARTIST</Name><String>{_xml_escape(media_file.artist)}</String></Simple>')
+        tags.append(f'    <Simple><Name>ARTIST</Name><String>{xml_escape(media_file.artist)}</String></Simple>')
 
     title = media_file.title or media_file.set_title or ""
     if media_file.festival:
         title = f"{media_file.festival} {media_file.year}".strip()
     if title:
-        tags.append(f'    <Simple><Name>TITLE</Name><String>{_xml_escape(title)}</String></Simple>')
+        tags.append(f'    <Simple><Name>TITLE</Name><String>{xml_escape(title)}</String></Simple>')
 
     date = media_file.date or media_file.year
     if date:
-        tags.append(f'    <Simple><Name>DATE_RELEASED</Name><String>{_xml_escape(date)}</String></Simple>')
+        tags.append(f'    <Simple><Name>DATE_RELEASED</Name><String>{xml_escape(date)}</String></Simple>')
 
     tags_str = "\n".join(tags)
     return f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -102,7 +85,7 @@ def _build_tag_xml(media_file: MediaFile) -> str:
 """
 
 
-def _xml_escape(text: str) -> str:
+def xml_escape(text: str) -> str:
     """Escape XML special characters."""
     return (text
             .replace("&", "&amp;")
