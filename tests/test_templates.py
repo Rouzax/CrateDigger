@@ -1,6 +1,6 @@
 from pathlib import Path
 from festival_organizer.templates import render_folder, render_filename
-from festival_organizer.config import Config, DEFAULT_CONFIG
+from festival_organizer.config import Config, DEFAULT_CONFIG, load_config
 from festival_organizer.models import MediaFile
 
 CFG = Config(DEFAULT_CONFIG)
@@ -54,6 +54,34 @@ def test_render_folder_festival_nested():
     result = render_folder(mf, CFG, layout_name="festival_nested")
     # Tomorrowland has location_in_name, so becomes "Tomorrowland Belgium"
     assert result == "Tomorrowland Belgium/2025/Hardwell"
+
+
+def test_render_folder_festival_flat_festival_set():
+    """festival_flat layout: festival sets go into {festival}/."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        festival="Tomorrowland",
+        year="2024",
+        content_type="festival_set",
+    )
+    config = load_config()
+    result = render_folder(mf, config, layout_name="festival_flat")
+    assert result == "Tomorrowland"
+
+
+def test_render_folder_festival_flat_concert_film():
+    """festival_flat layout: concerts fall back to {artist}/."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Adele",
+        title="Live at Hyde Park",
+        year="2022",
+        content_type="concert_film",
+    )
+    config = load_config()
+    result = render_folder(mf, config, layout_name="festival_flat")
+    assert result == "Adele"
 
 
 def test_render_folder_with_location_in_festival_name():
