@@ -188,3 +188,45 @@ def test_tracklists_credentials_env_override(monkeypatch):
         "tracklists": {"email": "config@b.com", "password": "configpw"}
     })
     assert config.tracklists_credentials == ("env@b.com", "envpw")
+
+
+def test_load_config_malformed_json(tmp_path, capsys):
+    """Malformed user config prints warning and falls back to defaults."""
+    user_dir = tmp_path / ".cratedigger"
+    user_dir.mkdir()
+    (user_dir / "config.json").write_text("{bad json!!!")
+    config = load_config(user_config_dir=user_dir)
+    assert config.default_layout == "artist_flat"  # fell back to default
+    captured = capsys.readouterr()
+    assert "config.json" in captured.err
+
+
+def test_load_config_malformed_library_json(tmp_path, capsys):
+    """Malformed library config prints warning, user config still applies."""
+    user_dir = tmp_path / "user" / ".cratedigger"
+    user_dir.mkdir(parents=True)
+    (user_dir / "config.json").write_text('{"default_layout": "festival_flat"}')
+    lib_dir = tmp_path / "lib" / ".cratedigger"
+    lib_dir.mkdir(parents=True)
+    (lib_dir / "config.json").write_text("not json")
+    config = load_config(user_config_dir=user_dir, library_config_dir=lib_dir)
+    assert config.default_layout == "festival_flat"  # user layer applied
+    captured = capsys.readouterr()
+    assert "config.json" in captured.err
+
+
+def test_load_config_unreadable_file(tmp_path, capsys):
+    """Unreadable config prints warning and falls back to defaults."""
+    import os
+    user_dir = tmp_path / ".cratedigger"
+    user_dir.mkdir()
+    cfg_file = user_dir / "config.json"
+    cfg_file.write_text('{"default_layout": "festival_flat"}')
+    os.chmod(cfg_file, 0o000)
+    try:
+        config = load_config(user_config_dir=user_dir)
+        assert config.default_layout == "artist_flat"  # fell back to default
+        captured = capsys.readouterr()
+        assert "config.json" in captured.err
+    finally:
+        os.chmod(cfg_file, 0o644)

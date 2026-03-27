@@ -1,5 +1,6 @@
 """Configuration loading and access."""
 import json
+import sys
 from copy import deepcopy
 from fnmatch import fnmatch
 from pathlib import Path
@@ -281,8 +282,11 @@ def load_config(
 
     # Legacy path support
     if config_path and config_path.exists():
-        with open(config_path, "r", encoding="utf-8") as f:
-            _deep_merge(data, json.load(f))
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                _deep_merge(data, json.load(f))
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"Warning: could not read {config_path}: {e}", file=sys.stderr)
         _migrate_layout_names(data)
         return Config(data)
 
@@ -291,15 +295,21 @@ def load_config(
         user_config_dir = Path.home() / ".cratedigger"
     user_file = user_config_dir / "config.json"
     if user_file.exists():
-        with open(user_file, "r", encoding="utf-8") as f:
-            _deep_merge(data, json.load(f))
+        try:
+            with open(user_file, "r", encoding="utf-8") as f:
+                _deep_merge(data, json.load(f))
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"Warning: could not read {user_file}: {e}", file=sys.stderr)
 
     # Layer 3: Library config
     if library_config_dir is not None:
         lib_file = library_config_dir / "config.json"
         if lib_file.exists():
-            with open(lib_file, "r", encoding="utf-8") as f:
-                _deep_merge(data, json.load(f))
+            try:
+                with open(lib_file, "r", encoding="utf-8") as f:
+                    _deep_merge(data, json.load(f))
+            except (json.JSONDecodeError, OSError) as e:
+                print(f"Warning: could not read {lib_file}: {e}", file=sys.stderr)
 
     _migrate_layout_names(data)
     return Config(data)
