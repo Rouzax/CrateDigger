@@ -8,6 +8,7 @@ from festival_organizer.classifier import classify
 from festival_organizer.config import load_config
 from festival_organizer.library import find_library_root, init_library
 from festival_organizer import metadata
+from festival_organizer.log import setup_logging
 from festival_organizer.metadata import configure_tools
 from festival_organizer.operations import (
     OrganizeOperation, NfoOperation, ArtOperation,
@@ -119,6 +120,9 @@ def _run_command(args) -> int:
     )
     configure_tools(config)
 
+    verbose = getattr(args, "verbose", False)
+    setup_logging(verbose=verbose)
+
     # Layout override
     if getattr(args, "layout", None):
         config._data["default_layout"] = args.layout
@@ -145,7 +149,6 @@ def _run_command(args) -> int:
         init_library(output, layout=config.default_layout)
 
     quiet = args.quiet
-    verbose = getattr(args, "verbose", False)
 
     # Scan
     progress = ProgressPrinter(total=0, quiet=quiet, verbose=verbose)
