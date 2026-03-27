@@ -1,7 +1,9 @@
 from io import StringIO
 from pathlib import Path
+from festival_organizer.models import MediaFile
 from festival_organizer.progress import ProgressPrinter
-from festival_organizer.operations import OperationResult
+from festival_organizer.operations import Operation, OperationResult
+from festival_organizer.runner import run_pipeline
 
 
 def test_progress_file_header():
@@ -61,3 +63,33 @@ def test_progress_quiet_mode():
     pp.record_results([OperationResult("nfo", "done")])
     pp.print_summary()
     assert "nfo" in out.getvalue().lower() or "NFO" in out.getvalue()
+
+
+def _make_mf(**kwargs):
+    defaults = dict(source_path=Path("test.mkv"), artist="Test",
+                    festival="TML", year="2024", content_type="festival_set")
+    defaults.update(kwargs)
+    return MediaFile(**defaults)
+
+
+class BrokenIsNeededOp(Operation):
+    name = "broken"
+
+    def is_needed(self, file_path, media_file):
+        raise OSError("broken symlink")
+
+    def execute(self, file_path, media_file):
+        return OperationResult(self.name, "done")
+
+
+def test_pipeline_is_needed_failure_does_not_crash(tmp_path):
+    """If is_needed() raises, the operation is marked as error, pipeline continues."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf()
+    ops = [BrokenIsNeededOp()]
+    progress = ProgressPrinter(total=1, stream=StringIO())
+    results = run_pipeline([(video, mf, ops)], progress)
+    assert len(results) == 1
+    assert results[0][0].status == "error"
+    assert "broken symlink" in results[0][0].detail
