@@ -53,6 +53,9 @@ class OrganizeOperation(Operation):
                 file_path.rename(target)
             else:
                 shutil.move(str(file_path), str(target))
+            # Update target so downstream operations (nfo, art, etc.) use the
+            # resolved path. This mutation is read by run_pipeline() — requires
+            # serial execution; do not reuse operation instances across files.
             self.target = target
             return OperationResult(self.name, "done")
         except OSError as e:
@@ -196,6 +199,8 @@ class TagsOperation(Operation):
         # Only MKV/WEBM support tag embedding
         if file_path.suffix.lower() not in (".mkv", ".webm"):
             return False
+        # No gap detection: reading existing MKV tags to compare is expensive
+        # and mkvpropedit is fast and idempotent, so always re-embed.
         return True
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
