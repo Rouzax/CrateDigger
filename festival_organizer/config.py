@@ -126,6 +126,11 @@ DEFAULT_CONFIG = {
         "delay_seconds": 5,
         "chapter_language": "eng",
     },
+    "fanart": {
+        "project_api_key": "9fb9273dbec3739bd0fdb49f10d6a129",
+        "personal_api_key": "",
+        "enabled": True,
+    },
 }
 
 
@@ -237,6 +242,26 @@ class Config:
     def get_filename_template(self, content_type: str) -> str:
         """Get the filename template for a content type."""
         return self.filename_templates.get(content_type, "{artist} - {title}")
+
+    @property
+    def fanart_settings(self) -> dict:
+        return self._data.get("fanart", {})
+
+    @property
+    def fanart_project_api_key(self) -> str:
+        """Return fanart.tv project API key — env var override + config fallback."""
+        import os
+        return os.environ.get("FANART_PROJECT_API_KEY") or self.fanart_settings.get("project_api_key", "")
+
+    @property
+    def fanart_personal_api_key(self) -> str:
+        """Return fanart.tv personal API key — env var override + config fallback."""
+        import os
+        return os.environ.get("FANART_PERSONAL_API_KEY") or self.fanart_settings.get("personal_api_key", "")
+
+    @property
+    def fanart_enabled(self) -> bool:
+        return self.fanart_settings.get("enabled", True)
 
     def should_skip(self, relative_path: str) -> bool:
         """Check if a relative path matches any skip pattern."""
