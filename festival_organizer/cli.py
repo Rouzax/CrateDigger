@@ -11,7 +11,7 @@ from festival_organizer import metadata
 from festival_organizer.log import setup_logging
 from festival_organizer.metadata import configure_tools
 from festival_organizer.operations import (
-    OrganizeOperation, NfoOperation, ArtOperation,
+    OrganizeOperation, NfoOperation, ArtOperation, FanartOperation,
     PosterOperation, AlbumPosterOperation, TagsOperation,
 )
 from festival_organizer.progress import ProgressPrinter
@@ -68,7 +68,7 @@ def build_parser() -> argparse.ArgumentParser:
     enr_p = sub.add_parser("enrich", help="Add metadata artifacts to files in place")
     add_common(enr_p)
     enr_p.add_argument("--only", type=str,
-                       help="Comma-separated: nfo,art,posters,tags,chapters")
+                       help="Comma-separated: nfo,art,fanart,posters,tags,chapters")
     enr_p.add_argument("--force", action="store_true",
                        help="Regenerate even if artifacts exist")
 
@@ -190,6 +190,14 @@ def _run_command(args) -> int:
         only = set(args.only.split(","))
     pipeline_files = []
 
+    # Shared FanartOperation instance (deduplicates across files)
+    fanart_op = None
+    if args.command in ("enrich", "organize"):
+        should_fanart = (args.command == "enrich" and (not only or "fanart" in only)) or \
+                        (args.command == "organize" and getattr(args, "enrich", False))
+        if should_fanart and config.fanart_enabled and config.fanart_project_api_key:
+            fanart_op = FanartOperation(config, library_root=output, force=force)
+
     for fp, mf in media_files:
         ops: list = []
 
@@ -213,6 +221,8 @@ def _run_command(args) -> int:
             if getattr(args, "enrich", False):
                 ops.append(NfoOperation(config))
                 ops.append(ArtOperation())
+                if fanart_op:
+                    ops.append(fanart_op)
                 ops.append(PosterOperation(config))
                 ops.append(TagsOperation())
 
@@ -221,9 +231,11 @@ def _run_command(args) -> int:
                 ops.append(NfoOperation(config, force=force))
             if not only or "art" in only:
                 ops.append(ArtOperation(force=force))
+            if fanart_op:
+                ops.append(fanart_op)
             if not only or "posters" in only:
                 ops.append(PosterOperation(config, force=force))
-                ops.append(AlbumPosterOperation(config, force=force))
+                ops.append(AlbumPosterOperation(config, force=force, library_root=output))
             if not only or "tags" in only:
                 ops.append(TagsOperation(force=force))
 

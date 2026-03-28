@@ -459,8 +459,12 @@ def generate_album_poster(
     detail: str = "",
     thumb_paths: list[Path] | None = None,
     override_color: tuple[int, int, int] | None = None,
+    background_image_path: Path | None = None,
 ) -> Path:
-    """Generate an album poster (editorial gradient, no image).
+    """Generate an album poster.
+
+    Uses a background image if provided (blurred + darkened like set posters),
+    otherwise falls back to an editorial gradient derived from thumbnail colors.
 
     Args:
         output_path: Where to save the poster
@@ -469,14 +473,38 @@ def generate_album_poster(
         detail: Optional detail (venue, location)
         thumb_paths: Thumbnail images for color derivation
         override_color: Override the auto-derived color
+        background_image_path: Optional fanart.tv background image
 
     Returns:
         Path to the generated poster
     """
-    base_color = override_color or get_dominant_color_from_thumbs(thumb_paths or [])
-    accent = _accent_from_base(base_color)
+    if background_image_path and background_image_path.exists():
+        # Use fanart background: blur + darken, similar to set poster
+        try:
+            frame = Image.open(background_image_path).convert("RGB")
+            accent = get_accent_color(frame)
 
-    bg = _make_gradient_bg(base_color)
+            bg = frame.resize((POSTER_W, POSTER_H), Image.LANCZOS)
+            bg = bg.filter(ImageFilter.GaussianBlur(radius=30))
+            bg = ImageEnhance.Brightness(bg).enhance(0.25)
+
+            # Dark gradient overlay from 40% down
+            gradient = Image.new("RGBA", (POSTER_W, POSTER_H), (0, 0, 0, 0))
+            dg = ImageDraw.Draw(gradient)
+            grad_start = int(POSTER_H * 0.40)
+            for y in range(grad_start, POSTER_H):
+                progress = (y - grad_start) / (POSTER_H - grad_start)
+                a = int(180 * progress ** 1.4)
+                dg.line([(0, y), (POSTER_W, y)], fill=(0, 0, 0, a))
+            bg = Image.alpha_composite(bg.convert("RGBA"), gradient).convert("RGB")
+        except (OSError, ValueError) as e:
+            logger.warning("Could not use background image %s: %s", background_image_path, e)
+            background_image_path = None  # fall through to gradient
+
+    if not background_image_path or not background_image_path.exists():
+        base_color = override_color or get_dominant_color_from_thumbs(thumb_paths or [])
+        accent = _accent_from_base(base_color)
+        bg = _make_gradient_bg(base_color)
     draw = ImageDraw.Draw(bg)
     max_w = POSTER_W - 100
     fest_upper = festival.upper()

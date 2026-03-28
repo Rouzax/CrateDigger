@@ -151,9 +151,10 @@ class PosterOperation(Operation):
 class AlbumPosterOperation(Operation):
     name = "album_poster"
 
-    def __init__(self, config: Config, force: bool = False):
+    def __init__(self, config: Config, force: bool = False, library_root: Path | None = None):
         self.config = config
         self.force = force
+        self.library_root = library_root
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         folder_jpg = file_path.parent / "folder.jpg"
@@ -176,16 +177,96 @@ class AlbumPosterOperation(Operation):
             # Collect existing thumbs in folder for color extraction
             thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
 
+            # Look for fanart.tv background if library root is set
+            bg_path = None
+            if self.library_root and mf.artist:
+                safe = "".join(
+                    c if c.isalnum() or c in " ._-()&" else "_" for c in mf.artist
+                ).strip()
+                candidate = self.library_root / ".cratedigger" / "artists" / safe / "fanart.jpg"
+                if candidate.exists():
+                    bg_path = candidate
+
             generate_album_poster(
                 output_path=folder_jpg,
                 festival=festival_display or mf.artist or "Unknown",
                 date_or_year=date_or_year,
                 detail=mf.stage or mf.location or "",
                 thumb_paths=thumb_paths if thumb_paths else None,
+                background_image_path=bg_path,
             )
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))
+
+
+class FanartOperation(Operation):
+    """Download artist artwork from fanart.tv.
+
+    This operation is shared across all files in a pipeline run to deduplicate
+    API calls when multiple files share an artist. The _completed_artists set
+    tracks which artists have already been processed.
+    """
+    name = "fanart"
+
+    def __init__(self, config: Config, library_root: Path, force: bool = False):
+        self.config = config
+        self.library_root = library_root
+        self.force = force
+        self._completed_artists: set[str] = set()
+        self._cache = None
+
+    def _get_cache(self):
+        if self._cache is None:
+            from festival_organizer.fanart import MBIDCache
+            self._cache = MBIDCache()
+        return self._cache
+
+    def _artist_dir(self, artist: str) -> Path:
+        """Resolve per-artist directory at library root level."""
+        safe = "".join(c if c.isalnum() or c in " ._-()&" else "_" for c in artist).strip()
+        return self.library_root / ".cratedigger" / "artists" / safe
+
+    def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
+        if not self.config.fanart_enabled or not self.config.fanart_project_api_key:
+            return False
+        if not media_file.artist:
+            return False
+        from festival_organizer.fanart import split_artists
+        for artist in split_artists(media_file.artist):
+            if artist in self._completed_artists:
+                continue
+            d = self._artist_dir(artist)
+            if self.force:
+                return True
+            if not (d / "clearlogo.png").exists() or not (d / "fanart.jpg").exists():
+                return True
+        return False
+
+    def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
+        from festival_organizer.fanart import split_artists, download_artist_images
+        artists = split_artists(media_file.artist)
+        fetched = []
+        for artist in artists:
+            if artist in self._completed_artists:
+                continue
+            d = self._artist_dir(artist)
+            try:
+                logo, bg = download_artist_images(
+                    artist, d,
+                    self.config.fanart_project_api_key,
+                    self.config.fanart_personal_api_key,
+                    self._get_cache(),
+                    force=self.force,
+                )
+                self._completed_artists.add(artist)
+                if logo or bg:
+                    fetched.append(artist)
+            except Exception as e:
+                return OperationResult(self.name, "error", f"{artist}: {e}")
+        if fetched:
+            return OperationResult(self.name, "done", f"fetched for: {', '.join(fetched)}")
+        return OperationResult(self.name, "skipped", "already cached or not available")
 
 
 class TagsOperation(Operation):
