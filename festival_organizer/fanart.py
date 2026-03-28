@@ -202,6 +202,46 @@ def pick_best_background(images: list[dict]) -> dict | None:
     return max(images, key=_image_sort_key)
 
 
+# --- TheAudioDB Client (fallback) ---
+
+AUDIODB_BASE_URL = "https://www.theaudiodb.com/api/v1/json/123"
+
+
+def fetch_audiodb_artist(mbid: str) -> dict | None:
+    """Fetch artist data from TheAudioDB by MusicBrainz ID. Returns artist dict or None."""
+    url = f"{AUDIODB_BASE_URL}/artist-mb.php"
+    params = {"i": mbid}
+
+    try:
+        resp = requests.get(url, params=params, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        artists = data.get("artists")
+        if artists:
+            return artists[0]
+        return None
+    except requests.RequestException as e:
+        logger.debug("TheAudioDB lookup failed for MBID %s: %s", mbid, e)
+        return None
+
+
+def _audiodb_best_fanart(artist: dict) -> str | None:
+    """Pick the best fanart URL from TheAudioDB artist data.
+
+    Priority: strArtistFanart (1280px) > strArtistThumb (700px square).
+    """
+    for field in ("strArtistFanart", "strArtistFanart2", "strArtistFanart3", "strArtistThumb"):
+        url = artist.get(field)
+        if url:
+            return url
+    return None
+
+
+def _audiodb_best_logo(artist: dict) -> str | None:
+    """Pick the logo URL from TheAudioDB artist data."""
+    return artist.get("strArtistLogo") or None
+
+
 # --- Image Download ---
 
 def _download_image(url: str, output_path: Path) -> bool:
@@ -256,11 +296,16 @@ def download_artist_images(
 ) -> tuple[bool, bool]:
     """Download clearlogo and fanart for one artist.
 
+    Source priority:
+    1. fanart.tv (HD logos + 1920px backgrounds)
+    2. TheAudioDB fallback (logos + 1280px fanart / 700px thumbs)
+
     Returns (logo_downloaded, bg_downloaded).
     """
     global _attribution_logged
     if not _attribution_logged:
-        logger.info("Artist images provided by fanart.tv (https://fanart.tv)")
+        logger.info("Artist images provided by fanart.tv (https://fanart.tv) "
+                     "and TheAudioDB (https://www.theaudiodb.com)")
         _attribution_logged = True
 
     logo_path = artist_dir / "clearlogo.png"
@@ -279,21 +324,38 @@ def download_artist_images(
     if not mbid:
         return (False, False)
 
-    data = fetch_artist_images(mbid, project_api_key, personal_api_key)
-    if not data:
-        return (False, False)
-
     logo_ok = False
     bg_ok = False
 
-    if need_logo:
-        logo = pick_best_logo(data.get("hdmusiclogo", []))
-        if logo:
-            logo_ok = _download_image(logo["url"], logo_path)
+    # --- Source 1: fanart.tv ---
+    data = fetch_artist_images(mbid, project_api_key, personal_api_key)
+    if data:
+        if need_logo:
+            logo = pick_best_logo(data.get("hdmusiclogo", []))
+            if logo:
+                logo_ok = _download_image(logo["url"], logo_path)
 
-    if need_bg:
-        bg = pick_best_background(data.get("artistbackground", []))
-        if bg:
-            bg_ok = _download_image(bg["url"], fanart_path)
+        if need_bg:
+            bg = pick_best_background(data.get("artistbackground", []))
+            if bg:
+                bg_ok = _download_image(bg["url"], fanart_path)
+
+    # --- Source 2: TheAudioDB fallback for anything still missing ---
+    still_need_logo = need_logo and not logo_ok
+    still_need_bg = need_bg and not bg_ok
+
+    if still_need_logo or still_need_bg:
+        logger.debug("Trying TheAudioDB fallback for %s", artist_name)
+        audiodb = fetch_audiodb_artist(mbid)
+        if audiodb:
+            if still_need_logo:
+                logo_url = _audiodb_best_logo(audiodb)
+                if logo_url:
+                    logo_ok = _download_image(logo_url, logo_path)
+
+            if still_need_bg:
+                bg_url = _audiodb_best_fanart(audiodb)
+                if bg_url:
+                    bg_ok = _download_image(bg_url, fanart_path)
 
     return (logo_ok, bg_ok)
