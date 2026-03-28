@@ -181,20 +181,25 @@ def fetch_artist_images(
 
 # --- Image Selection ---
 
+def _image_sort_key(img: dict) -> tuple[int, str]:
+    """Sort key: likes first, then newest added date as tiebreaker."""
+    return (int(img.get("likes", "0")), img.get("added", ""))
+
+
 def pick_best_logo(images: list[dict]) -> dict | None:
-    """Pick the best HD ClearLOGO — prefer English or language-neutral, highest likes."""
+    """Pick the best HD ClearLOGO — prefer English or language-neutral, highest likes, newest."""
     if not images:
         return None
     preferred = [img for img in images if img.get("lang") in ("en", "")]
     pool = preferred if preferred else images
-    return max(pool, key=lambda img: int(img.get("likes", "0")))
+    return max(pool, key=_image_sort_key)
 
 
 def pick_best_background(images: list[dict]) -> dict | None:
-    """Pick the best artist background — highest likes."""
+    """Pick the best artist background — highest likes, newest as tiebreaker."""
     if not images:
         return None
-    return max(images, key=lambda img: int(img.get("likes", "0")))
+    return max(images, key=_image_sort_key)
 
 
 # --- Image Download ---

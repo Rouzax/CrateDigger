@@ -485,8 +485,8 @@ def generate_album_poster(
             accent = get_accent_color(frame)
 
             bg = frame.resize((POSTER_W, POSTER_H), Image.LANCZOS)
-            bg = bg.filter(ImageFilter.GaussianBlur(radius=30))
-            bg = ImageEnhance.Brightness(bg).enhance(0.25)
+            bg = bg.filter(ImageFilter.GaussianBlur(radius=20))
+            bg = ImageEnhance.Brightness(bg).enhance(0.40)
 
             # Dark gradient overlay from 40% down
             gradient = Image.new("RGBA", (POSTER_W, POSTER_H), (0, 0, 0, 0))

@@ -162,6 +162,35 @@ class AlbumPosterOperation(Operation):
             return True
         return not folder_jpg.exists()
 
+    def _find_fanart_background(self, folder: Path, artist: str) -> Path | None:
+        """Find a fanart.tv background for an artist folder.
+
+        Only returns a background if the folder contains a single artist —
+        multi-artist folders (festival folders) use gradient backgrounds instead.
+        """
+        if not self.library_root or not artist:
+            return None
+
+        # Check if this is a single-artist folder by scanning filenames
+        # Use parent folder name heuristic: if folder name matches artist, it's an artist folder
+        # Otherwise scan thumbs for artist diversity
+        from festival_organizer.parsers import parse_filename
+        artists_in_folder: set[str] = set()
+        for video in folder.iterdir():
+            if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
+                parsed = parse_filename(video.stem)
+                if parsed.get("artist"):
+                    artists_in_folder.add(parsed["artist"].lower())
+                if len(artists_in_folder) > 1:
+                    return None  # Multi-artist folder, skip fanart background
+
+        # Single artist (or couldn't determine) — look for their fanart
+        safe = "".join(
+            c if c.isalnum() or c in " ._-()&" else "_" for c in artist
+        ).strip()
+        candidate = self.library_root / ".cratedigger" / "artists" / safe / "fanart.jpg"
+        return candidate if candidate.exists() else None
+
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.poster import generate_album_poster
         try:
@@ -177,15 +206,8 @@ class AlbumPosterOperation(Operation):
             # Collect existing thumbs in folder for color extraction
             thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
 
-            # Look for fanart.tv background if library root is set
-            bg_path = None
-            if self.library_root and mf.artist:
-                safe = "".join(
-                    c if c.isalnum() or c in " ._-()&" else "_" for c in mf.artist
-                ).strip()
-                candidate = self.library_root / ".cratedigger" / "artists" / safe / "fanart.jpg"
-                if candidate.exists():
-                    bg_path = candidate
+            # Use artist fanart background only for single-artist folders
+            bg_path = self._find_fanart_background(file_path.parent, mf.artist)
 
             generate_album_poster(
                 output_path=folder_jpg,
