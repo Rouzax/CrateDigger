@@ -40,15 +40,13 @@ def test_split_artist_b2b():
 
 
 def test_split_artist_no_split():
-    line1, line2 = split_artist("Swedish House Mafia")
-    assert line1 == "Swedish House Mafia"
-    assert line2 is None
+    lines = split_artist("Swedish House Mafia")
+    assert lines == ["Swedish House Mafia"]
 
 
 def test_split_artist_single_name():
-    line1, line2 = split_artist("Hardwell")
-    assert line1 == "Hardwell"
-    assert line2 is None
+    lines = split_artist("Hardwell")
+    assert lines == ["Hardwell"]
 
 
 # --- accent color tests ---

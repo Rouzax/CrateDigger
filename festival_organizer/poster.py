@@ -5,6 +5,7 @@ Album posters use gradient backgrounds derived from thumbnail colors.
 Layout uses a line-anchored system: accent line at 2/3 down, artist builds UP, metadata builds DOWN.
 """
 import logging
+import math
 import re
 from colorsys import hsv_to_rgb, rgb_to_hsv
 from pathlib import Path
@@ -64,37 +65,111 @@ def measure_w(font: ImageFont.FreeTypeFont, text: str) -> int:
     return bbox[2] - bbox[0]
 
 
+def _wcag_luminance(r: int, g: int, b: int) -> float:
+    """Calculate WCAG relative luminance with proper sRGB linearization."""
+    def _linearize(c: int) -> float:
+        s = c / 255
+        return s / 12.92 if s <= 0.04045 else ((s + 0.055) / 1.055) ** 2.4
+    return 0.2126 * _linearize(r) + 0.7152 * _linearize(g) + 0.0722 * _linearize(b)
+
+
+def _wcag_contrast(r: int, g: int, b: int, bg: tuple[int, int, int] = (10, 10, 10)) -> float:
+    """Calculate WCAG contrast ratio against a dark background."""
+    l1 = _wcag_luminance(r, g, b)
+    l2 = _wcag_luminance(*bg)
+    lighter, darker = max(l1, l2), min(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def _ensure_contrast(r: int, g: int, b: int, min_ratio: float = 4.5) -> tuple[int, int, int]:
+    """Boost color brightness until it meets WCAG AA contrast against dark background."""
+    if _wcag_contrast(r, g, b) >= min_ratio:
+        return (r, g, b)
+    h, s, v = rgb_to_hsv(r / 255, g / 255, b / 255)
+    for _ in range(40):
+        v = min(v + 0.03, 1.0)
+        s = max(s - 0.01, 0.3)  # slightly desaturate to gain luminance
+        nr, ng, nb = hsv_to_rgb(h, s, v)
+        ri, gi, bi = int(nr * 255), int(ng * 255), int(nb * 255)
+        if _wcag_contrast(ri, gi, bi) >= min_ratio:
+            return (ri, gi, bi)
+    return (ri, gi, bi)
+
+
+def _circular_hue_mean(h_array, s_array, min_sat: int = 40) -> float:
+    """Compute circular mean of hue, weighted by saturation, ignoring low-sat pixels.
+
+    Hue is circular (0-255 maps to 0-360°), so simple averaging breaks for reds
+    that straddle 0°/360°. Use sin/cos decomposition instead.
+    """
+    mask = s_array >= min_sat
+    if not mask.any():
+        mask = s_array >= 0  # fallback: use all pixels
+
+    h_filtered = h_array[mask].astype(np.float64)
+    s_filtered = s_array[mask].astype(np.float64)
+
+    angles = h_filtered * (2 * math.pi / 255)
+    weights = s_filtered / 255
+    sin_sum = np.sum(np.sin(angles) * weights)
+    cos_sum = np.sum(np.cos(angles) * weights)
+    mean_angle = math.atan2(sin_sum, cos_sum)
+    if mean_angle < 0:
+        mean_angle += 2 * math.pi
+    return mean_angle / (2 * math.pi)
+
+
 def get_accent_color(img: Image.Image) -> tuple[int, int, int]:
-    """Auto-derive accent color from source image mean HSV."""
+    """Auto-derive accent color from source image using circular hue mean."""
     hsv = img.convert("HSV")
-    stat = ImageStat.Stat(hsv)
-    h = stat.mean[0] / 255
-    s = min(1.0, stat.mean[1] / 160)
+    arr = np.array(hsv)
+    h_arr, s_arr = arr[:, :, 0].ravel(), arr[:, :, 1].ravel()
+
+    h = _circular_hue_mean(h_arr, s_arr)
+    s = min(1.0, np.mean(s_arr[s_arr >= 40]) / 160) if (s_arr >= 40).any() else 0.5
     v = 0.95
     r, g, b = hsv_to_rgb(h, s, v)
-    return (int(r * 255), int(g * 255), int(b * 255))
+    color = (int(r * 255), int(g * 255), int(b * 255))
+    return _ensure_contrast(*color)
 
 
-def split_artist(name: str) -> tuple[str, str | None]:
-    """Split artist name for two-line display.
+def split_artist(name: str) -> list[str]:
+    """Split artist name for multi-line display.
 
-    Priority:
-    1. Parenthetical: "Act Name (Artist & Artist)" -> ("Act Name", "Artist & Artist")
-    2. Connectors: & B2B vs x -> split at connector
-    3. No split for band names like "Swedish House Mafia"
+    Returns a list of 1-3 lines:
+    1. Parenthetical: "Act Name (Artist & Artist)" -> ["Act Name", "Artist & Artist"]
+    2. Multiple connectors: split at each & / B2B / vs / x
+    3. Single connector: split into 2 lines
+    4. No connector: single line
     """
     # 1. Parenthetical pattern
     paren_match = re.match(r'^(.+?)\s*\((.+)\)\s*$', name)
     if paren_match:
-        return paren_match.group(1).strip(), paren_match.group(2).strip()
-    # 2. Connectors
+        return [paren_match.group(1).strip(), paren_match.group(2).strip()]
+    # 2. Find all connector positions
     upper = name.upper()
+    splits: list[tuple[int, str]] = []
     for sep in [" & ", " B2B ", " VS ", " X "]:
-        if sep in upper:
-            idx = upper.index(sep)
-            return name[:idx].strip(), name[idx:].strip()
-    # 3. No split
-    return name, None
+        start = 0
+        while True:
+            idx = upper.find(sep, start)
+            if idx == -1:
+                break
+            splits.append((idx, sep))
+            start = idx + len(sep)
+    if not splits:
+        return [name]
+    splits.sort()
+    # 3. Single connector -> 2 lines
+    if len(splits) == 1:
+        idx, sep = splits[0]
+        return [name[:idx].strip(), name[idx:].strip()]
+    # 4. Multiple connectors -> one line per artist, keeping connector on each subsequent line
+    lines = [name[:splits[0][0]].strip()]
+    for i, (idx, sep) in enumerate(splits):
+        end = splits[i + 1][0] if i + 1 < len(splits) else len(name)
+        lines.append(name[idx:end].strip())
+    return lines
 
 
 def format_date_display(date: str, year: str) -> str:
@@ -249,39 +324,29 @@ def generate_set_poster(
     draw = ImageDraw.Draw(bg)
     max_w = POSTER_W - 100
 
-    # Split artist name
-    line1, line2 = split_artist(artist)
-    line1_upper = line1.upper()
-    line2_upper = line2.upper() if line2 else None
+    # Split artist name into lines
+    artist_lines = [line.upper() for line in split_artist(artist)]
 
-    # Auto-fit fonts
-    font_artist1, _ = auto_fit(line1_upper, "bold", max_w, start=110, minimum=50)
-    font_artist2 = None
-    if line2_upper:
-        font_artist2, _ = auto_fit(line2_upper, "bold", max_w, start=110, minimum=50)
+    # Auto-fit fonts — uniform size across all lines (driven by the longest)
+    sizes = []
+    for line in artist_lines:
+        _, size = auto_fit(line, "bold", max_w, start=110, minimum=50)
+        sizes.append(size)
+    shared_size = min(sizes)
+    font_artist = get_font("bold", shared_size)
+
     font_fest, _ = auto_fit(festival.upper(), "bold", max_w, start=68, minimum=36)
-    font_year = get_font("light", 52)
-    font_detail = get_font("semilight", 36)
+    font_year = get_font("semilight", 62)
+    font_detail = get_font("semilight", 44)
 
-    # BUILD UP from accent line
-    if line2_upper:
-        h2 = font_visual_height(font_artist2)
-        artist2_y = LINE_Y - PAD_LINE_TO_ARTIST - h2
-
-        h1 = font_visual_height(font_artist1)
-        artist1_y = artist2_y - PAD_ARTIST_LINES - h1
-
-        sp1 = max(2, min(8, (max_w - measure_w(font_artist1, line1_upper)) // max(len(line1_upper), 1)))
-        _draw_centered(draw, artist1_y, line1_upper, font_artist1, "white", letter_spacing=sp1)
-
-        sp2 = max(2, min(8, (max_w - measure_w(font_artist2, line2_upper)) // max(len(line2_upper), 1)))
-        _draw_centered(draw, artist2_y, line2_upper, font_artist2, "white", letter_spacing=sp2)
-    else:
-        h1 = font_visual_height(font_artist1)
-        artist1_y = LINE_Y - PAD_LINE_TO_ARTIST - h1
-
-        sp = max(2, min(10, (max_w - measure_w(font_artist1, line1_upper)) // max(len(line1_upper), 1)))
-        _draw_centered(draw, artist1_y, line1_upper, font_artist1, "white", letter_spacing=sp)
+    # BUILD UP from accent line — stack lines bottom-to-top
+    line_h = font_visual_height(font_artist)
+    cursor_y = LINE_Y - PAD_LINE_TO_ARTIST
+    for line in reversed(artist_lines):
+        cursor_y -= line_h
+        sp = max(2, min(8, (max_w - measure_w(font_artist, line)) // max(len(line), 1)))
+        _draw_centered(draw, cursor_y, line, font_artist, "white", letter_spacing=sp)
+        cursor_y -= PAD_ARTIST_LINES
 
     # ACCENT LINE with glow
     bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=14)
@@ -296,17 +361,16 @@ def generate_set_poster(
     draw = ImageDraw.Draw(bg)
     ty += fest_h + PAD_FEST_TO_YEAR
 
-    # Date/Year line
+    # Date/Year line — white, no effects for TV readability
     date_display = format_date_display(date, year)
     if date_display:
         year_h = font_visual_height(font_year)
-        bg = _draw_glow_text(bg, ty, date_display, font_year, accent, accent, glow_radius=14)
-        draw = ImageDraw.Draw(bg)
+        _draw_centered_no_shadow(draw, ty, date_display, font_year, "white")
         ty += year_h + PAD_YEAR_TO_DETAIL
 
-    # Detail line
+    # Detail line — white, no effects for TV readability
     if detail:
-        _draw_centered(draw, ty, detail, font_detail, (170, 170, 170))
+        _draw_centered_no_shadow(draw, ty, detail, font_detail, "white")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     bg.save(str(output_path), quality=95)
@@ -316,29 +380,30 @@ def generate_set_poster(
 # --- Album poster generation ---
 
 def get_dominant_color_from_thumbs(thumb_paths: list[Path]) -> tuple[int, int, int]:
-    """Get average color from thumbnail images."""
+    """Get average color from thumbnail images using circular hue mean."""
     if not thumb_paths:
         return (40, 80, 180)  # default blue
 
-    total_h, total_s, total_v = 0.0, 0.0, 0.0
-    valid = 0
+    all_h: list[np.ndarray] = []
+    all_s: list[np.ndarray] = []
     for path in thumb_paths:
         try:
             img = Image.open(path).convert("HSV")
-            stat = ImageStat.Stat(img)
-            total_h += stat.mean[0]
-            total_s += stat.mean[1]
-            total_v += stat.mean[2]
-            valid += 1
+            arr = np.array(img)
+            all_h.append(arr[:, :, 0].ravel())
+            all_s.append(arr[:, :, 1].ravel())
         except (OSError, ValueError) as e:
             logger.debug("Could not read thumbnail %s: %s", path, e)
             continue
 
-    if valid == 0:
+    if not all_h:
         return (40, 80, 180)
 
-    h = total_h / valid / 255
-    s = min(0.7, total_s / valid / 255)
+    h_arr = np.concatenate(all_h)
+    s_arr = np.concatenate(all_s)
+
+    h = _circular_hue_mean(h_arr, s_arr)
+    s = min(0.7, np.mean(s_arr[s_arr >= 40]) / 255) if (s_arr >= 40).any() else 0.3
     v = 0.5
     r, g, b = hsv_to_rgb(h, s, v)
     return (int(r * 255), int(g * 255), int(b * 255))
@@ -417,8 +482,8 @@ def generate_album_poster(
     fest_upper = festival.upper()
 
     font_fest, _ = auto_fit(fest_upper, "bold", max_w, start=130, minimum=60)
-    font_date = get_font("light", 52)
-    font_detail = get_font("semilight", 36)
+    font_date = get_font("semilight", 62)
+    font_detail = get_font("semilight", 44)
 
     # Festival above line (no drop shadow on album posters)
     fest_h = font_visual_height(font_fest)
@@ -430,16 +495,15 @@ def generate_album_poster(
     bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=16)
     draw = ImageDraw.Draw(bg)
 
-    # Date with glow
+    # Date — white, no effects for TV readability
     pad_line_to_date = 28
     ty = LINE_Y + LINE_H + pad_line_to_date
-    bg = _draw_glow_text(bg, ty, date_or_year, font_date, accent, accent, glow_radius=16)
-    draw = ImageDraw.Draw(bg)
+    _draw_centered_no_shadow(draw, ty, date_or_year, font_date, "white")
     ty += font_visual_height(font_date) + PAD_YEAR_TO_DETAIL
 
-    # Detail
+    # Detail — white, no effects for TV readability
     if detail:
-        _draw_centered_no_shadow(draw, ty, detail, font_detail, (170, 170, 170))
+        _draw_centered_no_shadow(draw, ty, detail, font_detail, "white")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     bg.save(str(output_path), quality=95)
