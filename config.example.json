@@ -1,0 +1,72 @@
+{
+    "_comment": "CrateDigger configuration. Copy to ~/.cratedigger/config.json (user) or .cratedigger/config.json (library root). Only include settings you want to override — defaults are built in.",
+
+    "default_layout": "artist_flat",
+
+    "tool_paths": {
+        "_comment": "Set these if the tools are not in your PATH. Use null for auto-detect.",
+        "mediainfo": null,
+        "ffprobe": null,
+        "mkvextract": null,
+        "mkvpropedit": null,
+        "mkvmerge": null
+    },
+
+    "tracklists": {
+        "_comment": "1001Tracklists credentials for chapter embedding. Optional.",
+        "email": "",
+        "password": "",
+        "delay_seconds": 5,
+        "chapter_language": "eng"
+    },
+
+    "fanart": {
+        "_comment": "fanart.tv settings. Project key is built in. Add your personal key for faster cache updates (get one at https://fanart.tv/get-an-api-key/).",
+        "project_api_key": "9fb9273dbec3739bd0fdb49f10d6a129",
+        "personal_api_key": "",
+        "enabled": true
+    },
+
+    "nfo_settings": {
+        "genre_festival": "Electronic",
+        "genre_concert": "Live"
+    },
+
+    "festival_aliases": {
+        "_comment": "Map alternative names to canonical festival names. Add your own festivals here.",
+        "AMF": "AMF",
+        "Amsterdam Music Festival": "AMF",
+        "EDC": "EDC Las Vegas",
+        "EDC Las Vegas": "EDC Las Vegas",
+        "Electric Daisy Carnival": "EDC Las Vegas",
+        "Ultra": "Ultra Music Festival",
+        "Ultra Music Festival": "Ultra Music Festival",
+        "Tomorrowland": "Tomorrowland",
+        "Tomorrowland Weekend 1": "Tomorrowland",
+        "Tomorrowland Weekend 2": "Tomorrowland"
+    },
+
+    "festival_config": {
+        "_comment": "Festivals that include location in their display name.",
+        "Tomorrowland": {
+            "location_in_name": true,
+            "known_locations": ["Belgium", "Brasil", "Brazil"]
+        },
+        "EDC": {
+            "location_in_name": true,
+            "known_locations": ["Las Vegas", "Mexico", "Orlando"]
+        }
+    },
+
+    "content_type_rules": {
+        "_comment": "Glob patterns to force classification. Paths relative to library root.",
+        "force_concert": [
+            "Adele/*",
+            "Coldplay/*",
+            "U2/*"
+        ],
+        "force_festival": []
+    },
+
+    "skip_patterns": ["*/BDMV/*", "Dolby*"]
+}
