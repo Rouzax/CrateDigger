@@ -201,13 +201,26 @@ class AlbumPosterOperation(Operation):
                 festival_display = self.config.get_festival_display(
                     mf.festival, mf.location
                 )
-            date_or_year = mf.date or mf.year or ""
+            # Determine year: scan folder for consensus, omit if mixed
+            from festival_organizer.parsers import parse_filename
+            years_in_folder: set[str] = set()
+            for video in file_path.parent.iterdir():
+                if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
+                    parsed = parse_filename(video.stem)
+                    yr = parsed.get("year", "")
+                    if yr:
+                        years_in_folder.add(yr)
+            if len(years_in_folder) == 1:
+                date_or_year = years_in_folder.pop()
+            else:
+                date_or_year = ""
 
             # Collect existing thumbs in folder for color extraction
             thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
 
             # Use artist fanart background only for single-artist folders
             bg_path = self._find_fanart_background(file_path.parent, mf.artist)
+            is_artist_folder = bg_path is not None
 
             generate_album_poster(
                 output_path=folder_jpg,
@@ -216,6 +229,7 @@ class AlbumPosterOperation(Operation):
                 detail=mf.stage or mf.location or "",
                 thumb_paths=thumb_paths if thumb_paths else None,
                 background_image_path=bg_path,
+                hero_text=mf.artist if is_artist_folder else None,
             )
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:

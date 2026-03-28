@@ -452,6 +452,165 @@ def _make_gradient_bg(base_color: tuple[int, int, int]) -> Image.Image:
     return bg
 
 
+def _make_collage_bg(thumb_paths: list[Path]) -> Image.Image:
+    """Create a collage background from multiple thumbnails.
+
+    Overlapping semi-transparent images create an atmospheric festival texture.
+    Uses a seeded RNG for reproducible layouts.
+    """
+    rng = np.random.default_rng(42)
+
+    # Start with a subtle gradient background derived from thumb colors
+    base_color = get_dominant_color_from_thumbs(thumb_paths)
+    gradient_bg = _make_gradient_bg(base_color)
+    bg = gradient_bg.convert("RGBA")
+    # Darken the gradient so it sits behind the collage images
+    darken = Image.new("RGBA", (POSTER_W, POSTER_H), (0, 0, 0, 100))
+    bg = Image.alpha_composite(bg, darken)
+
+    # Pick up to 6 thumbs, evenly spaced through the list for variety
+    paths = list(thumb_paths)
+    if len(paths) > 6:
+        step = len(paths) / 6
+        paths = [paths[int(i * step)] for i in range(6)]
+
+    # Composition using rule of thirds with foreground/background layering.
+    # Third lines at 1/3 and 2/3 of poster width (333, 667) and usable height.
+    # Background layer: larger, dimmer images placed first.
+    # Foreground layer: smaller, brighter images on top.
+    n = len(paths)
+    max_bottom = LINE_Y - 80
+
+    # Split into background (first half) and foreground (second half)
+    bg_count = max(n // 2, 1)
+    fg_count = n - bg_count
+
+    # Scale image sizes based on thumb count — fewer thumbs = larger images
+    if n <= 2:
+        bg_scale, fg_scale = 0.85, 0.75
+    elif n <= 4:
+        bg_scale, fg_scale = 0.75, 0.60
+    else:
+        bg_scale, fg_scale = 0.70, 0.55
+
+    bg_size_w = int(POSTER_W * bg_scale)
+    bg_size_h = int(bg_size_w * 9 / 16)
+    fg_size_w = int(POSTER_W * fg_scale)
+    fg_size_h = int(fg_size_w * 9 / 16)
+
+    # Layout slots based on rule of thirds
+    # Vertical offset to center the image mass between top and text line
+    y_offset = 0.08
+
+    if n <= 2:
+        bg_slots = [
+            (0.08, y_offset + 0.05),
+            (0.15, y_offset + 0.30),
+        ]
+        fg_slots = bg_slots
+    elif n <= 4:
+        bg_slots = [
+            (0.0, y_offset + 0.0),
+            (0.25, y_offset + 0.22),
+        ]
+        fg_slots = [
+            (0.10, y_offset + 0.38),
+            (0.30, y_offset + 0.08),
+        ]
+    else:
+        bg_slots = [
+            (0.02, y_offset + 0.0),
+            (0.30, y_offset + 0.15),
+            (0.05, y_offset + 0.35),
+        ]
+        fg_slots = [
+            (0.25, y_offset + 0.05),
+            (0.0, y_offset + 0.22),
+            (0.20, y_offset + 0.42),
+        ]
+
+    layers = []
+    for i, path in enumerate(paths):
+        is_bg = i < bg_count
+        size_w = bg_size_w if is_bg else fg_size_w
+        size_h = bg_size_h if is_bg else fg_size_h
+        slots = bg_slots if is_bg else fg_slots
+        slot_idx = i if is_bg else (i - bg_count)
+        slot = slots[slot_idx % len(slots)]
+
+        layers.append((path, size_w, size_h, slot, is_bg))
+
+    for path, size_w, size_h, slot, is_bg in layers:
+        try:
+            img = Image.open(path).convert("RGBA")
+        except (OSError, ValueError):
+            continue
+
+        # Crop to center portion and resize
+        src_w, src_h = img.size
+        crop_w = int(src_w * 0.7)
+        crop_h = int(src_h * 0.7)
+        cx, cy = src_w // 2, src_h // 2
+        ox = int(rng.integers(-src_w // 10, src_w // 10))
+        oy = int(rng.integers(-src_h // 10, src_h // 10))
+        left = max(0, cx + ox - crop_w // 2)
+        top = max(0, cy + oy - crop_h // 2)
+        right = min(src_w, left + crop_w)
+        bottom = min(src_h, top + crop_h)
+        img = img.crop((left, top, right, bottom))
+        img = img.resize((size_w, size_h), Image.LANCZOS)
+
+        # Oval mask first — applied on clean rectangle before rotation
+        max_opacity = 180 if is_bg else 240
+        iw, ih = img.size
+        ys = np.arange(ih, dtype=np.float64)
+        xs = np.arange(iw, dtype=np.float64)
+        ecx, ecy = iw / 2, ih / 2
+        rx, ry = iw / 2, ih / 2
+        yy = ((ys - ecy) / ry)[:, None].repeat(iw, axis=1)
+        xx = ((xs - ecx) / rx)[None, :].repeat(ih, axis=0)
+        ellipse_dist = np.sqrt(yy ** 2 + xx ** 2)
+        mask_arr = np.clip(1.0 - (ellipse_dist - 0.45) / 0.55, 0, 1)
+        mask_arr = (mask_arr ** 1.3 * max_opacity).astype(np.uint8)
+        edge_mask = Image.fromarray(mask_arr, mode="L")
+        edge_mask = edge_mask.filter(ImageFilter.GaussianBlur(radius=15))
+
+        # Darken the image pixels at the edges so bright content doesn't bleed through
+        # the semi-transparent feather zone
+        darken_arr = np.clip(1.0 - (ellipse_dist - 0.35) / 0.65, 0, 1)
+        darken_arr = darken_arr ** 0.8
+        img_arr = np.array(img)
+        for c in range(3):
+            img_arr[:, :, c] = (img_arr[:, :, c] * darken_arr).astype(np.uint8)
+        img = Image.fromarray(img_arr)
+        img.putalpha(edge_mask)
+
+        # Rotation last — tilts the oval, transparent corners blend naturally
+        angle = float(rng.uniform(-3, 3))
+        img = img.rotate(angle, expand=True, resample=Image.BICUBIC, fillcolor=(0, 0, 0, 0))
+
+        # Position from slot + slight jitter
+        min_top = size_h // 6
+        x = int(slot[0] * POSTER_W) + int(rng.integers(-15, 15))
+        y = int(slot[1] * max_bottom) + int(rng.integers(-10, 10))
+        x = max(-size_w // 4, min(x, POSTER_W - size_w // 2))
+        y = max(min_top, min(y, max_bottom - size_h))
+
+        bg.paste(img, (x, y), img)
+
+    # Dark gradient overlay from 45% down
+    gradient = Image.new("RGBA", (POSTER_W, POSTER_H), (0, 0, 0, 0))
+    dg = ImageDraw.Draw(gradient)
+    grad_start = int(POSTER_H * 0.40)
+    for y in range(grad_start, POSTER_H):
+        progress = (y - grad_start) / (POSTER_H - grad_start)
+        a = int(220 * progress ** 1.2)
+        dg.line([(0, y), (POSTER_W, y)], fill=(0, 0, 0, a))
+    bg = Image.alpha_composite(bg, gradient)
+
+    return bg.convert("RGB")
+
+
 def generate_album_poster(
     output_path: Path,
     festival: str,
@@ -460,33 +619,53 @@ def generate_album_poster(
     thumb_paths: list[Path] | None = None,
     override_color: tuple[int, int, int] | None = None,
     background_image_path: Path | None = None,
+    hero_text: str | None = None,
 ) -> Path:
     """Generate an album poster.
 
-    Uses a background image if provided (blurred + darkened like set posters),
+    Uses a background image if provided (sharp top + fade, like set posters),
     otherwise falls back to an editorial gradient derived from thumbnail colors.
+
+    For artist folders: pass hero_text="Artist Name" to show just the artist name.
+    For festival folders: hero_text defaults to festival name with date/detail below.
 
     Args:
         output_path: Where to save the poster
-        festival: Festival name (hero text)
+        festival: Festival name (used as hero text if hero_text not set)
         date_or_year: Date or year string for display
         detail: Optional detail (venue, location)
         thumb_paths: Thumbnail images for color derivation
         override_color: Override the auto-derived color
         background_image_path: Optional fanart.tv background image
+        hero_text: Override the hero text above the accent line (e.g. artist name)
 
     Returns:
         Path to the generated poster
     """
     if background_image_path and background_image_path.exists():
-        # Use fanart background: blur + darken, similar to set poster
+        # Use fanart background: sharp image at top, fade to dark — same as set posters
         try:
             frame = Image.open(background_image_path).convert("RGB")
             accent = get_accent_color(frame)
 
+            # Blurred + darkened background fills entire poster
             bg = frame.resize((POSTER_W, POSTER_H), Image.LANCZOS)
-            bg = bg.filter(ImageFilter.GaussianBlur(radius=20))
-            bg = ImageEnhance.Brightness(bg).enhance(0.40)
+            bg = bg.filter(ImageFilter.GaussianBlur(radius=40))
+            bg = ImageEnhance.Brightness(bg).enhance(0.18)
+
+            # Sharp image flush to top, scaled to poster width
+            scale = POSTER_W / frame.width
+            new_h = int(frame.height * scale)
+            sharp = frame.resize((POSTER_W, new_h), Image.LANCZOS)
+
+            # Fade mask starting at 60% of image height
+            mask = Image.new("L", (POSTER_W, new_h), 255)
+            dm = ImageDraw.Draw(mask)
+            fade_start = int(new_h * 0.60)
+            for y in range(fade_start, new_h):
+                alpha = int(255 * (1 - (y - fade_start) / (new_h - fade_start)))
+                dm.line([(0, y), (POSTER_W, y)], fill=alpha)
+            bg.paste(sharp, (0, 0), mask)
 
             # Dark gradient overlay from 40% down
             gradient = Image.new("RGBA", (POSTER_W, POSTER_H), (0, 0, 0, 0))
@@ -494,7 +673,7 @@ def generate_album_poster(
             grad_start = int(POSTER_H * 0.40)
             for y in range(grad_start, POSTER_H):
                 progress = (y - grad_start) / (POSTER_H - grad_start)
-                a = int(180 * progress ** 1.4)
+                a = int(200 * progress ** 1.4)
                 dg.line([(0, y), (POSTER_W, y)], fill=(0, 0, 0, a))
             bg = Image.alpha_composite(bg.convert("RGBA"), gradient).convert("RGB")
         except (OSError, ValueError) as e:
@@ -502,36 +681,49 @@ def generate_album_poster(
             background_image_path = None  # fall through to gradient
 
     if not background_image_path or not background_image_path.exists():
-        base_color = override_color or get_dominant_color_from_thumbs(thumb_paths or [])
-        accent = _accent_from_base(base_color)
-        bg = _make_gradient_bg(base_color)
+        is_festival = hero_text is None
+        if is_festival and thumb_paths and len(thumb_paths) >= 2:
+            # Festival folder with multiple thumbs: use collage
+            bg = _make_collage_bg(thumb_paths)
+            accent = get_accent_color(bg)
+        else:
+            # Gradient fallback
+            base_color = override_color or get_dominant_color_from_thumbs(thumb_paths or [])
+            accent = _accent_from_base(base_color)
+            bg = _make_gradient_bg(base_color)
     draw = ImageDraw.Draw(bg)
     max_w = POSTER_W - 100
-    fest_upper = festival.upper()
 
-    font_fest, _ = auto_fit(fest_upper, "bold", max_w, start=130, minimum=60)
-    font_date = get_font("semilight", 62)
-    font_detail = get_font("semilight", 44)
+    # Determine hero text: artist name for artist folders, festival for festival folders
+    display_text = (hero_text or festival).upper()
+    is_artist_poster = hero_text is not None
 
-    # Festival above line (no drop shadow on album posters)
-    fest_h = font_visual_height(font_fest)
-    fest_y = LINE_Y - PAD_LINE_TO_FEST - fest_h
-    spacing = max(2, min(14, (max_w - measure_w(font_fest, fest_upper)) // max(len(fest_upper), 1)))
-    _draw_centered_no_shadow(draw, fest_y, fest_upper, font_fest, "white", letter_spacing=spacing)
+    font_hero, _ = auto_fit(display_text, "bold", max_w, start=130, minimum=60)
+
+    # Hero text above line
+    hero_h = font_visual_height(font_hero)
+    hero_y = LINE_Y - PAD_LINE_TO_FEST - hero_h
+    spacing = max(2, min(14, (max_w - measure_w(font_hero, display_text)) // max(len(display_text), 1)))
+    _draw_centered_no_shadow(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
 
     # Accent line with glow
     bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=16)
     draw = ImageDraw.Draw(bg)
 
-    # Date — white, no effects for TV readability
-    pad_line_to_date = 28
-    ty = LINE_Y + LINE_H + pad_line_to_date
-    _draw_centered_no_shadow(draw, ty, date_or_year, font_date, "white")
-    ty += font_visual_height(font_date) + PAD_YEAR_TO_DETAIL
+    # Festival folders: show date + detail below the line
+    # Artist folders: nothing below the line — the image and name are enough
+    if not is_artist_poster:
+        font_date = get_font("semilight", 62)
+        font_detail = get_font("semilight", 44)
 
-    # Detail — white, no effects for TV readability
-    if detail:
-        _draw_centered_no_shadow(draw, ty, detail, font_detail, "white")
+        pad_line_to_date = 28
+        ty = LINE_Y + LINE_H + pad_line_to_date
+        if date_or_year:
+            _draw_centered_no_shadow(draw, ty, date_or_year, font_date, "white")
+            ty += font_visual_height(font_date) + PAD_YEAR_TO_DETAIL
+
+        if detail:
+            _draw_centered_no_shadow(draw, ty, detail, font_detail, "white")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     bg.save(str(output_path), quality=95)
