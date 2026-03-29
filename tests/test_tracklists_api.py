@@ -157,6 +157,40 @@ def test_parse_search_results_skip_pagination():
     assert len(results) == 1
 
 
+def test_parse_search_results_new_class_format():
+    """Site now uses class="bItm action oItm" instead of class="bItm "."""
+    html = '''
+    <div class="bItm action oItm">
+        <a href="/tracklist/abc123/artist-festival.html" class="">Artist @ Festival 2025</a>
+        <div title="play time"><i class="fa"></i>1h 2m</div>
+        <div title="tracklist date"><i class="fa"></i>2025-10-19</div>
+    </div>
+    <div class="bItm action oItm">
+        <a href="/tracklist/def456/other.html" class="">Other Artist @ Event</a>
+        <div title="play time"><i class="fa"></i>58m</div>
+        <div title="tracklist date"><i class="fa"></i>2025-06-28</div>
+    </div>
+    '''
+    session = TracklistSession()
+    results = session._parse_search_results(html)
+    assert len(results) == 2
+    assert results[0].id == "abc123"
+    assert results[0].title == "Artist @ Festival 2025"
+
+
+def test_parse_search_results_skips_header():
+    """bItmH (header) class should not be parsed as a result."""
+    html = '''
+    <div class="bItmH">Header</div>
+    <div class="bItm action oItm">
+        <a href="/tracklist/abc123/artist.html">Artist @ Festival</a>
+    </div>
+    '''
+    session = TracklistSession()
+    results = session._parse_search_results(html)
+    assert len(results) == 1
+
+
 def test_parse_search_results_empty():
     session = TracklistSession()
     results = session._parse_search_results("<div>No results</div>")
