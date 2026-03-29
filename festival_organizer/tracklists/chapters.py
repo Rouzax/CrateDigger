@@ -164,16 +164,24 @@ def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
 
 
 def extract_stored_tracklist_info(filepath: Path) -> dict | None:
-    """Extract stored 1001TL URL/title from MKV tags.
+    """Extract stored 1001TL tags from MKV file.
 
-    Returns {"url": str, "title": str} or None.
+    Returns dict with all 1001TL tag values, or None if no tags found.
     """
     root = extract_all_tags(filepath)
     if root is None:
         return None
 
-    url = ""
-    title = ""
+    tag_map = {
+        "1001TRACKLISTS_URL": "url",
+        "1001TRACKLISTS_TITLE": "title",
+        "1001TRACKLISTS_ID": "id",
+        "1001TRACKLISTS_DATE": "date",
+        "1001TRACKLISTS_GENRES": "genres",
+        "1001TRACKLISTS_EVENT_ARTWORK": "event_artwork",
+        "1001TRACKLISTS_DJ_ARTWORK": "dj_artwork",
+    }
+    result = {v: "" for v in tag_map.values()}
 
     for tag in root.iter("Tag"):
         targets = tag.find("Targets")
@@ -185,14 +193,11 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         for simple in tag.iter("Simple"):
             name = simple.find("Name")
             string = simple.find("String")
-            if name is not None and string is not None:
-                if name.text == "1001TRACKLISTS_URL":
-                    url = string.text or ""
-                elif name.text == "1001TRACKLISTS_TITLE":
-                    title = string.text or ""
+            if name is not None and string is not None and name.text in tag_map:
+                result[tag_map[name.text]] = string.text or ""
 
-    if url or title:
-        return {"url": url, "title": title}
+    if any(result.values()):
+        return result
     return None
 
 

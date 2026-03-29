@@ -14,6 +14,7 @@ from festival_organizer.tracklists.api import (
     RateLimitError,
     ExportError,
 )
+from festival_organizer.mkv_tags import write_merged_tags
 from festival_organizer.tracklists.chapters import (
     parse_tracklist_lines,
     extract_existing_chapters,
@@ -255,9 +256,40 @@ def _fetch_and_embed(
     if chapters_are_identical(existing, chapters):
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
-            if not quiet:
-                print(f"  Up to date ({len(chapters)} chapters)")
-            return "up_to_date"
+            # Chapters match — check if tags need updating
+            desired = {
+                "1001TRACKLISTS_URL": export.url,
+                "1001TRACKLISTS_TITLE": export.title,
+                "1001TRACKLISTS_ID": tracklist_id or "",
+                "1001TRACKLISTS_DATE": tracklist_date or "",
+                "1001TRACKLISTS_GENRES": "|".join(export.genres) if export.genres else "",
+                "1001TRACKLISTS_EVENT_ARTWORK": export.event_artwork_url,
+                "1001TRACKLISTS_DJ_ARTWORK": export.dj_artwork_url,
+            }
+            stored_map = {
+                "1001TRACKLISTS_URL": stored.get("url", ""),
+                "1001TRACKLISTS_TITLE": stored.get("title", ""),
+                "1001TRACKLISTS_ID": stored.get("id", ""),
+                "1001TRACKLISTS_DATE": stored.get("date", ""),
+                "1001TRACKLISTS_GENRES": stored.get("genres", ""),
+                "1001TRACKLISTS_EVENT_ARTWORK": stored.get("event_artwork", ""),
+                "1001TRACKLISTS_DJ_ARTWORK": stored.get("dj_artwork", ""),
+            }
+            # Only update tags that have a new non-empty value different from stored
+            tags_to_update = {
+                k: v for k, v in desired.items()
+                if v and v != stored_map.get(k, "")
+            }
+            if not tags_to_update:
+                if not quiet:
+                    print(f"  Up to date ({len(chapters)} chapters)")
+                return "up_to_date"
+            # Re-embed only the changed tags, skip chapter writing
+            if not preview:
+                write_merged_tags(filepath, {70: tags_to_update})
+                if not quiet:
+                    print(f"  Updated tags: {', '.join(tags_to_update.keys())}")
+                return "added"
 
     # Display chapters
     if not quiet or preview:

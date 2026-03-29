@@ -369,12 +369,6 @@ class TracklistSession:
             return False
 
 
-_NAV_GENRES = frozenset({
-    "electronic", "house", "techno", "trance", "bass", "dubstep",
-    "drum-and-bass", "hardstyle", "hardcore",
-})
-
-
 def _extract_event_artwork(html: str) -> str:
     """Extract event artwork URL from og:image meta tag or artworkTop CSS."""
     # Try og:image first
@@ -396,17 +390,21 @@ def _extract_event_artwork(html: str) -> str:
 
 
 def _extract_genres(html: str) -> list[str]:
-    """Extract genre slugs from /genre/<slug>/ links, deduplicate, filter nav genres."""
-    matches = re.findall(r'href="/genre/([^/]+)/"', html)
+    """Extract genres from itemprop="genre" structured data on the page.
+
+    1001TL embeds genre metadata as <meta itemprop="genre" content="..."> tags:
+    - One tracklist-level genre (near numTracks)
+    - Per-track genres for each track in the tracklist
+    """
+    matches = re.findall(r'<meta\s+itemprop="genre"\s+content="([^"]+)"', html)
     seen = set()
     genres = []
-    for slug in matches:
-        lower = slug.lower()
-        if lower in seen or lower in _NAV_GENRES:
+    for genre in matches:
+        lower = genre.lower()
+        if lower in seen or lower == "tracklist":
             continue
         seen.add(lower)
-        # Convert slug to title case: "melodic-house-techno" -> "Melodic House Techno"
-        genres.append(slug.replace("-", " ").title())
+        genres.append(genre)
     return genres
 
 

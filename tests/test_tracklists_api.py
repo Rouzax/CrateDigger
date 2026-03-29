@@ -271,29 +271,30 @@ def test_extract_event_artwork_empty():
     assert _extract_event_artwork("<html><body>nothing</body></html>") == ""
 
 
-# --- Genre extraction ---
+# --- Genre extraction (itemprop) ---
 
-def test_extract_genres_basic():
-    html = '''<a href="/genre/mainstage/">Mainstage</a>
-    <a href="/genre/melodic-house-techno/">MHT</a>'''
+def test_extract_genres_from_itemprop():
+    html = '''<meta itemprop="numTracks" content="25"><meta itemprop="genre" content="Mainstage">
+    <meta itemprop="genre" content="Dance / Electro Pop">
+    <meta itemprop="genre" content="Tech House">'''
     genres = _extract_genres(html)
-    assert genres == ["Mainstage", "Melodic House Techno"]
+    assert genres == ["Mainstage", "Dance / Electro Pop", "Tech House"]
 
 
 def test_extract_genres_deduplication():
-    html = '''<a href="/genre/trance/">T</a>
-    <a href="/genre/trance/">T</a>
-    <a href="/genre/progressive-house/">PH</a>'''
+    html = '''<meta itemprop="genre" content="Mainstage">
+    <meta itemprop="genre" content="House">
+    <meta itemprop="genre" content="Mainstage">
+    <meta itemprop="genre" content="House">'''
     genres = _extract_genres(html)
-    assert genres == ["Progressive House"]  # trance filtered as nav genre
+    assert genres == ["Mainstage", "House"]
 
 
-def test_extract_genres_filters_nav_genres():
-    html = '''<a href="/genre/electronic/">E</a>
-    <a href="/genre/house/">H</a>
-    <a href="/genre/big-room/">BR</a>'''
+def test_extract_genres_filters_tracklist_schema():
+    html = '''<meta itemprop="genre" content="tracklist">
+    <meta itemprop="genre" content="Mainstage">'''
     genres = _extract_genres(html)
-    assert genres == ["Big Room"]
+    assert genres == ["Mainstage"]
 
 
 def test_extract_genres_empty():
