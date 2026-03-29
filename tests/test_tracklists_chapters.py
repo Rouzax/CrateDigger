@@ -3,15 +3,15 @@ import logging
 import subprocess as subprocess_mod
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from festival_organizer.tracklists.chapters import (
     normalize_timestamp,
     parse_tracklist_lines,
     build_chapter_xml,
-    build_tags_xml,
     chapters_are_identical,
     extract_existing_chapters,
+    embed_chapters,
     Chapter,
 )
 import pytest
@@ -125,35 +125,6 @@ def test_build_chapter_xml_escapes_special_chars():
     assert title == "Artist & Other <Live>"
 
 
-# --- build_tags_xml ---
-
-def test_build_tags_xml_structure():
-    xml_str = build_tags_xml(
-        "https://www.1001tracklists.com/tracklist/1g6g22ut/",
-        "Artist @ Festival 2025"
-    )
-    root = ET.fromstring(xml_str)
-    assert root.tag == "Tags"
-
-    tag = root.find("Tag")
-    ttv = tag.find("Targets/TargetTypeValue")
-    assert ttv.text == "70"
-
-    # Find URL and title
-    simples = tag.findall("Simple")
-    names = {s.find("Name").text: s.find("String").text for s in simples}
-    assert names["1001TRACKLISTS_URL"] == "https://www.1001tracklists.com/tracklist/1g6g22ut/"
-    assert names["1001TRACKLISTS_TITLE"] == "Artist @ Festival 2025"
-
-
-def test_build_tags_xml_url_only():
-    xml_str = build_tags_xml("https://www.1001tracklists.com/tracklist/abc123/")
-    root = ET.fromstring(xml_str)
-    simples = root.findall(".//Simple")
-    assert len(simples) == 1
-    assert simples[0].find("Name").text == "1001TRACKLISTS_URL"
-
-
 # --- chapters_are_identical ---
 
 def test_chapters_identical_same():
@@ -206,3 +177,31 @@ def test_extract_chapters_failure_logged(tmp_path, caplog):
                 result = extract_existing_chapters(video)
     assert result is None
     assert "timeout" in caplog.text
+
+
+# --- embed_chapters ---
+
+def test_embed_chapters_uses_merged_tags(tmp_path):
+    """embed_chapters uses write_merged_tags for 1001TL tags."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    chapters = [Chapter("00:03:45.000", "Track One")]
+
+    with patch("festival_organizer.tracklists.chapters.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.tracklists.chapters.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            with patch("festival_organizer.tracklists.chapters.subprocess.run") as mock_run:
+                mock_run.return_value = MagicMock(returncode=0)
+                result = embed_chapters(
+                    video, chapters,
+                    tracklist_url="https://example.com/tracklist/abc123/",
+                    tracklist_title="Artist @ Festival",
+                )
+
+    assert result is True
+    mock_run.assert_called_once()
+    assert "--chapters" in mock_run.call_args[0][0]
+    mock_wmt.assert_called_once()
+    tags_dict = mock_wmt.call_args[0][1]
+    assert 70 in tags_dict
+    assert tags_dict[70]["1001TRACKLISTS_URL"] == "https://example.com/tracklist/abc123/"
+    assert tags_dict[70]["1001TRACKLISTS_TITLE"] == "Artist @ Festival"

@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 from festival_organizer import metadata
 from festival_organizer.embed_tags import xml_escape
+from festival_organizer.mkv_tags import extract_all_tags, write_merged_tags
 
 
 @dataclass
@@ -105,26 +106,6 @@ def build_chapter_xml(chapters: list[Chapter]) -> str:
     return '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding="unicode")
 
 
-def build_tags_xml(tracklist_url: str, tracklist_title: str = "") -> str:
-    """Generate Matroska tags XML with 1001TL URL/title at TargetTypeValue=70 (COLLECTION)."""
-    tags = []
-    if tracklist_url:
-        tags.append(f'    <Simple><Name>1001TRACKLISTS_URL</Name><String>{xml_escape(tracklist_url)}</String></Simple>')
-    if tracklist_title:
-        tags.append(f'    <Simple><Name>1001TRACKLISTS_TITLE</Name><String>{xml_escape(tracklist_title)}</String></Simple>')
-
-    tags_str = "\n".join(tags)
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
-<Tags>
-  <Tag>
-    <Targets>
-      <TargetTypeValue>70</TargetTypeValue>
-    </Targets>
-{tags_str}
-  </Tag>
-</Tags>
-"""
-
 
 def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
     """Extract chapters from an MKV file via mkvextract.
@@ -183,65 +164,36 @@ def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
 
 
 def extract_stored_tracklist_info(filepath: Path) -> dict | None:
-    """Extract stored 1001TL URL/title from MKV tags via mkvextract.
+    """Extract stored 1001TL URL/title from MKV tags.
 
     Returns {"url": str, "title": str} or None.
     """
-    if not metadata.MKVEXTRACT_PATH:
+    root = extract_all_tags(filepath)
+    if root is None:
         return None
 
-    try:
-        with tempfile.NamedTemporaryFile(suffix=".xml", delete=False, mode="w") as f:
-            xml_path = f.name
+    url = ""
+    title = ""
 
-        result = subprocess.run(
-            [metadata.MKVEXTRACT_PATH, str(filepath), "tags", xml_path],
-            capture_output=True, text=True, timeout=30,
-            encoding="utf-8", errors="replace",
-        )
+    for tag in root.iter("Tag"):
+        targets = tag.find("Targets")
+        if targets is not None:
+            ttv = targets.find("TargetTypeValue")
+            if ttv is not None and int(ttv.text or "0") < 70:
+                continue
 
-        if result.returncode != 0:
-            return None
+        for simple in tag.iter("Simple"):
+            name = simple.find("Name")
+            string = simple.find("String")
+            if name is not None and string is not None:
+                if name.text == "1001TRACKLISTS_URL":
+                    url = string.text or ""
+                elif name.text == "1001TRACKLISTS_TITLE":
+                    title = string.text or ""
 
-        content = Path(xml_path).read_text(encoding="utf-8").strip()
-        if not content:
-            return None
-
-        tree = ET.parse(xml_path)
-        root = tree.getroot()
-
-        url = ""
-        title = ""
-
-        for tag in root.iter("Tag"):
-            # Check for global scope (TargetTypeValue >= 70 or no Targets)
-            targets = tag.find("Targets")
-            if targets is not None:
-                ttv = targets.find("TargetTypeValue")
-                if ttv is not None and int(ttv.text or "0") < 70:
-                    continue
-
-            for simple in tag.iter("Simple"):
-                name = simple.find("Name")
-                string = simple.find("String")
-                if name is not None and string is not None:
-                    if name.text == "1001TRACKLISTS_URL":
-                        url = string.text or ""
-                    elif name.text == "1001TRACKLISTS_TITLE":
-                        title = string.text or ""
-
-        if url or title:
-            return {"url": url, "title": title}
-        return None
-
-    except (OSError, subprocess.SubprocessError, ET.ParseError, ValueError) as e:
-        logger.debug("Stored tracklist extraction failed for %s: %s", filepath, e)
-        return None
-    finally:
-        try:
-            os.unlink(xml_path)
-        except Exception:
-            pass
+    if url or title:
+        return {"url": url, "title": title}
+    return None
 
 
 def chapters_are_identical(existing: list[Chapter] | None, new: list[Chapter]) -> bool:
@@ -271,8 +223,13 @@ def embed_chapters(
     chapters: list[Chapter],
     tracklist_url: str | None = None,
     tracklist_title: str | None = None,
+    tracklist_id: str | None = None,
+    tracklist_date: str | None = None,
 ) -> bool:
-    """Write chapters and optional tags to an MKV file via mkvpropedit.
+    """Write chapters and optional tags to an MKV file.
+
+    Chapters: written via mkvpropedit --chapters (replaces chapters only, safe).
+    Tags: written via extract-merge-write to preserve existing tags.
 
     Returns True on success, False on failure.
     """
@@ -283,40 +240,43 @@ def embed_chapters(
         return False
 
     chapter_file = None
-    tags_file = None
 
     try:
-        # Write chapter XML
-        chapter_xml = build_chapter_xml(chapters)
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False, encoding="utf-8") as f:
-            f.write(chapter_xml)
-            chapter_file = f.name
-
-        cmd = [metadata.MKVPROPEDIT_PATH, str(filepath), "--chapters", chapter_file]
-
-        # Optionally add tags
-        if tracklist_url:
-            tags_xml = build_tags_xml(tracklist_url, tracklist_title or "")
+        # Write chapters via mkvpropedit --chapters (only if chapters provided)
+        if chapters:
+            chapter_xml = build_chapter_xml(chapters)
             with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False, encoding="utf-8") as f:
-                f.write(tags_xml)
-                tags_file = f.name
-            cmd.extend(["--tags", f"global:{tags_file}"])
+                f.write(chapter_xml)
+                chapter_file = f.name
 
-        result = subprocess.run(
-            cmd,
-            capture_output=True, text=True, timeout=30,
-            encoding="utf-8", errors="replace",
-        )
+            result = subprocess.run(
+                [metadata.MKVPROPEDIT_PATH, str(filepath), "--chapters", chapter_file],
+                capture_output=True, text=True, timeout=30,
+                encoding="utf-8", errors="replace",
+            )
 
-        return result.returncode == 0
+            if result.returncode != 0:
+                return False
+
+        # Write 1001TL tags via merge (preserves ARTIST/TITLE/DATE etc.)
+        if tracklist_url:
+            tags: dict[str, str] = {"1001TRACKLISTS_URL": tracklist_url}
+            if tracklist_title:
+                tags["1001TRACKLISTS_TITLE"] = tracklist_title
+            if tracklist_id:
+                tags["1001TRACKLISTS_ID"] = tracklist_id
+            if tracklist_date:
+                tags["1001TRACKLISTS_DATE"] = tracklist_date
+            return write_merged_tags(filepath, {70: tags})
+
+        return True
 
     except (OSError, subprocess.SubprocessError) as e:
         logger.debug("Chapter embedding failed for %s: %s", filepath, e)
         return False
     finally:
-        for f in [chapter_file, tags_file]:
-            if f:
-                try:
-                    os.unlink(f)
-                except Exception:
-                    pass
+        if chapter_file:
+            try:
+                os.unlink(chapter_file)
+            except Exception:
+                pass
