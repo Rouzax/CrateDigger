@@ -109,7 +109,15 @@ def merge_tags(
     else:
         root = ET.Element("Tags")
 
-    # Index existing Tag blocks by their TTV (None for no-targets blocks)
+    # Remove track-targeted Tag blocks (with TrackUID) — these are managed by
+    # mkvpropedit separately and must NOT be in the --tags global: XML, or
+    # mkvpropedit silently discards all global tags from the file.
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is not None and targets.find("TrackUID") is not None:
+            root.remove(tag)
+
+    # Index remaining (global) Tag blocks by their TTV
     ttv_to_tag: dict[int | None, ET.Element] = {}
     for tag in root.findall("Tag"):
         targets = tag.find("Targets")

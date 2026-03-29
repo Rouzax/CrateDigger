@@ -188,3 +188,41 @@ def test_merge_tags_no_targets_preserved():
     tag50 = _get_tag_block(root, 50)
     assert tag50 is not None
     assert _get_simple_value(tag50, "ARTIST") == "New"
+
+
+def test_merge_tags_strips_track_uid_blocks():
+    """Track-targeted tags (with TrackUID) must be stripped from merged output.
+
+    mkvpropedit --tags global: silently discards all global tags if the XML
+    contains track-targeted Tag blocks alongside global ones.
+    """
+    existing_xml = """<Tags>
+  <Tag>
+    <Targets><TrackUID>12345</TrackUID></Targets>
+    <Simple><Name>BPS</Name><String>128000</String></Simple>
+    <Simple><Name>DURATION</Name><String>01:00:00.000</String></Simple>
+  </Tag>
+  <Tag>
+    <Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+    <Simple><Name>ARTIST</Name><String>Existing</String></Simple>
+  </Tag>
+</Tags>"""
+    existing = ET.fromstring(existing_xml)
+
+    result = merge_tags(existing, {70: {"1001TRACKLISTS_URL": "https://example.com"}})
+    root = _parse_merged(result)
+
+    # TrackUID block must be gone
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is not None:
+            assert targets.find("TrackUID") is None, "TrackUID block should be stripped"
+
+    # Global tags preserved
+    tag50 = _get_tag_block(root, 50)
+    assert tag50 is not None
+    assert _get_simple_value(tag50, "ARTIST") == "Existing"
+
+    tag70 = _get_tag_block(root, 70)
+    assert tag70 is not None
+    assert _get_simple_value(tag70, "1001TRACKLISTS_URL") == "https://example.com"
