@@ -399,6 +399,7 @@ def _extract_genres(html: str) -> list[str]:
     seen = set()
     genres = []
     for genre in matches:
+        genre = _html_decode(genre)
         lower = genre.lower()
         if lower in seen or lower == "tracklist":
             continue
