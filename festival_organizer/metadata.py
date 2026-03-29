@@ -118,6 +118,14 @@ def parse_mediainfo_json(data: dict) -> dict:
             general.get("1001TRACKLISTS_URL", "")
             or extra.get("_1001TRACKLISTS_URL", "")
         ),
+        "tracklists_id": (
+            general.get("1001TRACKLISTS_ID", "")
+            or extra.get("_1001TRACKLISTS_ID", "")
+        ),
+        "tracklists_date": (
+            general.get("1001TRACKLISTS_DATE", "")
+            or extra.get("_1001TRACKLISTS_DATE", "")
+        ),
         # Video
         "video_format": video.get("Format", ""),
         "width": _int_or_none(video.get("Width", "")),
@@ -184,6 +192,8 @@ def _extract_ffprobe(filepath: Path) -> dict:
             "purl": tags.get("purl", "") or tags.get("PURL", ""),
             "tracklists_title": tags.get("1001TRACKLISTS_TITLE", ""),
             "tracklists_url": tags.get("1001TRACKLISTS_URL", ""),
+            "tracklists_id": tags.get("1001TRACKLISTS_ID", ""),
+            "tracklists_date": tags.get("1001TRACKLISTS_DATE", ""),
             "video_format": video.get("codec_name", ""),
             "width": _int_or_none(video.get("width", "")),
             "height": _int_or_none(video.get("height", "")),

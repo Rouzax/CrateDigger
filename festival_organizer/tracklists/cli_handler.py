@@ -1,5 +1,4 @@
 """CLI handler for the 'chapters' subcommand."""
-import os
 import sys
 import time
 from pathlib import Path
@@ -215,6 +214,7 @@ def _process_file(
         session, selected.url, filepath, duration_mins,
         config, preview, quiet, language,
         tracklist_id=tl_id,
+        tracklist_date=selected.date,
     )
 
 
@@ -228,6 +228,7 @@ def _fetch_and_embed(
     quiet: bool,
     language: str,
     tracklist_id: str | None = None,
+    tracklist_date: str | None = None,
 ) -> str:
     """Fetch tracklist, parse chapters, and embed."""
     if not tracklist_id and url:
@@ -241,7 +242,7 @@ def _fetch_and_embed(
         print(f"  {e}")
         if not preview:
             # Tag file with URL for future pickup
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date)
             print(f"  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -270,7 +271,7 @@ def _fetch_and_embed(
         return "skipped"
 
     # Embed
-    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title)
+    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date)
     if success:
         if not quiet:
             print(f"  Embedded {len(chapters)} chapters.")
@@ -336,14 +337,8 @@ def _display_auto_selected(result, duration_mins: int) -> None:
 
 
 def _get_credentials(config: Config) -> tuple[str, str]:
-    """Get 1001Tracklists credentials from env vars or interactive prompt."""
-    email = os.environ.get("TRACKLISTS_EMAIL", "")
-    password = os.environ.get("TRACKLISTS_PASSWORD", "")
-
-    if not email:
-        settings = config.tracklists_settings
-        email = settings.get("email", "")
-        password = settings.get("password", "")
+    """Get 1001Tracklists credentials from config or interactive prompt."""
+    email, password = config.tracklists_credentials
 
     if not email:
         try:

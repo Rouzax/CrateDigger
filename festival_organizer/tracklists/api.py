@@ -102,10 +102,19 @@ class TracklistSession:
             data["startDate"] = f"{year}-01-01"
             data["endDate"] = f"{year}-12-31"
 
+        logger.debug("Search params: %s", {k: v for k, v in data.items() if k != "main_search"})
+
         resp = self._request("POST", f"{BASE_URL}/search/result.php", data=data,
                              headers={"Referer": f"{BASE_URL}/search/"})
 
-        return self._parse_search_results(resp.text)
+        logger.debug("Search response: status=%d, length=%d, has_bItm=%s", resp.status_code, len(resp.text), "bItm" in resp.text)
+
+        results = self._parse_search_results(resp.text)
+
+        if not results and resp.text:
+            logger.debug("Search returned HTML (%d chars) but parsed 0 results — site format may have changed", len(resp.text))
+
+        return results
 
     def export_tracklist(self, tracklist_id: str, full_url: str | None = None) -> TracklistExport:
         """Fetch tracklist data (timestamps + track titles).
@@ -196,8 +205,8 @@ class TracklistSession:
         results = []
         seen_ids = set()
 
-        # Split by result items
-        items = re.split(r'class="bItm\s*"', html)
+        # Split by result items (class may include extra names like "bItm action oItm")
+        items = re.split(r'class="bItm\b(?!H)', html)
 
         for item in items[1:]:  # Skip content before first item
             # Extract title and URL
