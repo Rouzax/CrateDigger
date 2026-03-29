@@ -45,6 +45,9 @@ def test_parse_duration_string_empty():
 def test_html_decode():
     assert _html_decode("Artist &amp; Other") == "Artist & Other"
     assert _html_decode("A &lt;B&gt;") == "A <B>"
+    assert _html_decode("K&ouml;lsch") == "Kölsch"
+    assert _html_decode("Salom&eacute;") == "Salomé"
+    assert _html_decode("Ti&euml;sto") == "Tiësto"
 
 
 def test_normalize_date_iso():

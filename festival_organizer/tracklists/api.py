@@ -1,4 +1,5 @@
 """1001Tracklists API — session management, search, and tracklist export."""
+import html as html_mod
 import json
 import logging
 import random
@@ -98,9 +99,6 @@ class TracklistSession:
             "orderby": "added",
         }
 
-        if duration_minutes > 0:
-            data["duration"] = str(max(1, duration_minutes - 3))
-
         if year:
             data["startDate"] = f"{year}-01-01"
             data["endDate"] = f"{year}-12-31"
@@ -158,6 +156,7 @@ class TracklistSession:
         # Clean up common suffixes
         title = re.sub(r"\s*\|.*$", "", title)
         title = re.sub(r"\s*-\s*1001Tracklists$", "", title)
+        title = _html_decode(title)
 
         # Normalize URL to short form
         short_url = f"{BASE_URL}/tracklist/{tracklist_id}/"
@@ -441,14 +440,8 @@ def _parse_duration_string(dur_str: str) -> int | None:
 
 
 def _html_decode(text: str) -> str:
-    """Decode common HTML entities."""
-    text = text.replace("&amp;", "&")
-    text = text.replace("&lt;", "<")
-    text = text.replace("&gt;", ">")
-    text = text.replace("&quot;", '"')
-    text = text.replace("&#39;", "'")
-    text = text.replace("&apos;", "'")
-    return text
+    """Decode HTML entities (named, numeric, and hex)."""
+    return html_mod.unescape(text)
 
 
 def _normalize_date(date_str: str) -> str | None:
