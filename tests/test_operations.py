@@ -120,6 +120,91 @@ def test_album_poster_not_needed_when_exists(tmp_path):
     assert op.is_needed(video, _make_mf()) is False
 
 
+def test_album_poster_execute_parses_filenames(tmp_path):
+    """Album poster execute() correctly passes config to parse_filename."""
+    video = tmp_path / "2024 - Tomorrowland - Bicep.mkv"
+    video.write_bytes(b"")
+    (tmp_path / "2024 - Tomorrowland - Bicep-thumb.jpg").write_bytes(b"\xff\xd8")
+    op = AlbumPosterOperation(config=load_config())
+    mf = _make_mf(festival="Tomorrowland", artist="Bicep", year="2024")
+    with patch("festival_organizer.poster.generate_album_poster"):
+        result = op.execute(video, mf)
+    assert result.status == "done"
+
+
+def test_album_poster_fanart_multi_artist_returns_none(tmp_path):
+    """Fanart background skipped for multi-artist folders."""
+    (tmp_path / "2024 - TML - Artist1.mkv").write_bytes(b"")
+    (tmp_path / "2024 - TML - Artist2.mkv").write_bytes(b"")
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    op = AlbumPosterOperation(config=load_config(), library_root=lib)
+    result = op._find_fanart_background(tmp_path, "Artist1")
+    assert result is None
+
+
+def test_album_poster_fanart_single_artist_finds_image(tmp_path):
+    """Fanart background returned for single-artist folder."""
+    (tmp_path / "2024 - TML - Bicep.mkv").write_bytes(b"")
+    (tmp_path / "2024 - TML - Bicep WE2.mkv").write_bytes(b"")
+    lib = tmp_path / "lib"
+    fanart = lib / ".cratedigger" / "artists" / "Bicep" / "fanart.jpg"
+    fanart.parent.mkdir(parents=True)
+    fanart.write_bytes(b"\xff\xd8")
+    op = AlbumPosterOperation(config=load_config(), library_root=lib)
+    result = op._find_fanart_background(tmp_path, "Bicep")
+    assert result == fanart
+
+
+def test_album_poster_fanart_single_artist_dash_we(tmp_path):
+    """Dash-separated WE suffix doesn't split artist detection."""
+    (tmp_path / "2024 - TML - Bicep - WE1.mkv").write_bytes(b"")
+    (tmp_path / "2024 - TML - Bicep - WE2.mkv").write_bytes(b"")
+    lib = tmp_path / "lib"
+    fanart = lib / ".cratedigger" / "artists" / "Bicep" / "fanart.jpg"
+    fanart.parent.mkdir(parents=True)
+    fanart.write_bytes(b"\xff\xd8")
+    op = AlbumPosterOperation(config=load_config(), library_root=lib)
+    result = op._find_fanart_background(tmp_path, "Bicep")
+    assert result == fanart
+
+
+def test_album_poster_dedup_same_folder(tmp_path):
+    """Album poster skips second file in same folder after first completes."""
+    video1 = tmp_path / "2024 - TML - Bicep - WE1.mkv"
+    video2 = tmp_path / "2024 - TML - Bicep - WE2.mkv"
+    video1.write_bytes(b"")
+    video2.write_bytes(b"")
+    op = AlbumPosterOperation(config=load_config(), force=True)
+    mf = _make_mf(festival="TML", artist="Bicep", year="2024")
+    # First file: needed
+    assert op.is_needed(video1, mf) is True
+    # Simulate execute completing
+    with patch("festival_organizer.poster.generate_album_poster"):
+        op.execute(video1, mf)
+    # Second file in same folder: not needed
+    assert op.is_needed(video2, mf) is False
+
+
+def test_album_poster_dedup_different_folders(tmp_path):
+    """Album poster processes both files when in different folders."""
+    folder1 = tmp_path / "Artist1"
+    folder2 = tmp_path / "Artist2"
+    folder1.mkdir()
+    folder2.mkdir()
+    video1 = folder1 / "2024 - TML - Artist1.mkv"
+    video2 = folder2 / "2024 - TML - Artist2.mkv"
+    video1.write_bytes(b"")
+    video2.write_bytes(b"")
+    op = AlbumPosterOperation(config=load_config(), force=True)
+    mf1 = _make_mf(artist="Artist1")
+    mf2 = _make_mf(artist="Artist2")
+    with patch("festival_organizer.poster.generate_album_poster"):
+        op.execute(video1, mf1)
+    # Different folder: still needed
+    assert op.is_needed(video2, mf2) is True
+
+
 def test_keyboard_interrupt_propagates_from_nfo(tmp_path):
     """KeyboardInterrupt during NFO generation propagates, not swallowed."""
     import pytest

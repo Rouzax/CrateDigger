@@ -1,4 +1,12 @@
-"""Metadata extraction via MediaInfo CLI and ffprobe fallback."""
+"""Metadata extraction via MediaInfo CLI and ffprobe fallback.
+
+Logging:
+    Logger: 'festival_organizer.metadata'
+    Key events:
+        - mediainfo.fail (DEBUG): mediainfo CLI call failed
+        - ffprobe.fail (DEBUG): ffprobe CLI call failed
+    See docs/logging.md for full guidelines.
+"""
 import json
 import logging
 import platform

@@ -1,6 +1,16 @@
-"""Analyzer: combines metadata and parsing into a single MediaFile."""
+"""Analyzer: combines metadata and parsing into a single MediaFile.
+
+Logging:
+    Logger: 'festival_organizer.analyzer'
+    Key events:
+        - analyze.result (INFO): Final parsed artist, festival, year, and metadata source
+    See docs/logging.md for full guidelines.
+"""
+import logging
 import re
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from festival_organizer.config import Config
 from festival_organizer.metadata import extract_metadata
@@ -91,6 +101,9 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
 
     ext = filepath.suffix.lower()
     file_type = "video" if ext in VIDEO_EXTS else "audio"
+
+    logger.info("Parsed: artist=%s, festival=%s, year=%s, source=%s",
+                artist, festival, info.get("year", ""), metadata_source)
 
     return MediaFile(
         source_path=filepath,

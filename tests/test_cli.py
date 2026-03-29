@@ -22,10 +22,19 @@ def test_run_unexpected_error_returns_1(capsys):
     assert "boom" in captured.err
 
 
-def test_verbose_flag_enables_debug_logging():
-    """The --verbose flag enables DEBUG logging for the package."""
+def test_verbose_flag_enables_info_logging():
+    """The --verbose flag enables INFO logging for the package."""
     with patch("festival_organizer.cli.scan_folder", return_value=[]):
         with patch("festival_organizer.cli.find_library_root", return_value=None):
             run(["scan", "/tmp", "--verbose"])
+    logger = logging.getLogger("festival_organizer")
+    assert logger.level == logging.INFO
+
+
+def test_debug_flag_enables_debug_logging():
+    """The --debug flag enables DEBUG logging for the package."""
+    with patch("festival_organizer.cli.scan_folder", return_value=[]):
+        with patch("festival_organizer.cli.find_library_root", return_value=None):
+            run(["scan", "/tmp", "--debug"])
     logger = logging.getLogger("festival_organizer")
     assert logger.level == logging.DEBUG

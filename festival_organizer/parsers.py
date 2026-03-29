@@ -145,7 +145,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
     known_festivals = config.known_festivals
 
     # --- Pattern: YYYY - Part2 - Part3 [WE1/WE2] ---
-    m = re.match(r"^(\d{4})\s*[-\u2013]\s*(.+?)\s*[-\u2013]\s*(.+?)(?:\s+(WE\d))?\s*$", stem)
+    m = re.match(r"^(\d{4})\s*[-\u2013]\s*(.+?)\s*[-\u2013]\s*(.+?)(?:(?:\s*[-\u2013]\s*|\s+)(WE\d))?\s*$", stem)
     if m:
         result.setdefault("year", m.group(1))
         part2 = m.group(2).strip()

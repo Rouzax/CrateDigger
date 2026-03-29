@@ -1,4 +1,11 @@
-"""Recursive media file scanner with skip-pattern filtering."""
+"""Recursive media file scanner with skip-pattern filtering.
+
+Logging:
+    Logger: 'festival_organizer.scanner'
+    Key events:
+        - scan.error (WARNING): Could not scan directory
+    See docs/logging.md for full guidelines.
+"""
 import logging
 from pathlib import Path
 

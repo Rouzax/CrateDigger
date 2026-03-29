@@ -3,6 +3,13 @@
 Set posters use embedded cover art or sampled frames as source image.
 Album posters use gradient backgrounds derived from thumbnail colors.
 Layout uses a line-anchored system: accent line at 2/3 down, artist builds UP, metadata builds DOWN.
+
+Logging:
+    Logger: 'festival_organizer.poster'
+    Key events:
+        - thumbnail.read_error (DEBUG): Could not read a thumbnail for color extraction
+        - background.load_error (WARNING): Could not load artist fanart background image
+    See docs/logging.md for full guidelines.
 """
 import logging
 import math

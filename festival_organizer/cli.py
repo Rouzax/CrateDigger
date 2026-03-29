@@ -25,18 +25,18 @@ HELP_TEXT = """\
 CrateDigger — Festival set & concert library manager
 
 Common workflows:
-  organize scan ./downloads          Preview what would happen (dry run)
-  organize organize ./downloads      Organize files into library structure
-  organize enrich ./library          Add art, posters, tags to existing files
-  organize chapters ./file.mkv       Add 1001Tracklists chapters
+  cratedigger scan ./downloads          Preview what would happen (dry run)
+  cratedigger organize ./downloads      Organize files into library structure
+  cratedigger enrich ./library          Add art, posters, tags to existing files
+  cratedigger chapters ./file.mkv       Add 1001Tracklists chapters
 
-Run 'organize <command> --help' for details on each command.
+Run 'cratedigger <command> --help' for details on each command.
 """
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="organize",
+        prog="cratedigger",
         description=HELP_TEXT,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -50,7 +50,8 @@ def build_parser() -> argparse.ArgumentParser:
         ], help="Folder layout")
         p.add_argument("--config", type=str, help="Path to config.json")
         p.add_argument("--quiet", "-q", action="store_true", help="Suppress per-file output")
-        p.add_argument("--verbose", "-v", action="store_true", help="Show detailed metadata")
+        p.add_argument("--verbose", "-v", action="store_true", help="Show decisions and downloads")
+        p.add_argument("--debug", action="store_true", help="Show all internal details")
 
     # scan (dry-run)
     scan_p = sub.add_parser("scan", help="Preview what would happen (dry run)")
@@ -121,7 +122,8 @@ def _run_command(args) -> int:
     configure_tools(config)
 
     verbose = getattr(args, "verbose", False)
-    setup_logging(verbose=verbose)
+    debug = getattr(args, "debug", False)
+    setup_logging(verbose=verbose, debug=debug)
 
     # Layout override
     if getattr(args, "layout", None):
@@ -190,13 +192,16 @@ def _run_command(args) -> int:
         only = set(args.only.split(","))
     pipeline_files = []
 
-    # Shared FanartOperation instance (deduplicates across files)
+    # Shared operation instances (deduplicate across files)
     fanart_op = None
+    album_poster_op = None
     if args.command in ("enrich", "organize"):
         should_fanart = (args.command == "enrich" and (not only or "fanart" in only)) or \
                         (args.command == "organize" and getattr(args, "enrich", False))
         if should_fanart and config.fanart_enabled and config.fanart_project_api_key:
             fanart_op = FanartOperation(config, library_root=output, force=force)
+        if args.command == "enrich" and (not only or "posters" in only):
+            album_poster_op = AlbumPosterOperation(config, force=force, library_root=output)
 
     for fp, mf in media_files:
         ops: list = []
@@ -235,7 +240,8 @@ def _run_command(args) -> int:
                 ops.append(fanart_op)
             if not only or "posters" in only:
                 ops.append(PosterOperation(config, force=force))
-                ops.append(AlbumPosterOperation(config, force=force, library_root=output))
+                if album_poster_op:
+                    ops.append(album_poster_op)
             if not only or "tags" in only:
                 ops.append(TagsOperation(force=force))
 

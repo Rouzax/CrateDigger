@@ -2,6 +2,12 @@
 
 Embeds artist, title, and date into MKV file tags so Plex can read them.
 Only operates on destination files — never modifies source collection.
+
+Logging:
+    Logger: 'festival_organizer.embed_tags'
+    Key events:
+        - tags.embed_error (DEBUG): Tag embedding via mkvpropedit failed
+    See docs/logging.md for full guidelines.
 """
 import logging
 import os

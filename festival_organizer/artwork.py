@@ -1,4 +1,12 @@
-"""Cover art extraction from MKV attachments + frame sampling fallback."""
+"""Cover art extraction from MKV attachments + frame sampling fallback.
+
+Logging:
+    Logger: 'festival_organizer.artwork'
+    Key events:
+        - attachment.extract_error (DEBUG): MKV attachment extraction failed
+        - frame.sample_error (DEBUG): Frame sampling via ffmpeg failed
+    See docs/logging.md for full guidelines.
+"""
 import logging
 import subprocess
 from pathlib import Path

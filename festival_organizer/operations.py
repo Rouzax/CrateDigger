@@ -1,12 +1,22 @@
-"""Composable operations with gap detection."""
+"""Composable operations with gap detection.
+
+Logging:
+    Logger: 'festival_organizer.operations'
+    Key events:
+        - album_poster.style (INFO): Album poster style decision (artist vs festival)
+    See docs/logging.md for full guidelines.
+"""
 from __future__ import annotations
 
+import logging
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 from festival_organizer.config import Config
 from festival_organizer.models import MediaFile
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -155,9 +165,13 @@ class AlbumPosterOperation(Operation):
         self.config = config
         self.force = force
         self.library_root = library_root
+        self._completed_folders: set[Path] = set()
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
-        folder_jpg = file_path.parent / "folder.jpg"
+        folder = file_path.parent
+        if folder in self._completed_folders:
+            return False
+        folder_jpg = folder / "folder.jpg"
         if self.force:
             return True
         return not folder_jpg.exists()
@@ -175,13 +189,16 @@ class AlbumPosterOperation(Operation):
         # Use parent folder name heuristic: if folder name matches artist, it's an artist folder
         # Otherwise scan thumbs for artist diversity
         from festival_organizer.parsers import parse_filename
+        from festival_organizer.normalization import normalise_name
         artists_in_folder: set[str] = set()
         for video in folder.iterdir():
             if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
-                parsed = parse_filename(video.stem)
+                parsed = parse_filename(video, self.config)
                 if parsed.get("artist"):
-                    artists_in_folder.add(parsed["artist"].lower())
+                    artists_in_folder.add(normalise_name(parsed["artist"]).lower())
                 if len(artists_in_folder) > 1:
+                    logger.info("Album poster: %d artists in folder -> festival style",
+                                len(artists_in_folder))
                     return None  # Multi-artist folder, skip fanart background
 
         # Single artist (or couldn't determine) — look for their fanart
@@ -189,7 +206,10 @@ class AlbumPosterOperation(Operation):
             c if c.isalnum() or c in " ._-()&" else "_" for c in artist
         ).strip()
         candidate = self.library_root / ".cratedigger" / "artists" / safe / "fanart.jpg"
-        return candidate if candidate.exists() else None
+        result = candidate if candidate.exists() else None
+        logger.info("Album poster: 1 artist in folder -> %s",
+                    "artist style" if result else "festival style (no fanart)")
+        return result
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.poster import generate_album_poster
@@ -206,7 +226,7 @@ class AlbumPosterOperation(Operation):
             years_in_folder: set[str] = set()
             for video in file_path.parent.iterdir():
                 if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
-                    parsed = parse_filename(video.stem)
+                    parsed = parse_filename(video, self.config)
                     yr = parsed.get("year", "")
                     if yr:
                         years_in_folder.add(yr)
@@ -231,6 +251,7 @@ class AlbumPosterOperation(Operation):
                 background_image_path=bg_path,
                 hero_text=mf.artist if is_artist_folder else None,
             )
+            self._completed_folders.add(file_path.parent)
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))

@@ -2,6 +2,23 @@
 
 Downloads HD ClearLOGOs and artist backgrounds from fanart.tv.
 Artist images provided by fanart.tv (https://fanart.tv).
+
+Logging:
+    Logger: 'festival_organizer.fanart'
+    Key events:
+        - mbid.lookup (INFO): MusicBrainz artist lookup and result
+        - mbid.found (INFO): MBID resolved for artist
+        - mbid.miss (INFO): No MusicBrainz match for artist
+        - mbid.cache_hit (DEBUG): MBID found in local cache
+        - mbid.cache_negative (DEBUG): Negative cache hit (previously not found)
+        - download.success (INFO): Image downloaded successfully
+        - download.fail (WARNING): Image download failed
+        - fanart.retry (DEBUG): fanart.tv 5xx retry
+        - musicbrainz.retry (DEBUG): MusicBrainz 503 retry
+        - theaudiodb.fallback (DEBUG): Trying TheAudioDB as fallback
+        - theaudiodb.fail (DEBUG): TheAudioDB lookup failed
+        - attribution (INFO): Required attribution notice
+    See docs/logging.md for full guidelines.
 """
 import json
 import logging
@@ -253,7 +270,7 @@ def _download_image(url: str, output_path: Path) -> bool:
         with open(output_path, "wb") as f:
             for chunk in resp.iter_content(chunk_size=8192):
                 f.write(chunk)
-        logger.debug("Downloaded: %s -> %s", url, output_path)
+        logger.info("Downloaded: %s -> %s", url, output_path)
         return True
     except requests.RequestException as e:
         logger.warning("Failed to download %s: %s", url, e)

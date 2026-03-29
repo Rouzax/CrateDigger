@@ -11,8 +11,15 @@ def test_setup_logging_default():
 
 
 def test_setup_logging_verbose():
-    """Verbose setup configures DEBUG level."""
+    """Verbose setup configures INFO level."""
     setup_logging(verbose=True)
+    logger = logging.getLogger("festival_organizer")
+    assert logger.level == logging.INFO
+
+
+def test_setup_logging_debug():
+    """Debug setup configures DEBUG level."""
+    setup_logging(debug=True)
     logger = logging.getLogger("festival_organizer")
     assert logger.level == logging.DEBUG
 
