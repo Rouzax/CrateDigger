@@ -83,6 +83,8 @@ def build_parser() -> argparse.ArgumentParser:
     chap_p.add_argument("--delay", type=int, help="Delay between files (seconds)")
     chap_p.add_argument("--config", type=str, help="Path to config.json")
     chap_p.add_argument("--quiet", "-q", action="store_true", help="Suppress per-file output")
+    chap_p.add_argument("--verbose", "-v", action="store_true", help="Show decisions and downloads")
+    chap_p.add_argument("--debug", action="store_true", help="Show all internal details")
 
     return parser
 
