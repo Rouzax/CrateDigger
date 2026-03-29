@@ -27,6 +27,10 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
     if not title:
         return {}
 
+    # Decode HTML entities from stored MKV tags (e.g. &amp; -> &)
+    import html as html_mod
+    title = html_mod.unescape(title)
+
     result = {}
 
     if "@" not in title:

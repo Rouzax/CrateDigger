@@ -284,26 +284,34 @@ class AlbumPosterOperation(Operation):
             # Collect existing thumbs in folder for color extraction
             thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
 
-            # Determine background image source with fallback chain
-            bg_path = self._find_fanart_background(file_path.parent, mf.artist)
-            is_artist_folder = bg_path is not None
+            # Determine if this is a single-artist or multi-artist (festival) folder
+            fanart_path = self._find_fanart_background(file_path.parent, mf.artist)
+            is_artist_folder = fanart_path is not None
 
-            if not bg_path and self.library_root:
-                # Festival folder: try event artwork first
-                event_art = (
-                    self._download_artwork(mf.event_artwork_url, "events")
-                    if mf.event_artwork_url else None
-                )
+            # Background image fallback chain
+            bg_path = None
+
+            if is_artist_folder and self.library_root and mf.dj_artwork_url:
+                # Artist folder: prefer fresh 1001TL DJ artwork over fanart.tv
+                dj_art = self._download_artwork(mf.dj_artwork_url, "dj-artwork")
+                if dj_art:
+                    bg_path = dj_art
+                    logger.info("Album poster: using DJ artwork (1001TL)")
+
+            if not bg_path and is_artist_folder:
+                # Artist folder: fall back to fanart.tv
+                bg_path = fanart_path
+
+            if not bg_path and self.library_root and mf.event_artwork_url:
+                # Festival folder: try event artwork
+                event_art = self._download_artwork(mf.event_artwork_url, "events")
                 if event_art:
                     bg_path = event_art
                     logger.info("Album poster: using event artwork")
 
-            if not bg_path and not is_artist_folder and self.library_root:
+            if not bg_path and not is_artist_folder and self.library_root and mf.dj_artwork_url:
                 # Festival folder without event artwork: try DJ artwork
-                dj_art = (
-                    self._download_artwork(mf.dj_artwork_url, "dj-artwork")
-                    if mf.dj_artwork_url else None
-                )
+                dj_art = self._download_artwork(mf.dj_artwork_url, "dj-artwork")
                 if dj_art:
                     bg_path = dj_art
                     logger.info("Album poster: using DJ artwork")
