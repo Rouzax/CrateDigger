@@ -225,6 +225,8 @@ def embed_chapters(
     tracklist_title: str | None = None,
     tracklist_id: str | None = None,
     tracklist_date: str | None = None,
+    genres: list[str] | None = None,
+    event_artwork_url: str | None = None,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
 
@@ -267,6 +269,10 @@ def embed_chapters(
                 tags["1001TRACKLISTS_ID"] = tracklist_id
             if tracklist_date:
                 tags["1001TRACKLISTS_DATE"] = tracklist_date
+            if genres:
+                tags["1001TRACKLISTS_GENRES"] = "|".join(genres)
+            if event_artwork_url:
+                tags["1001TRACKLISTS_EVENT_ARTWORK"] = event_artwork_url
             return write_merged_tags(filepath, {70: tags})
 
         return True

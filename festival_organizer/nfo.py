@@ -52,8 +52,11 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
     elif mf.year:
         _add(root, "premiered", f"{mf.year}-01-01")
 
-    # Genre
-    if mf.content_type == "festival_set":
+    # Genre — use extracted genres when available, fall back to static config
+    if mf.genres:
+        for genre in mf.genres:
+            _add(root, "genre", genre)
+    elif mf.content_type == "festival_set":
         _add(root, "genre", nfo_settings.get("genre_festival", "Electronic"))
     else:
         _add(root, "genre", nfo_settings.get("genre_concert", "Live"))

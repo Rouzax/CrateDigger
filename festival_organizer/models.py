@@ -1,5 +1,5 @@
 """Data models for the festival organizer pipeline."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -24,6 +24,8 @@ class MediaFile:
     youtube_id: str = ""
     tracklists_url: str = ""
     tracklists_title: str = ""
+    genres: list[str] = field(default_factory=list)
+    event_artwork_url: str = ""
 
     # Technical metadata
     extension: str = ""

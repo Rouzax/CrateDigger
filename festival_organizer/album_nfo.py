@@ -59,12 +59,23 @@ def generate_album_nfo(
     if years:
         _add_element(root, "year", years[0])
 
-    # Genre
-    content_types = {mf.content_type for mf in media_files}
-    if "festival_set" in content_types:
-        _add_element(root, "genre", config.nfo_settings.get("genre_festival", "Electronic"))
+    # Genre — aggregate from all files, fall back to static config
+    all_genres = []
+    seen = set()
+    for mf in media_files:
+        for g in mf.genres:
+            if g.lower() not in seen:
+                seen.add(g.lower())
+                all_genres.append(g)
+    if all_genres:
+        for genre in all_genres:
+            _add_element(root, "genre", genre)
     else:
-        _add_element(root, "genre", config.nfo_settings.get("genre_concert", "Live"))
+        content_types = {mf.content_type for mf in media_files}
+        if "festival_set" in content_types:
+            _add_element(root, "genre", config.nfo_settings.get("genre_festival", "Electronic"))
+        else:
+            _add_element(root, "genre", config.nfo_settings.get("genre_concert", "Live"))
 
     # Plot — list of artists in this folder
     artists = sorted({mf.artist for mf in media_files if mf.artist})

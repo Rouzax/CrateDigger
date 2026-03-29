@@ -459,6 +459,35 @@ def _make_gradient_bg(base_color: tuple[int, int, int]) -> Image.Image:
     return bg
 
 
+def _center_sharp(frame: Image.Image, max_display: int) -> tuple[Image.Image, int, int]:
+    """Scale and center a sharp image in the upper poster area."""
+    scale = min(max_display / frame.width, max_display / frame.height)
+    new_w = int(frame.width * scale)
+    new_h = int(frame.height * scale)
+    sharp = frame.resize((new_w, new_h), Image.LANCZOS)
+    img_x = (POSTER_W - new_w) // 2
+    img_y = int(LINE_Y * 0.5) - new_h // 2
+    img_y = max(30, img_y)
+    return sharp, img_x, img_y
+
+
+def _rounded_edge_mask(w: int, h: int, corner_pct: float = 0.06, fade_px: int = 25) -> Image.Image:
+    """Create a mask with rounded corners and soft edge fade."""
+    corner_r = int(min(w, h) * corner_pct)
+    shape_mask = Image.new("L", (w, h), 0)
+    dm = ImageDraw.Draw(shape_mask)
+    dm.rounded_rectangle([(0, 0), (w - 1, h - 1)], radius=corner_r, fill=255)
+
+    fade_mask = Image.new("L", (w, h), 255)
+    fm = ImageDraw.Draw(fade_mask)
+    for d in range(fade_px):
+        alpha = int(255 * d / fade_px)
+        fm.rectangle([(d, d), (w - 1 - d, h - 1 - d)], outline=alpha)
+
+    mask_arr = np.minimum(np.array(shape_mask), np.array(fade_mask))
+    return Image.fromarray(mask_arr, mode="L").filter(ImageFilter.GaussianBlur(radius=3))
+
+
 def _make_collage_bg(thumb_paths: list[Path]) -> Image.Image:
     """Create a collage background from multiple thumbnails.
 
@@ -660,19 +689,70 @@ def generate_album_poster(
             bg = bg.filter(ImageFilter.GaussianBlur(radius=40))
             bg = ImageEnhance.Brightness(bg).enhance(0.18)
 
-            # Sharp image flush to top, scaled to poster width
-            scale = POSTER_W / frame.width
-            new_h = int(frame.height * scale)
-            sharp = frame.resize((POSTER_W, new_h), Image.LANCZOS)
+            is_small_source = frame.width < 600
 
-            # Fade mask starting at 60% of image height
-            mask = Image.new("L", (POSTER_W, new_h), 255)
-            dm = ImageDraw.Draw(mask)
-            fade_start = int(new_h * 0.60)
-            for y in range(fade_start, new_h):
-                alpha = int(255 * (1 - (y - fade_start) / (new_h - fade_start)))
-                dm.line([(0, y), (POSTER_W, y)], fill=alpha)
-            bg.paste(sharp, (0, 0), mask)
+            if is_small_source and hero_text is None:
+                # Festival layout: B2 tiled pattern background with centered logo
+                # Tile the artwork across the upper area
+                tile_size = 200
+                w, h = frame.size
+                sq = min(w, h)
+                left = (w - sq) // 2
+                top = (h - sq) // 2
+                tile = frame.crop((left, top, left + sq, top + sq))
+                tile = tile.resize((tile_size, tile_size), Image.LANCZOS)
+
+                pattern = Image.new("RGB", (POSTER_W, LINE_Y))
+                for x in range(0, POSTER_W, tile_size):
+                    for y in range(0, LINE_Y, tile_size):
+                        pattern.paste(tile, (x, y))
+
+                pattern = ImageEnhance.Brightness(pattern).enhance(0.30)
+                pattern_rgba = pattern.convert("RGBA")
+
+                # Fade alpha: in from top, out toward bottom
+                alpha_band = Image.new("L", (POSTER_W, LINE_Y), 0)
+                ad = ImageDraw.Draw(alpha_band)
+                for y in range(LINE_Y):
+                    if y < LINE_Y * 0.1:
+                        a = int(150 * y / (LINE_Y * 0.1))
+                    elif y < LINE_Y * 0.6:
+                        a = 150
+                    else:
+                        a = int(150 * (1 - (y - LINE_Y * 0.6) / (LINE_Y * 0.4)))
+                    ad.line([(0, y), (POSTER_W, y)], fill=a)
+                pattern_rgba.putalpha(alpha_band)
+                bg = bg.convert("RGBA")
+                bg.paste(pattern_rgba, (0, 0), pattern_rgba)
+                bg = bg.convert("RGB")
+
+                # Sharp logo centered
+                max_display = 420
+                sharp, img_x, img_y = _center_sharp(frame, max_display)
+                mask = _rounded_edge_mask(sharp.size[0], sharp.size[1])
+                bg.paste(sharp, (img_x, img_y), mask)
+
+            elif is_small_source:
+                # Artist layout: heavy blur background with larger centered photo
+                max_display = 550
+                sharp, img_x, img_y = _center_sharp(frame, max_display)
+                mask = _rounded_edge_mask(sharp.size[0], sharp.size[1])
+                bg.paste(sharp, (img_x, img_y), mask)
+
+            else:
+                # Large source (fanart 1920px+): sharp top, fade to dark
+                scale = POSTER_W / frame.width
+                new_h = int(frame.height * scale)
+                sharp = frame.resize((POSTER_W, new_h), Image.LANCZOS)
+
+                # Fade mask starting at 60% of image height
+                mask = Image.new("L", (POSTER_W, new_h), 255)
+                dm = ImageDraw.Draw(mask)
+                fade_start = int(new_h * 0.60)
+                for y in range(fade_start, new_h):
+                    alpha = int(255 * (1 - (y - fade_start) / (new_h - fade_start)))
+                    dm.line([(0, y), (POSTER_W, y)], fill=alpha)
+                bg.paste(sharp, (0, 0), mask)
 
             # Dark gradient overlay from 40% down
             gradient = Image.new("RGBA", (POSTER_W, POSTER_H), (0, 0, 0, 0))

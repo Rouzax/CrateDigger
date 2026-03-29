@@ -17,6 +17,8 @@ from festival_organizer.tracklists.api import (
     _html_decode,
     _normalize_date,
     _is_rate_limited,
+    _extract_event_artwork,
+    _extract_genres,
 )
 
 
@@ -239,6 +241,62 @@ def test_login_failure_no_cookies():
         with patch.object(session._session, "post", return_value=mock_resp):
             with pytest.raises(AuthenticationError, match="missing session cookies"):
                 session.login("test@test.com", "wrong")
+
+
+# --- Event artwork extraction ---
+
+def test_extract_event_artwork_og_image():
+    html = '''<head><meta property="og:image" content="https://cdn.1001tracklists.com/images/artworks/abc.jpg"></head>'''
+    assert _extract_event_artwork(html) == "https://cdn.1001tracklists.com/images/artworks/abc.jpg"
+
+
+def test_extract_event_artwork_css_background():
+    html = '''<style>#artworkTop {background-image: url('https://i1.sndcdn.com/avatars-abc-t300x300.jpg')}</style>'''
+    assert _extract_event_artwork(html) == "https://i1.sndcdn.com/avatars-abc-t300x300.jpg"
+
+
+def test_extract_event_artwork_cdn_medium():
+    html = '''<style>background-image: url('https://cdn.1001tracklists.com/images/artworks/sources/a/6/d/9/161211-artwork-umf-miami-584dd68e90676-Medium.jpg')</style>'''
+    assert _extract_event_artwork(html) == "https://cdn.1001tracklists.com/images/artworks/sources/a/6/d/9/161211-artwork-umf-miami-584dd68e90676-Medium.jpg"
+
+
+def test_extract_event_artwork_prefers_og_image():
+    html = '''<head><meta property="og:image" content="https://og.jpg"></head>
+    <style>#artworkTop {background-image: url('https://css.jpg')}</style>'''
+    assert _extract_event_artwork(html) == "https://og.jpg"
+
+
+def test_extract_event_artwork_empty():
+    assert _extract_event_artwork("<html><body>nothing</body></html>") == ""
+
+
+# --- Genre extraction ---
+
+def test_extract_genres_basic():
+    html = '''<a href="/genre/mainstage/">Mainstage</a>
+    <a href="/genre/melodic-house-techno/">MHT</a>'''
+    genres = _extract_genres(html)
+    assert genres == ["Mainstage", "Melodic House Techno"]
+
+
+def test_extract_genres_deduplication():
+    html = '''<a href="/genre/trance/">T</a>
+    <a href="/genre/trance/">T</a>
+    <a href="/genre/progressive-house/">PH</a>'''
+    genres = _extract_genres(html)
+    assert genres == ["Progressive House"]  # trance filtered as nav genre
+
+
+def test_extract_genres_filters_nav_genres():
+    html = '''<a href="/genre/electronic/">E</a>
+    <a href="/genre/house/">H</a>
+    <a href="/genre/big-room/">BR</a>'''
+    genres = _extract_genres(html)
+    assert genres == ["Big Room"]
+
+
+def test_extract_genres_empty():
+    assert _extract_genres("<html>no genres</html>") == []
 
 
 def test_request_raises_on_persistent_5xx():

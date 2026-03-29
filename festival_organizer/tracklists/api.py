@@ -4,7 +4,7 @@ import logging
 import random
 import re
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import requests
@@ -40,6 +40,8 @@ class TracklistExport:
     lines: list[str]
     url: str
     title: str
+    event_artwork_url: str = ""
+    genres: list[str] = field(default_factory=list)
 
 
 class TracklistSession:
@@ -159,7 +161,18 @@ class TracklistSession:
         # Normalize URL to short form
         short_url = f"{BASE_URL}/tracklist/{tracklist_id}/"
 
-        return TracklistExport(lines=lines, url=short_url, title=title)
+        # Extract enrichment metadata from page HTML
+        event_artwork_url = _extract_event_artwork(page_resp.text)
+        genres = _extract_genres(page_resp.text)
+        if event_artwork_url:
+            logger.info("Event artwork: %s", event_artwork_url)
+        if genres:
+            logger.info("Genres: %s", genres)
+
+        return TracklistExport(
+            lines=lines, url=short_url, title=title,
+            event_artwork_url=event_artwork_url, genres=genres,
+        )
 
     def _request(self, method: str, url: str, data: dict | None = None,
                  headers: dict | None = None, max_retries: int = 5) -> requests.Response:
@@ -330,6 +343,47 @@ class TracklistSession:
         except (OSError, json.JSONDecodeError, KeyError, TypeError) as e:
             logger.debug("Cookie restore failed: %s", e)
             return False
+
+
+_NAV_GENRES = frozenset({
+    "electronic", "house", "techno", "trance", "bass", "dubstep",
+    "drum-and-bass", "hardstyle", "hardcore",
+})
+
+
+def _extract_event_artwork(html: str) -> str:
+    """Extract event artwork URL from og:image meta tag or artworkTop CSS."""
+    # Try og:image first
+    m = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', html)
+    if m:
+        return m.group(1)
+    # Fallback: artworkTop background-image in CSS (cdn.1001tracklists.com artwork)
+    m = re.search(r"#artworkTop\s*\{[^}]*background-image:\s*url\('([^']+)'\)", html)
+    if m:
+        return m.group(1)
+    # Also try Medium-size artwork variant
+    m = re.search(
+        r"url\('(https://cdn\.1001tracklists\.com/images/artworks/[^']*-Medium\.[^']+)'\)",
+        html,
+    )
+    if m:
+        return m.group(1)
+    return ""
+
+
+def _extract_genres(html: str) -> list[str]:
+    """Extract genre slugs from /genre/<slug>/ links, deduplicate, filter nav genres."""
+    matches = re.findall(r'href="/genre/([^/]+)/"', html)
+    seen = set()
+    genres = []
+    for slug in matches:
+        lower = slug.lower()
+        if lower in seen or lower in _NAV_GENRES:
+            continue
+        seen.add(lower)
+        # Convert slug to title case: "melodic-house-techno" -> "Melodic House Techno"
+        genres.append(slug.replace("-", " ").title())
+    return genres
 
 
 def _is_rate_limited(text: str) -> bool:

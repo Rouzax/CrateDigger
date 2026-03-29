@@ -126,6 +126,14 @@ def parse_mediainfo_json(data: dict) -> dict:
             general.get("1001TRACKLISTS_DATE", "")
             or extra.get("_1001TRACKLISTS_DATE", "")
         ),
+        "tracklists_genres": (
+            general.get("1001TRACKLISTS_GENRES", "")
+            or extra.get("_1001TRACKLISTS_GENRES", "")
+        ),
+        "tracklists_event_artwork": (
+            general.get("1001TRACKLISTS_EVENT_ARTWORK", "")
+            or extra.get("_1001TRACKLISTS_EVENT_ARTWORK", "")
+        ),
         # Video
         "video_format": video.get("Format", ""),
         "width": _int_or_none(video.get("Width", "")),

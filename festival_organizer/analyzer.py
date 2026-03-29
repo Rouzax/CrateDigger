@@ -118,6 +118,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         youtube_id=info.get("youtube_id", ""),
         tracklists_url=meta.get("tracklists_url", ""),
         tracklists_title=meta.get("tracklists_title", ""),
+        genres=[g.strip() for g in meta.get("tracklists_genres", "").split("|") if g.strip()] if meta.get("tracklists_genres") else [],
+        event_artwork_url=meta.get("tracklists_event_artwork", ""),
         metadata_source=metadata_source,
         content_type="",  # Set by classifier
         extension=ext,
