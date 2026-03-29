@@ -10,12 +10,10 @@ Logging:
     See docs/logging.md for full guidelines.
 """
 import logging
-import os
-import subprocess
-import tempfile
 from pathlib import Path
 
 from festival_organizer import metadata
+from festival_organizer.mkv_tags import write_merged_tags
 from festival_organizer.models import MediaFile
 
 logger = logging.getLogger(__name__)
@@ -24,12 +22,7 @@ logger = logging.getLogger(__name__)
 def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
     """Embed metadata tags into an MKV file via mkvpropedit.
 
-    Args:
-        media_file: MediaFile with metadata to embed
-        target_path: Path to the MKV file to modify (must be the destination, not source)
-
-    Returns:
-        True if successful, False otherwise
+    Uses extract-merge-write to preserve existing tags (e.g. 1001TL tags).
     """
     if not metadata.MKVPROPEDIT_PATH:
         return False
@@ -37,62 +30,25 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
     if not target_path.exists() or target_path.suffix.lower() != ".mkv":
         return False
 
-    # Build tag XML
-    tag_xml = _build_tag_xml(media_file)
-
-    try:
-        # Write tag XML to a temp file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False, encoding="utf-8") as f:
-            f.write(tag_xml)
-            tag_file = f.name
-
-        # Run mkvpropedit
-        result = subprocess.run(
-            [metadata.MKVPROPEDIT_PATH, str(target_path), "--tags", f"global:{tag_file}"],
-            capture_output=True, text=True, timeout=30,
-            encoding="utf-8", errors="replace",
-        )
-
-        return result.returncode == 0
-
-    except (OSError, subprocess.SubprocessError) as e:
-        logger.debug("Tag embedding failed for %s: %s", target_path, e)
-        return False
-    finally:
-        try:
-            os.unlink(tag_file)
-        except Exception:
-            pass
-
-
-def _build_tag_xml(media_file: MediaFile) -> str:
-    """Build MKV tag XML for embedding."""
-    tags = []
+    tags: dict[str, str] = {}
 
     if media_file.artist:
-        tags.append(f'    <Simple><Name>ARTIST</Name><String>{xml_escape(media_file.artist)}</String></Simple>')
+        tags["ARTIST"] = media_file.artist
 
     title = media_file.title or media_file.set_title or ""
     if media_file.festival:
         title = f"{media_file.festival} {media_file.year}".strip()
     if title:
-        tags.append(f'    <Simple><Name>TITLE</Name><String>{xml_escape(title)}</String></Simple>')
+        tags["TITLE"] = title
 
     date = media_file.date or media_file.year
     if date:
-        tags.append(f'    <Simple><Name>DATE_RELEASED</Name><String>{xml_escape(date)}</String></Simple>')
+        tags["DATE_RELEASED"] = date
 
-    tags_str = "\n".join(tags)
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
-<Tags>
-  <Tag>
-    <Targets>
-      <TargetTypeValue>50</TargetTypeValue>
-    </Targets>
-{tags_str}
-  </Tag>
-</Tags>
-"""
+    if not tags:
+        return True  # Nothing to write
+
+    return write_merged_tags(target_path, {50: tags})
 
 
 def xml_escape(text: str) -> str:

@@ -1,5 +1,4 @@
 import logging
-import subprocess as subprocess_mod
 from pathlib import Path
 from unittest.mock import patch
 from festival_organizer.embed_tags import embed_tags
@@ -14,15 +13,33 @@ def _make_mf(**kwargs):
 
 
 def test_embed_tags_failure_logged(tmp_path, caplog):
-    """Tag embedding failure is logged."""
+    """Tag embedding failure is logged via write_merged_tags."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf()
 
     with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-        with patch("festival_organizer.embed_tags.subprocess.run",
-                   side_effect=subprocess_mod.SubprocessError("nope")):
-            with caplog.at_level(logging.DEBUG, logger="festival_organizer.embed_tags"):
-                result = embed_tags(mf, video)
+        with patch("festival_organizer.embed_tags.write_merged_tags", return_value=False):
+            result = embed_tags(mf, video)
     assert result is False
-    assert "nope" in caplog.text
+
+
+def test_embed_tags_calls_write_merged_tags(tmp_path):
+    """embed_tags uses mkv_tags.write_merged_tags, not raw mkvpropedit."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(artist="Afrojack", festival="EDC", year="2025")
+
+    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            result = embed_tags(mf, video)
+
+    assert result is True
+    mock_wmt.assert_called_once()
+    call_args = mock_wmt.call_args
+    assert call_args[0][0] == video
+    tags_dict = call_args[0][1]
+    assert 50 in tags_dict
+    assert tags_dict[50]["ARTIST"] == "Afrojack"
+    assert tags_dict[50]["TITLE"] == "EDC 2025"
+    assert tags_dict[50]["DATE_RELEASED"] == "2025"
