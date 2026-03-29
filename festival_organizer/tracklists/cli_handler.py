@@ -242,7 +242,7 @@ def _fetch_and_embed(
         print(f"  {e}")
         if not preview:
             # Tag file with URL for future pickup
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, event_artwork_url=export.event_artwork_url)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, event_artwork_url=export.event_artwork_url, dj_artwork_url=export.dj_artwork_url)
             print(f"  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -271,7 +271,7 @@ def _fetch_and_embed(
         return "skipped"
 
     # Embed
-    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, event_artwork_url=export.event_artwork_url)
+    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, event_artwork_url=export.event_artwork_url, dj_artwork_url=export.dj_artwork_url)
     if success:
         if not quiet:
             print(f"  Embedded {len(chapters)} chapters.")

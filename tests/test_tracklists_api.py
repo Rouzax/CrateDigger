@@ -19,6 +19,7 @@ from festival_organizer.tracklists.api import (
     _is_rate_limited,
     _extract_event_artwork,
     _extract_genres,
+    _extract_dj_slugs,
 )
 
 
@@ -297,6 +298,20 @@ def test_extract_genres_filters_nav_genres():
 
 def test_extract_genres_empty():
     assert _extract_genres("<html>no genres</html>") == []
+
+
+# --- DJ slug extraction ---
+
+def test_extract_dj_slugs():
+    html = '''<a href="/dj/martingarrix/">MG</a>
+    <a href="/dj/alesso/">A</a>
+    <a href="/dj/martingarrix/">MG</a>'''
+    slugs = _extract_dj_slugs(html)
+    assert slugs == ["martingarrix", "alesso"]
+
+
+def test_extract_dj_slugs_empty():
+    assert _extract_dj_slugs("<html>no djs</html>") == []
 
 
 def test_request_raises_on_persistent_5xx():

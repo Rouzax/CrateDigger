@@ -8,10 +8,13 @@ Logging:
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+
+import requests
 
 from festival_organizer.config import Config
 from festival_organizer.models import MediaFile
@@ -211,6 +214,49 @@ class AlbumPosterOperation(Operation):
                     "artist style" if result else "festival style (no fanart)")
         return result
 
+    def _download_artwork(self, url: str, cache_subdir: str) -> Path | None:
+        """Download an artwork URL to cache. Returns local path or None."""
+        if not url or not self.library_root:
+            return None
+        h = hashlib.md5(url.encode()).hexdigest()[:12]
+        ext = url.rsplit(".", 1)[-1].split("?")[0][:4]
+        if ext not in ("jpg", "jpeg", "png", "webp"):
+            ext = "jpg"
+        cache_dir = self.library_root / ".cratedigger" / cache_subdir
+        cached = cache_dir / f"{h}.{ext}"
+        if cached.exists():
+            return cached
+        try:
+            resp = requests.get(url, timeout=15)
+            resp.raise_for_status()
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            cached.write_bytes(resp.content)
+            logger.info("Downloaded artwork: %s -> %s", url, cached.name)
+            return cached
+        except (requests.RequestException, OSError) as e:
+            logger.debug("Artwork download failed: %s", e)
+            return None
+
+    def _find_event_artwork(self, folder: Path) -> Path | None:
+        """Find event artwork URL from media files in folder, download and cache."""
+        from festival_organizer.analyzer import analyse_file
+        for video in folder.iterdir():
+            if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
+                mf = analyse_file(video, folder, self.config)
+                if mf.event_artwork_url:
+                    return self._download_artwork(mf.event_artwork_url, "events")
+        return None
+
+    def _find_dj_artwork(self, folder: Path) -> Path | None:
+        """Find DJ artwork URL from media files in folder, download and cache."""
+        from festival_organizer.analyzer import analyse_file
+        for video in folder.iterdir():
+            if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
+                mf = analyse_file(video, folder, self.config)
+                if mf.dj_artwork_url:
+                    return self._download_artwork(mf.dj_artwork_url, "dj-artwork")
+        return None
+
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.poster import generate_album_poster
         try:
@@ -238,9 +284,29 @@ class AlbumPosterOperation(Operation):
             # Collect existing thumbs in folder for color extraction
             thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
 
-            # Use artist fanart background only for single-artist folders
+            # Determine background image source with fallback chain
             bg_path = self._find_fanart_background(file_path.parent, mf.artist)
             is_artist_folder = bg_path is not None
+
+            if not bg_path and self.library_root:
+                # Festival folder: try event artwork first
+                event_art = (
+                    self._download_artwork(mf.event_artwork_url, "events")
+                    if mf.event_artwork_url else None
+                )
+                if event_art:
+                    bg_path = event_art
+                    logger.info("Album poster: using event artwork")
+
+            if not bg_path and not is_artist_folder and self.library_root:
+                # Festival folder without event artwork: try DJ artwork
+                dj_art = (
+                    self._download_artwork(mf.dj_artwork_url, "dj-artwork")
+                    if mf.dj_artwork_url else None
+                )
+                if dj_art:
+                    bg_path = dj_art
+                    logger.info("Album poster: using DJ artwork")
 
             generate_album_poster(
                 output_path=folder_jpg,

@@ -120,6 +120,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         tracklists_title=meta.get("tracklists_title", ""),
         genres=[g.strip() for g in meta.get("tracklists_genres", "").split("|") if g.strip()] if meta.get("tracklists_genres") else [],
         event_artwork_url=meta.get("tracklists_event_artwork", ""),
+        dj_artwork_url=meta.get("tracklists_dj_artwork", ""),
         metadata_source=metadata_source,
         content_type="",  # Set by classifier
         extension=ext,

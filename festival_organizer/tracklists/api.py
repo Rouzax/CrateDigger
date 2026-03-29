@@ -42,6 +42,7 @@ class TracklistExport:
     title: str
     event_artwork_url: str = ""
     genres: list[str] = field(default_factory=list)
+    dj_artwork_url: str = ""
 
 
 class TracklistSession:
@@ -164,14 +165,23 @@ class TracklistSession:
         # Extract enrichment metadata from page HTML
         event_artwork_url = _extract_event_artwork(page_resp.text)
         genres = _extract_genres(page_resp.text)
+        dj_slugs = _extract_dj_slugs(page_resp.text)
         if event_artwork_url:
             logger.info("Event artwork: %s", event_artwork_url)
         if genres:
             logger.info("Genres: %s", genres)
 
+        # Fetch DJ artwork from first DJ's profile page
+        dj_artwork_url = ""
+        if dj_slugs:
+            dj_artwork_url = self._fetch_dj_artwork(dj_slugs[0])
+            if dj_artwork_url:
+                logger.info("DJ artwork: %s", dj_artwork_url)
+
         return TracklistExport(
             lines=lines, url=short_url, title=title,
             event_artwork_url=event_artwork_url, genres=genres,
+            dj_artwork_url=dj_artwork_url,
         )
 
     def _request(self, method: str, url: str, data: dict | None = None,
@@ -270,6 +280,20 @@ class TracklistSession:
             ))
 
         return results
+
+    def _fetch_dj_artwork(self, dj_slug: str) -> str:
+        """Fetch og:image from a /dj/ profile page. Returns URL or empty string."""
+        try:
+            resp = self._request("GET", f"{BASE_URL}/dj/{dj_slug}/index.html", max_retries=2)
+            m = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', resp.text)
+            if m:
+                url = m.group(1)
+                # Skip default/placeholder images
+                if "default" not in url:
+                    return url
+        except TracklistError:
+            logger.debug("Failed to fetch DJ page for %s", dj_slug)
+        return ""
 
     def _validate_session(self) -> bool:
         """Check if current session is still valid."""
@@ -384,6 +408,18 @@ def _extract_genres(html: str) -> list[str]:
         # Convert slug to title case: "melodic-house-techno" -> "Melodic House Techno"
         genres.append(slug.replace("-", " ").title())
     return genres
+
+
+def _extract_dj_slugs(html: str) -> list[str]:
+    """Extract DJ slugs from /dj/<slug>/ links, deduplicated, preserving order."""
+    matches = re.findall(r'href="/dj/([^/]+)/"', html)
+    seen = set()
+    slugs = []
+    for slug in matches:
+        if slug not in seen:
+            seen.add(slug)
+            slugs.append(slug)
+    return slugs
 
 
 def _is_rate_limited(text: str) -> bool:
