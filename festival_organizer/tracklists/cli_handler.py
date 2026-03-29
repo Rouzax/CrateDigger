@@ -251,6 +251,13 @@ def _fetch_and_embed(
         print("  No chapters found in tracklist.")
         return "skipped"
 
+    if len(chapters) < 2:
+        print("  Only 1 chapter — skipping (not useful for navigation)")
+        if not preview:
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, event_artwork_url=export.event_artwork_url, dj_artwork_url=export.dj_artwork_url)
+            print(f"  Tagged with URL for future pickup.")
+        return "skipped"
+
     # Check for duplicates
     existing = extract_existing_chapters(filepath)
     if chapters_are_identical(existing, chapters):

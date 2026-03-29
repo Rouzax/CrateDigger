@@ -45,10 +45,12 @@ def classify(media_file: MediaFile, root: Path, config: Config) -> str:
         logger.info("Classified as festival_set (1001tracklists metadata)")
         return "festival_set"
 
-    # 3. Has a known festival name -> festival
-    if media_file.festival and media_file.festival in config.known_festivals:
-        logger.info("Classified as festival_set (known festival: %s)", media_file.festival)
-        return "festival_set"
+    # 3. Has a known festival name -> festival (resolve aliases first)
+    if media_file.festival:
+        canonical = config.resolve_festival_alias(media_file.festival)
+        if canonical in config.known_festivals:
+            logger.info("Classified as festival_set (known festival: %s)", canonical)
+            return "festival_set"
 
     # 4. Fallback
     logger.info("Classified as unknown")

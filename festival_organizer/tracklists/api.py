@@ -370,9 +370,11 @@ class TracklistSession:
 
 def _extract_event_artwork(html: str) -> str:
     """Extract event artwork URL from og:image meta tag or artworkTop CSS."""
-    # Try og:image first
+    # Try og:image first — but only if it's from a known event artwork source,
+    # not a music platform album cover (Apple Music, Spotify, etc.)
+    _ARTWORK_BLOCKLIST = ("mzstatic.com", "i.scdn.co", "mosaic.scdn.co", "coverartarchive.org")
     m = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', html)
-    if m:
+    if m and not any(domain in m.group(1) for domain in _ARTWORK_BLOCKLIST):
         return m.group(1)
     # Fallback: artworkTop background-image in CSS (cdn.1001tracklists.com artwork)
     m = re.search(r"#artworkTop\s*\{[^}]*background-image:\s*url\('([^']+)'\)", html)
