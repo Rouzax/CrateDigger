@@ -10,6 +10,7 @@ class MediaFile:
 
     # Content metadata
     artist: str = ""
+    display_artist: str = ""  # Full multi-artist name for filenames/titles
     festival: str = ""
     year: str = ""
     date: str = ""

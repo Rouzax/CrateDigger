@@ -50,6 +50,16 @@ def test_media_file_new_fields_default_empty():
     assert mf.enriched_at == ""
 
 
+def test_display_artist_defaults_empty():
+    mf = MediaFile(source_path=Path("test.mkv"))
+    assert mf.display_artist == ""
+
+
+def test_display_artist_set_explicitly():
+    mf = MediaFile(source_path=Path("test.mkv"), display_artist="Martin Garrix & Alesso")
+    assert mf.display_artist == "Martin Garrix & Alesso"
+
+
 def test_file_action_defaults():
     mf = MediaFile(source_path=Path("src.mkv"))
     fa = FileAction(
