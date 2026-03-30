@@ -259,7 +259,7 @@ def _run_command(args) -> int:
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
-            progress.file_start(fp, target_folder + "/")
+            progress.file_start(fp, target_folder + "/" + target_name)
             progress.file_done([])
             continue
 
