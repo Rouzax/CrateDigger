@@ -133,7 +133,14 @@ DEFAULT_CONFIG = {
         "enabled": True,
     },
     "artist_aliases": {},
-    "artist_groups": [],
+    "artist_groups": [
+        "Above & Beyond",
+        "Axwell & Ingrosso",
+        "Dimitri Vegas & Like Mike",
+        "Sunnery James & Ryan Marciano",
+        "Swedish House Mafia",
+        "Vini Vici",
+    ],
 }
 
 
