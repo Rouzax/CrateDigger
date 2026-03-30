@@ -17,7 +17,7 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
 
 CSV_FIELDS = [
     "status", "source", "target",
-    "artist", "festival", "year", "date", "set_title",
+    "artist", "display_artist", "festival", "year", "date", "set_title",
     "stage", "location", "content_type", "file_type",
     "resolution", "duration", "video_format", "audio_format",
     "metadata_source", "tracklists_url", "error",
@@ -39,6 +39,7 @@ class ActionLogger:
             "source": str(action.source),
             "target": str(action.target),
             "artist": mf.artist,
+            "display_artist": mf.display_artist,
             "festival": mf.festival,
             "year": mf.year,
             "date": mf.date,

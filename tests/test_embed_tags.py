@@ -114,3 +114,44 @@ def test_embed_tags_skips_empty_enrichment_fields(tmp_path):
     tags_dict = mock_wmt.call_args[0][1]
     # TTV=70 should not be present if all enrichment fields are empty
     assert 70 not in tags_dict
+
+
+def test_embed_tags_b2b_artist_in_title_not_artist_tag(tmp_path):
+    """TITLE uses display_artist (B2B), ARTIST stays primary for Plex."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(
+        artist="Martin Garrix",
+        display_artist="Martin Garrix & Alesso",
+        festival="Red Rocks",
+        year="2025",
+    )
+
+    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            embed_tags(mf, video)
+
+    tags_dict = mock_wmt.call_args[0][1]
+    assert tags_dict[50]["ARTIST"] == "Martin Garrix"  # primary for Plex
+    assert tags_dict[50]["TITLE"] == "Martin Garrix & Alesso"  # display_artist in title
+
+
+def test_embed_tags_b2b_with_stage_in_title(tmp_path):
+    """TITLE with stage uses display_artist for B2B."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(
+        artist="Martin Garrix",
+        display_artist="Martin Garrix & Alesso",
+        festival="Red Rocks",
+        stage="Main Stage",
+        year="2025",
+    )
+
+    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            embed_tags(mf, video)
+
+    tags_dict = mock_wmt.call_args[0][1]
+    assert tags_dict[50]["ARTIST"] == "Martin Garrix"
+    assert tags_dict[50]["TITLE"] == "Martin Garrix & Alesso @ Main Stage, Red Rocks"

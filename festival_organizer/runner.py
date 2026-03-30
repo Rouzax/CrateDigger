@@ -30,7 +30,7 @@ def run_pipeline(
         target_folder = ""
         for op in operations:
             if op.name == "organize" and hasattr(op, "target"):
-                target_folder = str(op.target.parent.name) + "/"
+                target_folder = str(op.target.parent.name) + "/" + op.target.name
                 break
 
         progress.file_start(file_path, target_folder)

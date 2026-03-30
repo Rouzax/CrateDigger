@@ -97,6 +97,25 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     if embedded and not tracklists_info:
         metadata_source = "metadata+filename"
 
+    # Build display_artist: same priority but skip ARTIST tag (Layer 3 direct)
+    # This preserves full B2B/collab names in filenames and TITLE tags,
+    # while ARTIST tag (written by embed_tags) holds primary-only for Plex.
+    da = ""
+    # Layer 1: parent dir
+    if parent_info.get("artist"):
+        da = parent_info["artist"]
+    # Layer 2: filename parse (overwrites)
+    if filename_info.get("artist"):
+        da = filename_info["artist"]
+    # Layer 3: SKIP the ARTIST tag — intentionally omitted
+    # Layer 4: 1001TL (highest priority, overwrites)
+    if tracklists_info and tracklists_info.get("artist"):
+        da = tracklists_info["artist"]
+    display_artist = normalise_name(da)
+    # Title-case if the source was ALL-CAPS (e.g. YouTube titles)
+    if display_artist and display_artist == display_artist.upper():
+        display_artist = display_artist.title()
+
     # Normalise
     artist = normalise_name(info.get("artist", ""))
     if artist:
@@ -115,6 +134,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     return MediaFile(
         source_path=filepath,
         artist=artist,
+        display_artist=display_artist,
         festival=festival,
         year=info.get("year", "").strip(),
         date=info.get("date", ""),

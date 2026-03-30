@@ -37,7 +37,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
         tags["ARTIST"] = media_file.artist
 
     if media_file.content_type == "festival_set":
-        artist = media_file.artist or "Unknown Artist"
+        artist = media_file.display_artist or media_file.artist or "Unknown Artist"
         if media_file.stage:
             parts = [f"{artist} @ {media_file.stage}"]
             if media_file.festival:

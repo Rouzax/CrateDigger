@@ -159,6 +159,52 @@ def test_render_filename_concert_film():
     assert result == "Coldplay - A Head Full of Dreams.mkv"
 
 
+def test_render_filename_uses_display_artist():
+    """Filename uses display_artist (full B2B name), not artist (primary)."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        display_artist="Martin Garrix & Alesso",
+        festival="Red Rocks",
+        year="2025",
+        extension=".mkv",
+        content_type="festival_set",
+    )
+    result = render_filename(mf, CFG)
+    assert result == "2025 - Red Rocks - Martin Garrix & Alesso.mkv"
+
+
+def test_render_filename_display_artist_empty_falls_back():
+    """When display_artist is empty, filename falls back to artist."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        display_artist="",
+        festival="AMF",
+        year="2024",
+        extension=".mkv",
+        content_type="festival_set",
+    )
+    result = render_filename(mf, CFG)
+    assert result == "2024 - AMF - Martin Garrix.mkv"
+
+
+def test_render_folder_uses_primary_artist_not_display():
+    """Folder path uses primary artist, never display_artist."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        display_artist="Martin Garrix & Alesso",
+        festival="Red Rocks",
+        year="2025",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG)
+    assert result == "Martin Garrix"
+    result_nested = render_folder(mf, CFG, layout_name="artist_nested")
+    assert result_nested == "Martin Garrix/Red Rocks/2025"
+
+
 def test_render_filename_missing_values_uses_fallbacks():
     mf = MediaFile(
         source_path=Path("mystery.mkv"),

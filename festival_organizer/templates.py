@@ -36,7 +36,7 @@ def render_filename(media_file: MediaFile, config: Config) -> str:
         return media_file.source_path.name
 
     template = config.get_filename_template(ct)
-    values = _build_values(media_file, config)
+    values = _build_values(media_file, config, for_filename=True)
 
     rendered = _render(template, values, config.fallback_values)
 
@@ -60,15 +60,20 @@ def render_filename(media_file: MediaFile, config: Config) -> str:
     return rendered + ext
 
 
-def _build_values(media_file: MediaFile, config: Config) -> dict[str, str]:
+def _build_values(media_file: MediaFile, config: Config, *, for_filename: bool = False) -> dict[str, str]:
     """Build the substitution values dict for a media file."""
     # Resolve festival display name (with location if configured)
     festival = media_file.festival
     if festival:
         festival = config.get_festival_display(festival, media_file.location)
 
+    # For filenames, use display_artist (full B2B name); for folders, use artist (primary)
+    artist = media_file.artist
+    if for_filename and media_file.display_artist:
+        artist = media_file.display_artist
+
     return {
-        "artist": safe_filename(media_file.artist),
+        "artist": safe_filename(artist),
         "festival": safe_filename(festival),
         "year": media_file.year,
         "date": media_file.date,

@@ -173,3 +173,37 @@ def test_nfo_title_falls_back_to_artist(tmp_path):
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
     assert root.find("title").text == "Martin Garrix"
+
+
+def test_nfo_title_uses_display_artist_for_b2b(tmp_path):
+    """NFO title uses display_artist for B2B sets."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        display_artist="Martin Garrix & Alesso",
+        stage="Main Stage",
+        festival="Red Rocks",
+        year="2025",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("title").text == "Martin Garrix & Alesso @ Main Stage, Red Rocks"
+    assert root.find("artist").text == "Martin Garrix"  # primary for Plex
+
+
+def test_nfo_title_display_artist_no_stage(tmp_path):
+    """NFO title without stage still uses display_artist."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        display_artist="Martin Garrix & Alesso",
+        festival="Red Rocks",
+        year="2025",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("title").text == "Martin Garrix & Alesso"
