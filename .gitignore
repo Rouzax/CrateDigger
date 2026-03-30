@@ -5,3 +5,5 @@ __pycache__/
 .venv/
 C:/
 config.json
+docs/plans/
+docs/superpowers/
