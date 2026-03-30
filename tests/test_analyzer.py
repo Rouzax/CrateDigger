@@ -138,3 +138,85 @@ def test_analyse_enrichment_fields_default_empty():
     assert mf.fanart_url == ""
     assert mf.clearlogo_url == ""
     assert mf.enriched_at == ""
+
+
+def test_display_artist_from_1001tl_b2b():
+    """display_artist preserves full B2B name from 1001TL title."""
+    fake_meta = {
+        "title": "MARTIN GARRIX B2B ALESSO LIVE @ RED ROCKS 2025",
+        "tracklists_title": "Martin Garrix & Alesso @ Red Rocks Amphitheatre, United States 2025-10-24",
+        "tracklists_url": "https://www.1001tracklists.com/tracklist/20uhfc4k/",
+        "artist_tag": "Martin Garrix, Alesso",
+        "date_tag": "",
+        "duration_seconds": 3600.0, "width": 1920, "height": 1080,
+        "video_format": "VP9", "audio_format": "Opus",
+        "audio_bitrate": "", "overall_bitrate": "",
+        "has_cover": True, "description": "", "comment": "", "purl": "",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("D:/TEMP/_ORG/MARTIN GARRIX B2B ALESSO LIVE @ RED ROCKS 2025 [J8P_X7Fc5as].mkv"),
+            Path("D:/TEMP/_ORG"),
+            CFG,
+        )
+    assert mf.artist == "Martin Garrix"  # primary for folders
+    assert mf.display_artist == "Martin Garrix & Alesso"  # full for filenames
+
+
+def test_display_artist_solo_matches_artist():
+    """For solo artists, display_artist equals artist."""
+    fake_meta = {
+        "title": "MARTIN GARRIX LIVE @ AMF 2024",
+        "tracklists_title": "Martin Garrix @ Amsterdam Music Festival, Johan Cruijff ArenA, Amsterdam Dance Event, Netherlands 2024-10-19",
+        "tracklists_url": "https://www.1001tracklists.com/tracklist/qv6kl89/",
+        "artist_tag": "",
+        "date_tag": "",
+        "duration_seconds": 7200.0, "width": 3840, "height": 2160,
+        "video_format": "VP9", "audio_format": "Opus",
+        "audio_bitrate": "125000", "overall_bitrate": "13500000",
+        "has_cover": True, "description": "", "comment": "", "purl": "",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("//hyperv/Data/Concerts/AMF/2024 - AMF/MARTIN GARRIX LIVE @ AMF 2024.mkv"),
+            Path("//hyperv/Data/Concerts"),
+            CFG,
+        )
+    assert mf.artist == "Martin Garrix"
+    assert mf.display_artist == "Martin Garrix"
+
+
+def test_display_artist_ignores_artist_tag():
+    """display_artist is NOT derived from ARTIST tag (which stores primary only)."""
+    fake_meta = {
+        "title": "", "tracklists_title": "", "tracklists_url": "",
+        "artist_tag": "Martin Garrix",
+        "date_tag": "", "duration_seconds": None,
+        "width": None, "height": None,
+        "video_format": "", "audio_format": "",
+        "audio_bitrate": "", "overall_bitrate": "",
+        "has_cover": False, "description": "", "comment": "", "purl": "",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/Martin Garrix/2025 - Red Rocks - Martin Garrix & Alesso.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    # Filename gives "Martin Garrix & Alesso", ARTIST tag gives "Martin Garrix"
+    # display_artist should come from filename (skip ARTIST tag)
+    assert mf.display_artist == "Martin Garrix & Alesso"
+    assert mf.artist == "Martin Garrix"  # resolved primary
+
+
+def test_display_artist_filename_only_b2b():
+    """display_artist works from filename alone (no tags)."""
+    with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
+        mf = analyse_file(
+            Path("/downloads/MARTIN GARRIX B2B ALESSO LIVE @ RED ROCKS 2025.mkv"),
+            Path("/downloads"),
+            CFG,
+        )
+    assert mf.display_artist == "Martin Garrix B2B Alesso"
+    # artist is the primary (first) from B2B split; stays uppercase without alias match
+    assert mf.artist == "MARTIN GARRIX"
