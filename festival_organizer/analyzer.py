@@ -94,6 +94,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
 
     # Normalise
     artist = normalise_name(info.get("artist", ""))
+    if artist:
+        artist = config.resolve_artist(artist)
     festival = info.get("festival", "")
     # Resolve festival alias
     if festival:
