@@ -68,5 +68,17 @@
         "force_festival": []
     },
 
-    "skip_patterns": ["*/BDMV/*", "Dolby*"]
+    "skip_patterns": ["*/BDMV/*", "Dolby*"],
+
+    "artist_aliases": {
+        "_comment": "Map alternative artist names to canonical names.",
+        "DVLM": "Dimitri Vegas & Like Mike",
+        "Area21": "Martin Garrix"
+    },
+
+    "artist_groups": [
+        "Dimitri Vegas & Like Mike",
+        "Above & Beyond",
+        "Sunnery James & Ryan Marciano"
+    ]
 }

@@ -215,6 +215,36 @@ def test_load_config_malformed_library_json(tmp_path, capsys):
     assert "config.json" in captured.err
 
 
+def test_resolve_artist_alias():
+    config = Config({"artist_aliases": {"DVLM": "Dimitri Vegas & Like Mike", "Area21": "Martin Garrix"}})
+    assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
+    assert config.resolve_artist("Area21") == "Martin Garrix"
+    assert config.resolve_artist("Hardwell") == "Hardwell"
+
+
+def test_resolve_artist_case_insensitive():
+    config = Config({"artist_aliases": {"dvlm": "Dimitri Vegas & Like Mike"}})
+    assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
+
+
+def test_resolve_artist_b2b_not_in_groups():
+    config = Config({"artist_groups": ["Dimitri Vegas & Like Mike"]})
+    assert config.resolve_artist("Armin van Buuren & KIKI") == "Armin van Buuren"
+
+
+def test_resolve_artist_group_stays_intact():
+    config = Config({"artist_groups": ["Dimitri Vegas & Like Mike"]})
+    assert config.resolve_artist("Dimitri Vegas & Like Mike") == "Dimitri Vegas & Like Mike"
+
+
+def test_resolve_artist_alias_then_group():
+    config = Config({
+        "artist_aliases": {"DVLM": "Dimitri Vegas & Like Mike"},
+        "artist_groups": ["Dimitri Vegas & Like Mike"],
+    })
+    assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
+
+
 def test_load_config_unreadable_file(tmp_path, capsys):
     """Unreadable config prints warning and falls back to defaults."""
     import os

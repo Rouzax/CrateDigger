@@ -1,5 +1,6 @@
 """Configuration loading and access."""
 import json
+import re
 import sys
 from copy import deepcopy
 from fnmatch import fnmatch
@@ -131,6 +132,8 @@ DEFAULT_CONFIG = {
         "personal_api_key": "",
         "enabled": True,
     },
+    "artist_aliases": {},
+    "artist_groups": [],
 }
 
 
@@ -219,6 +222,43 @@ class Config:
             return self.festival_aliases[name]
         lower_map = {k.lower(): v for k, v in self.festival_aliases.items()}
         return lower_map.get(name.lower(), name)
+
+    @property
+    def artist_aliases(self) -> dict[str, str]:
+        return self._data.get("artist_aliases", {})
+
+    @property
+    def artist_groups(self) -> set[str]:
+        return {g.lower() for g in self._data.get("artist_groups", [])}
+
+    def resolve_artist(self, name: str) -> str:
+        """Resolve artist alias, then for B2Bs not in groups return first artist."""
+        # 1. Resolve alias (case-insensitive)
+        aliased = False
+        if name in self.artist_aliases:
+            name = self.artist_aliases[name]
+            aliased = True
+        else:
+            lower_map = {k.lower(): v for k, v in self.artist_aliases.items()}
+            resolved = lower_map.get(name.lower())
+            if resolved is not None:
+                name = resolved
+                aliased = True
+
+        # If an alias matched, the user explicitly chose this canonical name
+        if aliased:
+            return name
+
+        # 2. If the full name is a known group, keep it
+        if name.lower() in self.artist_groups:
+            return name
+
+        # 3. Split on separators, return first artist
+        parts = re.split(r"\s+(?:&|B2B|b2b|vs\.?|x)\s+", name, flags=re.IGNORECASE)
+        if len(parts) > 1:
+            return parts[0].strip()
+
+        return name
 
     def get_festival_display(self, canonical_festival: str, location: str) -> str:
         """Get display name for a festival, optionally including location."""
