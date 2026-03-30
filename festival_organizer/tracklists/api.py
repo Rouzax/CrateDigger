@@ -43,13 +43,18 @@ class TracklistExport:
     title: str
     genres: list[str] = field(default_factory=list)
     dj_artwork_url: str = ""
+    stage_text: str = ""
+    sources_by_type: dict[str, list[str]] = field(default_factory=dict)
 
 
 class TracklistSession:
     """Manages authenticated session with 1001tracklists.com."""
 
-    def __init__(self, cookie_cache_path: Path | None = None):
+    def __init__(self, cookie_cache_path: Path | None = None,
+                 source_cache=None, delay: float = 5):
         self._cookie_path = cookie_cache_path or DEFAULT_COOKIE_PATH
+        self._source_cache = source_cache
+        self._delay = delay
         self._session = requests.Session()
         self._session.headers.update({
             "User-Agent": USER_AGENT,
@@ -173,9 +178,30 @@ class TracklistSession:
             if dj_artwork_url:
                 logger.info("DJ artwork: %s", dj_artwork_url)
 
+        # Parse structured h1 for stage and source metadata
+        h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", page_resp.text, re.DOTALL)
+        stage_text = ""
+        sources_by_type: dict[str, list[str]] = {}
+        if h1_match:
+            h1_info = _parse_h1_structure(h1_match.group(1))
+            stage_text = h1_info["stage_text"]
+
+            if h1_info["sources"] and self._source_cache:
+                for sid, slug, display_name in h1_info["sources"]:
+                    if not self._source_cache.get(sid):
+                        time.sleep(self._delay)
+                        info = self.fetch_source_info(sid, slug)
+                        self._source_cache.put(sid, info)
+                        logger.info("Cached source: %s = %s (%s)", display_name, info["type"], info["country"])
+
+                sources_by_type = self._source_cache.group_by_type(
+                    [s[0] for s in h1_info["sources"]]
+                )
+
         return TracklistExport(
             lines=lines, url=short_url, title=title,
             genres=genres, dj_artwork_url=dj_artwork_url,
+            stage_text=stage_text, sources_by_type=sources_by_type,
         )
 
     def _request(self, method: str, url: str, data: dict | None = None,
@@ -275,6 +301,26 @@ class TracklistSession:
 
         return results
 
+    def fetch_source_info(self, source_id: str, slug: str) -> dict:
+        """Fetch metadata from a /source/ page. Returns {name, slug, type, country}."""
+        url = f"{BASE_URL}/source/{source_id}/{slug}/index.html"
+        resp = self._request("GET", url, max_retries=2)
+
+        type_match = re.search(
+            r'<div class="cRow">\s*<div class="mtb5">([^<]+)</div>', resp.text
+        )
+        source_type = type_match.group(1).strip() if type_match else ""
+
+        flag_match = re.search(
+            r'<img[^>]*flags/[^.]+\.png[^>]*alt="([^"]+)"', resp.text
+        )
+        country = flag_match.group(1).strip() if flag_match else ""
+
+        name_match = re.search(r'<div class="h">\s*([^<]+)', resp.text)
+        name = name_match.group(1).strip() if name_match else slug.replace("-", " ").title()
+
+        return {"name": name, "slug": slug, "type": source_type, "country": country}
+
     def _fetch_dj_artwork(self, dj_slug: str) -> str:
         """Fetch og:image from a /dj/ profile page. Returns URL or empty string."""
         try:
@@ -362,6 +408,39 @@ class TracklistSession:
         except (OSError, json.JSONDecodeError, KeyError, TypeError) as e:
             logger.debug("Cookie restore failed: %s", e)
             return False
+
+
+def _parse_h1_structure(h1_html: str) -> dict:
+    """Parse the structured <h1> content from a tracklist page.
+
+    Returns dict with:
+        stage_text: str — plain text between @ and first /source/ link
+        sources: list of (id, slug, display_name) tuples from /source/ links
+    """
+    result = {"stage_text": "", "sources": []}
+
+    if "@" not in h1_html:
+        return result
+
+    after_at = h1_html.split("@", 1)[1]
+
+    source_pattern = re.compile(
+        r'<a[^>]*href="/source/([^/]+)/([^/]+)/[^"]*"[^>]*>([^<]+)</a>'
+    )
+    sources = [(m.group(1), m.group(2), _html_decode(m.group(3).strip()))
+               for m in source_pattern.finditer(after_at)]
+    result["sources"] = sources
+
+    first_source = source_pattern.search(after_at)
+    if first_source:
+        plain = after_at[:first_source.start()]
+    else:
+        plain = after_at
+
+    plain = re.sub(r"<[^>]+>", "", plain).strip().rstrip(",").strip()
+    result["stage_text"] = _html_decode(plain)
+
+    return result
 
 
 def _extract_genres(html: str) -> list[str]:
