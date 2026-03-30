@@ -176,6 +176,36 @@ def test_parse_mediainfo_json_new_tag_names():
     assert meta["tracklists_dj_artwork"] == "https://dj.jpg"
 
 
+def test_parse_mediainfo_json_new_tags_in_extra():
+    """CRATEDIGGER_1001TL_* tags in extra dict are found (MediaInfo puts custom tags there)."""
+    raw = {
+        "media": {
+            "track": [
+                {
+                    "@type": "General",
+                    "Duration": "3600.0",
+                    "Format": "Matroska",
+                    "extra": {
+                        "CRATEDIGGER_1001TL_URL": "https://extra-url.com",
+                        "CRATEDIGGER_1001TL_TITLE": "Extra Title",
+                        "CRATEDIGGER_1001TL_ID": "extra123",
+                        "CRATEDIGGER_1001TL_DATE": "2025-06-15",
+                        "CRATEDIGGER_1001TL_GENRES": "Techno|Trance",
+                        "CRATEDIGGER_1001TL_DJ_ARTWORK": "https://extra-dj.jpg",
+                    },
+                },
+            ]
+        }
+    }
+    meta = parse_mediainfo_json(raw)
+    assert meta["tracklists_url"] == "https://extra-url.com"
+    assert meta["tracklists_title"] == "Extra Title"
+    assert meta["tracklists_id"] == "extra123"
+    assert meta["tracklists_date"] == "2025-06-15"
+    assert meta["tracklists_genres"] == "Techno|Trance"
+    assert meta["tracklists_dj_artwork"] == "https://extra-dj.jpg"
+
+
 def test_parse_mediainfo_json_old_tag_fallback():
     """Old 1001TRACKLISTS_* tags still work when new tags are absent."""
     raw = {

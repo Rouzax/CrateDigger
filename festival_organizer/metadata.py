@@ -109,34 +109,40 @@ def parse_mediainfo_json(data: dict) -> dict:
         "description": general.get("Description", ""),
         "comment": general.get("Comment", ""),
         "purl": general.get("PURL", "") or extra.get("PURL", ""),
-        # 1001Tracklists (new name first, fall back to old)
+        # 1001Tracklists (new name first, fall back to old; check extra for both)
         "tracklists_title": (
             general.get("CRATEDIGGER_1001TL_TITLE", "")
+            or extra.get("CRATEDIGGER_1001TL_TITLE", "")
             or general.get("1001TRACKLISTS_TITLE", "")
             or extra.get("_1001TRACKLISTS_TITLE", "")
         ),
         "tracklists_url": (
             general.get("CRATEDIGGER_1001TL_URL", "")
+            or extra.get("CRATEDIGGER_1001TL_URL", "")
             or general.get("1001TRACKLISTS_URL", "")
             or extra.get("_1001TRACKLISTS_URL", "")
         ),
         "tracklists_id": (
             general.get("CRATEDIGGER_1001TL_ID", "")
+            or extra.get("CRATEDIGGER_1001TL_ID", "")
             or general.get("1001TRACKLISTS_ID", "")
             or extra.get("_1001TRACKLISTS_ID", "")
         ),
         "tracklists_date": (
             general.get("CRATEDIGGER_1001TL_DATE", "")
+            or extra.get("CRATEDIGGER_1001TL_DATE", "")
             or general.get("1001TRACKLISTS_DATE", "")
             or extra.get("_1001TRACKLISTS_DATE", "")
         ),
         "tracklists_genres": (
             general.get("CRATEDIGGER_1001TL_GENRES", "")
+            or extra.get("CRATEDIGGER_1001TL_GENRES", "")
             or general.get("1001TRACKLISTS_GENRES", "")
             or extra.get("_1001TRACKLISTS_GENRES", "")
         ),
         "tracklists_dj_artwork": (
             general.get("CRATEDIGGER_1001TL_DJ_ARTWORK", "")
+            or extra.get("CRATEDIGGER_1001TL_DJ_ARTWORK", "")
             or general.get("1001TRACKLISTS_DJ_ARTWORK", "")
             or extra.get("_1001TRACKLISTS_DJ_ARTWORK", "")
         ),

@@ -349,6 +349,7 @@ class AlbumPosterOperation(Operation):
         for video in folder.iterdir():
             if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
                 mf = analyse_file(video, folder, self.config)
+                logger.debug("Album poster: dj_artwork_url=%s", mf.dj_artwork_url or "(empty)")
                 if mf.dj_artwork_url:
                     return self._download_artwork(mf.dj_artwork_url, "dj-artwork")
                 # Fallback: fetch DJ artwork from tracklist page
