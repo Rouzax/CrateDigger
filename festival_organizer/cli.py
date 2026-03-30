@@ -18,7 +18,6 @@ from festival_organizer.progress import ProgressPrinter
 from festival_organizer.runner import run_pipeline
 from festival_organizer.scanner import scan_folder
 from festival_organizer.templates import render_folder, render_filename
-from festival_organizer.normalization import safe_filename
 
 
 HELP_TEXT = """\
@@ -212,7 +211,7 @@ def _run_command(args) -> int:
             # Dry run — no operations, just show plan
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
-            target = output / target_folder / (safe_filename(target_name) + mf.extension)
+            target = output / target_folder / target_name
             progress.file_start(fp, target_folder + "/")
             progress.file_done([])
             continue
@@ -220,7 +219,7 @@ def _run_command(args) -> int:
         if args.command == "organize":
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
-            target = output / target_folder / (safe_filename(target_name) + mf.extension)
+            target = output / target_folder / target_name
             action = "copy" if getattr(args, "copy", False) else \
                      "rename" if getattr(args, "rename_only", False) else "move"
             ops.append(OrganizeOperation(target=target, action=action))
