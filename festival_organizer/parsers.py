@@ -55,7 +55,7 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
     for i, seg in enumerate(segments):
         seg_lower = seg.lower()
         for fest in all_aliases:
-            if fest.lower() in seg_lower:
+            if _festival_in_text(fest, seg_lower):
                 # Resolve alias to canonical name
                 result["festival"] = config.resolve_festival_alias(seg.strip())
                 festival_idx = i
@@ -242,7 +242,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         remainder = (stem[:year_match.start()] + stem[year_match.end():]).strip(" -\u2013\u2014")
         # Check if remainder contains a known festival
         for fest in known_festivals:
-            if fest.lower() in remainder.lower():
+            if _festival_in_text(fest, remainder):
                 result.setdefault("festival", fest)
                 # Remove the festival name to get the artist
                 cleaned = re.sub(re.escape(fest), "", remainder, flags=re.IGNORECASE).strip(" -\u2013\u2014")
@@ -276,7 +276,7 @@ def parse_parent_dirs(filepath: Path, root: Path, config: Config) -> dict:
 
         # Known festival
         for fest in config.known_festivals:
-            if fest.lower() in part.lower():
+            if _festival_in_text(fest, part):
                 result.setdefault("festival", fest)
                 break
 
@@ -289,7 +289,11 @@ def parse_parent_dirs(filepath: Path, root: Path, config: Config) -> dict:
     return result
 
 
+def _festival_in_text(fest: str, text: str) -> bool:
+    """Check if festival name appears in text as a whole word/phrase."""
+    return bool(re.search(r"(?<!\w)" + re.escape(fest) + r"(?!\w)", text, re.IGNORECASE))
+
+
 def _is_known_festival(name: str, known: set[str]) -> bool:
     """Check if name matches a known festival."""
-    name_lower = name.lower()
-    return any(f.lower() in name_lower for f in known)
+    return any(_festival_in_text(f, name) for f in known)

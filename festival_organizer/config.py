@@ -9,7 +9,16 @@ from pathlib import Path
 
 # Defaults for external config files (artists.json, festivals.json)
 _ARTIST_DEFAULTS = {
-    "aliases": {},
+    "aliases": {
+        "Martin Garrix": ["Area21", "YTRAM", "GRX"],
+        "Tiësto": ["Tiesto", "VER:WEST", "VERWEST"],
+        "David Guetta": ["Jack Back"],
+        "Armin van Buuren": ["Gaia", "Rising Star"],
+        "Nicky Romero": ["Monocule"],
+        "Oliver Heldens": ["HI-LO"],
+        "Afrojack": ["NLW"],
+        "Deadmau5": ["deadmau5", "BSOD", "Testpilot"],
+    },
     "groups": [
         "Above & Beyond",
         "Axwell & Ingrosso",
@@ -17,42 +26,58 @@ _ARTIST_DEFAULTS = {
         "Sunnery James & Ryan Marciano",
         "Swedish House Mafia",
         "Vini Vici",
+        "Blasterjaxx",
+        "Showtek",
+        "W&W",
+        "Galantis",
+        "NERVO",
+        "Cosmic Gate",
+        "Aly & Fila",
+        "Gabriel & Dresden",
+        "Chocolate Puma",
+        "Da Tweekaz",
+        "Sub Zero Project",
     ],
 }
 
 _FESTIVAL_DEFAULTS = {
     "aliases": {
-        "AMF": "AMF",
-        "Amsterdam Music Festival": "AMF",
-        "EDC": "EDC Las Vegas",
-        "EDC Las Vegas": "EDC Las Vegas",
-        "Electric Daisy Carnival": "EDC Las Vegas",
-        "Ultra": "Ultra Music Festival",
-        "Ultra Music Festival": "Ultra Music Festival",
-        "Ultra Music Festival Miami": "Ultra Music Festival",
-        "Tomorrowland": "Tomorrowland",
-        "Tomorrowland Weekend 1": "Tomorrowland",
-        "Tomorrowland Weekend 2": "Tomorrowland",
-        "Mysteryland": "Mysteryland",
-        "Glastonbury": "Glastonbury",
-        "Red Rocks": "Red Rocks",
-        "Red Rocks Amphitheatre": "Red Rocks",
-        "Dreamstate": "Dreamstate",
-        "We Belong Here": "We Belong Here",
-        "We Belong Here Miami": "We Belong Here",
-        "Defqon.1": "Defqon.1",
-        "Creamfields": "Creamfields",
-        "Lollapalooza": "Lollapalooza",
-        "Untold": "Untold",
+        "AMF": ["Amsterdam Music Festival"],
+        "EDC Las Vegas": ["EDC", "Electric Daisy Carnival"],
+        "Ultra Music Festival": ["Ultra", "Ultra Music Festival Miami", "UMF"],
+        "Tomorrowland": ["Tomorrowland Weekend 1", "Tomorrowland Weekend 2", "TML"],
+        "Mysteryland": [],
+        "Glastonbury": [],
+        "Red Rocks": ["Red Rocks Amphitheatre"],
+        "Dreamstate": ["Dreamstate SoCal"],
+        "We Belong Here": ["We Belong Here Miami"],
+        "Defqon.1": [],
+        "Creamfields": [],
+        "Lollapalooza": [],
+        "Untold": [],
+        "Sensation": [],
+        "Parookaville": [],
+        "Awakenings": [],
+        "Dance Valley": [],
+        "Coachella": [],
+        "Electric Zoo": ["EZoo"],
+        "ADE": ["Amsterdam Dance Event"],
+        "ASOT": ["A State Of Trance"],
+        "Nature One": [],
+        "Decibel Outdoor": [],
+        "World Club Dome": [],
+        "Exit Festival": ["EXIT"],
+        "Balaton Sound": [],
+        "Sziget": [],
     },
     "config": {
         "Tomorrowland": {
             "location_in_name": True,
             "known_locations": ["Belgium", "Brasil", "Brazil"],
         },
-        "EDC": {
+        "EDC Las Vegas": {
             "location_in_name": True,
-            "known_locations": ["Las Vegas", "Mexico", "Orlando"],
+            "known_locations": ["Las Vegas", "Mexico", "Orlando", "Thailand"],
         },
     },
 }
@@ -151,6 +176,16 @@ DEFAULT_CONFIG = {
 }
 
 
+def _invert_alias_map(grouped: dict) -> dict[str, str]:
+    """Convert {canonical: [aliases]} to {alias: canonical} flat lookup map."""
+    flat = {}
+    for canonical, aliases in grouped.items():
+        flat[canonical] = canonical
+        for alias in aliases:
+            flat[alias] = canonical
+    return flat
+
+
 class Config:
     """Typed access to the configuration."""
 
@@ -195,10 +230,10 @@ class Config:
 
     @property
     def festival_aliases(self) -> dict[str, str]:
-        defaults = self._load_external_config("festivals.json", _FESTIVAL_DEFAULTS).get("aliases", {})
+        raw = self._load_external_config("festivals.json", _FESTIVAL_DEFAULTS).get("aliases", {})
         if "festival_aliases" in self._data:
-            return {**defaults, **self._data["festival_aliases"]}
-        return defaults
+            raw = {**raw, **self._data["festival_aliases"]}
+        return _invert_alias_map(raw)
 
     @property
     def festival_config(self) -> dict:
@@ -269,10 +304,10 @@ class Config:
 
     @property
     def artist_aliases(self) -> dict[str, str]:
-        defaults = self._load_external_config("artists.json", _ARTIST_DEFAULTS).get("aliases", {})
+        raw = self._load_external_config("artists.json", _ARTIST_DEFAULTS).get("aliases", {})
         if "artist_aliases" in self._data:
-            return {**defaults, **self._data["artist_aliases"]}
-        return defaults
+            raw = {**raw, **self._data["artist_aliases"]}
+        return _invert_alias_map(raw)
 
     @property
     def artist_groups(self) -> set[str]:

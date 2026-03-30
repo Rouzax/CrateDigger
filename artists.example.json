@@ -1,10 +1,14 @@
 {
     "_comment": "Artist configuration. Place as artists.json next to config.json or in ~/.cratedigger/",
     "aliases": {
-        "DVLM": "Dimitri Vegas & Like Mike",
-        "SHM": "Swedish House Mafia",
-        "Area21": "Martin Garrix",
-        "YTRAM": "Martin Garrix"
+        "Martin Garrix": ["Area21", "YTRAM", "GRX"],
+        "Tiësto": ["Tiesto", "VER:WEST", "VERWEST"],
+        "David Guetta": ["Jack Back"],
+        "Armin van Buuren": ["Gaia", "Rising Star"],
+        "Nicky Romero": ["Monocule"],
+        "Oliver Heldens": ["HI-LO"],
+        "Afrojack": ["NLW"],
+        "Deadmau5": ["deadmau5", "BSOD", "Testpilot"]
     },
     "groups": [
         "Above & Beyond",
@@ -12,6 +16,17 @@
         "Dimitri Vegas & Like Mike",
         "Sunnery James & Ryan Marciano",
         "Swedish House Mafia",
-        "Vini Vici"
+        "Vini Vici",
+        "Blasterjaxx",
+        "Showtek",
+        "W&W",
+        "Galantis",
+        "NERVO",
+        "Cosmic Gate",
+        "Aly & Fila",
+        "Gabriel & Dresden",
+        "Chocolate Puma",
+        "Da Tweekaz",
+        "Sub Zero Project"
     ]
 }

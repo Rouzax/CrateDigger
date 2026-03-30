@@ -63,7 +63,7 @@ def test_config_force_concert_patterns():
 def test_load_config_from_file():
     data = {
         "default_layout": "festival_first",
-        "festival_aliases": {"TML": "Tomorrowland"},
+        "festival_aliases": {"Tomorrowland": ["TML"]},
     }
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
@@ -109,7 +109,7 @@ def test_load_config_user_layer(tmp_path):
     user_dir.mkdir()
     user_config = user_dir / "config.json"
     user_config.write_text(json.dumps({
-        "festival_aliases": {"My Fest": "My Festival"},
+        "festival_aliases": {"My Festival": ["My Fest"]},
         "tracklists": {"email": "me@example.com", "password": "secret"},
     }))
     config = load_config(user_config_dir=user_dir)
@@ -216,14 +216,14 @@ def test_load_config_malformed_library_json(tmp_path, capsys):
 
 
 def test_resolve_artist_alias():
-    config = Config({"artist_aliases": {"DVLM": "Dimitri Vegas & Like Mike", "Area21": "Martin Garrix"}})
+    config = Config({"artist_aliases": {"Dimitri Vegas & Like Mike": ["DVLM"], "Martin Garrix": ["Area21"]}})
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
     assert config.resolve_artist("Area21") == "Martin Garrix"
     assert config.resolve_artist("Hardwell") == "Hardwell"
 
 
 def test_resolve_artist_case_insensitive():
-    config = Config({"artist_aliases": {"dvlm": "Dimitri Vegas & Like Mike"}})
+    config = Config({"artist_aliases": {"Dimitri Vegas & Like Mike": ["dvlm"]}})
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
 
 
@@ -239,10 +239,30 @@ def test_resolve_artist_group_stays_intact():
 
 def test_resolve_artist_alias_then_group():
     config = Config({
-        "artist_aliases": {"DVLM": "Dimitri Vegas & Like Mike"},
+        "artist_aliases": {"Dimitri Vegas & Like Mike": ["DVLM"]},
         "artist_groups": ["Dimitri Vegas & Like Mike"],
     })
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
+
+
+def test_festival_aliases_grouped_format():
+    config = Config({"festival_aliases": {
+        "Tomorrowland": ["TML", "Tomorrowland Weekend 1"],
+        "AMF": ["Amsterdam Music Festival"],
+    }})
+    assert config.resolve_festival_alias("TML") == "Tomorrowland"
+    assert config.resolve_festival_alias("Tomorrowland Weekend 1") == "Tomorrowland"
+    assert config.resolve_festival_alias("Tomorrowland") == "Tomorrowland"
+    assert config.resolve_festival_alias("Amsterdam Music Festival") == "AMF"
+
+
+def test_artist_aliases_grouped_format():
+    config = Config({"artist_aliases": {
+        "Martin Garrix": ["Area21", "YTRAM"],
+    }})
+    assert config.resolve_artist("Area21") == "Martin Garrix"
+    assert config.resolve_artist("YTRAM") == "Martin Garrix"
+    assert config.resolve_artist("Martin Garrix") == "Martin Garrix"
 
 
 def test_load_config_unreadable_file(tmp_path, capsys):
