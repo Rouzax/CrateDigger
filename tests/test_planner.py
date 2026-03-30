@@ -4,12 +4,12 @@ from festival_organizer.config import Config, DEFAULT_CONFIG
 from festival_organizer.models import MediaFile, FileAction
 
 CFG = Config(DEFAULT_CONFIG)
-OUTPUT = Path("C:/Output")
+OUTPUT = Path("/tmp/test/Output")
 
 
 def test_plan_festival_set_artist_flat():
     mf = MediaFile(
-        source_path=Path("C:/Input/file.mkv"),
+        source_path=Path("/tmp/test/Input/file.mkv"),
         artist="Martin Garrix",
         festival="AMF",
         year="2024",
@@ -25,7 +25,7 @@ def test_plan_festival_set_artist_flat():
 
 def test_plan_concert_film():
     mf = MediaFile(
-        source_path=Path("C:/Input/file.mkv"),
+        source_path=Path("/tmp/test/Input/file.mkv"),
         artist="Coldplay",
         title="A Head Full of Dreams",
         year="2018",
@@ -39,7 +39,7 @@ def test_plan_concert_film():
 
 def test_plan_unknown_goes_to_needs_review():
     mf = MediaFile(
-        source_path=Path("C:/Input/mystery.mkv"),
+        source_path=Path("/tmp/test/Input/mystery.mkv"),
         content_type="unknown",
         extension=".mkv",
     )
@@ -50,7 +50,7 @@ def test_plan_unknown_goes_to_needs_review():
 
 def test_plan_with_set_title():
     mf = MediaFile(
-        source_path=Path("C:/Input/file.mkv"),
+        source_path=Path("/tmp/test/Input/file.mkv"),
         artist="Hardwell",
         festival="Tomorrowland",
         year="2025",
@@ -67,7 +67,7 @@ def test_plan_with_set_title():
 
 def test_plan_action_type_copy():
     mf = MediaFile(
-        source_path=Path("C:/Input/file.mkv"),
+        source_path=Path("/tmp/test/Input/file.mkv"),
         artist="Test",
         festival="AMF",
         year="2024",
@@ -80,7 +80,7 @@ def test_plan_action_type_copy():
 
 def test_plan_action_type_rename():
     mf = MediaFile(
-        source_path=Path("C:/Input/file.mkv"),
+        source_path=Path("/tmp/test/Input/file.mkv"),
         artist="Test",
         festival="AMF",
         year="2024",
@@ -91,4 +91,4 @@ def test_plan_action_type_rename():
     a = actions[0]
     assert a.action == "rename"
     # Rename keeps the file in its original directory
-    assert a.target.parent == Path("C:/Input")
+    assert a.target.parent == Path("/tmp/test/Input")

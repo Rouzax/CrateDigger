@@ -111,7 +111,7 @@ def test_execute_handles_collision():
 
 def test_execute_error_handling():
     """Non-existent source should produce error status."""
-    action = _make_action(Path("C:/nonexistent.mkv"), Path("C:/out.mkv"))
+    action = _make_action(Path("/tmp/test/nonexistent.mkv"), Path("/tmp/test/out.mkv"))
     results = execute_actions([action])
     assert results[0].status == "error"
     assert results[0].error != ""

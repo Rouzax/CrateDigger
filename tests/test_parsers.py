@@ -158,8 +158,8 @@ def test_parent_dirs_tomorrowland_location():
 
 def test_parent_dirs_no_info():
     result = parse_parent_dirs(
-        Path("C:/Downloads/random.mkv"),
-        Path("C:/Downloads"),
+        Path("/tmp/test/Downloads/random.mkv"),
+        Path("/tmp/test/Downloads"),
         CFG,
     )
     assert result == {}

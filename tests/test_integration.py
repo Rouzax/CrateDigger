@@ -91,7 +91,7 @@ class TestRealCollection:
             mf = analyse_file(fp, CONCERTS_ROOT, config)
             mf.content_type = classify(mf, CONCERTS_ROOT, config)
             media_files.append(mf)
-        actions = plan_actions(media_files, Path("C:/Test/Output"), config)
+        actions = plan_actions(media_files, Path("/tmp/test/Output"), config)
         targets = [str(a.target) for a in actions]
         # Allow soft check — some may collide but shouldn't be many
         unique = set(targets)
