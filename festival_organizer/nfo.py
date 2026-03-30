@@ -22,7 +22,7 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
 
     # Title — must stand alone in Kodi browse views (only label shown)
     if mf.content_type == "festival_set":
-        artist = mf.artist or "Unknown Artist"
+        artist = mf.display_artist or mf.artist or "Unknown Artist"
         if mf.stage:
             parts = [f"{artist} @ {mf.stage}"]
             if mf.festival:
