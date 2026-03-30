@@ -32,6 +32,7 @@ PAD_ARTIST_LINES = 6
 PAD_LINE_TO_FEST = 30
 PAD_FEST_TO_YEAR = 22
 PAD_YEAR_TO_DETAIL = 22
+PAD_DETAIL_LINES = 8
 
 from festival_organizer.fonts import get_font_path
 
@@ -417,7 +418,6 @@ def generate_set_poster(
         ty += year_h + PAD_YEAR_TO_DETAIL
 
     # Detail lines — split on comma, auto-fit each line
-    PAD_DETAIL_LINES = 8
     if detail:
         for part in [p.strip() for p in detail.split(",") if p.strip()]:
             font_d, _ = auto_fit(part, "semilight", max_w, start=44, minimum=28)
