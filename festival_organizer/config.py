@@ -7,6 +7,56 @@ from fnmatch import fnmatch
 from pathlib import Path
 
 
+# Defaults for external config files (artists.json, festivals.json)
+_ARTIST_DEFAULTS = {
+    "aliases": {},
+    "groups": [
+        "Above & Beyond",
+        "Axwell & Ingrosso",
+        "Dimitri Vegas & Like Mike",
+        "Sunnery James & Ryan Marciano",
+        "Swedish House Mafia",
+        "Vini Vici",
+    ],
+}
+
+_FESTIVAL_DEFAULTS = {
+    "aliases": {
+        "AMF": "AMF",
+        "Amsterdam Music Festival": "AMF",
+        "EDC": "EDC Las Vegas",
+        "EDC Las Vegas": "EDC Las Vegas",
+        "Electric Daisy Carnival": "EDC Las Vegas",
+        "Ultra": "Ultra Music Festival",
+        "Ultra Music Festival": "Ultra Music Festival",
+        "Ultra Music Festival Miami": "Ultra Music Festival",
+        "Tomorrowland": "Tomorrowland",
+        "Tomorrowland Weekend 1": "Tomorrowland",
+        "Tomorrowland Weekend 2": "Tomorrowland",
+        "Mysteryland": "Mysteryland",
+        "Glastonbury": "Glastonbury",
+        "Red Rocks": "Red Rocks",
+        "Red Rocks Amphitheatre": "Red Rocks",
+        "Dreamstate": "Dreamstate",
+        "We Belong Here": "We Belong Here",
+        "We Belong Here Miami": "We Belong Here",
+        "Defqon.1": "Defqon.1",
+        "Creamfields": "Creamfields",
+        "Lollapalooza": "Lollapalooza",
+        "Untold": "Untold",
+    },
+    "config": {
+        "Tomorrowland": {
+            "location_in_name": True,
+            "known_locations": ["Belgium", "Brasil", "Brazil"],
+        },
+        "EDC": {
+            "location_in_name": True,
+            "known_locations": ["Las Vegas", "Mexico", "Orlando"],
+        },
+    },
+}
+
 # Default config embedded so the tool works without a config file
 DEFAULT_CONFIG = {
     "default_layout": "artist_flat",
@@ -31,40 +81,6 @@ DEFAULT_CONFIG = {
     "filename_templates": {
         "festival_set": "{year} - {festival} - {artist}",
         "concert_film": "{artist} - {title}",
-    },
-    "festival_aliases": {
-        "AMF": "AMF",
-        "Amsterdam Music Festival": "AMF",
-        "EDC": "EDC Las Vegas",
-        "EDC Las Vegas": "EDC Las Vegas",
-        "Electric Daisy Carnival": "EDC Las Vegas",
-        "Ultra": "Ultra Music Festival",
-        "Ultra Music Festival": "Ultra Music Festival",
-        "Ultra Music Festival Miami": "Ultra Music Festival",
-        "Tomorrowland": "Tomorrowland",
-        "Tomorrowland Weekend 1": "Tomorrowland",
-        "Tomorrowland Weekend 2": "Tomorrowland",
-        "Mysteryland": "Mysteryland",
-        "Glastonbury": "Glastonbury",
-        "Red Rocks": "Red Rocks",
-        "Red Rocks Amphitheatre": "Red Rocks",
-        "Dreamstate": "Dreamstate",
-        "We Belong Here": "We Belong Here",
-        "We Belong Here Miami": "We Belong Here",
-        "Defqon.1": "Defqon.1",
-        "Creamfields": "Creamfields",
-        "Lollapalooza": "Lollapalooza",
-        "Untold": "Untold",
-    },
-    "festival_config": {
-        "Tomorrowland": {
-            "location_in_name": True,
-            "known_locations": ["Belgium", "Brasil", "Brazil"],
-        },
-        "EDC": {
-            "location_in_name": True,
-            "known_locations": ["Las Vegas", "Mexico", "Orlando"],
-        },
     },
     "content_type_rules": {
         "force_concert": [
@@ -132,23 +148,38 @@ DEFAULT_CONFIG = {
         "personal_api_key": "",
         "enabled": True,
     },
-    "artist_aliases": {},
-    "artist_groups": [
-        "Above & Beyond",
-        "Axwell & Ingrosso",
-        "Dimitri Vegas & Like Mike",
-        "Sunnery James & Ryan Marciano",
-        "Swedish House Mafia",
-        "Vini Vici",
-    ],
 }
 
 
 class Config:
     """Typed access to the configuration."""
 
-    def __init__(self, data: dict):
-        self._data = data
+    def __init__(self, data: dict, config_dir: Path | None = None):
+        self._data = {**DEFAULT_CONFIG, **data}
+        self._config_dir = config_dir
+        self._ext_cache: dict[str, dict] = {}
+
+    def _load_external_config(self, filename: str, defaults: dict) -> dict:
+        """Load config from external JSON file, with caching."""
+        if filename in self._ext_cache:
+            return self._ext_cache[filename]
+
+        candidates: list[Path] = []
+        if self._config_dir:
+            candidates.append(self._config_dir / filename)
+        candidates.append(Path.home() / ".cratedigger" / filename)
+
+        for path in candidates:
+            if path.exists():
+                try:
+                    data = json.loads(path.read_text(encoding="utf-8"))
+                    self._ext_cache[filename] = data
+                    return data
+                except (json.JSONDecodeError, OSError):
+                    pass
+
+        self._ext_cache[filename] = defaults
+        return defaults
 
     @property
     def default_layout(self) -> str:
@@ -163,12 +194,18 @@ class Config:
         return self._data.get("filename_templates", {})
 
     @property
-    def festival_aliases(self) -> dict:
-        return self._data.get("festival_aliases", {})
+    def festival_aliases(self) -> dict[str, str]:
+        defaults = self._load_external_config("festivals.json", _FESTIVAL_DEFAULTS).get("aliases", {})
+        if "festival_aliases" in self._data:
+            return {**defaults, **self._data["festival_aliases"]}
+        return defaults
 
     @property
     def festival_config(self) -> dict:
-        return self._data.get("festival_config", {})
+        defaults = self._load_external_config("festivals.json", _FESTIVAL_DEFAULTS).get("config", {})
+        if "festival_config" in self._data:
+            return {**defaults, **self._data["festival_config"]}
+        return defaults
 
     @property
     def skip_patterns(self) -> list[str]:
@@ -232,11 +269,17 @@ class Config:
 
     @property
     def artist_aliases(self) -> dict[str, str]:
-        return self._data.get("artist_aliases", {})
+        defaults = self._load_external_config("artists.json", _ARTIST_DEFAULTS).get("aliases", {})
+        if "artist_aliases" in self._data:
+            return {**defaults, **self._data["artist_aliases"]}
+        return defaults
 
     @property
     def artist_groups(self) -> set[str]:
-        return {g.lower() for g in self._data.get("artist_groups", [])}
+        if "artist_groups" in self._data:
+            return {g.lower() for g in self._data["artist_groups"]}
+        groups = self._load_external_config("artists.json", _ARTIST_DEFAULTS).get("groups", [])
+        return {g.lower() for g in groups}
 
     def resolve_artist(self, name: str) -> str:
         """Resolve artist alias, then for B2Bs not in groups return first artist."""
@@ -360,7 +403,7 @@ def load_config(
         except (json.JSONDecodeError, OSError) as e:
             print(f"Warning: could not read {config_path}: {e}", file=sys.stderr)
         _migrate_layout_names(data)
-        return Config(data)
+        return Config(data, config_dir=config_path.parent)
 
     # Layer 2: User config
     if user_config_dir is None:
@@ -384,7 +427,7 @@ def load_config(
                 print(f"Warning: could not read {lib_file}: {e}", file=sys.stderr)
 
     _migrate_layout_names(data)
-    return Config(data)
+    return Config(data, config_dir=library_config_dir or user_config_dir)
 
 
 def _migrate_layout_names(data: dict) -> None:

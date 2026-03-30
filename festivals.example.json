@@ -1,0 +1,37 @@
+{
+    "_comment": "Festival configuration. Place as festivals.json next to config.json or in ~/.cratedigger/",
+    "aliases": {
+        "AMF": "AMF",
+        "Amsterdam Music Festival": "AMF",
+        "EDC": "EDC Las Vegas",
+        "EDC Las Vegas": "EDC Las Vegas",
+        "Electric Daisy Carnival": "EDC Las Vegas",
+        "Ultra": "Ultra Music Festival",
+        "Ultra Music Festival": "Ultra Music Festival",
+        "Ultra Music Festival Miami": "Ultra Music Festival",
+        "Tomorrowland": "Tomorrowland",
+        "Tomorrowland Weekend 1": "Tomorrowland",
+        "Tomorrowland Weekend 2": "Tomorrowland",
+        "Mysteryland": "Mysteryland",
+        "Glastonbury": "Glastonbury",
+        "Red Rocks": "Red Rocks",
+        "Red Rocks Amphitheatre": "Red Rocks",
+        "Dreamstate": "Dreamstate",
+        "We Belong Here": "We Belong Here",
+        "We Belong Here Miami": "We Belong Here",
+        "Defqon.1": "Defqon.1",
+        "Creamfields": "Creamfields",
+        "Lollapalooza": "Lollapalooza",
+        "Untold": "Untold"
+    },
+    "config": {
+        "Tomorrowland": {
+            "location_in_name": true,
+            "known_locations": ["Belgium", "Brasil", "Brazil"]
+        },
+        "EDC": {
+            "location_in_name": true,
+            "known_locations": ["Las Vegas", "Mexico", "Orlando"]
+        }
+    }
+}
