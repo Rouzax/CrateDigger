@@ -276,8 +276,8 @@ def test_album_poster_config_priority_defaults():
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config(DEFAULT_CONFIG)
     ps = config.poster_settings
-    assert ps["artist_background_priority"] == ["dj_artwork", "fanart_tv", "event_artwork", "gradient"]
-    assert ps["festival_background_priority"] == ["event_artwork", "thumb_collage", "gradient"]
+    assert ps["artist_background_priority"] == ["dj_artwork", "fanart_tv", "gradient"]
+    assert ps["festival_background_priority"] == ["curated_logo", "thumb_collage", "gradient"]
     assert ps["year_background_priority"] == ["gradient"]
 
 
@@ -652,3 +652,89 @@ def test_album_poster_dj_artwork_fallback_no_credentials(tmp_path):
 
     # Should return None (no credentials, no dj_artwork_url)
     assert result is None
+
+
+# --- Curated logo tests ---
+
+def test_find_curated_logo_library_level(tmp_path):
+    """Curated logo found at library .cratedigger/festivals/{Name}/logo.png."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["festival_aliases"] = {"Tomorrowland": ["TML", "Tomorrowland Belgium"]}
+    lib = tmp_path / "lib"
+    logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
+    logo_dir.mkdir(parents=True)
+    logo_file = logo_dir / "logo.png"
+    logo_file.write_bytes(b"\x89PNG")
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    result = op._find_curated_logo("Tomorrowland")
+    assert result == logo_file
+
+
+def test_find_curated_logo_alias_resolution(tmp_path):
+    """Alias resolves to canonical name for logo lookup."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    lib = tmp_path / "lib"
+    logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
+    logo_dir.mkdir(parents=True)
+    (logo_dir / "logo.jpg").write_bytes(b"\xff\xd8")
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    result = op._find_curated_logo("TML")
+    assert result is not None
+    assert result.name == "logo.jpg"
+
+
+def test_find_curated_logo_missing(tmp_path):
+    """Returns None when no curated logo exists."""
+    config = Config(DEFAULT_CONFIG)
+    lib = tmp_path / "lib"
+    lib.mkdir()
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    assert op._find_curated_logo("Nonexistent") is None
+
+
+def test_find_curated_logo_empty_festival(tmp_path):
+    """Returns None for empty festival name."""
+    config = Config(DEFAULT_CONFIG)
+    op = AlbumPosterOperation(config=config, library_root=tmp_path)
+    assert op._find_curated_logo("") is None
+
+
+def test_try_background_source_curated_logo(tmp_path):
+    """curated_logo source calls _find_curated_logo with festival name."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["festival_aliases"] = {"AMF": ["AMF"]}
+    lib = tmp_path / "lib"
+    logo_dir = lib / ".cratedigger" / "festivals" / "AMF"
+    logo_dir.mkdir(parents=True)
+    logo_file = logo_dir / "logo.webp"
+    logo_file.write_bytes(b"RIFF")
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    mf = _make_mf(festival="AMF")
+    result = op._try_background_source("curated_logo", tmp_path, mf)
+    assert result == logo_file
+
+
+def test_logo_summary_tracks_hits_and_misses(tmp_path):
+    """logo_summary reports used logos and missing ones."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["festival_aliases"] = {"AMF": ["AMF"], "TML": ["TML"]}
+    lib = tmp_path / "lib"
+    logo_dir = lib / ".cratedigger" / "festivals" / "AMF"
+    logo_dir.mkdir(parents=True)
+    logo_file = logo_dir / "logo.png"
+    logo_file.write_bytes(b"\x89PNG")
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    op._logo_hits["AMF"] = logo_file
+    op._logo_misses.add("TML")
+
+    summary = op.logo_summary()
+    assert any("Curated logos used: 1" in line for line in summary)
+    assert any("Missing curated logos: 1" in line for line in summary)
+    assert any("AMF" in line for line in summary)
+    assert any("TML" in line for line in summary)

@@ -164,6 +164,84 @@ def test_generate_album_poster_with_thumbs(tmp_path):
         assert img.size == (POSTER_W, POSTER_H)
 
 
+def test_generate_album_poster_with_transparent_png(tmp_path):
+    """Album poster handles transparent PNG logos (RGBA) without artifacts."""
+    logo = tmp_path / "logo.png"
+    img = Image.new("RGBA", (500, 500), (0, 0, 0, 0))
+    # Draw a colored circle on transparent background
+    from PIL import ImageDraw
+    d = ImageDraw.Draw(img)
+    d.ellipse([50, 50, 450, 450], fill=(200, 50, 100, 255))
+    img.save(str(logo))
+
+    output = tmp_path / "poster.jpg"
+    generate_album_poster(
+        output_path=output,
+        festival="Test Festival",
+        date_or_year="2025",
+        background_image_path=logo,
+    )
+    assert output.exists()
+    with Image.open(output) as result:
+        assert result.size == (POSTER_W, POSTER_H)
+        assert result.mode == "RGB"
+
+
+def test_generate_album_poster_dark_logo_uses_thumbs(tmp_path):
+    """Dark transparent logo falls back to thumbnail colors for gradient."""
+    logo = tmp_path / "logo.png"
+    # Black on transparent
+    img = Image.new("RGBA", (800, 800), (0, 0, 0, 0))
+    from PIL import ImageDraw
+    d = ImageDraw.Draw(img)
+    d.rectangle([100, 100, 700, 700], fill=(0, 0, 0, 255))
+    img.save(str(logo))
+
+    # Create colorful thumbnails
+    thumbs = []
+    for i in range(3):
+        t = tmp_path / f"thumb_{i}.jpg"
+        Image.new("RGB", (320, 180), (100, 50, 200)).save(str(t))
+        thumbs.append(t)
+
+    output = tmp_path / "poster.jpg"
+    generate_album_poster(
+        output_path=output,
+        festival="Dark Fest",
+        date_or_year="2025",
+        background_image_path=logo,
+        thumb_paths=thumbs,
+    )
+    assert output.exists()
+    # The poster should NOT be mostly black — thumbnail colors should be visible
+    with Image.open(output) as result:
+        import numpy as np
+        arr = np.array(result)
+        # At least some pixels should have non-trivial color (not all near-black)
+        mean_brightness = arr.mean()
+        assert mean_brightness > 10, f"Poster too dark ({mean_brightness:.1f}), thumbnail colors not used"
+
+
+def test_generate_set_poster_with_rgba_source(tmp_path):
+    """Set poster handles RGBA source images."""
+    source = tmp_path / "cover.png"
+    img = Image.new("RGBA", (800, 600), (100, 150, 200, 200))
+    img.save(str(source))
+
+    output = tmp_path / "poster.jpg"
+    from festival_organizer.poster import generate_set_poster
+    generate_set_poster(
+        source_image_path=source,
+        output_path=output,
+        artist="Test Artist",
+        festival="Test Fest",
+        year="2025",
+    )
+    assert output.exists()
+    with Image.open(output) as result:
+        assert result.mode == "RGB"
+
+
 # --- font resolver tests ---
 
 def test_get_font_path_returns_bundled():

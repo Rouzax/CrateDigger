@@ -41,7 +41,6 @@ class TracklistExport:
     lines: list[str]
     url: str
     title: str
-    event_artwork_url: str = ""
     genres: list[str] = field(default_factory=list)
     dj_artwork_url: str = ""
 
@@ -162,11 +161,8 @@ class TracklistSession:
         short_url = f"{BASE_URL}/tracklist/{tracklist_id}/"
 
         # Extract enrichment metadata from page HTML
-        event_artwork_url = _extract_event_artwork(page_resp.text)
         genres = _extract_genres(page_resp.text)
         dj_slugs = _extract_dj_slugs(page_resp.text)
-        if event_artwork_url:
-            logger.info("Event artwork: %s", event_artwork_url)
         if genres:
             logger.info("Genres: %s", genres)
 
@@ -179,8 +175,7 @@ class TracklistSession:
 
         return TracklistExport(
             lines=lines, url=short_url, title=title,
-            event_artwork_url=event_artwork_url, genres=genres,
-            dj_artwork_url=dj_artwork_url,
+            genres=genres, dj_artwork_url=dj_artwork_url,
         )
 
     def _request(self, method: str, url: str, data: dict | None = None,
@@ -367,28 +362,6 @@ class TracklistSession:
         except (OSError, json.JSONDecodeError, KeyError, TypeError) as e:
             logger.debug("Cookie restore failed: %s", e)
             return False
-
-
-def _extract_event_artwork(html: str) -> str:
-    """Extract event artwork URL from og:image meta tag or artworkTop CSS."""
-    # Try og:image first — but only if it's from a known event artwork source,
-    # not a music platform album cover (Apple Music, Spotify, etc.)
-    _ARTWORK_BLOCKLIST = ("mzstatic.com", "i.scdn.co", "mosaic.scdn.co", "coverartarchive.org")
-    m = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', html)
-    if m and not any(domain in m.group(1) for domain in _ARTWORK_BLOCKLIST):
-        return m.group(1)
-    # Fallback: artworkTop background-image in CSS (cdn.1001tracklists.com artwork)
-    m = re.search(r"#artworkTop\s*\{[^}]*background-image:\s*url\('([^']+)'\)", html)
-    if m:
-        return m.group(1)
-    # Also try Medium-size artwork variant
-    m = re.search(
-        r"url\('(https://cdn\.1001tracklists\.com/images/artworks/[^']*-Medium\.[^']+)'\)",
-        html,
-    )
-    if m:
-        return m.group(1)
-    return ""
 
 
 def _extract_genres(html: str) -> list[str]:

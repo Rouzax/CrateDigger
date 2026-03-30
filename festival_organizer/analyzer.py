@@ -121,7 +121,6 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         tracklists_url=meta.get("tracklists_url", ""),
         tracklists_title=meta.get("tracklists_title", ""),
         genres=[g.strip() for g in meta.get("tracklists_genres", "").split("|") if g.strip()] if meta.get("tracklists_genres") else [],
-        event_artwork_url=meta.get("tracklists_event_artwork", ""),
         dj_artwork_url=meta.get("tracklists_dj_artwork", ""),
         mbid=meta.get("mbid", ""),
         fanart_url=meta.get("fanart_url", ""),

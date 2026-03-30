@@ -91,6 +91,13 @@ def build_parser() -> argparse.ArgumentParser:
     chap_p.add_argument("--verbose", "-v", action="store_true", help="Show decisions and downloads")
     chap_p.add_argument("--debug", action="store_true", help="Show all internal details")
 
+    # audit-logos
+    audit_p = sub.add_parser("audit-logos", help="Check curated festival logo coverage")
+    audit_p.add_argument("root", type=str, help="Library folder to audit")
+    audit_p.add_argument("--config", type=str, help="Path to config.json")
+    audit_p.add_argument("--verbose", "-v", action="store_true")
+    audit_p.add_argument("--debug", action="store_true")
+
     return parser
 
 
@@ -147,6 +154,9 @@ def _run_command(args) -> int:
         args.auto_select = getattr(args, "auto", False)
         args.ignore_stored_url = getattr(args, "force", False)
         return run_chapters(args, config)
+
+    if args.command == "audit-logos":
+        return _run_audit_logos(root, config)
 
     if not root.exists():
         print(f"Error: path does not exist: {root}", file=sys.stderr)
@@ -316,5 +326,98 @@ def _run_command(args) -> int:
             cleanup_empty_dirs(root)
 
     progress.print_summary()
+
+    # Print curated logo summary if album posters were generated
+    if album_poster_op:
+        summary = album_poster_op.logo_summary()
+        if summary:
+            w = progress.stream.write
+            w("\n")
+            for line in summary:
+                w(f"{line}\n")
+
+    return 0
+
+
+def _run_audit_logos(root: Path, config) -> int:
+    """Audit curated festival logo coverage for a library."""
+    from festival_organizer.library import find_library_root
+
+    library_root = find_library_root(root) if root.exists() else None
+    if not library_root:
+        print(f"Error: not a CrateDigger library: {root}", file=sys.stderr)
+        return 1
+
+    # Scan all media files for canonical festival names
+    festivals_found: set[str] = set()
+    for video in root.rglob("*"):
+        if video.suffix.lower() in (".mkv", ".mp4", ".webm") and video.is_file():
+            from festival_organizer.analyzer import analyse_file
+            mf = analyse_file(video, video.parent, config)
+            if mf.festival:
+                canonical = config.resolve_festival_alias(mf.festival)
+                festivals_found.add(canonical)
+
+    # Check logo availability for each festival
+    logo_dirs = [
+        library_root / ".cratedigger" / "festivals",
+        Path.home() / ".cratedigger" / "festivals",
+    ]
+
+    def find_logo(festival: str) -> Path | None:
+        for base in logo_dirs:
+            d = base / festival
+            for ext in ("jpg", "jpeg", "png", "webp"):
+                candidate = d / f"logo.{ext}"
+                if candidate.exists():
+                    return candidate
+        return None
+
+    # Report
+    have_logo: list[tuple[str, Path]] = []
+    missing_logo: list[str] = []
+    for fest in sorted(festivals_found):
+        logo = find_logo(fest)
+        if logo:
+            have_logo.append((fest, logo))
+        else:
+            missing_logo.append(fest)
+
+    print(f"Library: {library_root}")
+    print(f"Festivals found: {len(festivals_found)}")
+    print()
+
+    if have_logo:
+        print(f"With curated logo ({len(have_logo)}):")
+        for fest, path in have_logo:
+            print(f"  {fest}: {path}")
+        print()
+
+    if missing_logo:
+        print(f"Missing curated logo ({len(missing_logo)}):")
+        for fest in missing_logo:
+            suggested = library_root / ".cratedigger" / "festivals" / fest
+            print(f"  {fest}")
+            print(f"    -> place logo at: {suggested}/logo.png")
+        print()
+
+    # Check for unmatched folders
+    for base in logo_dirs:
+        if base.is_dir():
+            for d in sorted(base.iterdir()):
+                if d.is_dir() and d.name not in festivals_found:
+                    has_logo = any((d / f"logo.{ext}").exists()
+                                  for ext in ("jpg", "jpeg", "png", "webp"))
+                    if has_logo:
+                        print(f"Unmatched folder (not in library): {d.name}")
+
+    # Warn about unsupported formats
+    for base in logo_dirs:
+        if base.is_dir():
+            for d in sorted(base.iterdir()):
+                if d.is_dir():
+                    for f in d.iterdir():
+                        if f.suffix.lower() in (".svg", ".gif", ".bmp", ".tiff"):
+                            print(f"Unsupported format: {f}")
 
     return 0

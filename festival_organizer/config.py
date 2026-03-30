@@ -134,8 +134,8 @@ DEFAULT_CONFIG = {
         "unknown_title": "Unknown Title",
     },
     "poster_settings": {
-        "artist_background_priority": ["dj_artwork", "fanart_tv", "event_artwork", "gradient"],
-        "festival_background_priority": ["event_artwork", "thumb_collage", "gradient"],
+        "artist_background_priority": ["dj_artwork", "fanart_tv", "gradient"],
+        "festival_background_priority": ["curated_logo", "thumb_collage", "gradient"],
         "year_background_priority": ["gradient"],
     },
     "nfo_settings": {

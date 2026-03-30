@@ -179,7 +179,6 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         "CRATEDIGGER_1001TL_ID": "id",
         "CRATEDIGGER_1001TL_DATE": "date",
         "CRATEDIGGER_1001TL_GENRES": "genres",
-        "CRATEDIGGER_1001TL_EVENT_ARTWORK": "event_artwork",
         "CRATEDIGGER_1001TL_DJ_ARTWORK": "dj_artwork",
         # Old names (backward compatibility)
         "1001TRACKLISTS_URL": "url",
@@ -187,7 +186,6 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         "1001TRACKLISTS_ID": "id",
         "1001TRACKLISTS_DATE": "date",
         "1001TRACKLISTS_GENRES": "genres",
-        "1001TRACKLISTS_EVENT_ARTWORK": "event_artwork",
         "1001TRACKLISTS_DJ_ARTWORK": "dj_artwork",
     }
     result = {v: "" for v in tag_map.values()}
@@ -240,7 +238,6 @@ def embed_chapters(
     tracklist_id: str | None = None,
     tracklist_date: str | None = None,
     genres: list[str] | None = None,
-    event_artwork_url: str | None = None,
     dj_artwork_url: str | None = None,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
@@ -286,8 +283,6 @@ def embed_chapters(
                 tags["CRATEDIGGER_1001TL_DATE"] = tracklist_date
             if genres:
                 tags["CRATEDIGGER_1001TL_GENRES"] = "|".join(genres)
-            if event_artwork_url:
-                tags["CRATEDIGGER_1001TL_EVENT_ARTWORK"] = event_artwork_url
             if dj_artwork_url:
                 tags["CRATEDIGGER_1001TL_DJ_ARTWORK"] = dj_artwork_url
             return write_merged_tags(filepath, {70: tags})

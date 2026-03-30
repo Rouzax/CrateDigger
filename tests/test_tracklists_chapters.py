@@ -224,7 +224,6 @@ def test_embed_chapters_writes_all_new_tag_names(tmp_path):
                     tracklist_id="12345",
                     tracklist_date="2025-01-01",
                     genres=["Trance", "House"],
-                    event_artwork_url="https://event.jpg",
                     dj_artwork_url="https://dj.jpg",
                 )
 
@@ -235,7 +234,6 @@ def test_embed_chapters_writes_all_new_tag_names(tmp_path):
     assert tags["CRATEDIGGER_1001TL_ID"] == "12345"
     assert tags["CRATEDIGGER_1001TL_DATE"] == "2025-01-01"
     assert tags["CRATEDIGGER_1001TL_GENRES"] == "Trance|House"
-    assert tags["CRATEDIGGER_1001TL_EVENT_ARTWORK"] == "https://event.jpg"
     assert tags["CRATEDIGGER_1001TL_DJ_ARTWORK"] == "https://dj.jpg"
     # Ensure old names are NOT used
     assert "1001TRACKLISTS_URL" not in tags

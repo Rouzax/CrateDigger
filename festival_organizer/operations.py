@@ -214,6 +214,8 @@ class AlbumPosterOperation(Operation):
         self.force = force
         self.library_root = library_root
         self._completed_folders: set[Path] = set()
+        self._logo_hits: dict[str, Path] = {}   # festival -> logo path
+        self._logo_misses: set[str] = set()      # festivals without curated logo
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         folder = file_path.parent
@@ -322,14 +324,23 @@ class AlbumPosterOperation(Operation):
             logger.debug("Artwork download failed: %s", e)
             return None
 
-    def _find_event_artwork(self, folder: Path) -> Path | None:
-        """Find event artwork URL from media files in folder, download and cache."""
-        from festival_organizer.analyzer import analyse_file
-        for video in folder.iterdir():
-            if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
-                mf = analyse_file(video, folder, self.config)
-                if mf.event_artwork_url:
-                    return self._download_artwork(mf.event_artwork_url, "events")
+    def _find_curated_logo(self, festival: str) -> Path | None:
+        """Find curated festival logo from library or user-level folders."""
+        canonical = self.config.resolve_festival_alias(festival) if festival else ""
+        if not canonical:
+            return None
+
+        search_dirs: list[Path] = []
+        if self.library_root:
+            search_dirs.append(self.library_root / ".cratedigger" / "festivals" / canonical)
+        search_dirs.append(Path.home() / ".cratedigger" / "festivals" / canonical)
+
+        for d in search_dirs:
+            for ext in ("jpg", "jpeg", "png", "webp"):
+                candidate = d / f"logo.{ext}"
+                if candidate.exists():
+                    logger.info("Curated logo: %s", candidate)
+                    return candidate
         return None
 
     def _find_dj_artwork(self, folder: Path) -> Path | None:
@@ -380,23 +391,33 @@ class AlbumPosterOperation(Operation):
     def _resolve_background(self, priority: list[str], folder: Path,
                              media_file: MediaFile) -> Path | None:
         """Walk the background priority chain, return first successful image."""
+        tried_curated = False
         for source in priority:
             bg = self._try_background_source(source, folder, media_file)
+            if source == "curated_logo":
+                tried_curated = True
+                if bg and media_file.festival:
+                    canonical = self.config.resolve_festival_alias(media_file.festival)
+                    self._logo_hits[canonical] = bg
             if bg:
                 logger.info("Album poster: using %s", source)
                 return bg
             logger.debug("Album poster: %s not available", source)
+        if tried_curated and media_file.festival:
+            canonical = self.config.resolve_festival_alias(media_file.festival)
+            if canonical not in self._logo_hits:
+                self._logo_misses.add(canonical)
         return None
 
     def _try_background_source(self, source: str, folder: Path,
                                 media_file: MediaFile) -> Path | None:
         """Try a single background source. Returns path or None."""
-        if source == "dj_artwork":
+        if source == "curated_logo":
+            return self._find_curated_logo(media_file.festival)
+        elif source == "dj_artwork":
             return self._find_dj_artwork(folder)
         elif source == "fanart_tv":
             return self._find_fanart_background(folder, media_file.artist)
-        elif source == "event_artwork":
-            return self._find_event_artwork(folder)
         elif source == "thumb_collage":
             return None  # Handled by generate_album_poster via thumb_paths
         elif source == "gradient":
@@ -438,10 +459,10 @@ class AlbumPosterOperation(Operation):
             ps = self.config.poster_settings
             if poster_type == "artist":
                 priority = ps.get("artist_background_priority",
-                                  ["dj_artwork", "fanart_tv", "event_artwork", "gradient"])
+                                  ["dj_artwork", "fanart_tv", "gradient"])
             elif poster_type == "festival":
                 priority = ps.get("festival_background_priority",
-                                  ["event_artwork", "thumb_collage", "gradient"])
+                                  ["curated_logo", "thumb_collage", "gradient"])
             else:  # year
                 priority = ps.get("year_background_priority", ["gradient"])
 
@@ -471,6 +492,27 @@ class AlbumPosterOperation(Operation):
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))
+
+    def logo_summary(self) -> list[str]:
+        """Return summary lines about curated logo usage."""
+        lines: list[str] = []
+        if self._logo_hits:
+            lines.append(f"Curated logos used: {len(self._logo_hits)}")
+            for fest, path in sorted(self._logo_hits.items()):
+                lines.append(f"  {fest}: {path}")
+        if self._logo_misses:
+            lines.append(f"Missing curated logos: {len(self._logo_misses)}")
+            for fest in sorted(self._logo_misses):
+                lines.append(f"  {fest}")
+        # Check for unmatched folders in .cratedigger/festivals/
+        if self.library_root:
+            festivals_dir = self.library_root / ".cratedigger" / "festivals"
+            if festivals_dir.is_dir():
+                known = set(self._logo_hits.keys()) | self._logo_misses
+                for d in sorted(festivals_dir.iterdir()):
+                    if d.is_dir() and d.name not in known:
+                        lines.append(f"  Unmatched folder: {d.name}")
+        return lines
 
 
 class FanartOperation(Operation):

@@ -173,7 +173,6 @@ def test_parse_mediainfo_json_new_tag_names():
     assert meta["tracklists_id"] == "abc123"
     assert meta["tracklists_date"] == "2025-01-01"
     assert meta["tracklists_genres"] == "Trance|House"
-    assert meta["tracklists_event_artwork"] == "https://event.jpg"
     assert meta["tracklists_dj_artwork"] == "https://dj.jpg"
 
 

@@ -25,7 +25,6 @@ class MediaFile:
     tracklists_url: str = ""
     tracklists_title: str = ""
     genres: list[str] = field(default_factory=list)
-    event_artwork_url: str = ""
     dj_artwork_url: str = ""
 
     # Enrichment identifiers

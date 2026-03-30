@@ -135,11 +135,6 @@ def parse_mediainfo_json(data: dict) -> dict:
             or general.get("1001TRACKLISTS_GENRES", "")
             or extra.get("_1001TRACKLISTS_GENRES", "")
         ),
-        "tracklists_event_artwork": (
-            general.get("CRATEDIGGER_1001TL_EVENT_ARTWORK", "")
-            or general.get("1001TRACKLISTS_EVENT_ARTWORK", "")
-            or extra.get("_1001TRACKLISTS_EVENT_ARTWORK", "")
-        ),
         "tracklists_dj_artwork": (
             general.get("CRATEDIGGER_1001TL_DJ_ARTWORK", "")
             or general.get("1001TRACKLISTS_DJ_ARTWORK", "")
@@ -219,7 +214,6 @@ def _extract_ffprobe(filepath: Path) -> dict:
             "tracklists_id": tags.get("CRATEDIGGER_1001TL_ID", "") or tags.get("1001TRACKLISTS_ID", ""),
             "tracklists_date": tags.get("CRATEDIGGER_1001TL_DATE", "") or tags.get("1001TRACKLISTS_DATE", ""),
             "tracklists_genres": tags.get("CRATEDIGGER_1001TL_GENRES", "") or tags.get("1001TRACKLISTS_GENRES", ""),
-            "tracklists_event_artwork": tags.get("CRATEDIGGER_1001TL_EVENT_ARTWORK", "") or tags.get("1001TRACKLISTS_EVENT_ARTWORK", ""),
             "tracklists_dj_artwork": tags.get("CRATEDIGGER_1001TL_DJ_ARTWORK", "") or tags.get("1001TRACKLISTS_DJ_ARTWORK", ""),
             "mbid": tags.get("CRATEDIGGER_MBID", ""),
             "fanart_url": tags.get("CRATEDIGGER_FANART_URL", ""),
