@@ -265,6 +265,69 @@ def test_artist_aliases_grouped_format():
     assert config.resolve_artist("Martin Garrix") == "Martin Garrix"
 
 
+def test_festival_aliases_flat_format():
+    """Flat format {alias: canonical} should be handled correctly."""
+    config = Config({"festival_aliases": {
+        "AMF": "AMF",
+        "Amsterdam Music Festival": "AMF",
+        "EDC": "EDC Las Vegas",
+    }})
+    assert config.resolve_festival_alias("Amsterdam Music Festival") == "AMF"
+    assert config.resolve_festival_alias("AMF") == "AMF"
+    assert config.resolve_festival_alias("EDC") == "EDC Las Vegas"
+
+
+def test_festival_aliases_mixed_format():
+    """Mixed dict with some grouped and some flat entries."""
+    config = Config({"festival_aliases": {
+        "Tomorrowland": ["TML", "Tomorrowland Weekend 1"],
+        "AMF": "AMF",
+        "Amsterdam Music Festival": "AMF",
+    }})
+    assert config.resolve_festival_alias("TML") == "Tomorrowland"
+    assert config.resolve_festival_alias("Amsterdam Music Festival") == "AMF"
+    assert config.resolve_festival_alias("AMF") == "AMF"
+
+
+def test_invert_alias_map_flat_does_not_iterate_characters():
+    """Flat format 'AMF': 'AMF' must NOT create entries for 'A', 'M', 'F'."""
+    from festival_organizer.config import _invert_alias_map
+    result = _invert_alias_map({"AMF": "AMF", "Amsterdam Music Festival": "AMF"})
+    assert "A" not in result
+    assert "M" not in result
+    assert "F" not in result
+    assert result["AMF"] == "AMF"
+    assert result["Amsterdam Music Festival"] == "AMF"
+
+
+def test_invert_alias_map_invalid_value_type_skipped():
+    """Non-string, non-list values should be skipped with warning."""
+    from festival_organizer.config import _invert_alias_map
+    result = _invert_alias_map({
+        "AMF": ["Amsterdam Music Festival"],
+        "bad": 42,
+        "also_bad": None,
+    })
+    assert result["AMF"] == "AMF"
+    assert result["Amsterdam Music Festival"] == "AMF"
+    assert "bad" not in result
+    assert "also_bad" not in result
+
+
+def test_invert_alias_map_circular_flat_warns(caplog):
+    """Circular flat aliases should log a warning."""
+    import logging
+    from festival_organizer.config import _invert_alias_map
+    with caplog.at_level(logging.WARNING):
+        result = _invert_alias_map({
+            "AMF": "Amsterdam Music Festival",
+            "Amsterdam Music Festival": "AMF",
+        })
+    assert result["AMF"] == "Amsterdam Music Festival"
+    assert result["Amsterdam Music Festival"] == "AMF"
+    assert any("ircular" in msg for msg in caplog.messages)
+
+
 def test_load_config_unreadable_file(tmp_path, capsys):
     """Unreadable config prints warning and falls back to defaults."""
     import os

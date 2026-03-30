@@ -53,12 +53,18 @@ class OrganizeOperation(Operation):
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         return file_path.resolve() != self.target.resolve()
 
+    # Folder-level files that belong to the folder, not individual videos.
+    FOLDER_LEVEL_FILES = frozenset({"folder.jpg", "fanart.jpg", "album.nfo"})
+
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.executor import resolve_collision
         import shutil
 
         target = resolve_collision(self.target)
         target.parent.mkdir(parents=True, exist_ok=True)
+
+        old_stem = file_path.stem
+        old_dir = file_path.parent
 
         try:
             if self.action == "copy":
@@ -71,9 +77,48 @@ class OrganizeOperation(Operation):
             # resolved path. This mutation is read by run_pipeline() — requires
             # serial execution; do not reuse operation instances across files.
             self.target = target
+
+            # Move sidecar files that share the video's stem
+            new_stem = target.stem
+            self._move_sidecars(old_dir, old_stem, target.parent, new_stem,
+                                shutil, self.action)
+
             return OperationResult(self.name, "done")
         except OSError as e:
             return OperationResult(self.name, "error", str(e))
+
+    def _move_sidecars(self, old_dir: Path, old_stem: str,
+                       new_dir: Path, new_stem: str,
+                       shutil, action: str) -> None:
+        """Move/copy sidecar files from old_dir to new_dir, renaming stems."""
+        # Collect sidecars: {old_stem}.* (exact stem match) and {old_stem}-*
+        sidecars: list[Path] = []
+        for candidate in old_dir.iterdir():
+            if candidate.name in self.FOLDER_LEVEL_FILES:
+                continue
+            name = candidate.name
+            if name.startswith(old_stem + ".") or name.startswith(old_stem + "-"):
+                # Skip the video file itself (already moved)
+                if not candidate.exists():
+                    continue
+                sidecars.append(candidate)
+
+        for sidecar in sidecars:
+            # Compute new name: replace old_stem prefix with new_stem
+            suffix = sidecar.name[len(old_stem):]  # e.g. ".nfo" or "-poster.jpg"
+            new_name = new_stem + suffix
+            new_path = new_dir / new_name
+
+            try:
+                if action == "copy":
+                    shutil.copy2(sidecar, new_path)
+                elif action == "rename":
+                    sidecar.rename(new_path)
+                else:
+                    shutil.move(str(sidecar), str(new_path))
+                logger.debug("Sidecar %s: %s -> %s", action, sidecar.name, new_path.name)
+            except OSError as e:
+                logger.warning("Failed to %s sidecar %s: %s", action, sidecar.name, e)
 
 
 class NfoOperation(Operation):
@@ -179,6 +224,46 @@ class AlbumPosterOperation(Operation):
             return True
         return not folder_jpg.exists()
 
+    def _get_folder_poster_type(self, content_type: str) -> str:
+        """Determine poster type from the first segment of the layout template.
+
+        Priority for mixed segments: {festival} > {artist} > {year}.
+        """
+        template = self.config.get_layout_template(content_type)
+        first_segment = template.split("/")[0]
+        return self._classify_segment(first_segment)
+
+    def _get_layout_segments(self, content_type: str) -> list[str]:
+        """Return poster type for each segment of the layout template."""
+        template = self.config.get_layout_template(content_type)
+        return [self._classify_segment(seg) for seg in template.split("/")]
+
+    def _get_poster_type_for_folder(self, folder: Path, content_type: str) -> str:
+        """Determine poster type for a specific folder depth in a nested layout."""
+        if not self.library_root:
+            return self._get_folder_poster_type(content_type)
+        segments = self._get_layout_segments(content_type)
+        try:
+            depth = len(folder.resolve().relative_to(self.library_root.resolve()).parts) - 1
+        except ValueError:
+            depth = 0
+        if depth < 0:
+            depth = 0
+        if depth < len(segments):
+            return segments[depth]
+        return segments[-1] if segments else "artist"
+
+    @staticmethod
+    def _classify_segment(segment: str) -> str:
+        """Classify a template segment by priority: festival > artist > year."""
+        if "{festival}" in segment:
+            return "festival"
+        if "{artist}" in segment:
+            return "artist"
+        if "{year}" in segment:
+            return "year"
+        return "artist"
+
     def _find_fanart_background(self, folder: Path, artist: str) -> Path | None:
         """Find a fanart.tv background for an artist folder.
 
@@ -257,6 +342,32 @@ class AlbumPosterOperation(Operation):
                     return self._download_artwork(mf.dj_artwork_url, "dj-artwork")
         return None
 
+    def _resolve_background(self, priority: list[str], folder: Path,
+                             media_file: MediaFile) -> Path | None:
+        """Walk the background priority chain, return first successful image."""
+        for source in priority:
+            bg = self._try_background_source(source, folder, media_file)
+            if bg:
+                logger.info("Album poster: using %s", source)
+                return bg
+            logger.debug("Album poster: %s not available", source)
+        return None
+
+    def _try_background_source(self, source: str, folder: Path,
+                                media_file: MediaFile) -> Path | None:
+        """Try a single background source. Returns path or None."""
+        if source == "dj_artwork":
+            return self._find_dj_artwork(folder)
+        elif source == "fanart_tv":
+            return self._find_fanart_background(folder, media_file.artist)
+        elif source == "event_artwork":
+            return self._find_event_artwork(folder)
+        elif source == "thumb_collage":
+            return None  # Handled by generate_album_poster via thumb_paths
+        elif source == "gradient":
+            return None  # No image needed, poster generator creates gradient
+        return None
+
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.poster import generate_album_poster
         try:
@@ -284,46 +395,42 @@ class AlbumPosterOperation(Operation):
             # Collect existing thumbs in folder for color extraction
             thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
 
-            # Determine if this is a single-artist or multi-artist (festival) folder
-            fanart_path = self._find_fanart_background(file_path.parent, mf.artist)
-            is_artist_folder = fanart_path is not None
+            # Determine poster type from layout template
+            poster_type = self._get_folder_poster_type(mf.content_type)
+            logger.debug("Album poster: type=%s (from layout template)", poster_type)
 
-            # Background image fallback chain
-            bg_path = None
+            # Walk configurable background priority chain
+            ps = self.config.poster_settings
+            if poster_type == "artist":
+                priority = ps.get("artist_background_priority",
+                                  ["dj_artwork", "fanart_tv", "event_artwork", "gradient"])
+            elif poster_type == "festival":
+                priority = ps.get("festival_background_priority",
+                                  ["event_artwork", "thumb_collage", "gradient"])
+            else:  # year
+                priority = ps.get("year_background_priority", ["gradient"])
 
-            if is_artist_folder and self.library_root and mf.dj_artwork_url:
-                # Artist folder: prefer fresh 1001TL DJ artwork over fanart.tv
-                dj_art = self._download_artwork(mf.dj_artwork_url, "dj-artwork")
-                if dj_art:
-                    bg_path = dj_art
-                    logger.info("Album poster: using DJ artwork (1001TL)")
+            bg_path = self._resolve_background(priority, file_path.parent, mf)
 
-            if not bg_path and is_artist_folder:
-                # Artist folder: fall back to fanart.tv
-                bg_path = fanart_path
-
-            if not bg_path and self.library_root and mf.event_artwork_url:
-                # Festival folder: try event artwork
-                event_art = self._download_artwork(mf.event_artwork_url, "events")
-                if event_art:
-                    bg_path = event_art
-                    logger.info("Album poster: using event artwork")
-
-            if not bg_path and not is_artist_folder and self.library_root and mf.dj_artwork_url:
-                # Festival folder without event artwork: try DJ artwork
-                dj_art = self._download_artwork(mf.dj_artwork_url, "dj-artwork")
-                if dj_art:
-                    bg_path = dj_art
-                    logger.info("Album poster: using DJ artwork")
+            # Determine hero_text and festival/title based on poster type
+            if poster_type == "artist":
+                hero_text = mf.artist
+                poster_title = festival_display or mf.artist or "Unknown"
+            elif poster_type == "festival":
+                hero_text = None
+                poster_title = festival_display or mf.artist or "Unknown"
+            else:  # year
+                hero_text = date_or_year or mf.year
+                poster_title = festival_display or mf.artist or "Unknown"
 
             generate_album_poster(
                 output_path=folder_jpg,
-                festival=festival_display or mf.artist or "Unknown",
+                festival=poster_title,
                 date_or_year=date_or_year,
                 detail=mf.stage or mf.location or "",
                 thumb_paths=thumb_paths if thumb_paths else None,
                 background_image_path=bg_path,
-                hero_text=mf.artist if is_artist_folder else None,
+                hero_text=hero_text,
             )
             self._completed_folders.add(file_path.parent)
             return OperationResult(self.name, "done")

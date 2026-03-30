@@ -56,6 +56,10 @@ def build_parser() -> argparse.ArgumentParser:
     scan_p = sub.add_parser("scan", help="Preview what would happen (dry run)")
     add_common(scan_p)
 
+    # dry-run alias for scan
+    dryrun_p = sub.add_parser("dry-run", help="Alias for scan — preview what would happen")
+    add_common(dryrun_p)
+
     # organize
     org_p = sub.add_parser("organize", help="Move/copy files into library structure")
     add_common(org_p)
@@ -63,6 +67,8 @@ def build_parser() -> argparse.ArgumentParser:
     org_p.add_argument("--rename-only", action="store_true", help="Rename in place only")
     org_p.add_argument("--enrich", action="store_true",
                        help="Also run enrichment after organizing")
+    org_p.add_argument("--yes", "-y", action="store_true",
+                       help="Skip confirmation prompts")
 
     # enrich
     enr_p = sub.add_parser("enrich", help="Add metadata artifacts to files in place")
@@ -130,6 +136,10 @@ def _run_command(args) -> int:
     if getattr(args, "layout", None):
         config._data["default_layout"] = args.layout
 
+    # dry-run is an alias for scan
+    if args.command == "dry-run":
+        args.command = "scan"
+
     # Handle chapters separately
     if args.command == "chapters":
         from festival_organizer.tracklists.cli_handler import run_chapters
@@ -144,8 +154,34 @@ def _run_command(args) -> int:
 
     # Determine output root
     output = Path(args.output) if getattr(args, "output", None) else None
+    explicit_output = output is not None
     if output is None:
         output = library_root if library_root else root
+
+    # Organize safety: confirm when source is inside existing library
+    if args.command == "organize" and library_root and not explicit_output:
+        try:
+            root.resolve().relative_to(library_root.resolve())
+            is_inside_library = True
+        except ValueError:
+            is_inside_library = False
+
+        if is_inside_library and not getattr(args, "yes", False):
+            print(f"Re-organizing library at {library_root} "
+                  f"with layout '{config.default_layout}'",
+                  file=sys.stderr)
+            if sys.stdin.isatty():
+                try:
+                    answer = input("Continue? [y/N] ").strip().lower()
+                except EOFError:
+                    answer = ""
+                if answer not in ("y", "yes"):
+                    print("Aborted.", file=sys.stderr)
+                    return 0
+            else:
+                print("Error: re-organizing in-place requires confirmation. "
+                      "Use --yes to skip.", file=sys.stderr)
+                return 1
 
     # Initialize library marker on first organize
     if args.command == "organize" and not library_root:
@@ -270,6 +306,14 @@ def _run_command(args) -> int:
             quiet=quiet,
         )
         run_chapters(chap_args, config)
+
+    # Post-pipeline: clean up empty source directories after organize (move)
+    if args.command == "organize":
+        action = "copy" if getattr(args, "copy", False) else \
+                 "rename" if getattr(args, "rename_only", False) else "move"
+        if action == "move" and root.resolve() != output.resolve():
+            from festival_organizer.library import cleanup_empty_dirs
+            cleanup_empty_dirs(root)
 
     progress.print_summary()
 

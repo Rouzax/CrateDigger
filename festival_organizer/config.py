@@ -1,10 +1,13 @@
 """Configuration loading and access."""
 import json
+import logging
 import re
 import sys
 from copy import deepcopy
 from fnmatch import fnmatch
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 # Defaults for external config files (artists.json, festivals.json)
@@ -130,6 +133,11 @@ DEFAULT_CONFIG = {
         "unknown_year": "Unknown Year",
         "unknown_title": "Unknown Title",
     },
+    "poster_settings": {
+        "artist_background_priority": ["dj_artwork", "fanart_tv", "event_artwork", "gradient"],
+        "festival_background_priority": ["event_artwork", "thumb_collage", "gradient"],
+        "year_background_priority": ["gradient"],
+    },
     "nfo_settings": {
         "genre_festival": "Electronic",
         "genre_concert": "Live",
@@ -177,12 +185,31 @@ DEFAULT_CONFIG = {
 
 
 def _invert_alias_map(grouped: dict) -> dict[str, str]:
-    """Convert {canonical: [aliases]} to {alias: canonical} flat lookup map."""
+    """Convert alias map to {alias: canonical} flat lookup.
+
+    Accepts two formats:
+    - Grouped: {canonical: [aliases]} — standard format
+    - Flat: {alias: canonical} — deprecated, auto-detected per entry
+    """
     flat = {}
-    for canonical, aliases in grouped.items():
-        flat[canonical] = canonical
-        for alias in aliases:
-            flat[alias] = canonical
+    for key, value in grouped.items():
+        if isinstance(value, list):
+            # Grouped format: {canonical: [aliases]}
+            flat[key] = key
+            for alias in value:
+                flat[alias] = key
+        elif isinstance(value, str):
+            # Flat format: {alias: canonical} — already inverted
+            flat[key] = value
+        else:
+            logger.warning("Skipping alias entry '%s': expected str or list, got %s",
+                           key, type(value).__name__)
+            continue
+    # Detect circular flat references
+    for key, value in flat.items():
+        if value in flat and flat[value] != value and flat[value] == key:
+            logger.warning("Circular alias: '%s' <-> '%s'. "
+                           "One should be canonical (pointing to itself).", key, value)
     return flat
 
 
@@ -243,6 +270,12 @@ class Config:
         return defaults
 
     @property
+    def poster_settings(self) -> dict:
+        defaults = DEFAULT_CONFIG.get("poster_settings", {})
+        overrides = self._data.get("poster_settings", {})
+        return {**defaults, **overrides}
+
+    @property
     def skip_patterns(self) -> list[str]:
         return self._data.get("skip_patterns", [])
 
@@ -298,9 +331,15 @@ class Config:
         """Map a festival name/abbreviation to its canonical form."""
         # Try exact match first, then case-insensitive
         if name in self.festival_aliases:
-            return self.festival_aliases[name]
+            resolved = self.festival_aliases[name]
+            if resolved != name:
+                logger.debug("Festival alias: '%s' -> '%s'", name, resolved)
+            return resolved
         lower_map = {k.lower(): v for k, v in self.festival_aliases.items()}
-        return lower_map.get(name.lower(), name)
+        resolved = lower_map.get(name.lower(), name)
+        if resolved != name:
+            logger.debug("Festival alias (case-insensitive): '%s' -> '%s'", name, resolved)
+        return resolved
 
     @property
     def artist_aliases(self) -> dict[str, str]:
@@ -318,6 +357,7 @@ class Config:
 
     def resolve_artist(self, name: str) -> str:
         """Resolve artist alias, then for B2Bs not in groups return first artist."""
+        original = name
         # 1. Resolve alias (case-insensitive)
         aliased = False
         if name in self.artist_aliases:
@@ -332,6 +372,8 @@ class Config:
 
         # If an alias matched, the user explicitly chose this canonical name
         if aliased:
+            if name != original:
+                logger.debug("Artist alias: '%s' -> '%s'", original, name)
             return name
 
         # 2. If the full name is a known group, keep it
