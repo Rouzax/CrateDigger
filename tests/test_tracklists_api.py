@@ -314,6 +314,33 @@ def test_extract_dj_slugs():
     assert slugs == ["martingarrix", "alesso"]
 
 
+def test_extract_dj_slugs_index_html():
+    """Real 1001TL pages use /dj/slug/index.html links."""
+    html = '''<a href="/dj/afrojack/index.html" class="notranslate">AFROJACK</a>
+    <a href="/dj/nlw/index.html">NLW</a>
+    <a href="/dj/afrojack/index.html">AFROJACK</a>'''
+    slugs = _extract_dj_slugs(html)
+    assert slugs == ["afrojack", "nlw"]
+
+
+def test_extract_dj_slugs_group():
+    """Group DJs like DVLM have group slug first, then individual members."""
+    html = '''<a href="/dj/dimitrivegasandlikemike/index.html">Dimitri Vegas &amp; Like Mike</a>
+    <a href="/dj/dimitrivegas/index.html">Dimitri Vegas</a>
+    <a href="/dj/likemike/index.html">Like Mike</a>'''
+    slugs = _extract_dj_slugs(html)
+    assert slugs[0] == "dimitrivegasandlikemike"
+    assert len(slugs) == 3
+
+
+def test_extract_dj_slugs_mixed_formats():
+    """Mix of trailing-slash and index.html link formats."""
+    html = '''<a href="/dj/tiesto/">Tiesto</a>
+    <a href="/dj/martingarrix/index.html">Martin Garrix</a>'''
+    slugs = _extract_dj_slugs(html)
+    assert slugs == ["tiesto", "martingarrix"]
+
+
 def test_extract_dj_slugs_empty():
     assert _extract_dj_slugs("<html>no djs</html>") == []
 

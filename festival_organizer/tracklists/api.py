@@ -412,8 +412,8 @@ def _extract_genres(html: str) -> list[str]:
 
 
 def _extract_dj_slugs(html: str) -> list[str]:
-    """Extract DJ slugs from /dj/<slug>/ links, deduplicated, preserving order."""
-    matches = re.findall(r'href="/dj/([^/]+)/"', html)
+    """Extract DJ slugs from /dj/<slug>/ or /dj/<slug>/index.html links, deduplicated."""
+    matches = re.findall(r'href="/dj/([^/"]+)/(?:index\.html)?"', html)
     seen = set()
     slugs = []
     for slug in matches:
