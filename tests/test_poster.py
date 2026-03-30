@@ -222,6 +222,25 @@ def test_generate_album_poster_dark_logo_uses_thumbs(tmp_path):
         assert mean_brightness > 10, f"Poster too dark ({mean_brightness:.1f}), thumbnail colors not used"
 
 
+def test_set_poster_with_venue(tmp_path):
+    """Poster generates without error when venue is provided."""
+    source = tmp_path / "source.png"
+    Image.new("RGB", (1280, 720), (100, 50, 200)).save(str(source))
+    output = tmp_path / "poster.jpg"
+    generate_set_poster(
+        source_image_path=source,
+        output_path=output,
+        artist="Armin van Buuren",
+        festival="A State Of Trance Festival",
+        date="2026-02-27",
+        detail="25 Years Celebration Set, Area One",
+        venue="Ahoy Rotterdam",
+    )
+    assert output.exists()
+    img = Image.open(output)
+    assert img.size == (POSTER_W, POSTER_H)
+
+
 def test_generate_set_poster_with_rgba_source(tmp_path):
     """Set poster handles RGBA source images."""
     source = tmp_path / "cover.png"

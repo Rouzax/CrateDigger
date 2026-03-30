@@ -32,6 +32,7 @@ PAD_ARTIST_LINES = 6
 PAD_LINE_TO_FEST = 30
 PAD_FEST_TO_YEAR = 22
 PAD_YEAR_TO_DETAIL = 22
+PAD_DETAIL_LINES = 8
 
 from festival_organizer.fonts import get_font_path
 
@@ -305,6 +306,7 @@ def generate_set_poster(
     date: str = "",
     year: str = "",
     detail: str = "",
+    venue: str = "",
 ) -> Path:
     """Generate a set poster (per-video) using the v5b line-anchored layout.
 
@@ -315,7 +317,8 @@ def generate_set_poster(
         festival: Festival display name (already resolved with location)
         date: ISO date string (YYYY-MM-DD) for full date display
         year: Year string as fallback
-        detail: Optional detail line (stage, venue)
+        detail: Optional detail line (stage name)
+        venue: Optional venue/location (rendered in light gray)
 
     Returns:
         Path to the generated poster
@@ -385,8 +388,6 @@ def generate_set_poster(
 
     font_fest, _ = auto_fit(festival.upper(), "bold", max_w, start=68, minimum=36)
     font_year = get_font("semilight", 62)
-    font_detail = get_font("semilight", 44)
-
     # BUILD UP from accent line — stack lines bottom-to-top
     line_h = font_visual_height(font_artist)
     cursor_y = LINE_Y - PAD_LINE_TO_ARTIST
@@ -416,9 +417,21 @@ def generate_set_poster(
         _draw_centered_no_shadow(draw, ty, date_display, font_year, "white")
         ty += year_h + PAD_YEAR_TO_DETAIL
 
-    # Detail line — white, no effects for TV readability
+    # Detail lines — split on comma, auto-fit each line
     if detail:
-        _draw_centered_no_shadow(draw, ty, detail, font_detail, "white")
+        for part in [p.strip() for p in detail.split(",") if p.strip()]:
+            font_d, _ = auto_fit(part, "semilight", max_w, start=44, minimum=28)
+            dh = font_visual_height(font_d)
+            _draw_centered_no_shadow(draw, ty, part, font_d, "white")
+            ty += dh + PAD_DETAIL_LINES
+
+    # Venue lines — split on comma, auto-fit each line
+    if venue:
+        for part in [p.strip() for p in venue.split(",") if p.strip()]:
+            font_v, _ = auto_fit(part, "semilight", max_w, start=38, minimum=24)
+            vh = font_visual_height(font_v)
+            _draw_centered_no_shadow(draw, ty, part, font_v, (200, 200, 200))
+            ty += vh + PAD_DETAIL_LINES
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     bg.save(str(output_path), quality=95)

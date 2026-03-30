@@ -199,7 +199,8 @@ class PosterOperation(Operation):
                 festival=festival_display or mf.title or "",
                 date=mf.date,
                 year=mf.year,
-                detail=mf.stage or mf.location or "",
+                detail=mf.stage or "",
+                venue=mf.venue or "",
             )
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:

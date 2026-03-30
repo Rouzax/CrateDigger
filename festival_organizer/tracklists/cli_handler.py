@@ -15,6 +15,7 @@ from festival_organizer.tracklists.api import (
     ExportError,
 )
 from festival_organizer.mkv_tags import write_merged_tags
+from festival_organizer.tracklists.source_cache import SourceCache, SOURCE_TYPE_TO_TAG
 from festival_organizer.tracklists.chapters import (
     parse_tracklist_lines,
     extract_existing_chapters,
@@ -57,7 +58,8 @@ def run_chapters(args, config: Config) -> int:
         return 0
 
     # Get credentials and login
-    session = TracklistSession()
+    source_cache = SourceCache()
+    session = TracklistSession(source_cache=source_cache, delay=delay)
     email, password = _get_credentials(config)
     if not email or not password:
         print("Error: credentials required. Set TRACKLISTS_EMAIL and TRACKLISTS_PASSWORD environment variables.", file=sys.stderr)
@@ -243,7 +245,7 @@ def _fetch_and_embed(
         print(f"  {e}")
         if not preview:
             # Tag file with URL for future pickup
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type)
             print(f"  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -254,7 +256,7 @@ def _fetch_and_embed(
     if len(chapters) < 2:
         print("  Only 1 chapter — skipping (not useful for navigation)")
         if not preview:
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type)
             print(f"  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -272,6 +274,12 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_GENRES": "|".join(export.genres) if export.genres else "",
                 "CRATEDIGGER_1001TL_DJ_ARTWORK": export.dj_artwork_url,
             }
+            if export.stage_text:
+                desired["CRATEDIGGER_1001TL_STAGE"] = export.stage_text
+            for source_type, names in export.sources_by_type.items():
+                tag_name = SOURCE_TYPE_TO_TAG.get(source_type)
+                if tag_name and names:
+                    desired[tag_name] = "|".join(names)
             stored_map = {
                 "CRATEDIGGER_1001TL_URL": stored.get("url", ""),
                 "CRATEDIGGER_1001TL_TITLE": stored.get("title", ""),
@@ -279,6 +287,11 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_DATE": stored.get("date", ""),
                 "CRATEDIGGER_1001TL_GENRES": stored.get("genres", ""),
                 "CRATEDIGGER_1001TL_DJ_ARTWORK": stored.get("dj_artwork", ""),
+                "CRATEDIGGER_1001TL_STAGE": stored.get("stage", ""),
+                "CRATEDIGGER_1001TL_VENUE": stored.get("venue", ""),
+                "CRATEDIGGER_1001TL_FESTIVAL": stored.get("festival", ""),
+                "CRATEDIGGER_1001TL_CONFERENCE": stored.get("conference", ""),
+                "CRATEDIGGER_1001TL_RADIO": stored.get("radio", ""),
             }
             # Only update tags that have a new non-empty value different from stored
             tags_to_update = {
@@ -308,7 +321,7 @@ def _fetch_and_embed(
         return "skipped"
 
     # Embed
-    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url)
+    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type)
     if success:
         if not quiet:
             print(f"  Embedded {len(chapters)} chapters.")

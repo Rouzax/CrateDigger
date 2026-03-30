@@ -22,7 +22,7 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
 
     # Title — clean descriptor, not the full filename
     if mf.content_type == "festival_set":
-        title = mf.artist or "Unknown Artist"
+        title = mf.stage or mf.artist or "Unknown Artist"
     else:
         title = mf.title or mf.artist or "Unknown"
     _add(root, "title", title)
@@ -97,25 +97,6 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
 
     # Date added
     _add(root, "dateadded", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-    # Stream details
-    if mf.video_format or mf.audio_format:
-        fileinfo = ET.SubElement(root, "fileinfo")
-        streamdetails = ET.SubElement(fileinfo, "streamdetails")
-
-        if mf.video_format:
-            video = ET.SubElement(streamdetails, "video")
-            _add(video, "codec", mf.video_format)
-            if mf.width and mf.height:
-                _add(video, "aspect", f"{mf.width / mf.height:.2f}")
-                _add(video, "width", str(mf.width))
-                _add(video, "height", str(mf.height))
-            if mf.duration_seconds:
-                _add(video, "durationinseconds", str(int(mf.duration_seconds)))
-
-        if mf.audio_format:
-            audio = ET.SubElement(streamdetails, "audio")
-            _add(audio, "codec", mf.audio_format)
 
     # Pretty-print without XML declaration
     xml_str = minidom.parseString(

@@ -53,6 +53,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         "stage": "",
         "location": "",
         "youtube_id": "",
+        "venue": "",
     }
 
     # Layer 1 (lowest priority): parent directory info
@@ -89,7 +90,11 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
             if tracklists_info.get(key):
                 info[key] = tracklists_info[key]
         metadata_source = "1001tracklists"
-    elif embedded:
+    if meta.get("tracklists_stage"):
+        info["stage"] = meta["tracklists_stage"]
+    if meta.get("tracklists_venue"):
+        info["venue"] = meta["tracklists_venue"]
+    if embedded and not tracklists_info:
         metadata_source = "metadata+filename"
 
     # Normalise
@@ -116,6 +121,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         set_title=normalise_name(info.get("set_title", "")),
         title=normalise_name(info.get("title", "")),
         stage=info.get("stage", ""),
+        venue=info.get("venue", ""),
         location=info.get("location", ""),
         youtube_id=info.get("youtube_id", ""),
         tracklists_url=meta.get("tracklists_url", ""),

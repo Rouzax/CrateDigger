@@ -32,8 +32,8 @@ def test_nfo_album_is_festival_plus_year(tmp_path):
     assert root.find("album").text == "Tomorrowland 2024"
 
 
-def test_nfo_title_is_artist_for_sets(tmp_path):
-    """title = artist name for festival sets, not the filename."""
+def test_nfo_title_falls_back_to_artist_when_no_stage(tmp_path):
+    """title = artist when no stage available for festival sets."""
     mf = MediaFile(source_path=Path("2024 - TML - Artist.mkv"), artist="Martin Garrix",
                    festival="Tomorrowland", year="2024",
                    content_type="festival_set")
@@ -117,18 +117,16 @@ def test_nfo_multiple_thumb_aspects(tmp_path):
     assert "poster" in aspects
 
 
-def test_nfo_fileinfo_durationinseconds(tmp_path):
-    """fileinfo includes durationinseconds, aspect ratio, audio channels."""
+def test_nfo_no_streamdetails(tmp_path):
+    """fileinfo/streamdetails should not be present (Kodi overwrites on playback)."""
     mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
                    content_type="festival_set", festival="TML", year="2024",
-                   video_format="HEVC", width=1920, height=1080,
-                   audio_format="AAC", duration_seconds=3661.5)
+                   video_format="HEVC", audio_format="AAC",
+                   width=1920, height=1080, duration_seconds=3600)
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
-    vid = root.find(".//streamdetails/video")
-    assert vid.find("durationinseconds").text == "3661"
-    assert vid.find("aspect") is not None
+    assert root.find("fileinfo") is None
 
 
 def test_nfo_concert_film(tmp_path):
@@ -142,3 +140,25 @@ def test_nfo_concert_film(tmp_path):
     assert root.find("artist").text == "Coldplay"
     assert root.find("album").text == "A Head Full of Dreams"
     assert root.find("genre").text == "Live"
+
+
+def test_nfo_title_is_stage_for_sets_with_stage(tmp_path):
+    """title = stage name for festival sets when stage is available."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Afrojack",
+                   stage="kineticFIELD", festival="EDC Las Vegas", year="2025",
+                   content_type="festival_set")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("title").text == "kineticFIELD"
+
+
+def test_nfo_title_falls_back_to_artist(tmp_path):
+    """title = artist when no stage available."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Martin Garrix",
+                   festival="Red Rocks", year="2025",
+                   content_type="festival_set")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("title").text == "Martin Garrix"
