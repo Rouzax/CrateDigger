@@ -20,9 +20,19 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
 
     root = ET.Element("musicvideo")
 
-    # Title — clean descriptor, not the full filename
+    # Title — must stand alone in Kodi browse views (only label shown)
     if mf.content_type == "festival_set":
-        title = mf.stage or mf.artist or "Unknown Artist"
+        artist = mf.artist or "Unknown Artist"
+        if mf.stage:
+            parts = [f"{artist} @ {mf.stage}"]
+            if mf.festival:
+                festival = mf.festival
+                if mf.set_title:
+                    festival = f"{festival} {mf.set_title}"
+                parts.append(festival)
+            title = ", ".join(parts)
+        else:
+            title = artist
     else:
         title = mf.title or mf.artist or "Unknown"
     _add(root, "title", title)

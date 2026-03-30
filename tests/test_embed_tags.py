@@ -29,7 +29,8 @@ def test_embed_tags_calls_write_merged_tags(tmp_path):
     """embed_tags uses mkv_tags.write_merged_tags, not raw mkvpropedit."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
-    mf = _make_mf(artist="Afrojack", festival="EDC", year="2025")
+    mf = _make_mf(artist="Afrojack", festival="EDC Las Vegas",
+                   stage="kineticFIELD", year="2025")
 
     with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
         with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
@@ -42,8 +43,37 @@ def test_embed_tags_calls_write_merged_tags(tmp_path):
     tags_dict = call_args[0][1]
     assert 50 in tags_dict
     assert tags_dict[50]["ARTIST"] == "Afrojack"
-    assert tags_dict[50]["TITLE"] == "EDC 2025"
+    assert tags_dict[50]["TITLE"] == "Afrojack @ kineticFIELD, EDC Las Vegas"
     assert tags_dict[50]["DATE_RELEASED"] == "2025"
+
+
+def test_embed_tags_title_includes_set_title(tmp_path):
+    """MKV TITLE tag includes set_title (WE1/WE2) appended to festival."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(artist="Armin van Buuren", festival="Tomorrowland",
+                   stage="Mainstage", year="2025", set_title="WE2")
+
+    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            embed_tags(mf, video)
+
+    tags_dict = mock_wmt.call_args[0][1]
+    assert tags_dict[50]["TITLE"] == "Armin van Buuren @ Mainstage, Tomorrowland WE2"
+
+
+def test_embed_tags_title_fallback_no_stage(tmp_path):
+    """MKV TITLE falls back to artist when no stage available."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(artist="Martin Garrix", festival="Red Rocks", year="2025")
+
+    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            embed_tags(mf, video)
+
+    tags_dict = mock_wmt.call_args[0][1]
+    assert tags_dict[50]["TITLE"] == "Martin Garrix"
 
 
 def test_embed_tags_writes_enrichment_tags_at_ttv70(tmp_path):

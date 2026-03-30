@@ -142,15 +142,26 @@ def test_nfo_concert_film(tmp_path):
     assert root.find("genre").text == "Live"
 
 
-def test_nfo_title_is_stage_for_sets_with_stage(tmp_path):
-    """title = stage name for festival sets when stage is available."""
+def test_nfo_title_artist_at_stage_festival(tmp_path):
+    """title = 'Artist @ Stage, Festival' for festival sets."""
     mf = MediaFile(source_path=Path("test.mkv"), artist="Afrojack",
                    stage="kineticFIELD", festival="EDC Las Vegas", year="2025",
                    content_type="festival_set")
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
-    assert root.find("title").text == "kineticFIELD"
+    assert root.find("title").text == "Afrojack @ kineticFIELD, EDC Las Vegas"
+
+
+def test_nfo_title_includes_set_title(tmp_path):
+    """title appends set_title (WE1/WE2) to festival name."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Armin van Buuren",
+                   stage="Mainstage", festival="Tomorrowland", year="2025",
+                   set_title="WE2", content_type="festival_set")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("title").text == "Armin van Buuren @ Mainstage, Tomorrowland WE2"
 
 
 def test_nfo_title_falls_back_to_artist(tmp_path):
