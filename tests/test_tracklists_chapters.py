@@ -203,5 +203,101 @@ def test_embed_chapters_uses_merged_tags(tmp_path):
     mock_wmt.assert_called_once()
     tags_dict = mock_wmt.call_args[0][1]
     assert 70 in tags_dict
-    assert tags_dict[70]["1001TRACKLISTS_URL"] == "https://example.com/tracklist/abc123/"
-    assert tags_dict[70]["1001TRACKLISTS_TITLE"] == "Artist @ Festival"
+    assert tags_dict[70]["CRATEDIGGER_1001TL_URL"] == "https://example.com/tracklist/abc123/"
+    assert tags_dict[70]["CRATEDIGGER_1001TL_TITLE"] == "Artist @ Festival"
+
+
+def test_embed_chapters_writes_all_new_tag_names(tmp_path):
+    """embed_chapters writes all tags with CRATEDIGGER_1001TL_ prefix."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    chapters = [Chapter("00:03:45.000", "Track One")]
+
+    with patch("festival_organizer.tracklists.chapters.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.tracklists.chapters.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            with patch("festival_organizer.tracklists.chapters.subprocess.run") as mock_run:
+                mock_run.return_value = MagicMock(returncode=0)
+                embed_chapters(
+                    video, chapters,
+                    tracklist_url="https://example.com/tracklist/abc123/",
+                    tracklist_title="Artist @ Festival",
+                    tracklist_id="12345",
+                    tracklist_date="2025-01-01",
+                    genres=["Trance", "House"],
+                    event_artwork_url="https://event.jpg",
+                    dj_artwork_url="https://dj.jpg",
+                )
+
+    tags_dict = mock_wmt.call_args[0][1]
+    tags = tags_dict[70]
+    assert tags["CRATEDIGGER_1001TL_URL"] == "https://example.com/tracklist/abc123/"
+    assert tags["CRATEDIGGER_1001TL_TITLE"] == "Artist @ Festival"
+    assert tags["CRATEDIGGER_1001TL_ID"] == "12345"
+    assert tags["CRATEDIGGER_1001TL_DATE"] == "2025-01-01"
+    assert tags["CRATEDIGGER_1001TL_GENRES"] == "Trance|House"
+    assert tags["CRATEDIGGER_1001TL_EVENT_ARTWORK"] == "https://event.jpg"
+    assert tags["CRATEDIGGER_1001TL_DJ_ARTWORK"] == "https://dj.jpg"
+    # Ensure old names are NOT used
+    assert "1001TRACKLISTS_URL" not in tags
+
+
+def test_extract_stored_tracklist_info_reads_new_tags(tmp_path):
+    """extract_stored_tracklist_info reads CRATEDIGGER_1001TL_* tags."""
+    from festival_organizer.tracklists.chapters import extract_stored_tracklist_info
+
+    new_tags_xml = ET.Element("Tags")
+    tag = ET.SubElement(new_tags_xml, "Tag")
+    targets = ET.SubElement(tag, "Targets")
+    ttv = ET.SubElement(targets, "TargetTypeValue")
+    ttv.text = "70"
+    for name, value in [
+        ("CRATEDIGGER_1001TL_URL", "https://new-url.com"),
+        ("CRATEDIGGER_1001TL_TITLE", "New Title"),
+        ("CRATEDIGGER_1001TL_ID", "abc123"),
+    ]:
+        simple = ET.SubElement(tag, "Simple")
+        n = ET.SubElement(simple, "Name")
+        n.text = name
+        s = ET.SubElement(simple, "String")
+        s.text = value
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+
+    with patch("festival_organizer.tracklists.chapters.extract_all_tags", return_value=new_tags_xml):
+        result = extract_stored_tracklist_info(video)
+
+    assert result is not None
+    assert result["url"] == "https://new-url.com"
+    assert result["title"] == "New Title"
+    assert result["id"] == "abc123"
+
+
+def test_extract_stored_tracklist_info_reads_old_tags(tmp_path):
+    """extract_stored_tracklist_info still reads old 1001TRACKLISTS_* tags."""
+    from festival_organizer.tracklists.chapters import extract_stored_tracklist_info
+
+    old_tags_xml = ET.Element("Tags")
+    tag = ET.SubElement(old_tags_xml, "Tag")
+    targets = ET.SubElement(tag, "Targets")
+    ttv = ET.SubElement(targets, "TargetTypeValue")
+    ttv.text = "70"
+    for name, value in [
+        ("1001TRACKLISTS_URL", "https://old-url.com"),
+        ("1001TRACKLISTS_TITLE", "Old Title"),
+    ]:
+        simple = ET.SubElement(tag, "Simple")
+        n = ET.SubElement(simple, "Name")
+        n.text = name
+        s = ET.SubElement(simple, "String")
+        s.text = value
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+
+    with patch("festival_organizer.tracklists.chapters.extract_all_tags", return_value=old_tags_xml):
+        result = extract_stored_tracklist_info(video)
+
+    assert result is not None
+    assert result["url"] == "https://old-url.com"
+    assert result["title"] == "Old Title"

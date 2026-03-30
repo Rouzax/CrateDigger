@@ -340,7 +340,42 @@ class AlbumPosterOperation(Operation):
                 mf = analyse_file(video, folder, self.config)
                 if mf.dj_artwork_url:
                     return self._download_artwork(mf.dj_artwork_url, "dj-artwork")
+                # Fallback: fetch DJ artwork from tracklist page
+                if mf.tracklists_url:
+                    result = self._fetch_dj_artwork_from_tracklist(mf.tracklists_url)
+                    if result:
+                        return result
         return None
+
+    def _fetch_dj_artwork_from_tracklist(self, tracklist_url: str) -> Path | None:
+        """Fetch DJ artwork by scraping a 1001TL tracklist page for DJ slugs.
+
+        Returns local cached path or None on failure.
+        """
+        try:
+            email, password = self.config.tracklists_credentials
+            if not email or not password:
+                logger.debug("No 1001TL credentials, skipping DJ artwork fallback")
+                return None
+
+            from festival_organizer.tracklists.api import TracklistSession, _extract_dj_slugs
+            api = TracklistSession()
+            api.login(email, password)
+            resp = api._request("GET", tracklist_url)
+            slugs = _extract_dj_slugs(resp.text)
+            if not slugs:
+                logger.debug("No DJ slugs found on tracklist page")
+                return None
+
+            dj_artwork_url = api._fetch_dj_artwork(slugs[0])
+            if not dj_artwork_url:
+                logger.debug("No DJ artwork found for slug %s", slugs[0])
+                return None
+
+            return self._download_artwork(dj_artwork_url, "dj-artwork")
+        except Exception as e:
+            logger.debug("DJ artwork fallback failed: %s", e)
+            return None
 
     def _resolve_background(self, priority: list[str], folder: Path,
                              media_file: MediaFile) -> Path | None:
@@ -482,7 +517,10 @@ class FanartOperation(Operation):
         return False
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
-        from festival_organizer.fanart import split_artists, download_artist_images
+        from festival_organizer.fanart import (
+            split_artists, download_artist_images, lookup_mbid,
+            fetch_artist_images, pick_best_logo, pick_best_background,
+        )
         artists = split_artists(media_file.artist, groups=self.config.artist_groups)
         fetched = []
         for artist in artists:
@@ -490,15 +528,38 @@ class FanartOperation(Operation):
                 continue
             d = self._artist_dir(artist)
             try:
-                logo, bg = download_artist_images(
+                # Look up MBID and store on MediaFile
+                mbid = lookup_mbid(artist, self._get_cache())
+                if mbid and not media_file.mbid:
+                    media_file.mbid = mbid
+
+                # Fetch fanart.tv data once — extract URLs and pass to downloader
+                fanart_data = None
+                if mbid:
+                    fanart_data = fetch_artist_images(
+                        mbid,
+                        self.config.fanart_project_api_key,
+                        self.config.fanart_personal_api_key,
+                    )
+                    if fanart_data:
+                        logo = pick_best_logo(fanart_data.get("hdmusiclogo", []))
+                        if logo and not media_file.clearlogo_url:
+                            media_file.clearlogo_url = logo["url"]
+                        bg = pick_best_background(fanart_data.get("artistbackground", []))
+                        if bg and not media_file.fanart_url:
+                            media_file.fanart_url = bg["url"]
+
+                logo_ok, bg_ok = download_artist_images(
                     artist, d,
                     self.config.fanart_project_api_key,
                     self.config.fanart_personal_api_key,
                     self._get_cache(),
                     force=self.force,
+                    prefetched_mbid=mbid,
+                    prefetched_data=fanart_data,
                 )
                 self._completed_artists.add(artist)
-                if logo or bg:
+                if logo_ok or bg_ok:
                     fetched.append(artist)
             except Exception as e:
                 return OperationResult(self.name, "error", f"{artist}: {e}")

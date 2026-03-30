@@ -173,6 +173,15 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         return None
 
     tag_map = {
+        # New names (preferred)
+        "CRATEDIGGER_1001TL_URL": "url",
+        "CRATEDIGGER_1001TL_TITLE": "title",
+        "CRATEDIGGER_1001TL_ID": "id",
+        "CRATEDIGGER_1001TL_DATE": "date",
+        "CRATEDIGGER_1001TL_GENRES": "genres",
+        "CRATEDIGGER_1001TL_EVENT_ARTWORK": "event_artwork",
+        "CRATEDIGGER_1001TL_DJ_ARTWORK": "dj_artwork",
+        # Old names (backward compatibility)
         "1001TRACKLISTS_URL": "url",
         "1001TRACKLISTS_TITLE": "title",
         "1001TRACKLISTS_ID": "id",
@@ -268,19 +277,19 @@ def embed_chapters(
 
         # Write 1001TL tags via merge (preserves ARTIST/TITLE/DATE etc.)
         if tracklist_url:
-            tags: dict[str, str] = {"1001TRACKLISTS_URL": tracklist_url}
+            tags: dict[str, str] = {"CRATEDIGGER_1001TL_URL": tracklist_url}
             if tracklist_title:
-                tags["1001TRACKLISTS_TITLE"] = tracklist_title
+                tags["CRATEDIGGER_1001TL_TITLE"] = tracklist_title
             if tracklist_id:
-                tags["1001TRACKLISTS_ID"] = tracklist_id
+                tags["CRATEDIGGER_1001TL_ID"] = tracklist_id
             if tracklist_date:
-                tags["1001TRACKLISTS_DATE"] = tracklist_date
+                tags["CRATEDIGGER_1001TL_DATE"] = tracklist_date
             if genres:
-                tags["1001TRACKLISTS_GENRES"] = "|".join(genres)
+                tags["CRATEDIGGER_1001TL_GENRES"] = "|".join(genres)
             if event_artwork_url:
-                tags["1001TRACKLISTS_EVENT_ARTWORK"] = event_artwork_url
+                tags["CRATEDIGGER_1001TL_EVENT_ARTWORK"] = event_artwork_url
             if dj_artwork_url:
-                tags["1001TRACKLISTS_DJ_ARTWORK"] = dj_artwork_url
+                tags["CRATEDIGGER_1001TL_DJ_ARTWORK"] = dj_artwork_url
             return write_merged_tags(filepath, {70: tags})
 
         return True

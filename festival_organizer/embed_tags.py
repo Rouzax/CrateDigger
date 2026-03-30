@@ -10,6 +10,7 @@ Logging:
     See docs/logging.md for full guidelines.
 """
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
 
 from festival_organizer import metadata
@@ -45,10 +46,27 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
     if date:
         tags["DATE_RELEASED"] = date
 
-    if not tags:
+    # Enrichment tags at TTV=70 (collection level)
+    tags_70: dict[str, str] = {}
+    if media_file.mbid:
+        tags_70["CRATEDIGGER_MBID"] = media_file.mbid
+    if media_file.fanart_url:
+        tags_70["CRATEDIGGER_FANART_URL"] = media_file.fanart_url
+    if media_file.clearlogo_url:
+        tags_70["CRATEDIGGER_CLEARLOGO_URL"] = media_file.clearlogo_url
+    if tags_70:
+        tags_70["CRATEDIGGER_ENRICHED_AT"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+    if not tags and not tags_70:
         return True  # Nothing to write
 
-    return write_merged_tags(target_path, {50: tags})
+    all_tags: dict[int, dict[str, str]] = {}
+    if tags:
+        all_tags[50] = tags
+    if tags_70:
+        all_tags[70] = tags_70
+
+    return write_merged_tags(target_path, all_tags)
 
 
 def xml_escape(text: str) -> str:

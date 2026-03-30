@@ -3,9 +3,9 @@ from unittest.mock import patch, MagicMock
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
     NfoOperation, ArtOperation, PosterOperation, TagsOperation,
-    OrganizeOperation, AlbumPosterOperation,
+    OrganizeOperation, AlbumPosterOperation, FanartOperation,
 )
-from festival_organizer.config import load_config
+from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
 
 
 def _make_mf(**kwargs):
@@ -532,3 +532,123 @@ def test_organize_sidecar_stem_rename(tmp_path):
     # Old files gone
     assert not (src / "2024 - AMF - Tiësto.nfo").exists()
     assert not (src / "2024 - AMF - Tiësto-poster.jpg").exists()
+
+
+# --- FanartOperation stores MBID and URLs on MediaFile ---
+
+
+def test_fanart_op_stores_mbid_on_mediafile(tmp_path):
+    """FanartOperation stores the resolved MBID on the MediaFile."""
+    config = Config({
+        **DEFAULT_CONFIG,
+        "fanart": {"enabled": True, "project_api_key": "test-key"},
+    })
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(artist="Hardwell")
+
+    mock_cache = MagicMock()
+    mock_cache.has.return_value = False
+    mock_cache.get.side_effect = KeyError
+
+    with patch("festival_organizer.fanart.download_artist_images", return_value=(True, True)):
+        with patch("festival_organizer.fanart.lookup_mbid", return_value="mbid-abc-123"):
+            with patch("festival_organizer.fanart.fetch_artist_images", return_value=None):
+                op = FanartOperation(config, lib)
+                op._cache = mock_cache
+                result = op.execute(video, mf)
+
+    assert mf.mbid == "mbid-abc-123"
+
+
+def test_fanart_op_stores_urls_on_mediafile(tmp_path):
+    """FanartOperation stores fanart and clearlogo URLs on MediaFile."""
+    config = Config({
+        **DEFAULT_CONFIG,
+        "fanart": {"enabled": True, "project_api_key": "test-key"},
+    })
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(artist="Hardwell")
+
+    mock_cache = MagicMock()
+    mock_cache.has.return_value = False
+
+    with patch("festival_organizer.fanart.download_artist_images", return_value=(True, True)):
+        with patch("festival_organizer.fanart.lookup_mbid", return_value="mbid-123"):
+            with patch("festival_organizer.fanart.fetch_artist_images") as mock_fetch:
+                mock_fetch.return_value = {
+                    "hdmusiclogo": [{"url": "https://fanart.tv/logo.png", "likes": "5", "lang": "en"}],
+                    "artistbackground": [{"url": "https://fanart.tv/bg.jpg", "likes": "3"}],
+                }
+                op = FanartOperation(config, lib)
+                op._cache = mock_cache
+                result = op.execute(video, mf)
+
+    assert mf.fanart_url == "https://fanart.tv/bg.jpg"
+    assert mf.clearlogo_url == "https://fanart.tv/logo.png"
+
+
+# --- AlbumPosterOperation DJ artwork fallback via tracklist URL ---
+
+
+def test_album_poster_dj_artwork_fallback_from_tracklist(tmp_path):
+    """When dj_artwork_url is empty but tracklists_url exists, fetch DJ artwork from tracklist page."""
+    config = Config({
+        **DEFAULT_CONFIG,
+        "tracklists": {"email": "test@test.com", "password": "pw"},
+    })
+    lib = tmp_path / "lib"
+    lib.mkdir()
+
+    folder = tmp_path / "artist"
+    folder.mkdir()
+    video = folder / "set.mkv"
+    video.write_bytes(b"")
+
+    # MediaFile with tracklists_url but no dj_artwork_url
+    mf = _make_mf(tracklists_url="https://www.1001tracklists.com/tracklist/abc123/", dj_artwork_url="")
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+
+    mock_resp = MagicMock()
+    mock_resp.text = '<a href="/dj/martingarrix/">MG</a>'
+
+    # Mock analyse_file to return our mf (with tracklists_url, no dj_artwork_url)
+    with patch("festival_organizer.analyzer.analyse_file", return_value=mf):
+        with patch("festival_organizer.tracklists.api.TracklistSession") as MockSession:
+            api_instance = MockSession.return_value
+            api_instance.login.return_value = None
+            api_instance._request.return_value = mock_resp
+            api_instance._fetch_dj_artwork.return_value = "https://cdn.1001tracklists.com/images/dj/martingarrix.jpg"
+            with patch.object(op, "_download_artwork", return_value=Path("/tmp/cached.jpg")):
+                result = op._find_dj_artwork(folder)
+
+    assert result is not None
+
+
+def test_album_poster_dj_artwork_fallback_no_credentials(tmp_path):
+    """Without credentials, fallback returns None (no crash)."""
+    config = Config(DEFAULT_CONFIG)  # No tracklists credentials
+    lib = tmp_path / "lib"
+    lib.mkdir()
+
+    folder = tmp_path / "artist"
+    folder.mkdir()
+    video = folder / "set.mkv"
+    video.write_bytes(b"")
+
+    mf = _make_mf(tracklists_url="https://www.1001tracklists.com/tracklist/abc123/", dj_artwork_url="")
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+
+    # Mock analyse_file to return our mf
+    with patch("festival_organizer.analyzer.analyse_file", return_value=mf):
+        result = op._find_dj_artwork(folder)
+
+    # Should return None (no credentials, no dj_artwork_url)
+    assert result is None

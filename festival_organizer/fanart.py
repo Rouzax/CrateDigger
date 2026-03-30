@@ -315,6 +315,8 @@ def download_artist_images(
     personal_api_key: str = "",
     cache: MBIDCache | None = None,
     force: bool = False,
+    prefetched_mbid: str | None = None,
+    prefetched_data: dict | None = None,
 ) -> tuple[bool, bool]:
     """Download clearlogo and fanart for one artist.
 
@@ -323,6 +325,9 @@ def download_artist_images(
     2. TheAudioDB fallback (logos + 1280px fanart / 700px thumbs)
 
     Returns (logo_downloaded, bg_downloaded).
+
+    Pass prefetched_mbid and prefetched_data to avoid redundant API calls
+    when the caller has already looked up the MBID and fetched images.
     """
     global _attribution_logged
     if not _attribution_logged:
@@ -342,7 +347,7 @@ def download_artist_images(
     if cache is None:
         cache = MBIDCache()
 
-    mbid = lookup_mbid(artist_name, cache)
+    mbid = prefetched_mbid or lookup_mbid(artist_name, cache)
     if not mbid:
         return (False, False)
 
@@ -350,7 +355,7 @@ def download_artist_images(
     bg_ok = False
 
     # --- Source 1: fanart.tv ---
-    data = fetch_artist_images(mbid, project_api_key, personal_api_key)
+    data = prefetched_data or fetch_artist_images(mbid, project_api_key, personal_api_key)
     if data:
         if need_logo:
             logo = pick_best_logo(data.get("hdmusiclogo", []))

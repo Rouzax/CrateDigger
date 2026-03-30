@@ -41,6 +41,15 @@ def test_media_file_duration_formatted():
     assert mf2.duration_formatted == ""
 
 
+def test_media_file_new_fields_default_empty():
+    """New enrichment fields default to empty strings."""
+    mf = MediaFile(source_path=Path("test.mkv"))
+    assert mf.mbid == ""
+    assert mf.fanart_url == ""
+    assert mf.clearlogo_url == ""
+    assert mf.enriched_at == ""
+
+
 def test_file_action_defaults():
     mf = MediaFile(source_path=Path("src.mkv"))
     fa = FileAction(

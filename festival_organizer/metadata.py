@@ -109,35 +109,47 @@ def parse_mediainfo_json(data: dict) -> dict:
         "description": general.get("Description", ""),
         "comment": general.get("Comment", ""),
         "purl": general.get("PURL", "") or extra.get("PURL", ""),
-        # 1001Tracklists
+        # 1001Tracklists (new name first, fall back to old)
         "tracklists_title": (
-            general.get("1001TRACKLISTS_TITLE", "")
+            general.get("CRATEDIGGER_1001TL_TITLE", "")
+            or general.get("1001TRACKLISTS_TITLE", "")
             or extra.get("_1001TRACKLISTS_TITLE", "")
         ),
         "tracklists_url": (
-            general.get("1001TRACKLISTS_URL", "")
+            general.get("CRATEDIGGER_1001TL_URL", "")
+            or general.get("1001TRACKLISTS_URL", "")
             or extra.get("_1001TRACKLISTS_URL", "")
         ),
         "tracklists_id": (
-            general.get("1001TRACKLISTS_ID", "")
+            general.get("CRATEDIGGER_1001TL_ID", "")
+            or general.get("1001TRACKLISTS_ID", "")
             or extra.get("_1001TRACKLISTS_ID", "")
         ),
         "tracklists_date": (
-            general.get("1001TRACKLISTS_DATE", "")
+            general.get("CRATEDIGGER_1001TL_DATE", "")
+            or general.get("1001TRACKLISTS_DATE", "")
             or extra.get("_1001TRACKLISTS_DATE", "")
         ),
         "tracklists_genres": (
-            general.get("1001TRACKLISTS_GENRES", "")
+            general.get("CRATEDIGGER_1001TL_GENRES", "")
+            or general.get("1001TRACKLISTS_GENRES", "")
             or extra.get("_1001TRACKLISTS_GENRES", "")
         ),
         "tracklists_event_artwork": (
-            general.get("1001TRACKLISTS_EVENT_ARTWORK", "")
+            general.get("CRATEDIGGER_1001TL_EVENT_ARTWORK", "")
+            or general.get("1001TRACKLISTS_EVENT_ARTWORK", "")
             or extra.get("_1001TRACKLISTS_EVENT_ARTWORK", "")
         ),
         "tracklists_dj_artwork": (
-            general.get("1001TRACKLISTS_DJ_ARTWORK", "")
+            general.get("CRATEDIGGER_1001TL_DJ_ARTWORK", "")
+            or general.get("1001TRACKLISTS_DJ_ARTWORK", "")
             or extra.get("_1001TRACKLISTS_DJ_ARTWORK", "")
         ),
+        # Enrichment tags
+        "mbid": general.get("CRATEDIGGER_MBID", "") or extra.get("CRATEDIGGER_MBID", ""),
+        "fanart_url": general.get("CRATEDIGGER_FANART_URL", "") or extra.get("CRATEDIGGER_FANART_URL", ""),
+        "clearlogo_url": general.get("CRATEDIGGER_CLEARLOGO_URL", "") or extra.get("CRATEDIGGER_CLEARLOGO_URL", ""),
+        "enriched_at": general.get("CRATEDIGGER_ENRICHED_AT", "") or extra.get("CRATEDIGGER_ENRICHED_AT", ""),
         # Video
         "video_format": video.get("Format", ""),
         "width": _int_or_none(video.get("Width", "")),
@@ -202,10 +214,17 @@ def _extract_ffprobe(filepath: Path) -> dict:
             "description": tags.get("description", "") or tags.get("DESCRIPTION", ""),
             "comment": tags.get("comment", "") or tags.get("COMMENT", ""),
             "purl": tags.get("purl", "") or tags.get("PURL", ""),
-            "tracklists_title": tags.get("1001TRACKLISTS_TITLE", ""),
-            "tracklists_url": tags.get("1001TRACKLISTS_URL", ""),
-            "tracklists_id": tags.get("1001TRACKLISTS_ID", ""),
-            "tracklists_date": tags.get("1001TRACKLISTS_DATE", ""),
+            "tracklists_title": tags.get("CRATEDIGGER_1001TL_TITLE", "") or tags.get("1001TRACKLISTS_TITLE", ""),
+            "tracklists_url": tags.get("CRATEDIGGER_1001TL_URL", "") or tags.get("1001TRACKLISTS_URL", ""),
+            "tracklists_id": tags.get("CRATEDIGGER_1001TL_ID", "") or tags.get("1001TRACKLISTS_ID", ""),
+            "tracklists_date": tags.get("CRATEDIGGER_1001TL_DATE", "") or tags.get("1001TRACKLISTS_DATE", ""),
+            "tracklists_genres": tags.get("CRATEDIGGER_1001TL_GENRES", "") or tags.get("1001TRACKLISTS_GENRES", ""),
+            "tracklists_event_artwork": tags.get("CRATEDIGGER_1001TL_EVENT_ARTWORK", "") or tags.get("1001TRACKLISTS_EVENT_ARTWORK", ""),
+            "tracklists_dj_artwork": tags.get("CRATEDIGGER_1001TL_DJ_ARTWORK", "") or tags.get("1001TRACKLISTS_DJ_ARTWORK", ""),
+            "mbid": tags.get("CRATEDIGGER_MBID", ""),
+            "fanart_url": tags.get("CRATEDIGGER_FANART_URL", ""),
+            "clearlogo_url": tags.get("CRATEDIGGER_CLEARLOGO_URL", ""),
+            "enriched_at": tags.get("CRATEDIGGER_ENRICHED_AT", ""),
             "video_format": video.get("codec_name", ""),
             "width": _int_or_none(video.get("width", "")),
             "height": _int_or_none(video.get("height", "")),

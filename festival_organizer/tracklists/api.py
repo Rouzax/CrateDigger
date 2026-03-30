@@ -287,9 +287,10 @@ class TracklistSession:
             m = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', resp.text)
             if m:
                 url = m.group(1)
-                # Skip default/placeholder images
-                if "default" not in url:
-                    return url
+                # Skip default/placeholder/static images
+                if "/images/static/" in url or "logo" in url.lower() or "default" in url:
+                    return ""
+                return url
         except TracklistError:
             logger.debug("Failed to fetch DJ page for %s", dj_slug)
         return ""

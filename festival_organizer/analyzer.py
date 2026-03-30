@@ -123,6 +123,10 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         genres=[g.strip() for g in meta.get("tracklists_genres", "").split("|") if g.strip()] if meta.get("tracklists_genres") else [],
         event_artwork_url=meta.get("tracklists_event_artwork", ""),
         dj_artwork_url=meta.get("tracklists_dj_artwork", ""),
+        mbid=meta.get("mbid", ""),
+        fanart_url=meta.get("fanart_url", ""),
+        clearlogo_url=meta.get("clearlogo_url", ""),
+        enriched_at=meta.get("enriched_at", ""),
         metadata_source=metadata_source,
         content_type="",  # Set by classifier
         extension=ext,

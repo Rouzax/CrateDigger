@@ -96,3 +96,45 @@ def test_analyse_embedded_artist_tag():
         )
     assert mf.artist == "Michael Bublé"
     assert mf.year == "2017"
+
+
+def test_analyse_maps_enrichment_fields():
+    """Enrichment fields (mbid, fanart_url, etc.) are mapped from metadata."""
+    fake_meta = {
+        "title": "",
+        "tracklists_title": "",
+        "tracklists_url": "",
+        "artist_tag": "Test",
+        "date_tag": "",
+        "mbid": "abc-123",
+        "fanart_url": "https://fanart.tv/bg.jpg",
+        "clearlogo_url": "https://fanart.tv/logo.png",
+        "enriched_at": "2026-03-30T12:00:00",
+        "duration_seconds": None,
+        "width": None,
+        "height": None,
+        "video_format": "",
+        "audio_format": "",
+        "audio_bitrate": "",
+        "overall_bitrate": "",
+        "has_cover": False,
+        "description": "",
+        "comment": "",
+        "purl": "",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(Path("/tmp/test/file.mkv"), Path("/tmp/test"), CFG)
+    assert mf.mbid == "abc-123"
+    assert mf.fanart_url == "https://fanart.tv/bg.jpg"
+    assert mf.clearlogo_url == "https://fanart.tv/logo.png"
+    assert mf.enriched_at == "2026-03-30T12:00:00"
+
+
+def test_analyse_enrichment_fields_default_empty():
+    """Enrichment fields default to empty when not in metadata."""
+    with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
+        mf = analyse_file(Path("/tmp/test/file.mkv"), Path("/tmp/test"), CFG)
+    assert mf.mbid == ""
+    assert mf.fanart_url == ""
+    assert mf.clearlogo_url == ""
+    assert mf.enriched_at == ""
