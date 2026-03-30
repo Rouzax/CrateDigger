@@ -64,7 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     # organize
     org_p = sub.add_parser("organize", help="Move/copy files into library structure")
     add_common(org_p)
-    org_p.add_argument("--copy", action="store_true", help="Copy instead of move")
+    org_p.add_argument("--move", action="store_true", help="Move instead of copy (default: copy)")
     org_p.add_argument("--rename-only", action="store_true", help="Rename in place only")
     org_p.add_argument("--enrich", action="store_true",
                        help="Also run enrichment after organizing")
@@ -267,8 +267,8 @@ def _run_command(args) -> int:
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
-            action = "copy" if getattr(args, "copy", False) else \
-                     "rename" if getattr(args, "rename_only", False) else "move"
+            action = "move" if getattr(args, "move", False) else \
+                     "rename" if getattr(args, "rename_only", False) else "copy"
             ops.append(OrganizeOperation(target=target, action=action))
 
             if getattr(args, "enrich", False):
@@ -320,8 +320,8 @@ def _run_command(args) -> int:
 
     # Post-pipeline: clean up empty source directories after organize (move)
     if args.command == "organize":
-        action = "copy" if getattr(args, "copy", False) else \
-                 "rename" if getattr(args, "rename_only", False) else "move"
+        action = "move" if getattr(args, "move", False) else \
+                 "rename" if getattr(args, "rename_only", False) else "copy"
         if action == "move" and root.resolve() != output.resolve():
             from festival_organizer.library import cleanup_empty_dirs
             cleanup_empty_dirs(root)
