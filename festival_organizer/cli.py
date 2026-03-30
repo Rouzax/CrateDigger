@@ -28,6 +28,7 @@ Common workflows:
   cratedigger organize ./downloads      Organize files into library structure
   cratedigger enrich ./library          Add art, posters, tags to existing files
   cratedigger chapters ./file.mkv       Add 1001Tracklists chapters
+  cratedigger audit-logos ./library     Check curated festival logo coverage
 
 Run 'cratedigger <command> --help' for details on each command.
 """
