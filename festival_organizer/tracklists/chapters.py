@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 from festival_organizer import metadata
 from festival_organizer.embed_tags import xml_escape
 from festival_organizer.mkv_tags import extract_all_tags, write_merged_tags
+from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
 
 
 @dataclass
@@ -180,6 +181,11 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         "CRATEDIGGER_1001TL_DATE": "date",
         "CRATEDIGGER_1001TL_GENRES": "genres",
         "CRATEDIGGER_1001TL_DJ_ARTWORK": "dj_artwork",
+        "CRATEDIGGER_1001TL_STAGE": "stage",
+        "CRATEDIGGER_1001TL_VENUE": "venue",
+        "CRATEDIGGER_1001TL_FESTIVAL": "festival",
+        "CRATEDIGGER_1001TL_CONFERENCE": "conference",
+        "CRATEDIGGER_1001TL_RADIO": "radio",
         # Old names (backward compatibility)
         "1001TRACKLISTS_URL": "url",
         "1001TRACKLISTS_TITLE": "title",
@@ -239,6 +245,8 @@ def embed_chapters(
     tracklist_date: str | None = None,
     genres: list[str] | None = None,
     dj_artwork_url: str | None = None,
+    stage_text: str = "",
+    sources_by_type: dict[str, list[str]] | None = None,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
 
@@ -285,6 +293,13 @@ def embed_chapters(
                 tags["CRATEDIGGER_1001TL_GENRES"] = "|".join(genres)
             if dj_artwork_url:
                 tags["CRATEDIGGER_1001TL_DJ_ARTWORK"] = dj_artwork_url
+            if stage_text:
+                tags["CRATEDIGGER_1001TL_STAGE"] = stage_text
+            if sources_by_type:
+                for source_type, names in sources_by_type.items():
+                    tag_name = SOURCE_TYPE_TO_TAG.get(source_type)
+                    if tag_name and names:
+                        tags[tag_name] = "|".join(names)
             return write_merged_tags(filepath, {70: tags})
 
         return True

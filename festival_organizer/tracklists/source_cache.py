@@ -7,6 +7,14 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_PATH = Path.home() / ".cratedigger" / "source_cache.json"
 
+# Maps 1001TL source types to MKV tag names.
+SOURCE_TYPE_TO_TAG: dict[str, str] = {
+    "Open Air / Festival": "CRATEDIGGER_1001TL_FESTIVAL",
+    "Event Location": "CRATEDIGGER_1001TL_VENUE",
+    "Conference": "CRATEDIGGER_1001TL_CONFERENCE",
+    "Radio Channel": "CRATEDIGGER_1001TL_RADIO",
+}
+
 
 class SourceCache:
     """Read-through cache for 1001TL source page metadata.
