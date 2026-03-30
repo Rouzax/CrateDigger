@@ -19,6 +19,7 @@ from festival_organizer.tracklists.api import (
     _is_rate_limited,
     _extract_genres,
     _extract_dj_slugs,
+    _maximize_artwork_url,
 )
 
 
@@ -361,3 +362,51 @@ def test_request_raises_on_persistent_5xx():
     with patch.object(session._session, "get", return_value=mock_resp):
         with pytest.raises(TracklistError, match="502"):
             session._request("GET", "http://example.com", max_retries=2)
+
+
+# --- _maximize_artwork_url tests ---
+
+def test_maximize_artwork_url_soundcloud_t500x500():
+    """SoundCloud t500x500 is rewritten to original."""
+    url = "https://i1.sndcdn.com/avatars-vjum1BRzTUg83HKy-yajRWQ-t500x500.jpg"
+    assert _maximize_artwork_url(url) == "https://i1.sndcdn.com/avatars-vjum1BRzTUg83HKy-yajRWQ-original.jpg"
+
+
+def test_maximize_artwork_url_soundcloud_t300x300():
+    """SoundCloud t300x300 is also rewritten to original."""
+    url = "https://i1.sndcdn.com/avatars-abc123-t300x300.jpg"
+    assert _maximize_artwork_url(url) == "https://i1.sndcdn.com/avatars-abc123-original.jpg"
+
+
+def test_maximize_artwork_url_squarespace_strips_format():
+    """Squarespace format=NNNw query param is stripped."""
+    url = "https://images.squarespace-cdn.com/content/v1/abc/image.jpg?format=300w"
+    assert _maximize_artwork_url(url) == "https://images.squarespace-cdn.com/content/v1/abc/image.jpg"
+
+
+def test_maximize_artwork_url_youtube_s500_to_s800():
+    """YouTube profile pic s500 is upgraded to s800."""
+    url = "https://yt3.ggpht.com/GE5UaHPciygWU-7lj-8gfnkLJFOqQGMN0x3_eD7tlWfeLJQVMZGwIKdmxtMy0kAHb3A4xrPZEA=s500-c-k-c0x00ffffff-no-rj"
+    assert _maximize_artwork_url(url) == "https://yt3.ggpht.com/GE5UaHPciygWU-7lj-8gfnkLJFOqQGMN0x3_eD7tlWfeLJQVMZGwIKdmxtMy0kAHb3A4xrPZEA=s800-c-k-c0x00ffffff-no-rj"
+
+
+def test_maximize_artwork_url_unknown_cdn_passthrough():
+    """Unknown CDN URLs pass through unchanged."""
+    url = "https://cdn.1001tracklists.com/images/dj/someone-abc.jpg"
+    assert _maximize_artwork_url(url) == url
+
+
+def test_maximize_artwork_url_empty_string():
+    """Empty string returns empty string."""
+    assert _maximize_artwork_url("") == ""
+
+
+def test_fetch_dj_artwork_maximizes_squarespace_url():
+    """_fetch_dj_artwork applies URL maximization to Squarespace URLs."""
+    session = TracklistSession()
+    html = '<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/abc/image.jpg?format=300w">'
+    mock_resp = MagicMock()
+    mock_resp.text = html
+    with patch.object(session, "_request", return_value=mock_resp):
+        result = session._fetch_dj_artwork("someone")
+    assert result == "https://images.squarespace-cdn.com/content/v1/abc/image.jpg"

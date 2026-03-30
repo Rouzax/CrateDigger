@@ -14,6 +14,7 @@ from festival_organizer.poster import (
     format_date_display,
     generate_set_poster,
     generate_album_poster,
+    _filter_venue_parts,
     POSTER_W,
     POSTER_H,
 )
@@ -291,3 +292,83 @@ def test_get_font_path_config_override_missing_falls_back(tmp_path):
     path = get_font_path("bold", overrides=overrides)
     # Falls back to bundled — must be a real file
     assert Path(path).is_file()
+
+
+def test_set_poster_venue_dedup_exact_match(tmp_path):
+    """Venue identical to detail line should not appear twice."""
+    source = tmp_path / "source.png"
+    Image.new("RGB", (1280, 720), (100, 50, 200)).save(str(source))
+    output = tmp_path / "poster.jpg"
+    # Tiësto case: stage and venue are the same string
+    generate_set_poster(
+        source_image_path=source,
+        output_path=output,
+        artist="Tiësto",
+        festival="We Belong Here",
+        date="2026-03-01",
+        detail="Historic Virginia Key Park",
+        venue="Historic Virginia Key Park",
+    )
+    assert output.exists()
+
+
+def test_set_poster_venue_dedup_substring(tmp_path):
+    """Venue that is a substring of a detail part should be deduplicated."""
+    source = tmp_path / "source.png"
+    Image.new("RGB", (1280, 720), (100, 50, 200)).save(str(source))
+    output = tmp_path / "poster.jpg"
+    # AMF case: detail has "Johan Cruijff ArenA", venue has "Johan Cruijff ArenA Amsterdam"
+    generate_set_poster(
+        source_image_path=source,
+        output_path=output,
+        artist="Martin Garrix",
+        festival="AMF",
+        date="2024-10-19",
+        detail="Johan Cruijff ArenA, Amsterdam Dance Event",
+        venue="Johan Cruijff ArenA Amsterdam",
+    )
+    assert output.exists()
+
+
+def test_set_poster_venue_no_dedup_when_different(tmp_path):
+    """Venue unrelated to detail renders normally."""
+    source = tmp_path / "source.png"
+    Image.new("RGB", (1280, 720), (100, 50, 200)).save(str(source))
+    output = tmp_path / "poster.jpg"
+    generate_set_poster(
+        source_image_path=source,
+        output_path=output,
+        artist="Armin van Buuren",
+        festival="ASOT",
+        date="2026-02-27",
+        detail="Mainstage",
+        venue="Ahoy Rotterdam",
+    )
+    assert output.exists()
+
+
+# --- _filter_venue_parts tests ---
+
+def test_filter_venue_parts_exact_duplicate():
+    """Exact duplicate venue part is filtered out."""
+    assert _filter_venue_parts("Historic Virginia Key Park", "Historic Virginia Key Park") == []
+
+
+def test_filter_venue_parts_detail_substring_of_venue():
+    """Venue containing a detail part as substring is filtered."""
+    assert _filter_venue_parts("Johan Cruijff ArenA Amsterdam", "Johan Cruijff ArenA, Amsterdam Dance Event") == []
+
+
+def test_filter_venue_parts_unrelated():
+    """Unrelated venue parts pass through."""
+    assert _filter_venue_parts("Ahoy Rotterdam", "Mainstage") == ["Ahoy Rotterdam"]
+
+
+def test_filter_venue_parts_empty_detail():
+    """Empty detail means all venue parts pass through."""
+    assert _filter_venue_parts("Ahoy Rotterdam", "") == ["Ahoy Rotterdam"]
+
+
+def test_filter_venue_parts_empty_venue():
+    """Empty venue returns empty list."""
+    assert _filter_venue_parts("", "Mainstage") == []

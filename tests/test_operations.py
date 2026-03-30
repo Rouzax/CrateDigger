@@ -738,3 +738,51 @@ def test_logo_summary_tracks_hits_and_misses(tmp_path):
     assert any("Missing curated logos: 1" in line for line in summary)
     assert any("AMF" in line for line in summary)
     assert any("TML" in line for line in summary)
+
+
+def test_download_artwork_max_width_resizes(tmp_path):
+    """Downloaded artwork wider than max_width is resized down."""
+    from PIL import Image
+    import io
+
+    # Create an 800x800 test image
+    img = Image.new("RGB", (800, 800), color="red")
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    image_bytes = buf.getvalue()
+
+    mock_resp = MagicMock()
+    mock_resp.content = image_bytes
+    mock_resp.raise_for_status = MagicMock()
+
+    op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
+    with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+        result = op._download_artwork("https://example.com/big.jpg", "test-art", max_width=600)
+
+    assert result is not None
+    with Image.open(result) as saved:
+        assert saved.width == 600
+        assert saved.height == 600
+
+
+def test_download_artwork_no_max_width_keeps_original(tmp_path):
+    """Without max_width, artwork is saved at original size."""
+    from PIL import Image
+    import io
+
+    img = Image.new("RGB", (800, 800), color="red")
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    image_bytes = buf.getvalue()
+
+    mock_resp = MagicMock()
+    mock_resp.content = image_bytes
+    mock_resp.raise_for_status = MagicMock()
+
+    op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
+    with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+        result = op._download_artwork("https://example.com/big.jpg", "test-art")
+
+    assert result is not None
+    with Image.open(result) as saved:
+        assert saved.width == 800

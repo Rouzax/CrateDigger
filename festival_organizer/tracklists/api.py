@@ -331,7 +331,7 @@ class TracklistSession:
                 # Skip default/placeholder/static images
                 if "/images/static/" in url or "logo" in url.lower() or "default" in url:
                     return ""
-                return url
+                return _maximize_artwork_url(url)
         except TracklistError:
             logger.debug("Failed to fetch DJ page for %s", dj_slug)
         return ""
@@ -473,6 +473,22 @@ def _extract_dj_slugs(html: str) -> list[str]:
             seen.add(slug)
             slugs.append(slug)
     return slugs
+
+
+def _maximize_artwork_url(url: str) -> str:
+    """Rewrite artwork URL to request the highest available resolution."""
+    if not url:
+        return url
+    # SoundCloud: -t500x500.jpg -> -original.jpg (true source)
+    if "sndcdn.com" in url:
+        return re.sub(r"-t\d+x\d+\.", "-original.", url)
+    # Squarespace: strip ?format=NNNw to get original
+    if "squarespace-cdn.com" in url:
+        return re.sub(r"\?format=\d+w$", "", url)
+    # YouTube/Google profile pics: s500 -> s800
+    if "yt3.ggpht.com" in url:
+        return re.sub(r"=s\d+", "=s800", url)
+    return url
 
 
 def _is_rate_limited(text: str) -> bool:

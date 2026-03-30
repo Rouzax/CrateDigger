@@ -302,7 +302,7 @@ class AlbumPosterOperation(Operation):
                     "artist style" if result else "festival style (no fanart)")
         return result
 
-    def _download_artwork(self, url: str, cache_subdir: str) -> Path | None:
+    def _download_artwork(self, url: str, cache_subdir: str, max_width: int | None = None) -> Path | None:
         """Download an artwork URL to cache. Returns local path or None."""
         if not url or not self.library_root:
             return None
@@ -319,6 +319,14 @@ class AlbumPosterOperation(Operation):
             resp.raise_for_status()
             cache_dir.mkdir(parents=True, exist_ok=True)
             cached.write_bytes(resp.content)
+            if max_width:
+                from PIL import Image
+                with Image.open(cached) as img:
+                    if img.width > max_width:
+                        ratio = max_width / img.width
+                        new_size = (max_width, int(img.height * ratio))
+                        img = img.resize(new_size, Image.LANCZOS)
+                        img.save(cached)
             logger.info("Downloaded artwork: %s -> %s", url, cached.name)
             return cached
         except (requests.RequestException, OSError) as e:
@@ -352,7 +360,7 @@ class AlbumPosterOperation(Operation):
                 mf = analyse_file(video, folder, self.config)
                 logger.debug("Album poster: dj_artwork_url=%s", mf.dj_artwork_url or "(empty)")
                 if mf.dj_artwork_url:
-                    return self._download_artwork(mf.dj_artwork_url, "dj-artwork")
+                    return self._download_artwork(mf.dj_artwork_url, "dj-artwork", max_width=600)
                 # Fallback: fetch DJ artwork from tracklist page
                 if mf.tracklists_url:
                     result = self._fetch_dj_artwork_from_tracklist(mf.tracklists_url)
@@ -385,7 +393,7 @@ class AlbumPosterOperation(Operation):
                 logger.debug("No DJ artwork found for slug %s", slugs[0])
                 return None
 
-            return self._download_artwork(dj_artwork_url, "dj-artwork")
+            return self._download_artwork(dj_artwork_url, "dj-artwork", max_width=600)
         except Exception as e:
             logger.debug("DJ artwork fallback failed: %s", e)
             return None
