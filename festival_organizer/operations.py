@@ -364,7 +364,7 @@ class FanartOperation(Operation):
         if not media_file.artist:
             return False
         from festival_organizer.fanart import split_artists
-        for artist in split_artists(media_file.artist):
+        for artist in split_artists(media_file.artist, groups=self.config.artist_groups):
             if artist in self._completed_artists:
                 continue
             d = self._artist_dir(artist)
@@ -376,7 +376,7 @@ class FanartOperation(Operation):
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.fanart import split_artists, download_artist_images
-        artists = split_artists(media_file.artist)
+        artists = split_artists(media_file.artist, groups=self.config.artist_groups)
         fetched = []
         for artist in artists:
             if artist in self._completed_artists:

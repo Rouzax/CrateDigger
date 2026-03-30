@@ -48,6 +48,18 @@ def test_split_artists_vs():
     assert split_artists("Armin vs Vini Vici") == ["Armin", "Vini Vici"]
 
 
+def test_split_artists_respects_groups():
+    groups = {"dimitri vegas & like mike"}
+    result = split_artists("Dimitri Vegas & Like Mike", groups=groups)
+    assert result == ["Dimitri Vegas & Like Mike"]
+
+
+def test_split_artists_splits_non_groups():
+    groups = {"dimitri vegas & like mike"}
+    result = split_artists("Armin van Buuren & KIKI", groups=groups)
+    assert result == ["Armin van Buuren", "KIKI"]
+
+
 # --- MBIDCache tests ---
 
 def test_mbid_cache_put_get():

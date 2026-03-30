@@ -282,13 +282,18 @@ def _download_image(url: str, output_path: Path) -> bool:
 _SEPARATORS = re.compile(r"\s+(?:&|B2B|b2b|vs\.?|x)\s+", re.IGNORECASE)
 
 
-def split_artists(name: str) -> list[str]:
+def split_artists(name: str, groups: set[str] | None = None) -> list[str]:
     """Split B2B/duo artist names into individual artists for fanart lookup.
 
     "Martin Garrix & Alesso" -> ["Martin Garrix", "Alesso"]
     "Everything Always (Dom Dolla & John Summit)" -> ["Dom Dolla", "John Summit"]
     "Hardwell" -> ["Hardwell"]
+
+    If *groups* is provided and the name (case-insensitive) is in the set,
+    return it unsplit so the group is treated as a single artist.
     """
+    if groups and name.lower() in groups:
+        return [name]
     # Parenthetical: look up inner artists
     paren_match = re.match(r"^.+?\s*\((.+)\)\s*$", name)
     if paren_match:
