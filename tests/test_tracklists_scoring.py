@@ -78,6 +78,50 @@ def test_parse_query_no_short_words():
     assert len(parts.keywords) == 0
 
 
+def test_parse_query_all_caps_produces_keywords():
+    """ALL-CAPS queries (YouTube titles) should produce keywords, not just abbreviations."""
+    aliases = {"umf": "Ultra Music Festival"}
+    parts = parse_query("AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026", aliases)
+    assert parts.year == "2026"
+    # All-caps words should become keywords, not abbreviations
+    assert "afrojack" in parts.keywords
+    assert "live" in parts.keywords
+    assert "ultra" in parts.keywords
+    assert "festival" in parts.keywords
+    assert "miami" in parts.keywords
+    # Should NOT have spurious abbreviations from regular words
+    assert "AFROJACK" not in parts.abbreviations
+    assert "FESTIVAL" not in parts.abbreviations
+
+
+def test_parse_query_all_caps_preserves_known_alias():
+    """ALL-CAPS queries should still detect known alias abbreviations."""
+    aliases = {"amf": "Amsterdam Music Festival"}
+    parts = parse_query("AMF AFROJACK 2025", aliases)
+    assert parts.year == "2025"
+    # AMF is a known alias — should be abbreviation AND keyword
+    assert "AMF" in parts.abbreviations
+    assert len(parts.resolved_aliases) == 1
+    assert parts.resolved_aliases[0]["target"] == "Amsterdam Music Festival"
+    # AFROJACK is not a known alias — should be keyword only
+    assert "afrojack" in parts.keywords
+    assert "AFROJACK" not in parts.abbreviations
+
+
+def test_parse_query_mixed_case_unchanged():
+    """Mixed-case queries preserve existing abbreviation behavior."""
+    aliases = {"amf": "Amsterdam Music Festival"}
+    parts = parse_query("2025 AMF Sub Zero Project", aliases)
+    # AMF → abbreviation (existing behavior)
+    assert "AMF" in parts.abbreviations
+    # Sub, Zero, Project → keywords (existing behavior)
+    assert "sub" in parts.keywords
+    assert "zero" in parts.keywords
+    assert "project" in parts.keywords
+    # Keywords should NOT include "amf" (mixed-case: abbreviations stay separate)
+    assert "amf" not in parts.keywords
+
+
 # --- score_results ---
 
 def test_score_keywords_proportional():
