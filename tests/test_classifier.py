@@ -1,9 +1,10 @@
 from pathlib import Path
 from festival_organizer.classifier import classify
-from festival_organizer.config import Config, DEFAULT_CONFIG
+from festival_organizer.config import Config
 from festival_organizer.models import MediaFile
+from tests.conftest import TEST_CONFIG
 
-CFG = Config(DEFAULT_CONFIG)
+CFG = Config(TEST_CONFIG)
 ROOT = Path("//hyperv/Data/Concerts")
 
 

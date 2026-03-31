@@ -1,10 +1,11 @@
 from pathlib import Path
 from unittest.mock import patch
 from festival_organizer.analyzer import analyse_file
-from festival_organizer.config import Config, DEFAULT_CONFIG
+from festival_organizer.config import Config
 from festival_organizer.models import MediaFile
+from tests.conftest import TEST_CONFIG
 
-CFG = Config(DEFAULT_CONFIG)
+CFG = Config(TEST_CONFIG)
 
 
 def test_analyse_with_1001tl_overrides_filename():

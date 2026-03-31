@@ -2,6 +2,7 @@ import json
 import tempfile
 from pathlib import Path
 from festival_organizer.config import Config, load_config, DEFAULT_CONFIG
+from tests.conftest import TEST_CONFIG
 
 
 def test_default_config_has_required_keys():
@@ -16,15 +17,15 @@ def test_default_config_has_required_keys():
 
 
 def test_config_festival_aliases():
-    cfg = Config(DEFAULT_CONFIG)
+    cfg = Config(TEST_CONFIG)
     assert cfg.resolve_festival_alias("Amsterdam Music Festival") == "AMF"
     assert cfg.resolve_festival_alias("amf") == "AMF"
-    assert cfg.resolve_festival_alias("EDC Las Vegas") == "EDC Las Vegas"
+    assert cfg.resolve_festival_alias("EDC Las Vegas") == "EDC"
     assert cfg.resolve_festival_alias("Unknown Thing") == "Unknown Thing"
 
 
 def test_config_festival_location():
-    cfg = Config(DEFAULT_CONFIG)
+    cfg = Config(TEST_CONFIG)
     # Tomorrowland has location_in_name: true
     assert cfg.get_festival_display("Tomorrowland", "Belgium") == "Tomorrowland Belgium"
     assert cfg.get_festival_display("Tomorrowland", "") == "Tomorrowland"
@@ -86,11 +87,11 @@ def test_config_media_extensions():
 
 
 def test_config_known_festivals():
-    cfg = Config(DEFAULT_CONFIG)
+    cfg = Config(TEST_CONFIG)
     festivals = cfg.known_festivals
     assert "AMF" in festivals
     assert "Tomorrowland" in festivals
-    assert "EDC Las Vegas" in festivals
+    assert "EDC" in festivals
 
 
 def test_load_config_builtin_defaults():
@@ -116,7 +117,7 @@ def test_load_config_user_layer(tmp_path):
     # User alias merged in
     assert config.resolve_festival_alias("My Fest") == "My Festival"
     # Built-in aliases still present
-    assert config.resolve_festival_alias("EDC") == "EDC Las Vegas"
+    assert config.resolve_festival_alias("EDC") == "EDC"
     # Credentials accessible
     assert config.tracklists_credentials == ("me@example.com", "secret")
 

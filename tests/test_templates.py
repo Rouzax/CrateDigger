@@ -1,9 +1,10 @@
 from pathlib import Path
 from festival_organizer.templates import render_folder, render_filename
-from festival_organizer.config import Config, DEFAULT_CONFIG, load_config
+from festival_organizer.config import Config, load_config
 from festival_organizer.models import MediaFile
+from tests.conftest import TEST_CONFIG
 
-CFG = Config(DEFAULT_CONFIG)
+CFG = Config(TEST_CONFIG)
 
 
 def test_render_folder_artist_flat_festival():

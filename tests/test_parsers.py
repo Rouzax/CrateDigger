@@ -4,10 +4,11 @@ from festival_organizer.parsers import (
     parse_filename,
     parse_parent_dirs,
 )
-from festival_organizer.config import Config, DEFAULT_CONFIG
+from festival_organizer.config import Config
+from tests.conftest import TEST_CONFIG
 
 
-CFG = Config(DEFAULT_CONFIG)
+CFG = Config(TEST_CONFIG)
 
 
 # --- 1001Tracklists title parser ---
@@ -64,7 +65,7 @@ def test_1001tl_edc():
         CFG,
     )
     assert result["artist"] == "Armin van Buuren"
-    assert result["festival"] == "EDC Las Vegas"
+    assert result["festival"] == "EDC"
     assert result["stage"] == "kineticFIELD"
 
 

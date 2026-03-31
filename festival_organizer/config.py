@@ -11,80 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 # Defaults for external config files (artists.json, festivals.json)
-_ARTIST_DEFAULTS = {
-    "aliases": {
-        "Martin Garrix": ["Area21", "YTRAM", "GRX"],
-        "Tiësto": ["Tiesto", "VER:WEST", "VERWEST"],
-        "David Guetta": ["Jack Back"],
-        "Armin van Buuren": ["Gaia", "Rising Star"],
-        "Nicky Romero": ["Monocule"],
-        "Oliver Heldens": ["HI-LO"],
-        "Afrojack": ["NLW"],
-        "Deadmau5": ["deadmau5", "BSOD", "Testpilot"],
-    },
-    "groups": [
-        "Above & Beyond",
-        "Axwell & Ingrosso",
-        "Dimitri Vegas & Like Mike",
-        "Sunnery James & Ryan Marciano",
-        "Swedish House Mafia",
-        "Vini Vici",
-        "Blasterjaxx",
-        "Showtek",
-        "W&W",
-        "Galantis",
-        "NERVO",
-        "Cosmic Gate",
-        "Aly & Fila",
-        "Gabriel & Dresden",
-        "Chocolate Puma",
-        "Da Tweekaz",
-        "Sub Zero Project",
-    ],
-}
-
-_FESTIVAL_DEFAULTS = {
-    "aliases": {
-        "AMF": ["Amsterdam Music Festival"],
-        "EDC Las Vegas": ["EDC", "Electric Daisy Carnival"],
-        "Ultra Music Festival": ["Ultra", "Ultra Music Festival Miami", "UMF"],
-        "Tomorrowland": ["Tomorrowland Weekend 1", "Tomorrowland Weekend 2", "TML"],
-        "Mysteryland": [],
-        "Glastonbury": [],
-        "Red Rocks": ["Red Rocks Amphitheatre"],
-        "Dreamstate": ["Dreamstate SoCal"],
-        "We Belong Here": ["We Belong Here Miami"],
-        "Defqon.1": [],
-        "Creamfields": [],
-        "Lollapalooza": [],
-        "Untold": [],
-        "Sensation": [],
-        "Parookaville": [],
-        "Awakenings": [],
-        "Dance Valley": [],
-        "Coachella": [],
-        "Electric Zoo": ["EZoo"],
-        "ADE": ["Amsterdam Dance Event"],
-        "ASOT": ["A State Of Trance"],
-        "Nature One": [],
-        "Decibel Outdoor": [],
-        "World Club Dome": [],
-        "Exit Festival": ["EXIT"],
-        "Balaton Sound": [],
-        "Sziget": [],
-    },
-    "config": {
-        "Tomorrowland": {
-            "location_in_name": True,
-            "known_locations": ["Belgium", "Brasil", "Brazil"],
-        },
-        "EDC Las Vegas": {
-            "location_in_name": True,
-            "known_locations": ["Las Vegas", "Mexico", "Orlando", "Thailand"],
-        },
-    },
-}
-
 # Default config embedded so the tool works without a config file
 DEFAULT_CONFIG = {
     "default_layout": "artist_flat",
@@ -265,14 +191,14 @@ class Config:
 
     @property
     def festival_aliases(self) -> dict[str, str]:
-        raw = self._load_external_config("festivals.json", _FESTIVAL_DEFAULTS).get("aliases", {})
+        raw = self._load_external_config("festivals.json", {}).get("aliases", {})
         if "festival_aliases" in self._data:
             raw = {**raw, **self._data["festival_aliases"]}
         return _invert_alias_map(raw)
 
     @property
     def festival_config(self) -> dict:
-        defaults = self._load_external_config("festivals.json", _FESTIVAL_DEFAULTS).get("config", {})
+        defaults = self._load_external_config("festivals.json", {}).get("config", {})
         if "festival_config" in self._data:
             return {**defaults, **self._data["festival_config"]}
         return defaults
@@ -351,7 +277,7 @@ class Config:
 
     @property
     def artist_aliases(self) -> dict[str, str]:
-        raw = self._load_external_config("artists.json", _ARTIST_DEFAULTS).get("aliases", {})
+        raw = self._load_external_config("artists.json", {}).get("aliases", {})
         if "artist_aliases" in self._data:
             raw = {**raw, **self._data["artist_aliases"]}
         return _invert_alias_map(raw)
@@ -360,7 +286,7 @@ class Config:
     def artist_groups(self) -> set[str]:
         if "artist_groups" in self._data:
             return {g.lower() for g in self._data["artist_groups"]}
-        groups = self._load_external_config("artists.json", _ARTIST_DEFAULTS).get("groups", [])
+        groups = self._load_external_config("artists.json", {}).get("groups", [])
         return {g.lower() for g in groups}
 
     def resolve_artist(self, name: str) -> str:
