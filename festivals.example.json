@@ -11,7 +11,7 @@
         "Dance Valley": [],
         "Decibel Outdoor": [],
         "Defqon.1": [],
-        "Dreamstate": ["Dreamstate SoCal"],
+        "Dreamstate": ["Dreamstate SoCal", "Dreamstate Europe", "Dreamstate Australia"],
         "EDC": ["EDC Las Vegas", "Electric Daisy Carnival"],
         "Electric Zoo": ["EZoo"],
         "Exit Festival": ["EXIT"],
@@ -24,9 +24,9 @@
         "Sensation": [],
         "Sziget": [],
         "Tomorrowland": ["Tomorrowland Weekend 1", "Tomorrowland Weekend 2", "TML"],
-        "Ultra Music Festival": ["Ultra", "Ultra Music Festival Miami", "UMF"],
+        "Ultra Music Festival": ["Ultra", "Ultra Music Festival Miami", "UMF", "Ultra Europe", "Ultra Japan", "Ultra Korea", "Ultra Singapore", "Ultra South Africa", "Ultra Australia"],
         "Untold": [],
-        "We Belong Here": ["We Belong Here Miami"],
+        "We Belong Here": ["We Belong Here Miami", "We Belong Here Tulum"],
         "World Club Dome": []
     },
     "config": {
@@ -34,9 +34,21 @@
             "location_in_name": true,
             "known_locations": ["Belgium", "Brasil", "Brazil"]
         },
+        "Dreamstate": {
+            "location_in_name": true,
+            "known_locations": ["SoCal", "Europe", "Australia", "Mexico"]
+        },
         "EDC": {
             "location_in_name": true,
             "known_locations": ["Las Vegas", "Mexico", "Orlando", "Thailand"]
+        },
+        "We Belong Here": {
+            "location_in_name": true,
+            "known_locations": ["Miami", "Tulum"]
+        },
+        "Ultra Music Festival": {
+            "location_in_name": true,
+            "known_locations": ["Miami", "Europe", "Japan", "Korea", "Singapore", "South Africa", "Australia"]
         }
     }
 }
