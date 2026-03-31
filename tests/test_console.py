@@ -137,15 +137,7 @@ def test_results_table_score_indicators():
 def test_results_table_max_15():
     results = [_make_result(title=f"Set {i}") for i in range(20)]
     t = results_table(results, video_duration_mins=60)
-    # 15 data rows + 1 "... more" row
-    assert t.row_count == 16
-
-
-def test_results_table_truncation_message():
-    results = [_make_result(title=f"Set {i}") for i in range(20)]
-    t = results_table(results, video_duration_mins=60)
-    output = _render(t)
-    assert "5 more" in output
+    assert t.row_count == 15
 
 
 def test_results_table_keyword_highlighting():

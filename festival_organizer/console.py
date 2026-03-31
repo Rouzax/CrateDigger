@@ -124,11 +124,6 @@ def results_table(
 
         table.add_row(str(idx), quality, title_text, date_str, dur_text)
 
-    if len(results) > _MAX_RESULTS:
-        table.add_row(
-            "", "", Text(f"... {len(results) - _MAX_RESULTS} more", style="dim"), "", ""
-        )
-
     return table
 
 
