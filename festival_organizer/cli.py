@@ -534,11 +534,14 @@ def _run_audit_logos(root: Path, config, console) -> int:
         console.print()
 
     if missing_logo:
+        user_festivals = Path.home() / ".cratedigger" / "festivals"
         console.print(f"[yellow]Missing curated logo ({len(missing_logo)}):[/yellow]")
         for fest in missing_logo:
-            suggested = library_root / ".cratedigger" / "festivals" / fest
+            lib_path = library_root / ".cratedigger" / "festivals" / fest
+            usr_path = user_festivals / fest
             console.print(f"  {escape(fest)}")
-            console.print(f"    [dim]-> place logo at: {escape(str(suggested))}/logo.png[/dim]")
+            console.print(f"    [dim]-> place logo at: {escape(str(lib_path))}/logo.png[/dim]")
+            console.print(f"    [dim]   or user-level: {escape(str(usr_path))}/logo.png[/dim]")
         console.print()
 
     # Check for unmatched folders
