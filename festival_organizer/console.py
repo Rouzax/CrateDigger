@@ -139,16 +139,16 @@ def status_text(status: str, name: str, detail: str = "") -> Text:
     """
     text = Text()
     if status == "done":
-        text.append("\u2714", style="green")
-        text.append(f" {name}")
+        text.append("\u2714  ", style="green")
+        text.append(name)
     elif status == "skipped":
-        text.append("\u25cb", style="dim")
-        text.append(f" {name}")
+        text.append("\u25cb  ", style="dim")
+        text.append(name)
         if detail:
             text.append(f" ({detail})", style="dim")
     elif status == "error":
-        text.append("\u2718", style="red")
-        text.append(f" {name}")
+        text.append("\u2718  ", style="red")
+        text.append(name)
         if detail:
             text.append(f" ({detail})", style="red")
     return text

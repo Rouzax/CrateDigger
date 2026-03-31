@@ -59,27 +59,27 @@ def test_header_panel_contains_rows():
 
 def test_status_text_done():
     t = status_text("done", "nfo")
-    assert t.plain == "\u2714 nfo"
+    assert t.plain == "\u2714  nfo"
 
 
 def test_status_text_skipped_no_detail():
     t = status_text("skipped", "poster")
-    assert t.plain == "\u25cb poster"
+    assert t.plain == "\u25cb  poster"
 
 
 def test_status_text_skipped_with_detail():
     t = status_text("skipped", "poster", detail="exists")
-    assert t.plain == "\u25cb poster (exists)"
+    assert t.plain == "\u25cb  poster (exists)"
 
 
 def test_status_text_error_no_detail():
     t = status_text("error", "artwork")
-    assert t.plain == "\u2718 artwork"
+    assert t.plain == "\u2718  artwork"
 
 
 def test_status_text_error_with_detail():
     t = status_text("error", "artwork", detail="timeout")
-    assert t.plain == "\u2718 artwork (timeout)"
+    assert t.plain == "\u2718  artwork (timeout)"
 
 
 def test_status_text_done_green_style():
