@@ -37,6 +37,13 @@ def test_build_search_query_strips_noise():
     assert "Full Set" not in result
 
 
+def test_build_search_query_normalizes_unicode_slashes():
+    """Unicode fraction slashes (KI⧸KI) should become spaces."""
+    result = build_search_query(Path("Armin van Buuren & KI⧸KI live at AMF 2025 [WownWX6HUTs].mkv"))
+    assert "⧸" not in result
+    assert "KI" in result
+
+
 def test_detect_tracklist_source_url():
     result = detect_tracklist_source("https://www.1001tracklists.com/tracklist/1g6g22ut/test.html")
     assert result["type"] == "url"
@@ -70,3 +77,32 @@ def test_extract_tracklist_id_short_url():
 def test_extract_tracklist_id_invalid():
     with pytest.raises(ValueError):
         extract_tracklist_id("https://example.com/not-a-tracklist")
+
+
+from festival_organizer.tracklists.query import expand_aliases_in_query
+
+
+def test_expand_aliases_replaces_abbreviation():
+    aliases = {"amf": "Amsterdam Music Festival"}
+    result = expand_aliases_in_query("Armin van Buuren live at AMF 2025", aliases)
+    assert "Amsterdam Music Festival" in result
+    assert "AMF" not in result
+
+
+def test_expand_aliases_case_insensitive():
+    aliases = {"edc": "Electric Daisy Carnival"}
+    result = expand_aliases_in_query("Tiesto EDC Las Vegas", aliases)
+    assert "Electric Daisy Carnival" in result
+
+
+def test_expand_aliases_no_match_unchanged():
+    aliases = {"amf": "Amsterdam Music Festival"}
+    result = expand_aliases_in_query("Hardwell Tomorrowland 2025", aliases)
+    assert result == "Hardwell Tomorrowland 2025"
+
+
+def test_expand_aliases_word_boundary():
+    """Should not replace partial word matches."""
+    aliases = {"ed": "Something"}
+    result = expand_aliases_in_query("Red Rocks 2025", aliases)
+    assert result == "Red Rocks 2025"  # "ed" in "Red" should NOT match
