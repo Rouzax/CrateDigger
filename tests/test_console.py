@@ -228,3 +228,10 @@ def test_summary_panel_up_to_date():
     output = _render(p)
     assert "up_to_date" in output
     assert "5" in output
+
+
+def test_summary_panel_updated_status():
+    p = summary_panel({"added": 1, "updated": 3, "up_to_date": 5, "skipped": 0, "error": 0})
+    output = _render(p)
+    assert "updated" in output
+    assert "3" in output

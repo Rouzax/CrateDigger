@@ -45,6 +45,20 @@ from festival_organizer.tracklists.scoring import parse_query, score_results
 
 logger = logging.getLogger(__name__)
 
+_FRIENDLY_TAG_NAMES = {
+    "CRATEDIGGER_1001TL_URL": "url",
+    "CRATEDIGGER_1001TL_TITLE": "title",
+    "CRATEDIGGER_1001TL_ID": "id",
+    "CRATEDIGGER_1001TL_DATE": "date",
+    "CRATEDIGGER_1001TL_GENRES": "genres",
+    "CRATEDIGGER_1001TL_DJ_ARTWORK": "dj artwork",
+    "CRATEDIGGER_1001TL_STAGE": "stage",
+    "CRATEDIGGER_1001TL_VENUE": "venue",
+    "CRATEDIGGER_1001TL_FESTIVAL": "festival",
+    "CRATEDIGGER_1001TL_CONFERENCE": "conference",
+    "CRATEDIGGER_1001TL_RADIO": "radio",
+}
+
 
 def run_chapters(args, config: Config, console: Console | None = None) -> int:
     """Main entry point for the 'chapters' subcommand."""
@@ -96,7 +110,7 @@ def run_chapters(args, config: Config, console: Console | None = None) -> int:
     con.print(header_panel("Tracklist Chapters", rows))
 
     # Process files
-    stats = {"added": 0, "up_to_date": 0, "skipped": 0, "error": 0}
+    stats = {"added": 0, "updated": 0, "up_to_date": 0, "skipped": 0, "error": 0}
 
     for i, filepath in enumerate(files):
         if i > 0 and not preview:
@@ -335,8 +349,11 @@ def _fetch_and_embed(
             if not preview:
                 if write_merged_tags(filepath, {70: tags_to_update}):
                     if not quiet:
-                        con.print(f"  [green]Updated tags:[/green] {escape(', '.join(tags_to_update.keys()))}")
-                    return "added"
+                        friendly = ", ".join(
+                            _FRIENDLY_TAG_NAMES.get(k, k) for k in tags_to_update
+                        )
+                        con.print(f"  [cyan]Updated tags:[/cyan] {escape(friendly)} ({len(chapters)} chapters)")
+                    return "updated"
                 else:
                     logger.warning("Failed to write tags for %s", filepath)
                     return "skipped"

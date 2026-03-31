@@ -185,7 +185,9 @@ def summary_panel(counts: dict, log_path=None) -> Panel:
                 body.append("  ")
             first = False
             style = "green" if key in ("added", "done", "up_to_date") else (
-                "red" if key == "error" else "dim"
+                "cyan" if key == "updated" else (
+                    "red" if key == "error" else "dim"
+                )
             )
             body.append(f"{key}: ", style="bold")
             body.append(str(value), style=style)
