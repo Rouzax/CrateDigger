@@ -181,6 +181,14 @@ DEFAULT_CONFIG = {
         "personal_api_key": "",
         "enabled": True,
     },
+    "kodi": {
+        "enabled": False,
+        "host": "localhost",
+        "port": 8080,
+        "username": "kodi",
+        "password": "",
+        "path_mapping": None,
+    },
 }
 
 
@@ -429,6 +437,40 @@ class Config:
     @property
     def fanart_enabled(self) -> bool:
         return self.fanart_settings.get("enabled", True)
+
+    @property
+    def kodi_settings(self) -> dict:
+        return self._data.get("kodi", {})
+
+    @property
+    def kodi_enabled(self) -> bool:
+        return self.kodi_settings.get("enabled", False)
+
+    @property
+    def kodi_host(self) -> str:
+        import os
+        return os.environ.get("KODI_HOST") or self.kodi_settings.get("host", "localhost")
+
+    @property
+    def kodi_port(self) -> int:
+        import os
+        env_port = os.environ.get("KODI_PORT")
+        if env_port:
+            try:
+                return int(env_port)
+            except ValueError:
+                logger.warning("Invalid KODI_PORT '%s', using config default", env_port)
+        return self.kodi_settings.get("port", 8080)
+
+    @property
+    def kodi_username(self) -> str:
+        import os
+        return os.environ.get("KODI_USERNAME") or self.kodi_settings.get("username", "kodi")
+
+    @property
+    def kodi_password(self) -> str:
+        import os
+        return os.environ.get("KODI_PASSWORD") or self.kodi_settings.get("password", "")
 
     def should_skip(self, relative_path: str) -> bool:
         """Check if a relative path matches any skip pattern."""

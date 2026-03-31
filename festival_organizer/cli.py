@@ -71,6 +71,8 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Also run enrichment after organizing")
     org_p.add_argument("--yes", "-y", action="store_true",
                        help="Skip confirmation prompts")
+    org_p.add_argument("--kodi-sync", action="store_true",
+                       help="Notify Kodi to refresh updated items")
 
     # enrich
     enr_p = sub.add_parser("enrich", help="Add metadata artifacts to files in place")
@@ -79,6 +81,8 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Comma-separated: nfo,art,fanart,posters,tags,chapters")
     enr_p.add_argument("--force", action="store_true",
                        help="Regenerate even if artifacts exist")
+    enr_p.add_argument("--kodi-sync", action="store_true",
+                       help="Notify Kodi to refresh updated items")
 
     # chapters
     chap_p = sub.add_parser("chapters", help="Add 1001Tracklists chapters")
@@ -350,7 +354,54 @@ def _run_command(args) -> int:
             for line in summary:
                 console.print(line)
 
+    # Post-pipeline: Kodi sync
+    kodi_sync = getattr(args, "kodi_sync", False) or config.kodi_enabled
+    if kodi_sync and args.command in ("enrich", "organize"):
+        _run_kodi_sync(all_results, pipeline_files, config, console, quiet)
+
     return 0
+
+
+def _run_kodi_sync(all_results, pipeline_files, config, console, quiet):
+    """Notify Kodi to refresh items that had NFO/art/poster changes."""
+    from festival_organizer.kodi import KodiClient, sync_library
+
+    RELEVANT_OPS = {"nfo", "art", "poster", "album_poster"}
+    changed_paths: list[Path] = []
+
+    for (fp, _mf, ops), results in zip(pipeline_files, all_results):
+        final_path = fp
+        for op, result in zip(ops, results):
+            if op.name == "organize" and result.status == "done":
+                final_path = op.target
+
+        has_change = any(
+            r.status == "done" and r.name in RELEVANT_OPS
+            for r in results
+        )
+        if has_change:
+            changed_paths.append(final_path)
+
+    if not changed_paths:
+        return
+
+    try:
+        client = KodiClient(
+            host=config.kodi_host,
+            port=config.kodi_port,
+            username=config.kodi_username,
+            password=config.kodi_password,
+        )
+        path_mapping = config.kodi_settings.get("path_mapping")
+        sync_library(client, changed_paths, console, quiet,
+                     path_mapping=path_mapping)
+    except Exception as e:
+        import logging
+        logging.getLogger("festival_organizer.kodi").warning(
+            "Kodi sync failed: %s", e
+        )
+        if not quiet:
+            console.print(f"[yellow]Kodi sync failed: {e}[/yellow]")
 
 
 def _run_audit_logos(root: Path, config, console) -> int:

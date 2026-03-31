@@ -99,11 +99,14 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
         runtime_min = int(mf.duration_seconds) // 60
         _add(root, "runtime", str(runtime_min))
 
-    # Thumbnails — both thumb and poster references
+    # Thumbnails — thumb, poster, and fanart references
     thumb = ET.SubElement(root, "thumb", aspect="thumb")
     thumb.text = f"{video_path.stem}-thumb.jpg"
     poster = ET.SubElement(root, "thumb", aspect="poster")
     poster.text = f"{video_path.stem}-poster.jpg"
+    fanart_elem = ET.SubElement(root, "fanart")
+    fanart_thumb = ET.SubElement(fanart_elem, "thumb")
+    fanart_thumb.text = f"{video_path.stem}-thumb.jpg"
 
     # Date added
     _add(root, "dateadded", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
