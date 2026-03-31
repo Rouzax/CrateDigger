@@ -168,7 +168,7 @@ def _process_file(
                 )
             else:
                 con.print(f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]")
-                choice = input("  Use stored? (Y)es / (S)kip / (R)esearch: ").strip().lower()
+                choice = input("  Use stored? [Y]es / (S)kip / (R)esearch: ").strip().lower()
                 if choice in ("y", "yes", ""):
                     return _fetch_and_embed(
                         session, stored["url"], filepath, duration_mins,
