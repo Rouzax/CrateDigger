@@ -6,6 +6,7 @@ from pathlib import Path
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import load_config
+from festival_organizer.console import make_console
 from festival_organizer.library import find_library_root, init_library
 from festival_organizer import metadata
 from festival_organizer.log import setup_logging
@@ -140,6 +141,8 @@ def _run_command(args) -> int:
     debug = getattr(args, "debug", False)
     setup_logging(verbose=verbose, debug=debug)
 
+    console = make_console()
+
     # Layout override
     if getattr(args, "layout", None):
         config._data["default_layout"] = args.layout
@@ -154,10 +157,10 @@ def _run_command(args) -> int:
         # Map new flag names to what cli_handler expects
         args.auto_select = getattr(args, "auto", False)
         args.ignore_stored_url = getattr(args, "force", False)
-        return run_chapters(args, config)
+        return run_chapters(args, config, console=console)
 
     if args.command == "audit-logos":
-        return _run_audit_logos(root, config)
+        return _run_audit_logos(root, config, console)
 
     if not root.exists():
         print(f"Error: path does not exist: {root}", file=sys.stderr)
@@ -201,7 +204,7 @@ def _run_command(args) -> int:
     quiet = args.quiet
 
     # Scan
-    progress = ProgressPrinter(total=0, quiet=quiet, verbose=verbose)
+    progress = ProgressPrinter(total=0, console=console, quiet=quiet, verbose=verbose)
     tools = []
     if metadata.MEDIAINFO_PATH:
         tools.append("mediainfo")
@@ -217,11 +220,11 @@ def _run_command(args) -> int:
         layout=config.default_layout, tools=tools,
     )
 
-    print("Scanning...")
+    console.print("Scanning...")
     files = scan_folder(root, config)
-    print(f"Found {len(files)} media file(s).\n")
+    console.print(f"Found {len(files)} media file(s).\n")
     if not files:
-        print("Nothing to do.")
+        console.print("Nothing to do.")
         return 0
 
     progress.total = len(files)
@@ -316,7 +319,7 @@ def _run_command(args) -> int:
             config=getattr(args, "config", None),
             quiet=quiet,
         )
-        run_chapters(chap_args, config)
+        run_chapters(chap_args, config, console=console)
 
     # Post-pipeline: clean up empty source directories after organize (move)
     if args.command == "organize":
@@ -332,15 +335,14 @@ def _run_command(args) -> int:
     if album_poster_op:
         summary = album_poster_op.logo_summary()
         if summary:
-            w = progress.stream.write
-            w("\n")
+            console.print()
             for line in summary:
-                w(f"{line}\n")
+                console.print(line)
 
     return 0
 
 
-def _run_audit_logos(root: Path, config) -> int:
+def _run_audit_logos(root: Path, config, console) -> int:
     """Audit curated festival logo coverage for a library."""
     from festival_organizer.library import find_library_root
 
@@ -384,23 +386,23 @@ def _run_audit_logos(root: Path, config) -> int:
         else:
             missing_logo.append(fest)
 
-    print(f"Library: {library_root}")
-    print(f"Festivals found: {len(festivals_found)}")
-    print()
+    console.print(f"[bold]Library:[/bold] {library_root}")
+    console.print(f"[bold]Festivals found:[/bold] {len(festivals_found)}")
+    console.print()
 
     if have_logo:
-        print(f"With curated logo ({len(have_logo)}):")
+        console.print(f"[green]With curated logo ({len(have_logo)}):[/green]")
         for fest, path in have_logo:
-            print(f"  {fest}: {path}")
-        print()
+            console.print(f"  {fest}: [dim]{path}[/dim]")
+        console.print()
 
     if missing_logo:
-        print(f"Missing curated logo ({len(missing_logo)}):")
+        console.print(f"[yellow]Missing curated logo ({len(missing_logo)}):[/yellow]")
         for fest in missing_logo:
             suggested = library_root / ".cratedigger" / "festivals" / fest
-            print(f"  {fest}")
-            print(f"    -> place logo at: {suggested}/logo.png")
-        print()
+            console.print(f"  {fest}")
+            console.print(f"    [dim]-> place logo at: {suggested}/logo.png[/dim]")
+        console.print()
 
     # Check for unmatched folders
     for base in logo_dirs:
@@ -410,7 +412,7 @@ def _run_audit_logos(root: Path, config) -> int:
                     has_logo = any((d / f"logo.{ext}").exists()
                                   for ext in ("jpg", "jpeg", "png", "webp"))
                     if has_logo:
-                        print(f"Unmatched folder (not in library): {d.name}")
+                        console.print(f"[dim]Unmatched folder (not in library): {d.name}[/dim]")
 
     # Warn about unsupported formats
     for base in logo_dirs:
@@ -419,6 +421,6 @@ def _run_audit_logos(root: Path, config) -> int:
                 if d.is_dir():
                     for f in d.iterdir():
                         if f.suffix.lower() in (".svg", ".gif", ".bmp", ".tiff"):
-                            print(f"Unsupported format: {f}")
+                            console.print(f"[yellow]Unsupported format: {f}[/yellow]")
 
     return 0
