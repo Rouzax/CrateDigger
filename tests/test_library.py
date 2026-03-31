@@ -228,3 +228,104 @@ class TestCleanupEmptyDirs:
         (d / "folder.jpg").write_bytes(b"\xff\xd8")
         cleanup_empty_dirs(tmp_path)
         assert not d.exists()
+
+
+# ── find_library_root with non-existent paths ───────────────────────────
+
+
+def test_find_library_root_nonexistent_start_walks_up(tmp_path):
+    """When start_path doesn't exist, walk up from nearest existing ancestor."""
+    marker = tmp_path / ".cratedigger"
+    marker.mkdir()
+    # The start path doesn't exist yet (e.g. output dir to be created)
+    nonexistent = tmp_path / "future" / "output"
+    assert not nonexistent.exists()
+    assert find_library_root(nonexistent) == tmp_path
+
+
+def test_find_library_root_nonexistent_no_marker(tmp_path):
+    """Non-existent start path with no marker anywhere returns None."""
+    nonexistent = tmp_path / "no" / "marker" / "here"
+    assert find_library_root(nonexistent) is None
+
+
+# ── resolve_library_root tests ──────────────────────────────────────────
+
+
+from festival_organizer.library import resolve_library_root
+
+
+def test_resolve_library_root_output_wins_over_source(tmp_path):
+    """When both source and output have .cratedigger, output wins."""
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / ".cratedigger").mkdir()
+
+    output = tmp_path / "output"
+    output.mkdir()
+    (output / ".cratedigger").mkdir()
+
+    result = resolve_library_root(source=source, output=output)
+    assert result == output
+
+
+def test_resolve_library_root_falls_back_to_source(tmp_path):
+    """When only source has .cratedigger, use that."""
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / ".cratedigger").mkdir()
+
+    output = tmp_path / "output"
+    output.mkdir()
+
+    result = resolve_library_root(source=source, output=output)
+    assert result == source
+
+
+def test_resolve_library_root_output_only(tmp_path):
+    """When only output has .cratedigger, use that."""
+    source = tmp_path / "source"
+    source.mkdir()
+
+    output = tmp_path / "output"
+    output.mkdir()
+    (output / ".cratedigger").mkdir()
+
+    result = resolve_library_root(source=source, output=output)
+    assert result == output
+
+
+def test_resolve_library_root_no_output(tmp_path):
+    """When no output is given, search source only (existing behavior)."""
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / ".cratedigger").mkdir()
+
+    result = resolve_library_root(source=source, output=None)
+    assert result == source
+
+
+def test_resolve_library_root_neither(tmp_path):
+    """When neither has .cratedigger, return None."""
+    source = tmp_path / "source"
+    source.mkdir()
+
+    result = resolve_library_root(source=source, output=None)
+    assert result is None
+
+
+def test_resolve_library_root_output_nonexistent(tmp_path):
+    """When output doesn't exist yet, walk up from its parent."""
+    library = tmp_path / "library"
+    library.mkdir()
+    (library / ".cratedigger").mkdir()
+
+    source = tmp_path / "source"
+    source.mkdir()
+
+    # Output is a subdir that doesn't exist yet
+    output = library / "new_subdir"
+    assert not output.exists()
+
+    result = resolve_library_root(source=source, output=output)
+    assert result == library

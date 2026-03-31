@@ -11,7 +11,7 @@ from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import load_config
 from festival_organizer.console import escape, make_console
-from festival_organizer.library import find_library_root, init_library
+from festival_organizer.library import init_library, resolve_library_root
 from festival_organizer import metadata
 from festival_organizer.log import setup_logging
 from festival_organizer.metadata import configure_tools
@@ -203,8 +203,12 @@ def _run_command(args) -> int:
     config_path = Path(args.config) if getattr(args, "config", None) else None
     root = Path(args.root)
 
-    # Find library root
-    library_root = find_library_root(root) if root.exists() else None
+    # Determine output early so we can search it for .cratedigger
+    explicit_output = getattr(args, "output", None) is not None
+    output_arg = Path(args.output) if explicit_output else None
+
+    # Find library root: check output first (if given), fall back to source
+    library_root = resolve_library_root(source=root, output=output_arg)
     library_config_dir = (library_root / ".cratedigger") if library_root else None
 
     config = load_config(
@@ -242,8 +246,7 @@ def _run_command(args) -> int:
         return 1
 
     # Determine output root
-    output = Path(args.output) if getattr(args, "output", None) else None
-    explicit_output = output is not None
+    output = output_arg
     if output is None:
         output = library_root if library_root else root
 

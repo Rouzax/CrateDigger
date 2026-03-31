@@ -25,7 +25,7 @@ def test_run_unexpected_error_returns_1(capsys):
 def test_verbose_flag_enables_info_logging():
     """The --verbose flag enables INFO logging for the package."""
     with patch("festival_organizer.cli.scan_folder", return_value=[]):
-        with patch("festival_organizer.cli.find_library_root", return_value=None):
+        with patch("festival_organizer.cli.resolve_library_root", return_value=None):
             run(["scan", "/tmp", "--verbose"])
     logger = logging.getLogger("festival_organizer")
     assert logger.level == logging.INFO
@@ -34,7 +34,7 @@ def test_verbose_flag_enables_info_logging():
 def test_debug_flag_enables_debug_logging():
     """The --debug flag enables DEBUG logging for the package."""
     with patch("festival_organizer.cli.scan_folder", return_value=[]):
-        with patch("festival_organizer.cli.find_library_root", return_value=None):
+        with patch("festival_organizer.cli.resolve_library_root", return_value=None):
             run(["scan", "/tmp", "--debug"])
     logger = logging.getLogger("festival_organizer")
     assert logger.level == logging.DEBUG
@@ -43,7 +43,7 @@ def test_debug_flag_enables_debug_logging():
 def test_dry_run_is_alias_for_scan():
     """dry-run command produces same behavior as scan."""
     with patch("festival_organizer.cli.scan_folder", return_value=[]) as mock_scan:
-        with patch("festival_organizer.cli.find_library_root", return_value=None):
+        with patch("festival_organizer.cli.resolve_library_root", return_value=None):
             result = run(["dry-run", "/tmp"])
     assert result == 0
     mock_scan.assert_called_once()
@@ -55,7 +55,7 @@ def test_organize_inside_library_requires_confirmation(tmp_path, capsys):
     lib = tmp_path / "concerts"
     (lib / ".cratedigger").mkdir(parents=True)
 
-    with patch("festival_organizer.cli.find_library_root", return_value=lib):
+    with patch("festival_organizer.cli.resolve_library_root", return_value=lib):
         with patch("sys.stdin") as mock_stdin:
             mock_stdin.isatty.return_value = False
             result = run(["organize", str(lib)])
@@ -70,7 +70,7 @@ def test_organize_inside_library_with_yes_proceeds(tmp_path):
     lib = tmp_path / "concerts"
     (lib / ".cratedigger").mkdir(parents=True)
 
-    with patch("festival_organizer.cli.find_library_root", return_value=lib):
+    with patch("festival_organizer.cli.resolve_library_root", return_value=lib):
         with patch("festival_organizer.cli.scan_folder", return_value=[]):
             result = run(["organize", str(lib), "--yes"])
 
@@ -84,7 +84,7 @@ def test_organize_with_explicit_output_no_confirmation(tmp_path):
     out = tmp_path / "output"
     out.mkdir()
 
-    with patch("festival_organizer.cli.find_library_root", return_value=lib):
+    with patch("festival_organizer.cli.resolve_library_root", return_value=lib):
         with patch("festival_organizer.cli.scan_folder", return_value=[]):
             result = run(["organize", str(lib), "-o", str(out)])
 

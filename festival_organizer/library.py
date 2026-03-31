@@ -40,6 +40,21 @@ def find_library_root(start_path: Path) -> Path | None:
         current = parent
 
 
+def resolve_library_root(
+    source: Path, output: Path | None = None
+) -> Path | None:
+    """Find the library root, checking output first, then source.
+
+    When an explicit output path is given, its library root takes priority
+    over any library root found from the source path.  This ensures that
+    ``cratedigger organize <source> -o <library>`` picks up the config and
+    assets stored in the output library.
+    """
+    output_root = find_library_root(output) if output is not None else None
+    source_root = find_library_root(source)
+    return output_root or source_root
+
+
 def init_library(root: Path, layout: str | None = None) -> Path:
     """Initialize a library at root by creating .cratedigger/ marker.
 
