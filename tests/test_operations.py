@@ -626,7 +626,8 @@ def test_album_poster_dj_artwork_fallback_from_tracklist(tmp_path):
             api_instance._request.return_value = mock_resp
             api_instance._fetch_dj_artwork.return_value = "https://cdn.1001tracklists.com/images/dj/martingarrix.jpg"
             with patch.object(op, "_download_artwork", return_value=Path("/tmp/cached.jpg")):
-                result = op._find_dj_artwork(folder)
+                with patch.object(op, "_prepare_dj_artwork", side_effect=lambda p: p):
+                    result = op._find_dj_artwork(folder)
 
     assert result is not None
 

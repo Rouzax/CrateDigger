@@ -9,6 +9,7 @@ Logging:
     Key events:
         - thumbnail.read_error (DEBUG): Could not read a thumbnail for color extraction
         - background.load_error (WARNING): Could not load artist fanart background image
+        - layout.branch (INFO): Which album poster layout was selected
     See docs/logging.md for full guidelines.
 """
 import logging
@@ -715,6 +716,7 @@ def generate_album_poster(
     thumb_paths: list[Path] | None = None,
     override_color: tuple[int, int, int] | None = None,
     background_image_path: Path | None = None,
+    background_source: str = "",
     hero_text: str | None = None,
 ) -> Path:
     """Generate an album poster.
@@ -732,7 +734,8 @@ def generate_album_poster(
         detail: Optional detail (venue, location)
         thumb_paths: Thumbnail images for color derivation
         override_color: Override the auto-derived color
-        background_image_path: Optional fanart.tv background image
+        background_image_path: Optional background image (curated logo, fanart, DJ artwork)
+        background_source: Name of the source that provided the background (for logging)
         hero_text: Override the hero text above the accent line (e.g. artist name)
 
     Returns:
@@ -761,6 +764,8 @@ def generate_album_poster(
 
             if is_small_source and hero_text is None:
                 # Festival layout: ratio-preserving tiled pattern + centered sharp logo
+                logger.info("Layout: festival tiled pattern")
+                logger.debug("Layout: source %dx%d from %s", frame_raw.width, frame_raw.height, background_source or "unknown")
                 tile_max = 200
                 w, h = frame_rgb.size
                 tile_scale = tile_max / max(w, h)
@@ -804,6 +809,8 @@ def generate_album_poster(
 
             elif is_small_source:
                 # Artist layout: blurred overlay on gradient + centered sharp logo
+                logger.info("Layout: artist centered on blur")
+                logger.debug("Layout: source %dx%d from %s", frame_raw.width, frame_raw.height, background_source or "unknown")
                 blurred = frame_rgb.resize((POSTER_W, POSTER_H), Image.LANCZOS)
                 blurred = blurred.filter(ImageFilter.GaussianBlur(radius=40))
                 blurred = ImageEnhance.Brightness(blurred).enhance(0.18)
@@ -823,6 +830,8 @@ def generate_album_poster(
 
             else:
                 # Large source: sharp top on gradient, fade to dark
+                logger.info("Layout: large source with fade")
+                logger.debug("Layout: source %dx%d from %s", frame_raw.width, frame_raw.height, background_source or "unknown")
                 scale = POSTER_W / frame_raw.width
                 new_h = int(frame_raw.height * scale)
                 fade_mask = Image.new("L", (POSTER_W, new_h), 255)
@@ -863,10 +872,12 @@ def generate_album_poster(
         is_festival = hero_text is None
         if is_festival and thumb_paths and len(thumb_paths) >= 2:
             # Festival folder with multiple thumbs: use collage
+            logger.info("Layout: festival collage (%d thumbnails)", len(thumb_paths))
             bg = _make_collage_bg(thumb_paths)
             accent = get_accent_color(bg)
         else:
             # Gradient fallback
+            logger.info("Layout: gradient fallback")
             base_color = override_color or get_dominant_color_from_thumbs(thumb_paths or [])
             accent = _accent_from_base(base_color)
             bg = _make_gradient_bg(base_color)

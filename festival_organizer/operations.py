@@ -4,6 +4,7 @@ Logging:
     Logger: 'festival_organizer.operations'
     Key events:
         - album_poster.style (INFO): Album poster style decision (artist vs festival)
+        - dj_artwork.prepare (DEBUG): DJ artwork cropped/resized for centered layout
     See docs/logging.md for full guidelines.
 """
 from __future__ import annotations
@@ -352,6 +353,38 @@ class AlbumPosterOperation(Operation):
                     return candidate
         return None
 
+    def _prepare_dj_artwork(self, path: Path) -> Path:
+        """Center-crop to square and resize DJ artwork for the centered poster layout.
+
+        Ensures the image stays under the small-source threshold (< 600px)
+        so it takes the artist centered layout path in the poster generator.
+        Modifies the cached file in place; idempotent for already-processed images.
+        """
+        from PIL import Image
+        max_side = 550  # matches max_display in artist poster layout
+        with Image.open(path) as img:
+            w, h = img.size
+            needs_crop = w != h
+            needs_resize = max(w, h) > max_side
+
+            if not needs_crop and not needs_resize:
+                return path
+
+            if needs_crop:
+                side = min(w, h)
+                left = (w - side) // 2
+                top = (h - side) // 2
+                img = img.crop((left, top, left + side, top + side))
+                logger.debug("DJ artwork: center-cropped %dx%d -> %dx%d", w, h, side, side)
+                w = h = side
+
+            if needs_resize:
+                img = img.resize((max_side, max_side), Image.LANCZOS)
+                logger.debug("DJ artwork: resized %dx%d -> %dx%d", w, h, max_side, max_side)
+
+            img.save(path)
+        return path
+
     def _find_dj_artwork(self, folder: Path) -> Path | None:
         """Find DJ artwork URL from media files in folder, download and cache."""
         from festival_organizer.analyzer import analyse_file
@@ -360,12 +393,14 @@ class AlbumPosterOperation(Operation):
                 mf = analyse_file(video, folder, self.config)
                 logger.debug("Album poster: dj_artwork_url=%s", mf.dj_artwork_url or "(empty)")
                 if mf.dj_artwork_url:
-                    return self._download_artwork(mf.dj_artwork_url, "dj-artwork", max_width=600)
+                    result = self._download_artwork(mf.dj_artwork_url, "dj-artwork", max_width=600)
+                    if result:
+                        return self._prepare_dj_artwork(result)
                 # Fallback: fetch DJ artwork from tracklist page
                 if mf.tracklists_url:
                     result = self._fetch_dj_artwork_from_tracklist(mf.tracklists_url)
                     if result:
-                        return result
+                        return self._prepare_dj_artwork(result)
         return None
 
     def _fetch_dj_artwork_from_tracklist(self, tracklist_url: str) -> Path | None:
@@ -399,8 +434,8 @@ class AlbumPosterOperation(Operation):
             return None
 
     def _resolve_background(self, priority: list[str], folder: Path,
-                             media_file: MediaFile) -> Path | None:
-        """Walk the background priority chain, return first successful image."""
+                             media_file: MediaFile) -> tuple[Path | None, str]:
+        """Walk the background priority chain, return first successful image and source name."""
         tried_curated = False
         for source in priority:
             bg = self._try_background_source(source, folder, media_file)
@@ -411,13 +446,13 @@ class AlbumPosterOperation(Operation):
                     self._logo_hits[canonical] = bg
             if bg:
                 logger.info("Album poster: using %s", source)
-                return bg
+                return bg, source
             logger.debug("Album poster: %s not available", source)
         if tried_curated and media_file.festival:
             canonical = self.config.resolve_festival_alias(media_file.festival)
             if canonical not in self._logo_hits:
                 self._logo_misses.add(canonical)
-        return None
+        return None, ""
 
     def _try_background_source(self, source: str, folder: Path,
                                 media_file: MediaFile) -> Path | None:
@@ -476,7 +511,7 @@ class AlbumPosterOperation(Operation):
             else:  # year
                 priority = ps.get("year_background_priority", ["gradient"])
 
-            bg_path = self._resolve_background(priority, file_path.parent, mf)
+            bg_path, bg_source = self._resolve_background(priority, file_path.parent, mf)
 
             # Determine hero_text and festival/title based on poster type
             if poster_type == "artist":
@@ -496,6 +531,7 @@ class AlbumPosterOperation(Operation):
                 detail=mf.stage or mf.location or "",
                 thumb_paths=thumb_paths if thumb_paths else None,
                 background_image_path=bg_path,
+                background_source=bg_source,
                 hero_text=hero_text,
             )
             self._completed_folders.add(file_path.parent)
