@@ -96,6 +96,7 @@ def run_chapters(args, config: Config) -> int:
                 scan_root=scan_root,
                 session=session,
                 config=config,
+                source_cache=source_cache,
                 tracklist_input=tracklist_input,
                 auto_select=auto_select,
                 ignore_stored=ignore_stored,
@@ -127,6 +128,7 @@ def _process_file(
     scan_root: Path,
     session: TracklistSession,
     config: Config,
+    source_cache: SourceCache,
     tracklist_input: str | None,
     auto_select: bool,
     ignore_stored: bool,
@@ -186,7 +188,7 @@ def _process_file(
     query_str = source["value"]
 
     # Expand known abbreviations for better API results (AMF → Amsterdam Music Festival)
-    aliases = config.tracklists_aliases
+    aliases = {**source_cache.derive_aliases(), **config.tracklists_aliases}
     query_str = expand_aliases_in_query(query_str, aliases)
 
     if not quiet:
