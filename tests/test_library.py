@@ -127,11 +127,10 @@ class TestCleanupEmptyDirs:
         assert ".custom_hidden" in caplog.text
 
     def test_removes_orphaned_folder_sidecars(self, tmp_path):
-        """folder.jpg and album.nfo without media files are removed."""
+        """folder.jpg without media files is removed."""
         d = tmp_path / "Artist" / "Festival"
         d.mkdir(parents=True)
         (d / "folder.jpg").write_bytes(b"\xff\xd8")
-        (d / "album.nfo").write_text("<nfo/>")
         cleanup_empty_dirs(tmp_path)
         assert not d.exists()
         assert not (tmp_path / "Artist").exists()
@@ -227,6 +226,5 @@ class TestCleanupEmptyDirs:
         d.mkdir()
         (d / ".DS_Store").write_text("junk")
         (d / "folder.jpg").write_bytes(b"\xff\xd8")
-        (d / "album.nfo").write_text("<nfo/>")
         cleanup_empty_dirs(tmp_path)
         assert not d.exists()

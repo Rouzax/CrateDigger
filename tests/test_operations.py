@@ -424,7 +424,7 @@ def test_organize_moves_subtitle_sidecars(tmp_path):
 
 
 def test_organize_does_not_move_folder_level_files(tmp_path):
-    """Organize does NOT move folder.jpg, fanart.jpg, album.nfo."""
+    """Organize does NOT move folder.jpg, fanart.jpg."""
     src = tmp_path / "src"
     dst = tmp_path / "dst"
     src.mkdir()

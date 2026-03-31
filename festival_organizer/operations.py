@@ -54,7 +54,7 @@ class OrganizeOperation(Operation):
         return file_path.resolve() != self.target.resolve()
 
     # Folder-level files that belong to the folder, not individual videos.
-    FOLDER_LEVEL_FILES = frozenset({"folder.jpg", "fanart.jpg", "album.nfo"})
+    FOLDER_LEVEL_FILES = frozenset({"folder.jpg", "fanart.jpg"})
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.executor import resolve_collision

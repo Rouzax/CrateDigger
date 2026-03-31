@@ -20,7 +20,6 @@ JUNK_FILES = frozenset({
 FOLDER_SIDECARS = frozenset({
     "folder.jpg",
     "folder.png",
-    "album.nfo",
     "fanart.jpg",
 })
 
@@ -82,7 +81,7 @@ def cleanup_empty_dirs(root: Path) -> None:
     - Known junk files (.DS_Store, Thumbs.db, desktop.ini) are deleted before
       the empty check.  Unknown hidden files cause the directory to be kept
       (with a WARNING logged).
-    - Orphaned folder-level sidecars (folder.jpg, album.nfo, etc.) are removed
+    - Orphaned folder-level sidecars (folder.jpg, fanart.jpg, etc.) are removed
       when no media files remain in the directory.
     - Permission errors are caught per-directory, logged as WARNING, and do not
       abort the cleanup of other directories.
