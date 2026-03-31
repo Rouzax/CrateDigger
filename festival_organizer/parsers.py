@@ -25,11 +25,6 @@ def _clean_leftover(text: str) -> str:
     text = re.sub(r"\s+", " ", text).strip()
     return text
 
-# Known location names for parent directory parsing
-KNOWN_LOCATIONS = [
-    "Belgium", "Brazil", "Brasil", "Las Vegas", "Miami",
-    "Netherlands", "United States", "Mexico", "Orlando",
-]
 
 
 def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
@@ -71,8 +66,11 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
         seg_lower = seg.lower()
         for fest in all_aliases:
             if _festival_in_text(fest, seg_lower):
-                # Resolve alias to canonical name
-                result["festival"] = config.resolve_festival_alias(seg.strip())
+                # Resolve alias and extract location from alias name
+                fest, alias_loc = config.resolve_festival_with_location(seg.strip())
+                result["festival"] = fest
+                if alias_loc:
+                    result["location"] = alias_loc
                 festival_idx = i
                 break
         if festival_idx is not None:
@@ -83,9 +81,10 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
         after = segments[festival_idx + 1:]
 
         # Check after-segments for a known location to separate stage from location
+        known_locs = config.all_known_locations
         loc_offset = None
         for j, seg in enumerate(after):
-            for loc in KNOWN_LOCATIONS:
+            for loc in known_locs:
                 if loc.lower() in seg.lower():
                     loc_offset = j
                     break
@@ -96,7 +95,7 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
             # stage = before + after-segments before location
             stage_parts = before + after[:loc_offset]
             result["stage"] = ", ".join(stage_parts) if stage_parts else None
-            result["location"] = ", ".join(after[loc_offset:])
+            result.setdefault("location", ", ".join(after[loc_offset:]))
             if result.get("stage") is None:
                 result.pop("stage", None)
         elif before:
@@ -107,17 +106,17 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
                     stage_after = after[:loc_offset]
                     if stage_after:
                         result["stage"] += ", " + ", ".join(stage_after)
-                    result["location"] = ", ".join(after[loc_offset:])
+                    result.setdefault("location", ", ".join(after[loc_offset:]))
                 else:
-                    result["location"] = ", ".join(after)
+                    result.setdefault("location", ", ".join(after))
         elif after:
             if loc_offset is not None:
                 stage_parts = after[:loc_offset]
                 if stage_parts:
                     result["stage"] = ", ".join(stage_parts)
-                result["location"] = ", ".join(after[loc_offset:])
+                result.setdefault("location", ", ".join(after[loc_offset:]))
             else:
-                result["location"] = ", ".join(after)
+                result.setdefault("location", ", ".join(after))
     elif len(segments) >= 2:
         # No known festival — first segment is venue/festival, rest is location
         result["festival"] = config.resolve_festival_alias(segments[0])
@@ -177,7 +176,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
             # Could be location like "Belgium" — store both
             result.setdefault("festival", part2)
             # Check if it's actually a location for a known parent-dir festival
-            for loc in KNOWN_LOCATIONS:
+            for loc in config.all_known_locations:
                 if loc.lower() == part2.lower():
                     result["location"] = part2
                     result.pop("festival", None)
@@ -296,7 +295,7 @@ def parse_parent_dirs(filepath: Path, root: Path, config: Config) -> dict:
                 break
 
         # Known location
-        for loc in KNOWN_LOCATIONS:
+        for loc in config.all_known_locations:
             if loc.lower() in part.lower():
                 result.setdefault("location", loc)
                 break

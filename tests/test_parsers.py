@@ -23,7 +23,9 @@ def test_1001tl_basic_festival():
     assert result["festival"] == "AMF"  # Alias resolved
     assert result["date"] == "2024-10-19"
     assert result["year"] == "2024"
-    assert "Johan Cruijff ArenA" in result.get("stage", "")
+    # Without a known location match, after-segments become location
+    # (stage/venue split relies on structured tags from chapters command)
+    assert "Johan Cruijff ArenA" in result.get("location", "")
 
 
 def test_1001tl_tomorrowland_with_stage():
@@ -66,6 +68,32 @@ def test_1001tl_edc():
     )
     assert result["artist"] == "Armin van Buuren"
     assert result["festival"] == "EDC"
+    assert result["stage"] == "kineticFIELD"
+
+
+def test_1001tl_dreamstate_socal_location():
+    """Location should come from festival alias, not country."""
+    result = parse_1001tracklists_title(
+        "Tiësto @ The Dream Stage, Dreamstate SoCal, "
+        "Queen Mary Waterfront, United States 2025-11-22",
+        CFG,
+    )
+    assert result["festival"] == "Dreamstate"
+    assert result["location"] == "SoCal"
+    assert "The Dream Stage" in result.get("stage", "")
+    assert result["artist"] == "Tiësto"
+    assert result["date"] == "2025-11-22"
+
+
+def test_1001tl_edc_las_vegas_location():
+    """EDC Las Vegas should extract Las Vegas as location."""
+    result = parse_1001tracklists_title(
+        "Armin van Buuren @ kineticFIELD, EDC Las Vegas, "
+        "United States 2025-05-18",
+        CFG,
+    )
+    assert result["festival"] == "EDC"
+    assert result["location"] == "Las Vegas"
     assert result["stage"] == "kineticFIELD"
 
 

@@ -204,6 +204,31 @@ class Config:
         return defaults
 
     @property
+    def all_known_locations(self) -> set[str]:
+        """Collect all known_locations from every festival config entry."""
+        locs = set()
+        for fc in self.festival_config.values():
+            for loc in fc.get("known_locations", []):
+                locs.add(loc)
+        return locs
+
+    def resolve_festival_with_location(self, name: str) -> tuple[str, str]:
+        """Resolve alias and extract location from the name if applicable.
+
+        Returns (canonical_festival, location).
+        "Dreamstate SoCal" -> ("Dreamstate", "SoCal")
+        "Tomorrowland Weekend 1" -> ("Tomorrowland", "")
+        "AMF" -> ("AMF", "")
+        """
+        canonical = self.resolve_festival_alias(name)
+        fc = self.festival_config.get(canonical, {})
+        if fc.get("location_in_name") and canonical != name:
+            for loc in fc.get("known_locations", []):
+                if loc.lower() in name.lower():
+                    return canonical, loc
+        return canonical, ""
+
+    @property
     def poster_settings(self) -> dict:
         defaults = DEFAULT_CONFIG.get("poster_settings", {})
         overrides = self._data.get("poster_settings", {})
@@ -325,13 +350,13 @@ class Config:
         """Get display name for a festival, optionally including location."""
         fc = self.festival_config.get(canonical_festival, {})
         if fc.get("location_in_name") and location:
-            # Normalize Brasil/Brazil
             known = fc.get("known_locations", [])
             for k in known:
                 if k.lower() == location.lower():
-                    location = k
-                    break
-            return f"{canonical_festival} {location}"
+                    return f"{canonical_festival} {k}"
+            # If known_locations is configured but location doesn't match, omit it
+            if not known:
+                return f"{canonical_festival} {location}"
         return canonical_festival
 
     def get_layout_template(self, content_type: str, layout_name: str | None = None) -> str:

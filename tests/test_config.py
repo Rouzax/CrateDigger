@@ -33,6 +33,27 @@ def test_config_festival_location():
     assert cfg.get_festival_display("AMF", "Netherlands") == "AMF"
 
 
+def test_get_festival_display_rejects_unknown_location():
+    cfg = Config(TEST_CONFIG)
+    # Dreamstate has known_locations: [SoCal, Europe, Australia, Mexico]
+    # "United States" is not in that list, should be omitted
+    assert cfg.get_festival_display("Dreamstate", "United States") == "Dreamstate"
+    assert cfg.get_festival_display("Dreamstate", "SoCal") == "Dreamstate SoCal"
+
+
+def test_resolve_festival_with_location():
+    cfg = Config(TEST_CONFIG)
+    assert cfg.resolve_festival_with_location("Dreamstate SoCal") == ("Dreamstate", "SoCal")
+    assert cfg.resolve_festival_with_location("Dreamstate Europe") == ("Dreamstate", "Europe")
+    assert cfg.resolve_festival_with_location("EDC Las Vegas") == ("EDC", "Las Vegas")
+    # No location_in_name configured
+    assert cfg.resolve_festival_with_location("AMF") == ("AMF", "")
+    # Tomorrowland Weekend 1 has no known_location match
+    assert cfg.resolve_festival_with_location("Tomorrowland Weekend 1") == ("Tomorrowland", "")
+    # Unknown festival
+    assert cfg.resolve_festival_with_location("Unknown Fest") == ("Unknown Fest", "")
+
+
 def test_config_layout_templates():
     cfg = Config(DEFAULT_CONFIG)
     # Default layout is now artist_flat

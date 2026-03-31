@@ -161,7 +161,6 @@ def test_parse_mediainfo_json_new_tag_names():
                     "CRATEDIGGER_1001TL_ID": "abc123",
                     "CRATEDIGGER_1001TL_DATE": "2025-01-01",
                     "CRATEDIGGER_1001TL_GENRES": "Trance|House",
-                    "CRATEDIGGER_1001TL_EVENT_ARTWORK": "https://event.jpg",
                     "CRATEDIGGER_1001TL_DJ_ARTWORK": "https://dj.jpg",
                 },
             ]

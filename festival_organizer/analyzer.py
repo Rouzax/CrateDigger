@@ -100,7 +100,18 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         info["stage"] = meta["tracklists_stage"]
     if meta.get("tracklists_venue"):
         info["venue"] = meta["tracklists_venue"]
-    if embedded and not tracklists_info:
+    # Layer 5: Direct 1001TL festival tag (written by chapters command from
+    # source cache). Authoritative for festival + location.
+    if meta.get("tracklists_festival"):
+        fest, loc = config.resolve_festival_with_location(
+            meta["tracklists_festival"]
+        )
+        info["festival"] = fest
+        if loc:
+            info["location"] = loc
+        if not tracklists_info:
+            metadata_source = "1001tracklists"
+    if embedded and not tracklists_info and not meta.get("tracklists_festival"):
         metadata_source = "metadata+filename"
 
     # Build display_artist: same priority but skip ARTIST tag (Layer 3 direct)
