@@ -22,7 +22,7 @@ from festival_organizer.templates import render_folder, render_filename
 
 
 HELP_TEXT = """\
-CrateDigger — Festival set & concert library manager
+CrateDigger: Festival set & concert library manager
 
 Common workflows:
   cratedigger scan ./downloads          Preview what would happen (dry run)
@@ -59,7 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_common(scan_p)
 
     # dry-run alias for scan
-    dryrun_p = sub.add_parser("dry-run", help="Alias for scan — preview what would happen")
+    dryrun_p = sub.add_parser("dry-run", help="Alias for scan; preview what would happen")
     add_common(dryrun_p)
 
     # organize
@@ -84,7 +84,7 @@ def build_parser() -> argparse.ArgumentParser:
     chap_p = sub.add_parser("chapters", help="Add 1001Tracklists chapters")
     chap_p.add_argument("root", type=str, help="File or folder to process")
     chap_p.add_argument("--tracklist", "-t", type=str, help="Tracklist URL, ID, or query")
-    chap_p.add_argument("--auto", action="store_true", help="Batch mode — no prompts")
+    chap_p.add_argument("--auto", action="store_true", help="Batch mode, no prompts")
     chap_p.add_argument("--preview", action="store_true", help="Show chapters without embedding")
     chap_p.add_argument("--force", action="store_true", help="Ignore stored URLs, fresh search")
     chap_p.add_argument("--delay", type=int, help="Delay between files (seconds)")
@@ -258,7 +258,7 @@ def _run_command(args) -> int:
         ops: list = []
 
         if args.command == "scan":
-            # Dry run — no operations, just show plan
+            # Dry run: no operations, just show plan
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name

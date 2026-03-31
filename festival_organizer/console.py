@@ -64,7 +64,7 @@ def _highlight_keywords(title: str, keywords: list[str]) -> Text:
         return text
 
     # Sort longest-first to avoid partial overlap
-    sorted_kw = sorted(keywords, key=len, reverse=True)
+    sorted_kw = sorted((kw for kw in keywords if kw), key=len, reverse=True)
     # Track which character positions are already highlighted
     highlighted = [False] * len(title)
 
