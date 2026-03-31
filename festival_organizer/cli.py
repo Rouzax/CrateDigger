@@ -1,7 +1,11 @@
 """Command-line interface with workflow-oriented subcommands."""
-import argparse
 import sys
+import types
+from enum import StrEnum
 from pathlib import Path
+from typing import Annotated, Optional
+
+import typer
 
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
@@ -21,103 +25,167 @@ from festival_organizer.scanner import scan_folder
 from festival_organizer.templates import render_folder, render_filename
 
 
-HELP_TEXT = """\
-CrateDigger: Festival set & concert library manager
+# ---------------------------------------------------------------------------
+# Shared type aliases (single source of truth for help text)
+# ---------------------------------------------------------------------------
 
-Common workflows:
-  cratedigger scan ./downloads          Preview what would happen (dry run)
-  cratedigger organize ./downloads      Organize files into library structure
-  cratedigger enrich ./library          Add art, posters, tags to existing files
-  cratedigger chapters ./file.mkv       Add 1001Tracklists chapters
-  cratedigger audit-logos ./library     Check curated festival logo coverage
-
-Run 'cratedigger <command> --help' for details on each command.
-"""
+RootArg = Annotated[str, typer.Argument(help="File or folder to process")]
+OutputOpt = Annotated[Optional[str], typer.Option("--output", "-o", help="Output folder")]
+ConfigOpt = Annotated[Optional[str], typer.Option("--config", help="Path to config.json")]
+QuietOpt = Annotated[bool, typer.Option("--quiet", "-q", help="Suppress per-file output")]
+VerboseOpt = Annotated[bool, typer.Option("--verbose", "-v", help="Show decisions and downloads")]
+DebugOpt = Annotated[bool, typer.Option("--debug", help="Show all internal details")]
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="cratedigger",
-        description=HELP_TEXT,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    sub = parser.add_subparsers(dest="command", help="Command to run")
+class Layout(StrEnum):
+    artist_flat = "artist_flat"
+    festival_flat = "festival_flat"
+    artist_nested = "artist_nested"
+    festival_nested = "festival_nested"
 
-    def add_common(p):
-        p.add_argument("root", type=str, help="File or folder to process")
-        p.add_argument("--output", "-o", type=str, help="Output folder")
-        p.add_argument("--layout", choices=[
-            "artist_flat", "festival_flat", "artist_nested", "festival_nested"
-        ], help="Folder layout")
-        p.add_argument("--config", type=str, help="Path to config.json")
-        p.add_argument("--quiet", "-q", action="store_true", help="Suppress per-file output")
-        p.add_argument("--verbose", "-v", action="store_true", help="Show decisions and downloads")
-        p.add_argument("--debug", action="store_true", help="Show all internal details")
 
-    # scan (dry-run)
-    scan_p = sub.add_parser("scan", help="Preview what would happen (dry run)")
-    add_common(scan_p)
+LayoutOpt = Annotated[Optional[Layout], typer.Option("--layout", help="Folder layout")]
 
-    # dry-run alias for scan
-    dryrun_p = sub.add_parser("dry-run", help="Alias for scan; preview what would happen")
-    add_common(dryrun_p)
 
-    # organize
-    org_p = sub.add_parser("organize", help="Move/copy files into library structure")
-    add_common(org_p)
-    org_p.add_argument("--move", action="store_true", help="Move instead of copy (default: copy)")
-    org_p.add_argument("--rename-only", action="store_true", help="Rename in place only")
-    org_p.add_argument("--enrich", action="store_true",
-                       help="Also run enrichment after organizing")
-    org_p.add_argument("--yes", "-y", action="store_true",
-                       help="Skip confirmation prompts")
-    org_p.add_argument("--kodi-sync", action="store_true",
-                       help="Notify Kodi to refresh updated items")
+# ---------------------------------------------------------------------------
+# Typer app
+# ---------------------------------------------------------------------------
 
-    # enrich
-    enr_p = sub.add_parser("enrich", help="Add metadata artifacts to files in place")
-    add_common(enr_p)
-    enr_p.add_argument("--only", type=str,
-                       help="Comma-separated: nfo,art,fanart,posters,tags,chapters")
-    enr_p.add_argument("--force", action="store_true",
-                       help="Regenerate even if artifacts exist")
-    enr_p.add_argument("--kodi-sync", action="store_true",
-                       help="Notify Kodi to refresh updated items")
+app = typer.Typer(
+    name="cratedigger",
+    help="CrateDigger: Festival set & concert library manager",
+    rich_markup_mode="rich",
+    no_args_is_help=False,
+)
 
-    # chapters
-    chap_p = sub.add_parser("chapters", help="Add 1001Tracklists chapters")
-    chap_p.add_argument("root", type=str, help="File or folder to process")
-    chap_p.add_argument("--tracklist", "-t", type=str, help="Tracklist URL, ID, or query")
-    chap_p.add_argument("--auto", action="store_true", help="Batch mode, no prompts")
-    chap_p.add_argument("--preview", action="store_true", help="Show chapters without embedding")
-    chap_p.add_argument("--force", action="store_true", help="Ignore stored URLs, fresh search")
-    chap_p.add_argument("--delay", type=int, help="Delay between files (seconds)")
-    chap_p.add_argument("--config", type=str, help="Path to config.json")
-    chap_p.add_argument("--quiet", "-q", action="store_true", help="Suppress per-file output")
-    chap_p.add_argument("--verbose", "-v", action="store_true", help="Show decisions and downloads")
-    chap_p.add_argument("--debug", action="store_true", help="Show all internal details")
 
-    # audit-logos
-    audit_p = sub.add_parser("audit-logos", help="Check curated festival logo coverage")
-    audit_p.add_argument("root", type=str, help="Library folder to audit")
-    audit_p.add_argument("--config", type=str, help="Path to config.json")
-    audit_p.add_argument("--verbose", "-v", action="store_true")
-    audit_p.add_argument("--debug", action="store_true")
+@app.callback(invoke_without_command=True)
+def main(ctx: typer.Context):
+    """CrateDigger: Festival set & concert library manager."""
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise SystemExit(1)
 
-    return parser
 
+# ---------------------------------------------------------------------------
+# Helper: build namespace from command params and delegate to _run_command
+# ---------------------------------------------------------------------------
+
+def _dispatch(command: str, params: dict) -> int:
+    params = {k: v for k, v in params.items() if k != "command"}
+    ns = types.SimpleNamespace(command=command, **params)
+    if hasattr(ns, "layout") and ns.layout is not None:
+        ns.layout = ns.layout.value
+    return _run_command(ns)
+
+
+# ---------------------------------------------------------------------------
+# Commands
+# ---------------------------------------------------------------------------
+
+@app.command()
+def scan(
+    root: RootArg,
+    output: OutputOpt = None,
+    layout: LayoutOpt = None,
+    config: ConfigOpt = None,
+    quiet: QuietOpt = False,
+    verbose: VerboseOpt = False,
+    debug: DebugOpt = False,
+) -> int:
+    """Preview what would happen (dry run)."""
+    return _dispatch("scan", locals())
+
+
+@app.command(name="dry-run")
+def dry_run(
+    root: RootArg,
+    output: OutputOpt = None,
+    layout: LayoutOpt = None,
+    config: ConfigOpt = None,
+    quiet: QuietOpt = False,
+    verbose: VerboseOpt = False,
+    debug: DebugOpt = False,
+) -> int:
+    """Alias for scan; preview what would happen."""
+    return _dispatch("dry-run", locals())
+
+
+@app.command()
+def organize(
+    root: RootArg,
+    output: OutputOpt = None,
+    layout: LayoutOpt = None,
+    config: ConfigOpt = None,
+    quiet: QuietOpt = False,
+    verbose: VerboseOpt = False,
+    debug: DebugOpt = False,
+    move: Annotated[bool, typer.Option("--move", help="Move instead of copy (default: copy)")] = False,
+    rename_only: Annotated[bool, typer.Option("--rename-only", help="Rename in place only")] = False,
+    enrich: Annotated[bool, typer.Option("--enrich", help="Also run enrichment after organizing")] = False,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help="Skip confirmation prompts")] = False,
+    kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
+) -> int:
+    """Move/copy files into library structure."""
+    return _dispatch("organize", locals())
+
+
+@app.command()
+def enrich(
+    root: RootArg,
+    output: OutputOpt = None,
+    layout: LayoutOpt = None,
+    config: ConfigOpt = None,
+    quiet: QuietOpt = False,
+    verbose: VerboseOpt = False,
+    debug: DebugOpt = False,
+    only: Annotated[Optional[str], typer.Option("--only", help="Comma-separated: nfo,art,fanart,posters,tags,chapters")] = None,
+    force: Annotated[bool, typer.Option("--force", help="Regenerate even if artifacts exist")] = False,
+    kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
+) -> int:
+    """Add metadata artifacts to files in place."""
+    return _dispatch("enrich", locals())
+
+
+@app.command()
+def chapters(
+    root: RootArg,
+    tracklist: Annotated[Optional[str], typer.Option("--tracklist", "-t", help="Tracklist URL, ID, or query")] = None,
+    auto: Annotated[bool, typer.Option("--auto", help="Batch mode, no prompts")] = False,
+    preview: Annotated[bool, typer.Option("--preview", help="Show chapters without embedding")] = False,
+    force: Annotated[bool, typer.Option("--force", help="Ignore stored URLs, fresh search")] = False,
+    delay: Annotated[Optional[int], typer.Option("--delay", help="Delay between files (seconds)")] = None,
+    config: ConfigOpt = None,
+    quiet: QuietOpt = False,
+    verbose: VerboseOpt = False,
+    debug: DebugOpt = False,
+) -> int:
+    """Add 1001Tracklists chapters."""
+    return _dispatch("chapters", locals())
+
+
+@app.command(name="audit-logos")
+def audit_logos(
+    root: Annotated[str, typer.Argument(help="Library folder to audit")],
+    config: ConfigOpt = None,
+    verbose: VerboseOpt = False,
+    debug: DebugOpt = False,
+) -> int:
+    """Check curated festival logo coverage."""
+    return _dispatch("audit-logos", locals())
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 def run(argv: list[str] | None = None) -> int:
     """Main entry point. Returns exit code."""
-    parser = build_parser()
-    args = parser.parse_args(argv)
-
-    if not args.command:
-        parser.print_help()
-        return 1
-
     try:
-        return _run_command(args)
+        result = app(args=argv, standalone_mode=False)
+        return result if isinstance(result, int) else 0
+    except SystemExit as e:
+        return e.code if isinstance(e.code, int) else 0
     except KeyboardInterrupt:
         print("\nAborted.", file=sys.stderr)
         return 130
@@ -125,6 +193,10 @@ def run(argv: list[str] | None = None) -> int:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 
+
+# ---------------------------------------------------------------------------
+# Command logic (unchanged)
+# ---------------------------------------------------------------------------
 
 def _run_command(args) -> int:
     # Resolve config layers
@@ -323,8 +395,8 @@ def _run_command(args) -> int:
     # If enrich includes chapters, run chapters handler in auto mode
     if args.command == "enrich" and only and "chapters" in only:
         from festival_organizer.tracklists.cli_handler import run_chapters
-        import types
-        chap_args = types.SimpleNamespace(
+        import types as _types
+        chap_args = _types.SimpleNamespace(
             root=str(root),
             tracklist=None,
             auto_select=True,
