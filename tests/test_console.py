@@ -6,7 +6,6 @@ import io
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
 from festival_organizer.console import (
     header_panel,
@@ -16,6 +15,14 @@ from festival_organizer.console import (
     summary_panel,
 )
 from festival_organizer.tracklists.scoring import QueryParts, SearchResult
+
+
+def _render(renderable) -> str:
+    """Render a Rich object to plain text."""
+    buf = io.StringIO()
+    console = Console(file=buf, width=120, no_color=True)
+    console.print(renderable)
+    return buf.getvalue()
 
 
 # --- make_console ---
@@ -41,10 +48,7 @@ def test_header_panel_returns_panel():
 
 def test_header_panel_contains_rows():
     p = header_panel("Run", {"Source": "/music", "Layout": "flat"})
-    # Render to string to verify content
-    console = Console(file=io.StringIO(), width=80)
-    console.print(p)
-    output = console.file.getvalue()
+    output = _render(p)
     assert "Source" in output
     assert "/music" in output
     assert "Layout" in output
@@ -55,8 +59,7 @@ def test_header_panel_contains_rows():
 
 def test_status_text_done():
     t = status_text("done", "nfo")
-    plain = t.plain
-    assert plain == "v nfo"
+    assert t.plain == "v nfo"
 
 
 def test_status_text_skipped_no_detail():
@@ -81,7 +84,6 @@ def test_status_text_error_with_detail():
 
 def test_status_text_done_green_style():
     t = status_text("done", "nfo")
-    # First span is the "v" character with green style
     spans = t._spans
     assert any("green" in str(s.style) for s in spans)
 
@@ -94,7 +96,12 @@ def test_status_text_error_red_style():
 
 # --- results_table ---
 
-def _make_result(score=200, duration_mins=60, title="Test Set", date="2025-01-01"):
+def _make_result(
+    score: float = 200,
+    duration_mins: int | None = 60,
+    title: str = "Test Set",
+    date: str = "2025-01-01",
+) -> SearchResult:
     return SearchResult(
         id="1",
         title=title,
@@ -122,12 +129,8 @@ def test_results_table_columns():
 
 def test_results_table_score_indicators():
     """Verify quality indicators map to the right score ranges."""
-    console = Console(file=io.StringIO(), width=120, no_color=True)
-
-    # Score >= 250: "+"
     t = results_table([_make_result(score=300)], video_duration_mins=60)
-    console.print(t)
-    output = console.file.getvalue()
+    output = _render(t)
     assert "+" in output
 
 
@@ -140,10 +143,8 @@ def test_results_table_max_15():
 
 def test_results_table_truncation_message():
     results = [_make_result(title=f"Set {i}") for i in range(20)]
-    console = Console(file=io.StringIO(), width=120)
     t = results_table(results, video_duration_mins=60)
-    console.print(t)
-    output = console.file.getvalue()
+    output = _render(t)
     assert "5 more" in output
 
 
@@ -151,10 +152,7 @@ def test_results_table_keyword_highlighting():
     qp = QueryParts(keywords=["tomorrowland", "garrix"])
     r = _make_result(title="Tomorrowland 2025 Martin Garrix")
     t = results_table([r], video_duration_mins=60, query_parts=qp)
-    # Render and check that the title is present
-    console = Console(file=io.StringIO(), width=120)
-    console.print(t)
-    output = console.file.getvalue()
+    output = _render(t)
     assert "Tomorrowland" in output
     assert "Garrix" in output
 
@@ -182,14 +180,11 @@ def test_results_table_video_duration_none():
 
 def test_results_table_duration_coloring():
     """Verify duration diff coloring thresholds."""
-    console = Console(file=io.StringIO(), width=120)
-
-    # Exact match: green
     r_exact = _make_result(duration_mins=60)
     t = results_table([r_exact], video_duration_mins=60)
-    console.print(t)
     # Just verify it renders without error
-    assert t.row_count == 1
+    output = _render(t)
+    assert "60m" in output
 
 
 # --- summary_panel ---
@@ -197,9 +192,7 @@ def test_results_table_duration_coloring():
 def test_summary_panel_flat_counts():
     p = summary_panel({"added": 3, "skipped": 1, "error": 0})
     assert isinstance(p, Panel)
-    console = Console(file=io.StringIO(), width=80)
-    console.print(p)
-    output = console.file.getvalue()
+    output = _render(p)
     assert "added" in output
     assert "3" in output
     assert "skipped" in output
@@ -211,9 +204,7 @@ def test_summary_panel_nested_counts():
         "poster": {"done": 3, "error": 1},
     }
     p = summary_panel(counts)
-    console = Console(file=io.StringIO(), width=80)
-    console.print(p)
-    output = console.file.getvalue()
+    output = _render(p)
     assert "NFO" in output
     assert "POSTER" in output
     assert "2" in output
@@ -221,35 +212,27 @@ def test_summary_panel_nested_counts():
 
 def test_summary_panel_with_log_path():
     p = summary_panel({"added": 1}, log_path="/tmp/run.log")
-    console = Console(file=io.StringIO(), width=80)
-    console.print(p)
-    output = console.file.getvalue()
+    output = _render(p)
     assert "Log" in output
     assert "/tmp/run.log" in output
 
 
 def test_summary_panel_no_log_path():
     p = summary_panel({"added": 1})
-    console = Console(file=io.StringIO(), width=80)
-    console.print(p)
-    output = console.file.getvalue()
+    output = _render(p)
     assert "Log" not in output
 
 
 def test_summary_panel_empty_nested():
     counts = {"nfo": {"done": 0}}
     p = summary_panel(counts)
-    console = Console(file=io.StringIO(), width=80)
-    console.print(p)
-    output = console.file.getvalue()
+    output = _render(p)
     assert "NFO" in output
     assert "0" in output
 
 
 def test_summary_panel_up_to_date():
     p = summary_panel({"added": 2, "up_to_date": 5, "error": 0})
-    console = Console(file=io.StringIO(), width=80)
-    console.print(p)
-    output = console.file.getvalue()
+    output = _render(p)
     assert "up_to_date" in output
     assert "5" in output
