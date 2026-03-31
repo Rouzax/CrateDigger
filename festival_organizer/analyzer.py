@@ -90,6 +90,12 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
             if tracklists_info.get(key):
                 info[key] = tracklists_info[key]
         metadata_source = "1001tracklists"
+        # Clear set_title if redundant with 1001TL stage (e.g. "RESISTANCE
+        # MEGASTRUCTURE" from filename leftover when stage is already set)
+        st = normalise_name(info.get("set_title", "")).lower()
+        stage = info.get("stage", "").lower()
+        if st and stage and (st in stage or stage in st):
+            info["set_title"] = ""
     if meta.get("tracklists_stage"):
         info["stage"] = meta["tracklists_stage"]
     if meta.get("tracklists_venue"):

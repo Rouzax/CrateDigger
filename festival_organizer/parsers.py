@@ -4,11 +4,26 @@ from pathlib import Path
 
 from festival_organizer.config import Config
 from festival_organizer.normalization import (
+    UNICODE_SLASHES,
     extract_youtube_id,
     scene_dots_to_spaces,
     strip_noise_words,
     strip_scene_tags,
 )
+
+
+def _clean_leftover(text: str) -> str:
+    """Clean leftover text after year in filename patterns.
+
+    Strips pipe separators (used for stage names in YouTube titles),
+    unicode slashes, and orphaned parentheses/brackets.
+    """
+    text = re.sub(r"[|\uff5c]", " ", text)
+    text = UNICODE_SLASHES.sub(" ", text)
+    text = re.sub(r"^[)\]]+|[(\[]+$", "", text)
+    text = text.strip(" -\u2013\u2014,.()")
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 # Known location names for parent directory parsing
 KNOWN_LOCATIONS = [
@@ -178,7 +193,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         result.setdefault("artist", m.group(1).strip())
         result.setdefault("festival", m.group(2).strip())
         result.setdefault("year", m.group(3))
-        leftover = m.group(4).strip(" -\u2013\u2014")
+        leftover = _clean_leftover(m.group(4))
         if leftover:
             result.setdefault("set_title", leftover)
         return result
@@ -189,7 +204,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         result.setdefault("artist", m.group(1).strip())
         result.setdefault("festival", m.group(2).strip())
         result.setdefault("year", m.group(3))
-        leftover = m.group(4).strip(" -\u2013\u2014")
+        leftover = _clean_leftover(m.group(4))
         if leftover:
             result.setdefault("set_title", leftover)
         return result
@@ -200,7 +215,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         result.setdefault("artist", m.group(1).strip())
         result.setdefault("festival", m.group(2).strip())
         result.setdefault("year", m.group(3))
-        leftover = m.group(4).strip(" -\u2013\u2014,")
+        leftover = _clean_leftover(m.group(4))
         if leftover:
             result.setdefault("set_title", leftover)
         return result
@@ -211,7 +226,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         result.setdefault("artist", m.group(1).strip())
         result.setdefault("festival", m.group(2).strip())
         result.setdefault("year", m.group(3))
-        leftover = m.group(4).strip(" -\u2013\u2014,")
+        leftover = _clean_leftover(m.group(4))
         if leftover:
             result.setdefault("set_title", leftover)
         return result
