@@ -22,8 +22,10 @@ def make_console(file=None) -> Console:
     """Create a Console writing to the given file (default stdout).
 
     Rich auto-detects isatty() on the file descriptor.
+    Highlighting is disabled so Rich does not colorize numbers,
+    UUIDs, or other patterns in user-provided content.
     """
-    return Console(file=file or sys.stdout)
+    return Console(file=file or sys.stdout, highlight=False)
 
 
 def header_panel(title: str, rows: dict[str, str]) -> Panel:
