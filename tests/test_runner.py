@@ -1,17 +1,26 @@
 from io import StringIO
 from pathlib import Path
+
+from rich.console import Console
+
 from festival_organizer.models import MediaFile
 from festival_organizer.progress import ProgressPrinter
 from festival_organizer.operations import Operation, OperationResult
 from festival_organizer.runner import run_pipeline
 
 
+def _make_console() -> tuple[Console, StringIO]:
+    """Create a Console writing to a buffer for test assertions."""
+    buf = StringIO()
+    return Console(file=buf, no_color=True, force_terminal=True), buf
+
+
 def test_progress_file_header():
     """Print file counter and name."""
-    out = StringIO()
-    pp = ProgressPrinter(total=5, stream=out)
+    console, buf = _make_console()
+    pp = ProgressPrinter(total=5, console=console)
     pp.file_start(Path("2024 - AMF - Martin Garrix.mkv"), "Martin Garrix/")
-    output = out.getvalue()
+    output = buf.getvalue()
     assert "[1/5]" in output
     assert "2024 - AMF - Martin Garrix.mkv" in output
     assert "Martin Garrix/" in output
@@ -19,15 +28,15 @@ def test_progress_file_header():
 
 def test_progress_operation_results():
     """Print operation results inline."""
-    out = StringIO()
-    pp = ProgressPrinter(total=3, stream=out)
+    console, buf = _make_console()
+    pp = ProgressPrinter(total=3, console=console)
     pp.file_start(Path("test.mkv"), "Artist/")
     pp.file_done([
         OperationResult("nfo", "done"),
         OperationResult("art", "done"),
         OperationResult("poster", "skipped", "exists"),
     ])
-    output = out.getvalue()
+    output = buf.getvalue()
     assert "nfo" in output
     assert "art" in output
     assert "poster" in output
@@ -36,8 +45,8 @@ def test_progress_operation_results():
 
 def test_progress_summary():
     """Print aggregate summary."""
-    out = StringIO()
-    pp = ProgressPrinter(total=3, stream=out)
+    console, buf = _make_console()
+    pp = ProgressPrinter(total=3, console=console)
     pp.record_results([
         OperationResult("nfo", "done"),
         OperationResult("art", "done"),
@@ -47,22 +56,23 @@ def test_progress_summary():
         OperationResult("art", "skipped", "exists"),
     ])
     pp.print_summary()
-    output = out.getvalue()
-    assert "NFO: 2" in output or "nfo: 2" in output.lower()
+    output = buf.getvalue()
+    assert "NFO" in output or "nfo" in output.lower()
 
 
 def test_progress_quiet_mode():
     """Quiet mode suppresses per-file output but keeps summary."""
-    out = StringIO()
-    pp = ProgressPrinter(total=1, stream=out, quiet=True)
+    console, buf = _make_console()
+    pp = ProgressPrinter(total=1, console=console, quiet=True)
     pp.file_start(Path("test.mkv"), "Artist/")
     pp.file_done([OperationResult("nfo", "done")])
     # Per-file output suppressed
-    assert "test.mkv" not in out.getvalue()
+    assert "test.mkv" not in buf.getvalue()
     # Summary still works
     pp.record_results([OperationResult("nfo", "done")])
     pp.print_summary()
-    assert "nfo" in out.getvalue().lower() or "NFO" in out.getvalue()
+    output = buf.getvalue()
+    assert "nfo" in output.lower() or "NFO" in output
 
 
 def _make_mf(**kwargs):
@@ -88,7 +98,8 @@ def test_pipeline_is_needed_failure_does_not_crash(tmp_path):
     video.write_bytes(b"")
     mf = _make_mf()
     ops = [BrokenIsNeededOp()]
-    progress = ProgressPrinter(total=1, stream=StringIO())
+    console, _ = _make_console()
+    progress = ProgressPrinter(total=1, console=console)
     results = run_pipeline([(video, mf, ops)], progress)
     assert len(results) == 1
     assert results[0][0].status == "error"

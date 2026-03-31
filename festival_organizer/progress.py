@@ -1,10 +1,13 @@
 """Live progress output formatting."""
 from __future__ import annotations
 
-import sys
 from collections import defaultdict
 from pathlib import Path
 
+from rich.console import Console
+from rich.text import Text
+
+from festival_organizer.console import header_panel, make_console, status_text, summary_panel
 from festival_organizer.operations import OperationResult
 
 
@@ -14,12 +17,12 @@ class ProgressPrinter:
     def __init__(
         self,
         total: int,
-        stream=None,
+        console: Console | None = None,
         quiet: bool = False,
         verbose: bool = False,
     ):
         self.total = total
-        self.stream = stream or sys.stdout
+        self.console = console or make_console()
         self.quiet = quiet
         self.verbose = verbose
         self._file_index = 0
@@ -34,44 +37,41 @@ class ProgressPrinter:
         tools: list[str],
     ) -> None:
         """Print the run header."""
-        w = self.stream.write
-        w(f"CrateDigger — {command}\n")
-        w("=" * 56 + "\n")
-        w(f"Source:  {source}\n")
-        w(f"Output:  {output}\n")
-        w(f"Layout:  {layout}\n")
-        if tools:
-            w(f"Tools:   {', '.join(tools)}\n")
-        else:
-            w("Tools:   NONE (filename parsing only)\n")
-        w("=" * 56 + "\n\n")
+        tools_str = ", ".join(tools) if tools else "NONE (filename parsing only)"
+        rows = {
+            "Source": str(source),
+            "Output": str(output),
+            "Layout": layout,
+            "Tools": tools_str,
+        }
+        self.console.print(header_panel(f"CrateDigger: {command}", rows))
 
     def file_start(self, filename: Path, target_folder: str) -> None:
         """Print the start of processing a file."""
         self._file_index += 1
         if self.quiet:
             return
-        w = self.stream.write
-        w(f"\n [{self._file_index}/{self.total}] {filename.name}\n")
+        text = Text()
+        text.append(f"\n [{self._file_index}/{self.total}] ", style="bold")
+        text.append(filename.name)
+        self.console.print(text)
         if target_folder:
-            w(f"        -> {target_folder}\n")
+            self.console.print(f"        -> {target_folder}")
 
     def file_done(self, results: list[OperationResult]) -> None:
         """Print operation results for the current file."""
         if self.quiet:
             return
-        parts = []
+        parts: list[Text] = []
         for r in results:
-            if r.status == "done":
-                parts.append(f"v {r.name}")
-            elif r.status == "skipped":
-                detail = f" ({r.detail})" if r.detail else ""
-                parts.append(f"skip {r.name}{detail}")
-            elif r.status == "error":
-                detail = f" ({r.detail})" if r.detail else ""
-                parts.append(f"! {r.name}{detail}")
+            parts.append(status_text(r.status, r.name, r.detail or ""))
         if parts:
-            self.stream.write(f"        {'  '.join(parts)}\n")
+            line = Text("        ")
+            for i, part in enumerate(parts):
+                if i > 0:
+                    line.append("  ")
+                line.append_text(part)
+            self.console.print(line)
 
     def record_results(self, results: list[OperationResult]) -> None:
         """Record results for summary aggregation."""
@@ -80,14 +80,5 @@ class ProgressPrinter:
 
     def print_summary(self, log_path: Path | None = None) -> None:
         """Print the final summary."""
-        w = self.stream.write
-        w("\n" + "=" * 56 + "\n")
-        parts = []
-        for op_name, statuses in sorted(self._counts.items()):
-            done = statuses.get("done", 0)
-            label = op_name.upper()
-            parts.append(f"{label}: {done}")
-        w(" | ".join(parts) + "\n")
-        if log_path:
-            w(f"Log:  {log_path}\n")
-        w("=" * 56 + "\n")
+        counts = dict(self._counts)
+        self.console.print(summary_panel(counts, log_path=log_path))

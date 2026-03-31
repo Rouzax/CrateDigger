@@ -4,6 +4,10 @@ import io
 import sys
 from pathlib import Path
 
+from rich.console import Console
+from rich.text import Text
+
+from festival_organizer.console import make_console
 from festival_organizer.models import FileAction
 
 # Force UTF-8 on Windows console (skip when running under pytest to
@@ -27,8 +31,9 @@ CSV_FIELDS = [
 class ActionLogger:
     """Collects action results for display and CSV export."""
 
-    def __init__(self, verbose: bool = True):
+    def __init__(self, verbose: bool = True, console: Console | None = None):
         self.verbose = verbose
+        self.console = console or make_console()
         self.rows: list[dict] = []
 
     def log_action(self, action: FileAction) -> None:
@@ -62,19 +67,25 @@ class ActionLogger:
             self._print_action(action)
 
     def _print_action(self, action: FileAction) -> None:
-        status_labels = {
-            "pending": "DRY",
-            "done": " OK",
-            "skipped": "SKIP",
-            "error": "ERR",
+        status_styles = {
+            "pending": ("DRY", "dim"),
+            "done": (" OK", "green"),
+            "skipped": ("SKIP", "yellow"),
+            "error": ("ERR", "red"),
         }
-        label = status_labels.get(action.status, action.status.upper())
+        label, style = status_styles.get(action.status, (action.status.upper(), ""))
         ct = action.media_file.content_type or "?"
-        print(f"  [{label:>4}] [{ct:<12}] {action.source}")
+        line = Text("  [")
+        line.append(f"{label:>4}", style=style)
+        line.append(f"] [{ct:<12}] ")
+        line.append(str(action.source))
+        self.console.print(line)
         if action.status in ("pending", "done"):
-            print(f"         --> {action.target}")
+            self.console.print(f"         --> {action.target}")
         if action.error:
-            print(f"         !!! {action.error}")
+            err_line = Text("         !!! ")
+            err_line.append(str(action.error), style="red")
+            self.console.print(err_line)
 
     def save_csv(self, path: Path) -> None:
         """Write all recorded actions to a CSV file."""
