@@ -69,6 +69,10 @@ def parse_query(query: str, aliases: dict[str, str]) -> QueryParts:
     words = query.split()
     remaining = []
 
+    # Detect all-caps query (YouTube title convention)
+    alpha_words = [w for w in words if re.match(r"^[A-Za-z]{2,}$", w)]
+    all_caps_query = len(alpha_words) > 1 and all(w.isupper() for w in alpha_words)
+
     for word in words:
         # Year detection
         if re.match(r"^(19|20)\d{2}$", word):
@@ -88,12 +92,23 @@ def parse_query(query: str, aliases: dict[str, str]) -> QueryParts:
 
         # Abbreviation detection: exactly 2+ uppercase letters, no lowercase
         if re.match(r"^[A-Z]{2,}$", word):
-            parts.abbreviations.append(word)
-            # Also check if it's an alias
             lower = word.lower()
-            if lower in aliases:
-                parts.resolved_aliases.append({"alias": word, "target": aliases[lower]})
-            continue
+            is_known_alias = lower in aliases
+
+            if all_caps_query:
+                # All-caps query: only known aliases are treated as abbreviations
+                if is_known_alias:
+                    parts.abbreviations.append(word)
+                    parts.resolved_aliases.append({"alias": word, "target": aliases[lower]})
+                # Always also a keyword candidate in all-caps mode
+                remaining.append(word)
+                continue
+            else:
+                # Mixed-case query: existing behavior — all uppercase words are abbreviations
+                parts.abbreviations.append(word)
+                if is_known_alias:
+                    parts.resolved_aliases.append({"alias": word, "target": aliases[lower]})
+                continue
 
         # Alias check (case-insensitive)
         lower = word.lower()
