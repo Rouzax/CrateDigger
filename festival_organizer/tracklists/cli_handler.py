@@ -27,6 +27,7 @@ from festival_organizer.tracklists.query import (
     build_search_query,
     detect_tracklist_source,
     extract_tracklist_id,
+    expand_aliases_in_query,
 )
 from festival_organizer.tracklists.scoring import parse_query, score_results
 
@@ -183,6 +184,11 @@ def _process_file(
 
     # Search
     query_str = source["value"]
+
+    # Expand known abbreviations for better API results (AMF → Amsterdam Music Festival)
+    aliases = config.tracklists_aliases
+    query_str = expand_aliases_in_query(query_str, aliases)
+
     if not quiet:
         print(f"  Searching: {query_str}")
 
@@ -192,8 +198,7 @@ def _process_file(
         print("  No results found.")
         return "skipped"
 
-    # Score results
-    aliases = config.tracklists_aliases
+    # Score results (aliases already loaded above)
     query_parts = parse_query(query_str, aliases)
     scored = score_results(results, query_parts, duration_mins)
 

@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-from festival_organizer.normalization import extract_youtube_id, strip_scene_tags, strip_noise_words
+from festival_organizer.normalization import extract_youtube_id, strip_scene_tags, strip_noise_words, UNICODE_SLASHES
 
 
 def build_search_query(source_path: Path) -> str:
@@ -15,6 +15,9 @@ def build_search_query(source_path: Path) -> str:
     # Strip YouTube ID
     stem, _ = extract_youtube_id(stem)
 
+    # Normalize unicode slashes (KI⧸KI → KI KI)
+    stem = UNICODE_SLASHES.sub(" ", stem)
+
     # Convert common separators to spaces
     stem = re.sub(r"[-_.]", " ", stem)
 
@@ -26,6 +29,21 @@ def build_search_query(source_path: Path) -> str:
     stem = re.sub(r"\s+", " ", stem).strip()
 
     return stem
+
+
+def expand_aliases_in_query(query: str, aliases: dict[str, str]) -> str:
+    """Expand known abbreviations in a query string to their full names.
+
+    Args:
+        query: search query string
+        aliases: lowercase-keyed alias map (e.g. {"amf": "Amsterdam Music Festival"})
+
+    Returns:
+        Query with abbreviations replaced by full names.
+    """
+    for abbrev, full_name in aliases.items():
+        query = re.sub(rf"\b{re.escape(abbrev)}\b", full_name, query, flags=re.IGNORECASE)
+    return query
 
 
 def detect_tracklist_source(input_str: str) -> dict:
