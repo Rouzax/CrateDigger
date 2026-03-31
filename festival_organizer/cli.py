@@ -139,9 +139,8 @@ def _run_command(args) -> int:
 
     verbose = getattr(args, "verbose", False)
     debug = getattr(args, "debug", False)
-    setup_logging(verbose=verbose, debug=debug)
-
     console = make_console()
+    setup_logging(verbose=verbose, debug=debug, console=console)
 
     # Layout override
     if getattr(args, "layout", None):
