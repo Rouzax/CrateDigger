@@ -3,9 +3,18 @@ import sys
 import time
 from pathlib import Path
 
+from rich.console import Console
+from rich.text import Text
+
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import Config
+from festival_organizer.console import (
+    header_panel,
+    make_console,
+    results_table,
+    summary_panel,
+)
 from festival_organizer.scanner import scan_folder
 from festival_organizer.tracklists.api import (
     TracklistSession,
@@ -32,8 +41,9 @@ from festival_organizer.tracklists.query import (
 from festival_organizer.tracklists.scoring import parse_query, score_results
 
 
-def run_chapters(args, config: Config) -> int:
+def run_chapters(args, config: Config, console: Console | None = None) -> int:
     """Main entry point for the 'chapters' subcommand."""
+    con = console or make_console()
     root = Path(args.root)
     auto_select = args.auto_select or config.tracklists_settings.get("auto_select", False)
     delay = args.delay if hasattr(args, "delay") and args.delay is not None else config.tracklists_settings.get("delay_seconds", 5)
@@ -72,13 +82,13 @@ def run_chapters(args, config: Config) -> int:
         print(f"Login failed: {e}", file=sys.stderr)
         return 1
 
-    print(f"Tracklist Chapters")
-    print(f"{'=' * 60}")
-    print(f"Source:  {root}")
-    print(f"Files:   {len(files)}")
-    print(f"Mode:    {'preview' if preview else 'embed'}")
-    print(f"Select:  {'auto' if auto_select else 'interactive'}")
-    print(f"{'=' * 60}\n")
+    rows = {
+        "Source": str(root),
+        "Files": str(len(files)),
+        "Mode": "preview" if preview else "embed",
+        "Select": "auto" if auto_select else "interactive",
+    }
+    con.print(header_panel("Tracklist Chapters", rows))
 
     # Process files
     stats = {"added": 0, "up_to_date": 0, "skipped": 0, "error": 0}
@@ -88,7 +98,10 @@ def run_chapters(args, config: Config) -> int:
             time.sleep(delay)
 
         if not quiet:
-            print(f"\n[{i+1}/{len(files)}] {filepath.name}")
+            text = Text()
+            text.append(f"\n[{i+1}/{len(files)}] ", style="bold")
+            text.append(filepath.name)
+            con.print(text)
 
         try:
             status = _process_file(
@@ -103,22 +116,19 @@ def run_chapters(args, config: Config) -> int:
                 preview=preview,
                 quiet=quiet,
                 language=language,
+                console=con,
             )
             stats[status] = stats.get(status, 0) + 1
         except KeyboardInterrupt:
-            print("\nAborted by user.")
+            con.print("\nAborted by user.")
             break
         except Exception as e:
-            print(f"  Error: {e}")
+            con.print(f"  [red]Error:[/red] {e}")
             stats["error"] += 1
 
     # Summary
-    print(f"\n{'=' * 60}")
-    print("Summary:")
-    for status, count in sorted(stats.items()):
-        if count > 0:
-            print(f"  {status}: {count}")
-    print(f"{'=' * 60}")
+    con.print()
+    con.print(summary_panel(stats))
 
     return 0
 
@@ -135,8 +145,11 @@ def _process_file(
     preview: bool,
     quiet: bool,
     language: str,
+    console: Console | None = None,
 ) -> str:
     """Process a single file. Returns status string."""
+    con = console or make_console()
+
     # Analyse file for metadata
     mf = analyse_file(filepath, scan_root, config)
     mf.content_type = classify(mf, scan_root, config)
@@ -147,17 +160,17 @@ def _process_file(
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
             if auto_select:
-                print(f"  Using stored URL: {stored['url']}")
+                con.print(f"  Using stored URL: {stored['url']}")
                 return _fetch_and_embed(
                     session, stored["url"], filepath, duration_mins,
-                    config, preview, quiet, language,
+                    config, preview, quiet, language, console=con,
                 )
             else:
                 choice = input(f"  Stored URL: {stored['url']}\n  Use stored? (Y)es / (S)kip / (R)esearch: ").strip().lower()
                 if choice in ("y", "yes", ""):
                     return _fetch_and_embed(
                         session, stored["url"], filepath, duration_mins,
-                        config, preview, quiet, language,
+                        config, preview, quiet, language, console=con,
                     )
                 elif choice in ("s", "skip"):
                     return "skipped"
@@ -175,29 +188,29 @@ def _process_file(
         tl_id = extract_tracklist_id(source["value"])
         return _fetch_and_embed(
             session, source["value"], filepath, duration_mins,
-            config, preview, quiet, language,
+            config, preview, quiet, language, console=con,
         )
     elif source["type"] == "id":
         return _fetch_and_embed(
             session, None, filepath, duration_mins,
-            config, preview, quiet, language,
+            config, preview, quiet, language, console=con,
             tracklist_id=source["value"],
         )
 
     # Search
     query_str = source["value"]
 
-    # Expand known abbreviations for better API results (AMF → Amsterdam Music Festival)
+    # Expand known abbreviations for better API results (AMF -> Amsterdam Music Festival)
     aliases = {**source_cache.derive_aliases(), **config.tracklists_aliases}
     query_str = expand_aliases_in_query(query_str, aliases)
 
     if not quiet:
-        print(f"  Searching: {query_str}")
+        con.print(f"  [bold]Query:[/bold] {query_str}")
 
     results = session.search(query_str, duration_minutes=duration_mins, year=mf.year or None)
 
     if not results:
-        print("  No results found.")
+        con.print("  [dim]No results found.[/dim]")
         return "skipped"
 
     # Score results (aliases already loaded above)
@@ -205,16 +218,16 @@ def _process_file(
     scored = score_results(results, query_parts, duration_mins)
 
     if not scored:
-        print("  No relevant results after filtering.")
+        con.print("  [dim]No relevant results after filtering.[/dim]")
         return "skipped"
 
     # Select result
     if auto_select:
         selected = scored[0]
         if not quiet:
-            _display_auto_selected(selected, duration_mins)
+            _display_auto_selected(selected, duration_mins, con)
     else:
-        selected = _select_interactive(scored, duration_mins)
+        selected = _select_interactive(scored, duration_mins, query_parts, con)
         if selected is None:
             return "skipped"
 
@@ -222,7 +235,7 @@ def _process_file(
     tl_id = selected.id
     return _fetch_and_embed(
         session, selected.url, filepath, duration_mins,
-        config, preview, quiet, language,
+        config, preview, quiet, language, console=con,
         tracklist_id=tl_id,
         tracklist_date=selected.date,
     )
@@ -239,8 +252,11 @@ def _fetch_and_embed(
     language: str,
     tracklist_id: str | None = None,
     tracklist_date: str | None = None,
+    console: Console | None = None,
 ) -> str:
     """Fetch tracklist, parse chapters, and embed."""
+    con = console or make_console()
+
     if not tracklist_id and url:
         tracklist_id = extract_tracklist_id(url)
 
@@ -249,22 +265,22 @@ def _fetch_and_embed(
     try:
         chapters = parse_tracklist_lines(export.lines, language=language)
     except ValueError as e:
-        print(f"  {e}")
+        con.print(f"  {e}")
         if not preview:
             # Tag file with URL for future pickup
             embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type)
-            print(f"  Tagged with URL for future pickup.")
+            con.print("  Tagged with URL for future pickup.")
         return "skipped"
 
     if not chapters:
-        print("  No chapters found in tracklist.")
+        con.print("  [dim]No chapters found in tracklist.[/dim]")
         return "skipped"
 
     if len(chapters) < 2:
-        print("  Only 1 chapter — skipping (not useful for navigation)")
+        con.print("  [dim]Only 1 chapter, skipping (not useful for navigation)[/dim]")
         if not preview:
             embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type)
-            print(f"  Tagged with URL for future pickup.")
+            con.print("  Tagged with URL for future pickup.")
         return "skipped"
 
     # Check for duplicates
@@ -272,7 +288,7 @@ def _fetch_and_embed(
     if chapters_are_identical(existing, chapters):
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
-            # Chapters match — check if tags need updating
+            # Chapters match, check if tags need updating
             desired = {
                 "CRATEDIGGER_1001TL_URL": export.url,
                 "CRATEDIGGER_1001TL_TITLE": export.title,
@@ -307,22 +323,22 @@ def _fetch_and_embed(
             }
             if not tags_to_update:
                 if not quiet:
-                    print(f"  Up to date ({len(chapters)} chapters)")
+                    con.print(f"  [green]Up to date[/green] ({len(chapters)} chapters)")
                 return "up_to_date"
             # Re-embed only the changed tags, skip chapter writing
             if not preview:
                 write_merged_tags(filepath, {70: tags_to_update})
                 if not quiet:
-                    print(f"  Updated tags: {', '.join(tags_to_update.keys())}")
+                    con.print(f"  [green]Updated tags:[/green] {', '.join(tags_to_update.keys())}")
                 return "added"
 
     # Display chapters
     if not quiet or preview:
-        print(f"  Tracklist: {export.title}")
-        print(f"  Chapters:  {len(chapters)}")
+        con.print(f"  [bold]Tracklist:[/bold] {export.title}")
+        con.print(f"  [bold]Chapters:[/bold]  {len(chapters)}")
         if preview:
             for ch in chapters:
-                print(f"    [{ch.timestamp[:8]}] {ch.title}")
+                con.print(f"    [dim]{ch.timestamp[:8]}[/dim] {ch.title}")
 
     if preview:
         return "skipped"
@@ -331,66 +347,46 @@ def _fetch_and_embed(
     success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type)
     if success:
         if not quiet:
-            print(f"  Embedded {len(chapters)} chapters.")
+            con.print(f"  [green]Embedded {len(chapters)} chapters.[/green]")
         return "added"
     else:
-        print("  Failed to embed chapters (mkvpropedit error).")
+        con.print("  [red]Failed to embed chapters (mkvpropedit error).[/red]")
         return "error"
 
 
-def _select_interactive(results: list, duration_mins: int) -> object | None:
-    """Display numbered list and prompt for selection."""
-    max_show = 15
-    shown = results[:max_show]
+def _select_interactive(results: list, duration_mins: int, query_parts=None, console: Console | None = None) -> object | None:
+    """Display results table and prompt for selection."""
+    con = console or make_console()
 
-    print(f"\n  Search Results (video: {duration_mins}m):")
-    print(f"  {'-' * 50}")
+    con.print(f"\n  [bold]Search Results[/bold] [dim](video: {duration_mins}m)[/dim]")
+    table = results_table(results, duration_mins, query_parts)
+    con.print(table)
+    con.print("   [dim]0. Cancel[/dim]\n")
 
-    for i, r in enumerate(shown, 1):
-        # Quality indicator
-        if r.score >= 250:
-            indicator = "+"
-        elif r.score >= 150:
-            indicator = "~"
-        elif r.score >= 80:
-            indicator = "?"
-        else:
-            indicator = "-"
-
-        dur_str = f"{r.duration_mins}m" if r.duration_mins else "?"
-        diff_str = ""
-        if r.duration_mins and duration_mins:
-            diff = r.duration_mins - duration_mins
-            diff_str = f" ({diff:+d}m)" if diff != 0 else " (=)"
-
-        date_str = r.date or ""
-        print(f"  {i:>2}. [{indicator}] {r.title} [{date_str} | {dur_str}{diff_str}]")
-
-    print(f"  {'-' * 50}")
-    print(f"   0. Cancel\n")
-
+    max_show = min(len(results), 15)
     while True:
         try:
-            choice = input(f"  Select (1-{len(shown)}, or 0): ").strip()
+            choice = input(f"  Select (1-{max_show}, or 0): ").strip()
             if not choice:
                 continue
             num = int(choice)
             if num == 0:
                 return None
-            if 1 <= num <= len(shown):
-                return shown[num - 1]
+            if 1 <= num <= max_show:
+                return results[num - 1]
         except (ValueError, EOFError):
             return None
 
 
-def _display_auto_selected(result, duration_mins: int) -> None:
+def _display_auto_selected(result, duration_mins: int, console: Console | None = None) -> None:
     """Print auto-selection info."""
+    con = console or make_console()
     dur_str = f"{result.duration_mins}m" if result.duration_mins else "?"
     diff_str = ""
     if result.duration_mins and duration_mins:
         diff = result.duration_mins - duration_mins
         diff_str = f" ({diff:+d}m)" if diff != 0 else ""
-    print(f"  Auto-selected: {result.title} [{dur_str}{diff_str}] (score: {result.score:.0f})")
+    con.print(f"  [bold]Auto-selected:[/bold] {result.title} [dim][{dur_str}{diff_str}] (score: {result.score:.0f})[/dim]")
 
 
 def _get_credentials(config: Config) -> tuple[str, str]:
