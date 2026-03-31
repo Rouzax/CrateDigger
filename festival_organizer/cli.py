@@ -6,7 +6,7 @@ from pathlib import Path
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import load_config
-from festival_organizer.console import make_console
+from festival_organizer.console import escape, make_console
 from festival_organizer.library import find_library_root, init_library
 from festival_organizer import metadata
 from festival_organizer.log import setup_logging
@@ -222,7 +222,7 @@ def _run_command(args) -> int:
 
     console.print("Scanning...")
     files = scan_folder(root, config)
-    console.print(f"Found {len(files)} media file(s).\n")
+    console.print(f"Found {len(files)} media files.\n")
     if not files:
         console.print("Nothing to do.")
         return 0
@@ -386,22 +386,22 @@ def _run_audit_logos(root: Path, config, console) -> int:
         else:
             missing_logo.append(fest)
 
-    console.print(f"[bold]Library:[/bold] {library_root}")
+    console.print(f"[bold]Library:[/bold] {escape(str(library_root))}")
     console.print(f"[bold]Festivals found:[/bold] {len(festivals_found)}")
     console.print()
 
     if have_logo:
         console.print(f"[green]With curated logo ({len(have_logo)}):[/green]")
         for fest, path in have_logo:
-            console.print(f"  {fest}: [dim]{path}[/dim]")
+            console.print(f"  {escape(fest)}: [dim]{escape(str(path))}[/dim]")
         console.print()
 
     if missing_logo:
         console.print(f"[yellow]Missing curated logo ({len(missing_logo)}):[/yellow]")
         for fest in missing_logo:
             suggested = library_root / ".cratedigger" / "festivals" / fest
-            console.print(f"  {fest}")
-            console.print(f"    [dim]-> place logo at: {suggested}/logo.png[/dim]")
+            console.print(f"  {escape(fest)}")
+            console.print(f"    [dim]-> place logo at: {escape(str(suggested))}/logo.png[/dim]")
         console.print()
 
     # Check for unmatched folders
@@ -412,7 +412,7 @@ def _run_audit_logos(root: Path, config, console) -> int:
                     has_logo = any((d / f"logo.{ext}").exists()
                                   for ext in ("jpg", "jpeg", "png", "webp"))
                     if has_logo:
-                        console.print(f"[dim]Unmatched folder (not in library): {d.name}[/dim]")
+                        console.print(f"[dim]Unmatched folder (not in library): {escape(d.name)}[/dim]")
 
     # Warn about unsupported formats
     for base in logo_dirs:
@@ -421,6 +421,6 @@ def _run_audit_logos(root: Path, config, console) -> int:
                 if d.is_dir():
                     for f in d.iterdir():
                         if f.suffix.lower() in (".svg", ".gif", ".bmp", ".tiff"):
-                            console.print(f"[yellow]Unsupported format: {f}[/yellow]")
+                            console.print(f"[yellow]Unsupported format: {escape(str(f))}[/yellow]")
 
     return 0

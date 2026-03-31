@@ -7,7 +7,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.text import Text
 
-from festival_organizer.console import header_panel, make_console, status_text, summary_panel
+from festival_organizer.console import escape, header_panel, make_console, status_text, summary_panel
 from festival_organizer.operations import OperationResult
 
 
@@ -56,7 +56,7 @@ class ProgressPrinter:
         text.append(filename.name)
         self.console.print(text)
         if target_folder:
-            self.console.print(f"        -> {target_folder}")
+            self.console.print(f"        -> {escape(target_folder)}")
 
     def file_done(self, results: list[OperationResult]) -> None:
         """Print operation results for the current file."""

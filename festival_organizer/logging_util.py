@@ -7,7 +7,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.text import Text
 
-from festival_organizer.console import make_console
+from festival_organizer.console import escape, make_console
 from festival_organizer.models import FileAction
 
 # Force UTF-8 on Windows console (skip when running under pytest to
@@ -81,7 +81,7 @@ class ActionLogger:
         line.append(str(action.source))
         self.console.print(line)
         if action.status in ("pending", "done"):
-            self.console.print(f"         --> {action.target}")
+            self.console.print(f"         --> {escape(str(action.target))}")
         if action.error:
             err_line = Text("         !!! ")
             err_line.append(str(action.error), style="red")

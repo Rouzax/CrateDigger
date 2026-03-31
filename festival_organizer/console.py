@@ -10,6 +10,7 @@ import re
 import sys
 
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -136,15 +137,15 @@ def status_text(status: str, name: str, detail: str = "") -> Text:
     """
     text = Text()
     if status == "done":
-        text.append("v", style="green")
+        text.append("\u2714", style="green")
         text.append(f" {name}")
     elif status == "skipped":
-        text.append("skip", style="dim")
+        text.append("\u25cb", style="dim")
         text.append(f" {name}")
         if detail:
             text.append(f" ({detail})", style="dim")
     elif status == "error":
-        text.append("!", style="red")
+        text.append("\u2718", style="red")
         text.append(f" {name}")
         if detail:
             text.append(f" ({detail})", style="red")

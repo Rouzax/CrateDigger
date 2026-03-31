@@ -10,6 +10,7 @@ from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import Config
 from festival_organizer.console import (
+    escape,
     header_panel,
     make_console,
     results_table,
@@ -123,7 +124,7 @@ def run_chapters(args, config: Config, console: Console | None = None) -> int:
             con.print("\nAborted by user.")
             break
         except Exception as e:
-            con.print(f"  [red]Error:[/red] {e}")
+            con.print(f"  [red]Error:[/red] {escape(str(e))}")
             stats["error"] += 1
 
     # Summary
@@ -160,7 +161,7 @@ def _process_file(
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
             if auto_select:
-                con.print(f"  Using stored URL: {stored['url']}")
+                con.print(f"  Using stored URL: {escape(stored['url'])}")
                 return _fetch_and_embed(
                     session, stored["url"], filepath, duration_mins,
                     config, preview, quiet, language, console=con,
@@ -205,7 +206,7 @@ def _process_file(
     query_str = expand_aliases_in_query(query_str, aliases)
 
     if not quiet:
-        con.print(f"  [bold]Query:[/bold] {query_str}")
+        con.print(f"  [bold]Query:[/bold] {escape(query_str)}")
 
     results = session.search(query_str, duration_minutes=duration_mins, year=mf.year or None)
 
@@ -265,7 +266,7 @@ def _fetch_and_embed(
     try:
         chapters = parse_tracklist_lines(export.lines, language=language)
     except ValueError as e:
-        con.print(f"  {e}")
+        con.print(f"  {escape(str(e))}")
         if not preview:
             # Tag file with URL for future pickup
             embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type)
@@ -329,16 +330,16 @@ def _fetch_and_embed(
             if not preview:
                 write_merged_tags(filepath, {70: tags_to_update})
                 if not quiet:
-                    con.print(f"  [green]Updated tags:[/green] {', '.join(tags_to_update.keys())}")
+                    con.print(f"  [green]Updated tags:[/green] {escape(', '.join(tags_to_update.keys()))}")
                 return "added"
 
     # Display chapters
     if not quiet or preview:
-        con.print(f"  [bold]Tracklist:[/bold] {export.title}")
+        con.print(f"  [bold]Tracklist:[/bold] {escape(export.title)}")
         con.print(f"  [bold]Chapters:[/bold]  {len(chapters)}")
         if preview:
             for ch in chapters:
-                con.print(f"    [dim]{ch.timestamp[:8]}[/dim] {ch.title}")
+                con.print(f"    [dim]{ch.timestamp[:8]}[/dim] {escape(ch.title)}")
 
     if preview:
         return "skipped"
@@ -386,7 +387,7 @@ def _display_auto_selected(result, duration_mins: int, console: Console | None =
     if result.duration_mins and duration_mins:
         diff = result.duration_mins - duration_mins
         diff_str = f" ({diff:+d}m)" if diff != 0 else ""
-    con.print(f"  [bold]Auto-selected:[/bold] {result.title} [dim][{dur_str}{diff_str}] (score: {result.score:.0f})[/dim]")
+    con.print(f"  [bold]Auto-selected:[/bold] {escape(result.title)} [dim]\\[{dur_str}{diff_str}] (score: {result.score:.0f})[/dim]")
 
 
 def _get_credentials(config: Config) -> tuple[str, str]:
