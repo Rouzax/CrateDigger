@@ -161,13 +161,14 @@ def _process_file(
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
             if auto_select:
-                con.print(f"  Using stored URL: {escape(stored['url'])}")
+                con.print(f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]")
                 return _fetch_and_embed(
                     session, stored["url"], filepath, duration_mins,
                     config, preview, quiet, language, console=con,
                 )
             else:
-                choice = input(f"  Stored URL: {stored['url']}\n  Use stored? (Y)es / (S)kip / (R)esearch: ").strip().lower()
+                con.print(f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]")
+                choice = input("  Use stored? (Y)es / (S)kip / (R)esearch: ").strip().lower()
                 if choice in ("y", "yes", ""):
                     return _fetch_and_embed(
                         session, stored["url"], filepath, duration_mins,
