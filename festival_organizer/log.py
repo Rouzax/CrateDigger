@@ -12,6 +12,7 @@ import logging
 import sys
 
 from rich.console import Console
+from rich.highlighter import NullHighlighter
 from rich.logging import RichHandler
 
 
@@ -47,6 +48,7 @@ def setup_logging(
             show_path=False,
             markup=False,
             rich_tracebacks=False,
+            highlighter=NullHighlighter(),
         )
         handler.setLevel(level)
         fmt = logging.Formatter("[%(module)s] %(message)s")
