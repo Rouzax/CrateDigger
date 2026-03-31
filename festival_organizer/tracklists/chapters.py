@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 from festival_organizer import metadata
 from festival_organizer.embed_tags import xml_escape
-from festival_organizer.mkv_tags import extract_all_tags, write_merged_tags
+from festival_organizer.mkv_tags import MATROSKA_EXTS, extract_all_tags, write_merged_tags
 from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
 
 
@@ -258,7 +258,7 @@ def embed_chapters(
     if not metadata.MKVPROPEDIT_PATH:
         return False
 
-    if not filepath.exists() or filepath.suffix.lower() not in (".mkv", ".webm"):
+    if not filepath.exists() or filepath.suffix.lower() not in MATROSKA_EXTS:
         return False
 
     chapter_file = None

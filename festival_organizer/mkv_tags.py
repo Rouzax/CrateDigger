@@ -22,6 +22,8 @@ from festival_organizer import metadata
 
 logger = logging.getLogger(__name__)
 
+MATROSKA_EXTS = frozenset({".mkv", ".webm"})
+
 
 def extract_all_tags(filepath: Path) -> ET.Element | None:
     """Extract all global tags from an MKV file.
@@ -83,6 +85,40 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
                 os.unlink(tag_file)
             except Exception:
                 pass
+
+
+def extract_tag_values(filepath: Path) -> dict[int, dict[str, str]]:
+    """Extract existing tag values grouped by TargetTypeValue.
+
+    Returns dict mapping TTV -> {Name: String} for all global tags.
+    Returns empty dict if no tags or extraction fails.
+    """
+    root = extract_all_tags(filepath)
+    if root is None:
+        return {}
+
+    result: dict[int, dict[str, str]] = {}
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            continue
+        ttv_el = targets.find("TargetTypeValue")
+        if ttv_el is None or ttv_el.text is None:
+            continue
+        if targets.find("TrackUID") is not None:
+            continue
+        ttv = int(ttv_el.text)
+
+        tags: dict[str, str] = {}
+        for simple in tag.findall("Simple"):
+            name_el = simple.find("Name")
+            string_el = simple.find("String")
+            if name_el is not None and string_el is not None:
+                tags[name_el.text or ""] = string_el.text or ""
+        if tags:
+            result[ttv] = tags
+
+    return result
 
 
 def merge_tags(
@@ -188,7 +224,7 @@ def write_merged_tags(
     if not metadata.MKVPROPEDIT_PATH:
         return False
 
-    if not filepath.exists() or filepath.suffix.lower() != ".mkv":
+    if not filepath.exists() or filepath.suffix.lower() not in MATROSKA_EXTS:
         return False
 
     # Extract existing tags

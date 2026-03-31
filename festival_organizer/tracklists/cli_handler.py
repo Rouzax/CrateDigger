@@ -1,4 +1,5 @@
 """CLI handler for the 'chapters' subcommand."""
+import logging
 import sys
 import time
 from pathlib import Path
@@ -40,6 +41,9 @@ from festival_organizer.tracklists.query import (
     expand_aliases_in_query,
 )
 from festival_organizer.tracklists.scoring import parse_query, score_results
+
+
+logger = logging.getLogger(__name__)
 
 
 def run_chapters(args, config: Config, console: Console | None = None) -> int:
@@ -329,10 +333,13 @@ def _fetch_and_embed(
                 return "up_to_date"
             # Re-embed only the changed tags, skip chapter writing
             if not preview:
-                write_merged_tags(filepath, {70: tags_to_update})
-                if not quiet:
-                    con.print(f"  [green]Updated tags:[/green] {escape(', '.join(tags_to_update.keys()))}")
-                return "added"
+                if write_merged_tags(filepath, {70: tags_to_update}):
+                    if not quiet:
+                        con.print(f"  [green]Updated tags:[/green] {escape(', '.join(tags_to_update.keys()))}")
+                    return "added"
+                else:
+                    logger.warning("Failed to write tags for %s", filepath)
+                    return "skipped"
 
     # Display chapters
     if not quiet or preview:

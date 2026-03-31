@@ -629,11 +629,11 @@ class TagsOperation(Operation):
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         if self.force:
             return True
-        # Only MKV/WEBM support tag embedding
-        if file_path.suffix.lower() not in (".mkv", ".webm"):
+        from festival_organizer.mkv_tags import MATROSKA_EXTS
+        if file_path.suffix.lower() not in MATROSKA_EXTS:
             return False
-        # No gap detection: reading existing MKV tags to compare is expensive
-        # and mkvpropedit is fast and idempotent, so always re-embed.
+        # embed_tags compares desired vs existing tags and skips the write
+        # when nothing changed, so always return True here.
         return True
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:

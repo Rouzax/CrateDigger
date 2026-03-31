@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from festival_organizer import metadata
-from festival_organizer.mkv_tags import write_merged_tags
+from festival_organizer.mkv_tags import MATROSKA_EXTS, extract_tag_values, write_merged_tags
 from festival_organizer.models import MediaFile
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
     if not metadata.MKVPROPEDIT_PATH:
         return False
 
-    if not target_path.exists() or target_path.suffix.lower() != ".mkv":
+    if not target_path.exists() or target_path.suffix.lower() not in MATROSKA_EXTS:
         return False
 
     tags: dict[str, str] = {}
@@ -65,11 +65,27 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
         tags_70["CRATEDIGGER_FANART_URL"] = media_file.fanart_url
     if media_file.clearlogo_url:
         tags_70["CRATEDIGGER_CLEARLOGO_URL"] = media_file.clearlogo_url
-    if tags_70:
-        tags_70["CRATEDIGGER_ENRICHED_AT"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
     if not tags and not tags_70:
         return True  # Nothing to write
+
+    # Skip writing if all tags already match what's in the file
+    existing = extract_tag_values(target_path)
+    existing_50 = existing.get(50, {})
+    existing_70 = existing.get(70, {})
+
+    needs_write = any(
+        v != existing_50.get(k, "") for k, v in tags.items()
+    ) or any(
+        v != existing_70.get(k, "") for k, v in tags_70.items()
+    )
+
+    if not needs_write:
+        return True  # Already up to date
+
+    # Only stamp ENRICHED_AT when actually writing
+    if tags_70:
+        tags_70["CRATEDIGGER_ENRICHED_AT"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
     all_tags: dict[int, dict[str, str]] = {}
     if tags:
