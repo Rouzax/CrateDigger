@@ -242,3 +242,37 @@ def test_filter_low_relevance_with_event():
     scored = score_results(results, parts)
     # Result 2 has only 1 keyword match ("sub") and no event match → filtered
     assert all(r.id != "2" for r in scored) or scored[-1].score < scored[0].score
+
+
+def test_all_caps_query_scores_matching_results():
+    """ALL-CAPS query should score and return matching results, not filter all out."""
+    results = [
+        SearchResult(id="1", title="AFROJACK @ Mainstage, Ultra Music Festival Miami, United States", url="", duration_mins=60, date="2026-03-29"),
+        SearchResult(id="2", title="ZHU @ Live Stage, Ultra Music Festival Miami, United States", url="", duration_mins=58, date="2026-03-29"),
+        SearchResult(id="3", title="Random DJ - Radio Show 123", url="", duration_mins=60, date="2026-01-01"),
+    ]
+    aliases = {"umf": "Ultra Music Festival"}
+    parts = parse_query("AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026", aliases)
+    scored = score_results(results, parts, video_duration_minutes=60)
+    # Should NOT filter everything out
+    assert len(scored) >= 2
+    # AFROJACK result should score highest (matches artist + festival keywords)
+    assert scored[0].id == "1"
+
+
+def test_mixed_case_with_alias_still_filters_correctly():
+    """Regression: mixed-case queries with aliases should keep strict filtering."""
+    results = [
+        SearchResult(id="1", title="Sub Zero Project @ Amsterdam Music Festival 2025", url=""),
+        SearchResult(id="2", title="Sub Random Other Track 2025", url=""),
+    ]
+    aliases = {"amf": "Amsterdam Music Festival"}
+    parts = parse_query("2025 AMF Sub Zero Project", aliases)
+    scored = score_results(results, parts)
+    # Result 1 should be present and highly scored
+    assert any(r.id == "1" for r in scored)
+    # Result 2 should be filtered or score much lower (only 1 keyword match "sub", no event)
+    if any(r.id == "2" for r in scored):
+        r1_score = next(r.score for r in scored if r.id == "1")
+        r2_score = next(r.score for r in scored if r.id == "2")
+        assert r1_score > r2_score
