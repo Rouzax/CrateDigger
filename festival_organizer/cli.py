@@ -220,9 +220,13 @@ def _run_command(args) -> int:
         layout=config.default_layout, tools=tools,
     )
 
-    console.print("Scanning...")
-    files = scan_folder(root, config)
-    console.print(f"Found {len(files)} media files.\n")
+    if not quiet:
+        with console.status("Scanning files..."):
+            files = scan_folder(root, config)
+        console.print(f"Found {len(files)} media files.\n")
+    else:
+        files = scan_folder(root, config)
+
     if not files:
         console.print("Nothing to do.")
         return 0
@@ -231,10 +235,18 @@ def _run_command(args) -> int:
 
     # Analyze + classify
     media_files = []
-    for fp in files:
-        mf = analyse_file(fp, root, config)
-        mf.content_type = classify(mf, root, config)
-        media_files.append((fp, mf))
+    if not quiet:
+        with console.status("") as status:
+            for i, fp in enumerate(files):
+                status.update(f"Analyzing \\[{i+1}/{len(files)}] {escape(fp.name)}")
+                mf = analyse_file(fp, root, config)
+                mf.content_type = classify(mf, root, config)
+                media_files.append((fp, mf))
+    else:
+        for fp in files:
+            mf = analyse_file(fp, root, config)
+            mf.content_type = classify(mf, root, config)
+            media_files.append((fp, mf))
 
     # Build operations per file
     force = getattr(args, "force", False)
@@ -299,7 +311,7 @@ def _run_command(args) -> int:
         pipeline_files.append((fp, mf, ops))
 
     if args.command == "scan":
-        progress.print_summary()
+        console.print(f"\n[dim]Dry run complete. {len(media_files)} files scanned.[/dim]")
         return 0
 
     # Run pipeline
