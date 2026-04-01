@@ -334,7 +334,7 @@ def _extract_logo_color(img: Image.Image) -> tuple[int, int, int]:
     mean_sat = float(np.mean(s_arr[sat_mask]) / 255)
     sat = max(0.4, min(0.7, mean_sat))
 
-    r, g, b = hsv_to_rgb(hue, sat, 0.4)
+    r, g, b = hsv_to_rgb(hue, sat, 0.5)
     return (int(r * 255), int(g * 255), int(b * 255))
 
 
@@ -514,11 +514,11 @@ def get_dominant_color_from_thumbs(thumb_paths: list[Path]) -> tuple[int, int, i
 
 
 def _darken_brand_color(color: tuple[int, int, int]) -> tuple[int, int, int]:
-    """Darken a brand color to a moody gradient base (V ~0.4)."""
+    """Darken a brand color to a moody gradient base (V ~0.5)."""
     r, g, b = [c / 255 for c in color]
     h, s, v = rgb_to_hsv(r, g, b)
     s = max(0.4, min(0.7, s))
-    v = 0.4
+    v = 0.5
     r2, g2, b2 = hsv_to_rgb(h, s, v)
     return (int(r2 * 255), int(g2 * 255), int(b2 * 255))
 
