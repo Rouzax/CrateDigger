@@ -42,6 +42,7 @@ class TracklistExport:
     url: str
     title: str
     genres: list[str] = field(default_factory=list)
+    dj_artists: list[tuple[str, str]] = field(default_factory=list)
     dj_artwork_url: str = ""
     stage_text: str = ""
     sources_by_type: dict[str, list[str]] = field(default_factory=dict)
@@ -167,24 +168,18 @@ class TracklistSession:
 
         # Extract enrichment metadata from page HTML
         genres = _extract_genres(page_resp.text)
-        dj_slugs = _extract_dj_slugs(page_resp.text)
         if genres:
             logger.info("Genres: %s", genres)
 
-        # Fetch DJ artwork from first DJ's profile page
-        dj_artwork_url = ""
-        if dj_slugs:
-            dj_artwork_url = self._fetch_dj_artwork(dj_slugs[0])
-            if dj_artwork_url:
-                logger.info("DJ artwork: %s", dj_artwork_url)
-
-        # Parse structured h1 for stage and source metadata
+        # Parse structured h1 for stage, source, and DJ artist metadata
         h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", page_resp.text, re.DOTALL)
         stage_text = ""
+        dj_artists: list[tuple[str, str]] = []
         sources_by_type: dict[str, list[str]] = {}
         if h1_match:
             h1_info = _parse_h1_structure(h1_match.group(1))
             stage_text = h1_info["stage_text"]
+            dj_artists = h1_info["dj_artists"]
 
             if h1_info["sources"] and self._source_cache:
                 for sid, slug, display_name in h1_info["sources"]:
@@ -198,9 +193,18 @@ class TracklistSession:
                     [s[0] for s in h1_info["sources"]]
                 )
 
+        # Fetch DJ artwork from first DJ's profile page
+        dj_artwork_url = ""
+        dj_slugs = [slug for slug, _name in dj_artists] if dj_artists else _extract_dj_slugs(page_resp.text)
+        if dj_slugs:
+            dj_artwork_url = self._fetch_dj_artwork(dj_slugs[0])
+            if dj_artwork_url:
+                logger.info("DJ artwork: %s", dj_artwork_url)
+
         return TracklistExport(
             lines=lines, url=short_url, title=title,
-            genres=genres, dj_artwork_url=dj_artwork_url,
+            genres=genres, dj_artists=dj_artists,
+            dj_artwork_url=dj_artwork_url,
             stage_text=stage_text, sources_by_type=sources_by_type,
         )
 
@@ -414,15 +418,25 @@ def _parse_h1_structure(h1_html: str) -> dict:
     """Parse the structured <h1> content from a tracklist page.
 
     Returns dict with:
-        stage_text: str — plain text between @ and first /source/ link
+        dj_artists: list of (slug, display_name) tuples from /dj/ links before @
+        stage_text: str, plain text between @ and first /source/ link
         sources: list of (id, slug, display_name) tuples from /source/ links
     """
-    result = {"stage_text": "", "sources": []}
+    result: dict = {"stage_text": "", "sources": [], "dj_artists": []}
 
     if "@" not in h1_html:
         return result
 
-    after_at = h1_html.split("@", 1)[1]
+    before_at, after_at = h1_html.split("@", 1)
+
+    # Extract /dj/ links from the before-@ part
+    dj_pattern = re.compile(
+        r'<a[^>]*href="/dj/([^/"]+)/[^"]*"[^>]*>([^<]+)</a>'
+    )
+    result["dj_artists"] = [
+        (m.group(1), _html_decode(m.group(2).strip()))
+        for m in dj_pattern.finditer(before_at)
+    ]
 
     source_pattern = re.compile(
         r'<a[^>]*href="/source/([^/]+)/([^/]+)/[^"]*"[^>]*>([^<]+)</a>'
