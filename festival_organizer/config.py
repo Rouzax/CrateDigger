@@ -204,29 +204,47 @@ class Config:
         return defaults
 
     @property
-    def all_known_locations(self) -> set[str]:
-        """Collect all known_locations from every festival config entry."""
-        locs = set()
+    def all_known_editions(self) -> set[str]:
+        """Collect all editions from every festival config entry."""
+        editions = set()
         for fc in self.festival_config.values():
-            for loc in fc.get("known_locations", []):
-                locs.add(loc)
-        return locs
+            for ed in fc.get("editions", []):
+                editions.add(ed)
+        return editions
 
-    def resolve_festival_with_location(self, name: str) -> tuple[str, str]:
-        """Resolve alias and extract location from the name if applicable.
+    def resolve_festival_with_edition(self, name: str) -> tuple[str, str]:
+        """Resolve alias and extract edition from the name if applicable.
 
-        Returns (canonical_festival, location).
+        Returns (canonical_festival, edition).
         "Dreamstate SoCal" -> ("Dreamstate", "SoCal")
-        "Tomorrowland Weekend 1" -> ("Tomorrowland", "")
-        "AMF" -> ("AMF", "")
+        "Tomorrowland Winter" -> ("Tomorrowland", "Winter")
+        "TML" -> ("Tomorrowland", "")
         """
         canonical = self.resolve_festival_alias(name)
-        fc = self.festival_config.get(canonical, {})
-        if fc.get("location_in_name") and canonical != name:
-            for loc in fc.get("known_locations", []):
-                if loc.lower() in name.lower():
-                    return canonical, loc
-        return canonical, ""
+
+        # Alias resolved to something different: check for edition suffix
+        if canonical != name:
+            fc = self.festival_config.get(canonical, {})
+            suffix = name[len(canonical):].strip() if name.lower().startswith(canonical.lower()) else ""
+            for ed in fc.get("editions", []):
+                if ed.lower() == suffix.lower():
+                    return canonical, ed
+            return canonical, ""
+
+        # No alias match. Try canonical + edition decomposition.
+        for fest_name, fc in self.festival_config.items():
+            for ed in fc.get("editions", []):
+                if f"{fest_name} {ed}".lower() == name.lower():
+                    return fest_name, ed
+
+        # Try alias prefixes (handles "Ultra Europe" via alias "Ultra")
+        for alias, canon in self.festival_aliases.items():
+            fc = self.festival_config.get(canon, {})
+            for ed in fc.get("editions", []):
+                if f"{alias} {ed}".lower() == name.lower():
+                    return canon, ed
+
+        return name, ""
 
     @property
     def poster_settings(self) -> dict:
@@ -283,8 +301,13 @@ class Config:
 
     @property
     def known_festivals(self) -> set[str]:
-        """All canonical festival names (the values of the alias map)."""
-        return set(self.festival_aliases.values())
+        """All festival names the system can recognize."""
+        names = set(self.festival_aliases.keys())
+        names.update(self.festival_aliases.values())
+        for fest_name, fc in self.festival_config.items():
+            for ed in fc.get("editions", []):
+                names.add(f"{fest_name} {ed}")
+        return names
 
     def resolve_festival_alias(self, name: str) -> str:
         """Map a festival name/abbreviation to its canonical form."""
@@ -346,17 +369,14 @@ class Config:
 
         return name
 
-    def get_festival_display(self, canonical_festival: str, location: str) -> str:
-        """Get display name for a festival, optionally including location."""
+    def get_festival_display(self, canonical_festival: str, edition: str) -> str:
+        """Get display name for a festival, optionally including edition."""
         fc = self.festival_config.get(canonical_festival, {})
-        if fc.get("location_in_name") and location:
-            known = fc.get("known_locations", [])
-            for k in known:
-                if k.lower() == location.lower():
-                    return f"{canonical_festival} {k}"
-            # If known_locations is configured but location doesn't match, omit it
-            if not known:
-                return f"{canonical_festival} {location}"
+        editions = fc.get("editions", [])
+        if editions and edition:
+            for ed in editions:
+                if ed.lower() == edition.lower():
+                    return f"{canonical_festival} {ed}"
         return canonical_festival
 
     def get_layout_template(self, content_type: str, layout_name: str | None = None) -> str:
