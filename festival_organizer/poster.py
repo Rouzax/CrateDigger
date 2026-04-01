@@ -309,6 +309,8 @@ def _visible_pixel_color(img: Image.Image) -> tuple[int, int, int]:
 def _hex_to_rgb(hex_str: str) -> tuple[int, int, int]:
     """Parse a hex color string to an RGB tuple."""
     hex_str = hex_str.lstrip("#")
+    if len(hex_str) != 6:
+        raise ValueError(f"Expected 6-character hex color, got: {hex_str!r}")
     return (int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16))
 
 
@@ -324,7 +326,7 @@ def _extract_logo_color(img: Image.Image) -> tuple[int, int, int]:
         arr = np.array(img.convert("RGBA"))
         mask = arr[:, :, 3] > 128
         if not mask.any():
-            raise ValueError("No saturated pixels found in logo")
+            raise ValueError("No visible pixels found in logo")
         rgb_pixels = arr[:, :, :3][mask]
     else:
         arr = np.array(img.convert("RGB"))
