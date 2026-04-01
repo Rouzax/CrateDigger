@@ -51,7 +51,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         "set_title": "",
         "title": "",
         "stage": "",
-        "location": "",
+        "edition": "",
         "youtube_id": "",
         "venue": "",
     }
@@ -86,7 +86,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # Layer 4 (highest priority): 1001Tracklists overwrites
     metadata_source = "filename"
     if tracklists_info:
-        for key in ["artist", "festival", "date", "year", "stage", "location"]:
+        for key in ["artist", "festival", "date", "year", "stage", "edition"]:
             if tracklists_info.get(key):
                 info[key] = tracklists_info[key]
         metadata_source = "1001tracklists"
@@ -103,12 +103,12 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # Layer 5: Direct 1001TL festival tag (written by chapters command from
     # source cache). Authoritative for festival + location.
     if meta.get("tracklists_festival"):
-        fest, loc = config.resolve_festival_with_location(
+        fest, ed = config.resolve_festival_with_edition(
             meta["tracklists_festival"]
         )
         info["festival"] = fest
-        if loc:
-            info["location"] = loc
+        if ed:
+            info["edition"] = ed
         if not tracklists_info:
             metadata_source = "1001tracklists"
     if embedded and not tracklists_info and not meta.get("tracklists_festival"):
@@ -159,7 +159,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         title=normalise_name(info.get("title", "")),
         stage=info.get("stage", ""),
         venue=info.get("venue", ""),
-        location=info.get("location", ""),
+        edition=info.get("edition", ""),
         youtube_id=info.get("youtube_id", ""),
         tracklists_url=meta.get("tracklists_url", ""),
         tracklists_title=meta.get("tracklists_title", ""),
