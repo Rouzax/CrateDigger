@@ -594,165 +594,6 @@ def _rounded_edge_mask(w: int, h: int, corner_pct: float = 0.06) -> Image.Image:
     return mask.filter(ImageFilter.GaussianBlur(radius=2))
 
 
-def _make_collage_bg(thumb_paths: list[Path]) -> Image.Image:
-    """Create a collage background from multiple thumbnails.
-
-    Overlapping semi-transparent images create an atmospheric festival texture.
-    Uses a seeded RNG for reproducible layouts.
-    """
-    rng = np.random.default_rng(42)
-
-    # Start with a subtle gradient background derived from thumb colors
-    base_color = get_dominant_color_from_thumbs(thumb_paths)
-    gradient_bg = _make_gradient_bg(base_color)
-    bg = gradient_bg.convert("RGBA")
-    # Darken the gradient so it sits behind the collage images
-    darken = Image.new("RGBA", (POSTER_W, POSTER_H), (0, 0, 0, 100))
-    bg = Image.alpha_composite(bg, darken)
-
-    # Pick up to 6 thumbs, evenly spaced through the list for variety
-    paths = list(thumb_paths)
-    if len(paths) > 6:
-        step = len(paths) / 6
-        paths = [paths[int(i * step)] for i in range(6)]
-
-    # Composition using rule of thirds with foreground/background layering.
-    # Third lines at 1/3 and 2/3 of poster width (333, 667) and usable height.
-    # Background layer: larger, dimmer images placed first.
-    # Foreground layer: smaller, brighter images on top.
-    n = len(paths)
-    max_bottom = LINE_Y - 80
-
-    # Split into background (first half) and foreground (second half)
-    bg_count = max(n // 2, 1)
-    fg_count = n - bg_count
-
-    # Scale image sizes based on thumb count — fewer thumbs = larger images
-    if n <= 2:
-        bg_scale, fg_scale = 0.85, 0.75
-    elif n <= 4:
-        bg_scale, fg_scale = 0.75, 0.60
-    else:
-        bg_scale, fg_scale = 0.70, 0.55
-
-    bg_size_w = int(POSTER_W * bg_scale)
-    bg_size_h = int(bg_size_w * 9 / 16)
-    fg_size_w = int(POSTER_W * fg_scale)
-    fg_size_h = int(fg_size_w * 9 / 16)
-
-    # Layout slots based on rule of thirds
-    # Vertical offset to center the image mass between top and text line
-    y_offset = 0.08
-
-    if n <= 2:
-        bg_slots = [
-            (0.08, y_offset + 0.05),
-            (0.15, y_offset + 0.30),
-        ]
-        fg_slots = bg_slots
-    elif n <= 4:
-        bg_slots = [
-            (0.0, y_offset + 0.0),
-            (0.25, y_offset + 0.22),
-        ]
-        fg_slots = [
-            (0.10, y_offset + 0.38),
-            (0.30, y_offset + 0.08),
-        ]
-    else:
-        bg_slots = [
-            (0.02, y_offset + 0.0),
-            (0.30, y_offset + 0.15),
-            (0.05, y_offset + 0.35),
-        ]
-        fg_slots = [
-            (0.25, y_offset + 0.05),
-            (0.0, y_offset + 0.22),
-            (0.20, y_offset + 0.42),
-        ]
-
-    layers = []
-    for i, path in enumerate(paths):
-        is_bg = i < bg_count
-        size_w = bg_size_w if is_bg else fg_size_w
-        size_h = bg_size_h if is_bg else fg_size_h
-        slots = bg_slots if is_bg else fg_slots
-        slot_idx = i if is_bg else (i - bg_count)
-        slot = slots[slot_idx % len(slots)]
-
-        layers.append((path, size_w, size_h, slot, is_bg))
-
-    for path, size_w, size_h, slot, is_bg in layers:
-        try:
-            img = Image.open(path).convert("RGBA")
-        except (OSError, ValueError):
-            continue
-
-        # Crop to center portion and resize
-        src_w, src_h = img.size
-        crop_w = int(src_w * 0.7)
-        crop_h = int(src_h * 0.7)
-        cx, cy = src_w // 2, src_h // 2
-        ox = int(rng.integers(-src_w // 10, src_w // 10))
-        oy = int(rng.integers(-src_h // 10, src_h // 10))
-        left = max(0, cx + ox - crop_w // 2)
-        top = max(0, cy + oy - crop_h // 2)
-        right = min(src_w, left + crop_w)
-        bottom = min(src_h, top + crop_h)
-        img = img.crop((left, top, right, bottom))
-        img = img.resize((size_w, size_h), Image.LANCZOS)
-
-        # Oval mask first — applied on clean rectangle before rotation
-        max_opacity = 180 if is_bg else 240
-        iw, ih = img.size
-        ys = np.arange(ih, dtype=np.float64)
-        xs = np.arange(iw, dtype=np.float64)
-        ecx, ecy = iw / 2, ih / 2
-        rx, ry = iw / 2, ih / 2
-        yy = ((ys - ecy) / ry)[:, None].repeat(iw, axis=1)
-        xx = ((xs - ecx) / rx)[None, :].repeat(ih, axis=0)
-        ellipse_dist = np.sqrt(yy ** 2 + xx ** 2)
-        mask_arr = np.clip(1.0 - (ellipse_dist - 0.45) / 0.55, 0, 1)
-        mask_arr = (mask_arr ** 1.3 * max_opacity).astype(np.uint8)
-        edge_mask = Image.fromarray(mask_arr, mode="L")
-        edge_mask = edge_mask.filter(ImageFilter.GaussianBlur(radius=15))
-
-        # Darken the image pixels at the edges so bright content doesn't bleed through
-        # the semi-transparent feather zone
-        darken_arr = np.clip(1.0 - (ellipse_dist - 0.35) / 0.65, 0, 1)
-        darken_arr = darken_arr ** 0.8
-        img_arr = np.array(img)
-        for c in range(3):
-            img_arr[:, :, c] = (img_arr[:, :, c] * darken_arr).astype(np.uint8)
-        img = Image.fromarray(img_arr)
-        img.putalpha(edge_mask)
-
-        # Rotation last — tilts the oval, transparent corners blend naturally
-        angle = float(rng.uniform(-3, 3))
-        img = img.rotate(angle, expand=True, resample=Image.BICUBIC, fillcolor=(0, 0, 0, 0))
-
-        # Position from slot + slight jitter
-        min_top = size_h // 6
-        x = int(slot[0] * POSTER_W) + int(rng.integers(-15, 15))
-        y = int(slot[1] * max_bottom) + int(rng.integers(-10, 10))
-        x = max(-size_w // 4, min(x, POSTER_W - size_w // 2))
-        y = max(min_top, min(y, max_bottom - size_h))
-
-        bg.paste(img, (x, y), img)
-
-    # Dark gradient overlay from 45% down
-    gradient = Image.new("RGBA", (POSTER_W, POSTER_H), (0, 0, 0, 0))
-    dg = ImageDraw.Draw(gradient)
-    grad_start = int(POSTER_H * 0.40)
-    for y in range(grad_start, POSTER_H):
-        progress = (y - grad_start) / (POSTER_H - grad_start)
-        a = int(220 * progress ** 1.2)
-        dg.line([(0, y), (POSTER_W, y)], fill=(0, 0, 0, a))
-    bg = Image.alpha_composite(bg, gradient)
-
-    return bg.convert("RGB")
-
-
 def generate_album_poster(
     output_path: Path,
     festival: str,
@@ -809,49 +650,18 @@ def generate_album_poster(
             is_small_source = frame_raw.width < 600
 
             if is_small_source and hero_text is None:
-                # Festival layout: ratio-preserving tiled pattern + centered sharp logo
-                logger.info("Layout: festival tiled pattern")
-                logger.debug("Layout: source %dx%d from %s", frame_raw.width, frame_raw.height, background_source or "unknown")
-                tile_max = 200
-                w, h = frame_rgb.size
-                tile_scale = tile_max / max(w, h)
-                tile_w = max(1, int(w * tile_scale))
-                tile_h = max(1, int(h * tile_scale))
-                tile = frame_rgb.resize((tile_w, tile_h), Image.LANCZOS)
-
-                pattern = Image.new("RGB", (POSTER_W, LINE_Y))
-                for x in range(0, POSTER_W, tile_w):
-                    for y in range(0, LINE_Y, tile_h):
-                        pattern.paste(tile, (x, y))
-
-                pattern = ImageEnhance.Brightness(pattern).enhance(0.30)
-                pattern_rgba = pattern.convert("RGBA")
-
-                # Fade alpha: in from top, out toward bottom
-                alpha_band = Image.new("L", (POSTER_W, LINE_Y), 0)
-                ad = ImageDraw.Draw(alpha_band)
-                for y in range(LINE_Y):
-                    if y < LINE_Y * 0.1:
-                        a = int(150 * y / (LINE_Y * 0.1))
-                    elif y < LINE_Y * 0.6:
-                        a = 150
-                    else:
-                        a = int(150 * (1 - (y - LINE_Y * 0.6) / (LINE_Y * 0.4)))
-                    ad.line([(0, y), (POSTER_W, y)], fill=a)
-                pattern_rgba.putalpha(alpha_band)
-                bg = bg.convert("RGBA")
-                bg.paste(pattern_rgba, (0, 0), pattern_rgba)
-
-                # Sharp logo centered — use RGBA for transparent logos
+                # Festival layout: gradient + centered sharp logo
+                logger.info("Layout: festival gradient + logo")
                 max_display = 420
                 if has_alpha:
                     sharp, img_x, img_y = _center_sharp(frame_raw.convert("RGBA"), max_display)
+                    bg = bg.convert("RGBA")
                     bg.paste(sharp, (img_x, img_y), sharp)
+                    bg = bg.convert("RGB")
                 else:
                     sharp, img_x, img_y = _center_sharp(frame_rgb, max_display)
                     mask = _rounded_edge_mask(sharp.size[0], sharp.size[1])
                     bg.paste(sharp, (img_x, img_y), mask)
-                bg = bg.convert("RGB")
 
             elif is_small_source:
                 # Artist layout: blurred overlay on gradient + centered sharp logo
@@ -915,18 +725,11 @@ def generate_album_poster(
             background_image_path = None  # fall through to gradient
 
     if not background_image_path or not background_image_path.exists():
-        is_festival = hero_text is None
-        if is_festival and thumb_paths and len(thumb_paths) >= 2:
-            # Festival folder with multiple thumbs: use collage
-            logger.info("Layout: festival collage (%d thumbnails)", len(thumb_paths))
-            bg = _make_collage_bg(thumb_paths)
-            accent = get_accent_color(bg)
-        else:
-            # Gradient fallback
-            logger.info("Layout: gradient fallback")
-            base_color = override_color or get_dominant_color_from_thumbs(thumb_paths or [])
-            accent = _accent_from_base(base_color)
-            bg = _make_gradient_bg(base_color)
+        # Gradient fallback (no background image available)
+        logger.info("Layout: gradient fallback")
+        base_color = override_color or get_dominant_color_from_thumbs(thumb_paths or [])
+        accent = _accent_from_base(base_color)
+        bg = _make_gradient_bg(base_color)
     draw = ImageDraw.Draw(bg)
     max_w = POSTER_W - 100
 

@@ -220,22 +220,15 @@ def test_generate_album_poster_no_edition(tmp_path):
     assert output.exists()
 
 
-def test_generate_album_poster_dark_logo_uses_thumbs(tmp_path):
-    """Dark transparent logo falls back to thumbnail colors for gradient."""
+def test_generate_album_poster_dark_logo_uses_override(tmp_path):
+    """Dark logo with config color override produces a visible poster."""
     logo = tmp_path / "logo.png"
     # Black on transparent
-    img = Image.new("RGBA", (800, 800), (0, 0, 0, 0))
+    img = Image.new("RGBA", (500, 500), (0, 0, 0, 0))
     from PIL import ImageDraw
     d = ImageDraw.Draw(img)
-    d.rectangle([100, 100, 700, 700], fill=(0, 0, 0, 255))
+    d.rectangle([100, 100, 400, 400], fill=(0, 0, 0, 255))
     img.save(str(logo))
-
-    # Create colorful thumbnails
-    thumbs = []
-    for i in range(3):
-        t = tmp_path / f"thumb_{i}.jpg"
-        Image.new("RGB", (320, 180), (100, 50, 200)).save(str(t))
-        thumbs.append(t)
 
     output = tmp_path / "poster.jpg"
     generate_album_poster(
@@ -243,16 +236,35 @@ def test_generate_album_poster_dark_logo_uses_thumbs(tmp_path):
         festival="Dark Fest",
         date_or_year="2025",
         background_image_path=logo,
-        thumb_paths=thumbs,
+        override_color=(100, 50, 200),
     )
     assert output.exists()
-    # The poster should NOT be mostly black — thumbnail colors should be visible
     with Image.open(output) as result:
         import numpy as np
         arr = np.array(result)
-        # At least some pixels should have non-trivial color (not all near-black)
         mean_brightness = arr.mean()
-        assert mean_brightness > 10, f"Poster too dark ({mean_brightness:.1f}), thumbnail colors not used"
+        assert mean_brightness > 10, f"Poster too dark ({mean_brightness:.1f})"
+
+
+def test_generate_album_poster_no_logo_gradient_only(tmp_path):
+    """Festival without logo gets gradient-only poster (no collage)."""
+    thumbs = []
+    for i in range(4):
+        t = tmp_path / f"thumb_{i}.png"
+        Image.new("RGB", (320, 180), (100 + i * 20, 50, 200)).save(str(t))
+        thumbs.append(t)
+
+    output = tmp_path / "poster.jpg"
+    generate_album_poster(
+        output_path=output,
+        festival="Mysteryland",
+        date_or_year="2025",
+        thumb_paths=thumbs,
+        override_color=(255, 255, 123),
+    )
+    assert output.exists()
+    with Image.open(output) as img:
+        assert img.size == (POSTER_W, POSTER_H)
 
 
 def test_set_poster_with_venue(tmp_path):
