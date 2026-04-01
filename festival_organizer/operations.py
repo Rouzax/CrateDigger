@@ -189,9 +189,9 @@ class PosterOperation(Operation):
             poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
             mf = media_file
             festival_display = mf.festival
-            if mf.location:
+            if mf.edition:
                 festival_display = self.config.get_festival_display(
-                    mf.festival, mf.location
+                    mf.festival, mf.edition
                 )
             generate_set_poster(
                 source_image_path=thumb,
@@ -475,9 +475,9 @@ class AlbumPosterOperation(Operation):
             folder_jpg = file_path.parent / "folder.jpg"
             mf = media_file
             festival_display = mf.festival
-            if mf.location:
+            if mf.edition:
                 festival_display = self.config.get_festival_display(
-                    mf.festival, mf.location
+                    mf.festival, mf.edition
                 )
             # Determine year: scan folder for consensus, omit if mixed
             from festival_organizer.parsers import parse_filename
@@ -528,7 +528,7 @@ class AlbumPosterOperation(Operation):
                 output_path=folder_jpg,
                 festival=poster_title,
                 date_or_year=date_or_year,
-                detail=mf.stage or mf.location or "",
+                detail=mf.stage or mf.edition or "",
                 thumb_paths=thumb_paths if thumb_paths else None,
                 background_image_path=bg_path,
                 background_source=bg_source,
