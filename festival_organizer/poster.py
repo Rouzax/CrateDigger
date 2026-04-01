@@ -530,6 +530,16 @@ def get_dominant_color_from_thumbs(thumb_paths: list[Path]) -> tuple[int, int, i
     return (int(r * 255), int(g * 255), int(b * 255))
 
 
+def _darken_brand_color(color: tuple[int, int, int]) -> tuple[int, int, int]:
+    """Darken a brand color to a moody gradient base (V ~0.4)."""
+    r, g, b = [c / 255 for c in color]
+    h, s, v = rgb_to_hsv(r, g, b)
+    s = max(0.4, min(0.7, s))
+    v = 0.4
+    r2, g2, b2 = hsv_to_rgb(h, s, v)
+    return (int(r2 * 255), int(g2 * 255), int(b2 * 255))
+
+
 def _accent_from_base(base_color: tuple[int, int, int]) -> tuple[int, int, int]:
     """Derive a brighter accent color from the base."""
     r, g, b = [c / 255 for c in base_color]
@@ -637,7 +647,7 @@ def generate_album_poster(
 
             # Derive base color: config override > logo extraction > error
             if override_color:
-                base_color = override_color
+                base_color = _darken_brand_color(override_color)
             else:
                 base_color = _extract_logo_color(frame_raw)
 
@@ -727,7 +737,10 @@ def generate_album_poster(
     if not background_image_path or not background_image_path.exists():
         # Gradient fallback (no background image available)
         logger.info("Layout: gradient fallback")
-        base_color = override_color or get_dominant_color_from_thumbs(thumb_paths or [])
+        if override_color:
+            base_color = _darken_brand_color(override_color)
+        else:
+            base_color = get_dominant_color_from_thumbs(thumb_paths or [])
         accent = _accent_from_base(base_color)
         bg = _make_gradient_bg(base_color)
     draw = ImageDraw.Draw(bg)

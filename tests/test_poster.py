@@ -491,3 +491,25 @@ def test_generate_album_poster_edition_text_layout(tmp_path):
         bottom_strip = arr[LINE_Y + 50:, :]
         mean_bottom = bottom_strip.mean()
         assert mean_bottom < 40, f"Bottom area too bright ({mean_bottom:.1f}), text may be below accent line"
+
+
+def test_generate_album_poster_brand_color_darkened(tmp_path):
+    """Bright brand color override is darkened for gradient, not used raw."""
+    logo = tmp_path / "logo.png"
+    Image.new("RGB", (500, 500), (150, 30, 90)).save(str(logo))
+
+    output = tmp_path / "poster.jpg"
+    generate_album_poster(
+        output_path=output,
+        festival="AMF",
+        date_or_year="2025",
+        override_color=(234, 0, 0),
+        background_image_path=logo,
+    )
+    assert output.exists()
+    with Image.open(output) as result:
+        import numpy as np
+        arr = np.array(result)
+        top_strip = arr[50:150, 300:700]
+        mean_r = top_strip[:, :, 0].mean()
+        assert mean_r < 150, f"Gradient too bright ({mean_r:.0f}), brand color not darkened"
