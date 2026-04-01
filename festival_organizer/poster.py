@@ -631,12 +631,13 @@ def generate_album_poster(
             # Derive base color: config override > logo extraction > error
             if override_color:
                 base_color = _darken_brand_color(override_color)
+                accent = override_color
             else:
                 base_color = _extract_logo_color(frame_raw)
+                accent = _accent_from_base(base_color)
 
             # Gradient base layer — always the foundation
             bg = _make_gradient_bg(base_color)
-            accent = _accent_from_base(base_color)
 
             # Flatten for blur/tile operations
             frame_rgb = _flatten_alpha(frame_raw, base_color) if has_alpha else frame_raw.convert("RGB")
@@ -722,9 +723,10 @@ def generate_album_poster(
         logger.info("Layout: gradient fallback")
         if override_color:
             base_color = _darken_brand_color(override_color)
+            accent = override_color
         else:
             base_color = get_dominant_color_from_thumbs(thumb_paths or [])
-        accent = _accent_from_base(base_color)
+            accent = _accent_from_base(base_color)
         bg = _make_gradient_bg(base_color)
     draw = ImageDraw.Draw(bg)
     max_w = POSTER_W - 100
