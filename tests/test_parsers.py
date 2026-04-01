@@ -25,7 +25,7 @@ def test_1001tl_basic_festival():
     assert result["year"] == "2024"
     # Without a known location match, after-segments become location
     # (stage/venue split relies on structured tags from chapters command)
-    assert "Johan Cruijff ArenA" in result.get("location", "")
+    assert "Johan Cruijff ArenA" in result.get("edition", "")
 
 
 def test_1001tl_tomorrowland_with_stage():
@@ -35,7 +35,7 @@ def test_1001tl_tomorrowland_with_stage():
     )
     assert result["artist"] == "Hardwell"
     assert result["festival"] == "Tomorrowland"
-    assert result["location"] == "Belgium"
+    assert result["edition"] == "Belgium"
     assert result["year"] == "2025"
     assert result["stage"] == "The Great Library Stage"
 
@@ -71,29 +71,29 @@ def test_1001tl_edc():
     assert result["stage"] == "kineticFIELD"
 
 
-def test_1001tl_dreamstate_socal_location():
-    """Location should come from festival alias, not country."""
+def test_1001tl_dreamstate_socal_edition():
+    """Edition should come from festival alias, not country."""
     result = parse_1001tracklists_title(
         "Tiësto @ The Dream Stage, Dreamstate SoCal, "
         "Queen Mary Waterfront, United States 2025-11-22",
         CFG,
     )
     assert result["festival"] == "Dreamstate"
-    assert result["location"] == "SoCal"
+    assert result["edition"] == "SoCal"
     assert "The Dream Stage" in result.get("stage", "")
     assert result["artist"] == "Tiësto"
     assert result["date"] == "2025-11-22"
 
 
-def test_1001tl_edc_las_vegas_location():
-    """EDC Las Vegas should extract Las Vegas as location."""
+def test_1001tl_edc_las_vegas_edition():
+    """EDC Las Vegas should extract Las Vegas as edition."""
     result = parse_1001tracklists_title(
         "Armin van Buuren @ kineticFIELD, EDC Las Vegas, "
         "United States 2025-05-18",
         CFG,
     )
     assert result["festival"] == "EDC"
-    assert result["location"] == "Las Vegas"
+    assert result["edition"] == "Las Vegas"
     assert result["stage"] == "kineticFIELD"
 
 
@@ -174,14 +174,14 @@ def test_parent_dirs_festival_year():
     assert result.get("festival") == "AMF"
 
 
-def test_parent_dirs_tomorrowland_location():
+def test_parent_dirs_tomorrowland_edition():
     result = parse_parent_dirs(
         Path("//hyperv/Data/Concerts/Tomorrowland/2025 - Belgium/file.mkv"),
         Path("//hyperv/Data/Concerts"),
         CFG,
     )
     assert result.get("festival") == "Tomorrowland"
-    assert result.get("location") == "Belgium"
+    assert result.get("edition") == "Belgium"
     assert result.get("year") == "2025"
 
 
