@@ -20,38 +20,81 @@ def test_config_festival_aliases():
     cfg = Config(TEST_CONFIG)
     assert cfg.resolve_festival_alias("Amsterdam Music Festival") == "AMF"
     assert cfg.resolve_festival_alias("amf") == "AMF"
-    assert cfg.resolve_festival_alias("EDC Las Vegas") == "EDC"
+    # "EDC Las Vegas" is no longer an alias; resolved via edition decomposition
+    assert cfg.resolve_festival_alias("EDC Las Vegas") == "EDC Las Vegas"
     assert cfg.resolve_festival_alias("Unknown Thing") == "Unknown Thing"
 
 
-def test_config_festival_location():
+def test_config_festival_edition():
     cfg = Config(TEST_CONFIG)
-    # Tomorrowland has location_in_name: true
+    # Tomorrowland has editions configured
     assert cfg.get_festival_display("Tomorrowland", "Belgium") == "Tomorrowland Belgium"
     assert cfg.get_festival_display("Tomorrowland", "") == "Tomorrowland"
-    # AMF does not have location_in_name
+    # AMF has no editions
     assert cfg.get_festival_display("AMF", "Netherlands") == "AMF"
 
 
-def test_get_festival_display_rejects_unknown_location():
+def test_get_festival_display_rejects_unknown_edition():
     cfg = Config(TEST_CONFIG)
-    # Dreamstate has known_locations: [SoCal, Europe, Australia, Mexico]
+    # Dreamstate has editions: [SoCal, Europe, Australia, Mexico]
     # "United States" is not in that list, should be omitted
     assert cfg.get_festival_display("Dreamstate", "United States") == "Dreamstate"
     assert cfg.get_festival_display("Dreamstate", "SoCal") == "Dreamstate SoCal"
 
 
-def test_resolve_festival_with_location():
+def test_resolve_festival_with_edition():
     cfg = Config(TEST_CONFIG)
-    assert cfg.resolve_festival_with_location("Dreamstate SoCal") == ("Dreamstate", "SoCal")
-    assert cfg.resolve_festival_with_location("Dreamstate Europe") == ("Dreamstate", "Europe")
-    assert cfg.resolve_festival_with_location("EDC Las Vegas") == ("EDC", "Las Vegas")
-    # No location_in_name configured
-    assert cfg.resolve_festival_with_location("AMF") == ("AMF", "")
-    # Tomorrowland Weekend 1 has no known_location match
-    assert cfg.resolve_festival_with_location("Tomorrowland Weekend 1") == ("Tomorrowland", "")
+    # Edition decomposition (no alias needed)
+    assert cfg.resolve_festival_with_edition("Tomorrowland Winter") == ("Tomorrowland", "Winter")
+    assert cfg.resolve_festival_with_edition("Tomorrowland Belgium") == ("Tomorrowland", "Belgium")
+    assert cfg.resolve_festival_with_edition("EDC Las Vegas") == ("EDC", "Las Vegas")
+    assert cfg.resolve_festival_with_edition("Dreamstate SoCal") == ("Dreamstate", "SoCal")
+    assert cfg.resolve_festival_with_edition("Dreamstate Europe") == ("Dreamstate", "Europe")
+    # Alias prefix + edition (Ultra is alias for Ultra Music Festival)
+    assert cfg.resolve_festival_with_edition("Ultra Europe") == ("Ultra Music Festival", "Europe")
+    assert cfg.resolve_festival_with_edition("Ultra Music Festival Miami") == ("Ultra Music Festival", "Miami")
+    # Pure alias (no edition)
+    assert cfg.resolve_festival_with_edition("TML") == ("Tomorrowland", "")
+    assert cfg.resolve_festival_with_edition("AMF") == ("AMF", "")
+    # Alias that collapses weekends (no edition extracted)
+    assert cfg.resolve_festival_with_edition("Tomorrowland Weekend 1") == ("Tomorrowland", "")
+    # Genuine alternate name (not an edition)
+    assert cfg.resolve_festival_with_edition("Red Rocks Amphitheatre") == ("Red Rocks", "")
     # Unknown festival
-    assert cfg.resolve_festival_with_location("Unknown Fest") == ("Unknown Fest", "")
+    assert cfg.resolve_festival_with_edition("Unknown Fest") == ("Unknown Fest", "")
+
+
+def test_resolve_festival_with_edition_case_insensitive():
+    cfg = Config(TEST_CONFIG)
+    assert cfg.resolve_festival_with_edition("tomorrowland winter") == ("Tomorrowland", "Winter")
+    assert cfg.resolve_festival_with_edition("EDC LAS VEGAS") == ("EDC", "Las Vegas")
+
+
+def test_known_festivals_includes_edition_combos():
+    cfg = Config(TEST_CONFIG)
+    known = cfg.known_festivals
+    # Canonical names
+    assert "Tomorrowland" in known
+    assert "EDC" in known
+    # Edition combos (generated dynamically)
+    assert "Tomorrowland Winter" in known
+    assert "Tomorrowland Belgium" in known
+    assert "EDC Las Vegas" in known
+    # Aliases
+    assert "TML" in known
+    assert "Ultra" in known
+
+
+def test_get_festival_display_with_editions():
+    cfg = Config(TEST_CONFIG)
+    assert cfg.get_festival_display("Tomorrowland", "Belgium") == "Tomorrowland Belgium"
+    assert cfg.get_festival_display("Tomorrowland", "Winter") == "Tomorrowland Winter"
+    assert cfg.get_festival_display("Tomorrowland", "") == "Tomorrowland"
+    # AMF has no editions configured
+    assert cfg.get_festival_display("AMF", "Netherlands") == "AMF"
+    # Unknown edition rejected
+    assert cfg.get_festival_display("Dreamstate", "United States") == "Dreamstate"
+    assert cfg.get_festival_display("Dreamstate", "SoCal") == "Dreamstate SoCal"
 
 
 def test_config_layout_templates():

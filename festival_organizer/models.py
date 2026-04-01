@@ -18,7 +18,7 @@ class MediaFile:
     title: str = ""          # For concert films: the concert/show title
     stage: str = ""
     venue: str = ""
-    location: str = ""
+    edition: str = ""
     content_type: str = ""   # "festival_set" | "concert_film" | "unknown"
     metadata_source: str = "" # "1001tracklists" | "metadata" | "filename"
 

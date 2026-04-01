@@ -32,7 +32,7 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
 
     Format: "Artist @ Stage, Festival, Location YYYY-MM-DD"
 
-    Returns dict with keys: artist, festival, stage, location, date, year.
+    Returns dict with keys: artist, festival, stage, edition, date, year.
     """
     if not title:
         return {}
@@ -67,10 +67,10 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
         for fest in all_aliases:
             if _festival_in_text(fest, seg_lower):
                 # Resolve alias and extract location from alias name
-                fest, alias_loc = config.resolve_festival_with_location(seg.strip())
+                fest, alias_ed = config.resolve_festival_with_edition(seg.strip())
                 result["festival"] = fest
-                if alias_loc:
-                    result["location"] = alias_loc
+                if alias_ed:
+                    result["edition"] = alias_ed
                 festival_idx = i
                 break
         if festival_idx is not None:
@@ -80,12 +80,12 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
         before = segments[:festival_idx]
         after = segments[festival_idx + 1:]
 
-        # Check after-segments for a known location to separate stage from location
-        known_locs = config.all_known_locations
+        # Check after-segments for a known edition to separate stage from edition
+        known_eds = config.all_known_editions
         loc_offset = None
         for j, seg in enumerate(after):
-            for loc in known_locs:
-                if loc.lower() in seg.lower():
+            for ed in known_eds:
+                if ed.lower() in seg.lower():
                     loc_offset = j
                     break
             if loc_offset is not None:
@@ -95,7 +95,7 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
             # stage = before + after-segments before location
             stage_parts = before + after[:loc_offset]
             result["stage"] = ", ".join(stage_parts) if stage_parts else None
-            result.setdefault("location", ", ".join(after[loc_offset:]))
+            result.setdefault("edition", ", ".join(after[loc_offset:]))
             if result.get("stage") is None:
                 result.pop("stage", None)
         elif before:
@@ -106,21 +106,21 @@ def parse_1001tracklists_title(title: str | None, config: Config) -> dict:
                     stage_after = after[:loc_offset]
                     if stage_after:
                         result["stage"] += ", " + ", ".join(stage_after)
-                    result.setdefault("location", ", ".join(after[loc_offset:]))
+                    result.setdefault("edition", ", ".join(after[loc_offset:]))
                 else:
-                    result.setdefault("location", ", ".join(after))
+                    result.setdefault("edition", ", ".join(after))
         elif after:
             if loc_offset is not None:
                 stage_parts = after[:loc_offset]
                 if stage_parts:
                     result["stage"] = ", ".join(stage_parts)
-                result.setdefault("location", ", ".join(after[loc_offset:]))
+                result.setdefault("edition", ", ".join(after[loc_offset:]))
             else:
-                result.setdefault("location", ", ".join(after))
+                result.setdefault("edition", ", ".join(after))
     elif len(segments) >= 2:
-        # No known festival — first segment is venue/festival, rest is location
+        # No known festival; first segment is venue/festival, rest is edition
         result["festival"] = config.resolve_festival_alias(segments[0])
-        result["location"] = ", ".join(segments[1:])
+        result["edition"] = ", ".join(segments[1:])
     elif len(segments) == 1:
         result["festival"] = config.resolve_festival_alias(segments[0])
 
@@ -169,16 +169,16 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         part2 = m.group(2).strip()
         part3 = m.group(3).strip()
         weekend = m.group(4)
-        # Part2 could be festival or location; Part3 is artist
+        # Part2 could be festival or edition; Part3 is artist
         if _is_known_festival(part2, known_festivals):
             result.setdefault("festival", part2)
         else:
-            # Could be location like "Belgium" — store both
+            # Could be edition like "Belgium"; store both
             result.setdefault("festival", part2)
-            # Check if it's actually a location for a known parent-dir festival
-            for loc in config.all_known_locations:
-                if loc.lower() == part2.lower():
-                    result["location"] = part2
+            # Check if it's actually an edition for a known parent-dir festival
+            for ed in config.all_known_editions:
+                if ed.lower() == part2.lower():
+                    result["edition"] = part2
                     result.pop("festival", None)
                     break
         result.setdefault("artist", part3)
@@ -294,10 +294,10 @@ def parse_parent_dirs(filepath: Path, root: Path, config: Config) -> dict:
                 result.setdefault("festival", fest)
                 break
 
-        # Known location
-        for loc in config.all_known_locations:
-            if loc.lower() in part.lower():
-                result.setdefault("location", loc)
+        # Known edition
+        for ed in config.all_known_editions:
+            if ed.lower() in part.lower():
+                result.setdefault("edition", ed)
                 break
 
     return result

@@ -62,10 +62,10 @@ def render_filename(media_file: MediaFile, config: Config) -> str:
 
 def _build_values(media_file: MediaFile, config: Config, *, for_filename: bool = False) -> dict[str, str]:
     """Build the substitution values dict for a media file."""
-    # Resolve festival display name (with location if configured)
+    # Resolve festival display name (with edition if configured)
     festival = media_file.festival
     if festival:
-        festival = config.get_festival_display(festival, media_file.location)
+        festival = config.get_festival_display(festival, media_file.edition)
 
     # For filenames, use display_artist (full B2B name); for folders, use artist (primary)
     artist = media_file.artist
@@ -77,7 +77,7 @@ def _build_values(media_file: MediaFile, config: Config, *, for_filename: bool =
         "festival": safe_filename(festival),
         "year": media_file.year,
         "date": media_file.date,
-        "location": safe_filename(media_file.location),
+        "edition": safe_filename(media_file.edition),
         "stage": safe_filename(media_file.stage),
         "set_title": safe_filename(media_file.set_title),
         "title": safe_filename(media_file.title or media_file.set_title),
