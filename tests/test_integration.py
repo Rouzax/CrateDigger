@@ -70,7 +70,7 @@ class TestRealCollection:
         mf = analyse_file(target[0], CONCERTS_ROOT, config)
         assert mf.artist == "Hardwell"
         assert mf.festival == "Tomorrowland"
-        assert mf.location == "Belgium"
+        assert mf.edition == "Belgium"
         assert mf.set_title == "WE1"
 
     def test_adele_classified_as_concert(self, config):

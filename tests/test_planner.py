@@ -54,7 +54,7 @@ def test_plan_with_set_title():
         artist="Hardwell",
         festival="Tomorrowland",
         year="2025",
-        location="Belgium",
+        edition="Belgium",
         set_title="WE1",
         content_type="festival_set",
         extension=".mkv",
