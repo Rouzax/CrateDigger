@@ -513,23 +513,34 @@ class AlbumPosterOperation(Operation):
 
             bg_path, bg_source = self._resolve_background(priority, file_path.parent, mf)
 
+            # Look up brand color from festival config
+            fc = self.config.festival_config.get(mf.festival, {})
+            color_hex = fc.get("edition_colors", {}).get(mf.edition) or fc.get("color")
+            if color_hex:
+                from festival_organizer.poster import _hex_to_rgb
+                override_color = _hex_to_rgb(color_hex)
+            else:
+                override_color = None
+
             # Determine hero_text and festival/title based on poster type
             if poster_type == "artist":
                 hero_text = mf.artist
-                poster_title = festival_display or mf.artist or "Unknown"
+                poster_festival = festival_display or mf.artist or "Unknown"
             elif poster_type == "festival":
                 hero_text = None
-                poster_title = festival_display or mf.artist or "Unknown"
+                poster_festival = mf.festival or mf.artist or "Unknown"
             else:  # year
                 hero_text = date_or_year or mf.year
-                poster_title = festival_display or mf.artist or "Unknown"
+                poster_festival = festival_display or mf.artist or "Unknown"
 
             generate_album_poster(
                 output_path=folder_jpg,
-                festival=poster_title,
+                festival=poster_festival,
                 date_or_year=date_or_year,
-                detail=mf.stage or mf.edition or "",
+                detail=mf.stage or "",
+                edition=mf.edition or "",
                 thumb_paths=thumb_paths if thumb_paths else None,
+                override_color=override_color,
                 background_image_path=bg_path,
                 background_source=bg_source,
                 hero_text=hero_text,

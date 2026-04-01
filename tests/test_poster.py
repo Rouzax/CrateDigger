@@ -190,6 +190,36 @@ def test_generate_album_poster_with_transparent_png(tmp_path):
         assert result.mode == "RGB"
 
 
+def test_generate_album_poster_with_edition(tmp_path):
+    """Album poster accepts edition parameter for two-line text layout."""
+    logo = tmp_path / "logo.png"
+    Image.new("RGB", (500, 500), (150, 30, 90)).save(str(logo))
+
+    output = tmp_path / "poster.jpg"
+    generate_album_poster(
+        output_path=output,
+        festival="Tomorrowland",
+        date_or_year="2025",
+        edition="Belgium",
+        background_image_path=logo,
+    )
+    assert output.exists()
+    with Image.open(output) as img:
+        assert img.size == (POSTER_W, POSTER_H)
+
+
+def test_generate_album_poster_no_edition(tmp_path):
+    """Album poster works without edition (single-line text)."""
+    output = tmp_path / "poster.jpg"
+    generate_album_poster(
+        output_path=output,
+        festival="AMF",
+        date_or_year="2025",
+        override_color=(234, 0, 0),
+    )
+    assert output.exists()
+
+
 def test_generate_album_poster_dark_logo_uses_thumbs(tmp_path):
     """Dark transparent logo falls back to thumbnail colors for gradient."""
     logo = tmp_path / "logo.png"

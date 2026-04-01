@@ -758,6 +758,7 @@ def generate_album_poster(
     festival: str,
     date_or_year: str,
     detail: str = "",
+    edition: str = "",
     thumb_paths: list[Path] | None = None,
     override_color: tuple[int, int, int] | None = None,
     background_image_path: Path | None = None,
@@ -770,13 +771,14 @@ def generate_album_poster(
     otherwise falls back to an editorial gradient derived from thumbnail colors.
 
     For artist folders: pass hero_text="Artist Name" to show just the artist name.
-    For festival folders: hero_text defaults to festival name with date/detail below.
+    For festival folders: hero_text defaults to festival name with edition below.
 
     Args:
         output_path: Where to save the poster
         festival: Festival name (used as hero text if hero_text not set)
         date_or_year: Date or year string for display
         detail: Optional detail (venue, location)
+        edition: Optional edition name (e.g. "Belgium", "Las Vegas")
         thumb_paths: Thumbnail images for color derivation
         override_color: Override the auto-derived color
         background_image_path: Optional background image (curated logo, fanart, DJ artwork)
@@ -792,12 +794,11 @@ def generate_album_poster(
             frame_raw = Image.open(background_image_path)
             has_alpha = frame_raw.mode in ("RGBA", "LA", "PA")
 
-            # Derive base color for gradient: logo pixels, or thumbnails if too dark
-            base_color = override_color or _visible_pixel_color(frame_raw)
-            if _pixel_luminance(base_color) < 30 and thumb_paths:
-                base_color = get_dominant_color_from_thumbs(thumb_paths)
-            elif _pixel_luminance(base_color) < 30:
-                base_color = (40, 40, 50)
+            # Derive base color: config override > logo extraction > error
+            if override_color:
+                base_color = override_color
+            else:
+                base_color = _extract_logo_color(frame_raw)
 
             # Gradient base layer — always the foundation
             bg = _make_gradient_bg(base_color)
