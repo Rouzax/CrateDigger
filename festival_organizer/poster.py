@@ -306,6 +306,49 @@ def _visible_pixel_color(img: Image.Image) -> tuple[int, int, int]:
     return (int(mean[0]), int(mean[1]), int(mean[2]))
 
 
+def _hex_to_rgb(hex_str: str) -> tuple[int, int, int]:
+    """Parse a hex color string to an RGB tuple."""
+    hex_str = hex_str.lstrip("#")
+    return (int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16))
+
+
+def _extract_logo_color(img: Image.Image) -> tuple[int, int, int]:
+    """Extract dominant color from logo using saturation-aware circular hue mean.
+
+    Filters out low-saturation pixels (white/black/gray) and returns a dark/moody
+    RGB color suitable for gradient backgrounds (V ~0.4).
+
+    Raises ValueError if no saturated pixels are found.
+    """
+    if img.mode in ("RGBA", "LA", "PA"):
+        arr = np.array(img.convert("RGBA"))
+        mask = arr[:, :, 3] > 128
+        if not mask.any():
+            raise ValueError("No saturated pixels found in logo")
+        rgb_pixels = arr[:, :, :3][mask]
+    else:
+        arr = np.array(img.convert("RGB"))
+        rgb_pixels = arr.reshape(-1, 3)
+
+    # Convert to HSV using PIL for consistency with _circular_hue_mean
+    strip = Image.fromarray(rgb_pixels.reshape(1, -1, 3).astype(np.uint8), "RGB")
+    hsv_strip = np.array(strip.convert("HSV"))
+    h_arr = hsv_strip[0, :, 0]
+    s_arr = hsv_strip[0, :, 1]
+
+    # Filter to saturated pixels
+    sat_mask = s_arr >= 40
+    if not sat_mask.any():
+        raise ValueError("No saturated pixels found in logo")
+
+    hue = _circular_hue_mean(h_arr, s_arr, min_sat=40)
+    mean_sat = float(np.mean(s_arr[sat_mask]) / 255)
+    sat = max(0.4, min(0.7, mean_sat))
+
+    r, g, b = hsv_to_rgb(hue, sat, 0.4)
+    return (int(r * 255), int(g * 255), int(b * 255))
+
+
 def _pixel_luminance(color: tuple[int, int, int]) -> float:
     """Simple perceived luminance (0-255 scale)."""
     return 0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2]

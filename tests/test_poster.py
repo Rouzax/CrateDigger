@@ -15,6 +15,8 @@ from festival_organizer.poster import (
     generate_set_poster,
     generate_album_poster,
     _filter_venue_parts,
+    _hex_to_rgb,
+    _extract_logo_color,
     POSTER_W,
     POSTER_H,
 )
@@ -372,3 +374,49 @@ def test_filter_venue_parts_empty_detail():
 def test_filter_venue_parts_empty_venue():
     """Empty venue returns empty list."""
     assert _filter_venue_parts("", "Mainstage") == []
+
+
+# --- hex parsing tests ---
+
+def test_hex_to_rgb_with_hash():
+    assert _hex_to_rgb("#EA0000") == (234, 0, 0)
+
+
+def test_hex_to_rgb_without_hash():
+    assert _hex_to_rgb("1C99D8") == (28, 153, 216)
+
+
+# --- logo color extraction tests ---
+
+def test_extract_logo_color_saturated():
+    """Saturated logo returns a dark/moody color in the correct hue range."""
+    img = Image.new("RGB", (100, 100), (200, 0, 0))
+    color = _extract_logo_color(img)
+    r, g, b = color
+    assert r > g and r > b, f"Expected reddish, got {color}"
+    assert r < 150, f"Expected dark, got {color}"
+
+
+def test_extract_logo_color_with_alpha():
+    """Transparent logo ignores invisible pixels."""
+    img = Image.new("RGBA", (100, 100), (0, 0, 0, 0))
+    from PIL import ImageDraw
+    d = ImageDraw.Draw(img)
+    d.ellipse([10, 10, 90, 90], fill=(0, 0, 200, 255))
+    color = _extract_logo_color(img)
+    r, g, b = color
+    assert b > r and b > g, f"Expected bluish, got {color}"
+
+
+def test_extract_logo_color_unsaturated_raises():
+    """Grayscale logo raises ValueError."""
+    img = Image.new("RGB", (100, 100), (128, 128, 128))
+    with pytest.raises(ValueError, match="No saturated pixels"):
+        _extract_logo_color(img)
+
+
+def test_extract_logo_color_white_raises():
+    """White logo raises ValueError."""
+    img = Image.new("RGB", (100, 100), (255, 255, 255))
+    with pytest.raises(ValueError, match="No saturated pixels"):
+        _extract_logo_color(img)
