@@ -220,7 +220,7 @@ def test_new_flat_layouts():
     assert tpl == "{artist}"
     # festival_flat
     tpl = config.get_layout_template("festival_set", "festival_flat")
-    assert tpl == "{festival}"
+    assert tpl == "{festival}{ edition}"
     # Concerts in flat layouts fall back to {artist}
     tpl = config.get_layout_template("concert_film", "artist_flat")
     assert tpl == "{artist}"
@@ -232,9 +232,9 @@ def test_renamed_nested_layouts():
     """Old layout names renamed: artist_first -> artist_nested, etc."""
     config = load_config()
     tpl = config.get_layout_template("festival_set", "artist_nested")
-    assert tpl == "{artist}/{festival}/{year}"
+    assert tpl == "{artist}/{festival}{ edition}/{year}"
     tpl = config.get_layout_template("festival_set", "festival_nested")
-    assert tpl == "{festival}/{year}/{artist}"
+    assert tpl == "{festival}{ edition}/{year}/{artist}"
 
 
 def test_tracklists_credentials_from_config():

@@ -19,7 +19,7 @@ def test_plan_festival_set_artist_flat():
     actions = plan_actions([mf], OUTPUT, CFG)
     assert len(actions) == 1
     a = actions[0]
-    assert a.target == OUTPUT / "Martin Garrix" / "2024 - AMF - Martin Garrix.mkv"
+    assert a.target == OUTPUT / "Martin Garrix" / "2024 - Martin Garrix - AMF.mkv"
     assert a.action == "move"
 
 
@@ -34,7 +34,7 @@ def test_plan_concert_film():
     )
     actions = plan_actions([mf], OUTPUT, CFG)
     a = actions[0]
-    assert a.target == OUTPUT / "Coldplay" / "Coldplay - A Head Full of Dreams.mkv"
+    assert a.target == OUTPUT / "Coldplay" / "Coldplay - A Head Full of Dreams (2018).mkv"
 
 
 def test_plan_unknown_goes_to_needs_review():

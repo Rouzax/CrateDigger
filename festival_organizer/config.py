@@ -20,21 +20,21 @@ DEFAULT_CONFIG = {
             "concert_film": "{artist}",
         },
         "festival_flat": {
-            "festival_set": "{festival}",
+            "festival_set": "{festival}{ edition}",
             "concert_film": "{artist}",
         },
         "artist_nested": {
-            "festival_set": "{artist}/{festival}/{year}",
+            "festival_set": "{artist}/{festival}{ edition}/{year}",
             "concert_film": "{artist}/{year} - {title}",
         },
         "festival_nested": {
-            "festival_set": "{festival}/{year}/{artist}",
+            "festival_set": "{festival}{ edition}/{year}/{artist}",
             "concert_film": "{artist}/{year} - {title}",
         },
     },
     "filename_templates": {
-        "festival_set": "{year} - {festival} - {artist}",
-        "concert_film": "{artist} - {title}",
+        "festival_set": "{year} - {artist} - {festival}{ edition}{ [stage]}{ - set_title}",
+        "concert_film": "{artist} - {title}{ (year)}",
     },
     "content_type_rules": {
         "force_concert": [
