@@ -49,11 +49,11 @@ def test_render_folder_festival_nested():
         artist="Hardwell",
         festival="Tomorrowland",
         year="2025",
-        location="Belgium",
+        edition="Belgium",
         content_type="festival_set",
     )
     result = render_folder(mf, CFG, layout_name="festival_nested")
-    # Tomorrowland has location_in_name, so becomes "Tomorrowland Belgium"
+    # Tomorrowland has editions configured, so becomes "Tomorrowland Belgium"
     assert result == "Tomorrowland Belgium/2025/Hardwell"
 
 
@@ -85,13 +85,13 @@ def test_render_folder_festival_flat_concert_film():
     assert result == "Adele"
 
 
-def test_render_folder_with_location_in_festival_name():
+def test_render_folder_with_edition_in_festival_name():
     mf = MediaFile(
         source_path=Path("test.mkv"),
         artist="Alok",
         festival="Tomorrowland",
         year="2025",
-        location="Brasil",
+        edition="Brasil",
         content_type="festival_set",
     )
     result = render_folder(mf, CFG, layout_name="artist_nested")
@@ -139,7 +139,7 @@ def test_render_filename_with_set_title():
         festival="Tomorrowland",
         year="2025",
         set_title="WE1",
-        location="Belgium",
+        edition="Belgium",
         extension=".mkv",
         content_type="festival_set",
     )
