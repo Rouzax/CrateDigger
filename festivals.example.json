@@ -30,20 +30,41 @@
         "World Club Dome": []
     },
     "config": {
-        "Tomorrowland": {
-            "editions": ["Belgium", "Brasil", "Winter"]
+        "AMF": {
+            "color": "#EA0000"
+        },
+        "A State Of Trance Festival": {
+            "color": "#E63312"
         },
         "Dreamstate": {
-            "editions": ["SoCal", "Europe", "Australia", "Mexico"]
+            "editions": ["SoCal", "Europe", "Australia", "Mexico"],
+            "color": "#1C99D8"
         },
         "EDC": {
-            "editions": ["Las Vegas", "Mexico", "Orlando", "Thailand"]
+            "editions": ["Las Vegas", "Mexico", "Orlando", "Thailand"],
+            "color": "#ED3895"
         },
-        "We Belong Here": {
-            "editions": ["Miami", "Tulum"]
+        "Mysteryland": {
+            "color": "#FFFF7B"
+        },
+        "Red Rocks": {
+            "color": "#C0392B"
+        },
+        "Tomorrowland": {
+            "editions": ["Belgium", "Brasil", "Winter"],
+            "color": "#9B1B5A",
+            "edition_colors": {
+                "Brasil": "#2A9D8F",
+                "Winter": "#5B9BD5"
+            }
         },
         "Ultra Music Festival": {
-            "editions": ["Miami", "Europe", "Japan", "Korea", "Singapore", "South Africa", "Australia"]
+            "editions": ["Miami", "Europe", "Japan", "Korea", "Singapore", "South Africa", "Australia"],
+            "color": "#0693E3"
+        },
+        "We Belong Here": {
+            "editions": ["Miami", "Tulum"],
+            "color": "#2EA3F2"
         }
     }
 }
