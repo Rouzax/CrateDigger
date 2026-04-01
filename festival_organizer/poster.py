@@ -21,7 +21,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageStat
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 # Layout constants (tuned through ~15 iterations)
 POSTER_W, POSTER_H = 1000, 1500
@@ -292,19 +292,6 @@ def _flatten_alpha(img: Image.Image, bg_color: tuple[int, int, int] = (0, 0, 0))
     return bg
 
 
-def _visible_pixel_color(img: Image.Image) -> tuple[int, int, int]:
-    """Average RGB of visible (non-transparent) pixels. Falls back to (0,0,0)."""
-    if img.mode in ("RGBA", "LA", "PA"):
-        arr = np.array(img.convert("RGBA"))
-        mask = arr[:, :, 3] > 128
-        if mask.any():
-            rgb = arr[:, :, :3][mask]
-            mean = rgb.mean(axis=0)
-            return (int(mean[0]), int(mean[1]), int(mean[2]))
-    arr = np.array(img.convert("RGB"))
-    mean = arr.mean(axis=(0, 1))
-    return (int(mean[0]), int(mean[1]), int(mean[2]))
-
 
 def _hex_to_rgb(hex_str: str) -> tuple[int, int, int]:
     """Parse a hex color string to an RGB tuple."""
@@ -350,10 +337,6 @@ def _extract_logo_color(img: Image.Image) -> tuple[int, int, int]:
     r, g, b = hsv_to_rgb(hue, sat, 0.4)
     return (int(r * 255), int(g * 255), int(b * 255))
 
-
-def _pixel_luminance(color: tuple[int, int, int]) -> float:
-    """Simple perceived luminance (0-255 scale)."""
-    return 0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2]
 
 
 # --- Set poster generation ---
