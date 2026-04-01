@@ -741,28 +741,26 @@ def generate_album_poster(
 
     # Hero text above line
     hero_h = font_visual_height(font_hero)
-    hero_y = LINE_Y - PAD_LINE_TO_FEST - hero_h
     spacing = max(2, min(14, (max_w - measure_w(font_hero, display_text)) // max(len(display_text), 1)))
-    _draw_centered_no_shadow(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
+
+    if not is_artist_poster and edition:
+        # Two lines: festival name + edition above accent line
+        font_edition = get_font("semilight", 48)
+        edition_h = font_visual_height(font_edition)
+        pad_between = 12
+        total_block = hero_h + pad_between + edition_h
+        hero_y = LINE_Y - PAD_LINE_TO_FEST - total_block
+        _draw_centered_no_shadow(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
+        edition_y = hero_y + hero_h + pad_between
+        _draw_centered_no_shadow(draw, edition_y, edition, font_edition, "white")
+    else:
+        # Single line: festival name (or artist name)
+        hero_y = LINE_Y - PAD_LINE_TO_FEST - hero_h
+        _draw_centered_no_shadow(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
 
     # Accent line with glow
     bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=16)
     draw = ImageDraw.Draw(bg)
-
-    # Festival folders: show date + detail below the line
-    # Artist folders: nothing below the line — the image and name are enough
-    if not is_artist_poster:
-        font_date = get_font("semilight", 62)
-        font_detail = get_font("semilight", 44)
-
-        pad_line_to_date = 28
-        ty = LINE_Y + LINE_H + pad_line_to_date
-        if date_or_year:
-            _draw_centered_no_shadow(draw, ty, date_or_year, font_date, "white")
-            ty += font_visual_height(font_date) + PAD_YEAR_TO_DETAIL
-
-        if detail:
-            _draw_centered_no_shadow(draw, ty, detail, font_detail, "white")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     bg.save(str(output_path), quality=95)

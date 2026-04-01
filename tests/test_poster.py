@@ -19,6 +19,7 @@ from festival_organizer.poster import (
     _extract_logo_color,
     POSTER_W,
     POSTER_H,
+    LINE_Y,
 )
 
 
@@ -462,3 +463,31 @@ def test_extract_logo_color_white_raises():
     img = Image.new("RGB", (100, 100), (255, 255, 255))
     with pytest.raises(ValueError, match="No saturated pixels"):
         _extract_logo_color(img)
+
+
+def test_generate_album_poster_edition_text_layout(tmp_path):
+    """Festival poster with edition has nothing below accent line."""
+    logo = tmp_path / "logo.png"
+    img = Image.new("RGBA", (500, 500), (0, 0, 0, 0))
+    from PIL import ImageDraw
+    d = ImageDraw.Draw(img)
+    d.ellipse([50, 50, 450, 450], fill=(155, 27, 90, 255))
+    img.save(str(logo))
+
+    output = tmp_path / "poster.jpg"
+    generate_album_poster(
+        output_path=output,
+        festival="Tomorrowland",
+        date_or_year="2025",
+        edition="Belgium",
+        background_image_path=logo,
+    )
+    assert output.exists()
+    with Image.open(output) as result:
+        assert result.size == (POSTER_W, POSTER_H)
+        import numpy as np
+        arr = np.array(result)
+        # Below the accent line area should be mostly dark (no text)
+        bottom_strip = arr[LINE_Y + 50:, :]
+        mean_bottom = bottom_strip.mean()
+        assert mean_bottom < 40, f"Bottom area too bright ({mean_bottom:.1f}), text may be below accent line"
