@@ -44,8 +44,8 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
     if mf.content_type == "festival_set":
         album_parts = []
         festival_display = mf.festival
-        if mf.location:
-            festival_display = config.get_festival_display(mf.festival, mf.location)
+        if mf.edition:
+            festival_display = config.get_festival_display(mf.festival, mf.edition)
         if festival_display:
             album_parts.append(festival_display)
         if mf.year:
@@ -76,8 +76,8 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
         _add(root, "tag", mf.content_type)
     if mf.festival:
         _add(root, "tag", mf.festival)
-    if mf.location:
-        _add(root, "tag", mf.location)
+    if mf.edition:
+        _add(root, "tag", mf.edition)
 
     # Studio — stage name for sets, venue for concerts
     if mf.stage:
@@ -87,8 +87,8 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
     plot_parts = []
     if mf.stage:
         plot_parts.append(f"Stage: {mf.stage}")
-    if mf.location:
-        plot_parts.append(f"Location: {mf.location}")
+    if mf.edition:
+        plot_parts.append(f"Edition: {mf.edition}")
     if mf.set_title:
         plot_parts.append(f"Edition: {mf.set_title}")
     if plot_parts:

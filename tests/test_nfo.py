@@ -54,9 +54,9 @@ def test_nfo_title_is_title_for_concerts(tmp_path):
 
 
 def test_nfo_tags_for_smart_playlists(tmp_path):
-    """tag elements for content type, festival, location."""
+    """tag elements for content type, festival, edition."""
     mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   festival="Tomorrowland", location="Belgium",
+                   festival="Tomorrowland", edition="Belgium",
                    year="2024", content_type="festival_set")
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
@@ -94,7 +94,7 @@ def test_nfo_plot_no_tracklist_url(tmp_path):
     """plot should NOT contain 1001Tracklists URL."""
     mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
                    festival="TML", year="2024", content_type="festival_set",
-                   stage="Mainstage", location="Belgium",
+                   stage="Mainstage", edition="Belgium",
                    tracklists_url="https://www.1001tracklists.com/tracklist/abc123")
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
