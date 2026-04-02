@@ -220,3 +220,55 @@ def classification_summary_panel(
         for name in unrecognized:
             body.append(f"\n  {name}", style="yellow")
     return Panel(body, title="Dry Run Summary", expand=True)
+
+
+def identify_summary_panel(
+    stats: dict[str, int],
+    tagged_count: int = 0,
+    festivals: dict[str, int] | None = None,
+    unmatched: list[str] | None = None,
+) -> Panel:
+    """Summary panel for the identify command with metadata breakdown."""
+    body = Text()
+
+    # Standard stats line
+    first = True
+    for key, value in stats.items():
+        if not first:
+            body.append("  ")
+        first = False
+        style = "green" if key in ("added", "done", "up_to_date") else (
+            "cyan" if key == "updated" else (
+                "red" if key == "error" else "dim"
+            )
+        )
+        body.append(f"{key}: ", style="bold")
+        body.append(str(value), style=style)
+
+    # Metadata tagged count
+    if tagged_count:
+        body.append(f"\n\nMetadata tagged: ", style="bold")
+        body.append(str(tagged_count), style="green")
+        body.append(" files")
+
+    # Festival breakdown
+    if festivals:
+        body.append("\n")
+        body.append("Festivals: ", style="bold")
+        sorted_fests = sorted(festivals.items(), key=lambda x: -x[1])
+        fest_parts = [f"{name} ({count})" for name, count in sorted_fests[:6]]
+        body.append(", ".join(fest_parts))
+        remaining = len(sorted_fests) - 6
+        if remaining > 0:
+            body.append(f", ... +{remaining} more", style="dim")
+
+    # Unmatched files
+    if unmatched:
+        body.append("\n")
+        body.append("Unmatched: ", style="bold")
+        body.append(str(len(unmatched)), style="yellow")
+        body.append(f" ({', '.join(unmatched[:5])})", style="yellow")
+        if len(unmatched) > 5:
+            body.append(f", ... +{len(unmatched) - 5} more", style="dim")
+
+    return Panel(body, title="Summary", expand=True)

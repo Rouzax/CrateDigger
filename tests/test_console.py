@@ -256,3 +256,25 @@ def test_classification_summary_panel():
     assert "Unrecognized" in output
     assert "Musical 8B" in output
     assert "Gala ontvangst" in output
+
+
+# --- identify_summary_panel ---
+
+def test_identify_summary_panel():
+    """Identify summary shows metadata breakdown."""
+    from festival_organizer.console import identify_summary_panel
+    panel = identify_summary_panel(
+        stats={"added": 72, "updated": 5, "skipped": 1, "error": 2, "up_to_date": 0},
+        tagged_count=77,
+        festivals={"Tomorrowland": 45, "EDC Las Vegas": 10, "Ultra": 8},
+        unmatched=["Musical 8B", "Gala ontvangst"],
+    )
+    output = _render(panel)
+    assert "added" in output
+    assert "72" in output
+    assert "Metadata tagged" in output
+    assert "77" in output
+    assert "Tomorrowland" in output
+    assert "45" in output
+    assert "Unmatched" in output
+    assert "Musical 8B" in output

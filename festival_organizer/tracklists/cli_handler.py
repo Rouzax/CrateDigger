@@ -13,9 +13,9 @@ from festival_organizer.config import Config
 from festival_organizer.console import (
     escape,
     header_panel,
+    identify_summary_panel,
     make_console,
     results_table,
-    summary_panel,
 )
 from festival_organizer.scanner import scan_folder
 from festival_organizer.tracklists.api import (
@@ -59,6 +59,20 @@ _FRIENDLY_TAG_NAMES = {
     "CRATEDIGGER_1001TL_RADIO": "radio",
     "CRATEDIGGER_1001TL_ARTISTS": "artists",
 }
+
+
+def _print_tagged_metadata(export, console: Console) -> None:
+    """Print per-file tagged metadata (verbose mode only)."""
+    parts = []
+    if export.dj_artists:
+        parts.append(", ".join(name for _, name in export.dj_artists))
+    for source_type, names in export.sources_by_type.items():
+        if source_type == "Open Air / Festival" and names:
+            parts.append(names[0])
+    if export.stage_text:
+        parts.append(export.stage_text)
+    if parts:
+        console.print(f"  [dim]Tagged: {escape(', '.join(parts))}[/dim]")
 
 
 def run_identify(args, config: Config, console: Console | None = None) -> int:
@@ -114,6 +128,10 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
 
     # Process files
     stats = {"added": 0, "updated": 0, "up_to_date": 0, "skipped": 0, "error": 0}
+    tagged_festivals: dict[str, int] = {}
+    unmatched_files: list[str] = []
+    tagged_count = 0
+    verbose = logger.isEnabledFor(logging.INFO)
 
     for i, filepath in enumerate(files):
         if i > 0 and not preview:
@@ -139,8 +157,19 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 quiet=quiet,
                 language=language,
                 console=con,
+                verbose=verbose,
             )
             stats[status] = stats.get(status, 0) + 1
+            if status in ("added", "updated", "up_to_date"):
+                stored = extract_stored_tracklist_info(filepath)
+                fest = stored.get("festival", "") if stored else ""
+                if fest:
+                    tagged_festivals[fest] = tagged_festivals.get(fest, 0) + 1
+                    tagged_count += 1
+            elif status == "skipped":
+                stored = extract_stored_tracklist_info(filepath)
+                if not stored or not stored.get("url"):
+                    unmatched_files.append(filepath.name)
         except KeyboardInterrupt:
             con.print("\nAborted by user.")
             break
@@ -150,7 +179,12 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
 
     # Summary
     con.print()
-    con.print(summary_panel(stats))
+    con.print(identify_summary_panel(
+        stats=stats,
+        tagged_count=tagged_count,
+        festivals=tagged_festivals,
+        unmatched=unmatched_files,
+    ))
 
     return 0
 
@@ -168,6 +202,7 @@ def _process_file(
     quiet: bool,
     language: str,
     console: Console | None = None,
+    verbose: bool = False,
 ) -> str:
     """Process a single file. Returns status string."""
     con = console or make_console()
@@ -186,6 +221,7 @@ def _process_file(
                 return _fetch_and_embed(
                     session, stored["url"], filepath, duration_mins,
                     config, preview, quiet, language, console=con,
+                    verbose=verbose,
                 )
             else:
                 con.print(f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]")
@@ -194,6 +230,7 @@ def _process_file(
                     return _fetch_and_embed(
                         session, stored["url"], filepath, duration_mins,
                         config, preview, quiet, language, console=con,
+                        verbose=verbose,
                     )
                 elif choice in ("s", "skip"):
                     return "skipped"
@@ -212,12 +249,14 @@ def _process_file(
         return _fetch_and_embed(
             session, source["value"], filepath, duration_mins,
             config, preview, quiet, language, console=con,
+            verbose=verbose,
         )
     elif source["type"] == "id":
         return _fetch_and_embed(
             session, None, filepath, duration_mins,
             config, preview, quiet, language, console=con,
             tracklist_id=source["value"],
+            verbose=verbose,
         )
 
     # Search
@@ -262,6 +301,7 @@ def _process_file(
         config, preview, quiet, language, console=con,
         tracklist_id=tl_id,
         tracklist_date=selected.date,
+        verbose=verbose,
     )
 
 
@@ -277,6 +317,7 @@ def _fetch_and_embed(
     tracklist_id: str | None = None,
     tracklist_date: str | None = None,
     console: Console | None = None,
+    verbose: bool = False,
 ) -> str:
     """Fetch tracklist, parse chapters, and embed."""
     con = console or make_console()
@@ -381,6 +422,8 @@ def _fetch_and_embed(
     if success:
         if not quiet:
             con.print(f"  [green]Embedded {len(chapters)} chapters.[/green]")
+            if verbose:
+                _print_tagged_metadata(export, con)
         return "added"
     else:
         con.print("  [red]Failed to embed chapters (mkvpropedit error).[/red]")
