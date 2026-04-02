@@ -473,7 +473,7 @@ def _run_kodi_sync(all_results, pipeline_files, config, console, quiet):
     """Notify Kodi to refresh items that had NFO/art/poster changes."""
     from festival_organizer.kodi import KodiClient, sync_library
 
-    RELEVANT_OPS = {"nfo", "art", "poster", "album_poster", "posters"}
+    RELEVANT_OPS = {"nfo", "art", "posters"}
     changed_paths: list[Path] = []
 
     for (fp, _mf, ops), results in zip(pipeline_files, all_results):

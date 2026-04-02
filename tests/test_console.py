@@ -193,12 +193,12 @@ def test_summary_panel_flat_counts():
 def test_summary_panel_nested_counts():
     counts = {
         "nfo": {"done": 2, "skipped": 1},
-        "poster": {"done": 3, "error": 1},
+        "posters": {"done": 3, "error": 1},
     }
     p = summary_panel(counts)
     output = _render(p)
     assert "NFO" in output
-    assert "POSTER" in output
+    assert "POSTERS" in output
     assert "2" in output
 
 
