@@ -334,23 +334,35 @@ class AlbumPosterOperation(Operation):
             logger.debug("Artwork download failed: %s", e)
             return None
 
-    def _find_curated_logo(self, festival: str) -> Path | None:
-        """Find curated festival logo from library or user-level folders."""
+    def _find_curated_logo(self, festival: str, edition: str = "") -> Path | None:
+        """Find curated festival logo from library or user-level folders.
+
+        Tries edition-specific path first (e.g., festivals/EDC Las Vegas/logo.png),
+        then falls back to canonical (e.g., festivals/EDC/logo.png).
+        """
         canonical = self.config.resolve_festival_alias(festival) if festival else ""
         if not canonical:
             return None
 
-        search_dirs: list[Path] = []
-        if self.library_root:
-            search_dirs.append(self.library_root / ".cratedigger" / "festivals" / canonical)
-        search_dirs.append(Path.home() / ".cratedigger" / "festivals" / canonical)
+        # Build search names: edition-specific first, then canonical
+        names = []
+        if edition:
+            display = self.config.get_festival_display(canonical, edition)
+            if display != canonical:
+                names.append(display)
+        names.append(canonical)
 
-        for d in search_dirs:
-            for ext in ("jpg", "jpeg", "png", "webp"):
-                candidate = d / f"logo.{ext}"
-                if candidate.exists():
-                    logger.info("Curated logo: %s", candidate)
-                    return candidate
+        for name in names:
+            search_dirs: list[Path] = []
+            if self.library_root:
+                search_dirs.append(self.library_root / ".cratedigger" / "festivals" / name)
+            search_dirs.append(Path.home() / ".cratedigger" / "festivals" / name)
+            for d in search_dirs:
+                for ext in ("jpg", "jpeg", "png", "webp"):
+                    candidate = d / f"logo.{ext}"
+                    if candidate.exists():
+                        logger.info("Curated logo: %s", candidate)
+                        return candidate
         return None
 
     def _prepare_dj_artwork(self, path: Path) -> Path:
@@ -443,23 +455,25 @@ class AlbumPosterOperation(Operation):
             if source == "curated_logo":
                 tried_curated = True
                 if bg and media_file.festival:
-                    canonical = self.config.resolve_festival_alias(media_file.festival)
-                    self._logo_hits[canonical] = bg
+                    display = self.config.get_festival_display(
+                        media_file.festival, media_file.edition)
+                    self._logo_hits[display] = bg
             if bg:
                 logger.info("Album poster: using %s", source)
                 return bg, source
             logger.debug("Album poster: %s not available", source)
         if tried_curated and media_file.festival:
-            canonical = self.config.resolve_festival_alias(media_file.festival)
-            if canonical not in self._logo_hits:
-                self._logo_misses.add(canonical)
+            display = self.config.get_festival_display(
+                media_file.festival, media_file.edition)
+            if display not in self._logo_hits:
+                self._logo_misses.add(display)
         return None, ""
 
     def _try_background_source(self, source: str, folder: Path,
                                 media_file: MediaFile) -> Path | None:
         """Try a single background source. Returns path or None."""
         if source == "curated_logo":
-            return self._find_curated_logo(media_file.festival)
+            return self._find_curated_logo(media_file.festival, media_file.edition)
         elif source == "dj_artwork":
             return self._find_dj_artwork(folder)
         elif source == "fanart_tv":

@@ -495,8 +495,8 @@ def _run_audit_logos(root: Path, config, console) -> int:
             from festival_organizer.analyzer import analyse_file
             mf = analyse_file(video, video.parent, config)
             if mf.festival:
-                canonical = config.resolve_festival_alias(mf.festival)
-                festivals_found.add(canonical)
+                display = config.get_festival_display(mf.festival, mf.edition)
+                festivals_found.add(display)
 
     # Check logo availability for each festival
     logo_dirs = [
