@@ -196,7 +196,7 @@ class PosterOperation(Operation):
             generate_set_poster(
                 source_image_path=thumb,
                 output_path=poster,
-                artist=mf.artist or "Unknown",
+                artist=mf.display_artist or mf.artist or "Unknown",
                 festival=festival_display or mf.title or "",
                 date=mf.date,
                 year=mf.year,
