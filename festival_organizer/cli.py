@@ -323,19 +323,26 @@ def _run_command(args) -> int:
         "mkvpropedit": metadata.MKVPROPEDIT_PATH,
     }
     missing_tools = [name for name, path in all_tools.items() if not path]
-    command_label = "Organize (dry run)" if getattr(args, "dry_run", False) else args.command.capitalize()
-    progress.print_header(
-        command=command_label,
-        source=root, output=output,
-        layout=config.default_layout, missing_tools=missing_tools,
-    )
 
     if not quiet:
         with console.status("Scanning files..."):
             files = scan_folder(root, config)
-        console.print(f"Found {len(files)} media files.\n")
     else:
         files = scan_folder(root, config)
+
+    # Build command-specific header rows
+    if args.command == "enrich":
+        command_label = "Enrich"
+        header_rows = {"Library": str(output), "Files": str(len(files))}
+    else:
+        command_label = "Organize (dry run)" if getattr(args, "dry_run", False) else "Organize"
+        header_rows = {
+            "Source": str(root),
+            "Output": str(output),
+            "Layout": config.default_layout,
+            "Files": str(len(files)),
+        }
+    progress.print_header(command=command_label, rows=header_rows, missing_tools=missing_tools)
 
     if not files:
         console.print("Nothing to do.")
@@ -362,7 +369,13 @@ def _run_command(args) -> int:
     force = getattr(args, "regenerate", False) or getattr(args, "fresh", False)
     only = set()
     if getattr(args, "only", None):
-        only = set(args.only.split(","))
+        only = {v.strip() for v in args.only.split(",")}
+        valid_ops = {"nfo", "art", "fanart", "posters", "tags"}
+        unknown = only - valid_ops
+        if unknown:
+            print(f"Error: unknown operation {', '.join(repr(u) for u in sorted(unknown))}.\n"
+                  f"Valid: {', '.join(sorted(valid_ops))}", file=sys.stderr)
+            return 1
     pipeline_files = []
 
     # Shared operation instances (deduplicate across files)
@@ -467,7 +480,7 @@ def _run_kodi_sync(all_results, pipeline_files, config, console, quiet):
     """Notify Kodi to refresh items that had NFO/art/poster changes."""
     from festival_organizer.kodi import KodiClient, sync_library
 
-    RELEVANT_OPS = {"nfo", "art", "poster", "album_poster"}
+    RELEVANT_OPS = {"nfo", "art", "poster", "album_poster", "posters"}
     changed_paths: list[Path] = []
 
     for (fp, _mf, ops), results in zip(pipeline_files, all_results):

@@ -31,17 +31,10 @@ class ProgressPrinter:
     def print_header(
         self,
         command: str,
-        source: Path,
-        output: Path,
-        layout: str,
+        rows: dict[str, str],
         missing_tools: list[str] | None = None,
     ) -> None:
-        """Print the run header."""
-        rows = {
-            "Source": str(source),
-            "Output": str(output),
-            "Layout": layout,
-        }
+        """Print the run header with command-specific rows."""
         self.console.print(header_panel(f"CrateDigger: {command}", rows))
         if missing_tools:
             for tool in missing_tools:
@@ -53,7 +46,7 @@ class ProgressPrinter:
         if self.quiet:
             return
         text = Text()
-        text.append(f"\n [{self._file_index}/{self.total}] ", style="bold")
+        text.append(f"\n[{self._file_index}/{self.total}] ", style="bold")
         text.append(filename.name)
         self.console.print(text)
         if target_folder:
@@ -82,4 +75,11 @@ class ProgressPrinter:
     def print_summary(self, log_path: Path | None = None) -> None:
         """Print the final summary."""
         counts = dict(self._counts)
+        # Merge poster + album_poster into a combined "posters" entry
+        if "poster" in counts or "album_poster" in counts:
+            merged: dict[str, int] = defaultdict(int)
+            for key in ("poster", "album_poster"):
+                for status, count in counts.pop(key, {}).items():
+                    merged[status] += count
+            counts["posters"] = dict(merged)
         self.console.print(summary_panel(counts, log_path=log_path))
