@@ -1,4 +1,11 @@
-"""CLI handler for the 'identify' subcommand."""
+"""CLI handler for the 'identify' subcommand.
+
+Logging:
+    Logger: 'festival_organizer.tracklists.cli_handler'
+    Key events:
+        - identify.write_failed (WARNING): Tag writing via mkvpropedit failed
+    See docs/logging.md for full guidelines.
+"""
 import logging
 import sys
 import time
@@ -451,7 +458,10 @@ def _select_interactive(results: list, duration_mins: int, query_parts=None, con
                 return None
             if 1 <= num <= max_show:
                 return results[num - 1]
-        except (ValueError, EOFError):
+        except ValueError:
+            con.print(f"  [dim]Enter a number (1-{max_show}) or 0 to skip[/dim]")
+            continue
+        except EOFError:
             return None
 
 

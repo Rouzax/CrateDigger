@@ -1,4 +1,21 @@
-"""1001Tracklists API — session management, search, and tracklist export."""
+"""1001Tracklists API: session management, search, and tracklist export.
+
+Logging:
+    Logger: 'festival_organizer.tracklists.api'
+    Key events:
+        - search.params (DEBUG): Search parameters sent to API
+        - search.response (DEBUG): Search response status and size
+        - search.no_results (DEBUG): HTML returned but zero results parsed
+        - export.genres (INFO): Genres extracted from tracklist page
+        - export.cached_source (INFO): Source page metadata cached
+        - export.cached_dj (INFO): DJ profile cached
+        - export.dj_artwork (INFO): DJ artwork URL found
+        - session.validation_failed (DEBUG): Session validation request failed
+        - session.cookie_save_failed (DEBUG): Could not persist cookies
+        - session.cookie_restore_failed (DEBUG): Could not load cached cookies
+        - dj.fetch_failed (DEBUG): DJ profile page request failed
+    See docs/logging.md for full guidelines.
+"""
 import html as html_mod
 import json
 import logging

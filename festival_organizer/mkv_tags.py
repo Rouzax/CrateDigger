@@ -61,9 +61,8 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
         )
 
         if result.returncode != 0:
-            logger.warning(
-                "Tag extraction failed for %s: %s", filepath, result.stderr.strip()
-            )
+            detail = result.stderr.strip() or f"exit code {result.returncode}"
+            logger.warning("Tag extraction failed for %s: %s", filepath, detail)
             return None
 
         # mkvextract writes an empty file when there are no tags
@@ -87,16 +86,11 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
                 pass
 
 
-def extract_tag_values(filepath: Path) -> dict[int, dict[str, str]]:
-    """Extract existing tag values grouped by TargetTypeValue.
+def _tag_values_from_root(root: ET.Element) -> dict[int, dict[str, str]]:
+    """Derive TTV-grouped tag values from an already-parsed <Tags> root.
 
     Returns dict mapping TTV -> {Name: String} for all global tags.
-    Returns empty dict if no tags or extraction fails.
     """
-    root = extract_all_tags(filepath)
-    if root is None:
-        return {}
-
     result: dict[int, dict[str, str]] = {}
     for tag in root.findall("Tag"):
         targets = tag.find("Targets")
@@ -119,6 +113,19 @@ def extract_tag_values(filepath: Path) -> dict[int, dict[str, str]]:
             result[ttv] = tags
 
     return result
+
+
+def extract_tag_values(filepath: Path) -> dict[int, dict[str, str]]:
+    """Extract existing tag values grouped by TargetTypeValue.
+
+    Returns dict mapping TTV -> {Name: String} for all global tags.
+    Returns empty dict if no tags or extraction fails.
+    """
+    root = extract_all_tags(filepath)
+    if root is None:
+        return {}
+
+    return _tag_values_from_root(root)
 
 
 def merge_tags(
@@ -207,7 +214,7 @@ def merge_tags(
 
 
 def write_merged_tags(
-    filepath: Path, new_tags: dict[int, dict[str, str]]
+    filepath: Path, new_tags: dict[int, dict[str, str]], existing_root=None
 ) -> bool:
     """Extract existing tags, merge new ones in, and write the combined result.
 
@@ -217,6 +224,8 @@ def write_merged_tags(
     Args:
         filepath: Path to the MKV file to modify
         new_tags: Dict mapping TargetTypeValue -> {Name: String} pairs
+        existing_root: Pre-extracted XML root from extract_all_tags(); when
+            provided the redundant extraction is skipped.
 
     Returns:
         True if successful, False otherwise
@@ -227,8 +236,8 @@ def write_merged_tags(
     if not filepath.exists() or filepath.suffix.lower() not in MATROSKA_EXTS:
         return False
 
-    # Extract existing tags
-    existing = extract_all_tags(filepath)
+    # Extract existing tags (skip if caller already extracted)
+    existing = existing_root if existing_root is not None else extract_all_tags(filepath)
 
     # Merge
     merged_xml = merge_tags(existing, new_tags)
@@ -252,9 +261,8 @@ def write_merged_tags(
         )
 
         if result.returncode != 0:
-            logger.warning(
-                "Tag writing failed for %s: %s", filepath, result.stderr.strip()
-            )
+            detail = result.stderr.strip() or f"exit code {result.returncode}"
+            logger.warning("Tag writing failed for %s: %s", filepath, detail)
             return False
 
         return True

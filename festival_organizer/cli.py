@@ -352,18 +352,10 @@ def _run_command(args) -> int:
 
     # Analyze + classify
     media_files = []
-    if not quiet:
-        with console.status("") as status:
-            for i, fp in enumerate(files):
-                status.update(f"Analyzing \\[{i+1}/{len(files)}] {escape(fp.name)}")
-                mf = analyse_file(fp, root, config)
-                mf.content_type = classify(mf, root, config)
-                media_files.append((fp, mf))
-    else:
-        for fp in files:
-            mf = analyse_file(fp, root, config)
-            mf.content_type = classify(mf, root, config)
-            media_files.append((fp, mf))
+    for fp in files:
+        mf = analyse_file(fp, root, config)
+        mf.content_type = classify(mf, root, config)
+        media_files.append((fp, mf))
 
     # Build operations per file
     force = getattr(args, "regenerate", False) or getattr(args, "fresh", False)

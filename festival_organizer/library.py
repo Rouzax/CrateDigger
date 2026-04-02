@@ -1,4 +1,15 @@
-"""Library root detection and marker management."""
+"""Library root detection and marker management.
+
+Logging:
+    Logger: 'festival_organizer.library'
+    Key events:
+        - cleanup.permission_error (WARNING): Cannot remove directory due to permissions
+        - cleanup.os_error (WARNING): OS error during directory cleanup
+        - cleanup.unknown_hidden (WARNING): Directory kept because of unknown hidden files
+        - cleanup.not_empty (DEBUG): Directory not removed because it still has entries
+        - cleanup.removed (DEBUG): Empty directory removed
+    See docs/logging.md for full guidelines.
+"""
 import json
 import logging
 import os
@@ -177,4 +188,4 @@ def _try_cleanup_dir(dirpath: Path) -> None:
 
     # Directory is truly empty — remove it.
     dirpath.rmdir()
-    logger.info("Removed empty directory: %s", dirpath)
+    logger.debug("Removed empty directory: %s", dirpath)
