@@ -370,7 +370,17 @@ def _run_command(args) -> int:
         pipeline_files.append((fp, mf, ops))
 
     if getattr(args, "dry_run", False):
-        console.print(f"\n[dim]Dry run complete. {len(media_files)} files scanned.[/dim]")
+        from festival_organizer.console import classification_summary_panel
+        festival_count = sum(1 for _, mf in media_files if mf.content_type == "festival_set")
+        concert_count = sum(1 for _, mf in media_files if mf.content_type == "concert_film")
+        unrecognized = [fp.name for fp, mf in media_files if mf.content_type in ("unknown", "")]
+        console.print()
+        console.print(classification_summary_panel(
+            total=len(media_files),
+            festival_sets=festival_count,
+            concerts=concert_count,
+            unrecognized=unrecognized,
+        ))
         return 0
 
     # Run pipeline

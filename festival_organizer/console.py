@@ -198,3 +198,25 @@ def summary_panel(counts: dict, log_path=None) -> Panel:
         body.append(str(log_path), style="dim")
 
     return Panel(body, title="Summary", expand=True)
+
+
+def classification_summary_panel(
+    total: int,
+    festival_sets: int,
+    concerts: int,
+    unrecognized: list[str],
+) -> Panel:
+    """Dry-run classification breakdown panel."""
+    body = Text()
+    body.append("Festival sets: ", style="bold")
+    body.append(str(festival_sets), style="green")
+    body.append("\n")
+    body.append("Concerts: ", style="bold")
+    body.append(str(concerts), style="green")
+    if unrecognized:
+        body.append("\n")
+        body.append("Unrecognized: ", style="bold")
+        body.append(str(len(unrecognized)), style="yellow")
+        for name in unrecognized:
+            body.append(f"\n  {name}", style="yellow")
+    return Panel(body, title="Dry Run Summary", expand=True)

@@ -235,3 +235,24 @@ def test_summary_panel_updated_status():
     output = _render(p)
     assert "updated" in output
     assert "3" in output
+
+
+# --- classification_summary_panel ---
+
+def test_classification_summary_panel():
+    """Classification summary shows breakdown by content type."""
+    from festival_organizer.console import classification_summary_panel
+    panel = classification_summary_panel(
+        total=80,
+        festival_sets=75,
+        concerts=3,
+        unrecognized=["Musical 8B", "Gala ontvangst"],
+    )
+    output = _render(panel)
+    assert "Festival sets" in output
+    assert "75" in output
+    assert "Concerts" in output
+    assert "3" in output
+    assert "Unrecognized" in output
+    assert "Musical 8B" in output
+    assert "Gala ontvangst" in output
