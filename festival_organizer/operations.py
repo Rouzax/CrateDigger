@@ -30,11 +30,13 @@ class OperationResult:
     name: str
     status: str  # "done", "skipped", "error"
     detail: str = ""
+    display_name: str = ""  # Per-file label; falls back to name if empty
 
 
 class Operation:
     """Base class for operations."""
     name: str = ""
+    display_name: str = ""  # Per-file label; falls back to name if empty
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         """Check if this operation needs to run (gap detection)."""
@@ -174,6 +176,7 @@ class ArtOperation(Operation):
 
 class PosterOperation(Operation):
     name = "posters"
+    display_name = "poster"
 
     def __init__(self, config: Config, force: bool = False):
         self.config = config
@@ -216,6 +219,7 @@ class PosterOperation(Operation):
 
 class AlbumPosterOperation(Operation):
     name = "posters"
+    display_name = "album_poster"
 
     def __init__(self, config: Config, force: bool = False, library_root: Path | None = None):
         self.config = config

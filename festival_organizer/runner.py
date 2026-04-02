@@ -39,19 +39,21 @@ def run_pipeline(
         current_path = file_path
 
         for op in operations:
+            op_display = getattr(op, "display_name", "") or ""
             try:
                 needed = op.is_needed(current_path, media_file)
             except Exception as e:
-                file_results.append(OperationResult(op.name, "error", str(e)))
+                file_results.append(OperationResult(op.name, "error", str(e), display_name=op_display))
                 continue
 
             if needed:
                 result = op.execute(current_path, media_file)
+                result.display_name = op_display
                 # If organize succeeded, update path for downstream ops
                 if op.name == "organize" and result.status == "done":
                     current_path = op.target
             else:
-                result = OperationResult(op.name, "skipped", "exists")
+                result = OperationResult(op.name, "skipped", "exists", display_name=op_display)
             file_results.append(result)
 
         progress.file_done(file_results)

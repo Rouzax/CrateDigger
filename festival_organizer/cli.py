@@ -1,5 +1,6 @@
 """Command-line interface with workflow-oriented subcommands."""
 import sys
+import time
 import types
 from enum import StrEnum
 from pathlib import Path
@@ -10,7 +11,7 @@ import typer
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import load_config
-from festival_organizer.console import escape, make_console
+from festival_organizer.console import escape, make_console, print_error
 from festival_organizer.library import init_library, resolve_library_root
 from festival_organizer import metadata
 from festival_organizer.log import setup_logging
@@ -233,6 +234,7 @@ def run(argv: list[str] | None = None) -> int:
 # ---------------------------------------------------------------------------
 
 def _run_command(args) -> int:
+    start_time = time.monotonic()
     # Resolve config layers
     config_path = Path(args.config) if getattr(args, "config", None) else None
     root = Path(args.root)
@@ -272,11 +274,11 @@ def _run_command(args) -> int:
         return _run_audit_logos(root, config, console)
 
     if not root.exists():
-        print(f"Error: path does not exist: {root}", file=sys.stderr)
+        print_error(f"path does not exist: {root}", console)
         return 1
 
     if args.command == "enrich" and not library_root:
-        print("Error: not a CrateDigger library. Run organize first.", file=sys.stderr)
+        print_error("not a CrateDigger library. Run organize first.", console)
         return 1
 
     # Determine output root
@@ -305,8 +307,8 @@ def _run_command(args) -> int:
                     print("Aborted.", file=sys.stderr)
                     return 0
             else:
-                print("Error: re-organizing in-place requires confirmation. "
-                      "Use --yes to skip.", file=sys.stderr)
+                print_error("re-organizing in-place requires confirmation. "
+                           "Use --yes to skip.", console)
                 return 1
 
     # Initialize library marker on first organize
@@ -334,15 +336,29 @@ def _run_command(args) -> int:
     # Build command-specific header rows
     if args.command == "enrich":
         command_label = "Enrich"
-        header_rows = {"Library": str(output), "Files": str(len(files))}
+        header_rows = {}
+        if root.resolve() != output.resolve():
+            header_rows["Path"] = str(root)
+        header_rows["Library"] = str(output)
+        header_rows["Files"] = str(len(files))
+        if getattr(args, "only", None):
+            header_rows["Operations"] = args.only
+        if getattr(args, "regenerate", False):
+            header_rows["Regenerate"] = "yes"
     else:
-        command_label = "Organize (dry run)" if getattr(args, "dry_run", False) else "Organize"
+        action = "move" if getattr(args, "move", False) else \
+                 "rename" if getattr(args, "rename_only", False) else "copy"
+        dry_run = getattr(args, "dry_run", False)
+        command_label = f"Organize (dry run, {action})" if dry_run else "Organize"
         header_rows = {
             "Source": str(root),
             "Output": str(output),
             "Layout": config.default_layout,
+            "Action": action,
             "Files": str(len(files)),
         }
+        if getattr(args, "enrich", False):
+            header_rows["Enrich"] = "yes"
     progress.print_header(command=command_label, rows=header_rows, missing_tools=missing_tools)
 
     if not files:
@@ -366,8 +382,8 @@ def _run_command(args) -> int:
         valid_ops = {"nfo", "art", "fanart", "posters", "tags"}
         unknown = only - valid_ops
         if unknown:
-            print(f"Error: unknown operation {', '.join(repr(u) for u in sorted(unknown))}.\n"
-                  f"Valid: {', '.join(sorted(valid_ops))}", file=sys.stderr)
+            print_error(f"unknown operation {', '.join(repr(u) for u in sorted(unknown))}. "
+                       f"Valid: {', '.join(sorted(valid_ops))}", console)
             return 1
     pipeline_files = []
 
@@ -466,6 +482,11 @@ def _run_command(args) -> int:
     if kodi_sync and args.command in ("enrich", "organize"):
         _run_kodi_sync(all_results, pipeline_files, config, console, quiet)
 
+    # Completion signal
+    if not quiet:
+        elapsed = time.monotonic() - start_time
+        console.print(f"[dim]Completed in {elapsed:.1f}s[/dim]")
+
     return 0
 
 
@@ -517,7 +538,7 @@ def _run_audit_logos(root: Path, config, console) -> int:
 
     library_root = find_library_root(root) if root.exists() else None
     if not library_root:
-        print(f"Error: not a CrateDigger library: {root}", file=sys.stderr)
+        print_error(f"not a CrateDigger library: {root}", console)
         return 1
 
     # Scan all media files for canonical festival names

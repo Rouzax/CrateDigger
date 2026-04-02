@@ -58,7 +58,8 @@ class ProgressPrinter:
             return
         parts: list[Text] = []
         for r in results:
-            parts.append(status_text(r.status, r.name, r.detail or ""))
+            display = r.display_name or r.name
+            parts.append(status_text(r.status, display, r.detail or ""))
         if parts:
             line = Text("        ")
             for i, part in enumerate(parts):

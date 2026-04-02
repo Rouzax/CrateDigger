@@ -71,7 +71,8 @@ def test_organize_inside_library_requires_confirmation(tmp_path, capsys):
 
     assert result == 1
     captured = capsys.readouterr()
-    assert "confirmation" in captured.err.lower() or "--yes" in captured.err
+    combined = captured.out + captured.err
+    assert "confirmation" in combined.lower() or "--yes" in combined
 
 
 def test_organize_inside_library_with_yes_proceeds(tmp_path):

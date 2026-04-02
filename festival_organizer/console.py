@@ -203,6 +203,17 @@ def summary_panel(counts: dict, log_path=None) -> Panel:
     return Panel(body, title="Summary", expand=True)
 
 
+def print_error(message: str, console: Console | None = None) -> None:
+    """Print a styled error message.
+
+    Uses Rich console when available, falls back to stderr.
+    """
+    if console:
+        console.print(f"[red]Error:[/red] {escape(message)}")
+    else:
+        print(f"Error: {message}", file=sys.stderr)
+
+
 def classification_summary_panel(
     total: int,
     festival_sets: int,
