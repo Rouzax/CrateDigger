@@ -28,17 +28,12 @@
     },
 
     "kodi": {
-        "_comment": "Kodi JSON-RPC settings. Enable to auto-refresh Kodi after enrichment. Requires 'Allow remote control via HTTP' in Kodi Settings > Services > Control.",
+        "_comment": "Kodi JSON-RPC settings. Enable to auto-refresh Kodi after enrichment. Path mapping is auto-detected from the Kodi library.",
         "enabled": false,
         "host": "localhost",
         "port": 8080,
         "username": "kodi",
-        "password": "",
-        "path_mapping": {
-            "_comment": "Translate local paths to Kodi paths. Required when Kodi accesses files via SMB/NFS.",
-            "local": "D:\\Data\\Concerts",
-            "kodi": "smb://HYPERV/Data/Concerts"
-        }
+        "password": ""
     },
 
     "nfo_settings": {
