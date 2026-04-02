@@ -115,12 +115,12 @@ def test_nfo_multiple_thumb_aspects(tmp_path):
     aspects = [t.get("aspect") for t in thumbs]
     assert "thumb" in aspects
     assert "poster" in aspects
-    # Fanart references the thumb image
+    # Fanart references the dedicated fanart sidecar
     fanart = root.find("fanart")
     assert fanart is not None
     fanart_thumb = fanart.find("thumb")
     assert fanart_thumb is not None
-    assert fanart_thumb.text == "test-thumb.jpg"
+    assert fanart_thumb.text == "test-fanart.jpg"
 
 
 def test_nfo_no_streamdetails(tmp_path):

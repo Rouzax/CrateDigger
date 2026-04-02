@@ -106,7 +106,7 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
     poster.text = f"{video_path.stem}-poster.jpg"
     fanart_elem = ET.SubElement(root, "fanart")
     fanart_thumb = ET.SubElement(fanart_elem, "thumb")
-    fanart_thumb.text = f"{video_path.stem}-thumb.jpg"
+    fanart_thumb.text = f"{video_path.stem}-fanart.jpg"
 
     # Date added
     _add(root, "dateadded", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -159,9 +160,14 @@ class ArtOperation(Operation):
         from festival_organizer.artwork import extract_cover
         try:
             result = extract_cover(file_path, file_path.parent)
-            if result:
-                return OperationResult(self.name, "done")
-            return OperationResult(self.name, "error", "no embedded art, no frames")
+            if not result:
+                return OperationResult(self.name, "error", "no embedded art, no frames")
+            # Copy thumb as fanart sidecar (Kodi expects -fanart.jpg on disk)
+            thumb = file_path.with_name(f"{file_path.stem}-thumb.jpg")
+            fanart = file_path.with_name(f"{file_path.stem}-fanart.jpg")
+            if thumb.exists():
+                shutil.copy2(thumb, fanart)
+            return OperationResult(self.name, "done")
         except (OSError, subprocess.SubprocessError) as e:
             return OperationResult(self.name, "error", str(e))
 
