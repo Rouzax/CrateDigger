@@ -115,17 +115,15 @@ def organize(
 @app.command()
 def enrich(
     root: RootArg,
-    output: OutputOpt = None,
-    layout: LayoutOpt = None,
     config: ConfigOpt = None,
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
-    only: Annotated[Optional[str], typer.Option("--only", help="Comma-separated: nfo,art,fanart,posters,tags,chapters")] = None,
-    force: Annotated[bool, typer.Option("--force", help="Regenerate even if artifacts exist")] = False,
+    only: Annotated[Optional[str], typer.Option("--only", help="Operations: nfo, art, fanart, posters, tags")] = None,
+    regenerate: Annotated[bool, typer.Option("--regenerate", help="Regenerate even if artifacts exist")] = False,
     kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
 ) -> int:
-    """Add metadata artifacts to files in place."""
+    """Add artwork, posters, NFO, and tags."""
     return _dispatch("enrich", locals())
 
 
@@ -223,6 +221,10 @@ def _run_command(args) -> int:
         print(f"Error: path does not exist: {root}", file=sys.stderr)
         return 1
 
+    if args.command == "enrich" and not library_root:
+        print("Error: not a CrateDigger library. Run organize first.", file=sys.stderr)
+        return 1
+
     # Determine output root
     output = output_arg
     if output is None:
@@ -306,7 +308,7 @@ def _run_command(args) -> int:
             media_files.append((fp, mf))
 
     # Build operations per file
-    force = getattr(args, "force", False)
+    force = getattr(args, "regenerate", False) or getattr(args, "fresh", False)
     only = set()
     if getattr(args, "only", None):
         only = set(args.only.split(","))
@@ -373,22 +375,6 @@ def _run_command(args) -> int:
 
     # Run pipeline
     all_results = run_pipeline(pipeline_files, progress)
-
-    # If enrich includes chapters, run identify handler in auto mode
-    if args.command == "enrich" and only and "chapters" in only:
-        from festival_organizer.tracklists.cli_handler import run_identify
-        import types as _types
-        chap_args = _types.SimpleNamespace(
-            root=str(root),
-            tracklist=None,
-            auto_select=True,
-            ignore_stored_url=force,
-            preview=False,
-            delay=None,
-            config=getattr(args, "config", None),
-            quiet=quiet,
-        )
-        run_identify(chap_args, config, console=console)
 
     # Post-pipeline: clean up empty source directories after organize (move)
     if args.command == "organize":
