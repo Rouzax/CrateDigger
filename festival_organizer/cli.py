@@ -157,11 +157,61 @@ def audit_logos(
 
 
 # ---------------------------------------------------------------------------
+# Console state helpers (Windows console mode corruption prevention)
+# ---------------------------------------------------------------------------
+
+_SAVED_CONSOLE_MODE: int | None = None
+
+
+def _save_win32_console_mode() -> None:
+    """Snapshot the console output mode before Rich touches it."""
+    global _SAVED_CONSOLE_MODE
+    try:
+        import ctypes
+        from ctypes import wintypes
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
+        mode = wintypes.DWORD()
+        if kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+            _SAVED_CONSOLE_MODE = mode.value
+    except Exception:
+        pass
+
+
+def _restore_win32_console_mode() -> None:
+    """Restore the original console output mode."""
+    if _SAVED_CONSOLE_MODE is None:
+        return
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
+        kernel32.SetConsoleMode(handle, _SAVED_CONSOLE_MODE)
+    except Exception:
+        pass
+
+
+def _cleanup_console() -> None:
+    """Reset terminal state to prevent cross-process console corruption on Windows."""
+    try:
+        sys.stdout.write("\033[?25h")  # Show cursor (Rich Status/Live may hide it)
+        sys.stdout.flush()
+        sys.stderr.flush()
+    except Exception:
+        pass
+
+    if sys.platform == "win32":
+        _restore_win32_console_mode()
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
 def run(argv: list[str] | None = None) -> int:
     """Main entry point. Returns exit code."""
+    if sys.platform == "win32":
+        _save_win32_console_mode()
     try:
         result = app(args=argv, standalone_mode=False)
         return result if isinstance(result, int) else 0
@@ -173,6 +223,8 @@ def run(argv: list[str] | None = None) -> int:
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
+    finally:
+        _cleanup_console()
 
 
 # ---------------------------------------------------------------------------

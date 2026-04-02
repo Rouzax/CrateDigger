@@ -1,7 +1,5 @@
 """Logging: console output and CSV export."""
 import csv
-import io
-import sys
 from pathlib import Path
 
 from rich.console import Console
@@ -9,14 +7,6 @@ from rich.text import Text
 
 from festival_organizer.console import escape, make_console
 from festival_organizer.models import FileAction
-
-# Force UTF-8 on Windows console (skip when running under pytest to
-# avoid closing the capture file descriptors pytest relies on).
-if sys.platform == "win32" and "pytest" not in sys.modules:
-    if hasattr(sys.stdout, "buffer"):
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-    if hasattr(sys.stderr, "buffer"):
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 
 CSV_FIELDS = [
