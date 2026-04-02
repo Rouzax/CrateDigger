@@ -624,7 +624,7 @@ def test_album_poster_dj_artwork_fallback_from_tracklist(tmp_path):
             api_instance = MockSession.return_value
             api_instance.login.return_value = None
             api_instance._request.return_value = mock_resp
-            api_instance._fetch_dj_artwork.return_value = "https://cdn.1001tracklists.com/images/dj/martingarrix.jpg"
+            api_instance._fetch_dj_profile.return_value = {"artwork_url": "https://cdn.1001tracklists.com/images/dj/martingarrix.jpg", "aliases": [], "member_of": []}
             with patch.object(op, "_download_artwork", return_value=Path("/tmp/cached.jpg")):
                 with patch.object(op, "_prepare_dj_artwork", side_effect=lambda p: p):
                     result = op._find_dj_artwork(folder)

@@ -52,9 +52,10 @@ class TracklistSession:
     """Manages authenticated session with 1001tracklists.com."""
 
     def __init__(self, cookie_cache_path: Path | None = None,
-                 source_cache=None, delay: float = 5):
+                 source_cache=None, dj_cache=None, delay: float = 5):
         self._cookie_path = cookie_cache_path or DEFAULT_COOKIE_PATH
         self._source_cache = source_cache
+        self._dj_cache = dj_cache
         self._delay = delay
         self._session = requests.Session()
         self._session.headers.update({
@@ -193,12 +194,25 @@ class TracklistSession:
                     [s[0] for s in h1_info["sources"]]
                 )
 
-        # Fetch DJ artwork from first DJ's profile page
+        # Fetch DJ profiles and populate cache (skip already-cached DJs)
         dj_artwork_url = ""
         dj_slugs = [slug for slug, _name in dj_artists] if dj_artists else _extract_dj_slugs(page_resp.text)
-        if dj_slugs:
-            dj_artwork_url = self._fetch_dj_artwork(dj_slugs[0])
-            if dj_artwork_url:
+        dj_name_map = {slug: name for slug, name in dj_artists}
+        for i, dj_slug in enumerate(dj_slugs):
+            cached = self._dj_cache.get(dj_slug) if self._dj_cache else None
+            if cached:
+                profile = cached
+            else:
+                if i > 0:
+                    time.sleep(self._delay)
+                profile = self._fetch_dj_profile(dj_slug)
+                if self._dj_cache:
+                    display_name = dj_name_map.get(dj_slug, dj_slug)
+                    entry = {"name": display_name, **profile}
+                    self._dj_cache.put(dj_slug, entry)
+                    logger.info("Cached DJ profile: %s", display_name)
+            if i == 0 and profile.get("artwork_url"):
+                dj_artwork_url = profile["artwork_url"]
                 logger.info("DJ artwork: %s", dj_artwork_url)
 
         return TracklistExport(
@@ -325,20 +339,19 @@ class TracklistSession:
 
         return {"name": name, "slug": slug, "type": source_type, "country": country}
 
-    def _fetch_dj_artwork(self, dj_slug: str) -> str:
-        """Fetch og:image from a /dj/ profile page. Returns URL or empty string."""
+    def _fetch_dj_profile(self, dj_slug: str) -> dict:
+        """Fetch and parse a /dj/ profile page for artwork, aliases, and groups.
+
+        Returns dict with artwork_url, aliases, and member_of.
+        On failure returns empty defaults.
+        """
+        empty = {"artwork_url": "", "aliases": [], "member_of": []}
         try:
             resp = self._request("GET", f"{BASE_URL}/dj/{dj_slug}/index.html", max_retries=2)
-            m = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', resp.text)
-            if m:
-                url = m.group(1)
-                # Skip default/placeholder/static images
-                if "/images/static/" in url or "logo" in url.lower() or "default" in url:
-                    return ""
-                return _maximize_artwork_url(url)
+            return _parse_dj_profile(resp.text)
         except TracklistError:
             logger.debug("Failed to fetch DJ page for %s", dj_slug)
-        return ""
+        return empty
 
     def _validate_session(self) -> bool:
         """Check if current session is still valid."""
@@ -475,6 +488,52 @@ def _extract_genres(html: str) -> list[str]:
         seen.add(lower)
         genres.append(genre)
     return genres
+
+
+def _parse_dj_profile(html: str) -> dict:
+    """Parse a DJ profile page HTML for artwork, aliases, and group memberships.
+
+    Returns dict with:
+        artwork_url: str, og:image URL (empty if placeholder)
+        aliases: list of {"slug": str, "name": str}
+        member_of: list of {"slug": str, "name": str}
+    """
+    # Extract artwork from og:image
+    artwork_url = ""
+    og_match = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', html)
+    if og_match:
+        url = og_match.group(1)
+        if "/images/static/" not in url and "logo" not in url.lower() and "default" not in url:
+            artwork_url = _maximize_artwork_url(url)
+
+    def _extract_section(section_header: str) -> list[dict]:
+        """Extract /dj/ links from c ptb5 blocks following a section header."""
+        # Find the header div, then collect links until the next header
+        pattern = re.compile(
+            r'<div\s+class="h">\s*' + re.escape(section_header) + r'\s*</div>'
+            r'(.*?)'
+            r'(?:<div\s+class="h">|$)',
+            re.DOTALL,
+        )
+        match = pattern.search(html)
+        if not match:
+            return []
+        block = match.group(1)
+        link_pattern = re.compile(
+            r'<a\s+href="/dj/([^/"]+)/index\.html"[^>]*>([^<]+)</a>'
+        )
+        entries = []
+        for lm in link_pattern.finditer(block):
+            entries.append({
+                "slug": lm.group(1),
+                "name": _html_decode(lm.group(2).strip()),
+            })
+        return entries
+
+    aliases = _extract_section("Aliases")
+    member_of = _extract_section("Member Of")
+
+    return {"artwork_url": artwork_url, "aliases": aliases, "member_of": member_of}
 
 
 def _extract_dj_slugs(html: str) -> list[str]:

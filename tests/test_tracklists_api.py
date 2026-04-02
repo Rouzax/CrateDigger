@@ -318,37 +318,37 @@ def test_extract_dj_slugs_empty():
     assert _extract_dj_slugs("<html>no djs</html>") == []
 
 
-def test_fetch_dj_artwork_rejects_logo_url():
-    """DJ artwork filter rejects URLs containing 'logo' (case-insensitive)."""
+def test_fetch_dj_profile_rejects_logo_url():
+    """DJ profile filter rejects URLs containing 'logo' (case-insensitive)."""
     session = TracklistSession()
     html = '<meta property="og:image" content="https://www.1001tracklists.com/images/static/djLogo_placeholder.jpg">'
     mock_resp = MagicMock()
     mock_resp.text = html
     with patch.object(session, "_request", return_value=mock_resp):
-        result = session._fetch_dj_artwork("someartist")
-    assert result == ""
+        result = session._fetch_dj_profile("someartist")
+    assert result["artwork_url"] == ""
 
 
-def test_fetch_dj_artwork_rejects_static_image():
-    """DJ artwork filter rejects /images/static/ URLs."""
+def test_fetch_dj_profile_rejects_static_image():
+    """DJ profile filter rejects /images/static/ URLs."""
     session = TracklistSession()
     html = '<meta property="og:image" content="https://www.1001tracklists.com/images/static/header.jpg">'
     mock_resp = MagicMock()
     mock_resp.text = html
     with patch.object(session, "_request", return_value=mock_resp):
-        result = session._fetch_dj_artwork("someartist")
-    assert result == ""
+        result = session._fetch_dj_profile("someartist")
+    assert result["artwork_url"] == ""
 
 
-def test_fetch_dj_artwork_accepts_real_artwork():
-    """DJ artwork filter accepts real DJ artwork URLs."""
+def test_fetch_dj_profile_accepts_real_artwork():
+    """DJ profile filter accepts real DJ artwork URLs."""
     session = TracklistSession()
     html = '<meta property="og:image" content="https://cdn.1001tracklists.com/images/dj/martingarrix-abc123.jpg">'
     mock_resp = MagicMock()
     mock_resp.text = html
     with patch.object(session, "_request", return_value=mock_resp):
-        result = session._fetch_dj_artwork("martingarrix")
-    assert result == "https://cdn.1001tracklists.com/images/dj/martingarrix-abc123.jpg"
+        result = session._fetch_dj_profile("martingarrix")
+    assert result["artwork_url"] == "https://cdn.1001tracklists.com/images/dj/martingarrix-abc123.jpg"
 
 
 def test_request_raises_on_persistent_5xx():
@@ -401,12 +401,12 @@ def test_maximize_artwork_url_empty_string():
     assert _maximize_artwork_url("") == ""
 
 
-def test_fetch_dj_artwork_maximizes_squarespace_url():
-    """_fetch_dj_artwork applies URL maximization to Squarespace URLs."""
+def test_fetch_dj_profile_maximizes_squarespace_url():
+    """_fetch_dj_profile applies URL maximization to Squarespace URLs."""
     session = TracklistSession()
     html = '<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/abc/image.jpg?format=300w">'
     mock_resp = MagicMock()
     mock_resp.text = html
     with patch.object(session, "_request", return_value=mock_resp):
-        result = session._fetch_dj_artwork("someone")
-    assert result == "https://images.squarespace-cdn.com/content/v1/abc/image.jpg"
+        result = session._fetch_dj_profile("someone")
+    assert result["artwork_url"] == "https://images.squarespace-cdn.com/content/v1/abc/image.jpg"

@@ -423,7 +423,8 @@ class AlbumPosterOperation(Operation):
                 logger.debug("No DJ slugs found on tracklist page")
                 return None
 
-            dj_artwork_url = api._fetch_dj_artwork(slugs[0])
+            profile = api._fetch_dj_profile(slugs[0])
+            dj_artwork_url = profile["artwork_url"]
             if not dj_artwork_url:
                 logger.debug("No DJ artwork found for slug %s", slugs[0])
                 return None
