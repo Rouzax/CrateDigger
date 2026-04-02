@@ -1,4 +1,15 @@
-"""Configuration loading and access."""
+"""Configuration loading and access.
+
+Logging:
+    Logger: 'festival_organizer.config'
+    Key events:
+        - alias.invalid_entry (WARNING): Alias map entry has unexpected type
+        - alias.circular (WARNING): Two aliases point at each other
+        - alias.resolve_festival (DEBUG): Festival name resolved via alias
+        - alias.resolve_artist (DEBUG): Artist name resolved via alias
+        - config.invalid_kodi_port (WARNING): KODI_PORT env var is not a valid int
+    See docs/logging.md for full guidelines.
+"""
 import json
 import logging
 import re

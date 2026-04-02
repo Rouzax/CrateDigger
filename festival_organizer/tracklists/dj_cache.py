@@ -1,4 +1,11 @@
-"""Local cache for 1001Tracklists DJ profile metadata (aliases, groups, artwork)."""
+"""Local cache for 1001Tracklists DJ profile metadata (aliases, groups, artwork).
+
+Logging:
+    Logger: 'festival_organizer.tracklists.dj_cache'
+    Key events:
+        - cache.load_failed (DEBUG): Could not read or parse DJ cache file
+    See docs/logging.md for full guidelines.
+"""
 import json
 import logging
 from pathlib import Path

@@ -1,6 +1,13 @@
 """Chapter XML generation, extraction, comparison, and embedding.
 
 Handles Matroska chapter/tag XML for MKV files via mkvextract/mkvpropedit.
+
+Logging:
+    Logger: 'festival_organizer.tracklists.chapters'
+    Key events:
+        - chapters.extract_failed (DEBUG): Chapter extraction from MKV failed
+        - chapters.embed_failed (DEBUG): Chapter or tag embedding failed
+    See docs/logging.md for full guidelines.
 """
 import logging
 import os

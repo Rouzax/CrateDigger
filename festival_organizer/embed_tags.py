@@ -14,7 +14,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from festival_organizer import metadata
-from festival_organizer.mkv_tags import MATROSKA_EXTS, extract_tag_values, write_merged_tags
+from festival_organizer.mkv_tags import (
+    MATROSKA_EXTS,
+    _tag_values_from_root,
+    extract_all_tags,
+    write_merged_tags,
+)
 from festival_organizer.models import MediaFile
 
 logger = logging.getLogger(__name__)
@@ -69,8 +74,9 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
     if not tags and not tags_70:
         return True  # Nothing to write
 
-    # Skip writing if all tags already match what's in the file
-    existing = extract_tag_values(target_path)
+    # Extract tags once; reuse for comparison and write
+    root = extract_all_tags(target_path)
+    existing = _tag_values_from_root(root) if root is not None else {}
     existing_50 = existing.get(50, {})
     existing_70 = existing.get(70, {})
 
@@ -93,7 +99,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
     if tags_70:
         all_tags[70] = tags_70
 
-    return write_merged_tags(target_path, all_tags)
+    return write_merged_tags(target_path, all_tags, existing_root=root)
 
 
 def xml_escape(text: str) -> str:

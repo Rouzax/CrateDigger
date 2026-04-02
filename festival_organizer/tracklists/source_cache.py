@@ -1,4 +1,11 @@
-"""Local cache for 1001Tracklists /source/ page metadata (type, country)."""
+"""Local cache for 1001Tracklists /source/ page metadata (type, country).
+
+Logging:
+    Logger: 'festival_organizer.tracklists.source_cache'
+    Key events:
+        - cache.load_failed (DEBUG): Could not read or parse source cache file
+    See docs/logging.md for full guidelines.
+"""
 import json
 import logging
 from pathlib import Path
