@@ -52,6 +52,27 @@ from festival_organizer.tracklists.scoring import parse_query, score_results
 
 logger = logging.getLogger(__name__)
 
+AUTO_SELECT_MIN_SCORE = 150
+
+
+def _build_search_expansion(config: Config) -> dict[str, str]:
+    """Build {abbreviation: full_name} map for search query expansion.
+
+    Only expands short uppercase abbreviations (AMF, ASOT, EDC) to their
+    full names. Does not modify festivals.json or affect file naming.
+    """
+    import re as _re
+    expansion = {}
+    for alias, canon in config.festival_aliases.items():
+        if alias == canon:
+            continue
+        short, long = (canon, alias) if len(canon) < len(alias) else (alias, canon)
+        if _re.match(r"^[A-Z]{2,6}$", short):
+            key = short.lower()
+            if key not in expansion or len(long) > len(expansion[key]):
+                expansion[key] = long
+    return expansion
+
 _FRIENDLY_TAG_NAMES = {
     "CRATEDIGGER_1001TL_URL": "url",
     "CRATEDIGGER_1001TL_TITLE": "title",
@@ -157,6 +178,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 session=session,
                 config=config,
                 source_cache=source_cache,
+                dj_cache=dj_cache,
                 tracklist_input=tracklist_input,
                 auto_select=auto_select,
                 ignore_stored=ignore_stored,
@@ -203,6 +225,7 @@ def _process_file(
     session: TracklistSession,
     config: Config,
     source_cache: SourceCache,
+    dj_cache,
     tracklist_input: str | None,
     auto_select: bool,
     ignore_stored: bool,
@@ -270,10 +293,9 @@ def _process_file(
     # Search
     query_str = source["value"]
 
-    # Expand known abbreviations for better API results (AMF -> Amsterdam Music Festival)
-    search_aliases = {alias.lower(): canon for alias, canon in config.festival_aliases.items()
-                      if alias != canon}
-    query_str = expand_aliases_in_query(query_str, search_aliases)
+    # Build abbreviation -> full name expansion map for 1001TL search
+    search_expansion = _build_search_expansion(config)
+    query_str = expand_aliases_in_query(query_str, search_expansion)
 
     if not quiet:
         con.print(f"  [bold]Query:[/bold] {escape(query_str)}")
@@ -284,9 +306,19 @@ def _process_file(
         con.print("  [dim]No results found.[/dim]")
         return "skipped"
 
-    # Score results (aliases already loaded above)
-    query_parts = parse_query(query_str, search_aliases)
-    scored = score_results(results, query_parts, duration_mins)
+    query_parts = parse_query(query_str, search_expansion)
+
+    # Build name sets from all knowledge sources for cache-boosted scoring
+    _dj_names = dj_cache.all_names_lower() if dj_cache else set()
+    _dj_names |= {n.lower() for n in config.artist_aliases.keys()}
+    _dj_names |= {n.lower() for n in config.artist_aliases.values()}
+    _dj_names |= {g.lower() for g in config.artist_groups}
+
+    _source_names = source_cache.all_names_lower() if source_cache else set()
+    _source_names |= {n.lower() for n in config.known_festivals}
+
+    scored = score_results(results, query_parts, duration_mins,
+                           dj_names=_dj_names or None, source_names=_source_names or None)
 
     if not scored:
         con.print("  [dim]No relevant results after filtering.[/dim]")
@@ -295,6 +327,10 @@ def _process_file(
     # Select result
     if auto_select:
         selected = scored[0]
+        if selected.score < AUTO_SELECT_MIN_SCORE:
+            if not quiet:
+                con.print(f"  [yellow]Skipped (low confidence: {selected.score:.0f})[/yellow]")
+            return "skipped"
         if not quiet:
             _display_auto_selected(selected, duration_mins, con)
     else:
