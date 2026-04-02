@@ -3,7 +3,6 @@ import json
 import logging
 from pathlib import Path
 
-from festival_organizer.tracklists.scoring import get_abbreviation
 
 logger = logging.getLogger(__name__)
 
@@ -59,23 +58,6 @@ class SourceCache:
             for sid in source_ids
             if sid in self._data and self._data[sid].get("type") == source_type
         ]
-
-    def derive_aliases(self) -> dict[str, str]:
-        """Derive abbreviation → full name map from cached festival/event sources.
-
-        Inspects cached sources of type "Open Air / Festival" and "Conference",
-        derives abbreviations from multi-word names using first-letter extraction.
-        Returns lowercase-keyed dict matching the format of config.tracklists_aliases.
-        """
-        aliases: dict[str, str] = {}
-        for entry in self._data.values():
-            if entry.get("type") not in ("Open Air / Festival", "Conference"):
-                continue
-            name = entry.get("name", "")
-            abbrev = get_abbreviation(name)
-            if abbrev and len(abbrev) >= 2:
-                aliases[abbrev.lower()] = name
-        return aliases
 
     def group_by_type(self, source_ids: list[str]) -> dict[str, list[str]]:
         """Group source names by their type. Returns {type: [name, ...]}."""

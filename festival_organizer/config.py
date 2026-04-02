@@ -75,23 +75,7 @@ DEFAULT_CONFIG = {
         "mkvpropedit": None,
         "mkvmerge": None,
     },
-    "tracklists_aliases": {
-        "amf": "Amsterdam Music Festival",
-        "ade": "Amsterdam Dance Event",
-        "edc": "Electric Daisy Carnival",
-        "umf": "Ultra Music Festival",
-        "asot": "A State of Trance",
-        "abgt": "Above & Beyond Group Therapy",
-        "wao138": "Who's Afraid of 138",
-        "fsoe": "Future Sound of Egypt",
-        "gdjb": "Global DJ Broadcast",
-        "sw4": "South West Four",
-        "tml": "Tomorrowland",
-        "tl": "Tomorrowland",
-        "dwp": "Djakarta Warehouse Project",
-        "mmw": "Miami Music Week",
-    },
-    "tracklists": {
+"tracklists": {
         "email": "",
         "password": "",
         "delay_seconds": 5,
@@ -263,11 +247,6 @@ class Config:
     @property
     def tool_paths(self) -> dict:
         return self._data.get("tool_paths", {})
-
-    @property
-    def tracklists_aliases(self) -> dict[str, str]:
-        """Lowercase-keyed abbreviation -> full name mappings for tracklist scoring."""
-        return self._data.get("tracklists_aliases", {})
 
     @property
     def tracklists_settings(self) -> dict:

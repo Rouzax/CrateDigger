@@ -222,8 +222,9 @@ def _process_file(
     query_str = source["value"]
 
     # Expand known abbreviations for better API results (AMF -> Amsterdam Music Festival)
-    aliases = {**source_cache.derive_aliases(), **config.tracklists_aliases}
-    query_str = expand_aliases_in_query(query_str, aliases)
+    search_aliases = {alias.lower(): canon for alias, canon in config.festival_aliases.items()
+                      if alias != canon}
+    query_str = expand_aliases_in_query(query_str, search_aliases)
 
     if not quiet:
         con.print(f"  [bold]Query:[/bold] {escape(query_str)}")
@@ -235,7 +236,7 @@ def _process_file(
         return "skipped"
 
     # Score results (aliases already loaded above)
-    query_parts = parse_query(query_str, aliases)
+    query_parts = parse_query(query_str, search_aliases)
     scored = score_results(results, query_parts, duration_mins)
 
     if not scored:
