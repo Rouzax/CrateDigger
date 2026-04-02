@@ -54,3 +54,42 @@ def test_group_by_type(tmp_path):
     assert grouped["Open Air / Festival"] == ["AMF"]
     assert grouped["Event Location"] == ["Johan Cruijff ArenA Amsterdam"]
     assert grouped["Conference"] == ["ADE"]
+
+
+def test_promote_concert_to_festival(tmp_path):
+    cache = SourceCache(cache_path=tmp_path / "sc.json")
+    cache.put("rch80m", {"name": "A State Of Trance Festival", "slug": "asot", "type": "Concert / Live Event", "country": "Netherlands"})
+    cache.put("tslp1m", {"name": "Ahoy Rotterdam", "slug": "ahoy", "type": "Event Location", "country": "Netherlands"})
+    groups = cache.group_by_type(["rch80m", "tslp1m"])
+    assert "Open Air / Festival" in groups
+    assert "A State Of Trance Festival" in groups["Open Air / Festival"]
+    assert "Concert / Live Event" not in groups
+
+
+def test_promote_event_promoter_to_festival(tmp_path):
+    cache = SourceCache(cache_path=tmp_path / "sc.json")
+    cache.put("5j4wgtv", {"name": "We Belong Here", "slug": "wbh", "type": "Event Promoter", "country": "United States"})
+    cache.put("7xp1dkc", {"name": "Historic Virginia Key Park", "slug": "hvkp", "type": "Event Location", "country": "United States"})
+    groups = cache.group_by_type(["5j4wgtv", "7xp1dkc"])
+    assert "Open Air / Festival" in groups
+    assert "We Belong Here" in groups["Open Air / Festival"]
+    assert "Event Promoter" not in groups
+
+
+def test_no_promotion_when_festival_exists(tmp_path):
+    cache = SourceCache(cache_path=tmp_path / "sc.json")
+    cache.put("u8bf5c", {"name": "Ultra Music Festival Miami", "slug": "umf", "type": "Open Air / Festival", "country": "United States"})
+    cache.put("v088zc", {"name": "Resistance", "slug": "resistance", "type": "Event Promoter", "country": "Worldwide"})
+    groups = cache.group_by_type(["u8bf5c", "v088zc"])
+    assert groups["Open Air / Festival"] == ["Ultra Music Festival Miami"]
+    assert "Event Promoter" in groups
+    assert "Resistance" in groups["Event Promoter"]
+
+
+def test_concert_promoted_before_event_promoter(tmp_path):
+    cache = SourceCache(cache_path=tmp_path / "sc.json")
+    cache.put("aaa", {"name": "Some Concert", "slug": "sc", "type": "Concert / Live Event", "country": "NL"})
+    cache.put("bbb", {"name": "Some Promoter", "slug": "sp", "type": "Event Promoter", "country": "NL"})
+    groups = cache.group_by_type(["aaa", "bbb"])
+    assert groups["Open Air / Festival"] == ["Some Concert"]
+    assert "Concert / Live Event" not in groups

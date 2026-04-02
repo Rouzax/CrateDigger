@@ -42,6 +42,7 @@ class TracklistExport:
     url: str
     title: str
     genres: list[str] = field(default_factory=list)
+    dj_artists: list[tuple[str, str]] = field(default_factory=list)
     dj_artwork_url: str = ""
     stage_text: str = ""
     sources_by_type: dict[str, list[str]] = field(default_factory=dict)
@@ -51,9 +52,10 @@ class TracklistSession:
     """Manages authenticated session with 1001tracklists.com."""
 
     def __init__(self, cookie_cache_path: Path | None = None,
-                 source_cache=None, delay: float = 5):
+                 source_cache=None, dj_cache=None, delay: float = 5):
         self._cookie_path = cookie_cache_path or DEFAULT_COOKIE_PATH
         self._source_cache = source_cache
+        self._dj_cache = dj_cache
         self._delay = delay
         self._session = requests.Session()
         self._session.headers.update({
@@ -167,24 +169,18 @@ class TracklistSession:
 
         # Extract enrichment metadata from page HTML
         genres = _extract_genres(page_resp.text)
-        dj_slugs = _extract_dj_slugs(page_resp.text)
         if genres:
             logger.info("Genres: %s", genres)
 
-        # Fetch DJ artwork from first DJ's profile page
-        dj_artwork_url = ""
-        if dj_slugs:
-            dj_artwork_url = self._fetch_dj_artwork(dj_slugs[0])
-            if dj_artwork_url:
-                logger.info("DJ artwork: %s", dj_artwork_url)
-
-        # Parse structured h1 for stage and source metadata
+        # Parse structured h1 for stage, source, and DJ artist metadata
         h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", page_resp.text, re.DOTALL)
         stage_text = ""
+        dj_artists: list[tuple[str, str]] = []
         sources_by_type: dict[str, list[str]] = {}
         if h1_match:
             h1_info = _parse_h1_structure(h1_match.group(1))
             stage_text = h1_info["stage_text"]
+            dj_artists = h1_info["dj_artists"]
 
             if h1_info["sources"] and self._source_cache:
                 for sid, slug, display_name in h1_info["sources"]:
@@ -198,9 +194,31 @@ class TracklistSession:
                     [s[0] for s in h1_info["sources"]]
                 )
 
+        # Fetch DJ profiles and populate cache (skip already-cached DJs)
+        dj_artwork_url = ""
+        dj_slugs = [slug for slug, _name in dj_artists] if dj_artists else _extract_dj_slugs(page_resp.text)
+        dj_name_map = {slug: name for slug, name in dj_artists}
+        for i, dj_slug in enumerate(dj_slugs):
+            cached = self._dj_cache.get(dj_slug) if self._dj_cache else None
+            if cached:
+                profile = cached
+            else:
+                if i > 0:
+                    time.sleep(self._delay)
+                profile = self._fetch_dj_profile(dj_slug)
+                if self._dj_cache:
+                    display_name = dj_name_map.get(dj_slug, dj_slug)
+                    entry = {"name": display_name, **profile}
+                    self._dj_cache.put(dj_slug, entry)
+                    logger.info("Cached DJ profile: %s", display_name)
+            if i == 0 and profile.get("artwork_url"):
+                dj_artwork_url = profile["artwork_url"]
+                logger.info("DJ artwork: %s", dj_artwork_url)
+
         return TracklistExport(
             lines=lines, url=short_url, title=title,
-            genres=genres, dj_artwork_url=dj_artwork_url,
+            genres=genres, dj_artists=dj_artists,
+            dj_artwork_url=dj_artwork_url,
             stage_text=stage_text, sources_by_type=sources_by_type,
         )
 
@@ -321,20 +339,19 @@ class TracklistSession:
 
         return {"name": name, "slug": slug, "type": source_type, "country": country}
 
-    def _fetch_dj_artwork(self, dj_slug: str) -> str:
-        """Fetch og:image from a /dj/ profile page. Returns URL or empty string."""
+    def _fetch_dj_profile(self, dj_slug: str) -> dict:
+        """Fetch and parse a /dj/ profile page for artwork, aliases, and groups.
+
+        Returns dict with artwork_url, aliases, and member_of.
+        On failure returns empty defaults.
+        """
+        empty = {"artwork_url": "", "aliases": [], "member_of": []}
         try:
             resp = self._request("GET", f"{BASE_URL}/dj/{dj_slug}/index.html", max_retries=2)
-            m = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', resp.text)
-            if m:
-                url = m.group(1)
-                # Skip default/placeholder/static images
-                if "/images/static/" in url or "logo" in url.lower() or "default" in url:
-                    return ""
-                return _maximize_artwork_url(url)
+            return _parse_dj_profile(resp.text)
         except TracklistError:
             logger.debug("Failed to fetch DJ page for %s", dj_slug)
-        return ""
+        return empty
 
     def _validate_session(self) -> bool:
         """Check if current session is still valid."""
@@ -414,15 +431,25 @@ def _parse_h1_structure(h1_html: str) -> dict:
     """Parse the structured <h1> content from a tracklist page.
 
     Returns dict with:
-        stage_text: str — plain text between @ and first /source/ link
+        dj_artists: list of (slug, display_name) tuples from /dj/ links before @
+        stage_text: str, plain text between @ and first /source/ link
         sources: list of (id, slug, display_name) tuples from /source/ links
     """
-    result = {"stage_text": "", "sources": []}
+    result: dict = {"stage_text": "", "sources": [], "dj_artists": []}
 
     if "@" not in h1_html:
         return result
 
-    after_at = h1_html.split("@", 1)[1]
+    before_at, after_at = h1_html.split("@", 1)
+
+    # Extract /dj/ links from the before-@ part
+    dj_pattern = re.compile(
+        r'<a[^>]*href="/dj/([^/"]+)/[^"]*"[^>]*>([^<]+)</a>'
+    )
+    result["dj_artists"] = [
+        (m.group(1), _html_decode(m.group(2).strip()))
+        for m in dj_pattern.finditer(before_at)
+    ]
 
     source_pattern = re.compile(
         r'<a[^>]*href="/source/([^/]+)/([^/]+)/[^"]*"[^>]*>([^<]+)</a>'
@@ -461,6 +488,52 @@ def _extract_genres(html: str) -> list[str]:
         seen.add(lower)
         genres.append(genre)
     return genres
+
+
+def _parse_dj_profile(html: str) -> dict:
+    """Parse a DJ profile page HTML for artwork, aliases, and group memberships.
+
+    Returns dict with:
+        artwork_url: str, og:image URL (empty if placeholder)
+        aliases: list of {"slug": str, "name": str}
+        member_of: list of {"slug": str, "name": str}
+    """
+    # Extract artwork from og:image
+    artwork_url = ""
+    og_match = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', html)
+    if og_match:
+        url = og_match.group(1)
+        if "/images/static/" not in url and "logo" not in url.lower() and "default" not in url:
+            artwork_url = _maximize_artwork_url(url)
+
+    def _extract_section(section_header: str) -> list[dict]:
+        """Extract /dj/ links from c ptb5 blocks following a section header."""
+        # Find the header div, then collect links until the next header
+        pattern = re.compile(
+            r'<div\s+class="h">\s*' + re.escape(section_header) + r'\s*</div>'
+            r'(.*?)'
+            r'(?:<div\s+class="h">|$)',
+            re.DOTALL,
+        )
+        match = pattern.search(html)
+        if not match:
+            return []
+        block = match.group(1)
+        link_pattern = re.compile(
+            r'<a\s+href="/dj/([^/"]+)/index\.html"[^>]*>([^<]+)</a>'
+        )
+        entries = []
+        for lm in link_pattern.finditer(block):
+            entries.append({
+                "slug": lm.group(1),
+                "name": _html_decode(lm.group(2).strip()),
+            })
+        return entries
+
+    aliases = _extract_section("Aliases")
+    member_of = _extract_section("Member Of")
+
+    return {"artwork_url": artwork_url, "aliases": aliases, "member_of": member_of}
 
 
 def _extract_dj_slugs(html: str) -> list[str]:

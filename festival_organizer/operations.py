@@ -423,7 +423,8 @@ class AlbumPosterOperation(Operation):
                 logger.debug("No DJ slugs found on tracklist page")
                 return None
 
-            dj_artwork_url = api._fetch_dj_artwork(slugs[0])
+            profile = api._fetch_dj_profile(slugs[0])
+            dj_artwork_url = profile["artwork_url"]
             if not dj_artwork_url:
                 logger.debug("No DJ artwork found for slug %s", slugs[0])
                 return None
@@ -515,7 +516,7 @@ class AlbumPosterOperation(Operation):
 
             # Look up brand color from festival config
             fc = self.config.festival_config.get(mf.festival, {})
-            color_hex = fc.get("edition_colors", {}).get(mf.edition) or fc.get("color")
+            color_hex = fc.get("editions", {}).get(mf.edition, {}).get("color") or fc.get("color")
             if color_hex:
                 from festival_organizer.poster import _hex_to_rgb
                 override_color = _hex_to_rgb(color_hex)

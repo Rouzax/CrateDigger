@@ -42,3 +42,32 @@ def test_no_at_sign():
     result = _parse_h1_structure(h1)
     assert result["stage_text"] == ""
     assert result["sources"] == []
+    assert result["dj_artists"] == []
+
+
+def test_h1_extracts_single_dj():
+    h1 = '<a href="/dj/tiesto/index.html" class="notranslate ">Ti&euml;sto</a> @ Mainstage, <a href="/source/fgcfkm/tomorrowland/index.html">Tomorrowland</a>'
+    result = _parse_h1_structure(h1)
+    assert result["dj_artists"] == [("tiesto", "Tiësto")]
+    assert result["stage_text"] == "Mainstage"
+
+
+def test_h1_extracts_collab_djs():
+    h1 = '<a href="/dj/arminvanbuuren/index.html" class="notranslate ">Armin van Buuren</a> &amp; <a href="/dj/kislashki/index.html" class="notranslate ">KI/KI</a> @ Two Is One, <a href="/source/5tb5n3/amsterdam-music-festival/index.html">Amsterdam Music Festival</a>'
+    result = _parse_h1_structure(h1)
+    assert result["dj_artists"] == [("arminvanbuuren", "Armin van Buuren"), ("kislashki", "KI/KI")]
+    assert result["stage_text"] == "Two Is One"
+
+
+def test_h1_extracts_group_dj():
+    h1 = '<a href="/dj/dimitrivegasandlikemike/index.html" class="notranslate ">Dimitri Vegas &amp; Like Mike</a> @ Mainstage, <a href="/source/fgcfkm/tomorrowland/index.html">Tomorrowland</a> Weekend 2, Belgium 2025-07-26'
+    result = _parse_h1_structure(h1)
+    assert result["dj_artists"] == [("dimitrivegasandlikemike", "Dimitri Vegas & Like Mike")]
+
+
+def test_h1_existing_source_extraction_unchanged():
+    """Existing source extraction still works after adding DJ parsing."""
+    h1 = '<a href="/dj/arminvanbuuren/index.html">Armin van Buuren</a> @ Mainstage, <a href="/source/fgcfkm/tomorrowland/index.html">Tomorrowland</a>'
+    result = _parse_h1_structure(h1)
+    assert result["sources"] == [("fgcfkm", "tomorrowland", "Tomorrowland")]
+    assert result["stage_text"] == "Mainstage"

@@ -1,6 +1,5 @@
 from pathlib import Path
 from festival_organizer.parsers import (
-    parse_1001tracklists_title,
     parse_filename,
     parse_parent_dirs,
 )
@@ -9,97 +8,6 @@ from tests.conftest import TEST_CONFIG
 
 
 CFG = Config(TEST_CONFIG)
-
-
-# --- 1001Tracklists title parser ---
-
-def test_1001tl_basic_festival():
-    result = parse_1001tracklists_title(
-        "Martin Garrix @ Amsterdam Music Festival, Johan Cruijff ArenA, "
-        "Amsterdam Dance Event, Netherlands 2024-10-19",
-        CFG,
-    )
-    assert result["artist"] == "Martin Garrix"
-    assert result["festival"] == "AMF"  # Alias resolved
-    assert result["date"] == "2024-10-19"
-    assert result["year"] == "2024"
-    # Without a known location match, after-segments become location
-    # (stage/venue split relies on structured tags from chapters command)
-    assert "Johan Cruijff ArenA" in result.get("edition", "")
-
-
-def test_1001tl_tomorrowland_with_stage():
-    result = parse_1001tracklists_title(
-        "Hardwell @ The Great Library Stage, Tomorrowland Weekend 1, Belgium 2025-07-18",
-        CFG,
-    )
-    assert result["artist"] == "Hardwell"
-    assert result["festival"] == "Tomorrowland"
-    assert result["edition"] == "Belgium"
-    assert result["year"] == "2025"
-    assert result["stage"] == "The Great Library Stage"
-
-
-def test_1001tl_ultra_with_parenthetical_artist():
-    result = parse_1001tracklists_title(
-        "Everything Always (Dom Dolla & John Summit) @ Mainstage, "
-        "Ultra Music Festival Miami, United States 2025-03-28",
-        CFG,
-    )
-    assert result["artist"] == "Everything Always (Dom Dolla & John Summit)"
-    assert result["festival"] == "Ultra Music Festival"
-    assert result["year"] == "2025"
-
-
-def test_1001tl_b2b_at_venue():
-    result = parse_1001tracklists_title(
-        "Martin Garrix & Alesso @ Red Rocks Amphitheatre, United States 2025-10-24",
-        CFG,
-    )
-    assert result["artist"] == "Martin Garrix & Alesso"
-    assert result["festival"] == "Red Rocks"
-    assert result["year"] == "2025"
-
-
-def test_1001tl_edc():
-    result = parse_1001tracklists_title(
-        "Armin van Buuren @ kineticFIELD, EDC Las Vegas, United States 2025-05-18",
-        CFG,
-    )
-    assert result["artist"] == "Armin van Buuren"
-    assert result["festival"] == "EDC"
-    assert result["stage"] == "kineticFIELD"
-
-
-def test_1001tl_dreamstate_socal_edition():
-    """Edition should come from festival alias, not country."""
-    result = parse_1001tracklists_title(
-        "Tiësto @ The Dream Stage, Dreamstate SoCal, "
-        "Queen Mary Waterfront, United States 2025-11-22",
-        CFG,
-    )
-    assert result["festival"] == "Dreamstate"
-    assert result["edition"] == "SoCal"
-    assert "The Dream Stage" in result.get("stage", "")
-    assert result["artist"] == "Tiësto"
-    assert result["date"] == "2025-11-22"
-
-
-def test_1001tl_edc_las_vegas_edition():
-    """EDC Las Vegas should extract Las Vegas as edition."""
-    result = parse_1001tracklists_title(
-        "Armin van Buuren @ kineticFIELD, EDC Las Vegas, "
-        "United States 2025-05-18",
-        CFG,
-    )
-    assert result["festival"] == "EDC"
-    assert result["edition"] == "Las Vegas"
-    assert result["stage"] == "kineticFIELD"
-
-
-def test_1001tl_empty():
-    assert parse_1001tracklists_title("", CFG) == {}
-    assert parse_1001tracklists_title(None, CFG) == {}
 
 
 # --- Filename parser ---

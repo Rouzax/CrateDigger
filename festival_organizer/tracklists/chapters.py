@@ -186,6 +186,7 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         "CRATEDIGGER_1001TL_FESTIVAL": "festival",
         "CRATEDIGGER_1001TL_CONFERENCE": "conference",
         "CRATEDIGGER_1001TL_RADIO": "radio",
+        "CRATEDIGGER_1001TL_ARTISTS": "artists",
         # Old names (backward compatibility)
         "1001TRACKLISTS_URL": "url",
         "1001TRACKLISTS_TITLE": "title",
@@ -247,6 +248,7 @@ def embed_chapters(
     dj_artwork_url: str | None = None,
     stage_text: str = "",
     sources_by_type: dict[str, list[str]] | None = None,
+    dj_artists: list[tuple[str, str]] | None = None,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
 
@@ -300,6 +302,8 @@ def embed_chapters(
                     tag_name = SOURCE_TYPE_TO_TAG.get(source_type)
                     if tag_name and names:
                         tags[tag_name] = "|".join(names)
+            if dj_artists:
+                tags["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(name for _, name in dj_artists)
             return write_merged_tags(filepath, {70: tags})
 
         return True

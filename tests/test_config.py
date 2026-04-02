@@ -20,8 +20,8 @@ def test_config_festival_aliases():
     cfg = Config(TEST_CONFIG)
     assert cfg.resolve_festival_alias("Amsterdam Music Festival") == "AMF"
     assert cfg.resolve_festival_alias("amf") == "AMF"
-    # "EDC Las Vegas" is no longer an alias; resolved via edition decomposition
-    assert cfg.resolve_festival_alias("EDC Las Vegas") == "EDC Las Vegas"
+    # "EDC Las Vegas" is a per-edition alias that resolves to canonical "EDC"
+    assert cfg.resolve_festival_alias("EDC Las Vegas") == "EDC"
     assert cfg.resolve_festival_alias("Unknown Thing") == "Unknown Thing"
 
 
@@ -56,8 +56,8 @@ def test_resolve_festival_with_edition():
     # Pure alias (no edition)
     assert cfg.resolve_festival_with_edition("TML") == ("Tomorrowland", "")
     assert cfg.resolve_festival_with_edition("AMF") == ("AMF", "")
-    # Alias that collapses weekends (no edition extracted)
-    assert cfg.resolve_festival_with_edition("Tomorrowland Weekend 1") == ("Tomorrowland", "")
+    # Weekend aliases resolve to the Belgium edition
+    assert cfg.resolve_festival_with_edition("Tomorrowland Weekend 1") == ("Tomorrowland", "Belgium")
     # Genuine alternate name (not an edition)
     assert cfg.resolve_festival_with_edition("Red Rocks Amphitheatre") == ("Red Rocks", "")
     # Unknown festival

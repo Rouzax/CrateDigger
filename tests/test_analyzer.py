@@ -9,11 +9,15 @@ CFG = Config(TEST_CONFIG)
 
 
 def test_analyse_with_1001tl_overrides_filename():
-    """1001TL data should take priority over filename parsing."""
+    """1001TL dedicated tags should take priority over filename parsing."""
     fake_meta = {
         "title": "MARTIN GARRIX LIVE @ AMF 2024",
         "tracklists_title": "Martin Garrix @ Amsterdam Music Festival, Johan Cruijff ArenA, Amsterdam Dance Event, Netherlands 2024-10-19",
         "tracklists_url": "https://www.1001tracklists.com/tracklist/qv6kl89/",
+        "tracklists_artists": "Martin Garrix",
+        "tracklists_festival": "Amsterdam Music Festival",
+        "tracklists_date": "2024-10-19",
+        "tracklists_venue": "Johan Cruijff ArenA",
         "duration_seconds": 7200.0,
         "width": 3840,
         "height": 2160,
@@ -142,11 +146,12 @@ def test_analyse_enrichment_fields_default_empty():
 
 
 def test_display_artist_from_1001tl_b2b():
-    """display_artist preserves full B2B name from 1001TL title."""
+    """display_artist preserves full B2B name from 1001TL artists tag."""
     fake_meta = {
         "title": "MARTIN GARRIX B2B ALESSO LIVE @ RED ROCKS 2025",
         "tracklists_title": "Martin Garrix & Alesso @ Red Rocks Amphitheatre, United States 2025-10-24",
         "tracklists_url": "https://www.1001tracklists.com/tracklist/20uhfc4k/",
+        "tracklists_artists": "Martin Garrix|Alesso",
         "artist_tag": "Martin Garrix, Alesso",
         "date_tag": "",
         "duration_seconds": 3600.0, "width": 1920, "height": 1080,
@@ -170,6 +175,7 @@ def test_display_artist_solo_matches_artist():
         "title": "MARTIN GARRIX LIVE @ AMF 2024",
         "tracklists_title": "Martin Garrix @ Amsterdam Music Festival, Johan Cruijff ArenA, Amsterdam Dance Event, Netherlands 2024-10-19",
         "tracklists_url": "https://www.1001tracklists.com/tracklist/qv6kl89/",
+        "tracklists_artists": "Martin Garrix",
         "artist_tag": "",
         "date_tag": "",
         "duration_seconds": 7200.0, "width": 3840, "height": 2160,
@@ -221,3 +227,78 @@ def test_display_artist_filename_only_b2b():
     assert mf.display_artist == "Martin Garrix B2B Alesso"
     # artist is the primary (first) from B2B split; stays uppercase without alias match
     assert mf.artist == "MARTIN GARRIX"
+
+
+def test_analyzer_artists_tag_collab():
+    """tracklists_artists with 2 entries splits into artist + display_artist."""
+    fake_meta = {
+        "tracklists_artists": "Armin van Buuren|KI/KI",
+        "tracklists_festival": "Tomorrowland",
+        "tracklists_date": "2025-07-18",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2025 - Tomorrowland - Armin van Buuren.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.artist == "Armin van Buuren"
+    assert mf.display_artist == "Armin van Buuren & KI/KI"
+
+
+def test_analyzer_artists_tag_solo():
+    """tracklists_artists with 1 entry uses same for artist and display_artist."""
+    fake_meta = {
+        "tracklists_artists": "Dimitri Vegas & Like Mike",
+        "tracklists_festival": "Tomorrowland",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2025 - Tomorrowland - DVLM.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.artist == "Dimitri Vegas & Like Mike"
+    assert mf.display_artist == "Dimitri Vegas & Like Mike"
+
+
+def test_analyzer_no_artists_tag_falls_back():
+    """Without tracklists_artists, falls back to filename parsing."""
+    with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
+        mf = analyse_file(
+            Path("/library/2025 - AMF - Armin van Buuren.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.artist == "Armin van Buuren"
+    assert mf.metadata_source == "filename"
+
+
+def test_analyzer_edition_empty_for_amf():
+    """AMF with venue/conference in title should NOT produce edition."""
+    fake_meta = {
+        "tracklists_festival": "Amsterdam Music Festival",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - AMF - Martin Garrix.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.edition == ""
+
+
+def test_analyzer_tracklists_date_overwrites():
+    """tracklists_date should overwrite date and year."""
+    fake_meta = {
+        "tracklists_artists": "Hardwell",
+        "tracklists_date": "2025-10-25",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - AMF - Hardwell.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.date == "2025-10-25"
+    assert mf.year == "2025"

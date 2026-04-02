@@ -57,6 +57,7 @@ _FRIENDLY_TAG_NAMES = {
     "CRATEDIGGER_1001TL_FESTIVAL": "festival",
     "CRATEDIGGER_1001TL_CONFERENCE": "conference",
     "CRATEDIGGER_1001TL_RADIO": "radio",
+    "CRATEDIGGER_1001TL_ARTISTS": "artists",
 }
 
 
@@ -88,8 +89,10 @@ def run_chapters(args, config: Config, console: Console | None = None) -> int:
         return 0
 
     # Get credentials and login
+    from festival_organizer.tracklists.dj_cache import DjCache
     source_cache = SourceCache()
-    session = TracklistSession(source_cache=source_cache, delay=delay)
+    dj_cache = DjCache()
+    session = TracklistSession(source_cache=source_cache, dj_cache=dj_cache, delay=delay)
     email, password = _get_credentials(config)
     if not email or not password:
         print("Error: credentials required. Set TRACKLISTS_EMAIL and TRACKLISTS_PASSWORD environment variables.", file=sys.stderr)
@@ -221,8 +224,9 @@ def _process_file(
     query_str = source["value"]
 
     # Expand known abbreviations for better API results (AMF -> Amsterdam Music Festival)
-    aliases = {**source_cache.derive_aliases(), **config.tracklists_aliases}
-    query_str = expand_aliases_in_query(query_str, aliases)
+    search_aliases = {alias.lower(): canon for alias, canon in config.festival_aliases.items()
+                      if alias != canon}
+    query_str = expand_aliases_in_query(query_str, search_aliases)
 
     if not quiet:
         con.print(f"  [bold]Query:[/bold] {escape(query_str)}")
@@ -234,7 +238,7 @@ def _process_file(
         return "skipped"
 
     # Score results (aliases already loaded above)
-    query_parts = parse_query(query_str, aliases)
+    query_parts = parse_query(query_str, search_aliases)
     scored = score_results(results, query_parts, duration_mins)
 
     if not scored:
@@ -288,7 +292,7 @@ def _fetch_and_embed(
         con.print(f"  {escape(str(e))}")
         if not preview:
             # Tag file with URL for future pickup
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists)
             con.print("  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -299,7 +303,7 @@ def _fetch_and_embed(
     if len(chapters) < 2:
         con.print("  [dim]Only 1 chapter, skipping (not useful for navigation)[/dim]")
         if not preview:
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists)
             con.print("  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -317,6 +321,8 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_GENRES": "|".join(export.genres) if export.genres else "",
                 "CRATEDIGGER_1001TL_DJ_ARTWORK": export.dj_artwork_url,
             }
+            if export.dj_artists:
+                desired["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(name for _, name in export.dj_artists)
             if export.stage_text:
                 desired["CRATEDIGGER_1001TL_STAGE"] = export.stage_text
             for source_type, names in export.sources_by_type.items():
@@ -335,6 +341,7 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_FESTIVAL": stored.get("festival", ""),
                 "CRATEDIGGER_1001TL_CONFERENCE": stored.get("conference", ""),
                 "CRATEDIGGER_1001TL_RADIO": stored.get("radio", ""),
+                "CRATEDIGGER_1001TL_ARTISTS": stored.get("artists", ""),
             }
             # Only update tags that have a new non-empty value different from stored
             tags_to_update = {
@@ -370,7 +377,7 @@ def _fetch_and_embed(
         return "skipped"
 
     # Embed
-    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type)
+    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists)
     if success:
         if not quiet:
             con.print(f"  [green]Embedded {len(chapters)} chapters.[/green]")

@@ -17,7 +17,6 @@ from festival_organizer.metadata import extract_metadata
 from festival_organizer.models import MediaFile
 from festival_organizer.normalization import normalise_name, safe_filename
 from festival_organizer.parsers import (
-    parse_1001tracklists_title,
     parse_filename,
     parse_parent_dirs,
 )
@@ -30,7 +29,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     """Analyse a single file, combining all metadata sources.
 
     Priority (highest first):
-    1. 1001Tracklists title tag
+    1. 1001Tracklists dedicated tags (artists, festival, stage, venue, date)
     2. Embedded metadata tags (ARTIST, DATE, Title)
     3. Filename parsing
     4. Parent directory names
@@ -38,9 +37,6 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     meta = extract_metadata(filepath)
     filename_info = parse_filename(filepath, config)
     parent_info = parse_parent_dirs(filepath, root, config)
-    tracklists_info = parse_1001tracklists_title(
-        meta.get("tracklists_title", ""), config
-    )
 
     # Start with empty info dict
     info: dict[str, str] = {
@@ -83,25 +79,28 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # Parsed title info only fills missing
     _merge_missing(info, embedded)
 
-    # Layer 4 (highest priority): 1001Tracklists overwrites
+    # Layer 4: 1001TL dedicated tags (authoritative when present)
     metadata_source = "filename"
-    if tracklists_info:
-        for key in ["artist", "festival", "date", "year", "stage", "edition"]:
-            if tracklists_info.get(key):
-                info[key] = tracklists_info[key]
+    tracklists_artists_raw = meta.get("tracklists_artists", "")
+    artists_list = [a.strip() for a in tracklists_artists_raw.split("|") if a.strip()] if tracklists_artists_raw else []
+    if artists_list:
+        info["artist"] = artists_list[0]
         metadata_source = "1001tracklists"
-        # Clear set_title if redundant with 1001TL stage (e.g. "RESISTANCE
-        # MEGASTRUCTURE" from filename leftover when stage is already set)
-        st = normalise_name(info.get("set_title", "")).lower()
-        stage = info.get("stage", "").lower()
-        if st and stage and (st in stage or stage in st):
-            info["set_title"] = ""
+
+    # 1001TL date tag overwrites date/year
+    if meta.get("tracklists_date"):
+        tl_date = meta["tracklists_date"]
+        if len(tl_date) >= 4:
+            info["year"] = tl_date[:4]
+        if len(tl_date) == 10:
+            info["date"] = tl_date
+
     if meta.get("tracklists_stage"):
         info["stage"] = meta["tracklists_stage"]
     if meta.get("tracklists_venue"):
         info["venue"] = meta["tracklists_venue"]
     # Layer 5: Direct 1001TL festival tag (written by chapters command from
-    # source cache). Authoritative for festival + location.
+    # source cache). Authoritative for festival + edition.
     if meta.get("tracklists_festival"):
         fest, ed = config.resolve_festival_with_edition(
             meta["tracklists_festival"]
@@ -109,29 +108,28 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         info["festival"] = fest
         if ed:
             info["edition"] = ed
-        if not tracklists_info:
-            metadata_source = "1001tracklists"
-    if embedded and not tracklists_info and not meta.get("tracklists_festival"):
-        metadata_source = "metadata+filename"
+        metadata_source = "1001tracklists"
+    if not artists_list and not meta.get("tracklists_festival"):
+        if embedded:
+            metadata_source = "metadata+filename"
 
-    # Build display_artist: same priority but skip ARTIST tag (Layer 3 direct)
-    # This preserves full B2B/collab names in filenames and TITLE tags,
-    # while ARTIST tag (written by embed_tags) holds primary-only for Plex.
-    da = ""
-    # Layer 1: parent dir
-    if parent_info.get("artist"):
-        da = parent_info["artist"]
-    # Layer 2: filename parse (overwrites)
-    if filename_info.get("artist"):
-        da = filename_info["artist"]
-    # Layer 3: SKIP the ARTIST tag — intentionally omitted
-    # Layer 4: 1001TL (highest priority, overwrites)
-    if tracklists_info and tracklists_info.get("artist"):
-        da = tracklists_info["artist"]
-    display_artist = normalise_name(da)
-    # Title-case if the source was ALL-CAPS (e.g. YouTube titles)
-    if display_artist and display_artist == display_artist.upper():
-        display_artist = display_artist.title()
+    # Build display_artist
+    if artists_list:
+        if len(artists_list) > 1:
+            display_artist = " & ".join(artists_list)
+        else:
+            display_artist = artists_list[0]
+    else:
+        # Fallback: same priority as artist but skip ARTIST tag
+        da = ""
+        if parent_info.get("artist"):
+            da = parent_info["artist"]
+        if filename_info.get("artist"):
+            da = filename_info["artist"]
+        display_artist = normalise_name(da)
+        # Title-case if the source was ALL-CAPS (e.g. YouTube titles)
+        if display_artist and display_artist == display_artist.upper():
+            display_artist = display_artist.title()
 
     # Normalise
     artist = normalise_name(info.get("artist", ""))

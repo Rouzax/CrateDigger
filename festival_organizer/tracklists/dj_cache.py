@@ -1,0 +1,72 @@
+"""Local cache for 1001Tracklists DJ profile metadata (aliases, groups, artwork)."""
+import json
+import logging
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_PATH = Path.home() / ".cratedigger" / "dj_cache.json"
+
+
+class DjCache:
+    """Read-through cache for 1001TL DJ profile data.
+
+    Keyed by DJ slug (e.g. "tiesto", "arminvanbuuren"). Each entry stores
+    name, artwork_url, aliases, and member_of groups.
+    Persists to ~/.cratedigger/dj_cache.json.
+    """
+
+    def __init__(self, cache_path: Path | None = None):
+        self._path = cache_path or DEFAULT_PATH
+        self._data: dict[str, dict] = {}
+        self._load()
+
+    def _load(self) -> None:
+        if self._path.exists():
+            try:
+                self._data = json.loads(self._path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError) as e:
+                logger.debug("Could not load DJ cache: %s", e)
+                self._data = {}
+
+    def _save(self) -> None:
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        self._path.write_text(
+            json.dumps(self._data, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+    def get(self, slug: str) -> dict | None:
+        return self._data.get(slug)
+
+    def put(self, slug: str, entry: dict) -> None:
+        self._data[slug] = entry
+        self._save()
+
+    def derive_artist_aliases(self) -> dict[str, str]:
+        """Build alias_name -> canonical_name map from all cached DJ profiles.
+
+        For example, if Tiesto has aliases VER:WEST and Allure, returns
+        {"VER:WEST": "Tiesto", "Allure": "Tiesto"}.
+        """
+        aliases: dict[str, str] = {}
+        for entry in self._data.values():
+            canonical = entry.get("name", "")
+            for alias in entry.get("aliases", []):
+                alias_name = alias.get("name", "")
+                if alias_name:
+                    aliases[alias_name] = canonical
+        return aliases
+
+    def derive_artist_groups(self) -> set[str]:
+        """Collect lowercased group names from all cached member_of entries.
+
+        Returns e.g. {"gaia", "logica"}.
+        """
+        groups: set[str] = set()
+        for entry in self._data.values():
+            for group in entry.get("member_of", []):
+                name = group.get("name", "")
+                if name:
+                    groups.add(name.lower())
+        return groups
