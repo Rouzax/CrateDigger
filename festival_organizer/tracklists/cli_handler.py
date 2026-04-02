@@ -89,8 +89,10 @@ def run_chapters(args, config: Config, console: Console | None = None) -> int:
         return 0
 
     # Get credentials and login
+    from festival_organizer.tracklists.dj_cache import DjCache
     source_cache = SourceCache()
-    session = TracklistSession(source_cache=source_cache, delay=delay)
+    dj_cache = DjCache()
+    session = TracklistSession(source_cache=source_cache, dj_cache=dj_cache, delay=delay)
     email, password = _get_credentials(config)
     if not email or not password:
         print("Error: credentials required. Set TRACKLISTS_EMAIL and TRACKLISTS_PASSWORD environment variables.", file=sys.stderr)
