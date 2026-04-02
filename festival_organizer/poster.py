@@ -379,9 +379,27 @@ def generate_set_poster(
     bg = bg.filter(ImageFilter.GaussianBlur(radius=40))
     bg = ImageEnhance.Brightness(bg).enhance(0.18)
 
-    # Sharp image flush to top
-    scale = POSTER_W / frame_raw.width
-    new_h = int(frame_raw.height * scale)
+    # Sharp image flush to top, cover-fit to fill minimum height
+    min_img_h = 700
+    scale = max(POSTER_W / frame_raw.width, min_img_h / frame_raw.height)
+    scaled_w = int(frame_raw.width * scale)
+    scaled_h = int(frame_raw.height * scale)
+
+    if has_alpha:
+        sharp = frame_raw.convert("RGBA").resize((scaled_w, scaled_h), Image.LANCZOS)
+    else:
+        sharp = frame_rgb.resize((scaled_w, scaled_h), Image.LANCZOS)
+
+    # Center-crop horizontally to poster width
+    if scaled_w > POSTER_W:
+        left = (scaled_w - POSTER_W) // 2
+        sharp = sharp.crop((left, 0, left + POSTER_W, scaled_h))
+    # Crop vertically if taller than target
+    new_h = min(scaled_h, min_img_h)
+    if scaled_h > min_img_h:
+        top = (scaled_h - min_img_h) // 2
+        sharp = sharp.crop((0, top, POSTER_W, top + min_img_h))
+        new_h = sharp.height
 
     # Fade mask starting at 60% of image height
     fade_mask = Image.new("L", (POSTER_W, new_h), 255)
@@ -392,17 +410,15 @@ def generate_set_poster(
         dm.line([(0, y), (POSTER_W, y)], fill=alpha)
 
     if has_alpha:
-        sharp_rgba = frame_raw.convert("RGBA").resize((POSTER_W, new_h), Image.LANCZOS)
-        orig_alpha = sharp_rgba.split()[3]
+        orig_alpha = sharp.split()[3]
         combined = Image.fromarray(
             np.minimum(np.array(orig_alpha), np.array(fade_mask)), mode="L"
         )
-        sharp_rgba.putalpha(combined)
+        sharp.putalpha(combined)
         bg = bg.convert("RGBA")
-        bg.paste(sharp_rgba, (0, 0), sharp_rgba)
+        bg.paste(sharp, (0, 0), sharp)
         bg = bg.convert("RGB")
     else:
-        sharp = frame_rgb.resize((POSTER_W, new_h), Image.LANCZOS)
         bg.paste(sharp, (0, 0), fade_mask)
 
     # Dark gradient overlay from 40% down
@@ -447,10 +463,9 @@ def generate_set_poster(
     # BUILD DOWN from accent line
     ty = LINE_Y + LINE_H + PAD_LINE_TO_FEST
 
-    # Festival name with glow
+    # Festival name (plain colored text, no glow)
     fest_h = font_visual_height(font_fest)
-    bg = _draw_glow_text(bg, ty, festival.upper(), font_fest, accent, accent, glow_radius=18)
-    draw = ImageDraw.Draw(bg)
+    _draw_centered_no_shadow(draw, ty, festival.upper(), font_fest, accent)
     ty += fest_h + PAD_FEST_TO_YEAR
 
     # Date/Year line — white, no effects for TV readability
