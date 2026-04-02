@@ -161,7 +161,10 @@ def summary_panel(counts: dict, log_path=None) -> Panel:
 
     if is_nested:
         first = True
-        for op_name, statuses in sorted(counts.items()):
+        _WORKFLOW_ORDER = ["organize", "nfo", "art", "fanart", "posters", "tags"]
+        ordered_keys = [k for k in _WORKFLOW_ORDER if k in counts]
+        ordered_keys += [k for k in counts if k not in _WORKFLOW_ORDER]
+        for op_name, statuses in ((k, counts[k]) for k in ordered_keys):
             if not first:
                 body.append("\n")
             first = False

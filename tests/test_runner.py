@@ -34,12 +34,12 @@ def test_progress_operation_results():
     pp.file_done([
         OperationResult("nfo", "done"),
         OperationResult("art", "done"),
-        OperationResult("poster", "skipped", "exists"),
+        OperationResult("posters", "skipped", "exists"),
     ])
     output = buf.getvalue()
     assert "nfo" in output
     assert "art" in output
-    assert "poster" in output
+    assert "posters" in output
     assert "exists" in output
 
 

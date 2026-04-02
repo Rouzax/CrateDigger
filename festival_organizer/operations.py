@@ -173,7 +173,7 @@ class ArtOperation(Operation):
 
 
 class PosterOperation(Operation):
-    name = "poster"
+    name = "posters"
 
     def __init__(self, config: Config, force: bool = False):
         self.config = config
@@ -215,7 +215,7 @@ class PosterOperation(Operation):
 
 
 class AlbumPosterOperation(Operation):
-    name = "album_poster"
+    name = "posters"
 
     def __init__(self, config: Config, force: bool = False, library_root: Path | None = None):
         self.config = config

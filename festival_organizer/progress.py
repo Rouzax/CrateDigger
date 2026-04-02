@@ -75,11 +75,4 @@ class ProgressPrinter:
     def print_summary(self, log_path: Path | None = None) -> None:
         """Print the final summary."""
         counts = dict(self._counts)
-        # Merge poster + album_poster into a combined "posters" entry
-        if "poster" in counts or "album_poster" in counts:
-            merged: dict[str, int] = defaultdict(int)
-            for key in ("poster", "album_poster"):
-                for status, count in counts.pop(key, {}).items():
-                    merged[status] += count
-            counts["posters"] = dict(merged)
         self.console.print(summary_panel(counts, log_path=log_path))
