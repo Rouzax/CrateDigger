@@ -84,4 +84,10 @@ class SourceCache:
             entry = self._data.get(sid)
             if entry:
                 groups.setdefault(entry["type"], []).append(entry["name"])
+        # Promote unmapped types to festival when no festival exists
+        if "Open Air / Festival" not in groups:
+            for fallback_type in ("Concert / Live Event", "Event Promoter"):
+                if fallback_type in groups:
+                    groups["Open Air / Festival"] = groups.pop(fallback_type)
+                    break
         return groups
