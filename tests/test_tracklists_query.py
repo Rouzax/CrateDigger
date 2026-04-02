@@ -113,3 +113,37 @@ def test_expand_aliases_word_boundary():
     aliases = {"ed": "Something"}
     result = expand_aliases_in_query("Red Rocks 2025", aliases)
     assert result == "Red Rocks 2025"  # "ed" in "Red" should NOT match
+
+
+def test_build_search_query_normalizes_fullwidth_pipe():
+    """Fullwidth pipe (U+FF5C) from YouTube filenames should become a space."""
+    result = build_search_query(Path("Alesso WE1 \uff5c Tomorrowland 2024 [7ZCNipI13PA].mkv"))
+    assert "\uff5c" not in result
+    assert "Alesso" in result
+    assert "Tomorrowland" in result
+    assert "2024" in result
+
+
+def test_build_search_query_normalizes_fullwidth_colon():
+    """Fullwidth colon (U+FF1A) from YouTube filenames should become a space."""
+    result = build_search_query(Path("Ti\u00ebsto\uff1a In Search Of Sunrise [d2USUAxBGq0].mkv"))
+    assert "\uff1a" not in result
+    assert "Ti\u00ebsto" in result or "Tiësto" in result
+
+
+def test_build_search_query_strips_all_parens():
+    """All parentheses/brackets should be stripped, not just empty ones."""
+    result = build_search_query(Path("HARDWELL TOMORROWLAND 2024 (MAINSTAGE WEEKEND 2) [Ne-nZA2bZMg].mkv"))
+    assert "(" not in result
+    assert ")" not in result
+    assert "MAINSTAGE" in result
+    assert "WEEKEND" in result
+
+
+def test_build_search_query_pipe_separated_format():
+    """Official YouTube channel format 'Artist WE1 | Festival' should produce clean query."""
+    result = build_search_query(Path("Armin van Buuren B2B Joris Voorn \uff5c Tomorrowland Winter 2025 [i9hiZZi4c50].mkv"))
+    assert "Armin" in result
+    assert "Tomorrowland" in result
+    assert "\uff5c" not in result
+    assert "|" not in result

@@ -276,3 +276,94 @@ def test_mixed_case_with_alias_still_filters_correctly():
         r1_score = next(r.score for r in scored if r.id == "1")
         r2_score = next(r.score for r in scored if r.id == "2")
         assert r1_score > r2_score
+
+
+def test_duration_multiplier_never_penalizes():
+    """Duration multiplier should never go below 1.0 (no penalty for mismatch)."""
+    result = SearchResult(id="test", title="Test Set @ Festival", url="/test/", duration_mins=30)
+    query_parts = QueryParts(keywords=["test", "festival"])
+
+    # Score with large duration mismatch (video=120min, result=30min)
+    score_results([result], query_parts, video_duration_minutes=120)
+    score_with_mismatch = result.score
+
+    # Score with no duration info
+    result2 = SearchResult(id="test2", title="Test Set @ Festival", url="/test2/", duration_mins=None)
+    score_results([result2], query_parts, video_duration_minutes=120)
+    score_no_duration = result2.score
+
+    # Mismatched duration should not score LOWER than no duration
+    assert score_with_mismatch >= score_no_duration
+
+
+def test_all_match_bonus_beats_partial_with_close_duration():
+    """A result matching all keywords should outscore a partial match with closer duration."""
+    # Simulates Eric Prydz (all 4 kw, 118min) vs Adriatique (2/4 kw, 91min) with 90min video
+    full_match = SearchResult(id="full", title="Eric Prydz @ Resistance Megastructure, Ultra Music Festival", url="/f/", duration_mins=118)
+    partial_match = SearchResult(id="partial", title="Adriatique @ Resistance Megastructure, Ultra Music Festival", url="/p/", duration_mins=91)
+
+    query_parts = QueryParts(keywords=["eric", "prydz", "resistance", "megastructure"])
+    results = score_results([full_match, partial_match], query_parts, video_duration_minutes=90)
+
+    assert results[0].id == "full", "Full keyword match should rank higher despite worse duration"
+
+
+def test_multi_word_event_pattern():
+    """'WEEKEND 2' (two words) should be detected as a Weekend event pattern."""
+    aliases = {}
+    qp = parse_query("HARDWELL TOMORROWLAND 2024 MAINSTAGE WEEKEND 2", aliases)
+    assert any(p["type"] == "Weekend" and p["number"] == "2" for p in qp.event_patterns)
+
+
+def test_score_dj_cache_boost():
+    """Results containing a known DJ name should get a score boost."""
+    result = SearchResult(id="t1", title="Armin van Buuren @ Tomorrowland", url="/t/", duration_mins=90)
+    query_parts = QueryParts(keywords=["armin", "van", "buuren", "tomorrowland"])
+
+    # Without cache
+    score_results([result], query_parts, video_duration_minutes=90)
+    score_without = result.score
+
+    # Reset
+    result.score = 0.0
+    result.matched_keyword_count = 0
+
+    # With cache
+    dj_names = {"armin van buuren"}
+    score_results([result], query_parts, video_duration_minutes=90, dj_names=dj_names)
+    score_with = result.score
+
+    assert score_with > score_without
+
+
+def test_score_source_cache_boost():
+    """Results containing a known source/festival name should get a score boost."""
+    result = SearchResult(id="t1", title="Hardwell @ Mainstage, Tomorrowland Weekend 1", url="/t/", duration_mins=90)
+    query_parts = QueryParts(keywords=["hardwell", "tomorrowland"])
+
+    # Without cache
+    score_results([result], query_parts, video_duration_minutes=90)
+    score_without = result.score
+
+    # Reset
+    result.score = 0.0
+    result.matched_keyword_count = 0
+
+    # With cache
+    source_names = {"tomorrowland"}
+    score_results([result], query_parts, video_duration_minutes=90, source_names=source_names)
+    score_with = result.score
+
+    assert score_with > score_without
+
+
+def test_score_results_without_cache_unchanged():
+    """Passing None for cache params should produce identical scores to no params."""
+    result1 = SearchResult(id="t1", title="Test @ Festival", url="/t/", duration_mins=60)
+    result2 = SearchResult(id="t2", title="Test @ Festival", url="/t/", duration_mins=60)
+    query_parts = QueryParts(keywords=["test", "festival"])
+
+    score_results([result1], query_parts, video_duration_minutes=60)
+    score_results([result2], query_parts, video_duration_minutes=60, dj_names=None, source_names=None)
+
+    assert result1.score == result2.score
