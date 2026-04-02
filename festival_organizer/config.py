@@ -323,19 +323,44 @@ class Config:
             logger.debug("Festival alias (case-insensitive): '%s' -> '%s'", name, resolved)
         return resolved
 
+    def _load_dj_aliases(self) -> dict[str, str]:
+        """Load artist aliases derived from DJ cache."""
+        try:
+            from festival_organizer.tracklists.dj_cache import DjCache
+            cache = DjCache()
+            return cache.derive_artist_aliases()
+        except Exception:
+            return {}
+
+    def _load_dj_groups(self) -> set[str]:
+        """Load artist groups derived from DJ cache."""
+        try:
+            from festival_organizer.tracklists.dj_cache import DjCache
+            cache = DjCache()
+            return cache.derive_artist_groups()
+        except Exception:
+            return set()
+
     @property
     def artist_aliases(self) -> dict[str, str]:
         raw = self._load_external_config("artists.json", {}).get("aliases", {})
         if "artist_aliases" in self._data:
             raw = {**raw, **self._data["artist_aliases"]}
-        return _invert_alias_map(raw)
+        flat = _invert_alias_map(raw)
+        # Merge DJ cache aliases (manual config takes priority)
+        dj_aliases = self._load_dj_aliases()
+        return {**dj_aliases, **flat}
 
     @property
     def artist_groups(self) -> set[str]:
         if "artist_groups" in self._data:
-            return {g.lower() for g in self._data["artist_groups"]}
-        groups = self._load_external_config("artists.json", {}).get("groups", [])
-        return {g.lower() for g in groups}
+            groups = {g.lower() for g in self._data["artist_groups"]}
+        else:
+            groups = set()
+        ext_groups = self._load_external_config("artists.json", {}).get("groups", [])
+        groups.update(g.lower() for g in ext_groups)
+        groups.update(self._load_dj_groups())
+        return groups
 
     def resolve_artist(self, name: str) -> str:
         """Resolve artist alias, then for B2Bs not in groups return first artist."""
