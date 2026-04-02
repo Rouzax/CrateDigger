@@ -1,15 +1,9 @@
 {
-    "_comment": "Artist configuration. Place as artists.json next to config.json or in ~/.cratedigger/",
+    "_comment": "Artist configuration. DJ cache auto-discovers aliases and groups from 1001TL profiles. Diacritics matching is automatic. Only add entries here for aliases 1001TL does not know.",
     "aliases": {
-        "Afrojack": ["NLW"],
-        "ALOK": ["SOMETHING ELSE"],
-        "Armin van Buuren": ["Gaia", "Rising Star"],
-        "David Guetta": ["Jack Back"],
-        "Deadmau5": ["deadmau5", "BSOD", "Testpilot"],
-        "Martin Garrix": ["Area21", "YTRAM", "GRX"],
-        "Nicky Romero": ["Monocule"],
-        "Oliver Heldens": ["HI-LO"],
-        "Tiësto": ["Tiesto", "VER:WEST", "VERWEST"]
+        "Armin van Buuren": ["Rising Star"],
+        "Martin Garrix": ["GRX"],
+        "Nicky Romero": ["Monocule"]
     },
     "groups": [
         "Above & Beyond",

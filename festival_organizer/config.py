@@ -3,11 +3,18 @@ import json
 import logging
 import re
 import sys
+import unicodedata
 from copy import deepcopy
 from fnmatch import fnmatch
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
+def _strip_diacritics(text: str) -> str:
+    """Remove diacritics for matching. Tiesto becomes Tiesto."""
+    nfkd = unicodedata.normalize("NFD", text)
+    return "".join(c for c in nfkd if not unicodedata.combining(c))
 
 
 # Defaults for external config files (artists.json, festivals.json)
@@ -39,11 +46,7 @@ DEFAULT_CONFIG = {
     "content_type_rules": {
         "force_concert": [
             "Adele/*",
-            "Buena Vista Social Club/*",
             "Coldplay/*",
-            "Ed Sheeran*",
-            "Michael Buble*",
-            "Robbie Williams/*",
             "U2/*",
         ],
         "force_festival": [],
@@ -75,7 +78,7 @@ DEFAULT_CONFIG = {
         "mkvpropedit": None,
         "mkvmerge": None,
     },
-"tracklists": {
+    "tracklists": {
         "email": "",
         "password": "",
         "delay_seconds": 5,
@@ -369,6 +372,13 @@ class Config:
             if resolved is not None:
                 name = resolved
                 aliased = True
+            else:
+                # 3. Diacritics-insensitive lookup
+                stripped_map = {_strip_diacritics(k).lower(): v for k, v in self.artist_aliases.items()}
+                resolved = stripped_map.get(_strip_diacritics(name).lower())
+                if resolved is not None:
+                    name = resolved
+                    aliased = True
 
         # If an alias matched, the user explicitly chose this canonical name
         if aliased:

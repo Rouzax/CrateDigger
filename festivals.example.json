@@ -1,7 +1,7 @@
 {
     "_comment": "Festival configuration. One entry per festival.",
-    "A State Of Trance Festival": {
-        "aliases": ["ASOT", "A State Of Trance"],
+    "ASOT": {
+        "aliases": ["A State Of Trance Festival", "A State Of Trance"],
         "color": "#E63312"
     },
     "ADE": {
@@ -64,8 +64,8 @@
         },
         "color": "#9B1B5A"
     },
-    "Ultra Music Festival": {
-        "aliases": ["Ultra", "UMF"],
+    "UMF": {
+        "aliases": ["Ultra Music Festival", "Ultra"],
         "editions": {
             "Miami": { "aliases": ["Ultra Music Festival Miami"] },
             "Europe": {},
