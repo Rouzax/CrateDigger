@@ -148,20 +148,20 @@ def enrich(
 
 
 @app.command()
-def chapters(
+def identify(
     root: RootArg,
     tracklist: Annotated[Optional[str], typer.Option("--tracklist", "-t", help="Tracklist URL, ID, or query")] = None,
     auto: Annotated[bool, typer.Option("--auto", help="Batch mode, no prompts")] = False,
     preview: Annotated[bool, typer.Option("--preview", help="Show chapters without embedding")] = False,
-    force: Annotated[bool, typer.Option("--force", help="Ignore stored URLs, fresh search")] = False,
-    delay: Annotated[Optional[int], typer.Option("--delay", help="Delay between files (seconds)")] = None,
+    fresh: Annotated[bool, typer.Option("--fresh", help="Ignore stored URLs, search again")] = False,
+    delay: Annotated[Optional[int], typer.Option("--delay", help="Delay between files, seconds (default: 5)")] = None,
     config: ConfigOpt = None,
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
 ) -> int:
-    """Add 1001Tracklists chapters."""
-    return _dispatch("chapters", locals())
+    """Match files on 1001Tracklists; embed metadata and chapters."""
+    return _dispatch("identify", locals())
 
 
 @app.command(name="audit-logos")
@@ -230,13 +230,13 @@ def _run_command(args) -> int:
     if args.command == "dry-run":
         args.command = "scan"
 
-    # Handle chapters separately
-    if args.command == "chapters":
-        from festival_organizer.tracklists.cli_handler import run_chapters
+    # Handle identify separately
+    if args.command == "identify":
+        from festival_organizer.tracklists.cli_handler import run_identify
         # Map new flag names to what cli_handler expects
         args.auto_select = getattr(args, "auto", False)
-        args.ignore_stored_url = getattr(args, "force", False)
-        return run_chapters(args, config, console=console)
+        args.ignore_stored_url = getattr(args, "fresh", False)
+        return run_identify(args, config, console=console)
 
     if args.command == "audit-logos":
         return _run_audit_logos(root, config, console)
@@ -395,9 +395,9 @@ def _run_command(args) -> int:
     # Run pipeline
     all_results = run_pipeline(pipeline_files, progress)
 
-    # If enrich includes chapters, run chapters handler in auto mode
+    # If enrich includes chapters, run identify handler in auto mode
     if args.command == "enrich" and only and "chapters" in only:
-        from festival_organizer.tracklists.cli_handler import run_chapters
+        from festival_organizer.tracklists.cli_handler import run_identify
         import types as _types
         chap_args = _types.SimpleNamespace(
             root=str(root),
@@ -409,7 +409,7 @@ def _run_command(args) -> int:
             config=getattr(args, "config", None),
             quiet=quiet,
         )
-        run_chapters(chap_args, config, console=console)
+        run_identify(chap_args, config, console=console)
 
     # Post-pipeline: clean up empty source directories after organize (move)
     if args.command == "organize":

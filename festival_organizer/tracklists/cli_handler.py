@@ -1,4 +1,4 @@
-"""CLI handler for the 'chapters' subcommand."""
+"""CLI handler for the 'identify' subcommand."""
 import logging
 import sys
 import time
@@ -61,8 +61,8 @@ _FRIENDLY_TAG_NAMES = {
 }
 
 
-def run_chapters(args, config: Config, console: Console | None = None) -> int:
-    """Main entry point for the 'chapters' subcommand."""
+def run_identify(args, config: Config, console: Console | None = None) -> int:
+    """Main entry point for the 'identify' subcommand."""
     con = console or make_console()
     root = Path(args.root)
     auto_select = args.auto_select or config.tracklists_settings.get("auto_select", False)
@@ -110,7 +110,7 @@ def run_chapters(args, config: Config, console: Console | None = None) -> int:
         "Mode": "preview" if preview else "embed",
         "Select": "auto" if auto_select else "interactive",
     }
-    con.print(header_panel("Tracklist Chapters", rows))
+    con.print(header_panel("CrateDigger: Identify", rows))
 
     # Process files
     stats = {"added": 0, "updated": 0, "up_to_date": 0, "skipped": 0, "error": 0}
