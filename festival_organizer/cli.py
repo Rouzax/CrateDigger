@@ -56,6 +56,7 @@ app = typer.Typer(
     help="CrateDigger: Festival set & concert library manager\n\nWorkflow: identify -> organize -> enrich",
     rich_markup_mode="rich",
     no_args_is_help=False,
+    add_completion=False,
 )
 
 
