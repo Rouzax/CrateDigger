@@ -367,3 +367,24 @@ def test_score_results_without_cache_unchanged():
     score_results([result2], query_parts, video_duration_minutes=60, dj_names=None, source_names=None)
 
     assert result1.score == result2.score
+
+
+def test_auto_select_threshold_separates_good_from_bad():
+    """The auto-select threshold (150) should separate confident from uncertain results.
+
+    A strong match (all keywords + close duration) should score above 150.
+    A weak match (few keywords) should score below 150.
+    """
+    from festival_organizer.tracklists.cli_handler import AUTO_SELECT_MIN_SCORE
+
+    strong = SearchResult(id="s", title="Hardwell @ Mainstage, Tomorrowland Weekend 2", url="/s/", duration_mins=90)
+    weak = SearchResult(id="w", title="Random DJ @ Some Club", url="/w/", duration_mins=90)
+
+    query_parts = QueryParts(keywords=["hardwell", "tomorrowland", "mainstage"])
+    query_parts.event_patterns = [{"type": "Weekend", "number": "2"}]
+
+    score_results([strong], query_parts, video_duration_minutes=90)
+    score_results([weak], query_parts, video_duration_minutes=90)
+
+    assert strong.score >= AUTO_SELECT_MIN_SCORE, f"Strong match ({strong.score:.0f}) should pass auto-select threshold"
+    assert weak.score < AUTO_SELECT_MIN_SCORE, f"Weak match ({weak.score:.0f}) should fail auto-select threshold"

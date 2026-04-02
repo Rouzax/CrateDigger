@@ -7,6 +7,7 @@ Logging:
     See docs/logging.md for full guidelines.
 """
 import logging
+import re
 import sys
 import time
 from pathlib import Path
@@ -61,13 +62,12 @@ def _build_search_expansion(config: Config) -> dict[str, str]:
     Only expands short uppercase abbreviations (AMF, ASOT, EDC) to their
     full names. Does not modify festivals.json or affect file naming.
     """
-    import re as _re
     expansion = {}
     for alias, canon in config.festival_aliases.items():
         if alias == canon:
             continue
         short, long = (canon, alias) if len(canon) < len(alias) else (alias, canon)
-        if _re.match(r"^[A-Z]{2,6}$", short):
+        if re.match(r"^[A-Z]{2,6}$", short):
             key = short.lower()
             if key not in expansion or len(long) > len(expansion[key]):
                 expansion[key] = long
@@ -154,6 +154,17 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
     }
     con.print(header_panel("CrateDigger: Identify", rows))
 
+    # Pre-compute search expansion and name sets (constant across all files)
+    search_expansion = _build_search_expansion(config)
+
+    dj_name_set = dj_cache.all_names_lower() if dj_cache else set()
+    dj_name_set |= {n.lower() for n in config.artist_aliases.keys()}
+    dj_name_set |= {n.lower() for n in config.artist_aliases.values()}
+    dj_name_set |= {g.lower() for g in config.artist_groups}
+
+    source_name_set = source_cache.all_names_lower() if source_cache else set()
+    source_name_set |= {n.lower() for n in config.known_festivals}
+
     # Process files
     stats = {"added": 0, "updated": 0, "up_to_date": 0, "skipped": 0, "error": 0}
     tagged_festivals: dict[str, int] = {}
@@ -178,7 +189,9 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 session=session,
                 config=config,
                 source_cache=source_cache,
-                dj_cache=dj_cache,
+                search_expansion=search_expansion,
+                dj_name_set=dj_name_set,
+                source_name_set=source_name_set,
                 tracklist_input=tracklist_input,
                 auto_select=auto_select,
                 ignore_stored=ignore_stored,
@@ -225,7 +238,9 @@ def _process_file(
     session: TracklistSession,
     config: Config,
     source_cache: SourceCache,
-    dj_cache,
+    search_expansion: dict[str, str],
+    dj_name_set: set[str],
+    source_name_set: set[str],
     tracklist_input: str | None,
     auto_select: bool,
     ignore_stored: bool,
@@ -293,8 +308,7 @@ def _process_file(
     # Search
     query_str = source["value"]
 
-    # Build abbreviation -> full name expansion map for 1001TL search
-    search_expansion = _build_search_expansion(config)
+    # Expand abbreviations for better 1001TL search results
     query_str = expand_aliases_in_query(query_str, search_expansion)
 
     if not quiet:
@@ -307,18 +321,8 @@ def _process_file(
         return "skipped"
 
     query_parts = parse_query(query_str, search_expansion)
-
-    # Build name sets from all knowledge sources for cache-boosted scoring
-    _dj_names = dj_cache.all_names_lower() if dj_cache else set()
-    _dj_names |= {n.lower() for n in config.artist_aliases.keys()}
-    _dj_names |= {n.lower() for n in config.artist_aliases.values()}
-    _dj_names |= {g.lower() for g in config.artist_groups}
-
-    _source_names = source_cache.all_names_lower() if source_cache else set()
-    _source_names |= {n.lower() for n in config.known_festivals}
-
     scored = score_results(results, query_parts, duration_mins,
-                           dj_names=_dj_names or None, source_names=_source_names or None)
+                           dj_names=dj_name_set or None, source_names=source_name_set or None)
 
     if not scored:
         con.print("  [dim]No relevant results after filtering.[/dim]")
