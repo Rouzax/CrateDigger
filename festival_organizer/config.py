@@ -91,16 +91,12 @@ DEFAULT_CONFIG = {
         "dwp": "Djakarta Warehouse Project",
         "mmw": "Miami Music Week",
     },
-    "tracklists_settings": {
-        "chapter_language": "eng",
-        "auto_select": False,
-        "delay_seconds": 5,
-    },
     "tracklists": {
         "email": "",
         "password": "",
         "delay_seconds": 5,
         "chapter_language": "eng",
+        "auto_select": False,
     },
     "fanart": {
         "project_api_key": "9fb9273dbec3739bd0fdb49f10d6a129",
@@ -276,7 +272,7 @@ class Config:
     @property
     def tracklists_settings(self) -> dict:
         """Settings for tracklist chapter operations."""
-        return self._data.get("tracklists_settings", {})
+        return self._data.get("tracklists", {})
 
     @property
     def tracklists_credentials(self) -> tuple[str, str]:
