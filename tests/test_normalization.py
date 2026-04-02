@@ -48,6 +48,19 @@ def test_strip_noise_words():
     assert "Official" not in strip_noise_words("Official Stream")
 
 
+def test_strip_noise_words_preserves_live_at():
+    """'LIVE' before 'at' should NOT be stripped (it's a valid naming pattern)."""
+    result = strip_noise_words("Dimitri Vegas Live At Tomorrowland 2024")
+    assert "Live" in result
+    assert "Tomorrowland" in result
+
+
+def test_strip_noise_words_strips_live_before_at_sign():
+    """'LIVE' before '@' should still be stripped (noise in LIVE @ format)."""
+    result = strip_noise_words("Martin Garrix LIVE @ AMF 2024")
+    assert "LIVE" not in result
+
+
 def test_extract_youtube_id():
     stem, yt_id = extract_youtube_id("Armin van Buuren live at EDC Las Vegas 2025 [Dp7AwrAKckQ]")
     assert yt_id == "Dp7AwrAKckQ"

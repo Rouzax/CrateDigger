@@ -7,6 +7,9 @@ ILLEGAL_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 # Unicode characters that look like slashes but aren't (e.g. KI⧸KI)
 UNICODE_SLASHES = re.compile(r'[\u2044\u2215\u29F8\u29F9\uFF0F]')
 
+# Fullwidth pipe ｜ (U+FF5C) used in YouTube titles as separator
+FULLWIDTH_PIPE = re.compile(r'\uFF5C')
+
 # Scene-release technical tags
 SCENE_TAGS = re.compile(
     r"\b("
@@ -27,9 +30,18 @@ YT_ID_PATTERN = re.compile(r"\s*\[([A-Za-z0-9_-]{11})\]\s*")
 NOISE_WORDS = re.compile(
     r"\b(Full\s+Set|Live\s+Set|Full\s+DJ\s+Set|DJ\s+Set|Official|"
     r"HD|HQ|4K\s+HD|Preview|US\s+Debut|Hardstyle\s+Exclusive|"
-    r"LIVE(?=\s+[@|]|\s+at\b|\s*$))\b",
+    r"LIVE(?=\s+[@|]|\s*$))\b",
     re.IGNORECASE,
 )
+
+
+def normalize_pipes(text: str) -> str:
+    """Normalize fullwidth pipe (U+FF5C) to regular pipe.
+
+    YouTube titles from official festival channels use fullwidth pipes
+    as separators (e.g. "Alesso WE2 ｜ Tomorrowland 2024").
+    """
+    return FULLWIDTH_PIPE.sub("|", text)
 
 
 def safe_filename(name: str) -> str:

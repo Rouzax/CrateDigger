@@ -25,6 +25,9 @@ def build_search_query(source_path: Path) -> str:
     stem = strip_scene_tags(stem)
     stem = strip_noise_words(stem)
 
+    # Remove empty parentheses/brackets left after stripping
+    stem = re.sub(r"[(\[]\s*[)\]]", "", stem)
+
     # Collapse whitespace
     stem = re.sub(r"\s+", " ", stem).strip()
 

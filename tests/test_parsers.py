@@ -56,9 +56,61 @@ def test_filename_scene_style():
     assert "glastonbury" in result.get("festival", "").lower() or "Glastonbury" in result.get("festival", "")
 
 
+def test_filename_live_at_title_case():
+    """'Live At' with capital A should match the live-at pattern."""
+    result = parse_filename(
+        Path("Dimitri Vegas & Like Mike - Live At Tomorrowland 2024 Mainstage (FULL SET 4K UHD) [fJysO-Y4Tj4].mkv"),
+        CFG,
+    )
+    assert result["artist"] == "Dimitri Vegas & Like Mike"
+    assert result["festival"] == "Tomorrowland"
+    assert result["year"] == "2024"
+
+
+def test_filename_bare_at_festival():
+    """Bare 'At' (without 'Live') should also match."""
+    result = parse_filename(
+        Path("DJ Snake At Ultra Music Festival 2024 [abc12345678].mkv"), CFG
+    )
+    assert result["artist"] == "DJ Snake"
+    assert result["year"] == "2024"
+
+
 def test_filename_concert_style():
     result = parse_filename(Path("Adele - Live At The Royal Albert Hall-concert.mkv"), CFG)
     assert "Adele" in result.get("artist", "")
+
+
+def test_filename_youtube_pipe_with_weekend():
+    """YouTube festival channel format: Artist WE2 | Festival YYYY"""
+    result = parse_filename(
+        Path("Alesso WE1 \uff5c Tomorrowland 2024 [7ZCNipI13PA].mkv"), CFG
+    )
+    assert result["artist"] == "Alesso"
+    assert result["set_title"] == "WE1"
+    assert result["festival"] == "Tomorrowland"
+    assert result["year"] == "2024"
+    assert result["youtube_id"] == "7ZCNipI13PA"
+
+
+def test_filename_youtube_pipe_without_weekend():
+    """YouTube pipe format without weekend indicator."""
+    result = parse_filename(
+        Path("David Guetta | Tomorrowland 2024 [abc12345678].mkv"), CFG
+    )
+    assert result["artist"] == "David Guetta"
+    assert result["festival"] == "Tomorrowland"
+    assert result["year"] == "2024"
+    assert "set_title" not in result
+
+
+def test_filename_fallback_cleans_leftover_pipes():
+    """Fallback parser should clean pipe characters from artist names."""
+    result = parse_filename(
+        Path("Some Artist | Unknown Event 2024 [abc12345678].mkv"), CFG
+    )
+    assert "|" not in result.get("artist", "")
+    assert "\uff5c" not in result.get("artist", "")
 
 
 def test_filename_complex_youtube():

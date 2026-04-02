@@ -6,6 +6,7 @@ from festival_organizer.config import Config
 from festival_organizer.normalization import (
     UNICODE_SLASHES,
     extract_youtube_id,
+    normalize_pipes,
     scene_dots_to_spaces,
     strip_noise_words,
     strip_scene_tags,
@@ -37,6 +38,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         ARTIST live at FESTIVAL YYYY
         ARTIST at FESTIVAL YYYY
         Artist - Title [YYYY]
+        Artist WE2 | Festival YYYY (YouTube festival channels)
         scene.style.name.YYYY.tech.tags
     """
     stem = filepath.stem
@@ -46,6 +48,9 @@ def parse_filename(filepath: Path, config: Config) -> dict:
     stem, yt_id = extract_youtube_id(stem)
     if yt_id:
         result["youtube_id"] = yt_id
+
+    # Normalize fullwidth pipe to regular pipe (YouTube title artifact)
+    stem = normalize_pipes(stem)
 
     # Convert scene-style dots to spaces
     stem = scene_dots_to_spaces(stem)
@@ -108,19 +113,8 @@ def parse_filename(filepath: Path, config: Config) -> dict:
             result.setdefault("set_title", leftover)
         return result
 
-    # --- Pattern: ARTIST live at FESTIVAL YYYY ---
-    m = re.match(r"^(.+?)\s+(?:[Ll]ive\s+at)\s+(.+?)\s+(\d{4})\s*(.*)$", stem)
-    if m:
-        result.setdefault("artist", m.group(1).strip())
-        result.setdefault("festival", m.group(2).strip())
-        result.setdefault("year", m.group(3))
-        leftover = _clean_leftover(m.group(4))
-        if leftover:
-            result.setdefault("set_title", leftover)
-        return result
-
-    # --- Pattern: ARTIST at FESTIVAL YYYY ---
-    m = re.match(r"^(.+?)\s+at\s+(.+?)\s+(\d{4})\s*(.*)$", stem)
+    # --- Pattern: ARTIST [- ] [live] at FESTIVAL YYYY ---
+    m = re.match(r"^(.+?)\s*[-\u2013\u2014]?\s+(?:[Ll]ive\s+)?[Aa]t\s+(.+?)\s+(\d{4})\s*(.*)$", stem)
     if m:
         result.setdefault("artist", m.group(1).strip())
         result.setdefault("festival", m.group(2).strip())
@@ -149,6 +143,31 @@ def parse_filename(filepath: Path, config: Config) -> dict:
             result.setdefault("year", year)
         return result
 
+    # --- Pattern: Artist [WE2] | Festival YYYY (YouTube festival channels) ---
+    m = re.match(r"^(.+?)\s+(WE\d)\s*\|\s*(.+?)\s+(\d{4})\s*$", stem)
+    if not m:
+        m = re.match(r"^(.+?)\s*\|\s*(.+?)\s+(\d{4})\s*$", stem)
+    if m:
+        groups = m.groups()
+        if len(groups) == 4:
+            artist, weekend, festival_part, year = groups
+            result.setdefault("artist", artist.strip())
+            result.setdefault("set_title", weekend)
+            result.setdefault("year", year)
+            if _is_known_festival(festival_part.strip(), known_festivals):
+                result.setdefault("festival", festival_part.strip())
+            else:
+                result.setdefault("festival", festival_part.strip())
+        else:
+            artist, festival_part, year = groups
+            result.setdefault("artist", artist.strip())
+            result.setdefault("year", year)
+            if _is_known_festival(festival_part.strip(), known_festivals):
+                result.setdefault("festival", festival_part.strip())
+            else:
+                result.setdefault("festival", festival_part.strip())
+        return result
+
     # --- Fallback: extract year, rest is artist ---
     year_match = re.search(r"\b((?:19|20)\d{2})\b", stem)
     if year_match:
@@ -160,12 +179,13 @@ def parse_filename(filepath: Path, config: Config) -> dict:
                 result.setdefault("festival", fest)
                 # Remove the festival name to get the artist
                 cleaned = re.sub(re.escape(fest), "", remainder, flags=re.IGNORECASE).strip(" -\u2013\u2014")
+                cleaned = _clean_leftover(cleaned)
                 if cleaned:
                     result.setdefault("artist", cleaned)
                 break
         else:
             if remainder:
-                result.setdefault("artist", remainder)
+                result.setdefault("artist", _clean_leftover(remainder))
     elif stem:
         result.setdefault("artist", stem)
 

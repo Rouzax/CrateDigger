@@ -44,6 +44,13 @@ def test_build_search_query_normalizes_unicode_slashes():
     assert "KI" in result
 
 
+def test_build_search_query_removes_empty_parens():
+    """Empty parentheses left after noise stripping should be removed."""
+    result = build_search_query(Path("Artist Live At Festival 2024 (Full Set 4K UHD) [abc12345678].mkv"))
+    assert "(" not in result
+    assert ")" not in result
+
+
 def test_detect_tracklist_source_url():
     result = detect_tracklist_source("https://www.1001tracklists.com/tracklist/1g6g22ut/test.html")
     assert result["type"] == "url"
