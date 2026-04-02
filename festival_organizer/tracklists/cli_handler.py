@@ -170,6 +170,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 stored = extract_stored_tracklist_info(filepath)
                 if not stored or not stored.get("url"):
                     unmatched_files.append(filepath.name)
+            # previewed = tracklist found in preview mode, not unmatched
         except KeyboardInterrupt:
             con.print("\nAborted by user.")
             break
@@ -415,7 +416,7 @@ def _fetch_and_embed(
                 con.print(f"    [dim]{ch.timestamp[:8]}[/dim] {escape(ch.title)}")
 
     if preview:
-        return "skipped"
+        return "previewed"
 
     # Embed
     success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists)
