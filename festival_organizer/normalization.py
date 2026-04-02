@@ -10,6 +10,9 @@ UNICODE_SLASHES = re.compile(r'[\u2044\u2215\u29F8\u29F9\uFF0F]')
 # Fullwidth pipe ｜ (U+FF5C) used in YouTube titles as separator
 FULLWIDTH_PIPE = re.compile(r'\uFF5C')
 
+# Fullwidth colon ： (U+FF1A) used in YouTube filenames where : is illegal
+FULLWIDTH_COLON = re.compile(r'\uFF1A')
+
 # Scene-release technical tags
 SCENE_TAGS = re.compile(
     r"\b("
@@ -42,6 +45,15 @@ def normalize_pipes(text: str) -> str:
     as separators (e.g. "Alesso WE2 ｜ Tomorrowland 2024").
     """
     return FULLWIDTH_PIPE.sub("|", text)
+
+
+def normalize_colons(text: str) -> str:
+    """Replace fullwidth colon (U+FF1A) with a space.
+
+    YouTube filenames replace : with ： for filesystem safety.
+    We use space (not colon) because colons in search queries add noise.
+    """
+    return FULLWIDTH_COLON.sub(" ", text)
 
 
 def safe_filename(name: str) -> str:

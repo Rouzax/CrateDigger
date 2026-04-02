@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-from festival_organizer.normalization import extract_youtube_id, strip_scene_tags, strip_noise_words, UNICODE_SLASHES
+from festival_organizer.normalization import extract_youtube_id, strip_scene_tags, strip_noise_words, UNICODE_SLASHES, normalize_pipes, normalize_colons
 
 
 def build_search_query(source_path: Path) -> str:
@@ -15,6 +15,11 @@ def build_search_query(source_path: Path) -> str:
     # Strip YouTube ID
     stem, _ = extract_youtube_id(stem)
 
+    # Normalize YouTube fullwidth characters
+    stem = normalize_pipes(stem)      # ｜ -> |
+    stem = normalize_colons(stem)     # ： -> space
+    stem = stem.replace("|", " ")     # | -> space (flatten pipe separators)
+
     # Normalize unicode slashes (KI⧸KI → KI KI)
     stem = UNICODE_SLASHES.sub(" ", stem)
 
@@ -25,8 +30,8 @@ def build_search_query(source_path: Path) -> str:
     stem = strip_scene_tags(stem)
     stem = strip_noise_words(stem)
 
-    # Remove empty parentheses/brackets left after stripping
-    stem = re.sub(r"[(\[]\s*[)\]]", "", stem)
+    # Strip all parentheses/brackets (content is flattened into query)
+    stem = re.sub(r"[(\[)\]]", " ", stem)
 
     # Collapse whitespace
     stem = re.sub(r"\s+", " ", stem).strip()

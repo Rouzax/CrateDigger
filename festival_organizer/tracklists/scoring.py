@@ -66,6 +66,10 @@ def parse_query(query: str, aliases: dict[str, str]) -> QueryParts:
     # Strip YouTube ID from end
     query = re.sub(r"\s*\[[A-Za-z0-9_-]{11}\]\s*$", "", query)
 
+    # Merge multi-word event patterns: "WEEKEND 2" -> "Weekend2", "DAY 1" -> "Day1"
+    query = re.sub(r"(?i)\b(Weekend|WE|W)\s+(\d)\b", r"\1\2", query)
+    query = re.sub(r"(?i)\b(Day|D)\s+(\d)\b", r"\1\2", query)
+
     words = query.split()
     remaining = []
 
@@ -130,6 +134,8 @@ def score_results(
     results: list[SearchResult],
     query_parts: QueryParts,
     video_duration_minutes: int = 0,
+    dj_names: set[str] | None = None,
+    source_names: set[str] | None = None,
 ) -> list[SearchResult]:
     """Score, filter, and sort search results.
 
@@ -159,7 +165,7 @@ def score_results(
 
     # Score each result
     for r in results:
-        _compute_score(r, query_parts, video_duration_minutes, min_date, date_range_days)
+        _compute_score(r, query_parts, video_duration_minutes, min_date, date_range_days, dj_names, source_names)
 
     # Filter
     has_event_context = bool(query_parts.abbreviations or query_parts.resolved_aliases)
@@ -185,6 +191,8 @@ def _compute_score(
     video_duration_minutes: int,
     min_date: datetime | None,
     date_range_days: float,
+    dj_names: set[str] | None = None,
+    source_names: set[str] | None = None,
 ) -> None:
     """Compute and set score fields on a single SearchResult."""
     title_normalized = remove_diacritics(result.title).lower()
@@ -199,8 +207,8 @@ def _compute_score(
         result.matched_keyword_count = matched
         keyword_score = (matched / total_keywords) * 100
         if matched == total_keywords:
-            keyword_score += 20  # All-match bonus
-        content_score += min(keyword_score, 120)
+            keyword_score += 50  # All-match bonus
+        content_score += min(keyword_score, 170)
 
     # 2. Abbreviations (+35 each)
     for abbrev in query_parts.abbreviations:
@@ -247,20 +255,28 @@ def _compute_score(
             elif re.search(wrong_re, result.title):
                 content_score -= 30
 
+    # 5. Cache confirmation bonuses
+    if dj_names:
+        if any(name in title_normalized for name in dj_names if len(name) > 2):
+            content_score += 25
+
+    if source_names:
+        if any(name in title_normalized for name in source_names if len(name) > 2):
+            content_score += 20
+
     # --- Duration multiplier ---
     duration_mult = 1.0
     if video_duration_minutes > 0 and result.duration_mins is not None and result.duration_mins > 0:
         diff = abs(video_duration_minutes - result.duration_mins)
         if diff <= 1:
-            duration_mult = 2.0
+            duration_mult = 1.5
         elif diff <= 5:
-            duration_mult = 1.8
-        elif diff <= 15:
-            duration_mult = 1.4
-        elif diff <= 30:
+            duration_mult = 1.3
+        elif diff <= 10:
+            duration_mult = 1.2
+        elif diff <= 20:
             duration_mult = 1.1
-        else:
-            duration_mult = 0.8
+        # else: stays 1.0, no penalty
 
     # --- Additive bonuses ---
     year_bonus = 0.0

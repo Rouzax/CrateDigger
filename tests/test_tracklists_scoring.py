@@ -217,8 +217,8 @@ def test_score_event_pattern_wrong_weekend():
     ]
     parts = QueryParts(keywords=["artist"], event_patterns=[{"type": "Weekend", "number": "1"}])
     scored = score_results(results, parts)
-    # Gets -30 for wrong weekend, so lower than without pattern
-    assert scored[0].score < 100
+    # Gets -30 for wrong weekend, so lower than without pattern match
+    assert scored[0].score < 150
 
 
 def test_filter_zero_keyword_matches():
