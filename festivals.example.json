@@ -57,11 +57,8 @@
     "Sensation": {},
     "Sziget": {},
     "Tomorrowland": {
-        "aliases": ["TML"],
+        "aliases": ["TML", "Tomorrowland Weekend 1", "Tomorrowland Weekend 2"],
         "editions": {
-            "Belgium": {
-                "aliases": ["Tomorrowland Weekend 1", "Tomorrowland Weekend 2"]
-            },
             "Brasil": { "color": "#2A9D8F" },
             "Winter": { "color": "#5B9BD5" }
         },

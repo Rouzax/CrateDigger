@@ -52,11 +52,11 @@ def test_render_folder_festival_nested():
         artist="Hardwell",
         festival="Tomorrowland",
         year="2025",
-        edition="Belgium",
+        edition="Winter",
         content_type="festival_set",
     )
     result = render_folder(mf, CFG, layout_name="festival_nested")
-    assert result == "Tomorrowland Belgium/2025/Hardwell"
+    assert result == "Tomorrowland Winter/2025/Hardwell"
 
 
 def test_render_folder_festival_flat_festival_set():
@@ -199,12 +199,12 @@ def test_render_filename_with_set_title():
         festival="Tomorrowland",
         year="2025",
         set_title="WE1",
-        edition="Belgium",
+        edition="Winter",
         extension=".mkv",
         content_type="festival_set",
     )
     result = render_filename(mf, CFG)
-    assert result == "2025 - Hardwell - Tomorrowland Belgium - WE1.mkv"
+    assert result == "2025 - Hardwell - Tomorrowland Winter - WE1.mkv"
 
 
 def test_render_filename_with_stage():
@@ -214,12 +214,12 @@ def test_render_filename_with_stage():
         festival="Tomorrowland",
         year="2025",
         stage="Mainstage",
-        edition="Belgium",
+        edition="Winter",
         extension=".mkv",
         content_type="festival_set",
     )
     result = render_filename(mf, CFG)
-    assert result == "2025 - Hardwell - Tomorrowland Belgium [Mainstage].mkv"
+    assert result == "2025 - Hardwell - Tomorrowland Winter [Mainstage].mkv"
 
 
 def test_render_filename_with_stage_and_set_title():
@@ -230,12 +230,12 @@ def test_render_filename_with_stage_and_set_title():
         year="2025",
         stage="Mainstage",
         set_title="WE1",
-        edition="Belgium",
+        edition="Winter",
         extension=".mkv",
         content_type="festival_set",
     )
     result = render_filename(mf, CFG)
-    assert result == "2025 - Hardwell - Tomorrowland Belgium [Mainstage] - WE1.mkv"
+    assert result == "2025 - Hardwell - Tomorrowland Winter [Mainstage] - WE1.mkv"
 
 
 def test_render_filename_stage_empty_collapses():
@@ -411,6 +411,6 @@ def test_render_multiple_optional_fields_all_empty():
 
 
 def test_render_multiple_optional_fields_all_present():
-    values = {"festival": "Tomorrowland", "edition": "Belgium", "stage": "Mainstage", "set_title": "WE1"}
+    values = {"festival": "Tomorrowland", "edition": "Winter", "stage": "Mainstage", "set_title": "WE1"}
     result = _render("{festival}{ edition}{ [stage]}{ - set_title}", values, {})
-    assert result == "Tomorrowland Belgium [Mainstage] - WE1"
+    assert result == "Tomorrowland Winter [Mainstage] - WE1"

@@ -84,12 +84,12 @@ def test_parent_dirs_festival_year():
 
 def test_parent_dirs_tomorrowland_edition():
     result = parse_parent_dirs(
-        Path("//hyperv/Data/Concerts/Tomorrowland/2025 - Belgium/file.mkv"),
+        Path("//hyperv/Data/Concerts/Tomorrowland/2025 - Winter/file.mkv"),
         Path("//hyperv/Data/Concerts"),
         CFG,
     )
     assert result.get("festival") == "Tomorrowland"
-    assert result.get("edition") == "Belgium"
+    assert result.get("edition") == "Winter"
     assert result.get("year") == "2025"
 
 

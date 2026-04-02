@@ -28,7 +28,7 @@ def test_config_festival_aliases():
 def test_config_festival_edition():
     cfg = Config(TEST_CONFIG)
     # Tomorrowland has editions configured
-    assert cfg.get_festival_display("Tomorrowland", "Belgium") == "Tomorrowland Belgium"
+    assert cfg.get_festival_display("Tomorrowland", "Winter") == "Tomorrowland Winter"
     assert cfg.get_festival_display("Tomorrowland", "") == "Tomorrowland"
     # AMF has no editions
     assert cfg.get_festival_display("AMF", "Netherlands") == "AMF"
@@ -46,7 +46,7 @@ def test_resolve_festival_with_edition():
     cfg = Config(TEST_CONFIG)
     # Edition decomposition (no alias needed)
     assert cfg.resolve_festival_with_edition("Tomorrowland Winter") == ("Tomorrowland", "Winter")
-    assert cfg.resolve_festival_with_edition("Tomorrowland Belgium") == ("Tomorrowland", "Belgium")
+    assert cfg.resolve_festival_with_edition("Tomorrowland Brasil") == ("Tomorrowland", "Brasil")
     assert cfg.resolve_festival_with_edition("EDC Las Vegas") == ("EDC", "Las Vegas")
     assert cfg.resolve_festival_with_edition("Dreamstate SoCal") == ("Dreamstate", "SoCal")
     assert cfg.resolve_festival_with_edition("Dreamstate Europe") == ("Dreamstate", "Europe")
@@ -56,8 +56,8 @@ def test_resolve_festival_with_edition():
     # Pure alias (no edition)
     assert cfg.resolve_festival_with_edition("TML") == ("Tomorrowland", "")
     assert cfg.resolve_festival_with_edition("AMF") == ("AMF", "")
-    # Weekend aliases resolve to the Belgium edition
-    assert cfg.resolve_festival_with_edition("Tomorrowland Weekend 1") == ("Tomorrowland", "Belgium")
+    # Weekend aliases resolve to plain Tomorrowland (no edition)
+    assert cfg.resolve_festival_with_edition("Tomorrowland Weekend 1") == ("Tomorrowland", "")
     # Genuine alternate name (not an edition)
     assert cfg.resolve_festival_with_edition("Red Rocks Amphitheatre") == ("Red Rocks", "")
     # Unknown festival
@@ -78,7 +78,7 @@ def test_known_festivals_includes_edition_combos():
     assert "EDC" in known
     # Edition combos (generated dynamically)
     assert "Tomorrowland Winter" in known
-    assert "Tomorrowland Belgium" in known
+    assert "Tomorrowland Brasil" in known
     assert "EDC Las Vegas" in known
     # Aliases
     assert "TML" in known
@@ -87,8 +87,8 @@ def test_known_festivals_includes_edition_combos():
 
 def test_get_festival_display_with_editions():
     cfg = Config(TEST_CONFIG)
-    assert cfg.get_festival_display("Tomorrowland", "Belgium") == "Tomorrowland Belgium"
     assert cfg.get_festival_display("Tomorrowland", "Winter") == "Tomorrowland Winter"
+    assert cfg.get_festival_display("Tomorrowland", "Brasil") == "Tomorrowland Brasil"
     assert cfg.get_festival_display("Tomorrowland", "") == "Tomorrowland"
     # AMF has no editions configured
     assert cfg.get_festival_display("AMF", "Netherlands") == "AMF"
