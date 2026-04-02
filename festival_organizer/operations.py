@@ -516,7 +516,7 @@ class AlbumPosterOperation(Operation):
 
             # Look up brand color from festival config
             fc = self.config.festival_config.get(mf.festival, {})
-            color_hex = fc.get("edition_colors", {}).get(mf.edition) or fc.get("color")
+            color_hex = fc.get("editions", {}).get(mf.edition, {}).get("color") or fc.get("color")
             if color_hex:
                 from festival_organizer.poster import _hex_to_rgb
                 override_color = _hex_to_rgb(color_hex)

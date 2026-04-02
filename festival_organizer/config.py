@@ -171,14 +171,25 @@ class Config:
 
     @property
     def festival_aliases(self) -> dict[str, str]:
-        raw = self._load_external_config("festivals.json", {}).get("aliases", {})
+        festivals = self._load_external_config("festivals.json", {})
+        raw: dict[str, list[str]] = {}
+        for canon, fc in festivals.items():
+            if canon.startswith("_") or not isinstance(fc, dict):
+                continue
+            raw[canon] = list(fc.get("aliases", []))
+            # Per-edition aliases also resolve to the canonical festival
+            for ed_conf in fc.get("editions", {}).values():
+                for alias in ed_conf.get("aliases", []):
+                    raw.setdefault(canon, []).append(alias)
         if "festival_aliases" in self._data:
             raw = {**raw, **self._data["festival_aliases"]}
         return _invert_alias_map(raw)
 
     @property
     def festival_config(self) -> dict:
-        defaults = self._load_external_config("festivals.json", {}).get("config", {})
+        defaults = self._load_external_config("festivals.json", {})
+        defaults = {k: v for k, v in defaults.items()
+                    if not k.startswith("_") and isinstance(v, dict)}
         if "festival_config" in self._data:
             return {**defaults, **self._data["festival_config"]}
         return defaults
@@ -188,8 +199,7 @@ class Config:
         """Collect all editions from every festival config entry."""
         editions = set()
         for fc in self.festival_config.values():
-            for ed in fc.get("editions", []):
-                editions.add(ed)
+            editions.update(fc.get("editions", {}).keys())
         return editions
 
     def resolve_festival_with_edition(self, name: str) -> tuple[str, str]:
@@ -205,24 +215,30 @@ class Config:
         # Alias resolved to something different: check for edition suffix
         if canonical != name:
             fc = self.festival_config.get(canonical, {})
+            # Check per-edition aliases
+            for ed_name, ed_conf in fc.get("editions", {}).items():
+                if name in ed_conf.get("aliases", []):
+                    return canonical, ed_name
+            # Check if suffix matches an edition name
             suffix = name[len(canonical):].strip() if name.lower().startswith(canonical.lower()) else ""
-            for ed in fc.get("editions", []):
-                if ed.lower() == suffix.lower():
-                    return canonical, ed
+            if suffix:
+                for ed_name in fc.get("editions", {}):
+                    if ed_name.lower() == suffix.lower():
+                        return canonical, ed_name
             return canonical, ""
 
         # No alias match. Try canonical + edition decomposition.
         for fest_name, fc in self.festival_config.items():
-            for ed in fc.get("editions", []):
-                if f"{fest_name} {ed}".lower() == name.lower():
-                    return fest_name, ed
+            for ed_name in fc.get("editions", {}):
+                if f"{fest_name} {ed_name}".lower() == name.lower():
+                    return fest_name, ed_name
 
         # Try alias prefixes (handles "Ultra Europe" via alias "Ultra")
         for alias, canon in self.festival_aliases.items():
             fc = self.festival_config.get(canon, {})
-            for ed in fc.get("editions", []):
-                if f"{alias} {ed}".lower() == name.lower():
-                    return canon, ed
+            for ed_name in fc.get("editions", {}):
+                if f"{alias} {ed_name}".lower() == name.lower():
+                    return canon, ed_name
 
         return name, ""
 
@@ -280,8 +296,10 @@ class Config:
         names = set(self.festival_aliases.keys())
         names.update(self.festival_aliases.values())
         for fest_name, fc in self.festival_config.items():
-            for ed in fc.get("editions", []):
-                names.add(f"{fest_name} {ed}")
+            for ed_name, ed_conf in fc.get("editions", {}).items():
+                names.add(f"{fest_name} {ed_name}")
+                for alias in ed_conf.get("aliases", []):
+                    names.add(alias)
         return names
 
     def resolve_festival_alias(self, name: str) -> str:
@@ -372,11 +390,8 @@ class Config:
     def get_festival_display(self, canonical_festival: str, edition: str) -> str:
         """Get display name for a festival, optionally including edition."""
         fc = self.festival_config.get(canonical_festival, {})
-        editions = fc.get("editions", [])
-        if editions and edition:
-            for ed in editions:
-                if ed.lower() == edition.lower():
-                    return f"{canonical_festival} {ed}"
+        if edition and edition in fc.get("editions", {}):
+            return f"{canonical_festival} {edition}"
         return canonical_festival
 
     def get_layout_template(self, content_type: str, layout_name: str | None = None) -> str:

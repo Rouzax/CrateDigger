@@ -1,70 +1,92 @@
 {
-    "_comment": "Festival configuration. Place as festivals.json next to config.json or in ~/.cratedigger/",
-    "aliases": {
-        "ADE": ["Amsterdam Dance Event"],
-        "AMF": ["Amsterdam Music Festival"],
-        "ASOT": ["A State Of Trance"],
-        "Awakenings": [],
-        "Balaton Sound": [],
-        "Coachella": [],
-        "Creamfields": [],
-        "Dance Valley": [],
-        "Decibel Outdoor": [],
-        "Defqon.1": [],
-        "Dreamstate": [],
-        "EDC": ["Electric Daisy Carnival"],
-        "Electric Zoo": ["EZoo"],
-        "Exit Festival": ["EXIT"],
-        "Glastonbury": [],
-        "Lollapalooza": [],
-        "Mysteryland": [],
-        "Nature One": [],
-        "Parookaville": [],
-        "Red Rocks": ["Red Rocks Amphitheatre"],
-        "Sensation": [],
-        "Sziget": [],
-        "Tomorrowland": ["Tomorrowland Weekend 1", "Tomorrowland Weekend 2", "TML"],
-        "Ultra Music Festival": ["Ultra", "UMF"],
-        "Untold": [],
-        "We Belong Here": [],
-        "World Club Dome": []
+    "_comment": "Festival configuration. One entry per festival.",
+    "A State Of Trance Festival": {
+        "aliases": ["ASOT", "A State Of Trance"],
+        "color": "#E63312"
     },
-    "config": {
-        "AMF": {
-            "color": "#EA0000"
+    "ADE": {
+        "aliases": ["Amsterdam Dance Event"]
+    },
+    "AMF": {
+        "aliases": ["Amsterdam Music Festival"],
+        "color": "#EA0000"
+    },
+    "Awakenings": {},
+    "Balaton Sound": {},
+    "Coachella": {},
+    "Creamfields": {},
+    "Dance Valley": {},
+    "Decibel Outdoor": {},
+    "Defqon.1": {},
+    "Dreamstate": {
+        "editions": {
+            "SoCal": { "aliases": ["Dreamstate SoCal"] },
+            "Europe": {},
+            "Australia": {},
+            "Mexico": {}
         },
-        "A State Of Trance Festival": {
-            "color": "#E63312"
+        "color": "#1C99D8"
+    },
+    "EDC": {
+        "aliases": ["Electric Daisy Carnival"],
+        "editions": {
+            "Las Vegas": { "aliases": ["EDC Las Vegas"] },
+            "Mexico": {},
+            "Orlando": {},
+            "Thailand": {}
         },
-        "Dreamstate": {
-            "editions": ["SoCal", "Europe", "Australia", "Mexico"],
-            "color": "#1C99D8"
+        "color": "#ED3895"
+    },
+    "Electric Zoo": {
+        "aliases": ["EZoo"]
+    },
+    "Exit Festival": {
+        "aliases": ["EXIT"]
+    },
+    "Glastonbury": {},
+    "Lollapalooza": {},
+    "Mysteryland": {
+        "color": "#FFFF7B"
+    },
+    "Nature One": {},
+    "Parookaville": {},
+    "Red Rocks": {
+        "aliases": ["Red Rocks Amphitheatre"],
+        "color": "#C0392B"
+    },
+    "Sensation": {},
+    "Sziget": {},
+    "Tomorrowland": {
+        "aliases": ["TML"],
+        "editions": {
+            "Belgium": {
+                "aliases": ["Tomorrowland Weekend 1", "Tomorrowland Weekend 2"]
+            },
+            "Brasil": { "color": "#2A9D8F" },
+            "Winter": { "color": "#5B9BD5" }
         },
-        "EDC": {
-            "editions": ["Las Vegas", "Mexico", "Orlando", "Thailand"],
-            "color": "#ED3895"
+        "color": "#9B1B5A"
+    },
+    "Ultra Music Festival": {
+        "aliases": ["Ultra", "UMF"],
+        "editions": {
+            "Miami": { "aliases": ["Ultra Music Festival Miami"] },
+            "Europe": {},
+            "Japan": { "aliases": ["Ultra Music Festival Japan"] },
+            "Korea": {},
+            "Singapore": {},
+            "South Africa": {},
+            "Australia": {}
         },
-        "Mysteryland": {
-            "color": "#FFFF7B"
+        "color": "#0693E3"
+    },
+    "Untold": {},
+    "We Belong Here": {
+        "editions": {
+            "Miami": {},
+            "Tulum": {}
         },
-        "Red Rocks": {
-            "color": "#C0392B"
-        },
-        "Tomorrowland": {
-            "editions": ["Belgium", "Brasil", "Winter"],
-            "color": "#9B1B5A",
-            "edition_colors": {
-                "Brasil": "#2A9D8F",
-                "Winter": "#5B9BD5"
-            }
-        },
-        "Ultra Music Festival": {
-            "editions": ["Miami", "Europe", "Japan", "Korea", "Singapore", "South Africa", "Australia"],
-            "color": "#0693E3"
-        },
-        "We Belong Here": {
-            "editions": ["Miami", "Tulum"],
-            "color": "#2EA3F2"
-        }
-    }
+        "color": "#2EA3F2"
+    },
+    "World Club Dome": {}
 }
