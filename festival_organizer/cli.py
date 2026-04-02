@@ -30,11 +30,12 @@ from festival_organizer.templates import render_folder, render_filename
 # ---------------------------------------------------------------------------
 
 RootArg = Annotated[str, typer.Argument(help="File or folder to process")]
+LibraryArg = Annotated[str, typer.Argument(help="Library folder to process")]
 OutputOpt = Annotated[Optional[str], typer.Option("--output", "-o", help="Output folder")]
 ConfigOpt = Annotated[Optional[str], typer.Option("--config", help="Path to config.json")]
-QuietOpt = Annotated[bool, typer.Option("--quiet", "-q", help="Suppress per-file output")]
-VerboseOpt = Annotated[bool, typer.Option("--verbose", "-v", help="Show decisions and downloads")]
-DebugOpt = Annotated[bool, typer.Option("--debug", help="Show all internal details")]
+QuietOpt = Annotated[bool, typer.Option("--quiet", "-q", help="Suppress per-file progress")]
+VerboseOpt = Annotated[bool, typer.Option("--verbose", "-v", help="Show detailed progress and decisions")]
+DebugOpt = Annotated[bool, typer.Option("--debug", help="Show cache hits, retries, and internal mechanics")]
 
 
 class Layout(StrEnum):
@@ -90,7 +91,7 @@ def identify(
     tracklist: Annotated[Optional[str], typer.Option("--tracklist", "-t", help="Tracklist URL, ID, or query")] = None,
     auto: Annotated[bool, typer.Option("--auto", help="Batch mode, no prompts")] = False,
     preview: Annotated[bool, typer.Option("--preview", help="Show chapters without embedding")] = False,
-    fresh: Annotated[bool, typer.Option("--fresh", help="Ignore stored URLs, search again")] = False,
+    regenerate: Annotated[bool, typer.Option("--regenerate", "--fresh", help="Redo even if already done", show_default=False)] = False,
     delay: Annotated[Optional[int], typer.Option("--delay", help="Delay between files, seconds (default: 5)")] = None,
     config: ConfigOpt = None,
     quiet: QuietOpt = False,
@@ -113,7 +114,7 @@ def organize(
     move: Annotated[bool, typer.Option("--move", help="Move instead of copy (default: copy)")] = False,
     rename_only: Annotated[bool, typer.Option("--rename-only", help="Rename in place only")] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run", help="Preview what would happen without making changes")] = False,
-    enrich: Annotated[bool, typer.Option("--enrich", help="Also run enrichment after organizing")] = False,
+    enrich: Annotated[bool, typer.Option("--enrich", help="Run all enrichment after organizing (use enrich command for selective operations)")] = False,
     yes: Annotated[bool, typer.Option("--yes", "-y", help="Skip confirmation prompts")] = False,
     kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
 ) -> int:
@@ -132,12 +133,12 @@ def organize(
 
 @app.command()
 def enrich(
-    root: RootArg,
+    root: LibraryArg,
     config: ConfigOpt = None,
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
-    only: Annotated[Optional[str], typer.Option("--only", help="Operations: nfo, art, fanart, posters, tags")] = None,
+    only: Annotated[Optional[str], typer.Option("--only", help="Comma-separated operations to run (nfo, art, fanart, posters, tags)")] = None,
     regenerate: Annotated[bool, typer.Option("--regenerate", help="Regenerate even if artifacts exist")] = False,
     kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
 ) -> int:
@@ -147,7 +148,7 @@ def enrich(
 
 @app.command(name="audit-logos")
 def audit_logos(
-    root: Annotated[str, typer.Argument(help="Library folder to audit")],
+    root: LibraryArg,
     config: ConfigOpt = None,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
@@ -264,7 +265,7 @@ def _run_command(args) -> int:
         from festival_organizer.tracklists.cli_handler import run_identify
         # Map new flag names to what cli_handler expects
         args.auto_select = getattr(args, "auto", False)
-        args.ignore_stored_url = getattr(args, "fresh", False)
+        args.ignore_stored_url = getattr(args, "regenerate", False)
         return run_identify(args, config, console=console)
 
     if args.command == "audit-logos":
@@ -352,21 +353,13 @@ def _run_command(args) -> int:
 
     # Analyze + classify
     media_files = []
-    if not quiet:
-        with console.status("") as status:
-            for i, fp in enumerate(files):
-                status.update(f"Analyzing \\[{i+1}/{len(files)}] {escape(fp.name)}")
-                mf = analyse_file(fp, root, config)
-                mf.content_type = classify(mf, root, config)
-                media_files.append((fp, mf))
-    else:
-        for fp in files:
-            mf = analyse_file(fp, root, config)
-            mf.content_type = classify(mf, root, config)
-            media_files.append((fp, mf))
+    for fp in files:
+        mf = analyse_file(fp, root, config)
+        mf.content_type = classify(mf, root, config)
+        media_files.append((fp, mf))
 
     # Build operations per file
-    force = getattr(args, "regenerate", False) or getattr(args, "fresh", False)
+    force = getattr(args, "regenerate", False)
     only = set()
     if getattr(args, "only", None):
         only = {v.strip() for v in args.only.split(",")}

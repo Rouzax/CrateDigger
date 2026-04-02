@@ -135,6 +135,10 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     artist = normalise_name(info.get("artist", ""))
     if artist:
         artist = config.resolve_artist(artist)
+    # Align display_artist with the config-resolved canonical form
+    # when it refers to the same single artist (preserves B2B names)
+    if display_artist and normalise_name(display_artist).lower() == normalise_name(artist).lower():
+        display_artist = artist  # Use config-resolved canonical form
     festival = info.get("festival", "")
     # Resolve festival alias
     if festival:
