@@ -263,20 +263,18 @@ def _run_command(args) -> int:
 
     # Scan
     progress = ProgressPrinter(total=0, console=console, quiet=quiet, verbose=verbose)
-    tools = []
-    if metadata.MEDIAINFO_PATH:
-        tools.append("mediainfo")
-    if metadata.FFPROBE_PATH:
-        tools.append("ffprobe")
-    if metadata.MKVEXTRACT_PATH:
-        tools.append("mkvextract")
-    if metadata.MKVPROPEDIT_PATH:
-        tools.append("mkvpropedit")
+    all_tools = {
+        "mediainfo": metadata.MEDIAINFO_PATH,
+        "ffprobe": metadata.FFPROBE_PATH,
+        "mkvextract": metadata.MKVEXTRACT_PATH,
+        "mkvpropedit": metadata.MKVPROPEDIT_PATH,
+    }
+    missing_tools = [name for name, path in all_tools.items() if not path]
     command_label = "Organize (dry run)" if getattr(args, "dry_run", False) else args.command.capitalize()
     progress.print_header(
         command=command_label,
         source=root, output=output,
-        layout=config.default_layout, tools=tools,
+        layout=config.default_layout, missing_tools=missing_tools,
     )
 
     if not quiet:

@@ -34,17 +34,18 @@ class ProgressPrinter:
         source: Path,
         output: Path,
         layout: str,
-        tools: list[str],
+        missing_tools: list[str] | None = None,
     ) -> None:
         """Print the run header."""
-        tools_str = ", ".join(tools) if tools else "NONE (filename parsing only)"
         rows = {
             "Source": str(source),
             "Output": str(output),
             "Layout": layout,
-            "Tools": tools_str,
         }
         self.console.print(header_panel(f"CrateDigger: {command}", rows))
+        if missing_tools:
+            for tool in missing_tools:
+                self.console.print(f"  [yellow]Warning: {tool} not found (some features may be limited)[/yellow]")
 
     def file_start(self, filename: Path, target_folder: str) -> None:
         """Print the start of processing a file."""
