@@ -53,7 +53,7 @@ LayoutOpt = Annotated[Optional[Layout], typer.Option("--layout", help="Folder la
 
 app = typer.Typer(
     name="cratedigger",
-    help="CrateDigger: Festival set & concert library manager",
+    help="CrateDigger: Festival set & concert library manager\n\nWorkflow: identify -> organize -> enrich",
     rich_markup_mode="rich",
     no_args_is_help=False,
 )
@@ -80,8 +80,25 @@ def _dispatch(command: str, params: dict) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Commands
+# Commands (in recommended workflow order)
 # ---------------------------------------------------------------------------
+
+@app.command()
+def identify(
+    root: RootArg,
+    tracklist: Annotated[Optional[str], typer.Option("--tracklist", "-t", help="Tracklist URL, ID, or query")] = None,
+    auto: Annotated[bool, typer.Option("--auto", help="Batch mode, no prompts")] = False,
+    preview: Annotated[bool, typer.Option("--preview", help="Show chapters without embedding")] = False,
+    fresh: Annotated[bool, typer.Option("--fresh", help="Ignore stored URLs, search again")] = False,
+    delay: Annotated[Optional[int], typer.Option("--delay", help="Delay between files, seconds (default: 5)")] = None,
+    config: ConfigOpt = None,
+    quiet: QuietOpt = False,
+    verbose: VerboseOpt = False,
+    debug: DebugOpt = False,
+) -> int:
+    """Match files on 1001Tracklists; embed metadata and chapters."""
+    return _dispatch("identify", locals())
+
 
 @app.command()
 def organize(
@@ -125,23 +142,6 @@ def enrich(
 ) -> int:
     """Add artwork, posters, NFO, and tags."""
     return _dispatch("enrich", locals())
-
-
-@app.command()
-def identify(
-    root: RootArg,
-    tracklist: Annotated[Optional[str], typer.Option("--tracklist", "-t", help="Tracklist URL, ID, or query")] = None,
-    auto: Annotated[bool, typer.Option("--auto", help="Batch mode, no prompts")] = False,
-    preview: Annotated[bool, typer.Option("--preview", help="Show chapters without embedding")] = False,
-    fresh: Annotated[bool, typer.Option("--fresh", help="Ignore stored URLs, search again")] = False,
-    delay: Annotated[Optional[int], typer.Option("--delay", help="Delay between files, seconds (default: 5)")] = None,
-    config: ConfigOpt = None,
-    quiet: QuietOpt = False,
-    verbose: VerboseOpt = False,
-    debug: DebugOpt = False,
-) -> int:
-    """Match files on 1001Tracklists; embed metadata and chapters."""
-    return _dispatch("identify", locals())
 
 
 @app.command(name="audit-logos")
