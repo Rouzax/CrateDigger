@@ -84,34 +84,6 @@ def _dispatch(command: str, params: dict) -> int:
 # ---------------------------------------------------------------------------
 
 @app.command()
-def scan(
-    root: RootArg,
-    output: OutputOpt = None,
-    layout: LayoutOpt = None,
-    config: ConfigOpt = None,
-    quiet: QuietOpt = False,
-    verbose: VerboseOpt = False,
-    debug: DebugOpt = False,
-) -> int:
-    """Preview what would happen (dry run)."""
-    return _dispatch("scan", locals())
-
-
-@app.command(name="dry-run")
-def dry_run(
-    root: RootArg,
-    output: OutputOpt = None,
-    layout: LayoutOpt = None,
-    config: ConfigOpt = None,
-    quiet: QuietOpt = False,
-    verbose: VerboseOpt = False,
-    debug: DebugOpt = False,
-) -> int:
-    """Alias for scan; preview what would happen."""
-    return _dispatch("dry-run", locals())
-
-
-@app.command()
 def organize(
     root: RootArg,
     output: OutputOpt = None,
@@ -122,11 +94,21 @@ def organize(
     debug: DebugOpt = False,
     move: Annotated[bool, typer.Option("--move", help="Move instead of copy (default: copy)")] = False,
     rename_only: Annotated[bool, typer.Option("--rename-only", help="Rename in place only")] = False,
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="Preview what would happen without making changes")] = False,
     enrich: Annotated[bool, typer.Option("--enrich", help="Also run enrichment after organizing")] = False,
     yes: Annotated[bool, typer.Option("--yes", "-y", help="Skip confirmation prompts")] = False,
     kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
 ) -> int:
     """Move/copy files into library structure."""
+    if dry_run and move:
+        print("Error: --dry-run and --move cannot be used together.", file=sys.stderr)
+        raise SystemExit(1)
+    if dry_run and rename_only:
+        print("Error: --dry-run and --rename-only cannot be used together.", file=sys.stderr)
+        raise SystemExit(1)
+    if move and rename_only:
+        print("Error: --move and --rename-only cannot be used together.", file=sys.stderr)
+        raise SystemExit(1)
     return _dispatch("organize", locals())
 
 
@@ -226,10 +208,6 @@ def _run_command(args) -> int:
     if getattr(args, "layout", None):
         config._data["default_layout"] = args.layout
 
-    # dry-run is an alias for scan
-    if args.command == "dry-run":
-        args.command = "scan"
-
     # Handle identify separately
     if args.command == "identify":
         from festival_organizer.tracklists.cli_handler import run_identify
@@ -251,7 +229,7 @@ def _run_command(args) -> int:
         output = library_root if library_root else root
 
     # Organize safety: confirm when source is inside existing library
-    if args.command == "organize" and library_root and not explicit_output:
+    if args.command == "organize" and not getattr(args, "dry_run", False) and library_root and not explicit_output:
         try:
             root.resolve().relative_to(library_root.resolve())
             is_inside_library = True
@@ -276,7 +254,7 @@ def _run_command(args) -> int:
                 return 1
 
     # Initialize library marker on first organize
-    if args.command == "organize" and not library_root:
+    if args.command == "organize" and not getattr(args, "dry_run", False) and not library_root:
         init_library(output, layout=config.default_layout)
 
     quiet = args.quiet
@@ -292,8 +270,9 @@ def _run_command(args) -> int:
         tools.append("mkvextract")
     if metadata.MKVPROPEDIT_PATH:
         tools.append("mkvpropedit")
+    command_label = "Organize (dry run)" if getattr(args, "dry_run", False) else args.command.capitalize()
     progress.print_header(
-        command=args.command.capitalize(),
+        command=command_label,
         source=root, output=output,
         layout=config.default_layout, tools=tools,
     )
@@ -347,7 +326,7 @@ def _run_command(args) -> int:
     for fp, mf in media_files:
         ops: list = []
 
-        if args.command == "scan":
+        if getattr(args, "dry_run", False):
             # Dry run: no operations, just show plan
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
@@ -388,7 +367,7 @@ def _run_command(args) -> int:
 
         pipeline_files.append((fp, mf, ops))
 
-    if args.command == "scan":
+    if getattr(args, "dry_run", False):
         console.print(f"\n[dim]Dry run complete. {len(media_files)} files scanned.[/dim]")
         return 0
 
