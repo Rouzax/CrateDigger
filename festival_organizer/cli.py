@@ -493,7 +493,7 @@ def _run_audit_logos(root: Path, config, console) -> int:
     for video in root.rglob("*"):
         if video.suffix.lower() in (".mkv", ".mp4", ".webm") and video.is_file():
             from festival_organizer.analyzer import analyse_file
-            mf = analyse_file(video, video.parent, config)
+            mf = analyse_file(video, root, config)
             if mf.festival:
                 display = config.get_festival_display(mf.festival, mf.edition)
                 festivals_found.add(display)
