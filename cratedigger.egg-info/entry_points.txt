@@ -1,0 +1,2 @@
+[console_scripts]
+cratedigger = festival_organizer.cli:run

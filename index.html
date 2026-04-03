@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrateDigger - Festival Set &amp; Concert Library Manager</title>
+  <meta name="description" content="Organize, enrich, and curate your festival set and concert collection with professional artwork, metadata, and chapter markers.">
+  <meta property="og:title" content="CrateDigger">
+  <meta property="og:description" content="Festival set & concert library manager">
+  <meta property="og:image" content="assets/social-preview.jpg">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <a href="#" class="nav-logo">CrateDigger</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/Rouzax/CrateDigger" class="nav-gh" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-grain"></div>
+    <div class="hero-content">
+      <p class="hero-badge">v0.9.0 &middot; First Public Release</p>
+      <h1 class="hero-title">
+        <span class="hero-title-crate">Crate</span><span class="hero-title-digger">Digger</span>
+      </h1>
+      <p class="hero-subtitle">Festival set &amp; concert library manager</p>
+      <p class="hero-desc">Organize, enrich, and curate your collection with professional artwork, metadata, and chapter markers.</p>
+      <div class="hero-actions">
+        <a href="#install" class="btn btn-primary">Get Started</a>
+        <a href="https://github.com/Rouzax/CrateDigger" class="btn btn-outline" target="_blank" rel="noopener">View on GitHub</a>
+      </div>
+    </div>
+    <div class="hero-posters">
+      <div class="hero-poster" style="--delay: 0.1s"><img src="assets/martin-garrix-red-rocks.jpg" alt="Martin Garrix at Red Rocks poster" loading="lazy"></div>
+      <div class="hero-poster" style="--delay: 0.2s"><img src="assets/tomorrowland-album.jpg" alt="Tomorrowland album poster" loading="lazy"></div>
+      <div class="hero-poster" style="--delay: 0.3s"><img src="assets/swedish-house-mafia-umf.jpg" alt="Swedish House Mafia at UMF poster" loading="lazy"></div>
+      <div class="hero-poster" style="--delay: 0.15s"><img src="assets/edc-las-vegas-album.jpg" alt="EDC Las Vegas album poster" loading="lazy"></div>
+      <div class="hero-poster" style="--delay: 0.25s"><img src="assets/tiesto-edc-las-vegas.jpg" alt="Tiesto at EDC Las Vegas poster" loading="lazy"></div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features reveal" id="features">
+    <div class="section-header">
+      <span class="section-label">What it does</span>
+      <h2>Your library, perfected</h2>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card stagger">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <h3>Identify</h3>
+        <p>Match your recordings against 1001Tracklists. Embed tracklist metadata and chapter markers directly into MKV files for track-by-track navigation.</p>
+      </div>
+      <div class="feature-card stagger">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        </div>
+        <h3>Organize</h3>
+        <p>Four flexible folder layouts with smart filename templates. Sonarr-style collapsing tokens handle optional fields gracefully. Copy, move, or rename in place.</p>
+      </div>
+      <div class="feature-card stagger">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+        <h3>Enrich</h3>
+        <p>Generate professional posters, extract cover art, download HD artist images from fanart.tv, create Kodi-compatible NFO files, and embed MKV tags.</p>
+      </div>
+      <div class="feature-card stagger">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+        </div>
+        <h3>Kodi Sync</h3>
+        <p>Auto-refresh your Kodi library via JSON-RPC after enrichment. Automatic path mapping for multi-storage setups. NFO files integrate seamlessly.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="gallery reveal" id="gallery">
+    <div class="section-header">
+      <span class="section-label">Generated artwork</span>
+      <h2>Posters that look the part</h2>
+      <p class="section-desc">CrateDigger generates two poster styles: <strong>set posters</strong> using video frames with artist and event metadata, and <strong>album posters</strong> with festival branding and color-matched gradients.</p>
+    </div>
+    <div class="gallery-row">
+      <div class="gallery-group">
+        <span class="gallery-label">Set Posters</span>
+        <div class="gallery-items">
+          <div class="gallery-item"><img src="assets/martin-garrix-red-rocks.jpg" alt="Martin Garrix - Red Rocks" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/swedish-house-mafia-umf.jpg" alt="Swedish House Mafia - UMF Miami" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/tiesto-edc-las-vegas.jpg" alt="Tiesto - EDC Las Vegas" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/armin-van-buuren-tomorrowland.jpg" alt="Armin van Buuren - Tomorrowland Brasil" loading="lazy"></div>
+        </div>
+      </div>
+      <div class="gallery-group">
+        <span class="gallery-label">Album Posters</span>
+        <div class="gallery-items">
+          <div class="gallery-item"><img src="assets/tomorrowland-album.jpg" alt="Tomorrowland" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/edc-las-vegas-album.jpg" alt="EDC Las Vegas" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/amf-album.jpg" alt="AMF" loading="lazy"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Workflow -->
+  <section class="workflow reveal" id="workflow">
+    <div class="section-header">
+      <span class="section-label">Three commands</span>
+      <h2>From raw files to curated library</h2>
+    </div>
+    <div class="workflow-steps">
+      <div class="workflow-step stagger">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Identify</h3>
+          <p>Match recordings against 1001Tracklists. Embed metadata and chapter markers for track-by-track navigation.</p>
+          <code>cratedigger identify ~/downloads/sets/</code>
+        </div>
+      </div>
+      <div class="workflow-connector"></div>
+      <div class="workflow-step stagger">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Organize</h3>
+          <p>Move or copy files into your library with smart folder layouts and filename templates.</p>
+          <code>cratedigger organize ~/downloads/sets/ --output ~/library/ --move</code>
+        </div>
+      </div>
+      <div class="workflow-connector"></div>
+      <div class="workflow-step stagger">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Enrich</h3>
+          <p>Generate artwork, posters, NFO files, download artist images, and embed tags.</p>
+          <code>cratedigger enrich ~/library/ --kodi-sync</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section class="install reveal" id="install">
+    <div class="section-header">
+      <span class="section-label">Get started</span>
+      <h2>Up and running in minutes</h2>
+    </div>
+    <div class="install-content">
+      <div class="install-block">
+        <h3>Prerequisites</h3>
+        <ul>
+          <li>Python 3.10 or newer</li>
+          <li><a href="https://mediaarea.net/en/MediaInfo" target="_blank" rel="noopener">MediaInfo</a> (media analysis)</li>
+          <li><a href="https://ffmpeg.org/" target="_blank" rel="noopener">FFmpeg</a> (frame sampling, probing)</li>
+          <li><a href="https://mkvtoolnix.download/" target="_blank" rel="noopener">MKVToolNix</a> (chapter and tag embedding)</li>
+        </ul>
+      </div>
+      <div class="install-block">
+        <h3>Install</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span>Terminal</span>
+            <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install git+https://github.com/Rouzax/CrateDigger.git')">Copy</button>
+          </div>
+          <pre><code>pip install git+https://github.com/Rouzax/CrateDigger.git</code></pre>
+        </div>
+        <p class="install-note">Optional: install with vision support for advanced frame analysis</p>
+        <div class="code-block">
+          <div class="code-header">
+            <span>Terminal</span>
+            <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install &quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;')">Copy</button>
+          </div>
+          <pre><code>pip install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <span class="footer-logo">CrateDigger</span>
+        <p>Festival set &amp; concert library manager</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Rouzax/CrateDigger" target="_blank" rel="noopener">GitHub</a>
+        <a href="docs/">Documentation</a>
+        <a href="https://github.com/Rouzax/CrateDigger/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0 License</a>
+      </div>
+    </div>
+    <div class="footer-disclaimer">
+      <p>Artist images sourced from <a href="https://fanart.tv" target="_blank" rel="noopener">fanart.tv</a> and <a href="https://www.1001tracklists.com" target="_blank" rel="noopener">1001Tracklists</a>. All artwork, logos, and trademarks belong to their respective owners. CrateDigger is not affiliated with any festival, artist, or platform shown.</p>
+    </div>
+  </footer>
+
+  <script>
+    /* ---- Scroll-triggered reveal animations ---- */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          /* Stagger children if marked */
+          const children = entry.target.querySelectorAll('.stagger');
+          children.forEach((child, i) => {
+            child.style.transitionDelay = `${i * 0.1}s`;
+            child.classList.add('visible');
+          });
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    /* ---- Parallax on hero posters ---- */
+    const heroSection = document.querySelector('.hero');
+    const heroPosters = document.querySelector('.hero-posters');
+    const heroGlow = document.querySelector('.hero-glow');
+
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const heroH = heroSection.offsetHeight;
+      if (scrollY < heroH) {
+        const ratio = scrollY / heroH;
+        heroPosters.style.transform = `translateY(${scrollY * 0.15}px) scale(${1 - ratio * 0.05})`;
+        heroPosters.style.opacity = 1 - ratio * 0.8;
+        heroGlow.style.transform = `translateX(-50%) scale(${1 + ratio * 0.3})`;
+        heroGlow.style.opacity = 0.5 - ratio * 0.4;
+      }
+    }, { passive: true });
+
+    /* ---- Magnetic hover on poster items ---- */
+    document.querySelectorAll('.gallery-item, .hero-poster').forEach(el => {
+      el.addEventListener('mousemove', (e) => {
+        const rect = el.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        el.style.transform = `perspective(600px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-6px) scale(1.02)`;
+      });
+      el.addEventListener('mouseleave', () => {
+        el.style.transform = '';
+      });
+    });
+
+    /* ---- Navbar background on scroll ---- */
+    const nav = document.querySelector('.nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('nav-scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    /* ---- Typing effect on hero subtitle ---- */
+    const heroDesc = document.querySelector('.hero-desc');
+    const fullText = heroDesc.textContent;
+    heroDesc.textContent = '';
+    heroDesc.style.opacity = '1';
+    let charIndex = 0;
+    function typeChar() {
+      if (charIndex < fullText.length) {
+        heroDesc.textContent += fullText[charIndex];
+        charIndex++;
+        setTimeout(typeChar, 18);
+      }
+    }
+    setTimeout(typeChar, 1200);
+
+    /* ---- Smooth counter for step numbers ---- */
+    const stepObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('step-pop');
+          stepObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('.step-number').forEach(el => stepObserver.observe(el));
+
+    /* ---- Feature card glow follow cursor ---- */
+    document.querySelectorAll('.feature-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--mx', x + '%');
+        card.style.setProperty('--my', y + '%');
+      });
+    });
+
+    /* ---- Copy button feedback ---- */
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.style.color = 'var(--accent)';
+        setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
+      });
+    });
+  </script>
+</body>
+</html>
