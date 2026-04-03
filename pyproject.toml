@@ -26,5 +26,8 @@ dev = [
 [tool.setuptools.packages.find]
 include = ["festival_organizer*"]
 
+[tool.setuptools.package-data]
+"festival_organizer" = ["fonts/*.ttf"]
+
 [project.scripts]
 cratedigger = "festival_organizer.cli:run"
