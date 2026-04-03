@@ -711,9 +711,9 @@ class TagsOperation(Operation):
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.embed_tags import embed_tags
         try:
-            success = embed_tags(media_file, file_path)
-            if success:
-                return OperationResult(self.name, "done")
-            return OperationResult(self.name, "error", "embed_tags returned False")
+            status = embed_tags(media_file, file_path)
+            if status == "error":
+                return OperationResult(self.name, "error", "tag embedding failed")
+            return OperationResult(self.name, status)
         except (OSError, subprocess.SubprocessError) as e:
             return OperationResult(self.name, "error", str(e))

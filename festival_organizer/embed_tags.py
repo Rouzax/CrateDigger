@@ -25,16 +25,18 @@ from festival_organizer.models import MediaFile
 logger = logging.getLogger(__name__)
 
 
-def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
+def embed_tags(media_file: MediaFile, target_path: Path) -> str:
     """Embed metadata tags into an MKV file via mkvpropedit.
 
     Uses extract-merge-write to preserve existing tags (e.g. 1001TL tags).
+    Returns "done" if tags were written, "skipped" if already up to date,
+    or "error" on failure.
     """
     if not metadata.MKVPROPEDIT_PATH:
-        return False
+        return "error"
 
     if not target_path.exists() or target_path.suffix.lower() not in MATROSKA_EXTS:
-        return False
+        return "error"
 
     tags: dict[str, str] = {}
 
@@ -72,7 +74,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
         tags_70["CRATEDIGGER_CLEARLOGO_URL"] = media_file.clearlogo_url
 
     if not tags and not tags_70:
-        return True  # Nothing to write
+        return "skipped"  # Nothing to write
 
     # Extract tags once; reuse for comparison and write
     root = extract_all_tags(target_path)
@@ -87,7 +89,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
     )
 
     if not needs_write:
-        return True  # Already up to date
+        return "skipped"  # Already up to date
 
     # Only stamp ENRICHED_AT when actually writing
     if tags_70:
@@ -99,7 +101,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> bool:
     if tags_70:
         all_tags[70] = tags_70
 
-    return write_merged_tags(target_path, all_tags, existing_root=root)
+    return "done" if write_merged_tags(target_path, all_tags, existing_root=root) else "error"
 
 
 def xml_escape(text: str) -> str:

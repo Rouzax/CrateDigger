@@ -205,6 +205,87 @@ def test_lookup_mbid_low_score(mock_get):
         assert cache.get("Hardwell") is None  # Negative cached
 
 
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_exact_case_preferred(mock_get):
+    """Exact case match is preferred over higher-scored case mismatch (FISHER scenario)."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "artists": [
+            {"id": "wrong-india", "score": 100, "name": "India Fisher"},
+            {"id": "wrong-fisher", "score": 93, "name": "Fisher"},
+            {"id": "correct-fisher", "score": 88, "name": "FISHER"},
+        ]
+    }
+    mock_resp.raise_for_status = MagicMock()
+    mock_get.return_value = mock_resp
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        result = lookup_mbid("FISHER", cache)
+        assert result == "correct-fisher"
+
+
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_case_insensitive_fallback(mock_get):
+    """Case-insensitive match used when no exact case match exists."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "artists": [
+            {"id": "wrong-other", "score": 100, "name": "DJ Alesso"},
+            {"id": "correct-alesso", "score": 95, "name": "Alesso"},
+        ]
+    }
+    mock_resp.raise_for_status = MagicMock()
+    mock_get.return_value = mock_resp
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        result = lookup_mbid("alesso", cache)
+        assert result == "correct-alesso"
+
+
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_diacritics_match(mock_get):
+    """Diacritics-insensitive match finds accented artist names."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "artists": [
+            {"id": "correct-tiesto", "score": 100, "name": "Ti\u00ebsto"},
+        ]
+    }
+    mock_resp.raise_for_status = MagicMock()
+    mock_get.return_value = mock_resp
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        result = lookup_mbid("Tiesto", cache)
+        assert result == "correct-tiesto"
+
+
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_no_name_match_returns_none(mock_get):
+    """Returns None when no candidate name matches the query."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "artists": [
+            {"id": "wrong-1", "score": 100, "name": "India Fisher"},
+            {"id": "wrong-2", "score": 95, "name": "Eddie Fisher"},
+        ]
+    }
+    mock_resp.raise_for_status = MagicMock()
+    mock_get.return_value = mock_resp
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        result = lookup_mbid("FISHER", cache)
+        assert result is None
+        assert cache.get("FISHER") is None  # Negative cached
+
+
 # --- fanart.tv API tests ---
 
 @patch("festival_organizer.fanart.requests.get")

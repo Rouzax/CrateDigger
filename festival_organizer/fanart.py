@@ -24,6 +24,7 @@ import json
 import logging
 import re
 import time
+import unicodedata
 from pathlib import Path
 
 import requests
@@ -130,12 +131,25 @@ def lookup_mbid(artist_name: str, cache: MBIDCache) -> str | None:
     return mbid
 
 
+def _strip_diacritics(text: str) -> str:
+    """Remove diacritics for fuzzy matching. Tiesto matches Tiësto."""
+    nfkd = unicodedata.normalize("NFD", text)
+    return "".join(c for c in nfkd if not unicodedata.combining(c))
+
+
 def _mb_search(artist_name: str) -> str | None:
-    """Query MusicBrainz search API. Returns best-match MBID or None."""
+    """Query MusicBrainz search API. Returns best-match MBID or None.
+
+    Uses tiered name matching across candidates (score >= 80):
+    1. Exact case match
+    2. Case-insensitive match
+    3. Diacritics-insensitive match
+    """
     _mb_rate_limit()
 
     url = f"{MB_BASE_URL}/artist/"
-    params = {"query": f'artist:"{artist_name}"', "fmt": "json", "limit": "5"}
+    query = f'artist:"{artist_name}" AND (type:person OR type:group)'
+    params = {"query": query, "fmt": "json", "limit": "25"}
     headers = {"User-Agent": USER_AGENT}
 
     for attempt in range(3):
@@ -151,11 +165,36 @@ def _mb_search(artist_name: str) -> str | None:
             artists = data.get("artists", [])
             if not artists:
                 return None
-            best = artists[0]
-            score = best.get("score", 0)
-            if score >= 80:
-                return best["id"]
-            logger.debug("Best match score %d < 80 for '%s'", score, artist_name)
+
+            # Filter to candidates with sufficient score
+            candidates = [a for a in artists if a.get("score", 0) >= 80]
+            if not candidates:
+                logger.debug("Best match score %d < 80 for '%s'",
+                             artists[0].get("score", 0), artist_name)
+                return None
+
+            # Tier 1: exact case match
+            for a in candidates:
+                if a.get("name") == artist_name:
+                    logger.debug("MBID exact match: '%s' -> %s", a["name"], a["id"])
+                    return a["id"]
+
+            # Tier 2: case-insensitive match
+            query_lower = artist_name.lower()
+            for a in candidates:
+                if a.get("name", "").lower() == query_lower:
+                    logger.debug("MBID case-insensitive match: '%s' -> %s", a["name"], a["id"])
+                    return a["id"]
+
+            # Tier 3: diacritics-insensitive match
+            query_stripped = _strip_diacritics(artist_name).lower()
+            for a in candidates:
+                if _strip_diacritics(a.get("name", "")).lower() == query_stripped:
+                    logger.debug("MBID diacritics match: '%s' -> %s", a["name"], a["id"])
+                    return a["id"]
+
+            logger.debug("No name match in %d candidates for '%s'",
+                         len(candidates), artist_name)
             return None
         except requests.RequestException as e:
             if attempt < 2:

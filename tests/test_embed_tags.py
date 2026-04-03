@@ -22,7 +22,7 @@ def test_embed_tags_failure_logged(tmp_path, caplog):
     with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
         with patch("festival_organizer.embed_tags.write_merged_tags", return_value=False):
             result = embed_tags(mf, video)
-    assert result is False
+    assert result == "error"
 
 
 def test_embed_tags_calls_write_merged_tags(tmp_path):
@@ -36,7 +36,7 @@ def test_embed_tags_calls_write_merged_tags(tmp_path):
         with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
             result = embed_tags(mf, video)
 
-    assert result is True
+    assert result == "done"
     mock_wmt.assert_called_once()
     call_args = mock_wmt.call_args
     assert call_args[0][0] == video
@@ -90,7 +90,7 @@ def test_embed_tags_writes_enrichment_tags_at_ttv70(tmp_path):
         with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
             result = embed_tags(mf, video)
 
-    assert result is True
+    assert result == "done"
     tags_dict = mock_wmt.call_args[0][1]
     assert 70 in tags_dict
     assert tags_dict[70]["CRATEDIGGER_MBID"] == "abc-123-def"
