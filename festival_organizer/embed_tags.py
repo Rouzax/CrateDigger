@@ -20,7 +20,7 @@ from festival_organizer.mkv_tags import (
     extract_all_tags,
     write_merged_tags,
 )
-from festival_organizer.models import MediaFile
+from festival_organizer.models import MediaFile, build_display_title
 
 logger = logging.getLogger(__name__)
 
@@ -44,17 +44,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
         tags["ARTIST"] = media_file.artist
 
     if media_file.content_type == "festival_set":
-        artist = media_file.display_artist or media_file.artist or "Unknown Artist"
-        if media_file.stage:
-            parts = [f"{artist} @ {media_file.stage}"]
-            if media_file.festival:
-                festival = media_file.festival
-                if media_file.set_title:
-                    festival = f"{festival} {media_file.set_title}"
-                parts.append(festival)
-            title = ", ".join(parts)
-        else:
-            title = artist
+        title = build_display_title(media_file)
     else:
         title = media_file.title or media_file.set_title or ""
     if title:

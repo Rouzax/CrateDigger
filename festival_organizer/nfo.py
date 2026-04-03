@@ -5,7 +5,7 @@ from pathlib import Path
 from xml.dom import minidom
 
 from festival_organizer.config import Config
-from festival_organizer.models import MediaFile
+from festival_organizer.models import MediaFile, build_display_title
 
 
 def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Path:
@@ -21,20 +21,7 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
     root = ET.Element("musicvideo")
 
     # Title — must stand alone in Kodi browse views (only label shown)
-    if mf.content_type == "festival_set":
-        artist = mf.display_artist or mf.artist or "Unknown Artist"
-        if mf.stage:
-            parts = [f"{artist} @ {mf.stage}"]
-            if mf.festival:
-                festival = mf.festival
-                if mf.set_title:
-                    festival = f"{festival} {mf.set_title}"
-                parts.append(festival)
-            title = ", ".join(parts)
-        else:
-            title = artist
-    else:
-        title = mf.title or mf.artist or "Unknown"
+    title = build_display_title(mf, config)
     _add(root, "title", title)
 
     # Artist (required)

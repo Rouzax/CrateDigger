@@ -32,15 +32,15 @@ def test_nfo_album_is_festival_plus_year(tmp_path):
     assert root.find("album").text == "Tomorrowland 2024"
 
 
-def test_nfo_title_falls_back_to_artist_when_no_stage(tmp_path):
-    """title = artist when no stage available for festival sets."""
+def test_nfo_title_artist_at_festival_when_no_stage(tmp_path):
+    """title = 'Artist @ Festival' when no stage available for festival sets."""
     mf = MediaFile(source_path=Path("2024 - TML - Artist.mkv"), artist="Martin Garrix",
                    festival="Tomorrowland", year="2024",
                    content_type="festival_set")
     video = tmp_path / "2024 - TML - Martin Garrix.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
-    assert root.find("title").text == "Martin Garrix"
+    assert root.find("title").text == "Martin Garrix @ Tomorrowland"
 
 
 def test_nfo_title_is_title_for_concerts(tmp_path):
@@ -170,15 +170,15 @@ def test_nfo_title_includes_set_title(tmp_path):
     assert root.find("title").text == "Armin van Buuren @ Mainstage, Tomorrowland WE2"
 
 
-def test_nfo_title_falls_back_to_artist(tmp_path):
-    """title = artist when no stage available."""
+def test_nfo_title_artist_at_festival_no_stage(tmp_path):
+    """title = 'Artist @ Festival' when no stage available."""
     mf = MediaFile(source_path=Path("test.mkv"), artist="Martin Garrix",
                    festival="Red Rocks", year="2025",
                    content_type="festival_set")
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
-    assert root.find("title").text == "Martin Garrix"
+    assert root.find("title").text == "Martin Garrix @ Red Rocks"
 
 
 def test_nfo_title_uses_display_artist_for_b2b(tmp_path):
@@ -199,8 +199,8 @@ def test_nfo_title_uses_display_artist_for_b2b(tmp_path):
     assert root.find("artist").text == "Martin Garrix"  # primary for Plex
 
 
-def test_nfo_title_display_artist_no_stage(tmp_path):
-    """NFO title without stage still uses display_artist."""
+def test_nfo_title_display_artist_at_festival_no_stage(tmp_path):
+    """NFO title = 'display_artist @ Festival' when no stage."""
     mf = MediaFile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
@@ -212,4 +212,25 @@ def test_nfo_title_display_artist_no_stage(tmp_path):
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
-    assert root.find("title").text == "Martin Garrix & Alesso"
+    assert root.find("title").text == "Martin Garrix & Alesso @ Red Rocks"
+
+
+def test_nfo_title_no_stage_no_festival(tmp_path):
+    """title = bare artist when neither stage nor festival."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Martin Garrix",
+                   year="2025", content_type="festival_set")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("title").text == "Martin Garrix"
+
+
+def test_nfo_title_no_stage_with_set_title(tmp_path):
+    """set_title appended to festival when no stage."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Agents Of Time",
+                   festival="Tomorrowland", set_title="WE1", year="2025",
+                   content_type="festival_set")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("title").text == "Agents Of Time @ Tomorrowland WE1"
