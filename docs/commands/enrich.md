@@ -60,7 +60,7 @@ Requires `fanart.enabled: true` in your config (enabled by default). A built-in 
 Generates poster images for each media file and album-level poster images (`folder.jpg`) for each folder. Poster backgrounds are selected based on priority chains defined in `poster_settings`:
 
 - **Artist backgrounds**: dj_artwork (from 1001Tracklists), fanart_tv, gradient fallback
-- **Festival backgrounds**: curated_logo, thumb_collage, gradient fallback
+- **Festival backgrounds**: curated_logo, gradient fallback
 - **Year backgrounds**: gradient fallback
 
 Album posters are generated per folder and use a festival logo if available. Use the [audit-logos](audit-logos.md) command to check logo coverage.

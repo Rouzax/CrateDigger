@@ -495,8 +495,6 @@ class AlbumPosterOperation(Operation):
             return self._find_dj_artwork(folder)
         elif source == "fanart_tv":
             return self._find_fanart_background(folder, media_file.artist)
-        elif source == "thumb_collage":
-            return None  # Handled by generate_album_poster via thumb_paths
         elif source == "gradient":
             return None  # No image needed, poster generator creates gradient
         return None
@@ -539,7 +537,7 @@ class AlbumPosterOperation(Operation):
                                   ["dj_artwork", "fanart_tv", "gradient"])
             elif poster_type == "festival":
                 priority = ps.get("festival_background_priority",
-                                  ["curated_logo", "thumb_collage", "gradient"])
+                                  ["curated_logo", "gradient"])
             else:  # year
                 priority = ps.get("year_background_priority", ["gradient"])
 

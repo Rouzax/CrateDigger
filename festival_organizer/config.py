@@ -75,7 +75,7 @@ DEFAULT_CONFIG = {
     },
     "poster_settings": {
         "artist_background_priority": ["dj_artwork", "fanart_tv", "gradient"],
-        "festival_background_priority": ["curated_logo", "thumb_collage", "gradient"],
+        "festival_background_priority": ["curated_logo", "gradient"],
         "year_background_priority": ["gradient"],
     },
     "nfo_settings": {

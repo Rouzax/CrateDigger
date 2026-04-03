@@ -136,7 +136,7 @@ Placeholder values used in templates when metadata is missing.
 {
     "poster_settings": {
         "artist_background_priority": ["dj_artwork", "fanart_tv", "gradient"],
-        "festival_background_priority": ["curated_logo", "thumb_collage", "gradient"],
+        "festival_background_priority": ["curated_logo", "gradient"],
         "year_background_priority": ["gradient"]
     }
 }
@@ -149,7 +149,6 @@ Priority chains for poster background image selection. CrateDigger tries each so
 | `dj_artwork` | DJ photo from 1001Tracklists (embedded during identify) |
 | `fanart_tv` | Artist artwork from fanart.tv |
 | `curated_logo` | Hand-placed festival logo (see [Audit Logos](commands/audit-logos.md)) |
-| `thumb_collage` | Collage assembled from video thumbnails |
 | `gradient` | Solid gradient fallback (always available) |
 
 ### Tracklists
