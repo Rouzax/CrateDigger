@@ -23,5 +23,8 @@ dev = [
     "pytest-mock>=3.10",
 ]
 
+[tool.setuptools.packages.find]
+include = ["festival_organizer*"]
+
 [project.scripts]
 cratedigger = "festival_organizer.cli:run"
