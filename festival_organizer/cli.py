@@ -271,7 +271,8 @@ def _run_command(args) -> int:
         return run_identify(args, config, console=console)
 
     if args.command == "audit-logos":
-        return _run_audit_logos(root, config, console)
+        return _run_audit_logos(root, config, console,
+                                verbose=verbose, debug=debug)
 
     if not root.exists():
         print_error(f"path does not exist: {root}", console)
@@ -369,10 +370,20 @@ def _run_command(args) -> int:
 
     # Analyze + classify
     media_files = []
-    for fp in files:
-        mf = analyse_file(fp, root, config)
-        mf.content_type = classify(mf, root, config)
-        media_files.append((fp, mf))
+    if not quiet and not verbose and not debug:
+        with console.status("") as status:
+            for i, fp in enumerate(files):
+                status.update(f"Analyzing [{i+1}/{len(files)}] {escape(fp.name)}")
+                mf = analyse_file(fp, root, config)
+                mf.content_type = classify(mf, root, config)
+                media_files.append((fp, mf))
+    else:
+        if not quiet and (verbose or debug):
+            console.print(f"Analyzing {len(files)} files...")
+        for fp in files:
+            mf = analyse_file(fp, root, config)
+            mf.content_type = classify(mf, root, config)
+            media_files.append((fp, mf))
 
     # Build operations per file
     force = getattr(args, "regenerate", False)
@@ -532,7 +543,8 @@ def _run_kodi_sync(all_results, pipeline_files, config, console, quiet):
             console.print(f"[yellow]Kodi sync failed: {e}[/yellow]")
 
 
-def _run_audit_logos(root: Path, config, console) -> int:
+def _run_audit_logos(root: Path, config, console, *,
+                     verbose: bool = False, debug: bool = False) -> int:
     """Audit curated festival logo coverage for a library."""
     from festival_organizer.library import find_library_root
 
@@ -542,14 +554,26 @@ def _run_audit_logos(root: Path, config, console) -> int:
         return 1
 
     # Scan all media files for canonical festival names
+    from festival_organizer.analyzer import analyse_file
     festivals_found: set[str] = set()
-    for video in root.rglob("*"):
-        if video.suffix.lower() in (".mkv", ".mp4", ".webm") and video.is_file():
-            from festival_organizer.analyzer import analyse_file
-            mf = analyse_file(video, root, config)
-            if mf.festival:
-                display = config.get_festival_display(mf.festival, mf.edition)
-                festivals_found.add(display)
+    if not verbose and not debug:
+        with console.status("Scanning library for festivals...") as status:
+            for video in root.rglob("*"):
+                if video.suffix.lower() in (".mkv", ".mp4", ".webm") and video.is_file():
+                    status.update(f"Analyzing {escape(video.name)}")
+                    mf = analyse_file(video, root, config)
+                    if mf.festival:
+                        display = config.get_festival_display(mf.festival, mf.edition)
+                        festivals_found.add(display)
+    else:
+        if verbose or debug:
+            console.print("Scanning library for festivals...")
+        for video in root.rglob("*"):
+            if video.suffix.lower() in (".mkv", ".mp4", ".webm") and video.is_file():
+                mf = analyse_file(video, root, config)
+                if mf.festival:
+                    display = config.get_festival_display(mf.festival, mf.edition)
+                    festivals_found.add(display)
 
     # Check logo availability for each festival
     logo_dirs = [
