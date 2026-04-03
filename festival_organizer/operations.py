@@ -13,6 +13,7 @@ import hashlib
 import logging
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -221,10 +222,12 @@ class AlbumPosterOperation(Operation):
     name = "posters"
     display_name = "album_poster"
 
-    def __init__(self, config: Config, force: bool = False, library_root: Path | None = None):
+    def __init__(self, config: Config, force: bool = False, library_root: Path | None = None,
+                 ttl_days: int = 90):
         self.config = config
         self.force = force
         self.library_root = library_root
+        self._ttl_days = ttl_days
         self._completed_folders: set[Path] = set()
         self._logo_hits: dict[str, Path] = {}   # festival -> logo path
         self._logo_misses: set[str] = set()      # festivals without curated logo
@@ -324,7 +327,11 @@ class AlbumPosterOperation(Operation):
         cache_dir = self.library_root / ".cratedigger" / cache_subdir
         cached = cache_dir / f"{h}.{ext}"
         if cached.exists():
-            return cached
+            age_days = (time.time() - cached.stat().st_mtime) / 86400
+            if age_days <= self._ttl_days:
+                return cached
+            cached.unlink()
+            logger.debug("Stale artwork cache (%d days): %s", int(age_days), cached.name)
         try:
             resp = requests.get(url, timeout=15)
             resp.raise_for_status()
@@ -606,18 +613,28 @@ class FanartOperation(Operation):
     """
     name = "fanart"
 
-    def __init__(self, config: Config, library_root: Path, force: bool = False):
+    def __init__(self, config: Config, library_root: Path, force: bool = False,
+                 ttl_days: int = 90):
         self.config = config
         self.library_root = library_root
         self.force = force
+        self._ttl_days = ttl_days
         self._completed_artists: set[str] = set()
         self._cache = None
 
     def _get_cache(self):
         if self._cache is None:
             from festival_organizer.fanart import MBIDCache
-            self._cache = MBIDCache()
+            ttl = self.config.cache_ttl.get("mbid_days", 90)
+            self._cache = MBIDCache(ttl_days=ttl)
         return self._cache
+
+    def _is_stale(self, path: Path) -> bool:
+        """Check if a cached file is missing or older than TTL."""
+        if not path.exists():
+            return True
+        age_days = (time.time() - path.stat().st_mtime) / 86400
+        return age_days > self._ttl_days
 
     def _artist_dir(self, artist: str) -> Path:
         """Resolve per-artist directory at library root level."""
@@ -636,7 +653,7 @@ class FanartOperation(Operation):
             d = self._artist_dir(artist)
             if self.force:
                 return True
-            if not (d / "clearlogo.png").exists() or not (d / "fanart.jpg").exists():
+            if self._is_stale(d / "clearlogo.png") or self._is_stale(d / "fanart.jpg"):
                 return True
         return False
 

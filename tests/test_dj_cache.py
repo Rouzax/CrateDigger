@@ -59,6 +59,34 @@ def test_dj_cache_empty(tmp_path):
     assert cache.derive_artist_groups() == set()
 
 
+def test_dj_cache_expired_entry_is_miss(tmp_path):
+    """Expired entry should return None on get()."""
+    cache = DjCache(tmp_path / "dj_cache.json", ttl_days=0)
+    cache.put("tiesto", {"name": "Tiesto", "artwork_url": "", "aliases": [], "member_of": []})
+    assert cache.get("tiesto") is None
+
+
+def test_dj_cache_old_entries_without_ts_expire(tmp_path):
+    """Entries without ts field (from old cache) should be treated as expired."""
+    import json
+    path = tmp_path / "dj_cache.json"
+    path.write_text(json.dumps({"tiesto": {"name": "Tiesto", "artwork_url": "", "aliases": [], "member_of": []}}))
+    cache = DjCache(path, ttl_days=90)
+    assert cache.get("tiesto") is None
+
+
+def test_dj_cache_derive_aliases_includes_expired(tmp_path):
+    """derive_artist_aliases uses all data including expired entries."""
+    cache = DjCache(tmp_path / "dj_cache.json", ttl_days=0)
+    cache.put("tiesto", {
+        "name": "Tiesto", "artwork_url": "",
+        "aliases": [{"name": "VER:WEST"}], "member_of": [],
+    })
+    # Entry is expired for get(), but derive still uses it
+    aliases = cache.derive_artist_aliases()
+    assert aliases["VER:WEST"] == "Tiesto"
+
+
 # -- _parse_dj_profile tests --
 
 

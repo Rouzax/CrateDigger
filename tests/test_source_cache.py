@@ -93,3 +93,18 @@ def test_concert_promoted_before_event_promoter(tmp_path):
     groups = cache.group_by_type(["aaa", "bbb"])
     assert groups["Open Air / Festival"] == ["Some Concert"]
     assert "Concert / Live Event" not in groups
+
+
+def test_cache_expired_entry_is_miss(tmp_path):
+    """Expired entry should return None on get()."""
+    cache = SourceCache(cache_path=tmp_path / "sc.json", ttl_days=0)
+    cache.put("abc", {"name": "TML", "slug": "tml", "type": "Open Air / Festival", "country": "Belgium"})
+    assert cache.get("abc") is None
+
+
+def test_cache_old_entries_without_ts_expire(tmp_path):
+    """Entries without ts field (from old cache) should be treated as expired."""
+    path = tmp_path / "sc.json"
+    path.write_text(json.dumps({"abc": {"name": "TML", "slug": "tml", "type": "Open Air / Festival", "country": "Belgium"}}))
+    cache = SourceCache(cache_path=path, ttl_days=90)
+    assert cache.get("abc") is None

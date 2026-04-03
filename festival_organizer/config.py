@@ -109,6 +109,12 @@ DEFAULT_CONFIG = {
         "password": "",
         "path_mapping": None,
     },
+    "cache_ttl": {
+        "mbid_days": 90,
+        "dj_days": 30,
+        "source_days": 30,
+        "images_days": 90,
+    },
 }
 
 
@@ -478,6 +484,10 @@ class Config:
     def kodi_password(self) -> str:
         import os
         return os.environ.get("KODI_PASSWORD") or self.kodi_settings.get("password", "")
+
+    @property
+    def cache_ttl(self) -> dict:
+        return self._data.get("cache_ttl", {})
 
     def should_skip(self, relative_path: str) -> bool:
         """Check if a relative path matches any skip pattern."""

@@ -8,6 +8,7 @@ Logging:
 """
 import json
 import logging
+import time
 from pathlib import Path
 
 
@@ -31,8 +32,9 @@ class SourceCache:
     Persists to ~/.cratedigger/source_cache.json.
     """
 
-    def __init__(self, cache_path: Path | None = None):
+    def __init__(self, cache_path: Path | None = None, ttl_days: int = 30):
         self._path = cache_path or DEFAULT_PATH
+        self._ttl_seconds = ttl_days * 86400
         self._data: dict[str, dict] = {}
         self._load()
 
@@ -51,10 +53,17 @@ class SourceCache:
             encoding="utf-8",
         )
 
+    def _is_fresh(self, entry: dict) -> bool:
+        return (time.time() - entry.get("ts", 0)) < self._ttl_seconds
+
     def get(self, source_id: str) -> dict | None:
-        return self._data.get(source_id)
+        entry = self._data.get(source_id)
+        if entry is None or not self._is_fresh(entry):
+            return None
+        return entry
 
     def put(self, source_id: str, entry: dict) -> None:
+        entry["ts"] = time.time()
         self._data[source_id] = entry
         self._save()
 

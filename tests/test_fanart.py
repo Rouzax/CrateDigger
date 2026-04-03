@@ -171,6 +171,30 @@ def test_lookup_mbid_cache_negative_hit():
         assert result is None
 
 
+def test_mbid_cache_expired_entry_is_miss():
+    """Expired entry should act as cache miss."""
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp), ttl_days=0)
+        cache.put("Hardwell", "abc-123")
+        assert not cache.has("Hardwell")
+        with pytest.raises(KeyError):
+            cache.get("Hardwell")
+
+
+def test_mbid_cache_migrates_old_format():
+    """Old bare-string format entries are treated as expired."""
+    with tempfile.TemporaryDirectory() as tmp:
+        cache_file = Path(tmp) / "mbid_cache.json"
+        cache_file.write_text('{"hardwell": "abc-123", "nobody": null}')
+        cache = MBIDCache(cache_dir=Path(tmp), ttl_days=90)
+        # Old entries have ts=0, so they're expired
+        assert not cache.has("Hardwell")
+        # But putting a fresh entry works
+        cache.put("Hardwell", "new-456")
+        assert cache.has("Hardwell")
+        assert cache.get("Hardwell") == "new-456"
+
+
 @patch("festival_organizer.fanart.requests.get")
 def test_lookup_mbid_api_success(mock_get):
     mock_resp = MagicMock()

@@ -53,25 +53,32 @@ class FanartAPIError(FanartError):
 # --- MBID Cache ---
 
 class MBIDCache:
-    """Persistent artist-name-to-MBID mapping.
+    """Persistent artist-name-to-MBID mapping with TTL-based expiry.
 
-    Keys are lowercased artist names. Values are MBID strings or None
-    (negative cache for artists not found on MusicBrainz).
+    Keys are lowercased artist names. Values are dicts with "mbid" and "ts"
+    fields. Migrates transparently from the old bare-string format.
     """
 
-    def __init__(self, cache_dir: Path | None = None):
+    def __init__(self, cache_dir: Path | None = None, ttl_days: int = 90):
         self._dir = cache_dir or (Path.home() / ".cratedigger")
         self._path = self._dir / "mbid_cache.json"
-        self._data: dict[str, str | None] = {}
+        self._ttl_seconds = ttl_days * 86400
+        self._data: dict[str, dict] = {}
         self._load()
 
     def _load(self) -> None:
         if self._path.exists():
             try:
-                self._data = json.loads(self._path.read_text(encoding="utf-8"))
+                raw = json.loads(self._path.read_text(encoding="utf-8"))
             except (json.JSONDecodeError, OSError) as e:
                 logger.warning("Could not load MBID cache: %s", e)
-                self._data = {}
+                return
+            # Migrate old bare-string format: treat as expired (ts=0)
+            for key, value in raw.items():
+                if isinstance(value, dict) and "ts" in value:
+                    self._data[key] = value
+                else:
+                    self._data[key] = {"mbid": value, "ts": 0}
 
     def _save(self) -> None:
         self._dir.mkdir(parents=True, exist_ok=True)
@@ -80,20 +87,26 @@ class MBIDCache:
             encoding="utf-8",
         )
 
+    def _is_fresh(self, entry: dict) -> bool:
+        return (time.time() - entry.get("ts", 0)) < self._ttl_seconds
+
     def get(self, artist: str) -> str | None:
-        """Return cached MBID or None. Raises KeyError if not cached."""
+        """Return cached MBID or None. Raises KeyError if not cached or expired."""
         key = artist.lower()
-        if key not in self._data:
+        entry = self._data.get(key)
+        if entry is None or not self._is_fresh(entry):
             raise KeyError(artist)
-        return self._data[key]
+        return entry["mbid"]
 
     def has(self, artist: str) -> bool:
-        """True if artist is cached (even if MBID is None / negative cache)."""
-        return artist.lower() in self._data
+        """True if artist is cached and not expired."""
+        key = artist.lower()
+        entry = self._data.get(key)
+        return entry is not None and self._is_fresh(entry)
 
     def put(self, artist: str, mbid: str | None) -> None:
         """Cache an artist-to-MBID mapping. None = not found (negative cache)."""
-        self._data[artist.lower()] = mbid
+        self._data[artist.lower()] = {"mbid": mbid, "ts": time.time()}
         self._save()
 
 

@@ -8,6 +8,7 @@ Logging:
 """
 import json
 import logging
+import time
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -16,15 +17,16 @@ DEFAULT_PATH = Path.home() / ".cratedigger" / "dj_cache.json"
 
 
 class DjCache:
-    """Read-through cache for 1001TL DJ profile data.
+    """Read-through cache for 1001TL DJ profile data with TTL-based expiry.
 
     Keyed by DJ slug (e.g. "tiesto", "arminvanbuuren"). Each entry stores
     name, artwork_url, aliases, and member_of groups.
     Persists to ~/.cratedigger/dj_cache.json.
     """
 
-    def __init__(self, cache_path: Path | None = None):
+    def __init__(self, cache_path: Path | None = None, ttl_days: int = 30):
         self._path = cache_path or DEFAULT_PATH
+        self._ttl_seconds = ttl_days * 86400
         self._data: dict[str, dict] = {}
         self._load()
 
@@ -43,10 +45,17 @@ class DjCache:
             encoding="utf-8",
         )
 
+    def _is_fresh(self, entry: dict) -> bool:
+        return (time.time() - entry.get("ts", 0)) < self._ttl_seconds
+
     def get(self, slug: str) -> dict | None:
-        return self._data.get(slug)
+        entry = self._data.get(slug)
+        if entry is None or not self._is_fresh(entry):
+            return None
+        return entry
 
     def put(self, slug: str, entry: dict) -> None:
+        entry["ts"] = time.time()
         self._data[slug] = entry
         self._save()
 
