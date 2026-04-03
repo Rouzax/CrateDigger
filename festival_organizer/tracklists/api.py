@@ -496,6 +496,23 @@ def _parse_h1_structure(h1_html: str) -> dict:
         plain = after_at
 
     plain = re.sub(r"<[^>]+>", "", plain).strip().rstrip(",").strip()
+
+    if not plain and first_source:
+        # The first content after @ is a source link (e.g. "Resistance").
+        # The stage may be that source + trailing text before the next comma
+        # (e.g. "Resistance Megastructure"). Strip all tags from after_at,
+        # take the first comma-delimited segment, and check whether it
+        # differs from any bare source display name. If it does, the source
+        # link is part of a compound stage name.
+        all_text = re.sub(r"<[^>]+>", "", after_at).strip()
+        first_segment = all_text.split(",")[0].strip()
+        source_names = {
+            _html_decode(m.group(3).strip())
+            for m in source_pattern.finditer(after_at)
+        }
+        if first_segment and first_segment not in source_names:
+            plain = first_segment
+
     result["stage_text"] = _html_decode(plain)
 
     return result

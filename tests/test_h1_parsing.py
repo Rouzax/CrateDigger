@@ -71,3 +71,60 @@ def test_h1_existing_source_extraction_unchanged():
     result = _parse_h1_structure(h1)
     assert result["sources"] == [("fgcfkm", "tomorrowland", "Tomorrowland")]
     assert result["stage_text"] == "Mainstage"
+
+
+def test_stage_from_source_link_with_suffix():
+    """Eric Prydz @ Resistance Megastructure, Ultra Music Festival Miami.
+
+    'Resistance' is a /source/ link (Event Promoter). The stage is the
+    compound 'Resistance Megastructure', not empty.
+    """
+    h1 = (
+        '<a href="/dj/ericprydz/index.html" class="notranslate ">Eric Prydz</a>'
+        ' @ <a href="/source/v088zc/resistance/index.html">Resistance</a>'
+        " Megastructure,"
+        ' <a href="/source/u8bf5c/ultra-music-festival-miami/index.html">'
+        "Ultra Music Festival Miami</a>, United States 2026-03-27"
+    )
+    result = _parse_h1_structure(h1)
+    assert result["stage_text"] == "Resistance Megastructure"
+    assert result["dj_artists"] == [("ericprydz", "Eric Prydz")]
+    assert ("v088zc", "resistance", "Resistance") in result["sources"]
+    assert ("u8bf5c", "ultra-music-festival-miami", "Ultra Music Festival Miami") in result["sources"]
+
+
+def test_stage_from_source_link_the_cove():
+    """Dennis Cruz & Seth Troxler @ Resistance The Cove, UMF Miami.
+
+    Same pattern as Megastructure but with different suffix.
+    """
+    h1 = (
+        '<a href="/dj/denniscruz/index.html" class="notranslate ">Dennis Cruz</a>'
+        " &amp; "
+        '<a href="/dj/sethtroxler/index.html" class="notranslate ">Seth Troxler</a>'
+        ' @ <a href="/source/v088zc/resistance/index.html">Resistance</a>'
+        " The Cove,"
+        ' <a href="/source/u8bf5c/ultra-music-festival-miami/index.html">'
+        "Ultra Music Festival Miami</a>, United States 2026-03-29"
+    )
+    result = _parse_h1_structure(h1)
+    assert result["stage_text"] == "Resistance The Cove"
+    assert len(result["dj_artists"]) == 2
+
+
+def test_bare_promoter_source_is_not_stage():
+    """Tiesto @ We Belong Here, Historic Virginia Key Park.
+
+    'We Belong Here' is a /source/ link (Event Promoter) with no suffix.
+    It should NOT be treated as a stage.
+    """
+    h1 = (
+        '<a href="/dj/tiesto/index.html" class="notranslate ">Ti&euml;sto</a>'
+        ' @ <a href="/source/5j4wgtv/we-belong-here/index.html">'
+        "We Belong Here</a>,"
+        ' <a href="/source/7xp1dkc/historic-virginia-key-park/index.html">'
+        "Historic Virginia Key Park</a>, United States 2026-03-01"
+    )
+    result = _parse_h1_structure(h1)
+    assert result["stage_text"] == ""
+    assert len(result["sources"]) == 2
