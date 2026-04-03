@@ -502,11 +502,13 @@ def _run_command(args) -> int:
 
 
 def _run_kodi_sync(all_results, pipeline_files, config, console, quiet):
-    """Notify Kodi to refresh items that had NFO/art/poster changes."""
+    """Notify Kodi to refresh items that had changes affecting Kodi display."""
     from festival_organizer.kodi import KodiClient, sync_library
 
-    RELEVANT_OPS = {"nfo", "art", "posters"}
+    RELEVANT_OPS = {"nfo", "art", "posters", "album_poster", "fanart"}
+    video_exts = config.video_extensions
     changed_paths: list[Path] = []
+    album_poster_folders: set[Path] = set()
 
     for (fp, _mf, ops), results in zip(pipeline_files, all_results):
         final_path = fp
@@ -514,12 +516,20 @@ def _run_kodi_sync(all_results, pipeline_files, config, console, quiet):
             if op.name == "organize" and result.status == "done":
                 final_path = op.target
 
-        has_change = any(
-            r.status == "done" and r.name in RELEVANT_OPS
-            for r in results
-        )
-        if has_change:
-            changed_paths.append(final_path)
+        for r in results:
+            if r.status != "done":
+                continue
+            if r.name == "album_poster":
+                # folder.jpg changed; all videos in that folder need refresh
+                album_poster_folders.add(final_path.parent)
+            elif r.name in RELEVANT_OPS:
+                changed_paths.append(final_path)
+
+    # Expand album_poster folders: add all video files in affected folders
+    for folder in album_poster_folders:
+        for sibling in folder.iterdir():
+            if sibling.is_file() and sibling.suffix.lower() in video_exts:
+                changed_paths.append(sibling)
 
     if not changed_paths:
         return

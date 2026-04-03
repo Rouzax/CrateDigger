@@ -55,7 +55,7 @@ class KodiClient:
         logger.debug("JSON-RPC -> %s %s", method, params or {})
 
         try:
-            resp = self._session.post(self._url, json=payload, timeout=10)
+            resp = self._session.post(self._url, json=payload, timeout=30)
             resp.raise_for_status()
         except requests.ConnectionError as e:
             raise KodiError(f"Cannot connect to Kodi at {self._url}: {e}") from e
@@ -78,6 +78,14 @@ class KodiClient:
             "directory": directory,
         })
         logger.info("Triggered Kodi library scan")
+
+    def clean(self) -> None:
+        """Clean library: remove entries for files that no longer exist."""
+        self._call("VideoLibrary.Clean", {
+            "content": "musicvideos",
+            "showdialogs": False,
+        })
+        logger.info("Triggered Kodi library clean (musicvideos)")
 
     def get_music_videos(self) -> dict[str, int]:
         """Fetch all music videos and return {file_path: musicvideoid}.
@@ -185,7 +193,11 @@ def sync_library(
     quiet: bool = False,
     path_mapping: dict | None = None,
 ) -> None:
-    """Sync changed files with Kodi: scan for new, refresh existing.
+    """Sync changed files with Kodi: refresh existing, scan for new, clean stale.
+
+    Order: refresh existing items first, then scan for new files, then clean
+    stale entries. This avoids the race condition of scanning before the
+    library index is fetched.
 
     Path matching strategy (in order):
     1. Prefix mapping with case-insensitive lookup (explicit config or auto-detected)
@@ -201,11 +213,16 @@ def sync_library(
 
     logger.info("Syncing %d updated items with Kodi", len(changed_paths))
 
-    # Trigger scan for any new files
-    client.scan()
+    if not quiet:
+        console.print()
+        console.print("[bold]Kodi sync[/bold]")
 
     # Build path-to-ID mapping from Kodi's library
-    kodi_videos = client.get_music_videos()
+    if not quiet:
+        with console.status("Fetching Kodi library..."):
+            kodi_videos = client.get_music_videos()
+    else:
+        kodi_videos = client.get_music_videos()
 
     # Case-insensitive lookup: lowered path -> original Kodi path
     kodi_lower: dict[str, str] = {p.lower(): p for p in kodi_videos}
@@ -231,10 +248,13 @@ def sync_library(
         name = kodi_path.rsplit("/", 1)[-1] if "/" in kodi_path else kodi_path
         filename_index[name.lower()] = mv_id
 
+    # Deduplicate paths (album_poster expansion may add duplicates)
+    unique_paths = list(dict.fromkeys(changed_paths))
+
     refreshed = 0
     not_found = 0
 
-    for path in changed_paths:
+    for path in unique_paths:
         mv_id = None
 
         # Strategy 1: prefix mapping (case-insensitive)
@@ -259,16 +279,29 @@ def sync_library(
             refreshed += 1
         else:
             logger.warning(
-                "Not in Kodi library: %s (new file? library scan triggered)",
+                "Not in Kodi library (will be picked up by scan): %s",
                 path.name,
             )
             not_found += 1
 
+    # Per-item results
     if not quiet:
-        parts = []
-        if refreshed:
-            parts.append(f"refreshed {refreshed}")
+        from rich.text import Text
+        text = Text("        ")
+        text.append("\u2714  ", style="green")
+        text.append(f"refreshed {refreshed}")
         if not_found:
-            parts.append(f"{not_found} not yet in library")
-        if parts:
-            console.print(f"[dim]Kodi: {', '.join(parts)}[/dim]")
+            text.append("  ")
+            text.append("\u25cb  ", style="dim")
+            text.append(f"{not_found} not yet in library", style="dim")
+        console.print(text)
+
+    # Scan for new files, then clean stale entries
+    if not quiet:
+        with console.status("Scanning for new files..."):
+            client.scan()
+        with console.status("Cleaning stale entries..."):
+            client.clean()
+    else:
+        client.scan()
+        client.clean()

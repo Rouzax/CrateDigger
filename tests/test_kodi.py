@@ -91,6 +91,17 @@ class TestKodiClient:
             "ignorenfo": False,
         })
 
+    def test_clean_calls_rpc(self):
+        client = KodiClient("localhost", 8080, "kodi", "pass")
+
+        with patch.object(client, "_call", return_value="OK") as mock_call:
+            client.clean()
+
+        mock_call.assert_called_once_with("VideoLibrary.Clean", {
+            "content": "musicvideos",
+            "showdialogs": False,
+        })
+
 
 class TestInferPathMapping:
 
@@ -282,6 +293,34 @@ class TestSyncLibrary:
 
         client.scan.assert_not_called()
         client.get_music_videos.assert_not_called()
+
+    def test_refresh_before_scan_and_clean(self, tmp_path):
+        """Refresh existing items first, then scan for new, then clean stale."""
+        video = tmp_path / "video.mkv"
+        video.touch()
+
+        client = self._make_client({"smb://HOST/video.mkv": 1})
+        console = MagicMock()
+        call_order = []
+        client.refresh_music_video.side_effect = lambda *a: call_order.append("refresh")
+        client.scan.side_effect = lambda *a: call_order.append("scan")
+        client.clean.side_effect = lambda: call_order.append("clean")
+
+        sync_library(client, [video], console)
+
+        assert call_order == ["refresh", "scan", "clean"]
+
+    def test_deduplicates_paths(self, tmp_path):
+        """Duplicate paths (e.g. from album_poster expansion) are deduplicated."""
+        video = tmp_path / "video.mkv"
+        video.touch()
+
+        client = self._make_client({"smb://HOST/video.mkv": 1})
+        console = MagicMock()
+
+        sync_library(client, [video, video, video], console)
+
+        client.refresh_music_video.assert_called_once_with(1)
 
     def test_quiet_suppresses_console(self, tmp_path):
         video = tmp_path / "video.mkv"
