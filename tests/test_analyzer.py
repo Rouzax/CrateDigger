@@ -262,6 +262,25 @@ def test_analyzer_artists_tag_solo():
     assert mf.display_artist == "Dimitri Vegas & Like Mike"
 
 
+def test_display_artist_group_with_members():
+    """display_artist enriched from 1001TL title for group acts with members."""
+    fake_meta = {
+        "tracklists_artists": "Everything Always",
+        "tracklists_title": "Everything Always (Dom Dolla & John Summit) @ Mainstage, Ultra Music Festival Miami, United States 2025-03-28",
+        "tracklists_festival": "Ultra Music Festival Miami",
+        "tracklists_date": "2025-03-28",
+        "tracklists_stage": "Mainstage",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/UMF Miami/2025 - Everything Always (Dom Dolla & John Summit) - UMF Miami [Mainstage].mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.artist == "Everything Always"
+    assert mf.display_artist == "Everything Always (Dom Dolla & John Summit)"
+
+
 def test_analyzer_no_artists_tag_falls_back():
     """Without tracklists_artists, falls back to filename parsing."""
     with patch("festival_organizer.analyzer.extract_metadata", return_value={}):

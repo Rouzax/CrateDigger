@@ -119,6 +119,14 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
             display_artist = " & ".join(artists_list)
         else:
             display_artist = artists_list[0]
+            # Enrich with parenthetical member info from 1001TL title
+            # e.g. "Everything Always" -> "Everything Always (Dom Dolla & John Summit)"
+            tracklists_title = meta.get("tracklists_title", "")
+            if tracklists_title and " @ " in tracklists_title:
+                title_artist = tracklists_title.split(" @ ")[0].strip()
+                if (title_artist.lower().startswith(display_artist.lower())
+                        and len(title_artist) > len(display_artist)):
+                    display_artist = title_artist
     else:
         # Fallback: same priority as artist but skip ARTIST tag
         da = ""
