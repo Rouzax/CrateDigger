@@ -9,7 +9,6 @@ Logging:
 import logging
 import re
 import sys
-import time
 from pathlib import Path
 
 from rich.console import Console
@@ -175,7 +174,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
 
     for i, filepath in enumerate(files):
         if i > 0 and not preview:
-            time.sleep(delay)
+            session.throttle()
 
         if not quiet:
             text = Text()

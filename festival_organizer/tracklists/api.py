@@ -74,11 +74,24 @@ class TracklistSession:
         self._source_cache = source_cache
         self._dj_cache = dj_cache
         self._delay = delay
+        self._last_request_time: float = 0
         self._session = requests.Session()
         self._session.headers.update({
             "User-Agent": USER_AGENT,
             "Accept-Language": "en-US,en;q=0.9",
         })
+
+    def throttle(self) -> None:
+        """Sleep only the remaining delay since the last request.
+
+        If enough time has already passed (e.g. user was choosing interactively),
+        returns immediately instead of adding a redundant wait.
+        """
+        if self._last_request_time:
+            elapsed = time.monotonic() - self._last_request_time
+            remaining = self._delay - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
 
     def login(self, email: str, password: str) -> None:
         """Login or restore cached session. Raises AuthenticationError on failure."""
@@ -202,7 +215,7 @@ class TracklistSession:
             if h1_info["sources"] and self._source_cache:
                 for sid, slug, display_name in h1_info["sources"]:
                     if not self._source_cache.get(sid):
-                        time.sleep(self._delay)
+                        self.throttle()
                         info = self.fetch_source_info(sid, slug)
                         self._source_cache.put(sid, info)
                         logger.info("Cached source: %s = %s (%s)", display_name, info["type"], info["country"])
@@ -221,7 +234,7 @@ class TracklistSession:
                 profile = cached
             else:
                 if i > 0:
-                    time.sleep(self._delay)
+                    self.throttle()
                 profile = self._fetch_dj_profile(dj_slug)
                 if self._dj_cache:
                     display_name = dj_name_map.get(dj_slug, dj_slug)
@@ -267,6 +280,7 @@ class TracklistSession:
                         f"Server error {resp.status_code} after {max_retries} attempts"
                     )
 
+                self._last_request_time = time.monotonic()
                 return resp
 
             except requests.RequestException as e:
