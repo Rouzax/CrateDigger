@@ -63,6 +63,35 @@ class MediaFile:
         return ""
 
 
+def build_display_title(mf: MediaFile, config=None) -> str:
+    """Build a display title for Kodi browse views and MKV TITLE tag.
+
+    Format:
+        With stage:    Artist @ Stage, Festival [SetTitle]
+        Without stage: Artist @ Festival [SetTitle]
+        No festival:   Artist
+    """
+    if mf.content_type == "festival_set":
+        artist = mf.display_artist or mf.artist or "Unknown Artist"
+        festival = ""
+        if mf.festival:
+            if config and mf.edition:
+                festival = config.get_festival_display(mf.festival, mf.edition)
+            else:
+                festival = mf.festival
+            if mf.set_title:
+                festival = f"{festival} {mf.set_title}"
+        if mf.stage:
+            parts = [f"{artist} @ {mf.stage}"]
+            if festival:
+                parts.append(festival)
+            return ", ".join(parts)
+        if festival:
+            return f"{artist} @ {festival}"
+        return artist
+    return mf.title or mf.artist or "Unknown"
+
+
 @dataclass
 class FileAction:
     """A planned move/copy/rename operation."""

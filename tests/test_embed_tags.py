@@ -63,7 +63,7 @@ def test_embed_tags_title_includes_set_title(tmp_path):
 
 
 def test_embed_tags_title_fallback_no_stage(tmp_path):
-    """MKV TITLE falls back to artist when no stage available."""
+    """MKV TITLE uses Artist @ Festival when no stage available."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(artist="Martin Garrix", festival="Red Rocks", year="2025")
@@ -73,7 +73,7 @@ def test_embed_tags_title_fallback_no_stage(tmp_path):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
-    assert tags_dict[50]["TITLE"] == "Martin Garrix"
+    assert tags_dict[50]["TITLE"] == "Martin Garrix @ Red Rocks"
 
 
 def test_embed_tags_writes_enrichment_tags_at_ttv70(tmp_path):
@@ -133,7 +133,7 @@ def test_embed_tags_b2b_artist_in_title_not_artist_tag(tmp_path):
 
     tags_dict = mock_wmt.call_args[0][1]
     assert tags_dict[50]["ARTIST"] == "Martin Garrix"  # primary for Plex
-    assert tags_dict[50]["TITLE"] == "Martin Garrix & Alesso"  # display_artist in title
+    assert tags_dict[50]["TITLE"] == "Martin Garrix & Alesso @ Red Rocks"  # display_artist in title
 
 
 def test_embed_tags_b2b_with_stage_in_title(tmp_path):
