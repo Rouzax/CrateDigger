@@ -24,6 +24,7 @@ desktop.ini
 *.log
 
 # Project-specific
+CLAUDE.md
 .worktrees/
 C:/
 config.json
