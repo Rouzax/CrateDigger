@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: cratedigger
+Version: 0.1.0
+Summary: Festival set & concert library manager
+Requires-Python: >=3.10
+Requires-Dist: Pillow>=10.0
+Requires-Dist: numpy>=1.24
+Requires-Dist: requests>=2.28
+Requires-Dist: rich>=13.0
+Requires-Dist: typer>=0.9
+Provides-Extra: vision
+Requires-Dist: opencv-python-headless>=4.8; extra == "vision"
+Provides-Extra: all
+Requires-Dist: cratedigger[vision]; extra == "all"
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-mock>=3.10; extra == "dev"
