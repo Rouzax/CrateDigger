@@ -54,6 +54,7 @@ from festival_organizer.tracklists.scoring import parse_query, score_results
 logger = logging.getLogger(__name__)
 
 AUTO_SELECT_MIN_SCORE = 150
+AUTO_SELECT_MIN_GAP = 20
 
 
 def _build_search_expansion(config: Config) -> dict[str, str]:
@@ -331,9 +332,13 @@ def _process_file(
     # Select result
     if auto_select:
         selected = scored[0]
-        if selected.score < AUTO_SELECT_MIN_SCORE:
+        runner_up = scored[1].score if len(scored) > 1 else 0
+        gap = selected.score - runner_up
+
+        if selected.score < AUTO_SELECT_MIN_SCORE or gap < AUTO_SELECT_MIN_GAP:
             if not quiet:
-                con.print(f"  [yellow]Skipped (low confidence: {selected.score:.0f})[/yellow]")
+                reason = f"score {selected.score:.0f}" if selected.score < AUTO_SELECT_MIN_SCORE else f"gap {gap:.0f}"
+                con.print(f"  [yellow]Skipped (low confidence: {reason})[/yellow]")
             return "skipped"
         if not quiet:
             _display_auto_selected(selected, duration_mins, con)

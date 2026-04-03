@@ -370,21 +370,32 @@ def test_score_results_without_cache_unchanged():
 
 
 def test_auto_select_threshold_separates_good_from_bad():
-    """The auto-select threshold (150) should separate confident from uncertain results.
-
-    A strong match (all keywords + close duration) should score above 150.
-    A weak match (few keywords) should score below 150.
-    """
-    from festival_organizer.tracklists.cli_handler import AUTO_SELECT_MIN_SCORE
+    """Auto-select requires both minimum score AND minimum gap to #2."""
+    from festival_organizer.tracklists.cli_handler import AUTO_SELECT_MIN_SCORE, AUTO_SELECT_MIN_GAP
 
     strong = SearchResult(id="s", title="Hardwell @ Mainstage, Tomorrowland Weekend 2", url="/s/", duration_mins=90)
-    weak = SearchResult(id="w", title="Random DJ @ Some Club", url="/w/", duration_mins=90)
+    partial = SearchResult(id="p", title="Hardwell @ Some Other Festival", url="/p/", duration_mins=90)
 
     query_parts = QueryParts(keywords=["hardwell", "tomorrowland", "mainstage"])
     query_parts.event_patterns = [{"type": "Weekend", "number": "2"}]
 
-    score_results([strong], query_parts, video_duration_minutes=90)
-    score_results([weak], query_parts, video_duration_minutes=90)
+    scored = score_results([strong, partial], query_parts, video_duration_minutes=90)
 
-    assert strong.score >= AUTO_SELECT_MIN_SCORE, f"Strong match ({strong.score:.0f}) should pass auto-select threshold"
-    assert weak.score < AUTO_SELECT_MIN_SCORE, f"Weak match ({weak.score:.0f}) should fail auto-select threshold"
+    assert scored[0].score >= AUTO_SELECT_MIN_SCORE, f"Strong match ({scored[0].score:.0f}) should pass score threshold"
+    gap = scored[0].score - scored[1].score
+    assert gap >= AUTO_SELECT_MIN_GAP, f"Gap ({gap:.0f}) should pass gap threshold"
+
+
+def test_auto_select_rejects_narrow_gap():
+    """Auto-select should skip when #1 and #2 are too close, even if score is high."""
+    from festival_organizer.tracklists.cli_handler import AUTO_SELECT_MIN_GAP
+
+    # Two results with near-identical scores (same keywords match both)
+    r1 = SearchResult(id="r1", title="AFROJACK @ Mainstage, Ultra Music Festival Miami", url="/1/", duration_mins=60)
+    r2 = SearchResult(id="r2", title="Martin Garrix & Alesso @ Mainstage, Ultra Music Festival Miami", url="/2/", duration_mins=60)
+
+    query_parts = QueryParts(keywords=["ultra", "music", "festival", "miami", "mainstage"])
+    scored = score_results([r1, r2], query_parts, video_duration_minutes=60)
+
+    gap = scored[0].score - scored[1].score
+    assert gap < AUTO_SELECT_MIN_GAP, f"Near-identical results should have gap ({gap:.0f}) below threshold"
