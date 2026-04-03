@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-CrateDigger requires Python 3.10 or newer, plus several media tools.
+CrateDigger requires Python 3.11 or newer, plus several media tools.
 
 ### Required tools
 

@@ -2,7 +2,7 @@
 name = "cratedigger"
 version = "0.9.0"
 description = "Festival set & concert library manager"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "Pillow>=10.0",
     "numpy>=1.24",

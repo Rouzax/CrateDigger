@@ -24,7 +24,8 @@ jobs:
         run: |
           cp site/index.html build/
           cp site/style.css build/
-          cp -r site/assets build/assets-site || true
+          cp -r site/assets build/assets
+          touch build/.nojekyll
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:

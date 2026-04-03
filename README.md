@@ -1,7 +1,7 @@
 ![CrateDigger](docs/assets/hero-banner.jpg)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/python-3.10%2B-blue" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="GPL-3.0">
   <img src="https://img.shields.io/badge/version-v0.9.0-orange" alt="v0.9.0">
 </p>
@@ -57,7 +57,7 @@ Trigger library refreshes over JSON-RPC so Kodi picks up new content automatical
 
 ### Prerequisites
 
-- [Python 3.10+](https://www.python.org/downloads/)
+- [Python 3.11+](https://www.python.org/downloads/)
 - [MediaInfo](https://mediaarea.net/en/MediaInfo)
 - [FFmpeg](https://ffmpeg.org/download.html)
 - [MKVToolNix](https://mkvtoolnix.download/downloads.html)
