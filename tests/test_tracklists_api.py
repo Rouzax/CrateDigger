@@ -241,10 +241,10 @@ def test_login_failure_no_cookies():
     mock_resp = MagicMock()
     mock_resp.status_code = 200
 
-    with patch.object(session, "_restore_cookies", return_value=False):
-        with patch.object(session._session, "post", return_value=mock_resp):
-            with pytest.raises(AuthenticationError, match="missing session cookies"):
-                session.login("test@test.com", "wrong")
+    with patch.object(session, "_restore_cookies", return_value=False), \
+         patch.object(session, "_request", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="missing session cookies"):
+            session.login("test@test.com", "wrong")
 
 
 # --- Genre extraction (itemprop) ---
