@@ -25,8 +25,7 @@ desktop.ini
 
 # Project-specific
 CLAUDE.md
+.claude/
 .worktrees/
 C:/
 config.json
-docs/plans/
-docs/superpowers/
