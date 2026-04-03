@@ -1,8 +1,30 @@
-.worktrees/
+# Build / runtime
 __pycache__/
 *.pyc
 *.egg-info/
 .venv/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Secrets / env
+.env
+.env.*
+
+# Logs
+*.log
+
+# Project-specific
+.worktrees/
 C:/
 config.json
 docs/plans/
