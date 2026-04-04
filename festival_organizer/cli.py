@@ -235,11 +235,15 @@ def _analyse_parallel(
     root: Path,
     config,
     max_workers: int = 4,
+    on_complete=None,
 ) -> list[tuple]:
     """Analyse and classify files using a thread pool.
 
     Returns list of (Path, MediaFile) tuples in the same order as input.
     Spawns mediainfo/ffprobe subprocesses in parallel to overlap I/O.
+
+    If on_complete is provided, it is called (from the main thread) each
+    time a file finishes. Useful for progress reporting.
     """
     if not files:
         return []
@@ -262,6 +266,8 @@ def _analyse_parallel(
         for future in as_completed(futures):
             idx, fp, mf = future.result()
             results[idx] = (fp, mf)
+            if on_complete:
+                on_complete()
 
     return results  # type: ignore[return-value]
 
@@ -416,24 +422,10 @@ def _run_command(args) -> int:
             transient=True,
         ) as pbar:
             task_id = pbar.add_task("analyze", total=len(files))
-            media_files: list[tuple] = [None] * len(files)  # type: ignore[list-item]
-
-            # Populate config._ext_cache so worker threads only read
-            _ = config.known_festivals
-            _ = config.artist_aliases
-            _ = config.festival_aliases
-
-            def _worker(idx, fp):
-                mf = analyse_file(fp, root, config)
-                mf.content_type = classify(mf, root, config)
-                return idx, fp, mf
-
-            with ThreadPoolExecutor(max_workers=min(len(files), 4)) as pool:
-                futures = [pool.submit(_worker, i, fp) for i, fp in enumerate(files)]
-                for future in as_completed(futures):
-                    idx, fp, mf = future.result()
-                    media_files[idx] = (fp, mf)
-                    pbar.advance(task_id)
+            media_files = _analyse_parallel(
+                files, root, config,
+                on_complete=lambda: pbar.advance(task_id),
+            )
     else:
         if not quiet and (verbose or debug):
             console.print(f"Analyzing {len(files)} files...")
@@ -632,15 +624,13 @@ def _run_audit_logos(root: Path, config, console, *,
         videos = [v for v in root.rglob("*")
                   if v.suffix.lower() in (".mkv", ".mp4", ".webm") and v.is_file()]
 
+    festivals_found: set[str] = set()
     if videos:
         analyzed = _analyse_parallel(videos, root, config)
-        festivals_found: set[str] = set()
         for _fp, mf in analyzed:
             if mf.festival:
                 display = config.get_festival_display(mf.festival, mf.edition)
                 festivals_found.add(display)
-    else:
-        festivals_found: set[str] = set()
 
     # Check logo availability for each festival
     logo_dirs = [
