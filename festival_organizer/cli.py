@@ -405,22 +405,39 @@ def _run_command(args) -> int:
 
     progress.total = len(files)
 
-    # Analyze + classify
-    media_files = []
+    # Analyze + classify (parallel)
     if not quiet and not verbose and not debug:
-        with console.status("") as status:
-            for i, fp in enumerate(files):
-                status.update(f"Analyzing [{i+1}/{len(files)}] {escape(fp.name)}")
+        from rich.progress import Progress, BarColumn, MofNCompleteColumn, TextColumn
+        with Progress(
+            TextColumn("Analyzing"),
+            BarColumn(),
+            MofNCompleteColumn(),
+            console=console,
+            transient=True,
+        ) as pbar:
+            task_id = pbar.add_task("analyze", total=len(files))
+            media_files: list[tuple] = [None] * len(files)  # type: ignore[list-item]
+
+            # Populate config._ext_cache so worker threads only read
+            _ = config.known_festivals
+            _ = config.artist_aliases
+            _ = config.festival_aliases
+
+            def _worker(idx, fp):
                 mf = analyse_file(fp, root, config)
                 mf.content_type = classify(mf, root, config)
-                media_files.append((fp, mf))
+                return idx, fp, mf
+
+            with ThreadPoolExecutor(max_workers=min(len(files), 4)) as pool:
+                futures = [pool.submit(_worker, i, fp) for i, fp in enumerate(files)]
+                for future in as_completed(futures):
+                    idx, fp, mf = future.result()
+                    media_files[idx] = (fp, mf)
+                    pbar.advance(task_id)
     else:
         if not quiet and (verbose or debug):
             console.print(f"Analyzing {len(files)} files...")
-        for fp in files:
-            mf = analyse_file(fp, root, config)
-            mf.content_type = classify(mf, root, config)
-            media_files.append((fp, mf))
+        media_files = _analyse_parallel(files, root, config)
 
     # Build operations per file
     force = getattr(args, "regenerate", False)
