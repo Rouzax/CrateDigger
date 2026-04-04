@@ -622,26 +622,25 @@ def _run_audit_logos(root: Path, config, console, *,
         return 1
 
     # Scan all media files for canonical festival names
-    from festival_organizer.analyzer import analyse_file
-    festivals_found: set[str] = set()
     if not verbose and not debug:
-        with console.status("Scanning library for festivals...") as status:
-            for video in root.rglob("*"):
-                if video.suffix.lower() in (".mkv", ".mp4", ".webm") and video.is_file():
-                    status.update(f"Analyzing {escape(video.name)}")
-                    mf = analyse_file(video, root, config)
-                    if mf.festival:
-                        display = config.get_festival_display(mf.festival, mf.edition)
-                        festivals_found.add(display)
+        with console.status("Scanning for media files..."):
+            videos = [v for v in root.rglob("*")
+                      if v.suffix.lower() in (".mkv", ".mp4", ".webm") and v.is_file()]
     else:
         if verbose or debug:
             console.print("Scanning library for festivals...")
-        for video in root.rglob("*"):
-            if video.suffix.lower() in (".mkv", ".mp4", ".webm") and video.is_file():
-                mf = analyse_file(video, root, config)
-                if mf.festival:
-                    display = config.get_festival_display(mf.festival, mf.edition)
-                    festivals_found.add(display)
+        videos = [v for v in root.rglob("*")
+                  if v.suffix.lower() in (".mkv", ".mp4", ".webm") and v.is_file()]
+
+    if videos:
+        analyzed = _analyse_parallel(videos, root, config)
+        festivals_found: set[str] = set()
+        for _fp, mf in analyzed:
+            if mf.festival:
+                display = config.get_festival_display(mf.festival, mf.edition)
+                festivals_found.add(display)
+    else:
+        festivals_found: set[str] = set()
 
     # Check logo availability for each festival
     logo_dirs = [
