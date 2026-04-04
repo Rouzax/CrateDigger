@@ -166,6 +166,31 @@ def test_analyse_parallel_empty_list():
     assert result == []
 
 
+def test_enrich_uses_parallel_analysis(tmp_path):
+    """Enrich command should use _analyse_parallel for the analysis phase."""
+    lib = tmp_path / "concerts"
+    (lib / ".cratedigger").mkdir(parents=True)
+    fake_file = lib / "test.mkv"
+    fake_file.touch()
+
+    with patch("festival_organizer.cli.resolve_library_root", return_value=lib):
+        with patch("festival_organizer.cli.scan_folder", return_value=[fake_file]):
+            with patch("festival_organizer.cli._analyse_parallel") as mock_parallel:
+                mock_mf = MagicMock()
+                mock_mf.content_type = "festival_set"
+                mock_mf.festival = "TestFest"
+                mock_mf.artist = "TestArtist"
+                mock_mf.source_path = fake_file
+                mock_parallel.return_value = [(fake_file, mock_mf)]
+                with patch("festival_organizer.cli.run_pipeline", return_value=[]):
+                    result = run(["enrich", str(lib), "--verbose"])
+
+    mock_parallel.assert_called_once()
+    call_args = mock_parallel.call_args
+    assert call_args[0][0] == [fake_file]  # files
+    assert call_args[0][1] == lib  # root
+
+
 def test_analyse_parallel_propagates_exception():
     """If analyse_file raises, the exception should propagate."""
     cfg = Config(TEST_CONFIG)
