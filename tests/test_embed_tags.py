@@ -1,5 +1,6 @@
 import logging
 import re
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from unittest.mock import patch
 from festival_organizer.embed_tags import embed_tags
@@ -155,3 +156,64 @@ def test_embed_tags_b2b_with_stage_in_title(tmp_path):
     tags_dict = mock_wmt.call_args[0][1]
     assert tags_dict[50]["ARTIST"] == "Martin Garrix"
     assert tags_dict[50]["TITLE"] == "Martin Garrix & Alesso @ Main Stage, Red Rocks"
+
+
+def test_embed_tags_skipped_when_tags_match(tmp_path):
+    """embed_tags returns 'skipped' when existing TTV=50 tags already match."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(artist="Tiesto", festival="TML", year="2024")
+
+    existing_xml = """<Tags>
+  <Tag>
+    <Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+    <Simple><Name>ARTIST</Name><String>Tiesto</String></Simple>
+    <Simple><Name>TITLE</Name><String>Tiesto @ TML</String></Simple>
+    <Simple><Name>DATE_RELEASED</Name><String>2024</String></Simple>
+  </Tag>
+</Tags>"""
+    existing_root = ET.fromstring(existing_xml)
+
+    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+        with patch("festival_organizer.embed_tags.extract_all_tags", return_value=existing_root):
+            with patch("festival_organizer.embed_tags.write_merged_tags") as mock_wmt:
+                result = embed_tags(mf, video)
+
+    assert result == "skipped"
+    mock_wmt.assert_not_called()
+
+
+def test_embed_tags_skipped_with_enrichment_tags_match(tmp_path):
+    """embed_tags returns 'skipped' when TTV=50 and TTV=70 tags all match."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(
+        artist="Tiesto", festival="TML", year="2024",
+        mbid="abc-123", fanart_url="https://fanart.tv/bg.jpg",
+        clearlogo_url="https://fanart.tv/logo.png",
+    )
+
+    existing_xml = """<Tags>
+  <Tag>
+    <Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+    <Simple><Name>ARTIST</Name><String>Tiesto</String></Simple>
+    <Simple><Name>TITLE</Name><String>Tiesto @ TML</String></Simple>
+    <Simple><Name>DATE_RELEASED</Name><String>2024</String></Simple>
+  </Tag>
+  <Tag>
+    <Targets><TargetTypeValue>70</TargetTypeValue></Targets>
+    <Simple><Name>CRATEDIGGER_MBID</Name><String>abc-123</String></Simple>
+    <Simple><Name>CRATEDIGGER_FANART_URL</Name><String>https://fanart.tv/bg.jpg</String></Simple>
+    <Simple><Name>CRATEDIGGER_CLEARLOGO_URL</Name><String>https://fanart.tv/logo.png</String></Simple>
+    <Simple><Name>CRATEDIGGER_ENRICHED_AT</Name><String>2024-01-01T00:00:00+00:00</String></Simple>
+  </Tag>
+</Tags>"""
+    existing_root = ET.fromstring(existing_xml)
+
+    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+        with patch("festival_organizer.embed_tags.extract_all_tags", return_value=existing_root):
+            with patch("festival_organizer.embed_tags.write_merged_tags") as mock_wmt:
+                result = embed_tags(mf, video)
+
+    assert result == "skipped"
+    mock_wmt.assert_not_called()

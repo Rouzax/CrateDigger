@@ -1,7 +1,10 @@
 """Tests for the mkv_tags extract-merge-write module."""
+import subprocess
 import xml.etree.ElementTree as ET
+from pathlib import Path
+from unittest.mock import patch
 
-from festival_organizer.mkv_tags import merge_tags
+from festival_organizer.mkv_tags import _tag_values_from_root, extract_all_tags, merge_tags
 
 
 def _parse_merged(xml_str: str) -> ET.Element:
@@ -226,3 +229,56 @@ def test_merge_tags_strips_track_uid_blocks():
     tag70 = _get_tag_block(root, 70)
     assert tag70 is not None
     assert _get_simple_value(tag70, "1001TRACKLISTS_URL") == "https://example.com"
+
+
+def test_tag_values_from_root_missing_ttv_defaults_to_50():
+    """Tag blocks with Targets but no TargetTypeValue default to TTV=50."""
+    xml = """<Tags>
+  <Tag>
+    <Targets></Targets>
+    <Simple><Name>ARTIST</Name><String>Tiesto</String></Simple>
+  </Tag>
+</Tags>"""
+    root = ET.fromstring(xml)
+    result = _tag_values_from_root(root)
+    assert 50 in result
+    assert result[50]["ARTIST"] == "Tiesto"
+
+
+def test_merge_tags_missing_ttv_treated_as_50():
+    """Existing block without TargetTypeValue is updated in-place, no duplicate."""
+    existing_xml = """<Tags>
+  <Tag>
+    <Targets></Targets>
+    <Simple><Name>ARTIST</Name><String>Old</String></Simple>
+  </Tag>
+</Tags>"""
+    existing = ET.fromstring(existing_xml)
+
+    result = merge_tags(existing, {50: {"ARTIST": "New"}})
+    root = _parse_merged(result)
+
+    # Should have exactly one Tag block (updated in-place, no duplicate)
+    tag_blocks = root.findall("Tag")
+    assert len(tag_blocks) == 1
+    assert _get_simple_value(tag_blocks[0], "ARTIST") == "New"
+
+
+def test_extract_all_tags_exit_code_1_still_parses(tmp_path):
+    """mkvextract returning exit code 1 (warnings) still produces parsed XML."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    tag_xml = '<?xml version="1.0"?><Tags><Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets><Simple><Name>ARTIST</Name><String>Tiesto</String></Simple></Tag></Tags>'
+
+    def fake_run(cmd, **kwargs):
+        tag_file = cmd[3]  # mkvextract <file> tags <tagfile>
+        Path(tag_file).write_text(tag_xml, encoding="utf-8")
+        return subprocess.CompletedProcess(cmd, returncode=1, stdout="", stderr="Warning: something")
+
+    with patch("festival_organizer.mkv_tags.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
+        with patch("festival_organizer.mkv_tags.subprocess.run", side_effect=fake_run):
+            root = extract_all_tags(video)
+
+    assert root is not None
+    tag = root.find("Tag")
+    assert tag is not None

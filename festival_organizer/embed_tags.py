@@ -81,6 +81,10 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
     if not needs_write:
         return "skipped"  # Already up to date
 
+    diff_50 = {k: (existing_50.get(k, ""), v) for k, v in tags.items() if v != existing_50.get(k, "")}
+    diff_70 = {k: (existing_70.get(k, ""), v) for k, v in tags_70.items() if v != existing_70.get(k, "")}
+    logger.debug("Tag diff for %s: TTV50=%s TTV70=%s", target_path.name, diff_50, diff_70)
+
     # Only stamp ENRICHED_AT when actually writing
     if tags_70:
         tags_70["CRATEDIGGER_ENRICHED_AT"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
