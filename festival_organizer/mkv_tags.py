@@ -60,10 +60,13 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
             errors="replace",
         )
 
-        if result.returncode != 0:
+        if result.returncode >= 2:
             detail = result.stderr.strip() or f"exit code {result.returncode}"
             logger.warning("Tag extraction failed for %s: %s", filepath, detail)
             return None
+
+        if result.returncode == 1:
+            logger.debug("mkvextract warnings for %s: %s", filepath, result.stderr.strip())
 
         # mkvextract writes an empty file when there are no tags
         content = Path(tag_file).read_text(encoding="utf-8").strip()
@@ -96,12 +99,10 @@ def _tag_values_from_root(root: ET.Element) -> dict[int, dict[str, str]]:
         targets = tag.find("Targets")
         if targets is None:
             continue
-        ttv_el = targets.find("TargetTypeValue")
-        if ttv_el is None or ttv_el.text is None:
-            continue
         if targets.find("TrackUID") is not None:
             continue
-        ttv = int(ttv_el.text)
+        ttv_el = targets.find("TargetTypeValue")
+        ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
 
         tags: dict[str, str] = {}
         for simple in tag.findall("Simple"):
@@ -166,8 +167,8 @@ def merge_tags(
         targets = tag.find("Targets")
         if targets is not None:
             ttv_el = targets.find("TargetTypeValue")
-            if ttv_el is not None and ttv_el.text is not None:
-                ttv_to_tag[int(ttv_el.text)] = tag
+            ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+            ttv_to_tag[ttv] = tag
 
     # Merge each TTV scope
     for ttv, tag_dict in new_tags.items():
