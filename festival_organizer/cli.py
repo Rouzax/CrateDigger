@@ -2,6 +2,7 @@
 import sys
 import time
 import types
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Optional
@@ -227,6 +228,42 @@ def run(argv: list[str] | None = None) -> int:
         return 1
     finally:
         _cleanup_console()
+
+
+def _analyse_parallel(
+    files: list[Path],
+    root: Path,
+    config,
+    max_workers: int = 4,
+) -> list[tuple]:
+    """Analyse and classify files using a thread pool.
+
+    Returns list of (Path, MediaFile) tuples in the same order as input.
+    Spawns mediainfo/ffprobe subprocesses in parallel to overlap I/O.
+    """
+    if not files:
+        return []
+
+    # Populate config._ext_cache (file I/O cache) so worker threads
+    # only perform dict reads, avoiding redundant file loads.
+    _ = config.known_festivals
+    _ = config.artist_aliases
+    _ = config.festival_aliases
+
+    results: list[tuple | None] = [None] * len(files)
+
+    def _worker(idx: int, fp: Path):
+        mf = analyse_file(fp, root, config)
+        mf.content_type = classify(mf, root, config)
+        return idx, fp, mf
+
+    with ThreadPoolExecutor(max_workers=min(len(files), max_workers)) as pool:
+        futures = [pool.submit(_worker, i, fp) for i, fp in enumerate(files)]
+        for future in as_completed(futures):
+            idx, fp, mf = future.result()
+            results[idx] = (fp, mf)
+
+    return results  # type: ignore[return-value]
 
 
 # ---------------------------------------------------------------------------

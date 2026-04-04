@@ -1,6 +1,12 @@
 import logging
-from unittest.mock import patch
-from festival_organizer.cli import run
+from pathlib import Path
+from unittest.mock import patch, MagicMock
+
+import pytest
+
+from festival_organizer.cli import run, _analyse_parallel
+from festival_organizer.config import Config
+from tests.conftest import TEST_CONFIG
 
 
 def test_run_no_command():
@@ -99,3 +105,73 @@ def test_organize_with_explicit_output_no_confirmation(tmp_path):
             result = run(["organize", str(lib), "-o", str(out)])
 
     assert result == 0
+
+
+# ---------------------------------------------------------------------------
+# _analyse_parallel tests
+# ---------------------------------------------------------------------------
+
+
+def test_analyse_parallel_preserves_order():
+    """Parallel analysis must return results in the same order as input files."""
+    cfg = Config(TEST_CONFIG)
+    files = [Path(f"/fake/file{i}.mkv") for i in range(10)]
+    root = Path("/fake")
+
+    def fake_analyse(fp, r, c):
+        mf = MagicMock()
+        mf.artist = fp.stem
+        return mf
+
+    def fake_classify(mf, r, c):
+        return "festival_set"
+
+    with patch("festival_organizer.cli.analyse_file", side_effect=fake_analyse):
+        with patch("festival_organizer.cli.classify", side_effect=fake_classify):
+            result = _analyse_parallel(files, root, cfg, max_workers=4)
+
+    assert len(result) == 10
+    for i, (fp, mf) in enumerate(result):
+        assert fp == files[i], f"File at index {i} out of order"
+        assert mf.artist == f"file{i}"
+        assert mf.content_type == "festival_set"
+
+
+def test_analyse_parallel_single_file():
+    """Single file should work without issues."""
+    cfg = Config(TEST_CONFIG)
+    files = [Path("/fake/solo.mkv")]
+    root = Path("/fake")
+
+    def fake_analyse(fp, r, c):
+        mf = MagicMock()
+        mf.artist = "solo"
+        return mf
+
+    def fake_classify(mf, r, c):
+        return "unknown"
+
+    with patch("festival_organizer.cli.analyse_file", side_effect=fake_analyse):
+        with patch("festival_organizer.cli.classify", side_effect=fake_classify):
+            result = _analyse_parallel(files, root, cfg, max_workers=4)
+
+    assert len(result) == 1
+    assert result[0][1].content_type == "unknown"
+
+
+def test_analyse_parallel_empty_list():
+    """Empty file list should return empty list without errors."""
+    cfg = Config(TEST_CONFIG)
+    result = _analyse_parallel([], Path("/fake"), cfg)
+    assert result == []
+
+
+def test_analyse_parallel_propagates_exception():
+    """If analyse_file raises, the exception should propagate."""
+    cfg = Config(TEST_CONFIG)
+    files = [Path("/fake/bad.mkv")]
+    root = Path("/fake")
+
+    with patch("festival_organizer.cli.analyse_file", side_effect=RuntimeError("mediainfo exploded")):
+        with pytest.raises(RuntimeError, match="mediainfo exploded"):
+            _analyse_parallel(files, root, cfg, max_workers=4)
