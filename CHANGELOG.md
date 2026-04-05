@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.1] - 2026-04-05
+
+### Added
+
+- NFO files now emit multiple `<artist>` elements for B2B/collaborative sets
+- Individual artist `<tag>` elements in NFOs for Kodi smart playlist filtering
+- DJ group member expansion in NFO tags via DJ cache reverse-lookup (e.g. a Gaia set tags Armin van Buuren)
+- Curated MKV DESCRIPTION tag replacing raw yt-dlp YouTube descriptions with structured metadata (artist, stage, festival, country, source type, edition)
+- New MKV tags `CRATEDIGGER_1001TL_COUNTRY` and `CRATEDIGGER_1001TL_SOURCE_TYPE` embedded during chapter writing
+- `MediaFile.artists` field carrying the full resolved artist list from pipe-separated 1001TL tag
+- `DjCache.derive_group_members()` for group-to-member reverse lookups
+
 ## [0.9.0] - 2026-04-03
 
 First public release.

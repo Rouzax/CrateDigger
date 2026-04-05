@@ -8,7 +8,8 @@ from festival_organizer.config import Config
 from festival_organizer.models import MediaFile, build_display_title
 
 
-def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Path:
+def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
+                 dj_cache=None) -> Path:
     """Generate a Kodi-compatible musicvideo NFO file alongside a video file.
 
     Follows the Kodi v20+ spec: https://kodi.wiki/view/NFO_files/Music_videos
@@ -24,8 +25,12 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
     title = build_display_title(mf, config)
     _add(root, "title", title)
 
-    # Artist (required)
-    _add(root, "artist", mf.artist or "Unknown Artist")
+    # Artist(s): one element per artist from 1001TL; fallback to primary
+    if mf.artists:
+        for a in mf.artists:
+            _add(root, "artist", a)
+    else:
+        _add(root, "artist", mf.artist or "Unknown Artist")
 
     # Album — grouping key: festival + year
     if mf.content_type == "festival_set":
@@ -58,13 +63,30 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config) -> Pat
     else:
         _add(root, "genre", nfo_settings.get("genre_concert", "Live"))
 
-    # Tags — for Kodi smart playlists
+    # Tags: for Kodi smart playlists (deduplicated, case-insensitive)
+    existing_tags: set[str] = set()
     if mf.content_type:
         _add(root, "tag", mf.content_type)
+        existing_tags.add(mf.content_type.lower())
     if mf.festival:
         _add(root, "tag", mf.festival)
+        existing_tags.add(mf.festival.lower())
     if mf.edition:
         _add(root, "tag", mf.edition)
+        existing_tags.add(mf.edition.lower())
+
+    # Artist tags (deduplicated against existing tags)
+    if mf.artists:
+        group_members = dj_cache.derive_group_members() if dj_cache else {}
+        for artist_name in mf.artists:
+            if artist_name.lower() not in existing_tags:
+                _add(root, "tag", artist_name)
+                existing_tags.add(artist_name.lower())
+            # Expand group members
+            for member in group_members.get(artist_name, []):
+                if member.lower() not in existing_tags:
+                    _add(root, "tag", member)
+                    existing_tags.add(member.lower())
 
     # Studio — stage name for sets, venue for concerts
     if mf.stage:

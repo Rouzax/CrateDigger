@@ -20,6 +20,9 @@ class MediaFile:
     venue: str = ""
     edition: str = ""
     content_type: str = ""   # "festival_set" | "concert_film" | "unknown"
+    artists: list[str] = field(default_factory=list)  # All artists from 1001TL pipe-separated tag
+    country: str = ""
+    source_type: str = ""          # e.g. "Open Air / Festival", "Event Location"
     metadata_source: str = "" # "1001tracklists" | "metadata" | "filename"
 
     # Identifiers

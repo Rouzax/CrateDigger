@@ -459,6 +459,14 @@ def _run_command(args) -> int:
             album_poster_op = AlbumPosterOperation(config, force=force, library_root=output,
                                                     ttl_days=images_ttl)
 
+    # Load DJ cache once for group member expansion in NFO tags
+    dj_cache = None
+    try:
+        from festival_organizer.tracklists.dj_cache import DjCache
+        dj_cache = DjCache()
+    except Exception:
+        pass
+
     for fp, mf in media_files:
         ops: list = []
 
@@ -480,7 +488,7 @@ def _run_command(args) -> int:
             ops.append(OrganizeOperation(target=target, action=action))
 
             if getattr(args, "enrich", False):
-                ops.append(NfoOperation(config))
+                ops.append(NfoOperation(config, dj_cache=dj_cache))
                 ops.append(ArtOperation())
                 if fanart_op:
                     ops.append(fanart_op)
@@ -489,7 +497,7 @@ def _run_command(args) -> int:
 
         elif args.command == "enrich":
             if not only or "nfo" in only:
-                ops.append(NfoOperation(config, force=force))
+                ops.append(NfoOperation(config, force=force, dj_cache=dj_cache))
             if not only or "art" in only:
                 ops.append(ArtOperation(force=force))
             if fanart_op:
