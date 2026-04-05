@@ -25,6 +25,50 @@ from festival_organizer.models import MediaFile, build_display_title
 logger = logging.getLogger(__name__)
 
 
+def _build_curated_description(mf: MediaFile) -> str:
+    """Build a curated description from MediaFile metadata.
+
+    Format:
+        {display_artist} @ {stage}
+        {festival|venue} ({source_type}), {country}
+        Edition: {edition} | {set_title}
+
+    Lines are omitted when data is missing.
+    """
+    lines: list[str] = []
+
+    # Line 1: artist @ stage
+    artist = mf.display_artist or mf.artist or ""
+    if artist and mf.stage:
+        lines.append(f"{artist} @ {mf.stage}")
+    elif artist:
+        lines.append(artist)
+
+    # Line 2: location with source type and country
+    location = mf.festival or mf.venue
+    if location:
+        qualifiers: list[str] = []
+        if mf.source_type:
+            qualifiers.append(f"({mf.source_type})")
+        if mf.country:
+            qualifiers.append(mf.country)
+        if qualifiers:
+            lines.append(f"{location} {', '.join(qualifiers)}")
+        else:
+            lines.append(location)
+
+    # Line 3: edition and/or set title
+    edition_parts: list[str] = []
+    if mf.edition:
+        edition_parts.append(mf.edition)
+    if mf.set_title:
+        edition_parts.append(mf.set_title)
+    if edition_parts:
+        lines.append("Edition: " + " | ".join(edition_parts))
+
+    return "\n".join(lines)
+
+
 def embed_tags(media_file: MediaFile, target_path: Path) -> str:
     """Embed metadata tags into an MKV file via mkvpropedit.
 
@@ -53,6 +97,10 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
     date = media_file.date or media_file.year
     if date:
         tags["DATE_RELEASED"] = date
+
+    description = _build_curated_description(media_file)
+    if description:
+        tags["DESCRIPTION"] = description
 
     # Enrichment tags at TTV=70 (collection level)
     tags_70: dict[str, str] = {}
