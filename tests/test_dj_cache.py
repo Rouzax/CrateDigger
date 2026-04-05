@@ -75,6 +75,59 @@ def test_dj_cache_old_entries_without_ts_expire(tmp_path):
     assert cache.get("tiesto") is None
 
 
+def test_dj_cache_derive_group_members(tmp_path):
+    """derive_group_members builds group -> [member] mapping."""
+    cache = DjCache(tmp_path / "dj_cache.json")
+    cache.put("arminvanbuuren", {
+        "name": "Armin van Buuren", "artwork_url": "",
+        "aliases": [], "member_of": [{"slug": "gaia-nl", "name": "Gaia"}],
+    })
+    cache.put("rank1", {
+        "name": "Rank 1", "artwork_url": "",
+        "aliases": [], "member_of": [{"slug": "gaia-nl", "name": "Gaia"}],
+    })
+    members = cache.derive_group_members()
+    assert "Gaia" in members
+    assert sorted(members["Gaia"]) == ["Armin van Buuren", "Rank 1"]
+
+
+def test_dj_cache_derive_group_members_empty(tmp_path):
+    """derive_group_members returns empty dict when no groups."""
+    cache = DjCache(tmp_path / "dj_cache.json")
+    cache.put("tiesto", {
+        "name": "Tiesto", "artwork_url": "",
+        "aliases": [], "member_of": [],
+    })
+    assert cache.derive_group_members() == {}
+
+
+def test_dj_cache_derive_group_members_includes_expired(tmp_path):
+    """derive_group_members uses all data including expired entries."""
+    cache = DjCache(tmp_path / "dj_cache.json", ttl_days=0)
+    cache.put("arminvanbuuren", {
+        "name": "Armin van Buuren", "artwork_url": "",
+        "aliases": [], "member_of": [{"slug": "gaia-nl", "name": "Gaia"}],
+    })
+    members = cache.derive_group_members()
+    assert members == {"Gaia": ["Armin van Buuren"]}
+
+
+def test_dj_cache_derive_group_members_multi_group(tmp_path):
+    """DJ in multiple groups appears in each group's member list."""
+    cache = DjCache(tmp_path / "dj_cache.json")
+    cache.put("axwell", {
+        "name": "Axwell", "artwork_url": "",
+        "aliases": [],
+        "member_of": [
+            {"slug": "swedishhousemafia", "name": "Swedish House Mafia"},
+            {"slug": "axwellandingrosso", "name": "Axwell Ingrosso"},
+        ],
+    })
+    members = cache.derive_group_members()
+    assert members["Swedish House Mafia"] == ["Axwell"]
+    assert members["Axwell Ingrosso"] == ["Axwell"]
+
+
 def test_dj_cache_derive_aliases_includes_expired(tmp_path):
     """derive_artist_aliases uses all data including expired entries."""
     cache = DjCache(tmp_path / "dj_cache.json", ttl_days=0)

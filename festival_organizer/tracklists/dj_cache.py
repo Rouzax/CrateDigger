@@ -87,6 +87,24 @@ class DjCache:
                     groups.add(name.lower())
         return groups
 
+    def derive_group_members(self) -> dict[str, list[str]]:
+        """Build group_name -> [member_name, ...] mapping from all cached DJ profiles.
+
+        Scans all cached DJs and reverses their member_of entries.
+        For example, if Armin van Buuren has member_of: [{name: "Gaia"}],
+        returns {"Gaia": ["Armin van Buuren"]}.
+        """
+        groups: dict[str, list[str]] = {}
+        for entry in self._data.values():
+            member_name = entry.get("name", "")
+            if not member_name:
+                continue
+            for group in entry.get("member_of", []):
+                group_name = group.get("name", "")
+                if group_name:
+                    groups.setdefault(group_name, []).append(member_name)
+        return groups
+
     def all_names_lower(self) -> set[str]:
         """Return lowercased set of all cached DJ canonical names."""
         return {entry["name"].lower() for entry in self._data.values() if entry.get("name")}
