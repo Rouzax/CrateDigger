@@ -12,6 +12,7 @@ class MediaFile:
     artist: str = ""
     display_artist: str = ""  # Full multi-artist name for filenames/titles
     festival: str = ""
+    festival_full: str = ""  # Raw 1001TL festival name before alias resolution
     year: str = ""
     date: str = ""
     set_title: str = ""
