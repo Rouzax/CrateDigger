@@ -86,6 +86,8 @@ _FRIENDLY_TAG_NAMES = {
     "CRATEDIGGER_1001TL_CONFERENCE": "conference",
     "CRATEDIGGER_1001TL_RADIO": "radio",
     "CRATEDIGGER_1001TL_ARTISTS": "artists",
+    "CRATEDIGGER_1001TL_COUNTRY": "country",
+    "CRATEDIGGER_1001TL_SOURCE_TYPE": "source type",
 }
 
 
@@ -385,7 +387,7 @@ def _fetch_and_embed(
         con.print(f"  {escape(str(e))}")
         if not preview:
             # Tag file with URL for future pickup
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country)
             con.print("  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -396,7 +398,7 @@ def _fetch_and_embed(
     if len(chapters) < 2:
         con.print("  [dim]Only 1 chapter, skipping (not useful for navigation)[/dim]")
         if not preview:
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country)
             con.print("  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -416,6 +418,10 @@ def _fetch_and_embed(
             }
             if export.dj_artists:
                 desired["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(name for _, name in export.dj_artists)
+            if export.country:
+                desired["CRATEDIGGER_1001TL_COUNTRY"] = export.country
+            if export.source_type:
+                desired["CRATEDIGGER_1001TL_SOURCE_TYPE"] = export.source_type
             if export.stage_text:
                 desired["CRATEDIGGER_1001TL_STAGE"] = export.stage_text
             for source_type, names in export.sources_by_type.items():
@@ -435,6 +441,8 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_CONFERENCE": stored.get("conference", ""),
                 "CRATEDIGGER_1001TL_RADIO": stored.get("radio", ""),
                 "CRATEDIGGER_1001TL_ARTISTS": stored.get("artists", ""),
+                "CRATEDIGGER_1001TL_COUNTRY": stored.get("country", ""),
+                "CRATEDIGGER_1001TL_SOURCE_TYPE": stored.get("source_type", ""),
             }
             # Only update tags that have a new non-empty value different from stored
             tags_to_update = {
@@ -470,7 +478,7 @@ def _fetch_and_embed(
         return "previewed"
 
     # Embed
-    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists)
+    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country)
     if success:
         if not quiet:
             con.print(f"  [green]Embedded {len(chapters)} chapters.[/green]")

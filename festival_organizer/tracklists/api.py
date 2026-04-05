@@ -63,6 +63,8 @@ class TracklistExport:
     dj_artwork_url: str = ""
     stage_text: str = ""
     sources_by_type: dict[str, list[str]] = field(default_factory=dict)
+    country: str = ""
+    source_type: str = ""
 
 
 class TracklistSession:
@@ -207,6 +209,8 @@ class TracklistSession:
         stage_text = ""
         dj_artists: list[tuple[str, str]] = []
         sources_by_type: dict[str, list[str]] = {}
+        country = ""
+        source_type_str = ""
         if h1_match:
             h1_info = _parse_h1_structure(h1_match.group(1))
             stage_text = h1_info["stage_text"]
@@ -223,6 +227,18 @@ class TracklistSession:
                 sources_by_type = self._source_cache.group_by_type(
                     [s[0] for s in h1_info["sources"]]
                 )
+
+                # Derive country and source_type from the primary source
+                for stype in ("Open Air / Festival", "Event Location", "Conference",
+                              "Concert / Live Event", "Event Promoter"):
+                    if stype in sources_by_type:
+                        source_type_str = stype
+                        for sid, _slug, _name in h1_info["sources"]:
+                            cached = self._source_cache._data.get(sid)
+                            if cached and cached.get("type") == stype:
+                                country = cached.get("country", "")
+                                break
+                        break
 
         # Fetch DJ profiles and populate cache (skip already-cached DJs)
         dj_artwork_url = ""
@@ -250,6 +266,7 @@ class TracklistSession:
             genres=genres, dj_artists=dj_artists,
             dj_artwork_url=dj_artwork_url,
             stage_text=stage_text, sources_by_type=sources_by_type,
+            country=country, source_type=source_type_str,
         )
 
     def _request(self, method: str, url: str, data: dict | None = None,

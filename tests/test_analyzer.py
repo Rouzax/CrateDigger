@@ -321,3 +321,90 @@ def test_analyzer_tracklists_date_overwrites():
         )
     assert mf.date == "2025-10-25"
     assert mf.year == "2025"
+
+
+def test_mediafile_new_fields_default_empty():
+    """New fields artists, country, source_type default to empty."""
+    mf = MediaFile(source_path=Path("/tmp/test.mkv"))
+    assert mf.artists == []
+    assert mf.country == ""
+    assert mf.source_type == ""
+
+
+def test_analyzer_country_and_source_type():
+    """Country and source_type are populated from 1001TL tags."""
+    fake_meta = {
+        "tracklists_artists": "Armin van Buuren",
+        "tracklists_festival": "Tomorrowland",
+        "tracklists_date": "2024-07-21",
+        "tracklists_country": "Belgium",
+        "tracklists_source_type": "Open Air / Festival",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Tomorrowland - Armin van Buuren.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.country == "Belgium"
+    assert mf.source_type == "Open Air / Festival"
+
+
+def test_analyzer_country_defaults_empty():
+    """Country and source_type default to empty when tags absent."""
+    with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
+        mf = analyse_file(Path("/tmp/test.mkv"), Path("/tmp"), CFG)
+    assert mf.country == ""
+    assert mf.source_type == ""
+
+
+def test_analyzer_artists_list_b2b():
+    """artists list populated from pipe-separated 1001TL tag."""
+    fake_meta = {
+        "tracklists_artists": "Martin Garrix|Alesso",
+        "tracklists_festival": "Red Rocks",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2025 - Red Rocks - Martin Garrix & Alesso.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.artists == ["Martin Garrix", "Alesso"]
+
+
+def test_analyzer_artists_list_solo():
+    """Single artist in artists list."""
+    fake_meta = {
+        "tracklists_artists": "Armin van Buuren",
+        "tracklists_festival": "Tomorrowland",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Tomorrowland - Armin van Buuren.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.artists == ["Armin van Buuren"]
+
+
+def test_analyzer_artists_list_empty_without_tag():
+    """artists list is empty when no 1001TL artists tag."""
+    with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
+        mf = analyse_file(Path("/tmp/test.mkv"), Path("/tmp"), CFG)
+    assert mf.artists == []
+
+
+def test_analyzer_artists_list_known_group():
+    """Known group stays as single entry in artists list."""
+    fake_meta = {
+        "tracklists_artists": "Dimitri Vegas & Like Mike",
+        "tracklists_festival": "Tomorrowland",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2025 - Tomorrowland - DVLM.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.artists == ["Dimitri Vegas & Like Mike"]

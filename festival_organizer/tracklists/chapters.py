@@ -194,6 +194,8 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         "CRATEDIGGER_1001TL_CONFERENCE": "conference",
         "CRATEDIGGER_1001TL_RADIO": "radio",
         "CRATEDIGGER_1001TL_ARTISTS": "artists",
+        "CRATEDIGGER_1001TL_COUNTRY": "country",
+        "CRATEDIGGER_1001TL_SOURCE_TYPE": "source_type",
         # Old names (backward compatibility)
         "1001TRACKLISTS_URL": "url",
         "1001TRACKLISTS_TITLE": "title",
@@ -256,6 +258,7 @@ def embed_chapters(
     stage_text: str = "",
     sources_by_type: dict[str, list[str]] | None = None,
     dj_artists: list[tuple[str, str]] | None = None,
+    country: str = "",
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
 
@@ -309,6 +312,15 @@ def embed_chapters(
                     tag_name = SOURCE_TYPE_TO_TAG.get(source_type)
                     if tag_name and names:
                         tags[tag_name] = "|".join(names)
+            if country:
+                tags["CRATEDIGGER_1001TL_COUNTRY"] = country
+            # TODO: source_type priority is also derived in api.py export_tracklist().
+            # Consider passing source_type as a parameter instead of re-deriving.
+            for stype in ("Open Air / Festival", "Event Location", "Conference",
+                          "Concert / Live Event", "Event Promoter"):
+                if sources_by_type and stype in sources_by_type:
+                    tags["CRATEDIGGER_1001TL_SOURCE_TYPE"] = stype
+                    break
             if dj_artists:
                 tags["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(name for _, name in dj_artists)
             return write_merged_tags(filepath, {70: tags})

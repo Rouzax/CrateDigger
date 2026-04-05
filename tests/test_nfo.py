@@ -234,3 +234,129 @@ def test_nfo_title_no_stage_with_set_title(tmp_path):
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
     assert root.find("title").text == "Agents Of Time @ Tomorrowland WE1"
+
+
+def test_nfo_multiple_artists_b2b(tmp_path):
+    """B2B set has two <artist> elements."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        display_artist="Martin Garrix & Alesso",
+        artists=["Martin Garrix", "Alesso"],
+        festival="Red Rocks", year="2025",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    artist_elems = root.findall("artist")
+    assert len(artist_elems) == 2
+    assert artist_elems[0].text == "Martin Garrix"
+    assert artist_elems[1].text == "Alesso"
+
+
+def test_nfo_single_artist_stays_single(tmp_path):
+    """Single artist still produces one <artist> element."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Armin van Buuren",
+        artists=["Armin van Buuren"],
+        festival="Tomorrowland", year="2024",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    artist_elems = root.findall("artist")
+    assert len(artist_elems) == 1
+    assert artist_elems[0].text == "Armin van Buuren"
+
+
+def test_nfo_empty_artists_falls_back(tmp_path):
+    """Empty artists list falls back to mf.artist."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        artists=[],
+        festival="TML", year="2024",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    artist_elems = root.findall("artist")
+    assert len(artist_elems) == 1
+    assert artist_elems[0].text == "Martin Garrix"
+
+
+def test_nfo_artist_tags_present(tmp_path):
+    """Each artist appears as a <tag> element."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        display_artist="Martin Garrix & Alesso",
+        artists=["Martin Garrix", "Alesso"],
+        festival="Red Rocks", year="2025",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert "Martin Garrix" in tags
+    assert "Alesso" in tags
+
+
+def test_nfo_artist_tags_deduplicated(tmp_path):
+    """Artist tags don't duplicate existing tags like festival name."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Tomorrowland",
+        artists=["Tomorrowland"],
+        festival="Tomorrowland", year="2024",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert tags.count("Tomorrowland") == 1
+
+
+def test_nfo_group_members_as_tags(tmp_path):
+    """Group members from DJ cache appear as <tag> elements."""
+    from festival_organizer.tracklists.dj_cache import DjCache
+    dj_cache = DjCache(tmp_path / "dj_cache.json")
+    dj_cache.put("arminvanbuuren", {
+        "name": "Armin van Buuren", "artwork_url": "",
+        "aliases": [], "member_of": [{"slug": "gaia-nl", "name": "Gaia"}],
+    })
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Gaia",
+        artists=["Gaia"],
+        festival="Tomorrowland", year="2024",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config(), dj_cache=dj_cache))
+    tags = [t.text for t in root.findall("tag")]
+    assert "Gaia" in tags
+    assert "Armin van Buuren" in tags
+
+
+def test_nfo_no_dj_cache_no_expansion(tmp_path):
+    """Without DJ cache, no group member expansion."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Gaia",
+        artists=["Gaia"],
+        festival="Tomorrowland", year="2024",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert "Gaia" in tags
