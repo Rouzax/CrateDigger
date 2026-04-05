@@ -314,6 +314,8 @@ def embed_chapters(
                         tags[tag_name] = "|".join(names)
             if country:
                 tags["CRATEDIGGER_1001TL_COUNTRY"] = country
+            # TODO: source_type priority is also derived in api.py export_tracklist().
+            # Consider passing source_type as a parameter instead of re-deriving.
             for stype in ("Open Air / Festival", "Event Location", "Conference",
                           "Concert / Live Event", "Event Promoter"):
                 if sources_by_type and stype in sources_by_type:
