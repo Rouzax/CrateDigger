@@ -356,3 +356,55 @@ def test_analyzer_country_defaults_empty():
         mf = analyse_file(Path("/tmp/test.mkv"), Path("/tmp"), CFG)
     assert mf.country == ""
     assert mf.source_type == ""
+
+
+def test_analyzer_artists_list_b2b():
+    """artists list populated from pipe-separated 1001TL tag."""
+    fake_meta = {
+        "tracklists_artists": "Martin Garrix|Alesso",
+        "tracklists_festival": "Red Rocks",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2025 - Red Rocks - Martin Garrix & Alesso.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.artists == ["Martin Garrix", "Alesso"]
+
+
+def test_analyzer_artists_list_solo():
+    """Single artist in artists list."""
+    fake_meta = {
+        "tracklists_artists": "Armin van Buuren",
+        "tracklists_festival": "Tomorrowland",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Tomorrowland - Armin van Buuren.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.artists == ["Armin van Buuren"]
+
+
+def test_analyzer_artists_list_empty_without_tag():
+    """artists list is empty when no 1001TL artists tag."""
+    with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
+        mf = analyse_file(Path("/tmp/test.mkv"), Path("/tmp"), CFG)
+    assert mf.artists == []
+
+
+def test_analyzer_artists_list_known_group():
+    """Known group stays as single entry in artists list."""
+    fake_meta = {
+        "tracklists_artists": "Dimitri Vegas & Like Mike",
+        "tracklists_festival": "Tomorrowland",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2025 - Tomorrowland - DVLM.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.artists == ["Dimitri Vegas & Like Mike"]

@@ -143,6 +143,13 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     artist = normalise_name(info.get("artist", ""))
     if artist:
         artist = config.resolve_artist(artist)
+
+    # Build resolved artists list from 1001TL pipe-separated tag
+    resolved_artists: list[str] = []
+    if artists_list:
+        for a in artists_list:
+            resolved = config.resolve_artist(normalise_name(a))
+            resolved_artists.append(resolved if resolved else normalise_name(a))
     # Align display_artist with the config-resolved canonical form
     # when it refers to the same single artist (preserves B2B names)
     if display_artist and normalise_name(display_artist).lower() == normalise_name(artist).lower():
@@ -162,6 +169,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         source_path=filepath,
         artist=artist,
         display_artist=display_artist,
+        artists=resolved_artists,
         festival=festival,
         year=info.get("year", "").strip(),
         date=info.get("date", ""),
