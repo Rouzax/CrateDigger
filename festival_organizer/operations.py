@@ -129,9 +129,10 @@ class OrganizeOperation(Operation):
 class NfoOperation(Operation):
     name = "nfo"
 
-    def __init__(self, config: Config, force: bool = False):
+    def __init__(self, config: Config, force: bool = False, dj_cache=None):
         self.config = config
         self.force = force
+        self.dj_cache = dj_cache
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         if self.force:
@@ -141,7 +142,7 @@ class NfoOperation(Operation):
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.nfo import generate_nfo
         try:
-            generate_nfo(media_file, file_path, self.config)
+            generate_nfo(media_file, file_path, self.config, dj_cache=self.dj_cache)
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))
