@@ -321,3 +321,11 @@ def test_analyzer_tracklists_date_overwrites():
         )
     assert mf.date == "2025-10-25"
     assert mf.year == "2025"
+
+
+def test_mediafile_new_fields_default_empty():
+    """New fields artists, country, source_type default to empty."""
+    mf = MediaFile(source_path=Path("/tmp/test.mkv"))
+    assert mf.artists == []
+    assert mf.country == ""
+    assert mf.source_type == ""
