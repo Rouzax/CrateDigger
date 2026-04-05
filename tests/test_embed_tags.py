@@ -170,8 +170,9 @@ def test_embed_tags_skipped_when_tags_match(tmp_path):
     <Simple><Name>ARTIST</Name><String>Tiesto</String></Simple>
     <Simple><Name>TITLE</Name><String>Tiesto @ TML</String></Simple>
     <Simple><Name>DATE_RELEASED</Name><String>2024</String></Simple>
-    <Simple><Name>DESCRIPTION</Name><String>Tiesto
+    <Simple><Name>SYNOPSIS</Name><String>Tiesto
 TML</String></Simple>
+    <Simple><Name>DESCRIPTION</Name><String></String></Simple>
   </Tag>
 </Tags>"""
     existing_root = ET.fromstring(existing_xml)
@@ -201,8 +202,9 @@ def test_embed_tags_skipped_with_enrichment_tags_match(tmp_path):
     <Simple><Name>ARTIST</Name><String>Tiesto</String></Simple>
     <Simple><Name>TITLE</Name><String>Tiesto @ TML</String></Simple>
     <Simple><Name>DATE_RELEASED</Name><String>2024</String></Simple>
-    <Simple><Name>DESCRIPTION</Name><String>Tiesto
+    <Simple><Name>SYNOPSIS</Name><String>Tiesto
 TML</String></Simple>
+    <Simple><Name>DESCRIPTION</Name><String></String></Simple>
   </Tag>
   <Tag>
     <Targets><TargetTypeValue>70</TargetTypeValue></Targets>
@@ -223,11 +225,11 @@ TML</String></Simple>
     mock_wmt.assert_not_called()
 
 
-# --- Curated DESCRIPTION tag tests ---
+# --- Curated SYNOPSIS tag tests ---
 
 
 def test_embed_tags_curated_description_full(tmp_path):
-    """DESCRIPTION tag built from display_artist, stage, festival, country, source_type."""
+    """SYNOPSIS tag built from display_artist, stage, festival, country, source_type."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
@@ -243,7 +245,7 @@ def test_embed_tags_curated_description_full(tmp_path):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
-    desc = tags_dict[50]["DESCRIPTION"]
+    desc = tags_dict[50]["SYNOPSIS"]
     assert desc == "Armin van Buuren @ Mainstage\nTomorrowland (Open Air / Festival), Belgium\nEdition: Belgium | WE2"
 
 
@@ -264,7 +266,7 @@ def test_embed_tags_description_no_stage(tmp_path):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
-    desc = tags_dict[50]["DESCRIPTION"]
+    desc = tags_dict[50]["SYNOPSIS"]
     assert desc == "Martin Garrix\nTomorrowland (Open Air / Festival), Belgium"
 
 
@@ -285,12 +287,12 @@ def test_embed_tags_description_venue_fallback(tmp_path):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
-    desc = tags_dict[50]["DESCRIPTION"]
+    desc = tags_dict[50]["SYNOPSIS"]
     assert "Red Rocks Amphitheatre (Event Location), United States" in desc
 
 
 def test_embed_tags_description_skipped_when_same(tmp_path):
-    """DESCRIPTION not rewritten when it already matches curated text."""
+    """SYNOPSIS not rewritten when it already matches curated text."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
@@ -307,7 +309,8 @@ def test_embed_tags_description_skipped_when_same(tmp_path):
     <Simple><Name>ARTIST</Name><String>Tiesto</String></Simple>
     <Simple><Name>TITLE</Name><String>Tiesto @ TML</String></Simple>
     <Simple><Name>DATE_RELEASED</Name><String>2024</String></Simple>
-    <Simple><Name>DESCRIPTION</Name><String>{curated}</String></Simple>
+    <Simple><Name>SYNOPSIS</Name><String>{curated}</String></Simple>
+    <Simple><Name>DESCRIPTION</Name><String></String></Simple>
   </Tag>
 </Tags>"""
     existing_root = ET.fromstring(existing_xml)
@@ -338,7 +341,7 @@ def test_embed_tags_description_b2b(tmp_path):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
-    desc = tags_dict[50]["DESCRIPTION"]
+    desc = tags_dict[50]["SYNOPSIS"]
     assert "Martin Garrix & Alesso @ Main Stage" in desc
 
 
@@ -356,5 +359,47 @@ def test_embed_tags_description_no_location(tmp_path):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
-    desc = tags_dict[50]["DESCRIPTION"]
+    desc = tags_dict[50]["SYNOPSIS"]
     assert desc == "Test"
+
+
+def test_embed_tags_description_cleared(tmp_path):
+    """DESCRIPTION is cleared to empty string."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(
+        artist="Armin van Buuren",
+        display_artist="Armin van Buuren",
+        festival="Tomorrowland", year="2024",
+    )
+
+    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            embed_tags(mf, video)
+
+    tags_dict = mock_wmt.call_args[0][1]
+    assert tags_dict[50]["DESCRIPTION"] == ""
+    assert "SYNOPSIS" in tags_dict[50]
+
+
+def test_embed_tags_synopsis_uses_festival_full(tmp_path):
+    """SYNOPSIS uses festival_full (raw 1001TL name) over resolved alias."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(
+        artist="Martin Garrix",
+        display_artist="Martin Garrix",
+        festival="AMF",
+        festival_full="Amsterdam Music Festival",
+        country="Netherlands", source_type="Open Air / Festival",
+        year="2024",
+    )
+
+    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            embed_tags(mf, video)
+
+    tags_dict = mock_wmt.call_args[0][1]
+    desc = tags_dict[50]["SYNOPSIS"]
+    assert "Amsterdam Music Festival" in desc
+    assert "AMF" not in desc

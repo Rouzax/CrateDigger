@@ -45,7 +45,7 @@ def _build_curated_description(mf: MediaFile) -> str:
         lines.append(artist)
 
     # Line 2: location with source type and country
-    location = mf.festival or mf.venue
+    location = mf.festival_full or mf.festival or mf.venue
     if location:
         qualifiers: list[str] = []
         if mf.source_type:
@@ -100,7 +100,8 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
 
     description = _build_curated_description(media_file)
     if description:
-        tags["DESCRIPTION"] = description
+        tags["SYNOPSIS"] = description
+    tags["DESCRIPTION"] = ""  # Clear yt-dlp junk
 
     # Enrichment tags at TTV=70 (collection level)
     tags_70: dict[str, str] = {}

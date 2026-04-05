@@ -329,6 +329,24 @@ def test_mediafile_new_fields_default_empty():
     assert mf.artists == []
     assert mf.country == ""
     assert mf.source_type == ""
+    assert mf.festival_full == ""
+
+
+def test_analyzer_festival_full_preserves_raw_name():
+    """festival_full keeps raw 1001TL name while festival gets resolved."""
+    fake_meta = {
+        "tracklists_artists": "Martin Garrix",
+        "tracklists_festival": "Amsterdam Music Festival",
+        "tracklists_date": "2024-10-19",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - AMF - Martin Garrix.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.festival == "AMF"  # resolved alias
+    assert mf.festival_full == "Amsterdam Music Festival"  # raw 1001TL name
 
 
 def test_analyzer_country_and_source_type():
