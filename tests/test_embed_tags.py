@@ -364,7 +364,8 @@ def test_embed_tags_description_no_location(tmp_path):
 
 
 def test_embed_tags_description_cleared(tmp_path):
-    """DESCRIPTION is cleared to empty string."""
+    """DESCRIPTION is marked for clearing via CLEAR_TAG sentinel."""
+    from festival_organizer.mkv_tags import CLEAR_TAG
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
@@ -378,7 +379,7 @@ def test_embed_tags_description_cleared(tmp_path):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
-    assert tags_dict[50]["DESCRIPTION"] == ""
+    assert tags_dict[50]["DESCRIPTION"] is CLEAR_TAG
     assert "SYNOPSIS" in tags_dict[50]
 
 

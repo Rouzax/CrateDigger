@@ -24,6 +24,10 @@ logger = logging.getLogger(__name__)
 
 MATROSKA_EXTS = frozenset({".mkv", ".webm"})
 
+# Sentinel value: pass as a tag value to explicitly clear an existing tag.
+# Regular empty string "" preserves the existing value (backward compatible).
+CLEAR_TAG = object()
+
 
 def extract_all_tags(filepath: Path) -> ET.Element | None:
     """Extract all global tags from an MKV file.
@@ -191,17 +195,19 @@ def merge_tags(
 
         for name, value in tag_dict.items():
             if name in simple_by_name:
-                # Update existing — but empty value preserves existing
-                if value:
+                # Update existing; empty value preserves existing unless
+                # explicitly clearing (value is CLEAR_TAG sentinel)
+                if value or value is CLEAR_TAG:
+                    write_val = "" if value is CLEAR_TAG else value
                     string_el = simple_by_name[name].find("String")
                     if string_el is not None:
-                        string_el.text = value
+                        string_el.text = write_val
                     else:
                         string_el = ET.SubElement(simple_by_name[name], "String")
-                        string_el.text = value
+                        string_el.text = write_val
             else:
                 # Add new Simple element (skip if value is empty)
-                if value:
+                if value and value is not CLEAR_TAG:
                     simple = ET.SubElement(tag_block, "Simple")
                     name_el = ET.SubElement(simple, "Name")
                     name_el.text = name
