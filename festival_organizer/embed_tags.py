@@ -15,6 +15,7 @@ from pathlib import Path
 
 from festival_organizer import metadata
 from festival_organizer.mkv_tags import (
+    CLEAR_TAG,
     MATROSKA_EXTS,
     _tag_values_from_root,
     extract_all_tags,
@@ -101,7 +102,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
     description = _build_curated_description(media_file)
     if description:
         tags["SYNOPSIS"] = description
-    tags["DESCRIPTION"] = ""  # Clear yt-dlp junk
+    tags["DESCRIPTION"] = CLEAR_TAG  # Clear yt-dlp junk
 
     # Enrichment tags at TTV=70 (collection level)
     tags_70: dict[str, str] = {}
@@ -121,10 +122,14 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
     existing_50 = existing.get(50, {})
     existing_70 = existing.get(70, {})
 
+    def _cmp(v):
+        """Compare value, treating CLEAR_TAG as empty string."""
+        return "" if v is CLEAR_TAG else v
+
     needs_write = any(
-        v != existing_50.get(k, "") for k, v in tags.items()
+        _cmp(v) != existing_50.get(k, "") for k, v in tags.items()
     ) or any(
-        v != existing_70.get(k, "") for k, v in tags_70.items()
+        _cmp(v) != existing_70.get(k, "") for k, v in tags_70.items()
     )
 
     if not needs_write:

@@ -145,6 +145,26 @@ def test_merge_tags_empty_value_preserves_existing():
     assert _get_simple_value(tag50, "ARTIST") == "Tiesto"
 
 
+def test_merge_tags_clear_tag_clears_existing():
+    """CLEAR_TAG sentinel explicitly clears an existing tag value."""
+    from festival_organizer.mkv_tags import CLEAR_TAG
+    existing_xml = """<Tags>
+  <Tag>
+    <Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+    <Simple><Name>DESCRIPTION</Name><String>yt-dlp junk</String></Simple>
+  </Tag>
+</Tags>"""
+    existing = ET.fromstring(existing_xml)
+
+    result = merge_tags(existing, {50: {"DESCRIPTION": CLEAR_TAG}})
+    root = _parse_merged(result)
+
+    tag50 = _get_tag_block(root, 50)
+    assert tag50 is not None
+    # ET serializes empty text as <String/>, which parses back as None
+    assert _get_simple_value(tag50, "DESCRIPTION") is None
+
+
 def test_merge_tags_multiple_ttvs_at_once():
     """Can write both TTV=50 and TTV=70 in a single merge call."""
     result = merge_tags(None, {
