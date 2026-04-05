@@ -162,6 +162,14 @@ def parse_mediainfo_json(data: dict) -> dict:
             general.get("CRATEDIGGER_1001TL_ARTISTS", "")
             or extra.get("CRATEDIGGER_1001TL_ARTISTS", "")
         ),
+        "tracklists_country": (
+            general.get("CRATEDIGGER_1001TL_COUNTRY", "")
+            or extra.get("CRATEDIGGER_1001TL_COUNTRY", "")
+        ),
+        "tracklists_source_type": (
+            general.get("CRATEDIGGER_1001TL_SOURCE_TYPE", "")
+            or extra.get("CRATEDIGGER_1001TL_SOURCE_TYPE", "")
+        ),
         # Enrichment tags
         "mbid": general.get("CRATEDIGGER_MBID", "") or extra.get("CRATEDIGGER_MBID", ""),
         "fanart_url": general.get("CRATEDIGGER_FANART_URL", "") or extra.get("CRATEDIGGER_FANART_URL", ""),
@@ -241,6 +249,8 @@ def _extract_ffprobe(filepath: Path) -> dict:
             "tracklists_venue": tags.get("CRATEDIGGER_1001TL_VENUE", ""),
             "tracklists_festival": tags.get("CRATEDIGGER_1001TL_FESTIVAL", ""),
             "tracklists_artists": tags.get("CRATEDIGGER_1001TL_ARTISTS", ""),
+            "tracklists_country": tags.get("CRATEDIGGER_1001TL_COUNTRY", ""),
+            "tracklists_source_type": tags.get("CRATEDIGGER_1001TL_SOURCE_TYPE", ""),
             "mbid": tags.get("CRATEDIGGER_MBID", ""),
             "fanart_url": tags.get("CRATEDIGGER_FANART_URL", ""),
             "clearlogo_url": tags.get("CRATEDIGGER_CLEARLOGO_URL", ""),

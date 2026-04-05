@@ -329,3 +329,30 @@ def test_mediafile_new_fields_default_empty():
     assert mf.artists == []
     assert mf.country == ""
     assert mf.source_type == ""
+
+
+def test_analyzer_country_and_source_type():
+    """Country and source_type are populated from 1001TL tags."""
+    fake_meta = {
+        "tracklists_artists": "Armin van Buuren",
+        "tracklists_festival": "Tomorrowland",
+        "tracklists_date": "2024-07-21",
+        "tracklists_country": "Belgium",
+        "tracklists_source_type": "Open Air / Festival",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Tomorrowland - Armin van Buuren.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.country == "Belgium"
+    assert mf.source_type == "Open Air / Festival"
+
+
+def test_analyzer_country_defaults_empty():
+    """Country and source_type default to empty when tags absent."""
+    with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
+        mf = analyse_file(Path("/tmp/test.mkv"), Path("/tmp"), CFG)
+    assert mf.country == ""
+    assert mf.source_type == ""
