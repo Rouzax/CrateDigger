@@ -159,11 +159,15 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     if festival:
         festival = config.resolve_festival_alias(festival)
 
-    # Clear festival when it's a parser artifact: festival == artist but not
-    # a recognized festival name. This happens with standalone venue sets
-    # where the YYYY - Part2 - Part3 parser puts the artist in the festival slot.
-    if festival and artist and festival not in config.known_festivals:
-        if festival.lower() == artist.lower():
+    # Clear festival when it's a parser artifact. When 1001TL metadata is
+    # present but has no festival tag, the filename parser's guess is unreliable
+    # (e.g., standalone venue sets where YYYY-Part2-Part3 misparses). Trust the
+    # 1001TL signal: if it doesn't name a festival, there probably isn't one.
+    # Preserve only festivals that are independently recognized (known_festivals).
+    if festival and festival not in config.known_festivals:
+        if artists_list and not meta.get("tracklists_festival"):
+            festival = ""
+        elif artist and festival.lower() == artist.lower():
             festival = ""
 
     ext = filepath.suffix.lower()
