@@ -414,3 +414,32 @@ def test_render_multiple_optional_fields_all_present():
     values = {"festival": "Tomorrowland", "edition": "Winter", "stage": "Mainstage", "set_title": "WE1"}
     result = _render("{festival}{ edition}{ [stage]}{ - set_title}", values, {})
     assert result == "Tomorrowland Winter [Mainstage] - WE1"
+
+
+def test_render_filename_no_festival_collapses():
+    """Festival set without festival: festival and separator collapse cleanly."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="FISHER",
+        festival="",
+        year="2026",
+        stage="Bay Oval Park, New Zealand 2026-01-31",
+        extension=".mkv",
+        content_type="festival_set",
+    )
+    result = render_filename(mf, CFG)
+    assert result == "2026 - FISHER [Bay Oval Park, New Zealand 2026-01-31].mkv"
+
+
+def test_render_filename_with_festival_unchanged():
+    """Normal festival set: festival still renders with separator."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        festival="AMF",
+        year="2024",
+        extension=".mkv",
+        content_type="festival_set",
+    )
+    result = render_filename(mf, CFG)
+    assert result == "2024 - Martin Garrix - AMF.mkv"
