@@ -443,3 +443,55 @@ def test_render_filename_with_festival_unchanged():
     )
     result = render_filename(mf, CFG)
     assert result == "2024 - Martin Garrix - AMF.mkv"
+
+
+def test_render_folder_festival_flat_no_festival_falls_back_to_artist():
+    """festival_flat with no festival: folder falls back to artist."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="FISHER",
+        festival="",
+        year="2026",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG, layout_name="festival_flat")
+    assert result == "FISHER"
+
+
+def test_render_folder_festival_nested_no_festival_falls_back_to_artist():
+    """festival_nested with no festival: festival segment uses artist."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="FISHER",
+        festival="",
+        year="2026",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG, layout_name="festival_nested")
+    assert result == "FISHER/2026/FISHER"
+
+
+def test_render_folder_artist_nested_no_festival_falls_back_to_artist():
+    """artist_nested with no festival: festival segment uses artist."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="FISHER",
+        festival="",
+        year="2026",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG, layout_name="artist_nested")
+    assert result == "FISHER/FISHER/2026"
+
+
+def test_render_folder_festival_flat_with_festival_unchanged():
+    """festival_flat with festival: no change to existing behavior."""
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        festival="Tomorrowland",
+        year="2024",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG, layout_name="festival_flat")
+    assert result == "Tomorrowland"
