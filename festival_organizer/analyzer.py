@@ -159,6 +159,13 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     if festival:
         festival = config.resolve_festival_alias(festival)
 
+    # Clear festival when it's a parser artifact: festival == artist but not
+    # a recognized festival name. This happens with standalone venue sets
+    # where the YYYY - Part2 - Part3 parser puts the artist in the festival slot.
+    if festival and artist and festival not in config.known_festivals:
+        if festival.lower() == artist.lower():
+            festival = ""
+
     ext = filepath.suffix.lower()
     file_type = "video" if ext in VIDEO_EXTS else "audio"
 

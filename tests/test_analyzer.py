@@ -426,3 +426,56 @@ def test_analyzer_artists_list_known_group():
             CFG,
         )
     assert mf.artists == ["Dimitri Vegas & Like Mike"]
+
+
+def test_analyse_standalone_set_clears_festival():
+    """When 1001TL has no festival and parsed festival matches artist, clear festival."""
+    fake_meta = {
+        "title": "FISHER LIVE FROM BAY OVAL PARK IN NEW ZEALAND 2026",
+        "tracklists_title": "FISHER @ Bay Oval Park, New Zealand 2026-01-31",
+        "tracklists_url": "https://www.1001tracklists.com/tracklist/1dcsnz21/",
+        "tracklists_artists": "FISHER",
+        "tracklists_date": "2026-01-31",
+        "tracklists_stage": "Bay Oval Park, New Zealand 2026-01-31",
+        "artist_tag": "FISHER",
+        "date_tag": "20260329",
+        "duration_seconds": 7320.0,
+        "width": 1920,
+        "height": 1080,
+        "video_format": "AVC",
+        "audio_format": "AAC",
+        "audio_bitrate": "",
+        "overall_bitrate": "9243000",
+        "has_cover": True,
+        "description": "",
+        "comment": "https://www.youtube.com/watch?v=2dBfvEhwe2Q",
+        "purl": "https://www.youtube.com/watch?v=2dBfvEhwe2Q",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("D:/TEMP/_ORG/2026 - FISHER - [Bay Oval Park, New Zealand 2026-01-31].mkv"),
+            Path("D:/TEMP/_ORG"),
+            CFG,
+        )
+    assert mf.artist == "FISHER"
+    assert mf.festival == ""  # Should NOT be "FISHER"
+    assert mf.year == "2026"
+    assert mf.stage == "Bay Oval Park, New Zealand 2026-01-31"
+    assert mf.metadata_source == "1001tracklists"
+
+
+def test_analyse_standalone_set_keeps_known_festival():
+    """Known festival that happens to match a pattern should NOT be cleared."""
+    fake_meta = {
+        "tracklists_artists": "Martin Garrix",
+        "tracklists_festival": "Amsterdam Music Festival",
+        "tracklists_date": "2024-10-19",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - AMF - Martin Garrix.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.festival == "AMF"  # Resolved alias, kept
+    assert mf.artist == "Martin Garrix"
