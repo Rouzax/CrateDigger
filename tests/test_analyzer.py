@@ -479,3 +479,51 @@ def test_analyse_standalone_set_keeps_known_festival():
         )
     assert mf.festival == "AMF"  # Resolved alias, kept
     assert mf.artist == "Martin Garrix"
+
+
+def test_analyse_standalone_set_reparse_after_organize():
+    """Re-analyzing an organized standalone set should still clear festival.
+
+    After organize, the filename becomes '2026 - FISHER [Bay Oval Park, ...]'
+    which the parser garbles. The 1001TL tags (no festival) should still
+    cause festival to be cleared.
+    """
+    fake_meta = {
+        "tracklists_title": "FISHER @ Bay Oval Park, New Zealand 2026-01-31",
+        "tracklists_url": "https://www.1001tracklists.com/tracklist/1dcsnz21/",
+        "tracklists_artists": "FISHER",
+        "tracklists_date": "2026-01-31",
+        "tracklists_stage": "Bay Oval Park, New Zealand 2026-01-31",
+        "artist_tag": "FISHER",
+        "date_tag": "20260329",
+        "duration_seconds": 7320.0,
+        "width": 1920, "height": 1080,
+        "video_format": "AVC", "audio_format": "AAC",
+        "audio_bitrate": "", "overall_bitrate": "9243000",
+        "has_cover": True, "description": "", "comment": "", "purl": "",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("E:/Data/Concerts/FISHER/2026 - FISHER [Bay Oval Park, New Zealand 2026-01-31].mkv"),
+            Path("E:/Data/Concerts"),
+            CFG,
+        )
+    assert mf.artist == "FISHER"
+    assert mf.festival == ""  # Garbled parse cleared by 1001TL-no-festival check
+    assert mf.stage == "Bay Oval Park, New Zealand 2026-01-31"
+
+
+def test_analyse_1001tl_artists_preserves_known_festival_from_filename():
+    """1001TL artists tag without festival should NOT clear a known festival from filename."""
+    fake_meta = {
+        "tracklists_artists": "Martin Garrix",
+        "tracklists_date": "2025-07-18",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/Tomorrowland/2025 - Tomorrowland - Martin Garrix.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.festival == "Tomorrowland"  # Known festival preserved
+    assert mf.artist == "Martin Garrix"
