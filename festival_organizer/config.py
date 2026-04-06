@@ -51,7 +51,7 @@ DEFAULT_CONFIG = {
         },
     },
     "filename_templates": {
-        "festival_set": "{year} - {artist} - {festival}{ edition}{ [stage]}{ - set_title}",
+        "festival_set": "{year} - {artist}{ - festival}{ edition}{ [stage]}{ - set_title}",
         "concert_film": "{artist} - {title}{ (year)}",
     },
     "content_type_rules": {
