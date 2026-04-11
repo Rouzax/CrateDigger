@@ -43,6 +43,9 @@ def _timestamp_to_seconds(ts: str) -> float:
     return h * 3600 + m * 60 + s + millis / 1000
 
 
+MASHUP_THRESHOLD_SECONDS = 5
+
+
 def normalize_timestamp(time_str: str) -> str:
     """Normalize a timestamp to HH:MM:SS.mmm format.
 
@@ -74,6 +77,10 @@ def parse_tracklist_lines(lines: list[str], language: str = "eng") -> list[Chapt
 
     Expected format: "[mm:ss] Track Title" or "[hh:mm:ss] Track Title"
 
+    Chapters within MASHUP_THRESHOLD_SECONDS of each other are treated as
+    mashup components; the earlier chapter is dropped and only the later one
+    (the actual next track) is kept.
+
     Raises ValueError if lines contain numbered tracks but no timestamps
     (indicates tracklist exists but community hasn't added timestamps yet).
     """
@@ -96,6 +103,19 @@ def parse_tracklist_lines(lines: list[str], language: str = "eng") -> list[Chapt
 
     if not chapters and has_numbered_tracks:
         raise ValueError("Tracklist has no timestamps yet (tracks are numbered but no time markers)")
+
+    # Filter mashup components: when consecutive chapters are <threshold apart,
+    # drop the earlier one (mashup marker) and keep the later one (actual track).
+    if len(chapters) > 1:
+        filtered = []
+        for i, ch in enumerate(chapters):
+            if i < len(chapters) - 1:
+                gap = _timestamp_to_seconds(chapters[i + 1].timestamp) - _timestamp_to_seconds(ch.timestamp)
+                if gap < MASHUP_THRESHOLD_SECONDS:
+                    logger.info("Dropping mashup chapter: %s (%.0fs before next)", ch.title, gap)
+                    continue
+            filtered.append(ch)
+        chapters = filtered
 
     return chapters
 
