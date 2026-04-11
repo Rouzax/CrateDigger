@@ -358,6 +358,44 @@ class AlbumPosterOperation(Operation):
             logger.debug("Artwork download failed: %s", e)
             return None
 
+    def _download_dj_artwork(self, url: str, artist: str) -> Path | None:
+        """Download DJ artwork, convert to JPEG, crop/resize, save to artist dir."""
+        if not url or not artist:
+            return None
+        artist_dir = _safe_artist_dir(artist)
+        cached = artist_dir / "dj-artwork.jpg"
+        if cached.exists():
+            age_days = (time.time() - cached.stat().st_mtime) / 86400
+            if age_days <= self._ttl_days:
+                return cached
+            cached.unlink()
+            logger.debug("Stale DJ artwork cache (%d days): %s", int(age_days), artist)
+        try:
+            resp = requests.get(url, timeout=15)
+            resp.raise_for_status()
+            artist_dir.mkdir(parents=True, exist_ok=True)
+            from PIL import Image
+            import io
+            with Image.open(io.BytesIO(resp.content)) as img:
+                img = img.convert("RGB")
+                w, h = img.size
+                if w != h:
+                    side = min(w, h)
+                    left = (w - side) // 2
+                    top = (h - side) // 2
+                    img = img.crop((left, top, left + side, top + side))
+                    logger.debug("DJ artwork: center-cropped %dx%d -> %dx%d", w, h, side, side)
+                max_side = 550
+                if img.width > max_side:
+                    img = img.resize((max_side, max_side), Image.LANCZOS)
+                    logger.debug("DJ artwork: resized -> %dx%d", max_side, max_side)
+                img.save(cached, "JPEG", quality=90)
+            logger.info("Downloaded DJ artwork: %s -> %s", artist, cached)
+            return cached
+        except (requests.RequestException, OSError) as e:
+            logger.debug("DJ artwork download failed for %s: %s", artist, e)
+            return None
+
     def _find_curated_logo(self, festival: str, edition: str = "") -> Path | None:
         """Find curated festival logo from library or user-level folders.
 
