@@ -195,7 +195,7 @@ def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
     finally:
         try:
             os.unlink(xml_path)
-        except Exception:
+        except OSError:
             pass
 
 
@@ -362,5 +362,5 @@ def embed_chapters(
         if chapter_file:
             try:
                 os.unlink(chapter_file)
-            except Exception:
+            except OSError:
                 pass

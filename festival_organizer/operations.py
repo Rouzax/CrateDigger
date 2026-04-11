@@ -129,7 +129,7 @@ class OrganizeOperation(Operation):
 class NfoOperation(Operation):
     name = "nfo"
 
-    def __init__(self, config: Config, force: bool = False, dj_cache=None):
+    def __init__(self, config: Config, force: bool = False, dj_cache: object | None = None):
         self.config = config
         self.force = force
         self.dj_cache = dj_cache

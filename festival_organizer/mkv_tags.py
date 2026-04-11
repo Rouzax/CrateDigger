@@ -89,7 +89,7 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
         if tag_file:
             try:
                 os.unlink(tag_file)
-            except Exception:
+            except OSError:
                 pass
 
 
@@ -281,5 +281,5 @@ def write_merged_tags(
         if tag_file:
             try:
                 os.unlink(tag_file)
-            except Exception:
+            except OSError:
                 pass

@@ -1,11 +1,20 @@
 """Command-line interface with workflow-oriented subcommands."""
+from __future__ import annotations
+
+import json
+import logging
 import sys
 import time
 import types
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Callable, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from rich.console import Console
+    from festival_organizer.config import Config
+    from festival_organizer.models import MediaFile
 
 import typer
 
@@ -26,6 +35,8 @@ from festival_organizer.runner import run_pipeline
 from festival_organizer.scanner import scan_folder
 from festival_organizer.templates import render_folder, render_filename
 
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Shared type aliases (single source of truth for help text)
@@ -177,7 +188,7 @@ def _save_win32_console_mode() -> None:
         mode = wintypes.DWORD()
         if kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
             _SAVED_CONSOLE_MODE = mode.value
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         pass
 
 
@@ -190,7 +201,7 @@ def _restore_win32_console_mode() -> None:
         kernel32 = ctypes.windll.kernel32
         handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
         kernel32.SetConsoleMode(handle, _SAVED_CONSOLE_MODE)
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         pass
 
 
@@ -200,7 +211,7 @@ def _cleanup_console() -> None:
         sys.stdout.write("\033[?25h")  # Show cursor (Rich Status/Live may hide it)
         sys.stdout.flush()
         sys.stderr.flush()
-    except Exception:
+    except OSError:
         pass
 
     if sys.platform == "win32":
@@ -233,10 +244,10 @@ def run(argv: list[str] | None = None) -> int:
 def _analyse_parallel(
     files: list[Path],
     root: Path,
-    config,
+    config: Config,
     max_workers: int = 4,
-    on_complete=None,
-) -> list[tuple]:
+    on_complete: Callable[[], None] | None = None,
+) -> list[tuple[Path, MediaFile]]:
     """Analyse and classify files using a thread pool.
 
     Returns list of (Path, MediaFile) tuples in the same order as input.
@@ -276,7 +287,7 @@ def _analyse_parallel(
 # Command logic (unchanged)
 # ---------------------------------------------------------------------------
 
-def _run_command(args) -> int:
+def _run_command(args: types.SimpleNamespace) -> int:
     start_time = time.monotonic()
     # Resolve config layers
     config_path = Path(args.config) if getattr(args, "config", None) else None
@@ -464,8 +475,8 @@ def _run_command(args) -> int:
     try:
         from festival_organizer.tracklists.dj_cache import DjCache
         dj_cache = DjCache()
-    except Exception:
-        pass
+    except (ImportError, OSError, json.JSONDecodeError) as e:
+        logger.debug("DjCache init skipped: %s", e)
 
     for fp, mf in media_files:
         ops: list = []
@@ -559,7 +570,13 @@ def _run_command(args) -> int:
     return 0
 
 
-def _run_kodi_sync(all_results, pipeline_files, config, console, quiet):
+def _run_kodi_sync(
+    all_results: list[list],
+    pipeline_files: list[tuple],
+    config: Config,
+    console: "Console",
+    quiet: bool,
+) -> None:
     """Notify Kodi to refresh items that had changes affecting Kodi display."""
     from festival_organizer.kodi import KodiClient, sync_library
 
@@ -603,7 +620,6 @@ def _run_kodi_sync(all_results, pipeline_files, config, console, quiet):
         sync_library(client, changed_paths, console, quiet,
                      path_mapping=path_mapping)
     except Exception as e:
-        import logging
         logging.getLogger("festival_organizer.kodi").warning(
             "Kodi sync failed: %s", e
         )
@@ -611,7 +627,7 @@ def _run_kodi_sync(all_results, pipeline_files, config, console, quiet):
             console.print(f"[yellow]Kodi sync failed: {e}[/yellow]")
 
 
-def _run_audit_logos(root: Path, config, console, *,
+def _run_audit_logos(root: Path, config: Config, console: Console, *,
                      verbose: bool = False, debug: bool = False) -> int:
     """Audit curated festival logo coverage for a library."""
     from festival_organizer.library import find_library_root
