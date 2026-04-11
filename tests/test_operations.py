@@ -883,3 +883,82 @@ def test_download_artwork_uses_global_cache(tmp_path):
     assert str(global_home) in str(result)
     assert str(lib) not in str(result)
     assert (global_home / ".cratedigger" / "dj-artwork").exists()
+
+
+def test_download_dj_artwork_saves_as_jpeg_in_artist_dir(tmp_path):
+    """DJ artwork is saved as dj-artwork.jpg in the artist's directory."""
+    from PIL import Image
+    import io
+
+    img = Image.new("RGB", (800, 800), color="red")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    image_bytes = buf.getvalue()
+
+    mock_resp = MagicMock()
+    mock_resp.content = image_bytes
+    mock_resp.raise_for_status = MagicMock()
+
+    global_home = tmp_path / "home"
+    global_home.mkdir()
+
+    op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
+    with patch("festival_organizer.operations.Path.home", return_value=global_home):
+        with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+            result = op._download_dj_artwork("https://example.com/photo.png", "Tiesto")
+
+    assert result is not None
+    assert result.name == "dj-artwork.jpg"
+    assert "Tiesto" in str(result)
+    with Image.open(result) as saved:
+        assert saved.format == "JPEG"
+
+
+def test_download_dj_artwork_crops_and_resizes(tmp_path):
+    """DJ artwork is center-cropped to square and resized to 550px max."""
+    from PIL import Image
+    import io
+
+    img = Image.new("RGB", (1200, 800), color="blue")
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    image_bytes = buf.getvalue()
+
+    mock_resp = MagicMock()
+    mock_resp.content = image_bytes
+    mock_resp.raise_for_status = MagicMock()
+
+    global_home = tmp_path / "home"
+    global_home.mkdir()
+
+    op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
+    with patch("festival_organizer.operations.Path.home", return_value=global_home):
+        with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+            result = op._download_dj_artwork("https://example.com/big.jpg", "Tiesto")
+
+    assert result is not None
+    with Image.open(result) as saved:
+        assert saved.width == 550
+        assert saved.height == 550
+
+
+def test_download_dj_artwork_returns_cached(tmp_path):
+    """DJ artwork returns cached file if fresh."""
+    from PIL import Image
+    import io
+
+    global_home = tmp_path / "home"
+    global_home.mkdir()
+
+    artist_dir = global_home / ".cratedigger" / "artists" / "Tiesto"
+    artist_dir.mkdir(parents=True)
+    cached = artist_dir / "dj-artwork.jpg"
+    # Write a valid tiny JPEG
+    img = Image.new("RGB", (10, 10), color="red")
+    img.save(cached, "JPEG")
+
+    op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
+    with patch("festival_organizer.operations.Path.home", return_value=global_home):
+        result = op._download_dj_artwork("https://example.com/photo.jpg", "Tiesto")
+
+    assert result == cached
