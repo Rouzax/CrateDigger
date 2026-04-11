@@ -294,12 +294,10 @@ class AlbumPosterOperation(Operation):
         Only returns a background if the folder contains a single artist —
         multi-artist folders (festival folders) use gradient backgrounds instead.
         """
-        if not self.library_root or not artist:
+        if not artist:
             return None
 
         # Check if this is a single-artist folder by scanning filenames
-        # Use parent folder name heuristic: if folder name matches artist, it's an artist folder
-        # Otherwise scan thumbs for artist diversity
         from festival_organizer.parsers import parse_filename
         from festival_organizer.normalization import normalise_name
         artists_in_folder: set[str] = set()
@@ -314,10 +312,7 @@ class AlbumPosterOperation(Operation):
                     return None  # Multi-artist folder, skip fanart background
 
         # Single artist (or couldn't determine) — look for their fanart
-        safe = "".join(
-            c if c.isalnum() or c in " ._-()&" else "_" for c in artist
-        ).strip()
-        candidate = self.library_root / ".cratedigger" / "artists" / safe / "fanart.jpg"
+        candidate = _safe_artist_dir(artist) / "fanart.jpg"
         result = candidate if candidate.exists() else None
         logger.info("Album poster: 1 artist in folder -> %s",
                     "artist style" if result else "festival style (no fanart)")
@@ -445,6 +440,19 @@ class AlbumPosterOperation(Operation):
                         return result
         return None
 
+    def _warm_dj_artwork_cache(self, folder: Path) -> None:
+        """Download DJ artwork for all artists in a folder."""
+        from festival_organizer.analyzer import analyse_file
+        seen: set[str] = set()
+        for video in folder.iterdir():
+            if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
+                mf = analyse_file(video, folder, self.config)
+                if not mf.artist or mf.artist in seen:
+                    continue
+                seen.add(mf.artist)
+                if mf.dj_artwork_url:
+                    self._download_dj_artwork(mf.dj_artwork_url, mf.artist)
+
     def _fetch_dj_artwork_from_tracklist(self, tracklist_url: str, artist: str) -> Path | None:
         """Fetch DJ artwork by scraping a 1001TL tracklist page for DJ slugs.
 
@@ -557,9 +565,11 @@ class AlbumPosterOperation(Operation):
             bg_path, bg_source = self._resolve_background(priority, file_path.parent, mf)
 
             # Warm caches for background sources not in this poster's priority chain
-            all_sources = {"curated_logo", "dj_artwork", "fanart_tv"}
-            for source in all_sources - set(priority):
+            untried = {"curated_logo", "fanart_tv"} - set(priority)
+            for source in untried:
                 self._try_background_source(source, file_path.parent, mf)
+            # DJ artwork: always warm for ALL artists in folder, not just the first
+            self._warm_dj_artwork_cache(file_path.parent)
 
             # Look up brand color from festival config
             fc = self.config.festival_config.get(mf.festival, {})
