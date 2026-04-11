@@ -337,6 +337,33 @@ def test_album_poster_execute_festival_layout_no_hero_text(tmp_path):
         assert kwargs.get("hero_text") is None
 
 
+def test_album_poster_warms_caches_for_unused_sources(tmp_path):
+    """Album poster warms dj_artwork and fanart_tv caches even for festival layout."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "festival_flat"
+    lib = tmp_path / "lib"
+    (lib / ".cratedigger").mkdir(parents=True)
+
+    folder = lib / "Tomorrowland"
+    folder.mkdir()
+    (folder / "2024 - Tomorrowland - Tiesto.mkv").write_bytes(b"")
+    video = folder / "2024 - Tomorrowland - Tiesto.mkv"
+
+    op = AlbumPosterOperation(config=config, library_root=lib, force=True)
+    mf = _make_mf(artist="Tiesto", festival="Tomorrowland", year="2024")
+
+    with patch("festival_organizer.poster.generate_album_poster"):
+        with patch.object(op, "_try_background_source", wraps=op._try_background_source) as mock_try:
+            op.execute(video, mf)
+
+    # Festival priority is [curated_logo, gradient]; dj_artwork and fanart_tv
+    # should still be called to warm the cache
+    called_sources = [call.args[0] for call in mock_try.call_args_list]
+    assert "dj_artwork" in called_sources
+    assert "fanart_tv" in called_sources
+
+
 def test_keyboard_interrupt_propagates_from_nfo(tmp_path):
     """KeyboardInterrupt during NFO generation propagates, not swallowed."""
     import pytest
