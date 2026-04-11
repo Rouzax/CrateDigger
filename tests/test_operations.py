@@ -593,6 +593,26 @@ def test_fanart_op_stores_urls_on_mediafile(tmp_path):
     assert mf.clearlogo_url == "https://fanart.tv/logo.png"
 
 
+def test_artist_dir_uses_global_cache(tmp_path):
+    """Artist artwork directory resolves under ~/.cratedigger/, not library root."""
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    global_home = tmp_path / "home"
+    global_home.mkdir()
+
+    config = Config({
+        **DEFAULT_CONFIG,
+        "fanart": {"enabled": True, "project_api_key": "test-key"},
+    })
+    op = FanartOperation(config, lib)
+    with patch("festival_organizer.operations.Path.home", return_value=global_home):
+        result = op._artist_dir("Tiesto")
+
+    assert str(global_home) in str(result)
+    assert str(lib) not in str(result)
+    assert result == global_home / ".cratedigger" / "artists" / "Tiesto"
+
+
 # --- AlbumPosterOperation DJ artwork fallback via tracklist URL ---
 
 

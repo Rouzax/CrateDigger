@@ -638,7 +638,7 @@ class FanartOperation(Operation):
     def _artist_dir(self, artist: str) -> Path:
         """Resolve per-artist directory at library root level."""
         safe = "".join(c if c.isalnum() or c in " ._-()&" else "_" for c in artist).strip()
-        return self.library_root / ".cratedigger" / "artists" / safe
+        return Path.home() / ".cratedigger" / "artists" / safe
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         if not self.config.fanart_enabled or not self.config.fanart_project_api_key:
