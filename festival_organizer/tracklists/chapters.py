@@ -35,6 +35,14 @@ class Chapter:
     language: str = "eng"
 
 
+def _timestamp_to_seconds(ts: str) -> float:
+    """Convert HH:MM:SS.mmm timestamp to total seconds."""
+    parts = ts.split(".")
+    millis = int(parts[1]) if len(parts) > 1 else 0
+    h, m, s = (int(x) for x in parts[0].split(":"))
+    return h * 3600 + m * 60 + s + millis / 1000
+
+
 def normalize_timestamp(time_str: str) -> str:
     """Normalize a timestamp to HH:MM:SS.mmm format.
 
