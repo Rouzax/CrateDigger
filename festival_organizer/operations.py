@@ -466,18 +466,18 @@ class AlbumPosterOperation(Operation):
             if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
                 mf = analyse_file(video, folder, self.config)
                 logger.debug("Album poster: dj_artwork_url=%s", mf.dj_artwork_url or "(empty)")
-                if mf.dj_artwork_url:
-                    result = self._download_artwork(mf.dj_artwork_url, "dj-artwork", max_width=600)
+                if mf.dj_artwork_url and mf.artist:
+                    result = self._download_dj_artwork(mf.dj_artwork_url, mf.artist)
                     if result:
-                        return self._prepare_dj_artwork(result)
+                        return result
                 # Fallback: fetch DJ artwork from tracklist page
-                if mf.tracklists_url:
-                    result = self._fetch_dj_artwork_from_tracklist(mf.tracklists_url)
+                if mf.tracklists_url and mf.artist:
+                    result = self._fetch_dj_artwork_from_tracklist(mf.tracklists_url, mf.artist)
                     if result:
-                        return self._prepare_dj_artwork(result)
+                        return result
         return None
 
-    def _fetch_dj_artwork_from_tracklist(self, tracklist_url: str) -> Path | None:
+    def _fetch_dj_artwork_from_tracklist(self, tracklist_url: str, artist: str) -> Path | None:
         """Fetch DJ artwork by scraping a 1001TL tracklist page for DJ slugs.
 
         Returns local cached path or None on failure.
@@ -503,7 +503,7 @@ class AlbumPosterOperation(Operation):
                 logger.debug("No DJ artwork found for slug %s", slugs[0])
                 return None
 
-            return self._download_artwork(dj_artwork_url, "dj-artwork", max_width=600)
+            return self._download_dj_artwork(dj_artwork_url, artist)
         except Exception as e:
             logger.debug("DJ artwork fallback failed: %s", e)
             return None
