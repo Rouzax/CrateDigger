@@ -427,38 +427,6 @@ class AlbumPosterOperation(Operation):
                         return candidate
         return None
 
-    def _prepare_dj_artwork(self, path: Path) -> Path:
-        """Center-crop to square and resize DJ artwork for the centered poster layout.
-
-        Ensures the image stays under the small-source threshold (< 600px)
-        so it takes the artist centered layout path in the poster generator.
-        Modifies the cached file in place; idempotent for already-processed images.
-        """
-        from PIL import Image
-        max_side = 550  # matches max_display in artist poster layout
-        with Image.open(path) as img:
-            w, h = img.size
-            needs_crop = w != h
-            needs_resize = max(w, h) > max_side
-
-            if not needs_crop and not needs_resize:
-                return path
-
-            if needs_crop:
-                side = min(w, h)
-                left = (w - side) // 2
-                top = (h - side) // 2
-                img = img.crop((left, top, left + side, top + side))
-                logger.debug("DJ artwork: center-cropped %dx%d -> %dx%d", w, h, side, side)
-                w = h = side
-
-            if needs_resize:
-                img = img.resize((max_side, max_side), Image.LANCZOS)
-                logger.debug("DJ artwork: resized %dx%d -> %dx%d", w, h, max_side, max_side)
-
-            img.save(path)
-        return path
-
     def _find_dj_artwork(self, folder: Path) -> Path | None:
         """Find DJ artwork URL from media files in folder, download and cache."""
         from festival_organizer.analyzer import analyse_file
