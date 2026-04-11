@@ -1,5 +1,6 @@
 """Text normalization: filename safety, scene tag stripping, alias resolution."""
 import re
+import unicodedata
 
 # Characters illegal in Windows filenames
 ILLEGAL_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
@@ -36,6 +37,12 @@ NOISE_WORDS = re.compile(
     r"LIVE(?=\s+[@|]|\s*$))\b",
     re.IGNORECASE,
 )
+
+
+def strip_diacritics(text: str) -> str:
+    """Remove diacritics for fuzzy matching. 'Tiesto' matches 'Tiësto'."""
+    nfkd = unicodedata.normalize("NFD", text)
+    return "".join(c for c in nfkd if not unicodedata.combining(c))
 
 
 def normalize_pipes(text: str) -> str:

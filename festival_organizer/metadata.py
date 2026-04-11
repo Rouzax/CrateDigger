@@ -75,7 +75,7 @@ MKVPROPEDIT_PATH = find_tool("mkvpropedit")
 MKVMERGE_PATH = find_tool("mkvmerge")
 
 
-def configure_tools(config) -> None:
+def configure_tools(config: object) -> None:
     """Re-resolve tool paths using config-provided overrides."""
     global MEDIAINFO_PATH, FFPROBE_PATH, MKVEXTRACT_PATH, MKVPROPEDIT_PATH, MKVMERGE_PATH
     tool_paths = config.tool_paths if hasattr(config, "tool_paths") else {}
@@ -84,6 +84,44 @@ def configure_tools(config) -> None:
     MKVEXTRACT_PATH = find_tool("mkvextract", configured_path=tool_paths.get("mkvextract"))
     MKVPROPEDIT_PATH = find_tool("mkvpropedit", configured_path=tool_paths.get("mkvpropedit"))
     MKVMERGE_PATH = find_tool("mkvmerge", configured_path=tool_paths.get("mkvmerge"))
+
+
+def _first_tag(*sources: dict, keys: list[str]) -> str:
+    """Return the first non-empty value found across sources for the given keys."""
+    for key in keys:
+        for src in sources:
+            val = src.get(key, "")
+            if val:
+                return val
+    return ""
+
+
+# Tag key lookup: maps output field to (new_name, old_name) pairs.
+# MediaInfo stores custom tags in both the general track and an "extra" sub-dict.
+# Old "1001TRACKLISTS_*" names are kept for backward compatibility with files
+# tagged before the CRATEDIGGER_ prefix was adopted.  The extra dict prefixes
+# old names with an underscore.
+_1001TL_TAG_KEYS: dict[str, list[str]] = {
+    "tracklists_title": ["CRATEDIGGER_1001TL_TITLE", "1001TRACKLISTS_TITLE", "_1001TRACKLISTS_TITLE"],
+    "tracklists_url": ["CRATEDIGGER_1001TL_URL", "1001TRACKLISTS_URL", "_1001TRACKLISTS_URL"],
+    "tracklists_id": ["CRATEDIGGER_1001TL_ID", "1001TRACKLISTS_ID", "_1001TRACKLISTS_ID"],
+    "tracklists_date": ["CRATEDIGGER_1001TL_DATE", "1001TRACKLISTS_DATE", "_1001TRACKLISTS_DATE"],
+    "tracklists_genres": ["CRATEDIGGER_1001TL_GENRES", "1001TRACKLISTS_GENRES", "_1001TRACKLISTS_GENRES"],
+    "tracklists_dj_artwork": ["CRATEDIGGER_1001TL_DJ_ARTWORK", "1001TRACKLISTS_DJ_ARTWORK", "_1001TRACKLISTS_DJ_ARTWORK"],
+    "tracklists_stage": ["CRATEDIGGER_1001TL_STAGE"],
+    "tracklists_venue": ["CRATEDIGGER_1001TL_VENUE"],
+    "tracklists_festival": ["CRATEDIGGER_1001TL_FESTIVAL"],
+    "tracklists_artists": ["CRATEDIGGER_1001TL_ARTISTS"],
+    "tracklists_country": ["CRATEDIGGER_1001TL_COUNTRY"],
+    "tracklists_source_type": ["CRATEDIGGER_1001TL_SOURCE_TYPE"],
+}
+
+_ENRICHMENT_TAG_KEYS: dict[str, str] = {
+    "mbid": "CRATEDIGGER_MBID",
+    "fanart_url": "CRATEDIGGER_FANART_URL",
+    "clearlogo_url": "CRATEDIGGER_CLEARLOGO_URL",
+    "enriched_at": "CRATEDIGGER_ENRICHED_AT",
+}
 
 
 def parse_mediainfo_json(data: dict) -> dict:
@@ -97,7 +135,7 @@ def parse_mediainfo_json(data: dict) -> dict:
     audio = next((t for t in tracks if t.get("@type") == "Audio"), {})
     extra = general.get("extra", {})
 
-    return {
+    result = {
         "title": general.get("Title", ""),
         "duration_seconds": _parse_duration(general.get("Duration", "")),
         "overall_bitrate": general.get("OverallBitRate", ""),
@@ -109,72 +147,6 @@ def parse_mediainfo_json(data: dict) -> dict:
         "description": general.get("Description", ""),
         "comment": general.get("Comment", ""),
         "purl": general.get("PURL", "") or extra.get("PURL", ""),
-        # 1001Tracklists (new name first, fall back to old; check extra for both)
-        "tracklists_title": (
-            general.get("CRATEDIGGER_1001TL_TITLE", "")
-            or extra.get("CRATEDIGGER_1001TL_TITLE", "")
-            or general.get("1001TRACKLISTS_TITLE", "")
-            or extra.get("_1001TRACKLISTS_TITLE", "")
-        ),
-        "tracklists_url": (
-            general.get("CRATEDIGGER_1001TL_URL", "")
-            or extra.get("CRATEDIGGER_1001TL_URL", "")
-            or general.get("1001TRACKLISTS_URL", "")
-            or extra.get("_1001TRACKLISTS_URL", "")
-        ),
-        "tracklists_id": (
-            general.get("CRATEDIGGER_1001TL_ID", "")
-            or extra.get("CRATEDIGGER_1001TL_ID", "")
-            or general.get("1001TRACKLISTS_ID", "")
-            or extra.get("_1001TRACKLISTS_ID", "")
-        ),
-        "tracklists_date": (
-            general.get("CRATEDIGGER_1001TL_DATE", "")
-            or extra.get("CRATEDIGGER_1001TL_DATE", "")
-            or general.get("1001TRACKLISTS_DATE", "")
-            or extra.get("_1001TRACKLISTS_DATE", "")
-        ),
-        "tracklists_genres": (
-            general.get("CRATEDIGGER_1001TL_GENRES", "")
-            or extra.get("CRATEDIGGER_1001TL_GENRES", "")
-            or general.get("1001TRACKLISTS_GENRES", "")
-            or extra.get("_1001TRACKLISTS_GENRES", "")
-        ),
-        "tracklists_dj_artwork": (
-            general.get("CRATEDIGGER_1001TL_DJ_ARTWORK", "")
-            or extra.get("CRATEDIGGER_1001TL_DJ_ARTWORK", "")
-            or general.get("1001TRACKLISTS_DJ_ARTWORK", "")
-            or extra.get("_1001TRACKLISTS_DJ_ARTWORK", "")
-        ),
-        "tracklists_stage": (
-            general.get("CRATEDIGGER_1001TL_STAGE", "")
-            or extra.get("CRATEDIGGER_1001TL_STAGE", "")
-        ),
-        "tracklists_venue": (
-            general.get("CRATEDIGGER_1001TL_VENUE", "")
-            or extra.get("CRATEDIGGER_1001TL_VENUE", "")
-        ),
-        "tracklists_festival": (
-            general.get("CRATEDIGGER_1001TL_FESTIVAL", "")
-            or extra.get("CRATEDIGGER_1001TL_FESTIVAL", "")
-        ),
-        "tracklists_artists": (
-            general.get("CRATEDIGGER_1001TL_ARTISTS", "")
-            or extra.get("CRATEDIGGER_1001TL_ARTISTS", "")
-        ),
-        "tracklists_country": (
-            general.get("CRATEDIGGER_1001TL_COUNTRY", "")
-            or extra.get("CRATEDIGGER_1001TL_COUNTRY", "")
-        ),
-        "tracklists_source_type": (
-            general.get("CRATEDIGGER_1001TL_SOURCE_TYPE", "")
-            or extra.get("CRATEDIGGER_1001TL_SOURCE_TYPE", "")
-        ),
-        # Enrichment tags
-        "mbid": general.get("CRATEDIGGER_MBID", "") or extra.get("CRATEDIGGER_MBID", ""),
-        "fanart_url": general.get("CRATEDIGGER_FANART_URL", "") or extra.get("CRATEDIGGER_FANART_URL", ""),
-        "clearlogo_url": general.get("CRATEDIGGER_CLEARLOGO_URL", "") or extra.get("CRATEDIGGER_CLEARLOGO_URL", ""),
-        "enriched_at": general.get("CRATEDIGGER_ENRICHED_AT", "") or extra.get("CRATEDIGGER_ENRICHED_AT", ""),
         # Video
         "video_format": video.get("Format", ""),
         "width": _int_or_none(video.get("Width", "")),
@@ -189,6 +161,16 @@ def parse_mediainfo_json(data: dict) -> dict:
         # Cover art
         "has_cover": bool(general.get("Attachments", "")),
     }
+
+    # 1001Tracklists tags (new name first, fall back to old; check extra for both)
+    for field, tag_keys in _1001TL_TAG_KEYS.items():
+        result[field] = _first_tag(general, extra, keys=tag_keys)
+
+    # Enrichment tags
+    for field, tag_key in _ENRICHMENT_TAG_KEYS.items():
+        result[field] = general.get(tag_key, "") or extra.get(tag_key, "")
+
+    return result
 
 
 def _extract_mediainfo(filepath: Path) -> dict:
@@ -229,7 +211,8 @@ def _extract_ffprobe(filepath: Path) -> dict:
         streams = data.get("streams", [])
         video = next((s for s in streams if s.get("codec_type") == "video"), {})
         audio = next((s for s in streams if s.get("codec_type") == "audio"), {})
-        return {
+
+        result_dict: dict = {
             "title": tags.get("title", "") or tags.get("TITLE", ""),
             "duration_seconds": _parse_duration(fmt.get("duration", "")),
             "overall_bitrate": fmt.get("bit_rate", ""),
@@ -239,22 +222,6 @@ def _extract_ffprobe(filepath: Path) -> dict:
             "description": tags.get("description", "") or tags.get("DESCRIPTION", ""),
             "comment": tags.get("comment", "") or tags.get("COMMENT", ""),
             "purl": tags.get("purl", "") or tags.get("PURL", ""),
-            "tracklists_title": tags.get("CRATEDIGGER_1001TL_TITLE", "") or tags.get("1001TRACKLISTS_TITLE", ""),
-            "tracklists_url": tags.get("CRATEDIGGER_1001TL_URL", "") or tags.get("1001TRACKLISTS_URL", ""),
-            "tracklists_id": tags.get("CRATEDIGGER_1001TL_ID", "") or tags.get("1001TRACKLISTS_ID", ""),
-            "tracklists_date": tags.get("CRATEDIGGER_1001TL_DATE", "") or tags.get("1001TRACKLISTS_DATE", ""),
-            "tracklists_genres": tags.get("CRATEDIGGER_1001TL_GENRES", "") or tags.get("1001TRACKLISTS_GENRES", ""),
-            "tracklists_dj_artwork": tags.get("CRATEDIGGER_1001TL_DJ_ARTWORK", "") or tags.get("1001TRACKLISTS_DJ_ARTWORK", ""),
-            "tracklists_stage": tags.get("CRATEDIGGER_1001TL_STAGE", ""),
-            "tracklists_venue": tags.get("CRATEDIGGER_1001TL_VENUE", ""),
-            "tracklists_festival": tags.get("CRATEDIGGER_1001TL_FESTIVAL", ""),
-            "tracklists_artists": tags.get("CRATEDIGGER_1001TL_ARTISTS", ""),
-            "tracklists_country": tags.get("CRATEDIGGER_1001TL_COUNTRY", ""),
-            "tracklists_source_type": tags.get("CRATEDIGGER_1001TL_SOURCE_TYPE", ""),
-            "mbid": tags.get("CRATEDIGGER_MBID", ""),
-            "fanart_url": tags.get("CRATEDIGGER_FANART_URL", ""),
-            "clearlogo_url": tags.get("CRATEDIGGER_CLEARLOGO_URL", ""),
-            "enriched_at": tags.get("CRATEDIGGER_ENRICHED_AT", ""),
             "video_format": video.get("codec_name", ""),
             "width": _int_or_none(video.get("width", "")),
             "height": _int_or_none(video.get("height", "")),
@@ -266,6 +233,16 @@ def _extract_ffprobe(filepath: Path) -> dict:
             "audio_sampling_rate": audio.get("sample_rate", ""),
             "has_cover": False,  # ffprobe doesn't easily report attachments
         }
+
+        # 1001Tracklists tags (ffprobe uses flat tag namespace)
+        for field, tag_keys in _1001TL_TAG_KEYS.items():
+            result_dict[field] = _first_tag(tags, keys=tag_keys)
+
+        # Enrichment tags
+        for field, tag_key in _ENRICHMENT_TAG_KEYS.items():
+            result_dict[field] = tags.get(tag_key, "")
+
+        return result_dict
     except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as e:
         logger.debug("ffprobe failed for %s: %s", filepath, e)
         return {}
@@ -279,7 +256,7 @@ def extract_metadata(filepath: Path) -> dict:
     return meta
 
 
-def _parse_duration(value) -> float | None:
+def _parse_duration(value: str | float | None) -> float | None:
     """Parse a duration value to seconds."""
     if not value:
         return None
@@ -293,7 +270,7 @@ def _parse_duration(value) -> float | None:
     return None
 
 
-def _int_or_none(value) -> int | None:
+def _int_or_none(value: str | int | None) -> int | None:
     """Parse an integer, handling MediaInfo's space-formatted numbers."""
     if not value:
         return None

@@ -24,10 +24,11 @@ import json
 import logging
 import re
 import time
-import unicodedata
 from pathlib import Path
 
 import requests
+
+from festival_organizer.normalization import strip_diacritics
 
 logger = logging.getLogger(__name__)
 
@@ -144,12 +145,6 @@ def lookup_mbid(artist_name: str, cache: MBIDCache) -> str | None:
     return mbid
 
 
-def _strip_diacritics(text: str) -> str:
-    """Remove diacritics for fuzzy matching. Tiesto matches Tiësto."""
-    nfkd = unicodedata.normalize("NFD", text)
-    return "".join(c for c in nfkd if not unicodedata.combining(c))
-
-
 def _mb_search(artist_name: str) -> str | None:
     """Query MusicBrainz search API. Returns best-match MBID or None.
 
@@ -200,9 +195,9 @@ def _mb_search(artist_name: str) -> str | None:
                     return a["id"]
 
             # Tier 3: diacritics-insensitive match
-            query_stripped = _strip_diacritics(artist_name).lower()
+            query_stripped = strip_diacritics(artist_name).lower()
             for a in candidates:
-                if _strip_diacritics(a.get("name", "")).lower() == query_stripped:
+                if strip_diacritics(a.get("name", "")).lower() == query_stripped:
                     logger.debug("MBID diacritics match: '%s' -> %s", a["name"], a["id"])
                     return a["id"]
 

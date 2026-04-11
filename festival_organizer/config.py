@@ -14,18 +14,13 @@ import json
 import logging
 import re
 import sys
-import unicodedata
 from copy import deepcopy
 from fnmatch import fnmatch
 from pathlib import Path
 
+from festival_organizer.normalization import strip_diacritics
+
 logger = logging.getLogger(__name__)
-
-
-def _strip_diacritics(text: str) -> str:
-    """Remove diacritics for matching. Tiesto becomes Tiesto."""
-    nfkd = unicodedata.normalize("NFD", text)
-    return "".join(c for c in nfkd if not unicodedata.combining(c))
 
 
 # Defaults for external config files (artists.json, festivals.json)
@@ -116,6 +111,12 @@ DEFAULT_CONFIG = {
         "images_days": 90,
     },
 }
+
+
+def _ci_lookup(mapping: dict[str, str], key: str) -> str | None:
+    """Case-insensitive lookup in a string-keyed dict. Returns value or None."""
+    lower_map = {k.lower(): v for k, v in mapping.items()}
+    return lower_map.get(key.lower())
 
 
 def _invert_alias_map(grouped: dict) -> dict[str, str]:
@@ -330,8 +331,7 @@ class Config:
             if resolved != name:
                 logger.debug("Festival alias: '%s' -> '%s'", name, resolved)
             return resolved
-        lower_map = {k.lower(): v for k, v in self.festival_aliases.items()}
-        resolved = lower_map.get(name.lower(), name)
+        resolved = _ci_lookup(self.festival_aliases, name) or name
         if resolved != name:
             logger.debug("Festival alias (case-insensitive): '%s' -> '%s'", name, resolved)
         return resolved
@@ -342,7 +342,8 @@ class Config:
             from festival_organizer.tracklists.dj_cache import DjCache
             cache = DjCache()
             return cache.derive_artist_aliases()
-        except Exception:
+        except (ImportError, OSError, json.JSONDecodeError, KeyError, ValueError) as e:
+            logger.debug("DjCache alias load skipped: %s", e)
             return {}
 
     def _load_dj_groups(self) -> set[str]:
@@ -351,7 +352,8 @@ class Config:
             from festival_organizer.tracklists.dj_cache import DjCache
             cache = DjCache()
             return cache.derive_artist_groups()
-        except Exception:
+        except (ImportError, OSError, json.JSONDecodeError, KeyError, ValueError) as e:
+            logger.debug("DjCache group load skipped: %s", e)
             return set()
 
     @property
@@ -378,21 +380,19 @@ class Config:
     def resolve_artist(self, name: str) -> str:
         """Resolve artist alias, then for B2Bs not in groups return first artist."""
         original = name
-        # 1. Resolve alias (case-insensitive)
+        # 1. Resolve alias (exact, case-insensitive, then diacritics-insensitive)
         aliased = False
         if name in self.artist_aliases:
             name = self.artist_aliases[name]
             aliased = True
         else:
-            lower_map = {k.lower(): v for k, v in self.artist_aliases.items()}
-            resolved = lower_map.get(name.lower())
+            resolved = _ci_lookup(self.artist_aliases, name)
             if resolved is not None:
                 name = resolved
                 aliased = True
             else:
-                # 3. Diacritics-insensitive lookup
-                stripped_map = {_strip_diacritics(k).lower(): v for k, v in self.artist_aliases.items()}
-                resolved = stripped_map.get(_strip_diacritics(name).lower())
+                stripped_map = {strip_diacritics(k).lower(): v for k, v in self.artist_aliases.items()}
+                resolved = stripped_map.get(strip_diacritics(name).lower())
                 if resolved is not None:
                     name = resolved
                     aliased = True
