@@ -148,12 +148,12 @@ def test_album_poster_fanart_single_artist_finds_image(tmp_path):
     """Fanart background returned for single-artist folder."""
     (tmp_path / "2024 - TML - Bicep.mkv").write_bytes(b"")
     (tmp_path / "2024 - TML - Bicep WE2.mkv").write_bytes(b"")
-    lib = tmp_path / "lib"
-    fanart = lib / ".cratedigger" / "artists" / "Bicep" / "fanart.jpg"
+    fanart = tmp_path / ".cratedigger" / "artists" / "Bicep" / "fanart.jpg"
     fanart.parent.mkdir(parents=True)
     fanart.write_bytes(b"\xff\xd8")
-    op = AlbumPosterOperation(config=load_config(), library_root=lib)
-    result = op._find_fanart_background(tmp_path, "Bicep")
+    op = AlbumPosterOperation(config=load_config(), library_root=tmp_path)
+    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+        result = op._find_fanart_background(tmp_path, "Bicep")
     assert result == fanart
 
 
@@ -161,12 +161,12 @@ def test_album_poster_fanart_single_artist_dash_we(tmp_path):
     """Dash-separated WE suffix doesn't split artist detection."""
     (tmp_path / "2024 - TML - Bicep - WE1.mkv").write_bytes(b"")
     (tmp_path / "2024 - TML - Bicep - WE2.mkv").write_bytes(b"")
-    lib = tmp_path / "lib"
-    fanart = lib / ".cratedigger" / "artists" / "Bicep" / "fanart.jpg"
+    fanart = tmp_path / ".cratedigger" / "artists" / "Bicep" / "fanart.jpg"
     fanart.parent.mkdir(parents=True)
     fanart.write_bytes(b"\xff\xd8")
-    op = AlbumPosterOperation(config=load_config(), library_root=lib)
-    result = op._find_fanart_background(tmp_path, "Bicep")
+    op = AlbumPosterOperation(config=load_config(), library_root=tmp_path)
+    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+        result = op._find_fanart_background(tmp_path, "Bicep")
     assert result == fanart
 
 
@@ -339,7 +339,7 @@ def test_album_poster_execute_festival_layout_no_hero_text(tmp_path):
 
 
 def test_album_poster_warms_caches_for_unused_sources(tmp_path):
-    """Album poster warms dj_artwork and fanart_tv caches even for festival layout."""
+    """Album poster warms fanart_tv and DJ artwork caches even for festival layout."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "festival_flat"
@@ -356,13 +356,14 @@ def test_album_poster_warms_caches_for_unused_sources(tmp_path):
 
     with patch("festival_organizer.poster.generate_album_poster"):
         with patch.object(op, "_try_background_source", wraps=op._try_background_source) as mock_try:
-            op.execute(video, mf)
+            with patch.object(op, "_warm_dj_artwork_cache") as mock_warm:
+                op.execute(video, mf)
 
-    # Festival priority is [curated_logo, gradient]; dj_artwork and fanart_tv
-    # should still be called to warm the cache
+    # Festival priority is [curated_logo, gradient]; fanart_tv should be
+    # called via _try_background_source, DJ artwork via _warm_dj_artwork_cache
     called_sources = [call.args[0] for call in mock_try.call_args_list]
-    assert "dj_artwork" in called_sources
     assert "fanart_tv" in called_sources
+    mock_warm.assert_called_once_with(folder)
 
 
 def test_keyboard_interrupt_propagates_from_nfo(tmp_path):
