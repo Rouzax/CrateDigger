@@ -105,6 +105,86 @@ def test_parse_tracklist_lines_custom_language():
     assert chapters[0].language == "dut"
 
 
+# --- mashup filtering ---
+
+def test_parse_tracklist_filters_mashup_at_start():
+    """Mashup stack at the start: [00:00] and [00:01] are <5s apart, drop [00:00]."""
+    lines = [
+        "[00:00] Mashup Intro Track",
+        "[00:01] Real First Track",
+        "[01:16] Second Track",
+    ]
+    chapters = parse_tracklist_lines(lines)
+    assert len(chapters) == 2
+    assert chapters[0].title == "Real First Track"
+    assert chapters[0].timestamp == "00:00:01.000"
+    assert chapters[1].title == "Second Track"
+
+
+def test_parse_tracklist_filters_mashup_mid_set():
+    """Mashup in the middle of a set."""
+    lines = [
+        "[10:00] Track A",
+        "[15:00] Mashup Component",
+        "[15:02] Real Track B",
+        "[20:00] Track C",
+    ]
+    chapters = parse_tracklist_lines(lines)
+    assert len(chapters) == 3
+    assert chapters[0].title == "Track A"
+    assert chapters[1].title == "Real Track B"
+    assert chapters[2].title == "Track C"
+
+
+def test_parse_tracklist_filters_chain_of_close_chapters():
+    """Three chapters within threshold: only the last survives."""
+    lines = [
+        "[00:00] Layer 1",
+        "[00:01] Layer 2",
+        "[00:03] Actual Track",
+        "[05:00] Next Track",
+    ]
+    chapters = parse_tracklist_lines(lines)
+    assert len(chapters) == 2
+    assert chapters[0].title == "Actual Track"
+    assert chapters[1].title == "Next Track"
+
+
+def test_parse_tracklist_keeps_chapters_at_threshold():
+    """Chapters exactly 5s apart are kept (threshold is strictly less than)."""
+    lines = [
+        "[00:00] Track One",
+        "[00:05] Track Two",
+        "[05:00] Track Three",
+    ]
+    chapters = parse_tracklist_lines(lines)
+    assert len(chapters) == 3
+
+
+def test_parse_tracklist_no_filter_normal_tracklist():
+    """Normal tracklist with no close pairs is unchanged."""
+    lines = [
+        "[03:45] Artist1 - Track One",
+        "[07:20] Artist2 - Track Two",
+        "[12:00] Artist3 - Track Three",
+    ]
+    chapters = parse_tracklist_lines(lines)
+    assert len(chapters) == 3
+    assert chapters[0].title == "Artist1 - Track One"
+
+
+def test_parse_tracklist_mashup_filter_logs(caplog):
+    """Mashup filtering logs dropped chapters at INFO."""
+    lines = [
+        "[00:00] Mashup Intro",
+        "[00:01] Real Track",
+        "[05:00] Next Track",
+    ]
+    with caplog.at_level(logging.INFO, logger="festival_organizer.tracklists.chapters"):
+        parse_tracklist_lines(lines)
+    assert "Mashup Intro" in caplog.text
+
+
 # --- build_chapter_xml ---
 
 def test_build_chapter_xml_structure():
