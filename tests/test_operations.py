@@ -4,6 +4,7 @@ from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
     NfoOperation, ArtOperation, PosterOperation, TagsOperation,
     OrganizeOperation, AlbumPosterOperation, FanartOperation,
+    _safe_artist_dir,
 )
 from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
 
@@ -638,6 +639,21 @@ def test_artist_dir_uses_global_cache(tmp_path):
     assert str(global_home) in str(result)
     assert str(lib) not in str(result)
     assert result == global_home / ".cratedigger" / "artists" / "Tiesto"
+
+
+def test_safe_artist_dir_sanitizes_name():
+    """_safe_artist_dir sanitizes special characters and resolves to global cache."""
+    from festival_organizer.operations import _safe_artist_dir
+
+    result = _safe_artist_dir("Tiesto")
+    assert result == Path.home() / ".cratedigger" / "artists" / "Tiesto"
+
+    result = _safe_artist_dir("Armin van Buuren")
+    assert result == Path.home() / ".cratedigger" / "artists" / "Armin van Buuren"
+
+    # Special chars replaced with underscore
+    result = _safe_artist_dir("Artist/Name")
+    assert "Artist_Name" in str(result)
 
 
 # --- AlbumPosterOperation DJ artwork fallback via tracklist URL ---

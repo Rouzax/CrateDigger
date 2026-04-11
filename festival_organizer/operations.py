@@ -219,6 +219,12 @@ class PosterOperation(Operation):
             return OperationResult(self.name, "error", str(e))
 
 
+def _safe_artist_dir(artist: str) -> Path:
+    """Resolve per-artist cache directory under ~/.cratedigger/artists/."""
+    safe = "".join(c if c.isalnum() or c in " ._-()&" else "_" for c in artist).strip()
+    return Path.home() / ".cratedigger" / "artists" / safe
+
+
 class AlbumPosterOperation(Operation):
     name = "posters"
     display_name = "album_poster"
@@ -641,9 +647,8 @@ class FanartOperation(Operation):
         return age_days > self._ttl_days
 
     def _artist_dir(self, artist: str) -> Path:
-        """Resolve per-artist directory at library root level."""
-        safe = "".join(c if c.isalnum() or c in " ._-()&" else "_" for c in artist).strip()
-        return Path.home() / ".cratedigger" / "artists" / safe
+        """Resolve per-artist directory."""
+        return _safe_artist_dir(artist)
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         if not self.config.fanart_enabled or not self.config.fanart_project_api_key:
