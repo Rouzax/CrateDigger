@@ -398,7 +398,8 @@ def test_fanart_op_not_needed_when_images_exist(tmp_path):
     (artist_dir / "fanart.jpg").write_bytes(b"fake")
 
     mf = MediaFile(source_path=Path("/tmp/test.mkv"), artist="Hardwell")
-    assert op.is_needed(Path("/tmp/test.mkv"), mf) is False
+    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+        assert op.is_needed(Path("/tmp/test.mkv"), mf) is False
 
 
 def test_fanart_op_needed_when_logo_missing(tmp_path):
@@ -416,7 +417,8 @@ def test_fanart_op_needed_when_logo_missing(tmp_path):
     (artist_dir / "fanart.jpg").write_bytes(b"fake")
 
     mf = MediaFile(source_path=Path("/tmp/test.mkv"), artist="Hardwell")
-    assert op.is_needed(Path("/tmp/test.mkv"), mf) is True
+    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+        assert op.is_needed(Path("/tmp/test.mkv"), mf) is True
 
 
 def test_fanart_op_deduplicates_artists(tmp_path):
