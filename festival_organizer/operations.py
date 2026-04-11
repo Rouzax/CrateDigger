@@ -319,13 +319,13 @@ class AlbumPosterOperation(Operation):
 
     def _download_artwork(self, url: str, cache_subdir: str, max_width: int | None = None) -> Path | None:
         """Download an artwork URL to cache. Returns local path or None."""
-        if not url or not self.library_root:
+        if not url:
             return None
         h = hashlib.md5(url.encode()).hexdigest()[:12]
         ext = url.rsplit(".", 1)[-1].split("?")[0][:4]
         if ext not in ("jpg", "jpeg", "png", "webp"):
             ext = "jpg"
-        cache_dir = self.library_root / ".cratedigger" / cache_subdir
+        cache_dir = Path.home() / ".cratedigger" / cache_subdir
         cached = cache_dir / f"{h}.{ext}"
         if cached.exists():
             age_days = (time.time() - cached.stat().st_mtime) / 86400

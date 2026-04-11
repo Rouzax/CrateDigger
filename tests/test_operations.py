@@ -757,8 +757,9 @@ def test_download_artwork_max_width_resizes(tmp_path):
     mock_resp.raise_for_status = MagicMock()
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
-    with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
-        result = op._download_artwork("https://example.com/big.jpg", "test-art", max_width=600)
+    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+        with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+            result = op._download_artwork("https://example.com/big.jpg", "test-art", max_width=600)
 
     assert result is not None
     with Image.open(result) as saved:
@@ -781,9 +782,41 @@ def test_download_artwork_no_max_width_keeps_original(tmp_path):
     mock_resp.raise_for_status = MagicMock()
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
-    with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
-        result = op._download_artwork("https://example.com/big.jpg", "test-art")
+    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+        with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+            result = op._download_artwork("https://example.com/big.jpg", "test-art")
 
     assert result is not None
     with Image.open(result) as saved:
         assert saved.width == 800
+
+
+def test_download_artwork_uses_global_cache(tmp_path):
+    """Downloaded artwork is cached under ~/.cratedigger/, not library root."""
+    from PIL import Image
+    import io
+
+    img = Image.new("RGB", (100, 100), color="blue")
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    image_bytes = buf.getvalue()
+
+    mock_resp = MagicMock()
+    mock_resp.content = image_bytes
+    mock_resp.raise_for_status = MagicMock()
+
+    global_home = tmp_path / "home"
+    global_home.mkdir()
+    lib = tmp_path / "lib"
+    lib.mkdir()
+
+    op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=lib)
+    with patch("festival_organizer.operations.Path.home", return_value=global_home):
+        with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+            result = op._download_artwork("https://example.com/photo.jpg", "dj-artwork")
+
+    assert result is not None
+    # Cached under global home, not library root
+    assert str(global_home) in str(result)
+    assert str(lib) not in str(result)
+    assert (global_home / ".cratedigger" / "dj-artwork").exists()
