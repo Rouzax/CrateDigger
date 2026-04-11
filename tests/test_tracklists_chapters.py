@@ -7,6 +7,7 @@ from unittest.mock import patch, MagicMock
 
 from festival_organizer.tracklists.chapters import (
     normalize_timestamp,
+    _timestamp_to_seconds,
     parse_tracklist_lines,
     build_chapter_xml,
     chapters_are_identical,
@@ -42,6 +43,24 @@ def test_normalize_timestamp_full_millis():
 def test_normalize_timestamp_invalid():
     with pytest.raises(ValueError):
         normalize_timestamp("invalid")
+
+
+# --- _timestamp_to_seconds ---
+
+def test_timestamp_to_seconds_zero():
+    assert _timestamp_to_seconds("00:00:00.000") == 0.0
+
+
+def test_timestamp_to_seconds_minutes():
+    assert _timestamp_to_seconds("00:03:45.000") == 225.0
+
+
+def test_timestamp_to_seconds_hours():
+    assert _timestamp_to_seconds("01:30:00.000") == 5400.0
+
+
+def test_timestamp_to_seconds_millis():
+    assert _timestamp_to_seconds("00:00:01.500") == 1.5
 
 
 # --- parse_tracklist_lines ---
