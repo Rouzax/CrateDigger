@@ -544,6 +544,11 @@ class AlbumPosterOperation(Operation):
 
             bg_path, bg_source = self._resolve_background(priority, file_path.parent, mf)
 
+            # Warm caches for background sources not in this poster's priority chain
+            all_sources = {"curated_logo", "dj_artwork", "fanart_tv"}
+            for source in all_sources - set(priority):
+                self._try_background_source(source, file_path.parent, mf)
+
             # Look up brand color from festival config
             fc = self.config.festival_config.get(mf.festival, {})
             color_hex = fc.get("editions", {}).get(mf.edition, {}).get("color") or fc.get("color")
