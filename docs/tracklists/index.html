@@ -1264,49 +1264,75 @@
 <thead>
 <tr>
 <th>Tag</th>
+<th>Scope</th>
 <th>Content</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Tracklist URL</td>
+<td>Global</td>
 <td>Link to the 1001Tracklists page</td>
 </tr>
 <tr>
 <td>Tracklist title</td>
+<td>Global</td>
 <td>Title of the tracklist</td>
 </tr>
 <tr>
 <td>Tracklist ID</td>
+<td>Global</td>
 <td>Numeric identifier</td>
 </tr>
 <tr>
 <td>Tracklist date</td>
+<td>Global</td>
 <td>Event date</td>
 </tr>
 <tr>
 <td>Genres</td>
-<td>Genre tags from the tracklist page</td>
+<td>Global</td>
+<td>Top 5 most frequent per-track genres from the tracklist page</td>
 </tr>
 <tr>
 <td>DJ artwork</td>
+<td>Global</td>
 <td>URL to the DJ photo from the page</td>
 </tr>
 <tr>
 <td>Stage</td>
+<td>Global</td>
 <td>Stage name (if listed)</td>
 </tr>
 <tr>
 <td>Festival/venue/radio</td>
+<td>Global</td>
 <td>Source information by type</td>
 </tr>
 <tr>
 <td>Artists</td>
-<td>DJ names associated with the tracklist</td>
+<td>Global</td>
+<td>DJ names associated with the tracklist (display form, pipe-separated)</td>
+</tr>
+<tr>
+<td>PERFORMER</td>
+<td>Per chapter</td>
+<td>Canonical artist of this track (resolved via DJ cache + artist aliases)</td>
+</tr>
+<tr>
+<td>PERFORMER_SLUGS</td>
+<td>Per chapter</td>
+<td>Pipe-separated 1001TL slugs for every artist linked on the track row</td>
+</tr>
+<tr>
+<td>GENRE</td>
+<td>Per chapter</td>
+<td>Pipe-separated per-track genres</td>
 </tr>
 </tbody>
 </table>
-<p>These tags are used by later pipeline stages (enrich) for artwork lookups, poster generation, and NFO metadata.</p>
+<p>Per-chapter tags use Matroska <code>TargetTypeValue=30</code> targeting each chapter's <code>ChapterUID</code>. They surface directly in <code>ffprobe -show_chapters</code> output (under <code>chapters[].tags</code>), which makes them readable by downstream tools like TrackSplit without any format bridge.</p>
+<p>These tags are used by later pipeline stages (enrich) for artwork lookups, poster generation, and NFO metadata; per-chapter tags feed per-track FLAC metadata when extracting individual tracks from a set.</p>
 <h2 id="caching-and-rate-limiting">Caching and rate limiting</h2>
 <h3 id="rate-limiting">Rate limiting</h3>
 <p>CrateDigger respects 1001Tracklists rate limits with a configurable delay between requests. The default is 5 seconds, adjustable via <code>tracklists.delay_seconds</code>.</p>
@@ -1314,10 +1340,11 @@
 <h3 id="caching">Caching</h3>
 <p>CrateDigger maintains local caches that improve search accuracy and reduce API calls:</p>
 <ul>
-<li><strong>DJ cache</strong>: Stores DJ names and aliases learned from tracklist pages. Used for search scoring and artist alias resolution. TTL: 30 days (configurable via <code>cache_ttl.dj_days</code>).</li>
-<li><strong>Source cache</strong>: Stores festival, venue, radio, and conference names. Used for scoring and classification. TTL: 30 days (configurable via <code>cache_ttl.source_days</code>).</li>
+<li><strong>DJ cache</strong>: Stores DJ names and aliases learned from tracklist pages. Used for search scoring and artist alias resolution. TTL: 90 days (configurable via <code>cache_ttl.dj_days</code>).</li>
+<li><strong>Source cache</strong>: Stores festival, venue, radio, and conference names. Used for scoring and classification. TTL: 365 days (configurable via <code>cache_ttl.source_days</code>).</li>
 </ul>
-<p>Cache files are stored in <code>~/.cratedigger/cache/</code>.</p>
+<p>Each cache entry stamps its own randomised TTL within ±20% of the configured base to prevent synchronised expiry and thundering-herd re-fetches after a bulk first-run fill.</p>
+<p>Cache files are stored in <code>~/.cratedigger/</code>.</p>
 <h2 id="auto-mode-vs-interactive-mode">Auto mode vs interactive mode</h2>
 <h3 id="interactive-mode-default">Interactive mode (default)</h3>
 <p>CrateDigger shows a ranked results table for each file and prompts you to select the correct tracklist. Options:</p>

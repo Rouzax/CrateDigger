@@ -1484,13 +1484,14 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="nt">&quot;cache_ttl&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">        </span><span class="nt">&quot;mbid_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">        </span><span class="nt">&quot;dj_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">        </span><span class="nt">&quot;source_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">        </span><span class="nt">&quot;dj_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">        </span><span class="nt">&quot;source_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">365</span><span class="p">,</span>
 <a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">        </span><span class="nt">&quot;images_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span>
 <a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="p">}</span>
 </code></pre></div>
-<p>Time-to-live settings for various caches, in days. After the TTL expires, cached data is refreshed on the next lookup.</p>
+<p>Base time-to-live settings for various caches, in days. After a cache entry's TTL expires, cached data is refreshed on the next lookup.</p>
+<p>Values are <em>base</em> TTLs: each cache entry's actual lifetime jitters by ±20% around the base (so a <code>dj_days: 90</code> entry lives 72-108 days). This prevents synchronised expiry after a bulk first-run cache fill, which would otherwise cause a thundering-herd re-fetch on a single day months later.</p>
 <table>
 <thead>
 <tr>
@@ -1505,11 +1506,11 @@
 </tr>
 <tr>
 <td><code>dj_days</code></td>
-<td>DJ name and alias cache (default: 30)</td>
+<td>DJ name and alias cache (default: 90)</td>
 </tr>
 <tr>
 <td><code>source_days</code></td>
-<td>Source/venue name cache (default: 30)</td>
+<td>Source/venue name cache (default: 365)</td>
 </tr>
 <tr>
 <td><code>images_days</code></td>
