@@ -109,6 +109,58 @@ class DjCache:
                     groups.setdefault(group_name, []).append(member_name)
         return groups
 
+    def get_or_fetch_many(
+        self,
+        slugs,
+        fetcher,
+        progress=None,
+    ) -> dict[str, dict]:
+        """Resolve a batch of slugs, fetching any not in cache via fetcher(slug).
+
+        Parameters
+        ----------
+        slugs : iterable of str
+            Slugs to resolve. Duplicates are deduped.
+        fetcher : callable[str, dict | None]
+            Called for every slug not present in the cache. Returns a profile
+            dict (will be put into the cache) or None (skipped with a
+            WARNING-level log). The caller is responsible for rate limiting
+            and I/O; this helper just loops.
+        progress : optional callable[str, int, int]
+            Called as progress(slug, done_count, total_misses) after each
+            successful fetch so callers can drive a Rich progress display.
+
+        Returns
+        -------
+        dict[str, dict]
+            Resolved entries keyed by slug. Slugs that failed to fetch are
+            omitted.
+        """
+        unique = list(dict.fromkeys(slugs))
+        resolved: dict[str, dict] = {}
+        misses: list[str] = []
+        for slug in unique:
+            hit = self.get(slug)
+            if hit is not None:
+                resolved[slug] = hit
+            else:
+                misses.append(slug)
+
+        for i, slug in enumerate(misses, start=1):
+            try:
+                entry = fetcher(slug)
+            except Exception as exc:
+                logger.warning("Artist fetch failed for slug '%s': %s", slug, exc)
+                continue
+            if entry is None:
+                logger.warning("Artist fetch returned no data for slug '%s'", slug)
+                continue
+            self.put(slug, entry)
+            resolved[slug] = entry
+            if progress is not None:
+                progress(slug, i, len(misses))
+        return resolved
+
     def all_names_lower(self) -> set[str]:
         """Return lowercased set of all cached DJ canonical names."""
         return {entry["name"].lower() for entry in self._data.values() if entry.get("name")}
