@@ -5,8 +5,36 @@ from festival_organizer.normalization import (
     strip_noise_words,
     extract_youtube_id,
     scene_dots_to_spaces,
+    fix_mojibake,
 )
 from festival_organizer.config import Config, DEFAULT_CONFIG
+
+
+# --- fix_mojibake ---
+
+def test_fix_mojibake_empty():
+    assert fix_mojibake("") == ""
+
+
+def test_fix_mojibake_idempotent_on_clean_text():
+    assert fix_mojibake("Kölsch") == "Kölsch"
+
+
+def test_fix_mojibake_latin1_double_encoded():
+    assert fix_mojibake("KÃ¶lsch") == "Kölsch"
+
+
+def test_fix_mojibake_preserves_diacritics():
+    # Tiësto should survive unchanged
+    assert fix_mojibake("Tiësto") == "Tiësto"
+
+
+def test_fix_mojibake_french_accent():
+    assert fix_mojibake("Ã©dition") == "édition"
+
+
+def test_fix_mojibake_plain_ascii():
+    assert fix_mojibake("plain ascii") == "plain ascii"
 
 
 def test_safe_filename_removes_illegal_chars():

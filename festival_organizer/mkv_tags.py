@@ -19,6 +19,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from festival_organizer import metadata
+from festival_organizer.normalization import fix_mojibake
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +114,9 @@ def _tag_values_from_root(root: ET.Element) -> dict[int, dict[str, str]]:
             name_el = simple.find("Name")
             string_el = simple.find("String")
             if name_el is not None and string_el is not None:
-                tags[name_el.text or ""] = string_el.text or ""
+                name = fix_mojibake(name_el.text or "")
+                value = fix_mojibake(string_el.text or "")
+                tags[name] = value
         if tags:
             result[ttv] = tags
 
