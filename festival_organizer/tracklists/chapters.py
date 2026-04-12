@@ -120,6 +120,41 @@ def parse_tracklist_lines(lines: list[str], language: str = "eng") -> list[Chapt
     return chapters
 
 
+def trim_chapters_to_duration(
+    chapters: list[Chapter],
+    duration_s: float | None,
+    epsilon: float = 2.0,
+) -> list[Chapter]:
+    """Drop chapters whose start is at or within epsilon of the media end.
+
+    Tracklists from 1001TL describe the full DJ set, but the video file may be
+    shorter (broadcast cuts, uploader trims). Chapters past the video's end
+    would have zero duration in playback and confuse downstream tools like
+    TrackSplit.
+
+    Args:
+        chapters: Chapter list from parse_tracklist_lines()
+        duration_s: Media duration in seconds (e.g. MediaFile.duration_seconds).
+            If None, no trimming happens.
+        epsilon: Trim chapters starting within this many seconds of the end.
+
+    Returns:
+        New list of chapters with past-end entries removed. Logs at INFO when
+        any chapters are dropped.
+    """
+    if duration_s is None:
+        return chapters
+    cutoff = duration_s - epsilon
+    kept = [ch for ch in chapters if _timestamp_to_seconds(ch.timestamp) < cutoff]
+    dropped = len(chapters) - len(kept)
+    if dropped:
+        logger.info(
+            "Trimmed %d chapters past video end (duration=%.1fs)",
+            dropped, duration_s,
+        )
+    return kept
+
+
 def build_chapter_xml(chapters: list[Chapter]) -> str:
     """Generate Matroska chapter XML string."""
     root = ET.Element("Chapters")
