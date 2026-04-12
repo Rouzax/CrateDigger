@@ -83,6 +83,28 @@ class TracklistExport:
     tracks: list[Track] = field(default_factory=list)
 
 
+def top_genres_by_frequency(tracks: list["Track"], n: int = 5) -> list[str]:
+    """Return the top-n most frequent per-track genres across the set.
+
+    Each genre counts once per track it appears on (so a track tagged with
+    three genres contributes one to each). Ties are broken by first-appearance
+    order so the result is deterministic across runs.
+    """
+    counts: dict[str, int] = {}
+    first_seen: dict[str, int] = {}
+    idx = 0
+    for track in tracks:
+        for g in track.genres:
+            if not g:
+                continue
+            if g not in counts:
+                first_seen[g] = idx
+                idx += 1
+            counts[g] = counts.get(g, 0) + 1
+    ordered = sorted(counts, key=lambda g: (-counts[g], first_seen[g]))
+    return ordered[:n]
+
+
 class TracklistSession:
     """Manages authenticated session with 1001tracklists.com."""
 
