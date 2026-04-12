@@ -247,20 +247,22 @@ Explicit paths to external tools. Set these if the tools are not on your system 
 {
     "cache_ttl": {
         "mbid_days": 90,
-        "dj_days": 30,
-        "source_days": 30,
+        "dj_days": 90,
+        "source_days": 365,
         "images_days": 90
     }
 }
 ```
 
-Time-to-live settings for various caches, in days. After the TTL expires, cached data is refreshed on the next lookup.
+Base time-to-live settings for various caches, in days. After a cache entry's TTL expires, cached data is refreshed on the next lookup.
+
+Values are *base* TTLs: each cache entry's actual lifetime jitters by ±20% around the base (so a `dj_days: 90` entry lives 72-108 days). This prevents synchronised expiry after a bulk first-run cache fill, which would otherwise cause a thundering-herd re-fetch on a single day months later.
 
 | Key | Description |
 |-----|-------------|
 | `mbid_days` | MusicBrainz ID cache (default: 90) |
-| `dj_days` | DJ name and alias cache (default: 30) |
-| `source_days` | Source/venue name cache (default: 30) |
+| `dj_days` | DJ name and alias cache (default: 90) |
+| `source_days` | Source/venue name cache (default: 365) |
 | `images_days` | Downloaded images cache (default: 90) |
 
 ## Environment variables
