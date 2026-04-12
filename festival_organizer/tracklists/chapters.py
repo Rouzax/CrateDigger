@@ -18,7 +18,7 @@ import tempfile
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, overload
+from typing import TYPE_CHECKING, Literal, overload
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +26,10 @@ from festival_organizer import metadata
 from festival_organizer.embed_tags import xml_escape
 from festival_organizer.mkv_tags import MATROSKA_EXTS, extract_all_tags, write_merged_tags
 from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
+
+if TYPE_CHECKING:
+    from festival_organizer.tracklists.api import Track
+    from festival_organizer.tracklists.dj_cache import DjCache
 
 
 @dataclass
@@ -326,6 +330,42 @@ def chapters_are_identical(existing: list[Chapter] | None, new: list[Chapter]) -
     return True
 
 
+def _build_chapter_tags_map(
+    chapters: list[Chapter],
+    chapter_uids: list[int],
+    tracks: list["Track"],
+    dj_cache: "DjCache | None",
+) -> dict[int, dict[str, str]]:
+    """Match each chapter to a track by exact start_ms; build TTV=30 tag map.
+
+    chapters[i] pairs with chapter_uids[i]. For each chapter we look up a
+    Track whose start_ms equals the chapter's timestamp-in-ms. Unmatched
+    chapters produce no tag block. The returned dict is keyed by ChapterUID.
+    """
+    tracks_by_ms: dict[int, "Track"] = {}
+    for t in tracks:
+        tracks_by_ms.setdefault(t.start_ms, t)  # first wins on ties
+    result: dict[int, dict[str, str]] = {}
+    for chapter, uid in zip(chapters, chapter_uids):
+        chapter_ms = int(_timestamp_to_seconds(chapter.timestamp) * 1000)
+        track = tracks_by_ms.get(chapter_ms)
+        if track is None:
+            continue
+        entry: dict[str, str] = {}
+        if track.artist_slugs:
+            entry["ARTIST_SLUGS"] = "|".join(track.artist_slugs)
+            first_slug = track.artist_slugs[0]
+            if dj_cache is not None:
+                entry["ARTIST"] = dj_cache.canonical_name(first_slug, fallback=first_slug)
+            else:
+                entry["ARTIST"] = first_slug
+        if track.genres:
+            entry["GENRE"] = "|".join(track.genres)
+        if entry:
+            result[uid] = entry
+    return result
+
+
 def embed_chapters(
     filepath: Path,
     chapters: list[Chapter],
@@ -339,6 +379,8 @@ def embed_chapters(
     sources_by_type: dict[str, list[str]] | None = None,
     dj_artists: list[tuple[str, str]] | None = None,
     country: str = "",
+    tracks: list["Track"] | None = None,
+    dj_cache: "DjCache | None" = None,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
 
@@ -354,11 +396,12 @@ def embed_chapters(
         return False
 
     chapter_file = None
+    chapter_uids: list[int] = []
 
     try:
         # Write chapters via mkvpropedit --chapters (only if chapters provided)
         if chapters:
-            chapter_xml = build_chapter_xml(chapters)
+            chapter_xml, chapter_uids = build_chapter_xml(chapters, return_uids=True)
             with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False, encoding="utf-8") as f:
                 f.write(chapter_xml)
                 chapter_file = f.name
@@ -402,8 +445,15 @@ def embed_chapters(
                     tags["CRATEDIGGER_1001TL_SOURCE_TYPE"] = stype
                     break
             if dj_artists:
-                tags["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(name for _, name in dj_artists)
-            return write_merged_tags(filepath, {70: tags})
+                if dj_cache is not None:
+                    names = [dj_cache.canonical_name(slug, fallback=name) for slug, name in dj_artists]
+                else:
+                    names = [name for _, name in dj_artists]
+                tags["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(names)
+            chapter_tags: dict[int, dict[str, str]] | None = None
+            if tracks and chapters and chapter_uids:
+                chapter_tags = _build_chapter_tags_map(chapters, chapter_uids, tracks, dj_cache)
+            return write_merged_tags(filepath, {70: tags}, chapter_tags=chapter_tags)
 
         return True
 
