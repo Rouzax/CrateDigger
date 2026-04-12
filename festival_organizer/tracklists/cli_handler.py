@@ -40,6 +40,7 @@ from festival_organizer.tracklists.chapters import (
     extract_stored_tracklist_info,
     chapters_are_identical,
     embed_chapters,
+    trim_chapters_to_duration,
 )
 from festival_organizer.tracklists.query import (
     build_search_query,
@@ -269,7 +270,7 @@ def _process_file(
                 return _fetch_and_embed(
                     session, stored["url"], filepath, duration_mins,
                     config, preview, quiet, language, console=con,
-                    verbose=verbose,
+                    verbose=verbose, duration_seconds=mf.duration_seconds,
                 )
             else:
                 con.print(f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]")
@@ -278,7 +279,7 @@ def _process_file(
                     return _fetch_and_embed(
                         session, stored["url"], filepath, duration_mins,
                         config, preview, quiet, language, console=con,
-                        verbose=verbose,
+                        verbose=verbose, duration_seconds=mf.duration_seconds,
                     )
                 elif choice in ("s", "skip"):
                     return "skipped"
@@ -297,14 +298,14 @@ def _process_file(
         return _fetch_and_embed(
             session, source["value"], filepath, duration_mins,
             config, preview, quiet, language, console=con,
-            verbose=verbose,
+            verbose=verbose, duration_seconds=mf.duration_seconds,
         )
     elif source["type"] == "id":
         return _fetch_and_embed(
             session, None, filepath, duration_mins,
             config, preview, quiet, language, console=con,
             tracklist_id=source["value"],
-            verbose=verbose,
+            verbose=verbose, duration_seconds=mf.duration_seconds,
         )
 
     # Search
@@ -355,7 +356,7 @@ def _process_file(
         config, preview, quiet, language, console=con,
         tracklist_id=tl_id,
         tracklist_date=selected.date,
-        verbose=verbose,
+        verbose=verbose, duration_seconds=mf.duration_seconds,
     )
 
 
@@ -372,6 +373,7 @@ def _fetch_and_embed(
     tracklist_date: str | None = None,
     console: Console | None = None,
     verbose: bool = False,
+    duration_seconds: float | None = None,
 ) -> str:
     """Fetch tracklist, parse chapters, and embed."""
     con = console or make_console()
@@ -383,6 +385,7 @@ def _fetch_and_embed(
 
     try:
         chapters = parse_tracklist_lines(export.lines, language=language)
+        chapters = trim_chapters_to_duration(chapters, duration_seconds)
     except ValueError as e:
         con.print(f"  {escape(str(e))}")
         if not preview:
