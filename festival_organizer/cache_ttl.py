@@ -6,6 +6,7 @@ first-fetch.
 
 Logging: no log lines emitted here; callers handle logging around cache ops.
 """
+import hashlib
 import random
 import time
 
@@ -32,3 +33,17 @@ def is_fresh(entry: dict, default_ttl_seconds: float) -> bool:
         return False
     ttl = entry.get("ttl", default_ttl_seconds)
     return (time.time() - ts) < ttl
+
+
+def hashed_jitter_factor(key: str, jitter_pct: float = 0.2) -> float:
+    """Deterministic jitter factor in [1 - jitter_pct, 1 + jitter_pct] based on key.
+
+    Use for filesystem-mtime caches that can't store a per-entry TTL field.
+    Multiply the base TTL by this factor before comparing against file age.
+    The same key always returns the same factor across runs, so a file doesn't
+    flip-flop between fresh and stale.
+    """
+    digest = hashlib.md5(key.encode("utf-8")).digest()
+    int_val = int.from_bytes(digest[:8], "big")
+    unit = int_val / 0xFFFFFFFFFFFFFFFF  # [0, 1]
+    return 1.0 + (unit - 0.5) * 2 * jitter_pct

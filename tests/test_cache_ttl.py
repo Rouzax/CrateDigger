@@ -1,6 +1,7 @@
 """Tests for the shared cache TTL helper."""
 import time
 from festival_organizer.cache_ttl import jittered_ttl_seconds, is_fresh
+from festival_organizer.cache_ttl import hashed_jitter_factor
 
 
 def test_jittered_ttl_within_bounds():
@@ -41,3 +42,22 @@ def test_is_fresh_expired():
 
 def test_is_fresh_missing_ts():
     assert is_fresh({}, default_ttl_seconds=1000.0) is False
+
+
+def test_hashed_jitter_factor_deterministic():
+    assert hashed_jitter_factor("abc") == hashed_jitter_factor("abc")
+
+
+def test_hashed_jitter_factor_bounds():
+    samples = [hashed_jitter_factor(f"key-{i}") for i in range(500)]
+    assert all(0.8 <= s <= 1.2 for s in samples)
+
+
+def test_hashed_jitter_factor_has_variance():
+    samples = {round(hashed_jitter_factor(f"key-{i}"), 3) for i in range(500)}
+    assert len(samples) > 100
+
+
+def test_hashed_jitter_factor_custom_jitter():
+    samples = [hashed_jitter_factor(f"k{i}", jitter_pct=0.5) for i in range(200)]
+    assert all(0.5 <= s <= 1.5 for s in samples)
