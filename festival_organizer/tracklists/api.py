@@ -53,6 +53,21 @@ class ExportError(TracklistError):
 
 
 @dataclass
+class Track:
+    """A single track on a 1001TL tracklist.
+
+    start_ms: chapter start in milliseconds
+    raw_text: the visible track label, as exported by 1001TL (e.g. 'Artist - Title (Remix) [Label]')
+    artist_slugs: 1001TL slugs for every linked artist on the track row, in link order
+    genres: per-track <meta itemprop="genre"> values for this row
+    """
+    start_ms: int
+    raw_text: str
+    artist_slugs: list[str]
+    genres: list[str]
+
+
+@dataclass
 class TracklistExport:
     """Exported tracklist data."""
     lines: list[str]
@@ -65,6 +80,76 @@ class TracklistExport:
     sources_by_type: dict[str, list[str]] = field(default_factory=dict)
     country: str = ""
     source_type: str = ""
+    tracks: list[Track] = field(default_factory=list)
+
+
+def top_genres_by_frequency(tracks: list["Track"], n: int = 5) -> list[str]:
+    """Return the top-n most frequent per-track genres across the set.
+
+    Each genre counts once per track it appears on (so a track tagged with
+    three genres contributes one to each). Ties are broken by first-appearance
+    order so the result is deterministic across runs.
+    """
+    counts: dict[str, int] = {}
+    first_seen: dict[str, int] = {}
+    idx = 0
+    for track in tracks:
+        for g in track.genres:
+            if not g:
+                continue
+            if g not in counts:
+                first_seen[g] = idx
+                idx += 1
+            counts[g] = counts.get(g, 0) + 1
+    ordered = sorted(counts, key=lambda g: (-counts[g], first_seen[g]))
+    return ordered[:n]
+
+
+def _parse_tracks(html: str) -> list["Track"]:
+    """Extract chapter-aligned per-track rows from a 1001TL tracklist page.
+
+    Only rows with class 'tlpTog' and NOT 'con' and NOT 'tlpSubTog' are
+    included; the page also contains mashup-component sub-rows that do not
+    correspond to chapter atoms. Returns Track objects in page order with
+    start_ms taken from the row's cue_seconds input (float seconds * 1000).
+    """
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+    tracks: list[Track] = []
+    for row in soup.select("div.tlpItem"):
+        classes = set(row.get("class", []))
+        if "tlpTog" not in classes:
+            continue
+        if "con" in classes or "tlpSubTog" in classes:
+            continue
+        cue_el = row.select_one("input[id$='_cue_seconds']")
+        if cue_el is None:
+            continue
+        try:
+            start_ms = int(float(cue_el.get("value", "0")) * 1000)
+        except ValueError:
+            continue
+        name_meta = row.select_one('meta[itemprop="name"]')
+        raw_text = name_meta.get("content", "") if name_meta else ""
+        genres = [
+            m.get("content", "")
+            for m in row.select('meta[itemprop="genre"]')
+            if m.get("content")
+        ]
+        slugs: list[str] = []
+        for a in row.select("a[href^='/artist/']"):
+            m = re.match(r"/artist/[^/]+/([^/]+)/", a.get("href", ""))
+            if m and m.group(1) not in slugs:
+                slugs.append(m.group(1))
+        tracks.append(
+            Track(
+                start_ms=start_ms,
+                raw_text=raw_text,
+                artist_slugs=slugs,
+                genres=genres,
+            )
+        )
+    return tracks
 
 
 class TracklistSession:
@@ -261,12 +346,15 @@ class TracklistSession:
                 dj_artwork_url = profile["artwork_url"]
                 logger.info("DJ artwork: %s", dj_artwork_url)
 
+        tracks = _parse_tracks(page_resp.text)
+
         return TracklistExport(
             lines=lines, url=short_url, title=title,
             genres=genres, dj_artists=dj_artists,
             dj_artwork_url=dj_artwork_url,
             stage_text=stage_text, sources_by_type=sources_by_type,
             country=country, source_type=source_type_str,
+            tracks=tracks,
         )
 
     def _request(self, method: str, url: str, data: dict | None = None,

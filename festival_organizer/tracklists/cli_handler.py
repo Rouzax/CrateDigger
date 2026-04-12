@@ -57,6 +57,24 @@ AUTO_SELECT_MIN_SCORE = 150
 AUTO_SELECT_MIN_GAP = 20
 
 
+def _fetch_full_dj_profile(session: TracklistSession, slug: str) -> dict | None:
+    """Fetch a DJ profile for slug and wrap it with a canonical `name` key.
+
+    `_parse_dj_profile` returns artwork/aliases/member_of but no name; we
+    derive the display name from the slug (title-cased) so DjCache's
+    canonical_name() can resolve per-track ARTIST tags. If the underlying
+    fetch returns an empty payload (network/parse error), we still return
+    a minimal record keyed by slug-derived name so we don't re-fetch on
+    every run.
+    """
+    try:
+        profile = session._fetch_dj_profile(slug)
+    except Exception:
+        return None
+    name = slug.replace("-", " ").title()
+    return {"name": name, **profile}
+
+
 def _build_search_expansion(config: Config) -> dict[str, str]:
     """Build {abbreviation: full_name} map for search query expansion.
 
@@ -390,7 +408,7 @@ def _fetch_and_embed(
         con.print(f"  {escape(str(e))}")
         if not preview:
             # Tag file with URL for future pickup
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, fetcher=(lambda slug: _fetch_full_dj_profile(session, slug)), alias_resolver=config.resolve_artist)
             con.print("  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -401,7 +419,7 @@ def _fetch_and_embed(
     if len(chapters) < 2:
         con.print("  [dim]Only 1 chapter, skipping (not useful for navigation)[/dim]")
         if not preview:
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, fetcher=(lambda slug: _fetch_full_dj_profile(session, slug)), alias_resolver=config.resolve_artist)
             con.print("  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -420,7 +438,15 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_DJ_ARTWORK": export.dj_artwork_url,
             }
             if export.dj_artists:
-                desired["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(name for _, name in export.dj_artists)
+                # See embed_chapters: this tag preserves the 1001TL display form;
+                # alias resolution happens at the ARTIST (TTV=50) and filesystem
+                # layout layer, not here.
+                if session._dj_cache:
+                    names = [session._dj_cache.canonical_name(slug, fallback=name)
+                             for slug, name in export.dj_artists]
+                else:
+                    names = [name for _, name in export.dj_artists]
+                desired["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(names)
             if export.country:
                 desired["CRATEDIGGER_1001TL_COUNTRY"] = export.country
             if export.source_type:
@@ -481,7 +507,7 @@ def _fetch_and_embed(
         return "previewed"
 
     # Embed
-    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country)
+    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, fetcher=(lambda slug: _fetch_full_dj_profile(session, slug)), alias_resolver=config.resolve_artist)
     if success:
         if not quiet:
             con.print(f"  [green]Embedded {len(chapters)} chapters.[/green]")

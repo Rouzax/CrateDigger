@@ -62,19 +62,24 @@ Chapters are embedded using `mkvpropedit`. The chapter language defaults to "eng
 
 In addition to chapters, CrateDigger embeds several MKV tags:
 
-| Tag | Content |
-|-----|---------|
-| Tracklist URL | Link to the 1001Tracklists page |
-| Tracklist title | Title of the tracklist |
-| Tracklist ID | Numeric identifier |
-| Tracklist date | Event date |
-| Genres | Genre tags from the tracklist page |
-| DJ artwork | URL to the DJ photo from the page |
-| Stage | Stage name (if listed) |
-| Festival/venue/radio | Source information by type |
-| Artists | DJ names associated with the tracklist |
+| Tag | Scope | Content |
+|-----|-------|---------|
+| Tracklist URL | Global | Link to the 1001Tracklists page |
+| Tracklist title | Global | Title of the tracklist |
+| Tracklist ID | Global | Numeric identifier |
+| Tracklist date | Global | Event date |
+| Genres | Global | Top 5 most frequent per-track genres from the tracklist page |
+| DJ artwork | Global | URL to the DJ photo from the page |
+| Stage | Global | Stage name (if listed) |
+| Festival/venue/radio | Global | Source information by type |
+| Artists | Global | DJ names associated with the tracklist (display form, pipe-separated) |
+| PERFORMER | Per chapter | Canonical artist of this track (resolved via DJ cache + artist aliases) |
+| PERFORMER_SLUGS | Per chapter | Pipe-separated 1001TL slugs for every artist linked on the track row |
+| GENRE | Per chapter | Pipe-separated per-track genres |
 
-These tags are used by later pipeline stages (enrich) for artwork lookups, poster generation, and NFO metadata.
+Per-chapter tags use Matroska `TargetTypeValue=30` targeting each chapter's `ChapterUID`. They surface directly in `ffprobe -show_chapters` output (under `chapters[].tags`), which makes them readable by downstream tools like TrackSplit without any format bridge.
+
+These tags are used by later pipeline stages (enrich) for artwork lookups, poster generation, and NFO metadata; per-chapter tags feed per-track FLAC metadata when extracting individual tracks from a set.
 
 ## Caching and rate limiting
 
@@ -88,10 +93,12 @@ The delay uses smart throttling: if you already spent time making a selection in
 
 CrateDigger maintains local caches that improve search accuracy and reduce API calls:
 
-- **DJ cache**: Stores DJ names and aliases learned from tracklist pages. Used for search scoring and artist alias resolution. TTL: 30 days (configurable via `cache_ttl.dj_days`).
-- **Source cache**: Stores festival, venue, radio, and conference names. Used for scoring and classification. TTL: 30 days (configurable via `cache_ttl.source_days`).
+- **DJ cache**: Stores DJ names and aliases learned from tracklist pages. Used for search scoring and artist alias resolution. TTL: 90 days (configurable via `cache_ttl.dj_days`).
+- **Source cache**: Stores festival, venue, radio, and conference names. Used for scoring and classification. TTL: 365 days (configurable via `cache_ttl.source_days`).
 
-Cache files are stored in `~/.cratedigger/cache/`.
+Each cache entry stamps its own randomised TTL within ±20% of the configured base to prevent synchronised expiry and thundering-herd re-fetches after a bulk first-run fill.
+
+Cache files are stored in `~/.cratedigger/`.
 
 ## Auto mode vs interactive mode
 

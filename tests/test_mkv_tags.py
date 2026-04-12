@@ -317,3 +317,82 @@ def test_extract_all_tags_exit_code_1_still_parses(tmp_path):
     assert root is not None
     tag = root.find("Tag")
     assert tag is not None
+
+
+def test_merge_tags_folds_duplicate_global_blocks():
+    """A pre-existing bug accumulated duplicate Tag blocks at the same TTV
+    (e.g. 30x ARTIST=Tiësto from repeated enrichment runs). merge_tags must
+    fold them into one block on next write."""
+    existing_xml = """<Tags>
+<Tag><Targets/><Simple><Name>ARTIST</Name><String>Tiësto</String></Simple></Tag>
+<Tag><Targets/><Simple><Name>ARTIST</Name><String>Tiësto</String></Simple></Tag>
+<Tag><Targets/><Simple><Name>ARTIST</Name><String>Tiësto</String></Simple></Tag>
+<Tag><Targets><TargetTypeValue>70</TargetTypeValue></Targets>
+<Simple><Name>URL</Name><String>https://x</String></Simple></Tag>
+</Tags>"""
+    import xml.etree.ElementTree as ET
+    existing = ET.fromstring(existing_xml)
+    result = merge_tags(existing, {})
+    root = ET.fromstring(result)
+    # Count blocks whose content is just ARTIST=Tiësto
+    artist_blocks = []
+    for tag in root.findall("Tag"):
+        for s in tag.findall("Simple"):
+            n = s.find("Name")
+            v = s.find("String")
+            if n is not None and n.text == "ARTIST" and v is not None and v.text == "Tiësto":
+                artist_blocks.append(tag)
+                break
+    assert len(artist_blocks) == 1, f"Expected 1 ARTIST block, got {len(artist_blocks)}"
+
+
+def test_merge_tags_fold_preserves_distinct_names_across_duplicates():
+    """Folding duplicate TTV=50 blocks should preserve distinct Simple names."""
+    existing_xml = """<Tags>
+<Tag><Targets/><Simple><Name>ARTIST</Name><String>X</String></Simple></Tag>
+<Tag><Targets/><Simple><Name>TITLE</Name><String>Y</String></Simple></Tag>
+</Tags>"""
+    import xml.etree.ElementTree as ET
+    existing = ET.fromstring(existing_xml)
+    result = merge_tags(existing, {})
+    root = ET.fromstring(result)
+    # Should end up with one Tag block containing both ARTIST and TITLE
+    assert len(root.findall("Tag")) == 1
+    names = {s.find("Name").text for s in root.find("Tag").findall("Simple")}
+    assert names == {"ARTIST", "TITLE"}
+
+
+def test_merge_tags_fold_later_wins_on_conflicting_values():
+    """If two duplicate TTV=50 blocks have the same Name with different values,
+    the later block's value wins after folding."""
+    existing_xml = """<Tags>
+<Tag><Targets/><Simple><Name>ARTIST</Name><String>Old</String></Simple></Tag>
+<Tag><Targets/><Simple><Name>ARTIST</Name><String>New</String></Simple></Tag>
+</Tags>"""
+    import xml.etree.ElementTree as ET
+    existing = ET.fromstring(existing_xml)
+    result = merge_tags(existing, {})
+    root = ET.fromstring(result)
+    tags = root.findall("Tag")
+    assert len(tags) == 1
+    simples = tags[0].findall("Simple")
+    assert len(simples) == 1
+    assert simples[0].find("String").text == "New"
+
+
+def test_merge_tags_fold_does_not_touch_chapter_scoped_blocks():
+    """TTV=30 blocks (one per ChapterUID) each target a distinct UID and
+    must NOT be folded, even though they share the same TTV."""
+    existing_xml = """<Tags>
+<Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
+<Simple><Name>PERFORMER</Name><String>A</String></Simple></Tag>
+<Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>222</ChapterUID></Targets>
+<Simple><Name>PERFORMER</Name><String>B</String></Simple></Tag>
+</Tags>"""
+    import xml.etree.ElementTree as ET
+    existing = ET.fromstring(existing_xml)
+    result = merge_tags(existing, {})
+    root = ET.fromstring(result)
+    chap_tags = [t for t in root.findall("Tag")
+                 if t.find("Targets/ChapterUID") is not None]
+    assert len(chap_tags) == 2

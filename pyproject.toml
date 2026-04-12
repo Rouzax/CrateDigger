@@ -1,9 +1,10 @@
 [project]
 name = "cratedigger"
-version = "0.9.8"
+version = "0.9.9"
 description = "Festival set & concert library manager"
 requires-python = ">=3.11"
 dependencies = [
+    "beautifulsoup4>=4.12",
     "Pillow>=10.0",
     "ftfy>=6.0",
     "numpy>=1.24",
@@ -32,3 +33,10 @@ include = ["festival_organizer*"]
 
 [project.scripts]
 cratedigger = "festival_organizer.cli:run"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: slow end-to-end tests that hit the filesystem, external APIs, or real MKV files. Run with: pytest -m integration",
+]
+# Skip integration tests by default; opt in via -m integration.
+addopts = "-m 'not integration'"
