@@ -18,6 +18,7 @@ import tempfile
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, overload
 
 logger = logging.getLogger(__name__)
 
@@ -155,15 +156,28 @@ def trim_chapters_to_duration(
     return kept
 
 
-def build_chapter_xml(chapters: list[Chapter]) -> str:
-    """Generate Matroska chapter XML string."""
+@overload
+def build_chapter_xml(chapters: list[Chapter], return_uids: Literal[False] = False) -> str: ...
+@overload
+def build_chapter_xml(chapters: list[Chapter], return_uids: Literal[True]) -> tuple[str, list[int]]: ...
+def build_chapter_xml(chapters: list[Chapter], return_uids: bool = False):
+    """Generate Matroska chapter XML string.
+
+    When return_uids=True, returns (xml_str, uids) where uids[i] is the
+    ChapterUID assigned to chapters[i]. Callers that want to emit per-chapter
+    tags targeting those UIDs use the tuple form; all existing callers that
+    just write chapter XML keep getting a bare string.
+    """
     root = ET.Element("Chapters")
     edition = ET.SubElement(root, "EditionEntry")
+    uids: list[int] = []
 
     for ch in chapters:
         atom = ET.SubElement(edition, "ChapterAtom")
+        uid_value = random.getrandbits(64)
+        uids.append(uid_value)
         uid = ET.SubElement(atom, "ChapterUID")
-        uid.text = str(random.getrandbits(64))
+        uid.text = str(uid_value)
 
         time_start = ET.SubElement(atom, "ChapterTimeStart")
         time_start.text = ch.timestamp
@@ -174,7 +188,10 @@ def build_chapter_xml(chapters: list[Chapter]) -> str:
         ch_lang = ET.SubElement(display, "ChapterLanguage")
         ch_lang.text = ch.language
 
-    return '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding="unicode")
+    xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding="unicode")
+    if return_uids:
+        return xml_str, uids
+    return xml_str
 
 
 

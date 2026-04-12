@@ -461,3 +461,43 @@ def test_extract_stored_tracklist_info_reads_old_tags(tmp_path):
     assert result is not None
     assert result["url"] == "https://old-url.com"
     assert result["title"] == "Old Title"
+
+
+# --- build_chapter_xml return_uids ---
+
+def test_build_chapter_xml_default_return_is_string():
+    """Backwards-compat: default call returns just the XML string."""
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    result = build_chapter_xml([Chapter(timestamp="00:00:00.000", title="Intro")])
+    assert isinstance(result, str)
+    assert "<Chapters>" in result
+
+
+def test_build_chapter_xml_return_uids_tuple_shape():
+    """return_uids=True yields (xml_str, [uids])."""
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    chapters = [
+        Chapter(timestamp="00:00:00.000", title="A"),
+        Chapter(timestamp="00:01:00.000", title="B"),
+        Chapter(timestamp="00:02:00.000", title="C"),
+    ]
+    xml_str, uids = build_chapter_xml(chapters, return_uids=True)
+    assert isinstance(xml_str, str)
+    assert isinstance(uids, list)
+    assert len(uids) == 3
+    assert all(isinstance(u, int) and u > 0 for u in uids)
+
+
+def test_build_chapter_xml_uids_match_xml():
+    """The returned UIDs are the same ones embedded in the generated XML."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    chapters = [
+        Chapter(timestamp="00:00:00.000", title="A"),
+        Chapter(timestamp="00:01:00.000", title="B"),
+    ]
+    xml_str, uids = build_chapter_xml(chapters, return_uids=True)
+    root = ET.fromstring(xml_str[xml_str.index("<Chapters>"):])
+    atoms = root.findall(".//ChapterAtom")
+    xml_uids = [int(a.find("ChapterUID").text) for a in atoms]
+    assert xml_uids == uids
