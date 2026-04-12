@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="GPL-3.0">
-  <img src="https://img.shields.io/badge/version-v0.9.0-orange" alt="v0.9.0">
+  <img src="https://img.shields.io/badge/version-v0.9.8-orange" alt="v0.9.8">
 </p>
 
 <p align="center"><em>Festival set & concert library manager. Organize, enrich, and curate your collection with professional artwork, metadata, and chapter markers.</em></p>
@@ -68,7 +68,7 @@ Trigger library refreshes over JSON-RPC so Kodi picks up new content automatical
 pip install git+https://github.com/Rouzax/CrateDigger.git
 ```
 
-For vision-based tracklist extraction (uses GPT-4o for screenshot parsing):
+Optional: install with frame sampling support for higher-quality poster backgrounds (uses OpenCV to score video frames):
 
 ```bash
 pip install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"
@@ -103,6 +103,10 @@ CrateDigger reads settings from `~/.cratedigger/config.json` for global defaults
 ## Disclaimer
 
 Artwork displayed in this project is sourced from fanart.tv and 1001Tracklists. All artwork, logos, and trademarks belong to their respective owners. CrateDigger is not affiliated with any festival, artist, or platform shown.
+
+## Related projects
+
+**[TrackSplit](https://github.com/Rouzax/TrackSplit)** is a sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. It reads CrateDigger's festival and artist config so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries.
 
 ## License
 
