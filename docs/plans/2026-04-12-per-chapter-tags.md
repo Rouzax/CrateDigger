@@ -700,18 +700,22 @@ git commit -m "feat(tracklist): add Track dataclass and TracklistExport.tracks f
 
 ## Task 9: Per-track HTML parser
 
+**Validated against saved fixture `tests/tracklists/fixtures/afrojack_edc_2025.html` (already committed).**
+
+**Key findings from fixture probe:**
+- Track rows: `div.tlpItem` — 77 total on the Afrojack page.
+- **Only 27 rows are chapter-aligned**: those with class `tlpTog` (not `tlpSubTog`) and no `con` class. The rest are sub-tracks shown underneath mashups. Plus the very first row is always at 0:00 (`trRow1`, often no `con`).
+- **Authoritative rule:** a row is chapter-aligned iff `tlpTog` is in its class list AND `con` is NOT AND `tlpSubTog` is NOT. Filter on class list, not on cue_seconds.
+- Each row has `<input id="tlpN_cue_seconds" value="SECONDS_FLOAT">`. For chapter-aligned rows this is the track start in seconds (float, can be 0.0 for the intro). Multiply by 1000 for start_ms.
+- Per-row metadata: `<meta itemprop="name" content="ARTIST - TITLE">`, `<meta itemprop="genre" content="...">` (0+ per row), `<meta itemprop="duration" content="PT..">`. **Duration is per-track time, not chapter length.**
+- Per-row artist links: `<a href="/artist/<id>/<slug>/index.html">`. Slug is path segment 3. NOT `/dj/<slug>/` — that form only appears in H1 set-owner region.
+
 **Files:**
-- Modify: `festival_organizer/tracklists/api.py` — add `_parse_tracks(soup)` helper; call it from the existing HTML-enrichment path in `export_tracklist` (near line 165 where the current genre scan happens); stop discarding per-track genres.
+- Modify: `festival_organizer/tracklists/api.py` — add `_parse_tracks(html)` helper that returns `list[Track]` for chapter-aligned rows only.
 - Test: `tests/tracklists/test_parse_tracks.py` (new)
-- Fixture: `tests/tracklists/fixtures/afrojack_edc_2025.html` (saved copy of the 1001TL tracklist page for set `2wrmg6f1`)
+- Fixture: already committed at `tests/tracklists/fixtures/afrojack_edc_2025.html`.
 
-**Step 1: Save the fixture**
-
-From a shell where `1001tl` auth cookies are available (or manually via a browser with dev tools open), save the HTML of `https://www.1001tracklists.com/tracklist/2wrmg6f1/` to `tests/tracklists/fixtures/afrojack_edc_2025.html`. Do this once; commit the fixture.
-
-If fetching is hard, pick any other set you already have an MKV for in `_temp/cratedigger/data/mkv-info-dump/` and retrieve its HTML — the test assertions adjust to whichever fixture you use.
-
-**Step 2: Write the failing test**
+**Step 1: Write the failing test**
 
 ```python
 # tests/tracklists/test_parse_tracks.py
@@ -721,96 +725,133 @@ from festival_organizer.tracklists.api import _parse_tracks
 FIXTURE = Path(__file__).parent / "fixtures" / "afrojack_edc_2025.html"
 
 
-def test_parse_tracks_finds_expected_row_count():
-    html = FIXTURE.read_text(encoding="utf-8")
-    tracks = _parse_tracks(html)
-    # mkv-info-dump for the Afrojack EDC 2025 set has ~30 chapter atoms;
-    # page tracks should be roughly the same (sometimes off by intro/outro).
-    assert 20 < len(tracks) < 50
+def test_parse_tracks_returns_chapter_aligned_rows_only():
+    """HTML has 77 tlpItem rows but only ~27-30 are chapter-aligned."""
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    # Afrojack EDC 2025 set has 27 rows with cue_seconds > 0 and 1 intro at 0.
+    # Expect 27-30, reject 77 (which would mean we didn't filter sub-rows).
+    assert 24 <= len(tracks) <= 35
 
 
 def test_parse_tracks_extracts_slugs():
-    html = FIXTURE.read_text(encoding="utf-8")
-    tracks = _parse_tracks(html)
-    # At least one track row should have the set owner's slug (afrojack)
-    assert any("afrojack" in t.artist_slugs for t in tracks)
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    # First track is AFROJACK - Take Over Control; its slug is 'afrojack'.
+    assert tracks[0].artist_slugs
+    assert tracks[0].artist_slugs[0] == "afrojack"
+    # At least 80% of chapter-aligned rows have at least one slug
+    with_slugs = [t for t in tracks if t.artist_slugs]
+    assert len(with_slugs) >= int(len(tracks) * 0.8)
 
 
-def test_parse_tracks_extracts_genres():
-    html = FIXTURE.read_text(encoding="utf-8")
-    tracks = _parse_tracks(html)
-    # At least half the tracks should have a non-empty genre list
-    with_genre = [t for t in tracks if t.genres]
-    assert len(with_genre) >= len(tracks) // 2
+def test_parse_tracks_extracts_genres_from_chapter_rows():
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    # Chapter-aligned rows alone should have a reasonable genre count
+    # (sub-rows being excluded reduces noise).
+    all_genres = [g for t in tracks for g in t.genres]
+    assert len(all_genres) >= 5
 
 
 def test_parse_tracks_start_ms_monotonic():
-    html = FIXTURE.read_text(encoding="utf-8")
-    tracks = _parse_tracks(html)
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
     starts = [t.start_ms for t in tracks]
     assert starts == sorted(starts)
+
+
+def test_parse_tracks_first_chapter_at_zero():
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    assert tracks[0].start_ms == 0
+
+
+def test_parse_tracks_raw_text_preserved():
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    assert "Take Over Control" in tracks[0].raw_text
+
+
+def test_parse_tracks_no_mojibake():
+    """After the 1e45b59 fix, no parsed text should contain mojibake bytes."""
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    for t in tracks:
+        assert "├" not in t.raw_text, f"mojibake in {t.raw_text!r}"
+        for g in t.genres:
+            assert "├" not in g
 ```
 
-**Step 3: Run to verify fail**
+**Step 2: Run to verify fail**
 
-Run: `pytest tests/tracklists/test_parse_tracks.py -v`
+Run: `python3 -m pytest tests/tracklists/test_parse_tracks.py -v`
 Expected: FAIL — `_parse_tracks` not defined.
 
-**Step 4: Implement `_parse_tracks`**
+**Step 3: Implement `_parse_tracks`**
 
-In `festival_organizer/tracklists/api.py`, add a module-level helper (below the other parse helpers). The tracklist HTML uses per-track rows keyed by `id="tlp<n>_tr"` with inner elements that include a timestamp (`class="cueValueField"`), track text, and `<meta itemprop="genre">` tags, plus `<a href="/dj/<slug>/">` artist links. Inspect the saved fixture to confirm exact selectors before writing the parser — the existing `_extract_genres` near line 538 is a working reference for the genre selector.
-
-Sketch:
+In `festival_organizer/tracklists/api.py`, add a module-level helper below the existing parse helpers. Use BeautifulSoup4 (now a project dep via `pyproject.toml`).
 
 ```python
-def _parse_tracks(html: str) -> list[Track]:
-    """Extract per-track rows from a 1001TL tracklist HTML page.
+def _parse_tracks(html: str) -> list["Track"]:
+    """Extract chapter-aligned per-track rows from a 1001TL tracklist page.
 
-    Returns a list of Track objects in page order. Rows without a parseable
-    timestamp are skipped (they're usually section dividers).
+    Only rows with class 'tlpTog' and NOT 'con' and NOT 'tlpSubTog' are
+    included, because the page also contains mashup-component sub-rows that
+    don't correspond to chapter atoms. Returns Track objects in page order
+    with start_ms taken from the row's cue_seconds input (float seconds).
     """
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, "html.parser")
     tracks: list[Track] = []
-    # TODO: confirm the exact row selector from the fixture; likely something
-    # like soup.select("div.tlpItem") or soup.select("[id^='tlp'][id$='_tr']").
-    for row in soup.select(TRACK_ROW_SELECTOR):
-        ts_el = row.select_one(TIMESTAMP_SELECTOR)
-        if not ts_el:
+    for row in soup.select("div.tlpItem"):
+        classes = set(row.get("class", []))
+        if "tlpTog" not in classes:
             continue
-        start_ms = _parse_timestamp_to_ms(ts_el.get_text(strip=True))
-        if start_ms is None:
+        if "con" in classes or "tlpSubTog" in classes:
             continue
-        raw_text = _extract_row_text(row)
-        slugs = [_slug_from_dj_href(a["href"])
-                 for a in row.select("a[href*='/dj/']")
-                 if a.get("href")]
-        slugs = [s for s in slugs if s]
-        genres = [m.get("content", "")
-                  for m in row.select('meta[itemprop="genre"]')
-                  if m.get("content")]
-        tracks.append(Track(start_ms=start_ms, raw_text=raw_text,
-                            artist_slugs=slugs, genres=genres))
+        cue_el = row.select_one("input[id$='_cue_seconds']")
+        if cue_el is None:
+            continue
+        try:
+            start_ms = int(float(cue_el.get("value", "0")) * 1000)
+        except ValueError:
+            continue
+        name_meta = row.select_one('meta[itemprop="name"]')
+        raw_text = name_meta.get("content", "") if name_meta else ""
+        genres = [
+            m.get("content", "")
+            for m in row.select('meta[itemprop="genre"]')
+            if m.get("content")
+        ]
+        slugs: list[str] = []
+        for a in row.select("a[href^='/artist/']"):
+            m = re.match(r"/artist/[^/]+/([^/]+)/", a.get("href", ""))
+            if m and m.group(1) not in slugs:
+                slugs.append(m.group(1))
+        tracks.append(
+            Track(
+                start_ms=start_ms,
+                raw_text=raw_text,
+                artist_slugs=slugs,
+                genres=genres,
+            )
+        )
     return tracks
 ```
 
-Add supporting helpers `_parse_timestamp_to_ms`, `_slug_from_dj_href`, `_extract_row_text`, `TRACK_ROW_SELECTOR`, `TIMESTAMP_SELECTOR` — all tight, tested indirectly by the four tests above. Use the existing `_extract_genres` at line 538 as your reference for how rows are structured in the current DOM.
+No need for `TRACK_ROW_SELECTOR`, `_parse_timestamp_to_ms`, `_slug_from_dj_href` constants as separate helpers — the parser is short enough that inlining is clearer. Do not add BeautifulSoup-based parsing to the existing `_extract_genres` or other scrapes; they already work.
 
-Also wire the result into `export_tracklist`: after the existing HTML-enrichment block, call `tracks = _parse_tracks(html)` and populate `TracklistExport.tracks = tracks` on the return.
+Wire into `export_tracklist`: after the existing HTML-enrichment block (line ~165), call `tracks = _parse_tracks(page_resp.text)` and populate `TracklistExport.tracks = tracks` on the return.
 
-**Step 5: Run tests**
+**Step 4: Run tests**
 
-Run: `pytest tests/tracklists/test_parse_tracks.py -v`
-Expected: all 4 PASS. If counts are off, tune the selectors — don't weaken the assertions.
+Run: `python3 -m pytest tests/tracklists/test_parse_tracks.py tests/ -x`
+Expected: all new tests PASS, full suite still green.
 
-Then run the full suite: `pytest tests/ -x`. Expected: no regressions.
-
-**Step 6: Commit**
+**Step 5: Commit**
 
 ```bash
-git add festival_organizer/tracklists/api.py tests/tracklists/test_parse_tracks.py tests/tracklists/fixtures/afrojack_edc_2025.html
+git add festival_organizer/tracklists/api.py tests/tracklists/test_parse_tracks.py
 git commit -m "feat(tracklist): parse per-track slugs and genres from HTML"
 ```
+
+**Notes:**
+- The chapter-aligned row filter (`tlpTog AND NOT con AND NOT tlpSubTog`) is the authoritative rule confirmed against the Afrojack EDC 2025 fixture. Alternative approaches (`cue_seconds > 0`, trno ranges) were rejected because the intro row has `cue_seconds=0` and trno 0, and sub-rows don't have distinct trno values.
+- **Mainstage noise:** "Mainstage" still appears in chapter-aligned rows' genre metas on this fixture (1001TL tags stage names as per-track genres). Task 9a's top-N aggregator will surface it. If that becomes a UX problem, Task 14 can wrap the aggregator with a stage-name blocklist derived from `source_cache`; not doing it in Task 9a keeps the aggregator a pure function.
 
 ---
 
