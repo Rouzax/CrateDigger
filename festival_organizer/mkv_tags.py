@@ -137,7 +137,10 @@ def extract_tag_values(filepath: Path) -> dict[int, dict[str, str]]:
 
 
 def merge_tags(
-    existing: ET.Element | None, new_tags: dict[int, dict[str, str]]
+    existing: ET.Element | None,
+    new_tags: dict[int, dict[str, str]],
+    *,
+    chapter_tags: dict[int, dict[str, str]] | None = None,
 ) -> str:
     """Merge new tags into existing tag XML, organized by TargetTypeValue scope.
 
@@ -151,6 +154,11 @@ def merge_tags(
         existing: Root <Tags> Element from extract_all_tags, or None
         new_tags: Dict mapping TargetTypeValue -> {Name: String} pairs
             e.g. {50: {"ARTIST": "Tiesto"}, 70: {"URL": "..."}}
+        chapter_tags: Per-chapter tags keyed by ChapterUID. When provided
+            (including as an empty dict), all existing TTV=30 Tag blocks are
+            removed from the output and replaced with one block per entry
+            here. When None (default), existing TTV=30 blocks are preserved
+            unchanged.
 
     Returns:
         Merged XML string ready for mkvpropedit
@@ -160,13 +168,26 @@ def merge_tags(
     else:
         root = ET.Element("Tags")
 
-    # Remove track-targeted Tag blocks (with TrackUID) — these are managed by
+    # Remove track-targeted Tag blocks (with TrackUID), these are managed by
     # mkvpropedit separately and must NOT be in the --tags global: XML, or
-    # mkvpropedit silently discards all global tags from the file.
+    # mkvpropedit silently discards all global tags from the file. Note:
+    # ChapterUID-targeted blocks (TTV=30) are distinct and handled below.
     for tag in root.findall("Tag"):
         targets = tag.find("Targets")
         if targets is not None and targets.find("TrackUID") is not None:
             root.remove(tag)
+
+    # If the caller is replacing per-chapter tags, strip existing TTV=30
+    # blocks so they're wholesale replaced (not merged in-place). Triggered
+    # whenever chapter_tags is not None (including an empty dict).
+    if chapter_tags is not None:
+        for tag in list(root.findall("Tag")):
+            targets = tag.find("Targets")
+            if targets is None:
+                continue
+            ttv_el = targets.find("TargetTypeValue")
+            if ttv_el is not None and ttv_el.text == "30":
+                root.remove(tag)
 
     # Index remaining (global) Tag blocks by their TTV
     ttv_to_tag: dict[int | None, ET.Element] = {}
@@ -217,6 +238,25 @@ def merge_tags(
                     string_el = ET.SubElement(simple, "String")
                     string_el.text = value
 
+    # Append per-chapter tag blocks (one per ChapterUID) after global tags.
+    # Empty tag_dict entries still emit a targeting block (no Simple elements).
+    if chapter_tags:
+        for chapter_uid, tag_dict in chapter_tags.items():
+            tag_block = ET.SubElement(root, "Tag")
+            targets = ET.SubElement(tag_block, "Targets")
+            ttv_el = ET.SubElement(targets, "TargetTypeValue")
+            ttv_el.text = "30"
+            uid_el = ET.SubElement(targets, "ChapterUID")
+            uid_el.text = str(chapter_uid)
+            for name, value in tag_dict.items():
+                if not value:
+                    continue
+                simple = ET.SubElement(tag_block, "Simple")
+                name_el = ET.SubElement(simple, "Name")
+                name_el.text = name
+                string_el = ET.SubElement(simple, "String")
+                string_el.text = value
+
     # Serialize
     ET.indent(root, space="  ")
     xml_str = ET.tostring(root, encoding="unicode", xml_declaration=True)
@@ -224,7 +264,11 @@ def merge_tags(
 
 
 def write_merged_tags(
-    filepath: Path, new_tags: dict[int, dict[str, str]], existing_root=None
+    filepath: Path,
+    new_tags: dict[int, dict[str, str]],
+    existing_root=None,
+    *,
+    chapter_tags: dict[int, dict[str, str]] | None = None,
 ) -> bool:
     """Extract existing tags, merge new ones in, and write the combined result.
 
@@ -236,6 +280,9 @@ def write_merged_tags(
         new_tags: Dict mapping TargetTypeValue -> {Name: String} pairs
         existing_root: Pre-extracted XML root from extract_all_tags(); when
             provided the redundant extraction is skipped.
+        chapter_tags: Optional per-chapter tags keyed by ChapterUID. When
+            provided, existing TTV=30 blocks are replaced wholesale; when
+            None (default), existing TTV=30 blocks are preserved.
 
     Returns:
         True if successful, False otherwise
@@ -250,7 +297,7 @@ def write_merged_tags(
     existing = existing_root if existing_root is not None else extract_all_tags(filepath)
 
     # Merge
-    merged_xml = merge_tags(existing, new_tags)
+    merged_xml = merge_tags(existing, new_tags, chapter_tags=chapter_tags)
 
     # Write via mkvpropedit
     tag_file = None
