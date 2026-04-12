@@ -36,3 +36,19 @@ def test_default_ttl_is_90_days_explicit():
 def test_default_ttl_signature_is_90_days(tmp_path):
     cache = DjCache(cache_path=tmp_path / "dj_cache.json")
     assert cache._ttl_seconds == 90 * 86400
+
+
+def test_canonical_name_resolves(tmp_path):
+    cache = DjCache(cache_path=tmp_path / "c.json", ttl_days=90)
+    cache.put("afrojack", {"name": "Afrojack"})
+    assert cache.canonical_name("afrojack") == "Afrojack"
+
+
+def test_canonical_name_falls_back_to_slug(tmp_path):
+    cache = DjCache(cache_path=tmp_path / "c.json", ttl_days=90)
+    assert cache.canonical_name("unknown") == "unknown"
+
+
+def test_canonical_name_fallback_value(tmp_path):
+    cache = DjCache(cache_path=tmp_path / "c.json", ttl_days=90)
+    assert cache.canonical_name("unknown", fallback="X") == "X"

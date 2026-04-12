@@ -164,3 +164,10 @@ class DjCache:
     def all_names_lower(self) -> set[str]:
         """Return lowercased set of all cached DJ canonical names."""
         return {entry["name"].lower() for entry in self._data.values() if entry.get("name")}
+
+    def canonical_name(self, slug: str, fallback: str | None = None) -> str:
+        """Return the canonical name for a slug, or fallback/slug when unknown."""
+        entry = self._data.get(slug)
+        if entry and entry.get("name"):
+            return entry["name"]
+        return fallback if fallback is not None else slug
