@@ -1338,7 +1338,8 @@ Expected: all FAIL.
 1. After `export_tracklist()` returns a `TracklistExport` with `tracks`, collect `set_owner_slugs` (from `dj_artists`) and `track_slugs` (union over `tracks[i].artist_slugs`).
 2. Build the fetcher closure that calls the existing single-artist scraper inside `TracklistSession` (grep for where `dj_cache.put` is currently called — reuse that call path). The closure enforces the 5s throttle via the same `session.throttle()` already in use.
 3. `cache.get_or_fetch_many(union_of_slugs, fetcher, progress=...)` with `progress` wired to a Rich progress counter (see Task 15).
-4. When composing `CRATEDIGGER_1001TL_ARTISTS` (at the current composition site in `metadata.py`), route through `cache.canonical_name(slug)` for each set-owner slug; join with `", "` for multi-DJ sets.
+4. When composing `CRATEDIGGER_1001TL_ARTISTS` (at the current composition site in `metadata.py`), route through `cache.canonical_name(slug)` for each set-owner slug; join with `|` (pipe) for multi-DJ sets — matches the existing convention in all 79 enriched files (`Armin van Buuren|KI/KI`, `AFROJACK|R3HAB`, `Agents Of Time|MORTEN`). Same separator used by `CRATEDIGGER_1001TL_GENRES` and the new per-chapter `ARTIST_SLUGS` for consistency.
+4b. **Alias resolution chain.** Some 1001TL set-owner slugs are aliases of a different canonical artist (real example: the 1001TL page shows `SOMETHING ELSE` but `SOMETHING ELSE` is an alias of canonical `ALOK` in `artists.json`). Before stamping `CRATEDIGGER_1001TL_ARTISTS`, feed `DjCache.canonical_name(slug)` output through the existing `artists.json` alias resolver (grep for where the top-level `ARTIST` tag is composed — that code already does this resolution). This ensures `ARTIST` and `CRATEDIGGER_1001TL_ARTISTS` end up pointing at the same canonical name. Write a test for the `SOMETHING ELSE → ALOK` case using that set as a fixture.
 4a. When composing `CRATEDIGGER_1001TL_GENRES` (same composition site), prefer `top_genres_by_frequency(tracks, n=5)` pipe-joined. If the parser yielded zero per-track genres (HTML shape change, empty tracklist), fall back to the existing `_extract_genres` union-deduped list so enrichment never produces an empty genre tag. Add a corresponding test in `tests/test_enrichment_per_chapter.py`:
 
 ```python
@@ -1353,7 +1354,7 @@ def test_set_level_genres_falls_back_when_no_per_track_data(...):
     # Assert: GENRES still populated via legacy union-deduped scrape
 ```
 5. When building chapter display strings, if the first token matches the 1001TL set-owner display form (upper-case of `canonical_name`), swap it for `canonical_name`. Leave the rest of the string alone.
-6. Build the per-chapter tag map keyed by `ChapterUID` (from Task 13's `return_uids=True` call): for each track, `{ChapterUID: {"ARTIST": cache.canonical_name(track.artist_slugs[0]) if track.artist_slugs else "", "ARTIST_SLUGS": ",".join(track.artist_slugs), "GENRE": "|".join(track.genres)}}`. Skip chapters whose track has no data.
+6. Build the per-chapter tag map keyed by `ChapterUID` (from Task 13's `return_uids=True` call): for each track, `{ChapterUID: {"ARTIST": cache.canonical_name(track.artist_slugs[0]) if track.artist_slugs else "", "ARTIST_SLUGS": "|".join(track.artist_slugs), "GENRE": "|".join(track.genres)}}`. Skip chapters whose track has no data. Pipe separator keeps the new tag consistent with `CRATEDIGGER_1001TL_ARTISTS` and `CRATEDIGGER_1001TL_GENRES`.
 7. Pass this dict as the TTV=30 scope to `write_merged_tags`.
 
 **Step 4: Run tests**
@@ -1509,9 +1510,18 @@ def test_re_enrichment_produces_canonical_tags_and_per_chapter_tags(tmp_path):
     # 4. Assert: menu["extra"]["CRATEDIGGER_1001TL_ARTISTS"] == "Afrojack"
     # 5. Assert: chapter 0 title starts with "Afrojack" not "AFROJACK"
     # 6. Assert: mkvmerge -J reports chapter tags with ARTIST / GENRE on every
-    #    chapter (the exact JSON shape depends on mkvmerge version — inspect
+    #    chapter (the exact JSON shape depends on mkvmerge version; inspect
     #    output once, then codify the expected keys).
+    # 7. Assert: no chapter title or tag value contains mojibake bytes.
+    #    The audit of /home/martijn/_temp/cratedigger/data/mkv-info-dump
+    #    found legacy files with Ti├½sto / Am├⌐l / R├£F├£S from before commit
+    #    1e45b59. Re-enrichment must produce clean UTF-8.
+    #    for s in all_strings: assert "├" not in s, f"mojibake in {s!r}"
+    # 8. Assert: ARTIST_SLUGS values use pipe separator (match existing
+    #    CRATEDIGGER_1001TL_ARTISTS / _GENRES convention).
 ```
+
+Add a second test against `Tomorrowland Winter_2026 - Something Else - Tomorrowland Winter.json` to exercise the alias chain (1001TL owner `SOMETHING ELSE` → `artists.json` alias → canonical `ALOK`). Assert both `ARTIST` and `CRATEDIGGER_1001TL_ARTISTS` equal `ALOK` after re-enrichment.
 
 **Step 2: Run it**
 
@@ -1576,7 +1586,7 @@ gh pr create --title "feat: per-chapter artist/genre tags and unified cache TTL"
 - Emit structured per-chapter tags (TTV=30: ARTIST, ARTIST_SLUGS, GENRE) so TrackSplit can write accurate per-track FLAC tags.
 - Unify all artist references through DjCache canonical names (fixes AFROJACK vs Afrojack mismatch).
 - Shared jittered-TTL helper applied to all five caches; DJ 30d→90d, Source 30d→365d.
-- Version 0.9.6 → 0.9.7.
+- Version 0.9.8 → 0.9.9.
 
 ## Test plan
 - [ ] `pytest tests/` passes
