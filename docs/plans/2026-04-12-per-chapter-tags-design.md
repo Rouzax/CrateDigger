@@ -25,7 +25,9 @@ And Matroska natively supports per-chapter tags via `TargetTypeValue=30` + `Chap
 
 ## Critical files to modify
 
-- `festival_organizer/tracklists/api.py` — extend tracklist HTML parse to produce structured `Track` rows (timestamp, raw title text, artist slugs, genres). Stop throwing away per-track genre meta.
+- `festival_organizer/tracklists/api.py` — extend tracklist HTML parse to produce structured `Track` rows (timestamp, raw title text, artist slugs, genres). Stop throwing away per-track genre meta. Use BeautifulSoup4 for the new per-row parser (container scoping inside nested divs is hard to do correctly with regex). Keep existing regex scrapes untouched.
+- `pyproject.toml` — add `beautifulsoup4>=4.12` to dependencies.
+- **Artist link format (audit finding):** per-track artist links are `/artist/<artist_id>/<slug>/index.html` (example: `/artist/kdl3un/afrojack/index.html`), NOT `/dj/<slug>/` as the plan originally assumed. The `/dj/<slug>/` form is used only in the H1 set-owner region. The per-track parser extracts the slug from the third path segment. Both forms resolve to the same slug that `DjCache.get_or_fetch` expects.
 - `festival_organizer/models.py` — add `Track` dataclass; extend `TracklistExport` with `tracks: list[Track]` (alongside existing `lines: list[str]` for backward compatibility during transition).
 - **New shared utility** `festival_organizer/cache_ttl.py` — two small functions: `jittered_ttl_seconds(base_days, jitter_pct=0.2)` returns a randomised lifetime to stamp onto an entry at write time; `is_fresh(entry, default_ttl_seconds)` reads `entry.get("ttl", default)` and compares against `now - entry["ts"]`. Single source of truth for jitter logic.
 - `festival_organizer/tracklists/dj_cache.py` — bump default TTL to 90 days; call shared `jittered_ttl_seconds` on insert; call shared `is_fresh` on read; add batch helper `get_or_fetch_many(slugs)` that drives the Rich progress UI and handles the throttle loop.
