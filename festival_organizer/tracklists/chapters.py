@@ -340,17 +340,44 @@ def chapters_are_identical(existing: list[Chapter] | None, new: list[Chapter]) -
     return True
 
 
+def _resolve_canonical(
+    slug: str,
+    dj_cache: "DjCache | None",
+    alias_resolver: "Callable[[str], str] | None",
+    fallback: str | None = None,
+) -> str:
+    """Two-step canonicalisation: DjCache slug -> name, then artists.json alias.
+
+    Mirrors how the top-level ARTIST tag is composed (DJ name resolved via
+    DjCache, then run through Config.resolve_artist for deadmau5 -> Deadmau5
+    and SOMETHING ELSE -> ALOK style aliases). Caller supplies the resolver
+    callable so this module doesn't depend on Config.
+    """
+    if dj_cache is not None:
+        name = dj_cache.canonical_name(slug, fallback=fallback if fallback is not None else slug)
+    else:
+        name = fallback if fallback is not None else slug
+    if alias_resolver is not None:
+        name = alias_resolver(name)
+    return name
+
+
 def _build_chapter_tags_map(
     chapters: list[Chapter],
     chapter_uids: list[int],
     tracks: list["Track"],
     dj_cache: "DjCache | None",
+    alias_resolver: "Callable[[str], str] | None" = None,
 ) -> dict[int, dict[str, str]]:
     """Match each chapter to a track by exact start_ms; build TTV=30 tag map.
 
     chapters[i] pairs with chapter_uids[i]. For each chapter we look up a
     Track whose start_ms equals the chapter's timestamp-in-ms. Unmatched
     chapters produce no tag block. The returned dict is keyed by ChapterUID.
+
+    PERFORMER names resolve via DjCache, then through alias_resolver
+    (typically Config.resolve_artist) so per-chapter names match the
+    canonicalised top-level ARTIST tag.
     """
     tracks_by_ms: dict[int, "Track"] = {}
     for t in tracks:
@@ -364,16 +391,13 @@ def _build_chapter_tags_map(
         entry: dict[str, str] = {}
         if track.artist_slugs:
             # Use PERFORMER (Matroska convention for per-chapter artist) instead
-            # of ARTIST to avoid collision with the global TTV=50 ARTIST tag.
+            # of ARTIST to avoid collision with the global TTV=50 ARTIST tag:
             # mediainfo flattens all ARTIST values across scopes into its
-            # extra.ARTIST field, so the last chapter's track artist would
-            # clobber the set-level DJ name on re-enrichment.
+            # extra.ARTIST field, which would clobber the set-level DJ name.
             entry["PERFORMER_SLUGS"] = "|".join(track.artist_slugs)
-            first_slug = track.artist_slugs[0]
-            if dj_cache is not None:
-                entry["PERFORMER"] = dj_cache.canonical_name(first_slug, fallback=first_slug)
-            else:
-                entry["PERFORMER"] = first_slug
+            entry["PERFORMER"] = _resolve_canonical(
+                track.artist_slugs[0], dj_cache, alias_resolver
+            )
         if track.genres:
             entry["GENRE"] = "|".join(track.genres)
         if entry:
@@ -397,6 +421,7 @@ def embed_chapters(
     tracks: list["Track"] | None = None,
     dj_cache: "DjCache | None" = None,
     fetcher: "Callable[[str], dict | None] | None" = None,
+    alias_resolver: "Callable[[str], str] | None" = None,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
 
@@ -504,14 +529,22 @@ def embed_chapters(
                     tags["CRATEDIGGER_1001TL_SOURCE_TYPE"] = stype
                     break
             if dj_artists:
-                if dj_cache is not None:
-                    names = [dj_cache.canonical_name(slug, fallback=name) for slug, name in dj_artists]
-                else:
-                    names = [name for _, name in dj_artists]
+                # CRATEDIGGER_1001TL_ARTISTS preserves the 1001TL display form
+                # (e.g. 'SOMETHING ELSE'). The top-level ARTIST tag and the
+                # filesystem layout route through alias resolution separately;
+                # this tag is the raw 1001TL-stated DJ name, casing-normalised
+                # via DjCache (so we don't re-emit 1001TL's UPPERCASE-on-submit
+                # artefact when DjCache has the canonical casing).
+                names = [
+                    dj_cache.canonical_name(slug, fallback=name) if dj_cache is not None else name
+                    for slug, name in dj_artists
+                ]
                 tags["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(names)
             chapter_tags: dict[int, dict[str, str]] | None = None
             if tracks and chapters and chapter_uids:
-                chapter_tags = _build_chapter_tags_map(chapters, chapter_uids, tracks, dj_cache)
+                chapter_tags = _build_chapter_tags_map(
+                    chapters, chapter_uids, tracks, dj_cache, alias_resolver
+                )
             return write_merged_tags(filepath, {70: tags}, chapter_tags=chapter_tags)
 
         return True
