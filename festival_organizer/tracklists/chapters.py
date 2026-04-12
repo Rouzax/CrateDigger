@@ -9,9 +9,9 @@ Logging:
         - chapters.embed_failed (DEBUG): Chapter or tag embedding failed
     See docs/logging.md for full guidelines.
 """
+import hashlib
 import logging
 import os
-import random
 import re
 import subprocess
 import tempfile
@@ -188,7 +188,13 @@ def build_chapter_xml(chapters: list[Chapter], return_uids: bool = False):
 
     for ch in chapters:
         atom = ET.SubElement(edition, "ChapterAtom")
-        uid_value = random.getrandbits(64)
+        # Deterministic ChapterUID: hash (timestamp, title) to a stable 64-bit
+        # value so re-enrichment produces byte-identical chapter XML (and the
+        # TTV=30 tags that reference these UIDs) when the source data is
+        # unchanged. Matroska requires ChapterUID > 0; MD5 of non-empty input
+        # is never zero in practice.
+        digest = hashlib.md5(f"{ch.timestamp}|{ch.title}".encode("utf-8")).digest()
+        uid_value = int.from_bytes(digest[:8], "big") or 1
         uids.append(uid_value)
         uid = ET.SubElement(atom, "ChapterUID")
         uid.text = str(uid_value)

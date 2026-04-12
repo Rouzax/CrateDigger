@@ -501,3 +501,37 @@ def test_build_chapter_xml_uids_match_xml():
     atoms = root.findall(".//ChapterAtom")
     xml_uids = [int(a.find("ChapterUID").text) for a in atoms]
     assert xml_uids == uids
+
+
+def test_build_chapter_xml_uids_are_stable_across_calls():
+    """Deterministic ChapterUIDs: same input always produces same UIDs so
+    re-enrichment is byte-idempotent when source data is unchanged."""
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    chapters = [
+        Chapter(timestamp="00:00:00.000", title="Intro"),
+        Chapter(timestamp="00:03:30.000", title="Second Track [LABEL]"),
+        Chapter(timestamp="00:07:15.000", title="Third"),
+    ]
+    _, uids_a = build_chapter_xml(chapters, return_uids=True)
+    _, uids_b = build_chapter_xml(chapters, return_uids=True)
+    assert uids_a == uids_b, "ChapterUIDs must be deterministic across calls"
+
+
+def test_build_chapter_xml_uid_depends_on_both_ts_and_title():
+    """Different (timestamp, title) must produce different UIDs."""
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    # Same title, different timestamp
+    _, uids_a = build_chapter_xml([Chapter(timestamp="00:00:00.000", title="A")], return_uids=True)
+    _, uids_b = build_chapter_xml([Chapter(timestamp="00:01:00.000", title="A")], return_uids=True)
+    assert uids_a != uids_b
+    # Same timestamp, different title
+    _, uids_c = build_chapter_xml([Chapter(timestamp="00:00:00.000", title="B")], return_uids=True)
+    assert uids_a != uids_c
+
+
+def test_build_chapter_xml_uid_is_positive():
+    """Matroska requires ChapterUID > 0. Our hash-based UIDs must satisfy that."""
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    chapters = [Chapter(timestamp=f"00:0{i}:00.000", title=f"t{i}") for i in range(10)]
+    _, uids = build_chapter_xml(chapters, return_uids=True)
+    assert all(u > 0 for u in uids)

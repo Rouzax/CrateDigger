@@ -189,6 +189,48 @@ def merge_tags(
             if ttv_el is not None and ttv_el.text == "30":
                 root.remove(tag)
 
+    # Fold duplicate global Tag blocks at the same TTV into a single block.
+    # A pre-a8fb326 merge_tags bug failed to index blocks with empty <Targets/>
+    # and appended a new block on every run instead of updating the existing
+    # one, so existing enriched files can carry dozens of redundant copies
+    # (e.g. 30x ARTIST=Tiësto). This step consolidates them on next write.
+    # Per-chapter (ChapterUID) blocks are left alone because each is its own
+    # entity; TrackUID blocks were already stripped above.
+    by_ttv: dict[int, list[ET.Element]] = {}
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            continue
+        if targets.find("ChapterUID") is not None:
+            continue
+        ttv_el = targets.find("TargetTypeValue")
+        ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+        by_ttv.setdefault(ttv, []).append(tag)
+    for blocks in by_ttv.values():
+        if len(blocks) <= 1:
+            continue
+        keeper = blocks[0]
+        keeper_simples: dict[str, ET.Element] = {}
+        for s in keeper.findall("Simple"):
+            n = s.find("Name")
+            if n is not None and n.text is not None:
+                keeper_simples[n.text] = s
+        for extra in blocks[1:]:
+            for s in list(extra.findall("Simple")):
+                n = s.find("Name")
+                if n is None or n.text is None:
+                    continue
+                existing = keeper_simples.get(n.text)
+                if existing is not None:
+                    existing_str = existing.find("String")
+                    new_str = s.find("String")
+                    if existing_str is not None and new_str is not None:
+                        existing_str.text = new_str.text
+                else:
+                    keeper.append(s)
+                    keeper_simples[n.text] = s
+            root.remove(extra)
+
     # Index remaining (global) Tag blocks by their TTV
     ttv_to_tag: dict[int | None, ET.Element] = {}
     for tag in root.findall("Tag"):
