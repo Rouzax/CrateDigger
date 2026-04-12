@@ -22,11 +22,11 @@ def test_build_chapter_tags_map_matches_by_ms(tmp_path):
               artist_slugs=["guest-artist"], genres=["Techno", "Tech House"]),
     ]
     result = _build_chapter_tags_map(chapters, uids, tracks, cache)
-    assert result[111]["ARTIST"] == "Afrojack"
-    assert result[111]["ARTIST_SLUGS"] == "afrojack"
+    assert result[111]["PERFORMER"] == "Afrojack"
+    assert result[111]["PERFORMER_SLUGS"] == "afrojack"
     assert result[111]["GENRE"] == "House"
-    assert result[222]["ARTIST"] == "guest-artist"  # fallback when not in cache
-    assert result[222]["ARTIST_SLUGS"] == "guest-artist"
+    assert result[222]["PERFORMER"] == "guest-artist"  # fallback when not in cache
+    assert result[222]["PERFORMER_SLUGS"] == "guest-artist"
     assert result[222]["GENRE"] == "Techno|Tech House"
 
 
@@ -44,7 +44,7 @@ def test_build_chapter_tags_map_no_dj_cache(tmp_path):
     uids = [111]
     tracks = [Track(start_ms=0, raw_text="x", artist_slugs=["foo"], genres=["House"])]
     result = _build_chapter_tags_map(chapters, uids, tracks, None)
-    assert result[111]["ARTIST"] == "foo"  # no cache, fall back to slug
+    assert result[111]["PERFORMER"] == "foo"  # no cache, fall back to slug
     assert result[111]["GENRE"] == "House"
 
 
@@ -68,8 +68,8 @@ def test_build_chapter_tags_map_pairs_by_index(tmp_path):
         Track(start_ms=120000, raw_text="y", artist_slugs=["b"], genres=[]),
     ]
     result = _build_chapter_tags_map(chapters, uids, tracks, None)
-    assert result[111]["ARTIST"] == "a"
-    assert result[222]["ARTIST"] == "b"
+    assert result[111]["PERFORMER"] == "a"
+    assert result[222]["PERFORMER"] == "b"
 
 
 def test_embed_chapters_canonical_artists_tag(tmp_path):

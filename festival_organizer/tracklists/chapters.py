@@ -363,12 +363,17 @@ def _build_chapter_tags_map(
             continue
         entry: dict[str, str] = {}
         if track.artist_slugs:
-            entry["ARTIST_SLUGS"] = "|".join(track.artist_slugs)
+            # Use PERFORMER (Matroska convention for per-chapter artist) instead
+            # of ARTIST to avoid collision with the global TTV=50 ARTIST tag.
+            # mediainfo flattens all ARTIST values across scopes into its
+            # extra.ARTIST field, so the last chapter's track artist would
+            # clobber the set-level DJ name on re-enrichment.
+            entry["PERFORMER_SLUGS"] = "|".join(track.artist_slugs)
             first_slug = track.artist_slugs[0]
             if dj_cache is not None:
-                entry["ARTIST"] = dj_cache.canonical_name(first_slug, fallback=first_slug)
+                entry["PERFORMER"] = dj_cache.canonical_name(first_slug, fallback=first_slug)
             else:
-                entry["ARTIST"] = first_slug
+                entry["PERFORMER"] = first_slug
         if track.genres:
             entry["GENRE"] = "|".join(track.genres)
         if entry:
