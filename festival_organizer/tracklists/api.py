@@ -53,6 +53,21 @@ class ExportError(TracklistError):
 
 
 @dataclass
+class Track:
+    """A single track on a 1001TL tracklist.
+
+    start_ms: chapter start in milliseconds
+    raw_text: the visible track label, as exported by 1001TL (e.g. 'Artist - Title (Remix) [Label]')
+    artist_slugs: 1001TL slugs for every linked artist on the track row, in link order
+    genres: per-track <meta itemprop="genre"> values for this row
+    """
+    start_ms: int
+    raw_text: str
+    artist_slugs: list[str]
+    genres: list[str]
+
+
+@dataclass
 class TracklistExport:
     """Exported tracklist data."""
     lines: list[str]
@@ -65,6 +80,7 @@ class TracklistExport:
     sources_by_type: dict[str, list[str]] = field(default_factory=dict)
     country: str = ""
     source_type: str = ""
+    tracks: list[Track] = field(default_factory=list)
 
 
 class TracklistSession:
