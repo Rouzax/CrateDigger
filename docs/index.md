@@ -40,7 +40,7 @@ See the [Getting Started](getting-started.md) guide for detailed setup instructi
 
 ## Related projects
 
-- **[TrackSplit](https://github.com/Rouzax/TrackSplit)**: A sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. TrackSplit reads CrateDigger's festival and artist config, so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries.
+- **[TrackSplit](https://rouzax.github.io/TrackSplit/)**: A sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. TrackSplit reads CrateDigger's festival and artist config, so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries. See the [TrackSplit documentation](https://rouzax.github.io/TrackSplit/docs/) or [source on GitHub](https://github.com/Rouzax/TrackSplit).
 
 ## Learn more
 

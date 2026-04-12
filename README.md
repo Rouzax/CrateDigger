@@ -106,7 +106,11 @@ Artwork displayed in this project is sourced from fanart.tv and 1001Tracklists. 
 
 ## Related projects
 
-**[TrackSplit](https://github.com/Rouzax/TrackSplit)** is a sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. It reads CrateDigger's festival and artist config so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries.
+**[TrackSplit](https://rouzax.github.io/TrackSplit/)** is a sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. It reads CrateDigger's festival and artist config so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries.
+
+- Landing page: [rouzax.github.io/TrackSplit](https://rouzax.github.io/TrackSplit/)
+- Documentation: [rouzax.github.io/TrackSplit/docs](https://rouzax.github.io/TrackSplit/docs/)
+- Source: [github.com/Rouzax/TrackSplit](https://github.com/Rouzax/TrackSplit)
 
 ## License
 
