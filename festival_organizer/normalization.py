@@ -2,6 +2,8 @@
 import re
 import unicodedata
 
+import ftfy
+
 # Characters illegal in Windows filenames
 ILLEGAL_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
@@ -37,6 +39,21 @@ NOISE_WORDS = re.compile(
     r"LIVE(?=\s+[@|]|\s*$))\b",
     re.IGNORECASE,
 )
+
+
+def fix_mojibake(text: str) -> str:
+    """Fix Latin-1/cp1252 mojibake and other encoding issues in tag values.
+
+    Idempotent: calling on already-clean text returns it unchanged. Safe on
+    empty strings and non-Latin text. Applied at every external read boundary
+    (mkvextract XML, mediainfo/ffprobe JSON) so downstream code always sees
+    proper Unicode.
+
+    Example: "KÃ¶lsch" -> "Kölsch", "Ã©dition" -> "édition".
+    """
+    if not text:
+        return text
+    return ftfy.fix_text(text)
 
 
 def strip_diacritics(text: str) -> str:

@@ -15,7 +15,17 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from festival_organizer.normalization import fix_mojibake
+
 logger = logging.getLogger(__name__)
+
+
+def _fix_string_values(d: dict) -> dict:
+    """Apply fix_mojibake to every string value in a metadata dict (in place)."""
+    for k, v in d.items():
+        if isinstance(v, str):
+            d[k] = fix_mojibake(v)
+    return d
 
 
 # Package → tool names for install hints
@@ -170,7 +180,7 @@ def parse_mediainfo_json(data: dict) -> dict:
     for field, tag_key in _ENRICHMENT_TAG_KEYS.items():
         result[field] = general.get(tag_key, "") or extra.get(tag_key, "")
 
-    return result
+    return _fix_string_values(result)
 
 
 def _extract_mediainfo(filepath: Path) -> dict:
@@ -242,7 +252,7 @@ def _extract_ffprobe(filepath: Path) -> dict:
         for field, tag_key in _ENRICHMENT_TAG_KEYS.items():
             result_dict[field] = tags.get(tag_key, "")
 
-        return result_dict
+        return _fix_string_values(result_dict)
     except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as e:
         logger.debug("ffprobe failed for %s: %s", filepath, e)
         return {}

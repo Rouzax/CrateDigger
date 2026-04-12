@@ -265,6 +265,21 @@ def test_tag_values_from_root_missing_ttv_defaults_to_50():
     assert result[50]["ARTIST"] == "Tiesto"
 
 
+def test_tag_values_from_root_fixes_mojibake():
+    """Mojibake in tag values is cleaned on extraction."""
+    xml = """<Tags>
+  <Tag>
+    <Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+    <Simple><Name>ARTIST</Name><String>KÃ¶lsch</String></Simple>
+    <Simple><Name>TITLE</Name><String>Ã©dition</String></Simple>
+  </Tag>
+</Tags>"""
+    root = ET.fromstring(xml)
+    result = _tag_values_from_root(root)
+    assert result[50]["ARTIST"] == "Kölsch"
+    assert result[50]["TITLE"] == "édition"
+
+
 def test_merge_tags_missing_ttv_treated_as_50():
     """Existing block without TargetTypeValue is updated in-place, no duplicate."""
     existing_xml = """<Tags>

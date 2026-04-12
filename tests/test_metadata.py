@@ -92,6 +92,25 @@ def test_parse_mediainfo_json_empty():
     assert meta2 == {}
 
 
+def test_parse_mediainfo_json_fixes_mojibake():
+    """Mojibake in tag values gets cleaned via fix_mojibake() on every string field."""
+    raw = {
+        "media": {
+            "track": [
+                {
+                    "@type": "General",
+                    "Title": "KÃ¶lsch",
+                    "ARTIST": "Tiesto",
+                    "CRATEDIGGER_1001TL_FESTIVAL": "Ã©dition",
+                }
+            ]
+        }
+    }
+    meta = parse_mediainfo_json(raw)
+    assert meta["title"] == "Kölsch"
+    assert meta["tracklists_festival"] == "édition"
+
+
 def test_find_tool_in_path():
     with patch("shutil.which", return_value="/usr/bin/mediainfo"):
         assert find_tool("mediainfo", []) == "/usr/bin/mediainfo"
