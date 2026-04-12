@@ -18,7 +18,7 @@ import tempfile
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, overload
+from typing import TYPE_CHECKING, Callable, Literal, overload
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,16 @@ from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
 if TYPE_CHECKING:
     from festival_organizer.tracklists.api import Track
     from festival_organizer.tracklists.dj_cache import DjCache
+
+
+def _shared_console():
+    """Return the project's shared Rich Console instance.
+
+    Centralised so Progress, logging, and other UI all write to the same stream
+    (stdout). Rich auto-strips formatting when stdout is piped.
+    """
+    from festival_organizer.console import make_console
+    return make_console()
 
 
 @dataclass
@@ -381,6 +391,7 @@ def embed_chapters(
     country: str = "",
     tracks: list["Track"] | None = None,
     dj_cache: "DjCache | None" = None,
+    fetcher: "Callable[[str], dict | None] | None" = None,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
 
@@ -397,6 +408,49 @@ def embed_chapters(
 
     chapter_file = None
     chapter_uids: list[int] = []
+
+    # Pre-fetch per-track artist profiles so canonical name resolution is populated.
+    # Only runs when the caller threads all three kwargs (tracks, dj_cache, fetcher).
+    if tracks and dj_cache is not None and fetcher is not None:
+        slugs_needed = sorted({s for t in tracks for s in t.artist_slugs})
+        if slugs_needed:
+            n_cached = sum(1 for s in slugs_needed if dj_cache.get(s) is not None)
+            n_missing = len(slugs_needed) - n_cached
+            if n_missing > 0:
+                from rich.progress import (
+                    BarColumn,
+                    Progress,
+                    SpinnerColumn,
+                    TextColumn,
+                )
+                console = _shared_console()
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("{task.description}"),
+                    BarColumn(),
+                    TextColumn("{task.completed}/{task.total}"),
+                    console=console,
+                    transient=True,
+                ) as bar:
+                    task_id = bar.add_task("Fetching artist pages", total=n_missing)
+
+                    def on_progress(slug, done, total):
+                        bar.update(
+                            task_id,
+                            advance=1,
+                            description=f"Fetching artist pages ({slug})",
+                        )
+
+                    dj_cache.get_or_fetch_many(
+                        slugs_needed, fetcher=fetcher, progress=on_progress
+                    )
+            else:
+                # All cached already; still call the batch helper for symmetry.
+                dj_cache.get_or_fetch_many(slugs_needed, fetcher=fetcher)
+            logger.info(
+                "Resolved %d per-track artists (%d cached, %d fetched)",
+                len(slugs_needed), n_cached, n_missing,
+            )
 
     try:
         # Write chapters via mkvpropedit --chapters (only if chapters provided)
