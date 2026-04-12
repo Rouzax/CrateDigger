@@ -38,6 +38,10 @@ See the [Getting Started](getting-started.md) guide for detailed setup instructi
 
 - **[Audit Logos](commands/audit-logos.md)**: Check which festivals in your library have curated logo artwork available for poster generation.
 
+## Related projects
+
+- **[TrackSplit](https://github.com/Rouzax/TrackSplit)**: A sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. TrackSplit reads CrateDigger's festival and artist config, so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries.
+
 ## Learn more
 
 - [Configuration](configuration.md): Full reference for all config options

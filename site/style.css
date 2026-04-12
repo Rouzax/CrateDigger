@@ -607,6 +607,50 @@ section {
   margin-bottom: 0.75rem;
 }
 
+/* ---- Related projects ---- */
+.related {
+  background: var(--bg-dark);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.related-card {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2.25rem 2rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.related-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.related-card h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.75rem;
+  color: var(--accent);
+}
+
+.related-card p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.related-actions {
+  display: flex;
+  justify-content: center;
+}
+
 /* ---- Footer ---- */
 .footer {
   padding: 3rem 2rem 2rem;
