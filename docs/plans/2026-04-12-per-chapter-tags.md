@@ -1646,3 +1646,32 @@ EOF
 - **Jitter decision record.** The ±20% window is chosen because it spreads 90-day TTLs over ~36 days — enough to fully break any synchronised-expiry wave even after an aggressive first-run bulk fetch — without letting any individual entry live more than ~20% past its nominal freshness budget.
 - **DjCache import churn.** Task 14 may touch several callers that currently use `DjCache.get` singly. Don't preemptively migrate them to `get_or_fetch_many`; only the tracklist-enrichment path needs batch resolution. YAGNI.
 - **Fixture HTML.** The Afrojack EDC fixture in Task 9 should be committed so CI can run the parser test without 1001TL auth. If the file is large, consider trimming unrelated sections (ads, JS) while preserving the track-row markup.
+
+---
+
+## Audit corrections (round 4, applied during Tasks 10-14 dispatch)
+
+Code-inspection audit of `mkv_tags.py`, `chapters.py`, `api.py`, and `cli_handler.py` revealed structural specifics the plan glossed over. These corrections take precedence when dispatching the remaining task subagents.
+
+- **Task 10 `fetcher` source:** the single-DJ fetcher already exists as `TracklistSession._fetch_dj_profile(dj_slug)` at `festival_organizer/tracklists/api.py:478`. `DjCache.get_or_fetch_many`'s `fetcher` closure just calls it. No new fetch logic needed.
+
+- **Task 12 structural change:** current `merge_tags(existing, new_tags: dict[int, dict[str, str]])` treats TTV as a scalar key — one Tag block per TTV. Per-chapter TTV=30 needs MULTIPLE Tag blocks (one per ChapterUID). Extend via a new keyword arg rather than overloading the existing dict shape:
+
+  ```python
+  def merge_tags(existing, new_tags: dict[int, dict[str, str]], *,
+                 chapter_tags: dict[int, dict[str, str]] | None = None) -> str:
+  ```
+
+  `chapter_tags` keys are `ChapterUID` (int), values are `{Name: Value}` pairs. For each, emit a separate `<Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>UID</ChapterUID></Targets>...</Tag>` block. Preserve any existing TTV=30 Tag blocks on the input root (don't strip them like TrackUID-targeted ones). `write_merged_tags` gets the same `chapter_tags` kwarg and passes it through.
+
+- **Task 13 signature:** add `return_uids: bool = False` to `build_chapter_xml(chapters, return_uids=False)`. When True, return `(xml_str, uids: list[int])` where `uids[i]` is the `ChapterUID` for `chapters[i]`. Default behaviour unchanged. Callers that want to tag chapters by UID use the tuple form. Existing callers (all of them today) keep the bare-string return.
+
+- **Task 14 composition site:** the plan said "modify `metadata.py`" but the site is actually `festival_organizer/tracklists/chapters.py:312 embed_chapters()`, specifically line 388 where `CRATEDIGGER_1001TL_ARTISTS` is composed. Existing code already uses `|` as separator, matching the `|` convention. `dj_artists` is `list[tuple[slug, name]]` — to apply canonical names, swap `name` for `DjCache.canonical_name(slug)`. Pass the `DjCache` instance into `embed_chapters` as a new keyword-only arg (or via the already-available `TracklistSession._dj_cache`). The chapter-title set-owner normalisation happens when building `Chapter` objects upstream (see `parse_tracklist_lines` at `chapters.py:75`). `cli_handler.py:423` does the same composition for the "no chapters, only tags" path — update both call sites.
+
+- **Task 14 per-chapter tag flow:** `embed_chapters` signature gains `tracks: list[Track] | None = None` and a keyword-only `dj_cache: DjCache | None = None`. When both `chapters` and `tracks` are present (aligned 1:1 via timestamp matching — use `Chapter.timestamp` vs `Track.start_ms`), generate UIDs upfront via `build_chapter_xml(chapters, return_uids=True)`, then build a per-chapter tag map `{uid: {ARTIST, ARTIST_SLUGS, GENRE}}` for tracks with matching timestamps, and pass it to `write_merged_tags(..., chapter_tags=...)`. Tracks without a matching chapter are dropped (they're sub-rows the author filtered out in Task 9, but defence in depth).
+
+- **Task 14 timestamp matching:** `Chapter.timestamp` is a string like `"00:01:23.000"` (from `parse_tracklist_lines`). `Track.start_ms` is an int. Convert both to milliseconds and match with a ±500ms tolerance (1001TL and the export endpoint round differently on half-seconds).
+
+- **Task 12 safety:** `merge_tags` currently strips all TrackUID-targeted tags from the existing XML before merging (line 166-169 in `mkv_tags.py`) because mkvpropedit handles those separately. ChapterUID-targeted tags must NOT be stripped (they ARE the thing we're writing). Add a test that verifies pre-existing TTV=30 tags are preserved on round-trip.
+
+- **Task 17 tooling:** `mkvmerge -J` on an existing enriched file shows `global_tags: [{"num_entries": N}]` without tag values. To assert tag contents, use `mediainfo --Output=JSON <file>` and read from `media.track[@type=General].extra` (this is how the mkv-info-dump snapshots were produced). For per-chapter tags specifically, use `mkvextract tags <file>` and parse the XML.
