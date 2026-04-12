@@ -105,9 +105,14 @@ DEFAULT_CONFIG = {
         "path_mapping": None,
     },
     "cache_ttl": {
+        # Base TTL in days for each cache. Actual per-entry lifetimes jitter
+        # by +/- 20% around the base to avoid thundering-herd re-fetches after
+        # a bulk first-run cache fill. JSON-backed caches (dj_cache, source_cache,
+        # mbid_cache) stamp the randomised TTL into each entry. Filesystem-mtime
+        # caches (images) use a deterministic hash of the path for jitter.
         "mbid_days": 90,
-        "dj_days": 30,
-        "source_days": 30,
+        "dj_days": 90,
+        "source_days": 365,
         "images_days": 90,
     },
 }
