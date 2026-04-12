@@ -461,3 +461,77 @@ def test_extract_stored_tracklist_info_reads_old_tags(tmp_path):
     assert result is not None
     assert result["url"] == "https://old-url.com"
     assert result["title"] == "Old Title"
+
+
+# --- build_chapter_xml return_uids ---
+
+def test_build_chapter_xml_default_return_is_string():
+    """Backwards-compat: default call returns just the XML string."""
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    result = build_chapter_xml([Chapter(timestamp="00:00:00.000", title="Intro")])
+    assert isinstance(result, str)
+    assert "<Chapters>" in result
+
+
+def test_build_chapter_xml_return_uids_tuple_shape():
+    """return_uids=True yields (xml_str, [uids])."""
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    chapters = [
+        Chapter(timestamp="00:00:00.000", title="A"),
+        Chapter(timestamp="00:01:00.000", title="B"),
+        Chapter(timestamp="00:02:00.000", title="C"),
+    ]
+    xml_str, uids = build_chapter_xml(chapters, return_uids=True)
+    assert isinstance(xml_str, str)
+    assert isinstance(uids, list)
+    assert len(uids) == 3
+    assert all(isinstance(u, int) and u > 0 for u in uids)
+
+
+def test_build_chapter_xml_uids_match_xml():
+    """The returned UIDs are the same ones embedded in the generated XML."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    chapters = [
+        Chapter(timestamp="00:00:00.000", title="A"),
+        Chapter(timestamp="00:01:00.000", title="B"),
+    ]
+    xml_str, uids = build_chapter_xml(chapters, return_uids=True)
+    root = ET.fromstring(xml_str[xml_str.index("<Chapters>"):])
+    atoms = root.findall(".//ChapterAtom")
+    xml_uids = [int(a.find("ChapterUID").text) for a in atoms]
+    assert xml_uids == uids
+
+
+def test_build_chapter_xml_uids_are_stable_across_calls():
+    """Deterministic ChapterUIDs: same input always produces same UIDs so
+    re-enrichment is byte-idempotent when source data is unchanged."""
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    chapters = [
+        Chapter(timestamp="00:00:00.000", title="Intro"),
+        Chapter(timestamp="00:03:30.000", title="Second Track [LABEL]"),
+        Chapter(timestamp="00:07:15.000", title="Third"),
+    ]
+    _, uids_a = build_chapter_xml(chapters, return_uids=True)
+    _, uids_b = build_chapter_xml(chapters, return_uids=True)
+    assert uids_a == uids_b, "ChapterUIDs must be deterministic across calls"
+
+
+def test_build_chapter_xml_uid_depends_on_both_ts_and_title():
+    """Different (timestamp, title) must produce different UIDs."""
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    # Same title, different timestamp
+    _, uids_a = build_chapter_xml([Chapter(timestamp="00:00:00.000", title="A")], return_uids=True)
+    _, uids_b = build_chapter_xml([Chapter(timestamp="00:01:00.000", title="A")], return_uids=True)
+    assert uids_a != uids_b
+    # Same timestamp, different title
+    _, uids_c = build_chapter_xml([Chapter(timestamp="00:00:00.000", title="B")], return_uids=True)
+    assert uids_a != uids_c
+
+
+def test_build_chapter_xml_uid_is_positive():
+    """Matroska requires ChapterUID > 0. Our hash-based UIDs must satisfy that."""
+    from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+    chapters = [Chapter(timestamp=f"00:0{i}:00.000", title=f"t{i}") for i in range(10)]
+    _, uids = build_chapter_xml(chapters, return_uids=True)
+    assert all(u > 0 for u in uids)

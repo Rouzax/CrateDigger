@@ -11,6 +11,7 @@ import logging
 import time
 from pathlib import Path
 
+from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +33,9 @@ class SourceCache:
     Persists to ~/.cratedigger/source_cache.json.
     """
 
-    def __init__(self, cache_path: Path | None = None, ttl_days: int = 30):
+    def __init__(self, cache_path: Path | None = None, ttl_days: int = 365):
         self._path = cache_path or DEFAULT_PATH
+        self._ttl_days = ttl_days
         self._ttl_seconds = ttl_days * 86400
         self._data: dict[str, dict] = {}
         self._load()
@@ -54,7 +56,7 @@ class SourceCache:
         )
 
     def _is_fresh(self, entry: dict) -> bool:
-        return (time.time() - entry.get("ts", 0)) < self._ttl_seconds
+        return is_fresh(entry, self._ttl_seconds)
 
     def get(self, source_id: str) -> dict | None:
         entry = self._data.get(source_id)
@@ -64,6 +66,7 @@ class SourceCache:
 
     def put(self, source_id: str, entry: dict) -> None:
         entry["ts"] = time.time()
+        entry["ttl"] = jittered_ttl_seconds(self._ttl_days)
         self._data[source_id] = entry
         self._save()
 

@@ -9,15 +9,16 @@ Logging:
         - chapters.embed_failed (DEBUG): Chapter or tag embedding failed
     See docs/logging.md for full guidelines.
 """
+import hashlib
 import logging
 import os
-import random
 import re
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING, Callable, Literal, overload
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,20 @@ from festival_organizer import metadata
 from festival_organizer.embed_tags import xml_escape
 from festival_organizer.mkv_tags import MATROSKA_EXTS, extract_all_tags, write_merged_tags
 from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
+
+if TYPE_CHECKING:
+    from festival_organizer.tracklists.api import Track
+    from festival_organizer.tracklists.dj_cache import DjCache
+
+
+def _shared_console():
+    """Return the project's shared Rich Console instance.
+
+    Centralised so Progress, logging, and other UI all write to the same stream
+    (stdout). Rich auto-strips formatting when stdout is piped.
+    """
+    from festival_organizer.console import make_console
+    return make_console()
 
 
 @dataclass
@@ -155,15 +170,34 @@ def trim_chapters_to_duration(
     return kept
 
 
-def build_chapter_xml(chapters: list[Chapter]) -> str:
-    """Generate Matroska chapter XML string."""
+@overload
+def build_chapter_xml(chapters: list[Chapter], return_uids: Literal[False] = False) -> str: ...
+@overload
+def build_chapter_xml(chapters: list[Chapter], return_uids: Literal[True]) -> tuple[str, list[int]]: ...
+def build_chapter_xml(chapters: list[Chapter], return_uids: bool = False):
+    """Generate Matroska chapter XML string.
+
+    When return_uids=True, returns (xml_str, uids) where uids[i] is the
+    ChapterUID assigned to chapters[i]. Callers that want to emit per-chapter
+    tags targeting those UIDs use the tuple form; all existing callers that
+    just write chapter XML keep getting a bare string.
+    """
     root = ET.Element("Chapters")
     edition = ET.SubElement(root, "EditionEntry")
+    uids: list[int] = []
 
     for ch in chapters:
         atom = ET.SubElement(edition, "ChapterAtom")
+        # Deterministic ChapterUID: hash (timestamp, title) to a stable 64-bit
+        # value so re-enrichment produces byte-identical chapter XML (and the
+        # TTV=30 tags that reference these UIDs) when the source data is
+        # unchanged. Matroska requires ChapterUID > 0; MD5 of non-empty input
+        # is never zero in practice.
+        digest = hashlib.md5(f"{ch.timestamp}|{ch.title}".encode("utf-8")).digest()
+        uid_value = int.from_bytes(digest[:8], "big") or 1
+        uids.append(uid_value)
         uid = ET.SubElement(atom, "ChapterUID")
-        uid.text = str(random.getrandbits(64))
+        uid.text = str(uid_value)
 
         time_start = ET.SubElement(atom, "ChapterTimeStart")
         time_start.text = ch.timestamp
@@ -174,7 +208,10 @@ def build_chapter_xml(chapters: list[Chapter]) -> str:
         ch_lang = ET.SubElement(display, "ChapterLanguage")
         ch_lang.text = ch.language
 
-    return '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding="unicode")
+    xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding="unicode")
+    if return_uids:
+        return xml_str, uids
+    return xml_str
 
 
 
@@ -309,6 +346,71 @@ def chapters_are_identical(existing: list[Chapter] | None, new: list[Chapter]) -
     return True
 
 
+def _resolve_canonical(
+    slug: str,
+    dj_cache: "DjCache | None",
+    alias_resolver: "Callable[[str], str] | None",
+    fallback: str | None = None,
+) -> str:
+    """Two-step canonicalisation: DjCache slug -> name, then artists.json alias.
+
+    Mirrors how the top-level ARTIST tag is composed (DJ name resolved via
+    DjCache, then run through Config.resolve_artist for deadmau5 -> Deadmau5
+    and SOMETHING ELSE -> ALOK style aliases). Caller supplies the resolver
+    callable so this module doesn't depend on Config.
+    """
+    if dj_cache is not None:
+        name = dj_cache.canonical_name(slug, fallback=fallback if fallback is not None else slug)
+    else:
+        name = fallback if fallback is not None else slug
+    if alias_resolver is not None:
+        name = alias_resolver(name)
+    return name
+
+
+def _build_chapter_tags_map(
+    chapters: list[Chapter],
+    chapter_uids: list[int],
+    tracks: list["Track"],
+    dj_cache: "DjCache | None",
+    alias_resolver: "Callable[[str], str] | None" = None,
+) -> dict[int, dict[str, str]]:
+    """Match each chapter to a track by exact start_ms; build TTV=30 tag map.
+
+    chapters[i] pairs with chapter_uids[i]. For each chapter we look up a
+    Track whose start_ms equals the chapter's timestamp-in-ms. Unmatched
+    chapters produce no tag block. The returned dict is keyed by ChapterUID.
+
+    PERFORMER names resolve via DjCache, then through alias_resolver
+    (typically Config.resolve_artist) so per-chapter names match the
+    canonicalised top-level ARTIST tag.
+    """
+    tracks_by_ms: dict[int, "Track"] = {}
+    for t in tracks:
+        tracks_by_ms.setdefault(t.start_ms, t)  # first wins on ties
+    result: dict[int, dict[str, str]] = {}
+    for chapter, uid in zip(chapters, chapter_uids):
+        chapter_ms = int(_timestamp_to_seconds(chapter.timestamp) * 1000)
+        track = tracks_by_ms.get(chapter_ms)
+        if track is None:
+            continue
+        entry: dict[str, str] = {}
+        if track.artist_slugs:
+            # Use PERFORMER (Matroska convention for per-chapter artist) instead
+            # of ARTIST to avoid collision with the global TTV=50 ARTIST tag:
+            # mediainfo flattens all ARTIST values across scopes into its
+            # extra.ARTIST field, which would clobber the set-level DJ name.
+            entry["PERFORMER_SLUGS"] = "|".join(track.artist_slugs)
+            entry["PERFORMER"] = _resolve_canonical(
+                track.artist_slugs[0], dj_cache, alias_resolver
+            )
+        if track.genres:
+            entry["GENRE"] = "|".join(track.genres)
+        if entry:
+            result[uid] = entry
+    return result
+
+
 def embed_chapters(
     filepath: Path,
     chapters: list[Chapter],
@@ -322,6 +424,10 @@ def embed_chapters(
     sources_by_type: dict[str, list[str]] | None = None,
     dj_artists: list[tuple[str, str]] | None = None,
     country: str = "",
+    tracks: list["Track"] | None = None,
+    dj_cache: "DjCache | None" = None,
+    fetcher: "Callable[[str], dict | None] | None" = None,
+    alias_resolver: "Callable[[str], str] | None" = None,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
 
@@ -337,11 +443,55 @@ def embed_chapters(
         return False
 
     chapter_file = None
+    chapter_uids: list[int] = []
+
+    # Pre-fetch per-track artist profiles so canonical name resolution is populated.
+    # Only runs when the caller threads all three kwargs (tracks, dj_cache, fetcher).
+    if tracks and dj_cache is not None and fetcher is not None:
+        slugs_needed = sorted({s for t in tracks for s in t.artist_slugs})
+        if slugs_needed:
+            n_cached = sum(1 for s in slugs_needed if dj_cache.get(s) is not None)
+            n_missing = len(slugs_needed) - n_cached
+            if n_missing > 0:
+                from rich.progress import (
+                    BarColumn,
+                    Progress,
+                    SpinnerColumn,
+                    TextColumn,
+                )
+                console = _shared_console()
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("{task.description}"),
+                    BarColumn(),
+                    TextColumn("{task.completed}/{task.total}"),
+                    console=console,
+                    transient=True,
+                ) as bar:
+                    task_id = bar.add_task("Fetching artist pages", total=n_missing)
+
+                    def on_progress(slug, done, total):
+                        bar.update(
+                            task_id,
+                            advance=1,
+                            description=f"Fetching artist pages ({slug})",
+                        )
+
+                    dj_cache.get_or_fetch_many(
+                        slugs_needed, fetcher=fetcher, progress=on_progress
+                    )
+            else:
+                # All cached already; still call the batch helper for symmetry.
+                dj_cache.get_or_fetch_many(slugs_needed, fetcher=fetcher)
+            logger.info(
+                "Resolved %d per-track artists (%d cached, %d fetched)",
+                len(slugs_needed), n_cached, n_missing,
+            )
 
     try:
         # Write chapters via mkvpropedit --chapters (only if chapters provided)
         if chapters:
-            chapter_xml = build_chapter_xml(chapters)
+            chapter_xml, chapter_uids = build_chapter_xml(chapters, return_uids=True)
             with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False, encoding="utf-8") as f:
                 f.write(chapter_xml)
                 chapter_file = f.name
@@ -385,8 +535,23 @@ def embed_chapters(
                     tags["CRATEDIGGER_1001TL_SOURCE_TYPE"] = stype
                     break
             if dj_artists:
-                tags["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(name for _, name in dj_artists)
-            return write_merged_tags(filepath, {70: tags})
+                # CRATEDIGGER_1001TL_ARTISTS preserves the 1001TL display form
+                # (e.g. 'SOMETHING ELSE'). The top-level ARTIST tag and the
+                # filesystem layout route through alias resolution separately;
+                # this tag is the raw 1001TL-stated DJ name, casing-normalised
+                # via DjCache (so we don't re-emit 1001TL's UPPERCASE-on-submit
+                # artefact when DjCache has the canonical casing).
+                names = [
+                    dj_cache.canonical_name(slug, fallback=name) if dj_cache is not None else name
+                    for slug, name in dj_artists
+                ]
+                tags["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(names)
+            chapter_tags: dict[int, dict[str, str]] | None = None
+            if tracks and chapters and chapter_uids:
+                chapter_tags = _build_chapter_tags_map(
+                    chapters, chapter_uids, tracks, dj_cache, alias_resolver
+                )
+            return write_merged_tags(filepath, {70: tags}, chapter_tags=chapter_tags)
 
         return True
 

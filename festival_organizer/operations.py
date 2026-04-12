@@ -19,6 +19,7 @@ from pathlib import Path
 
 import requests
 
+from festival_organizer.cache_ttl import hashed_jitter_factor
 from festival_organizer.config import Config
 from festival_organizer.models import MediaFile
 
@@ -330,10 +331,12 @@ class AlbumPosterOperation(Operation):
         cached = cache_dir / f"{h}.{ext}"
         if cached.exists():
             age_days = (time.time() - cached.stat().st_mtime) / 86400
-            if age_days <= self._ttl_days:
+            effective_ttl = self._ttl_days * hashed_jitter_factor(cached.name)
+            if age_days <= effective_ttl:
                 return cached
             cached.unlink()
-            logger.debug("Stale artwork cache (%d days): %s", int(age_days), cached.name)
+            logger.debug("Stale artwork cache (%d days, ttl %.1f): %s",
+                         int(age_days), effective_ttl, cached.name)
         try:
             resp = requests.get(url, timeout=15)
             resp.raise_for_status()
@@ -361,10 +364,12 @@ class AlbumPosterOperation(Operation):
         cached = artist_dir / "dj-artwork.jpg"
         if cached.exists():
             age_days = (time.time() - cached.stat().st_mtime) / 86400
-            if age_days <= self._ttl_days:
+            effective_ttl = self._ttl_days * hashed_jitter_factor(cached.name)
+            if age_days <= effective_ttl:
                 return cached
             cached.unlink()
-            logger.debug("Stale DJ artwork cache (%d days): %s", int(age_days), artist)
+            logger.debug("Stale DJ artwork cache (%d days, ttl %.1f): %s",
+                         int(age_days), effective_ttl, artist)
         try:
             resp = requests.get(url, timeout=15)
             resp.raise_for_status()
@@ -656,11 +661,12 @@ class FanartOperation(Operation):
         return self._cache
 
     def _is_stale(self, path: Path) -> bool:
-        """Check if a cached file is missing or older than TTL."""
+        """Check if a cached file is missing or older than jittered TTL."""
         if not path.exists():
             return True
         age_days = (time.time() - path.stat().st_mtime) / 86400
-        return age_days > self._ttl_days
+        effective_ttl = self._ttl_days * hashed_jitter_factor(path.name)
+        return age_days > effective_ttl
 
     def _artist_dir(self, artist: str) -> Path:
         """Resolve per-artist directory."""

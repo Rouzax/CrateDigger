@@ -28,6 +28,7 @@ from pathlib import Path
 
 import requests
 
+from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 from festival_organizer.normalization import strip_diacritics
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,7 @@ class MBIDCache:
     def __init__(self, cache_dir: Path | None = None, ttl_days: int = 90):
         self._dir = cache_dir or (Path.home() / ".cratedigger")
         self._path = self._dir / "mbid_cache.json"
+        self._ttl_days = ttl_days
         self._ttl_seconds = ttl_days * 86400
         self._data: dict[str, dict] = {}
         self._load()
@@ -89,7 +91,7 @@ class MBIDCache:
         )
 
     def _is_fresh(self, entry: dict) -> bool:
-        return (time.time() - entry.get("ts", 0)) < self._ttl_seconds
+        return is_fresh(entry, self._ttl_seconds)
 
     def get(self, artist: str) -> str | None:
         """Return cached MBID or None. Raises KeyError if not cached or expired."""
@@ -107,7 +109,11 @@ class MBIDCache:
 
     def put(self, artist: str, mbid: str | None) -> None:
         """Cache an artist-to-MBID mapping. None = not found (negative cache)."""
-        self._data[artist.lower()] = {"mbid": mbid, "ts": time.time()}
+        self._data[artist.lower()] = {
+            "mbid": mbid,
+            "ts": time.time(),
+            "ttl": jittered_ttl_seconds(self._ttl_days),
+        }
         self._save()
 
 
