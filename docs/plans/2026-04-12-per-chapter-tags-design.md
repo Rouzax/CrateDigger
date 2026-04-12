@@ -12,7 +12,7 @@ And Matroska natively supports per-chapter tags via `TargetTypeValue=30` + `Chap
 
 **Secondary problem (surfaced during design):** artist-name canonicalisation is currently inconsistent across tags. `DJCache` (`dj_cache.json`) holds the canonical titlecased name (e.g. `Afrojack`), which already matches the top-level `ARTIST` tag and the `.cratedigger/artists/` directory. But `CRATEDIGGER_1001TL_ARTISTS` stores the 1001TL display form (`AFROJACK`, all-caps, their set-owner convention), and chapter title strings mix cases within the same file. There is no single source of truth.
 
-**Outcome:** per-track `ARTIST` (canonical) + `GENRE` (per track) written as Matroska chapter-targeted tags (`TargetTypeValue=30`); `DJCache` extended to resolve any per-track slug on-demand; all new writes use `DJCache` canonical name as the single source of truth. Existing files can be re-enriched to pick up canonical names. Version bumps 0.9.6 → 0.9.7.
+**Outcome:** per-track `ARTIST` (canonical) + `GENRE` (per track) written as Matroska chapter-targeted tags (`TargetTypeValue=30`); `DJCache` extended to resolve any per-track slug on-demand; all new writes use `DJCache` canonical name as the single source of truth. Existing files can be re-enriched to pick up canonical names. Version bumps 0.9.8 → 0.9.9.
 
 ## Design decisions (from brainstorm)
 
@@ -37,7 +37,7 @@ And Matroska natively supports per-chapter tags via `TargetTypeValue=30` + `Chap
 - `festival_organizer/mkv_tags.py` — extend tag-scope handling to accept TTV=30 entries keyed by `ChapterUID`. Ensure the extract-merge-write cycle round-trips chapter-targeted tags (preserve tags the user added manually, just as is already done for TTV=50/70).
 - `festival_organizer/metadata.py` (or wherever set-owner artist string is composed for `CRATEDIGGER_1001TL_ARTISTS` and the chapter-title set-owner token) — route through `DJCache.canonical_name(slug)` instead of using the raw H1 display string.
 - `festival_organizer/cli.py` / operations layer — surface fetch progress per the logging contract (see below). No new flags required.
-- `pyproject.toml` — version bump 0.9.6 → 0.9.7.
+- `pyproject.toml` — version bump 0.9.8 → 0.9.9.
 
 ## Data flow (new)
 

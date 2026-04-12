@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Embed structured per-chapter `ARTIST` / `ARTIST_SLUGS` / `GENRE` tags in Matroska files using `TargetTypeValue=30` so TrackSplit can write accurate per-track FLAC tags; unify all artist references through `DjCache` canonical names; fix the synchronised-expiry problem in all five caches via a shared jittered-TTL helper; bump version 0.9.6 → 0.9.7.
+**Goal:** Embed structured per-chapter `ARTIST` / `ARTIST_SLUGS` / `GENRE` tags in Matroska files using `TargetTypeValue=30` so TrackSplit can write accurate per-track FLAC tags; unify all artist references through `DjCache` canonical names; fix the synchronised-expiry problem in all five caches via a shared jittered-TTL helper; bump version 0.9.8 → 0.9.9.
 
 **Architecture:** Extend the 1001TL tracklist HTML parser to produce structured `Track` rows (slug list + per-track genres). Add a shared `cache_ttl.py` utility that every cache calls into — per-entry `ttl` for JSON caches, deterministic hash jitter for filesystem-mtime caches. Teach `build_chapter_xml` / `mkv_tags` to emit and round-trip TTV=30 chapter-targeted tags through the existing `mkvpropedit` pipeline. Route all artist-name writes through `DjCache.canonical_name()`.
 
@@ -28,22 +28,22 @@ Work on branch `feat/per-chapter-tags` from `main`. Each task ends with a focuse
 ## Task 1: Version bump
 
 **Files:**
-- Modify: `pyproject.toml` (the `version = "0.9.6"` line)
+- Modify: `pyproject.toml` (the `version = "0.9.8"` line)
 
 **Step 1: Update version**
 
-Change `version = "0.9.6"` to `version = "0.9.7"` in `pyproject.toml`.
+Change `version = "0.9.8"` to `version = "0.9.9"` in `pyproject.toml`.
 
 **Step 2: Verify**
 
 Run: `grep -n '^version' pyproject.toml`
-Expected: `version = "0.9.7"`
+Expected: `version = "0.9.9"`
 
 **Step 3: Commit**
 
 ```bash
 git add pyproject.toml
-git commit -m "chore: bump version to 0.9.7"
+git commit -m "chore: bump version to 0.9.9"
 ```
 
 ---
