@@ -160,7 +160,8 @@ Priority chains for poster background image selection. CrateDigger tries each so
         "password": "",
         "delay_seconds": 5,
         "chapter_language": "eng",
-        "auto_select": false
+        "auto_select": false,
+        "genre_top_n": 5
     }
 }
 ```
@@ -174,6 +175,7 @@ Settings for 1001Tracklists integration. See [1001Tracklists](tracklists.md) for
 | `delay_seconds` | Delay between API requests in seconds (default: 5) |
 | `chapter_language` | Language code for chapter names (default: "eng") |
 | `auto_select` | Default auto-select behavior (overridden by `--auto` flag) |
+| `genre_top_n` | Cap on the set-level `CRATEDIGGER_1001TL_GENRES` tag: keep only the top-N most frequent per-track genres (default: 5). Ties broken by first-appearance order so the result is deterministic. Set to `0` to disable the cap and write every per-track genre. |
 
 Credentials can also be set via environment variables `TRACKLISTS_EMAIL` and `TRACKLISTS_PASSWORD`.
 

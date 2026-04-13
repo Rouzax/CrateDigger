@@ -31,6 +31,7 @@ from festival_organizer.tracklists.api import (
     AuthenticationError,
     RateLimitError,
     ExportError,
+    top_genres_by_frequency,
 )
 from festival_organizer.mkv_tags import has_chapter_tags
 from festival_organizer.tracklists.source_cache import SourceCache, SOURCE_TYPE_TO_TAG
@@ -389,6 +390,18 @@ def _fetch_and_embed(
 
     export = session.export_tracklist(tracklist_id, full_url=url)
 
+    # Cap the set-level GENRES tag per config. top_genres_by_frequency counts
+    # per-track genre occurrences and keeps the top-N with deterministic
+    # first-appearance tie-breaking. Fall back to the flat HTML scrape when
+    # the per-track parser returned nothing (defensive: a 1001TL layout
+    # change or an unparsed page still writes genres instead of an empty tag).
+    genre_top_n = config.tracklists_settings.get("genre_top_n", 5)
+    if genre_top_n and export.tracks:
+        capped = top_genres_by_frequency(export.tracks, n=genre_top_n)
+        set_genres = capped or list(export.genres)
+    else:
+        set_genres = list(export.genres)
+
     try:
         chapters = parse_tracklist_lines(export.lines, language=language)
         chapters = trim_chapters_to_duration(chapters, duration_seconds)
@@ -396,7 +409,7 @@ def _fetch_and_embed(
         con.print(f"  {escape(str(e))}")
         if not preview:
             # Tag file with URL for future pickup
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
             con.print("  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -407,7 +420,7 @@ def _fetch_and_embed(
     if len(chapters) < 2:
         con.print("  [dim]Only 1 chapter, skipping (not useful for navigation)[/dim]")
         if not preview:
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
             con.print("  Tagged with URL for future pickup.")
         return "skipped"
 
@@ -422,7 +435,7 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_TITLE": export.title,
                 "CRATEDIGGER_1001TL_ID": tracklist_id or "",
                 "CRATEDIGGER_1001TL_DATE": tracklist_date or "",
-                "CRATEDIGGER_1001TL_GENRES": "|".join(export.genres) if export.genres else "",
+                "CRATEDIGGER_1001TL_GENRES": "|".join(set_genres) if set_genres else "",
                 "CRATEDIGGER_1001TL_DJ_ARTWORK": export.dj_artwork_url,
             }
             if export.dj_artists:
@@ -483,7 +496,7 @@ def _fetch_and_embed(
                 filepath, chapters,
                 tracklist_url=export.url, tracklist_title=export.title,
                 tracklist_id=tracklist_id, tracklist_date=tracklist_date,
-                genres=export.genres, dj_artwork_url=export.dj_artwork_url,
+                genres=set_genres, dj_artwork_url=export.dj_artwork_url,
                 stage_text=export.stage_text,
                 sources_by_type=export.sources_by_type,
                 dj_artists=export.dj_artists, country=export.country,
@@ -518,7 +531,7 @@ def _fetch_and_embed(
         return "previewed"
 
     # Embed
-    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=export.genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
+    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
     if success:
         if not quiet:
             con.print(f"  [green]Embedded {len(chapters)} chapters.[/green]")
