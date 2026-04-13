@@ -137,12 +137,16 @@ def extract_tag_values(filepath: Path) -> dict[int, dict[str, str]]:
 
 
 def has_chapter_tags(filepath: Path) -> bool:
-    """Return True if the MKV file has any per-chapter (TTV=30) tag blocks.
+    """Return True if the MKV file has the current per-chapter tag contract.
 
-    Used by the identify flow to self-heal legacy files that were enriched
-    before TTV=30 per-chapter tags were introduced: when this returns False,
-    the identify handler re-runs full embed_chapters to populate them rather
-    than short-circuiting on "chapters are identical".
+    Used by identify to self-heal legacy files: when this returns False the
+    handler re-runs full embed_chapters rather than short-circuiting on
+    "chapters are identical". PERFORMER_NAMES is the canary because it is
+    the newest tag in the contract, so presence of at least one such Simple
+    inside a TTV=30 block proves the file was enriched by the current
+    CrateDigger version (or later). Files enriched by pre-PERFORMER_NAMES
+    versions will auto-heal on the next identify run without requiring
+    --regenerate.
     """
     root = extract_all_tags(filepath)
     if root is None:
@@ -152,8 +156,12 @@ def has_chapter_tags(filepath: Path) -> bool:
         if targets is None:
             continue
         ttv_el = targets.find("TargetTypeValue")
-        if ttv_el is not None and ttv_el.text == "30":
-            return True
+        if ttv_el is None or ttv_el.text != "30":
+            continue
+        for simple in tag.iter("Simple"):
+            name_el = simple.find("Name")
+            if name_el is not None and name_el.text == "PERFORMER_NAMES":
+                return True
     return False
 
 

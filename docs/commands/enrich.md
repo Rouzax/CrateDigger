@@ -33,6 +33,7 @@ Use `--only` to run a subset of operations. Valid values:
 | `fanart` | Look up artist artwork on fanart.tv |
 | `posters` | Generate poster images |
 | `tags` | Write MKV tags |
+| `chapter_mbids` | Resolve per-chapter MusicBrainz artist IDs |
 
 Combine multiple values with commas:
 
@@ -72,6 +73,43 @@ Creates Kodi-compatible NFO metadata files alongside each media file. NFO files 
 ### MKV tags (`tags`)
 
 Writes structured MKV tags into each file, including artist, title, date, and other metadata fields extracted during analysis and identification.
+
+### Chapter MBIDs (`chapter_mbids`)
+
+Reads `PERFORMER_NAMES` on each chapter (written by [identify](identify.md)), resolves every unique artist name to a MusicBrainz artist ID, and writes `MUSICBRAINZ_ARTISTIDS` back onto the chapter. The value is pipe-joined and aligned slot-for-slot with `PERFORMER_NAMES` and `PERFORMER_SLUGS`; unresolved names leave an empty slot (`""`) so downstream consumers can zip the three tags by index to produce multi-valued FLAC artist tags.
+
+**Lookup precedence** for each unique artist name:
+
+1. **User override file**: `~/.cratedigger/artist_mbids.json` (case-insensitive, never expires).
+2. **Auto cache**: `~/.cratedigger/mbid_cache.json` (TTL-bound, populated by MusicBrainz searches).
+3. **MusicBrainz search**: fresh HTTP lookup, result written to the auto cache.
+
+The override file is user-curated; CrateDigger never writes to it, and overrides are never promoted into the auto cache.
+
+**Override file format** (`~/.cratedigger/artist_mbids.json`):
+
+```json
+{
+    "Afrojack": "3abb6f9f-5b6a-4f1f-8a2d-1111111111aa",
+    "Oliver Heldens": "6e7dde91-4c02-47ea-a2b4-2222222222bb"
+}
+```
+
+Keys match artist names case-insensitively.
+
+**Unresolved names** log a WARNING, once per unique name per run:
+
+```
+No MBID resolved for artist: <name> (add to ~/.cratedigger/artist_mbids.json)
+```
+
+Fix loop: run `enrich --only chapter_mbids`, read the WARNING lines, look up the correct MBIDs on [musicbrainz.org](https://musicbrainz.org/), add them to the override file, then rerun:
+
+```bash
+cratedigger enrich ~/Music/Library/ --only chapter_mbids --regenerate
+```
+
+`--regenerate` re-runs the MBID path even on chapters that already have a `MUSICBRAINZ_ARTISTIDS` tag, which is how newly added overrides reach files that were enriched earlier.
 
 ## Examples
 

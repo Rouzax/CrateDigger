@@ -29,6 +29,7 @@ from festival_organizer.metadata import configure_tools
 from festival_organizer.operations import (
     OrganizeOperation, NfoOperation, ArtOperation, FanartOperation,
     PosterOperation, AlbumPosterOperation, TagsOperation,
+    ChapterMbidsOperation,
 )
 from festival_organizer.progress import ProgressPrinter
 from festival_organizer.runner import run_pipeline
@@ -151,7 +152,7 @@ def enrich(
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
-    only: Annotated[Optional[str], typer.Option("--only", help="Comma-separated operations to run (nfo, art, fanart, posters, tags)")] = None,
+    only: Annotated[Optional[str], typer.Option("--only", help="Comma-separated operations to run (nfo, art, fanart, posters, tags, chapter_mbids)")] = None,
     regenerate: Annotated[bool, typer.Option("--regenerate", help="Regenerate even if artifacts exist")] = False,
     kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
 ) -> int:
@@ -447,7 +448,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     only = set()
     if getattr(args, "only", None):
         only = {v.strip() for v in args.only.split(",")}
-        valid_ops = {"nfo", "art", "fanart", "posters", "tags"}
+        valid_ops = {"nfo", "art", "fanart", "posters", "tags", "chapter_mbids"}
         unknown = only - valid_ops
         if unknown:
             print_error(f"unknown operation {', '.join(repr(u) for u in sorted(unknown))}. "
@@ -519,6 +520,8 @@ def _run_command(args: types.SimpleNamespace) -> int:
                     ops.append(album_poster_op)
             if not only or "tags" in only:
                 ops.append(TagsOperation(force=force))
+            if not only or "chapter_mbids" in only:
+                ops.append(ChapterMbidsOperation(config=config, force=force))
 
         pipeline_files.append((fp, mf, ops))
 

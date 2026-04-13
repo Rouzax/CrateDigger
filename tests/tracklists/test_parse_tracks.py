@@ -181,3 +181,120 @@ def test_parse_tracks_label_no_stray_space_around_nested_icon():
     tracks = _parse_tracks(html)
     assert len(tracks) == 1
     assert tracks[0].label == "SHEFFIELD TUNES (KONTOR)"
+
+
+# --- artist_names cleanliness: per-artist wrapper vs. trackValue fallback ---
+
+
+def test_artist_names_uses_inner_per_artist_notranslate_wrapper():
+    """When the per-artist notranslate span exists, display is just the name,
+    not the surrounding track text (ft./remix notes/vs. compounds)."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="AFROJACK ft. Eva Simons - Take Over Control">
+<span class="trackValue notranslate blueTxt">
+  <span class="notranslate blueTxt">AFROJACK<span class="tgHid spL"><a href="/artist/kdl3un/afrojack/index.html"></a></span></span>
+  ft.
+  <span class="notranslate blueTxt">Eva Simons<span class="tgHid spL"><a href="/artist/eva/eva-simons/index.html"></a></span></span>
+  - Take Over Control
+</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].artist_slugs == ["afrojack", "eva-simons"]
+    assert tracks[0].artist_names == ["AFROJACK", "Eva Simons"]
+
+
+def test_artist_names_fall_back_to_slug_when_wrapper_missing():
+    """On tracks where 1001TL omits the per-artist wrapper (seen on some b2b/
+    mashup rows), the outer trackValue span pollutes the name with ft./remix
+    notes. Fall back to the slug rather than writing garbage to disk."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="Hannah Laing &amp; Marlon Hoffstadt ft. Caroline Roxy - Stomp Your Feet">
+<span class="trackValue notranslate blueTxt">
+  <a href="/artist/h1/hannah-laing/index.html">Hannah Laing</a>
+  &amp;
+  <a href="/artist/m1/marlon-hoffstadt/index.html">Marlon Hoffstadt</a>
+  ft.
+  <a href="/artist/c1/caroline-roxy/index.html">Caroline Roxy</a>
+  - Stomp Your Feet
+</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].artist_slugs == ["hannah-laing", "marlon-hoffstadt", "caroline-roxy"]
+    # No "ft. " prefix, no remix-note pollution: the slug-derived fallback wins.
+    assert tracks[0].artist_names == ["Hannah Laing", "Marlon Hoffstadt", "Caroline Roxy"]
+
+
+def test_artist_names_fall_back_to_slug_preserves_alignment_with_slugs():
+    """Mixed case: some artists have the per-artist wrapper, others do not.
+    Alignment with artist_slugs must hold in both branches."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="Armin van Buuren &amp; Hannah Laing &amp; Wippenberg - U Got 2 Know">
+<span class="trackValue notranslate blueTxt">
+  <span class="notranslate blueTxt">Armin van Buuren<span class="tgHid spL"><a href="/artist/avb/armin-van-buuren/index.html"></a></span></span>
+  &amp;
+  <a href="/artist/h1/hannah-laing/index.html">Hannah Laing</a>
+  &amp;
+  <a href="/artist/w1/wippenberg/index.html">Wippenberg</a>
+  - U Got 2 Know
+</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].artist_slugs == ["armin-van-buuren", "hannah-laing", "wippenberg"]
+    assert len(tracks[0].artist_names) == len(tracks[0].artist_slugs)
+    assert tracks[0].artist_names[0] == "Armin van Buuren"
+    assert tracks[0].artist_names[1] == "Hannah Laing"  # slug-derived
+    assert tracks[0].artist_names[2] == "Wippenberg"    # slug-derived
+
+
+def test_artist_names_remix_credit_uses_preceding_blueTxt_sibling():
+    """When the anchor sits inside <span class='tgHid spR'>, the remix-credit
+    artist name is in the preceding sibling <span class='blueTxt'>. Reading it
+    preserves casing and punctuation (LAWTON, Kø:lab) exactly, avoiding the
+    lossy slug-fallback that would turn "Kø:lab" into "Kolab"."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="Madonna - Frozen ( LAWTON Lick )">
+<span class="trackValue notranslate">
+  <span class="notranslate blueTxt">Madonna<span class="tgHid spL"><a href="/artist/u/madonna/index.html"></a></span></span>
+  <span class="notranslate"> - </span>
+  <span class="blueTxt">Frozen</span>
+  <span class="notranslate"> (<span class="blueTxt">LAWTON</span><span class="tgHid spR"><a href="/artist/l/lawton/index.html"></a></span><span class="remixValue"> Lick</span>)</span>
+</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].artist_slugs == ["madonna", "lawton"]
+    # Proper all-caps preserved (not slug-fallback title-case "Lawton"):
+    assert tracks[0].artist_names == ["Madonna", "LAWTON"]
+
+
+def test_artist_names_remix_credit_preserves_diacritics_and_punctuation():
+    """Real-world regression: Kø:lab remix credit must not degrade to "Kolab"."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="Artist - Track ( Kø:lab Rave Edit )">
+<span class="trackValue notranslate">
+  <span class="notranslate blueTxt">Artist<span class="tgHid spL"><a href="/artist/a/artist/index.html"></a></span></span>
+  <span class="notranslate"> - </span>
+  <span class="blueTxt">Track</span>
+  <span class="notranslate"> (<span class="blueTxt">Kø:lab</span><span class="tgHid spR"><a href="/artist/k/kolab/index.html"></a></span><span class="remixValue"> Rave Edit</span>)</span>
+</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].artist_slugs == ["artist", "kolab"]
+    assert tracks[0].artist_names == ["Artist", "Kø:lab"]
+
+
+def test_artist_names_real_fixture_still_clean():
+    """Sanity: the existing afrojack fixture continues to yield clean names."""
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    # None of the extracted display names should contain ft./feat. or
+    # enclosing parentheses, which would indicate trackValue pollution.
+    polluted = [
+        n for t in tracks for n in t.artist_names
+        if n.lower().startswith(("ft.", "feat."))
+        or (n.startswith("(") and n.endswith(")"))
+    ]
+    assert not polluted, f"trackValue pollution leaked: {polluted}"

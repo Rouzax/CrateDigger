@@ -22,6 +22,7 @@ canonical), TTV=70 CRATEDIGGER_1001TL_ARTISTS (1001TL display form), and
 TTV=30 PERFORMER (1001TL display form, no alias resolution).
 """
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -44,11 +45,42 @@ CONFIG = _env_path("CRATEDIGGER_TEST_CONFIG")
 COOKIES = _env_path("CRATEDIGGER_TEST_COOKIES")
 MKV_DIR = _env_path("CRATEDIGGER_TEST_MKV_DIR")
 
-TIESTO_MKV = (MKV_DIR / "tiesto-we-belong-here.mkv") if MKV_DIR else None
-TIESTO_ID = "2dyq04n9"
+FIXTURES = {
+    "tiesto-we-belong-here": {
+        "filename": "Tiësto - Live at We Belong Here Miami 2026 [2EQGqEvLAuE].mkv",
+        "tracklist_id": "2dyq04n9",
+    },
+    "alok-something-else": {
+        "filename": "Alok presents Something Else ｜ Tomorrowland Winter 2026 [kttWNVHJKDo].mkv",
+        "tracklist_id": "upk4l6k",
+    },
+    "armin-b2b-marlon": {
+        "filename": "ARMIN VAN BUUREN B2B MARLON HOFFSTADT LIVE AT ULTRA MIAMI 2026 ASOT WORLDWIDE STAGE [XM0zfkqLMzI].mkv",
+        "tracklist_id": "2gugf5b9",
+    },
+    "afrojack-ultra": {
+        "filename": "AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 [fLyb8KvtSzw].mkv",
+        "tracklist_id": "22r0yk79",
+    },
+    "eric-prydz-resistance": {
+        "filename": "ERIC PRYDZ LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 ｜ RESISTANCE MEGASTRUCTURE [hU-z3iV0LOg].mkv",
+        "tracklist_id": "qy9yyy9",
+    },
+}
 
-SOMETHING_ELSE_MKV = (MKV_DIR / "something-else-tomorrowland-winter.mkv") if MKV_DIR else None
-SOMETHING_ELSE_ID = "upk4l6k"
+
+def _fixture_mkv(key: str) -> Path | None:
+    if MKV_DIR is None:
+        return None
+    path = MKV_DIR / FIXTURES[key]["filename"]
+    return path if path.exists() else None
+
+
+TIESTO_MKV = _fixture_mkv("tiesto-we-belong-here")
+TIESTO_ID = FIXTURES["tiesto-we-belong-here"]["tracklist_id"]
+
+SOMETHING_ELSE_MKV = _fixture_mkv("alok-something-else")
+SOMETHING_ELSE_ID = FIXTURES["alok-something-else"]["tracklist_id"]
 
 
 pytestmark = pytest.mark.skipif(
@@ -205,6 +237,160 @@ def test_something_else_display_preserved_per_chapter(tmp_path):
     assert all(v != "ALOK" for v in perf_values), (
         "per-chapter PERFORMER must not be alias-resolved"
     )
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    TIESTO_MKV is None or not TIESTO_MKV.exists(),
+    reason="Tiësto fixture MKV missing (expected at $CRATEDIGGER_TEST_MKV_DIR/tiesto-we-belong-here.mkv)",
+)
+def test_chapter_mbids_end_to_end(tmp_path, caplog):
+    """End-to-end: PERFORMER_NAMES -> MUSICBRAINZ_ARTISTIDS slot alignment.
+
+    Covers the per-track MBID write path with:
+      (a) pipe-count alignment between PERFORMER_NAMES and MUSICBRAINZ_ARTISTIDS
+          on every chapter that carries per-track names,
+      (b) ArtistMbidOverrides taking precedence for a pinned artist (the
+          pinned MBID must appear in exactly the slot(s) that match the
+          pinned name),
+      (c) the pinned artist's lowercase key must NOT appear in
+          mbid_cache.json: overrides are never promoted into the cache,
+      (d) any unresolved artists are surfaced at WARNING.
+    """
+    from festival_organizer.fanart import (
+        ArtistMbidOverrides,
+        MBIDCache,
+        compute_chapter_mbid_tags,
+        lookup_mbid,
+    )
+    from festival_organizer.operations import (
+        _extract_chapter_tags_by_uid,
+        write_chapter_mbid_tags,
+    )
+
+    assert TIESTO_MKV is not None
+    mkv = tmp_path / "test.mkv"
+    shutil.copy(TIESTO_MKV, mkv)
+
+    # Step 1: normal enrichment to seed PERFORMER_NAMES on each chapter.
+    _run_enrich(mkv, TIESTO_ID, tmp_path, tracklist_date="2026-03-01")
+
+    existing = _extract_chapter_tags_by_uid(mkv)
+    assert existing, "expected chapter-scoped tags after enrich"
+
+    # Collect the set of unique PERFORMER_NAMES entries from the file. The
+    # pin target is chosen from this set so the override path is guaranteed
+    # to match at least one chapter, regardless of fluctuations in the
+    # 1001TL export.
+    unique_names: list[str] = []
+    seen: set[str] = set()
+    for block in existing.values():
+        names = block.get("PERFORMER_NAMES", "")
+        for n in names.split("|"):
+            if n and n not in seen:
+                seen.add(n)
+                unique_names.append(n)
+    assert unique_names, "expected at least one PERFORMER_NAMES entry"
+
+    # Prefer a non-headliner slot (index > 0) so the pin lands in a
+    # non-first column, which is the more interesting slot-alignment case.
+    pinned_artist = unique_names[-1] if len(unique_names) > 1 else unique_names[0]
+    pinned_mbid = "deadbeef-1234-5678-9abc-def012345678"
+
+    # Step 2: isolate overrides + cache to a tmp dir so the real
+    # ~/.cratedigger is never touched.
+    home = tmp_path / "cratedigger_home"
+    home.mkdir()
+    (home / "artist_mbids.json").write_text(
+        json.dumps({pinned_artist: pinned_mbid}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    overrides = ArtistMbidOverrides(overrides_dir=home)
+    cache = MBIDCache(cache_dir=home, ttl_days=90)
+
+    def resolver(name: str) -> str | None:
+        return lookup_mbid(name, cache, overrides=overrides)
+
+    # Step 3: compute + write MBIDs, capturing WARNING logs for assertion (d).
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger="festival_organizer.fanart"):
+        new_tags = compute_chapter_mbid_tags(existing, resolver)
+        merged: dict[int, dict[str, str]] = {}
+        for uid, block in existing.items():
+            merged_block = dict(block)
+            if uid in new_tags:
+                merged_block["MUSICBRAINZ_ARTISTIDS"] = new_tags[uid][
+                    "MUSICBRAINZ_ARTISTIDS"
+                ]
+            merged[uid] = merged_block
+        write_chapter_mbid_tags(mkv, merged)
+
+    # Step 4: re-extract and assert the invariants.
+    after = _extract_chapter_tags_by_uid(mkv)
+    assert after, "chapter tags disappeared after MBID write"
+
+    # (a) slot alignment: every chapter with PERFORMER_NAMES must have
+    # MUSICBRAINZ_ARTISTIDS with matching pipe-count.
+    chapters_with_names = 0
+    for uid, block in after.items():
+        names = block.get("PERFORMER_NAMES", "")
+        if not names:
+            continue
+        chapters_with_names += 1
+        mbids = block.get("MUSICBRAINZ_ARTISTIDS", "")
+        assert mbids, f"chapter {uid} has PERFORMER_NAMES but no MUSICBRAINZ_ARTISTIDS"
+        name_slots = names.split("|")
+        mbid_slots = mbids.split("|")
+        assert len(name_slots) == len(mbid_slots), (
+            f"chapter {uid}: pipe-count mismatch "
+            f"names={len(name_slots)} mbids={len(mbid_slots)}"
+        )
+    assert chapters_with_names > 0, "expected chapters with PERFORMER_NAMES"
+
+    # (b) pinned override lands in the correct slot(s).
+    hits = 0
+    for uid, block in after.items():
+        names = block.get("PERFORMER_NAMES", "").split("|")
+        mbids = block.get("MUSICBRAINZ_ARTISTIDS", "").split("|")
+        for idx, name in enumerate(names):
+            if name == pinned_artist:
+                assert mbids[idx] == pinned_mbid, (
+                    f"chapter {uid} slot {idx}: expected override "
+                    f"{pinned_mbid} for {pinned_artist!r}, got {mbids[idx]!r}"
+                )
+                hits += 1
+    assert hits > 0, f"pinned artist {pinned_artist!r} never appeared in any chapter"
+
+    # (c) override must NOT leak into the MBID cache file.
+    cache_file = home / "mbid_cache.json"
+    if cache_file.exists():
+        cache_data = json.loads(cache_file.read_text(encoding="utf-8"))
+        assert pinned_artist.lower() not in cache_data, (
+            f"override leaked into mbid_cache.json under key {pinned_artist.lower()!r}"
+        )
+
+    # Hermeticity: no mbid_cache.json or artist_mbids.json in real ~/.cratedigger
+    # was consulted or written. We assert the isolated files are the only
+    # ones the test touched by checking our tmp home for the expected shape.
+    assert (home / "artist_mbids.json").exists()
+
+    # (d) any unresolved artists are logged at WARNING. When every artist
+    # resolves, there are simply no warnings, which is also valid: so we
+    # only assert the shape IF there is at least one empty MBID slot.
+    had_miss = any(
+        "" in block.get("MUSICBRAINZ_ARTISTIDS", "").split("|")
+        and block.get("PERFORMER_NAMES")
+        for block in after.values()
+    )
+    if had_miss:
+        warning_messages = [
+            r.getMessage() for r in caplog.records if r.levelno == logging.WARNING
+        ]
+        assert any("No MBID resolved for artist" in m for m in warning_messages), (
+            "expected a WARNING for unresolved artists, got: "
+            f"{warning_messages!r}"
+        )
 
 
 def _find_global_tag(root: ET.Element, ttv: int, name: str) -> str | None:

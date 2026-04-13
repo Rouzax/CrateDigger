@@ -65,11 +65,26 @@ Once a tracklist is selected, CrateDigger:
 
 If a file already has a stored tracklist URL from a previous run, CrateDigger reuses it by default. In auto mode, it fetches and verifies the stored URL directly. In interactive mode, it prompts you to use the stored URL, skip, or research.
 
-Use `--regenerate` to ignore stored URLs and search again. This flag also forces a full re-tag of the MKV even when the chapter structure is already current, which is useful for picking up new tag types (e.g. per-chapter PERFORMER / GENRE) or updated canonical names on files enriched by earlier CrateDigger versions.
+Use `--regenerate` to ignore stored URLs and search again. This flag also forces a full re-tag of the MKV even when the chapter structure is already current, which is useful for picking up new tag types (e.g. per-chapter PERFORMER / PERFORMER_NAMES / GENRE) or updated canonical names on files enriched by earlier CrateDigger versions.
+
+### Per-chapter tags
+
+`identify` writes these per-chapter tags at Matroska `TargetTypeValue=30`, one set per chapter:
+
+| Tag | Example | Description |
+|-----|---------|-------------|
+| `PERFORMER` | `Afrojack` | Primary artist, alias-resolved |
+| `PERFORMER_SLUGS` | `afrojack\|oliver-heldens` | Pipe-separated 1001TL slugs for every linked artist |
+| `PERFORMER_NAMES` | `Afrojack\|Oliver Heldens` | Pipe-separated display names, aligned slot-for-slot with `PERFORMER_SLUGS` |
+| `TITLE` | `Take Over Control` | Clean track title |
+| `LABEL` | `WALL` | Record label |
+| `GENRE` | `Electro House\|Big Room` | Pipe-separated per-track genres |
+
+`PERFORMER_NAMES` is read by `enrich` to resolve per-artist MusicBrainz IDs. See [Enrich](enrich.md) for the `MUSICBRAINZ_ARTISTIDS` tag it writes alongside.
 
 ### Self-healing legacy files
 
-When `identify` runs against a file whose chapter structure is already current, it normally reports `Up to date` and skips the write step. CrateDigger now also checks whether the file has the per-chapter tags (`PERFORMER`, `PERFORMER_SLUGS`, `GENRE` at `TargetTypeValue=30`) that were introduced in version 0.9.9. If those tags are missing, the full tagging flow runs automatically on the next `identify` pass, no flag required. Subsequent runs are byte-idempotent because chapter UIDs are deterministic.
+When `identify` runs against a file whose chapter structure is already current, it normally reports `Up to date` and skips the write step. CrateDigger also checks whether the file has the per-chapter tags (`PERFORMER`, `PERFORMER_SLUGS`, `PERFORMER_NAMES`, `GENRE` at `TargetTypeValue=30`). If any are missing, the full tagging flow runs automatically on the next `identify` pass, no flag required. Subsequent runs are byte-idempotent because chapter UIDs are deterministic.
 
 ## Examples
 

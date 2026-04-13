@@ -267,6 +267,30 @@ Values are *base* TTLs: each cache entry's actual lifetime jitters by ±20% arou
 | `source_days` | Source/venue name cache (default: 365) |
 | `images_days` | Downloaded images cache (default: 90) |
 
+## Artist MBID override file
+
+`~/.cratedigger/artist_mbids.json` is a user-curated flat JSON map from artist display name to MusicBrainz artist ID. It is consulted first by the `enrich --only chapter_mbids` operation, ahead of the auto cache and any live MusicBrainz lookup.
+
+```json
+{
+    "Afrojack": "3abb6f9f-5b6a-4f1f-8a2d-1111111111aa",
+    "Oliver Heldens": "6e7dde91-4c02-47ea-a2b4-2222222222bb"
+}
+```
+
+| Property | Value |
+|----------|-------|
+| Path | `~/.cratedigger/artist_mbids.json` |
+| Format | Flat JSON object, `{"Artist Name": "mbid-uuid"}` |
+| Matching | Case-insensitive on the artist name |
+| Precedence | Checked before `mbid_cache.json` and before any live MusicBrainz search |
+| Expiry | Never expires |
+| Written by code | No; CrateDigger never writes to this file |
+
+**Distinction from `mbid_cache.json`**: `mbid_cache.json` is disposable, TTL-bound (see `cache_ttl.mbid_days`), and populated automatically by CrateDigger from MusicBrainz search results. It can be deleted at any time and will refill. `artist_mbids.json` is your curated override list, and is the correct place to record MBIDs for artists that MusicBrainz searches misidentify or fail to find.
+
+See [Enrich / Chapter MBIDs](commands/enrich.md#chapter-mbids-chapter_mbids) for the full fix loop.
+
 ## Environment variables
 
 | Variable | Overrides |

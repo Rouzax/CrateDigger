@@ -75,11 +75,15 @@ In addition to chapters, CrateDigger embeds several MKV tags:
 | Artists | Global | DJ names associated with the tracklist (display form, pipe-separated) |
 | PERFORMER | Per chapter | Primary artist of this track, display name taken directly from the 1001TL track row HTML and then passed through `artists.json` alias resolution (e.g. `SOMETHING ELSE` → `ALOK`). Preserves original casing (`deadmau5`, `CIElll`, `S3PPA`). |
 | PERFORMER_SLUGS | Per chapter | Pipe-separated 1001TL slugs for every artist linked on the track row |
+| PERFORMER_NAMES | Per chapter | Pipe-separated display names for every artist, aligned slot-for-slot with `PERFORMER_SLUGS` (written by identify) |
+| MUSICBRAINZ_ARTISTIDS | Per chapter | Pipe-separated MusicBrainz artist IDs, aligned slot-for-slot with `PERFORMER_NAMES`; empty slot `""` for unresolved names (written by enrich `chapter_mbids`) |
 | TITLE | Per chapter | Clean track title with artist prefix stripped (e.g. `Take Over Control` from the row `AFROJACK ft. Eva Simons - Take Over Control`) |
 | LABEL | Per chapter | Record label as plain text (e.g. `WALL`, `MAU5TRAP`) |
 | GENRE | Per chapter | Pipe-separated per-track genres |
 
 Per-chapter tags use Matroska `TargetTypeValue=30` targeting each chapter's `ChapterUID`. They surface directly in `ffprobe -show_chapters` output (under `chapters[].tags`), which makes them readable by downstream tools like TrackSplit without any format bridge.
+
+**Alignment invariant**: when `MUSICBRAINZ_ARTISTIDS` is present on a chapter, its pipe count matches the other two artist-aligned tags: `len(PERFORMER_SLUGS.split("|")) == len(PERFORMER_NAMES.split("|")) == len(MUSICBRAINZ_ARTISTIDS.split("|"))`. Downstream tools can zip the three lists by index to produce multi-valued FLAC artist tags. See [Enrich / Chapter MBIDs](commands/enrich.md#chapter-mbids-chapter_mbids) and [artist_mbids.json](configuration.md#artist-mbid-override-file).
 
 These tags are used by later pipeline stages (enrich) for artwork lookups, poster generation, and NFO metadata; per-chapter tags feed per-track FLAC metadata when extracting individual tracks from a set.
 

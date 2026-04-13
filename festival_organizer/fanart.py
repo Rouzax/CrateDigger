@@ -25,6 +25,7 @@ import logging
 import re
 import time
 from pathlib import Path
+from typing import Callable
 
 import requests
 
@@ -117,6 +118,48 @@ class MBIDCache:
         self._save()
 
 
+class ArtistMbidOverrides:
+    """User-curated artist-name-to-MBID pins, read-only and never expiring.
+
+    Keys are artist display names, matched case-insensitively. This file is
+    owned by the user: the code never writes to it and never promotes
+    entries into MBIDCache, keeping curated pins separate from disposable
+    cache data.
+    """
+
+    _FILENAME = "artist_mbids.json"
+
+    def __init__(self, overrides_dir: Path | None = None):
+        self._path = (overrides_dir or (Path.home() / ".cratedigger")) / self._FILENAME
+        self._data: dict[str, str] = {}
+        self._load()
+
+    def _load(self) -> None:
+        if not self._path.exists():
+            return
+        try:
+            raw = json.loads(self._path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning("Could not load artist_mbids.json: %s", e)
+            return
+        if not isinstance(raw, dict):
+            logger.warning("artist_mbids.json must be a JSON object; ignoring")
+            return
+        self._data = {
+            k.lower(): v
+            for k, v in raw.items()
+            if isinstance(v, str) and v
+        }
+
+    def get(self, artist_name: str) -> str | None:
+        """Return the pinned MBID for an artist, or None when not pinned."""
+        return self._data.get(artist_name.lower())
+
+    def has(self, artist_name: str) -> bool:
+        """True when the artist has a pinned MBID override."""
+        return artist_name.lower() in self._data
+
+
 # --- MusicBrainz Client ---
 
 _last_mb_request: float = 0.0
@@ -131,8 +174,24 @@ def _mb_rate_limit() -> None:
     _last_mb_request = time.monotonic()
 
 
-def lookup_mbid(artist_name: str, cache: MBIDCache) -> str | None:
-    """Look up MusicBrainz ID for an artist name. Uses cache, respects rate limit."""
+def lookup_mbid(
+    artist_name: str,
+    cache: MBIDCache,
+    overrides: "ArtistMbidOverrides | None" = None,
+) -> str | None:
+    """Look up MusicBrainz ID for an artist name.
+
+    Precedence: user override (never expires, never written to) > local
+    cache (TTL-bound) > MusicBrainz search. Overrides are returned as-is
+    and are NOT promoted into the cache: that keeps the curated file the
+    single source of truth and prevents a TTL refresh from stomping a pin.
+    """
+    if overrides is not None:
+        pinned = overrides.get(artist_name)
+        if pinned:
+            logger.debug("MBID override hit: %s -> %s", artist_name, pinned)
+            return pinned
+
     if cache.has(artist_name):
         mbid = cache.get(artist_name)
         if mbid:
@@ -162,9 +221,18 @@ def _mb_search(artist_name: str) -> str | None:
     _mb_rate_limit()
 
     url = f"{MB_BASE_URL}/artist/"
-    query = f'artist:"{artist_name}" AND (type:person OR type:group)'
+    # Query without a type filter, then post-filter in code. An AND type:...
+    # clause would drop MB entries whose type field is null, which is common
+    # for mid-profile DJs whose MB entry has never been type-tagged (e.g.
+    # Hannah Laing, score 100 exact match, but type:null -> excluded).
+    query = f'artist:"{artist_name}"'
     params = {"query": query, "fmt": "json", "limit": "25"}
     headers = {"User-Agent": USER_AGENT}
+
+    # Reject explicit non-artist types so results don't include record labels,
+    # orchestras, characters, etc. Missing type ("" or None) is allowed because
+    # real artists often have no type set on MB.
+    non_artist_types = {"Orchestra", "Choir", "Character", "Other"}
 
     for attempt in range(3):
         try:
@@ -180,8 +248,12 @@ def _mb_search(artist_name: str) -> str | None:
             if not artists:
                 return None
 
-            # Filter to candidates with sufficient score
-            candidates = [a for a in artists if a.get("score", 0) >= 80]
+            # Filter: drop non-artist types; require score >= 80.
+            candidates = [
+                a for a in artists
+                if a.get("score", 0) >= 80
+                and (a.get("type") or "") not in non_artist_types
+            ]
             if not candidates:
                 logger.debug("Best match score %d < 80 for '%s'",
                              artists[0].get("score", 0), artist_name)
@@ -439,3 +511,51 @@ def download_artist_images(
                     bg_ok = _download_image(bg_url, fanart_path)
 
     return (logo_ok, bg_ok)
+
+
+def compute_chapter_mbid_tags(
+    chapter_tags: dict[int, dict[str, str]],
+    resolver: Callable[[str], str | None],
+) -> dict[int, dict[str, str]]:
+    """Build a per-chapter MUSICBRAINZ_ARTISTIDS map from PERFORMER_NAMES.
+
+    Resolves each unique display name via `resolver` (typically a closure
+    over lookup_mbid + shared cache + overrides). Missing MBIDs produce
+    empty slots so the pipe-split count stays aligned with PERFORMER_NAMES
+    and PERFORMER_SLUGS, preserving the positional zip invariant downstream
+    consumers rely on.
+
+    Chapters without PERFORMER_NAMES are skipped (legacy files must be
+    re-identified first, not half-enriched).
+
+    The resolver is invoked at most once per unique name across all
+    chapters. Unresolved names are logged once at WARNING, not once per
+    occurrence, to keep the miss log readable.
+    """
+    resolved: dict[str, str | None] = {}
+    for entry in chapter_tags.values():
+        names_str = entry.get("PERFORMER_NAMES")
+        if not names_str:
+            continue
+        for name in names_str.split("|"):
+            if name and name not in resolved:
+                resolved[name] = resolver(name)
+
+    for name, mbid in resolved.items():
+        if mbid is None:
+            logger.warning(
+                "No MBID resolved for artist: %r (add to ~/.cratedigger/artist_mbids.json)",
+                name,
+            )
+
+    result: dict[int, dict[str, str]] = {}
+    for uid, entry in chapter_tags.items():
+        names_str = entry.get("PERFORMER_NAMES")
+        if not names_str:
+            continue
+        mbids = [
+            "" if (m := resolved.get(name)) is None else m
+            for name in names_str.split("|")
+        ]
+        result[uid] = {"MUSICBRAINZ_ARTISTIDS": "|".join(mbids)}
+    return result

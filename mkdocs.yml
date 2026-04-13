@@ -3,6 +3,13 @@ site_url: https://rouzax.github.io/CrateDigger/docs/
 repo_url: https://github.com/Rouzax/CrateDigger
 repo_name: Rouzax/CrateDigger
 
+# Write build output under build/ (already in .gitignore) instead of the
+# default ./site, which holds the hand-authored landing page committed to
+# the repo. The CI workflow (.github/workflows/deploy-docs.yml) already
+# builds into build/docs; aligning the default keeps bare `mkdocs build`
+# from overwriting site/index.html, site/style.css, and site/assets/.
+site_dir: build/docs
+
 theme:
   name: material
   palette:
