@@ -155,16 +155,33 @@ def _parse_tracks(html: str) -> list["Track"]:
             slug = m.group(1)
             if slug in slugs:
                 continue
+            # Walk up to the nearest per-artist notranslate wrapper. Skip the
+            # outer trackValue span because it also has class notranslate but
+            # wraps the WHOLE track line ("Artist ft. X - Title (Y Mashup)"),
+            # which would leak garbage into the tag. Also reject per-artist
+            # spans whose text is a mashup/edit credit rather than a clean
+            # name (1001TL wraps anchors like Afrojack in "( AFROJACK Mashup )"
+            # spans on remix rows). In either failure mode, derive the display
+            # from the slug so PERFORMER_NAMES stays safe to write to disk.
             display = ""
             parent = a
-            for _ in range(4):  # walk up at most 4 levels
+            for _ in range(4):
                 parent = parent.parent if parent else None
                 if parent is None:
                     break
                 parent_classes = parent.get("class", []) if hasattr(parent, "get") else []
-                if "notranslate" in parent_classes:
-                    display = parent.get_text(" ", strip=True)
+                if "notranslate" in parent_classes and "trackValue" not in parent_classes:
+                    candidate = parent.get_text(" ", strip=True)
+                    # Reject parenthetical credits: "( AFROJACK Mashup )",
+                    # "( Marlon Hoffstadt Rave Revival Edit )", etc.
+                    if not (candidate.startswith("(") and candidate.endswith(")")):
+                        display = candidate
                     break
+            # Strip ft./feat. prefixes that occasionally leak through when the
+            # per-artist wrapper itself carries the feature prefix inline.
+            display = re.sub(r"^(ft\.?\s+|feat\.?\s+)", "", display, flags=re.IGNORECASE)
+            if not display:
+                display = slug.replace("-", " ").title()
             slugs.append(slug)
             names.append(fix_mojibake(display))
         # Title: split raw_text on the last " - " to drop the artist prefix.
