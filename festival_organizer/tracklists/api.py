@@ -815,9 +815,6 @@ def _maximize_artwork_url(url: str) -> str:
     # Squarespace: strip ?format=NNNw to get original
     if "squarespace-cdn.com" in url:
         return re.sub(r"\?format=\d+w$", "", url)
-    # YouTube/Google profile pics: s500 -> s800
-    if "yt3.ggpht.com" in url:
-        return re.sub(r"=s\d+", "=s800", url)
     return url
 
 

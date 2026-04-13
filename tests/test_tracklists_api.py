@@ -384,10 +384,12 @@ def test_maximize_artwork_url_squarespace_strips_format():
     assert _maximize_artwork_url(url) == "https://images.squarespace-cdn.com/content/v1/abc/image.jpg"
 
 
-def test_maximize_artwork_url_youtube_s500_to_s800():
-    """YouTube profile pic s500 is upgraded to s800."""
+def test_maximize_artwork_url_youtube_passthrough():
+    """YouTube profile pic URLs pass through unchanged. The CDN does not
+    reliably serve arbitrary size suffixes, so we keep the size 1001TL
+    embeds (which YouTube has guaranteed is available)."""
     url = "https://yt3.ggpht.com/GE5UaHPciygWU-7lj-8gfnkLJFOqQGMN0x3_eD7tlWfeLJQVMZGwIKdmxtMy0kAHb3A4xrPZEA=s500-c-k-c0x00ffffff-no-rj"
-    assert _maximize_artwork_url(url) == "https://yt3.ggpht.com/GE5UaHPciygWU-7lj-8gfnkLJFOqQGMN0x3_eD7tlWfeLJQVMZGwIKdmxtMy0kAHb3A4xrPZEA=s800-c-k-c0x00ffffff-no-rj"
+    assert _maximize_artwork_url(url) == url
 
 
 def test_maximize_artwork_url_unknown_cdn_passthrough():
