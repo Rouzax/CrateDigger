@@ -44,6 +44,7 @@ def _env_path(name: str) -> Path | None:
 CONFIG = _env_path("CRATEDIGGER_TEST_CONFIG")
 COOKIES = _env_path("CRATEDIGGER_TEST_COOKIES")
 MKV_DIR = _env_path("CRATEDIGGER_TEST_MKV_DIR")
+FULL_PIPELINE = os.environ.get("CRATEDIGGER_TEST_FULL_PIPELINE") == "1"
 
 # `expect` schema (consumed by _assert_embedding_expect / _assert_pipeline_expect):
 #   embedding.ttv70_artists: str                 # exact match on TTV=70 CRATEDIGGER_1001TL_ARTISTS
@@ -209,6 +210,52 @@ def test_embedding(fixture_key: str, tmp_path):
     _assert_embedding_expect(
         tags_root, fixture.get("expect", {}).get("embedding", {}), tmp_path
     )
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    not FULL_PIPELINE,
+    reason="Set CRATEDIGGER_TEST_FULL_PIPELINE=1 to run the CLI pipeline test",
+)
+@pytest.mark.parametrize(
+    "fixture_key",
+    list(FIXTURES.keys()),
+    ids=list(FIXTURES.keys()),
+)
+def test_full_pipeline(fixture_key: str, tmp_path):
+    """Run identify -> organize -> enrich via CLI subprocess, assert library tree."""
+    fixture = FIXTURES[fixture_key]
+    assert MKV_DIR is not None and CONFIG is not None
+    src = MKV_DIR / fixture["filename"]
+    if not src.exists():
+        pytest.skip(f"fixture MKV missing: {fixture['filename']}")
+
+    inbox = tmp_path / "inbox"
+    library = tmp_path / "library"
+    inbox.mkdir()
+    library.mkdir()
+    shutil.copy(src, inbox / fixture["filename"])
+
+    cfg_arg = ["--config", str(CONFIG)]
+
+    subprocess.run(
+        ["cratedigger", "identify", *cfg_arg,
+         "--tracklist", fixture["tracklist_id"], "--auto",
+         str(inbox / fixture["filename"])],
+        check=True, timeout=600,
+    )
+    subprocess.run(
+        ["cratedigger", "organize", *cfg_arg,
+         "--output", str(library), "--move", "--yes",
+         str(inbox)],
+        check=True, timeout=300,
+    )
+    subprocess.run(
+        ["cratedigger", "enrich", *cfg_arg, str(library)],
+        check=True, timeout=900,
+    )
+
+    _assert_pipeline_expect(library, fixture.get("expect", {}).get("pipeline", {}))
 
 
 @pytest.mark.integration
