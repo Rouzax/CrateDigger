@@ -49,22 +49,60 @@ FIXTURES = {
     "tiesto-we-belong-here": {
         "filename": "Tiësto - Live at We Belong Here Miami 2026 [2EQGqEvLAuE].mkv",
         "tracklist_id": "2dyq04n9",
+        "tracklist_date": "2026-03-01",
+        "scenarios": ["solo", "baseline"],
+        "expect": {
+            "embedding": {
+                "ttv70_artists": "Tiësto",
+                "min_chapters": 20,
+                "min_performer_chapters": 20,
+                "dj_cache_min_entries": 1,
+            },
+            "pipeline": {
+                "library_path_glob": "**/Tiësto/*We Belong Here*2026*.mkv",
+                "nfo_must_exist": True,
+                "poster_must_exist": True,
+                "fanart_must_exist": True,
+            },
+        },
     },
     "alok-something-else": {
         "filename": "Alok presents Something Else ｜ Tomorrowland Winter 2026 [kttWNVHJKDo].mkv",
         "tracklist_id": "upk4l6k",
+        "scenarios": ["alias"],
+        "expect": {
+            "embedding": {
+                "ttv70_artists": "SOMETHING ELSE",
+                "performer_must_not_contain": ["ALOK"],
+                "min_performer_chapters": 1,
+            },
+            "pipeline": {
+                "library_path_glob": "**/ALOK/*Tomorrowland Winter*2026*.mkv",
+            },
+        },
     },
     "armin-b2b-marlon": {
         "filename": "ARMIN VAN BUUREN B2B MARLON HOFFSTADT LIVE AT ULTRA MIAMI 2026 ASOT WORLDWIDE STAGE [XM0zfkqLMzI].mkv",
         "tracklist_id": "2gugf5b9",
+        "scenarios": ["b2b"],
+        "expect": {
+            "embedding": {
+                "ttv70_artists_contains": ["Armin", "Marlon"],
+                "min_chapters": 15,
+            },
+        },
     },
     "afrojack-ultra": {
         "filename": "AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 [fLyb8KvtSzw].mkv",
         "tracklist_id": "22r0yk79",
+        "scenarios": ["solo"],
+        "expect": {"embedding": {"ttv70_artists": "Afrojack"}},
     },
     "eric-prydz-resistance": {
         "filename": "ERIC PRYDZ LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 ｜ RESISTANCE MEGASTRUCTURE [hU-z3iV0LOg].mkv",
         "tracklist_id": "qy9yyy9",
+        "scenarios": ["solo", "single-genre"],
+        "expect": {"embedding": {"ttv70_artists": "Eric Prydz"}},
     },
 }
 
