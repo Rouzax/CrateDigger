@@ -656,6 +656,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#per-chapter-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-chapter tags
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#self-healing-legacy-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1033,6 +1044,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#per-chapter-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-chapter tags
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#self-healing-legacy-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1170,9 +1192,53 @@
 </ol>
 <h3 id="stored-url-handling">Stored URL handling</h3>
 <p>If a file already has a stored tracklist URL from a previous run, CrateDigger reuses it by default. In auto mode, it fetches and verifies the stored URL directly. In interactive mode, it prompts you to use the stored URL, skip, or research.</p>
-<p>Use <code>--regenerate</code> to ignore stored URLs and search again. This flag also forces a full re-tag of the MKV even when the chapter structure is already current, which is useful for picking up new tag types (e.g. per-chapter PERFORMER / GENRE) or updated canonical names on files enriched by earlier CrateDigger versions.</p>
+<p>Use <code>--regenerate</code> to ignore stored URLs and search again. This flag also forces a full re-tag of the MKV even when the chapter structure is already current, which is useful for picking up new tag types (e.g. per-chapter PERFORMER / PERFORMER_NAMES / GENRE) or updated canonical names on files enriched by earlier CrateDigger versions.</p>
+<h3 id="per-chapter-tags">Per-chapter tags</h3>
+<p><code>identify</code> writes these per-chapter tags at Matroska <code>TargetTypeValue=30</code>, one set per chapter:</p>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Example</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PERFORMER</code></td>
+<td><code>Afrojack</code></td>
+<td>Primary artist, alias-resolved</td>
+</tr>
+<tr>
+<td><code>PERFORMER_SLUGS</code></td>
+<td><code>afrojack\|oliver-heldens</code></td>
+<td>Pipe-separated 1001TL slugs for every linked artist</td>
+</tr>
+<tr>
+<td><code>PERFORMER_NAMES</code></td>
+<td><code>Afrojack\|Oliver Heldens</code></td>
+<td>Pipe-separated display names, aligned slot-for-slot with <code>PERFORMER_SLUGS</code></td>
+</tr>
+<tr>
+<td><code>TITLE</code></td>
+<td><code>Take Over Control</code></td>
+<td>Clean track title</td>
+</tr>
+<tr>
+<td><code>LABEL</code></td>
+<td><code>WALL</code></td>
+<td>Record label</td>
+</tr>
+<tr>
+<td><code>GENRE</code></td>
+<td><code>Electro House\|Big Room</code></td>
+<td>Pipe-separated per-track genres</td>
+</tr>
+</tbody>
+</table>
+<p><code>PERFORMER_NAMES</code> is read by <code>enrich</code> to resolve per-artist MusicBrainz IDs. See <a href="../enrich/">Enrich</a> for the <code>MUSICBRAINZ_ARTISTIDS</code> tag it writes alongside.</p>
 <h3 id="self-healing-legacy-files">Self-healing legacy files</h3>
-<p>When <code>identify</code> runs against a file whose chapter structure is already current, it normally reports <code>Up to date</code> and skips the write step. CrateDigger now also checks whether the file has the per-chapter tags (<code>PERFORMER</code>, <code>PERFORMER_SLUGS</code>, <code>GENRE</code> at <code>TargetTypeValue=30</code>) that were introduced in version 0.9.9. If those tags are missing, the full tagging flow runs automatically on the next <code>identify</code> pass, no flag required. Subsequent runs are byte-idempotent because chapter UIDs are deterministic.</p>
+<p>When <code>identify</code> runs against a file whose chapter structure is already current, it normally reports <code>Up to date</code> and skips the write step. CrateDigger also checks whether the file has the per-chapter tags (<code>PERFORMER</code>, <code>PERFORMER_SLUGS</code>, <code>PERFORMER_NAMES</code>, <code>GENRE</code> at <code>TargetTypeValue=30</code>). If any are missing, the full tagging flow runs automatically on the next <code>identify</code> pass, no flag required. Subsequent runs are byte-idempotent because chapter UIDs are deterministic.</p>
 <h2 id="examples">Examples</h2>
 <p>Identify all files in a folder interactively:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/

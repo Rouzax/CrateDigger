@@ -1325,6 +1325,16 @@
 <td>Pipe-separated 1001TL slugs for every artist linked on the track row</td>
 </tr>
 <tr>
+<td>PERFORMER_NAMES</td>
+<td>Per chapter</td>
+<td>Pipe-separated display names for every artist, aligned slot-for-slot with <code>PERFORMER_SLUGS</code> (written by identify)</td>
+</tr>
+<tr>
+<td>MUSICBRAINZ_ARTISTIDS</td>
+<td>Per chapter</td>
+<td>Pipe-separated MusicBrainz artist IDs, aligned slot-for-slot with <code>PERFORMER_NAMES</code>; empty slot <code>""</code> for unresolved names (written by enrich <code>chapter_mbids</code>)</td>
+</tr>
+<tr>
 <td>TITLE</td>
 <td>Per chapter</td>
 <td>Clean track title with artist prefix stripped (e.g. <code>Take Over Control</code> from the row <code>AFROJACK ft. Eva Simons - Take Over Control</code>)</td>
@@ -1342,6 +1352,7 @@
 </tbody>
 </table>
 <p>Per-chapter tags use Matroska <code>TargetTypeValue=30</code> targeting each chapter's <code>ChapterUID</code>. They surface directly in <code>ffprobe -show_chapters</code> output (under <code>chapters[].tags</code>), which makes them readable by downstream tools like TrackSplit without any format bridge.</p>
+<p><strong>Alignment invariant</strong>: when <code>MUSICBRAINZ_ARTISTIDS</code> is present on a chapter, its pipe count matches the other two artist-aligned tags: <code>len(PERFORMER_SLUGS.split("|")) == len(PERFORMER_NAMES.split("|")) == len(MUSICBRAINZ_ARTISTIDS.split("|"))</code>. Downstream tools can zip the three lists by index to produce multi-valued FLAC artist tags. See <a href="../commands/enrich/#chapter-mbids-chapter_mbids">Enrich / Chapter MBIDs</a> and <a href="../configuration/#artist-mbid-override-file">artist_mbids.json</a>.</p>
 <p>These tags are used by later pipeline stages (enrich) for artwork lookups, poster generation, and NFO metadata; per-chapter tags feed per-track FLAC metadata when extracting individual tracks from a set.</p>
 <h2 id="caching-and-rate-limiting">Caching and rate limiting</h2>
 <h3 id="rate-limiting">Rate limiting</h3>

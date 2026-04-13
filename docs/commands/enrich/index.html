@@ -728,6 +728,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#chapter-mbids-chapter_mbids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chapter MBIDs (chapter_mbids)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1055,6 +1066,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#chapter-mbids-chapter_mbids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chapter MBIDs (chapter_mbids)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1174,6 +1196,10 @@
 <td><code>tags</code></td>
 <td>Write MKV tags</td>
 </tr>
+<tr>
+<td><code>chapter_mbids</code></td>
+<td>Resolve per-chapter MusicBrainz artist IDs</td>
+</tr>
 </tbody>
 </table>
 <p>Combine multiple values with commas:</p>
@@ -1199,18 +1225,41 @@
 <p>Creates Kodi-compatible NFO metadata files alongside each media file. NFO files include title, artist, year, genre, and other metadata. Genre defaults are configurable via <code>nfo_settings</code>.</p>
 <h3 id="mkv-tags-tags">MKV tags (<code>tags</code>)</h3>
 <p>Writes structured MKV tags into each file, including artist, title, date, and other metadata fields extracted during analysis and identification.</p>
+<h3 id="chapter-mbids-chapter_mbids">Chapter MBIDs (<code>chapter_mbids</code>)</h3>
+<p>Reads <code>PERFORMER_NAMES</code> on each chapter (written by <a href="../identify/">identify</a>), resolves every unique artist name to a MusicBrainz artist ID, and writes <code>MUSICBRAINZ_ARTISTIDS</code> back onto the chapter. The value is pipe-joined and aligned slot-for-slot with <code>PERFORMER_NAMES</code> and <code>PERFORMER_SLUGS</code>; unresolved names leave an empty slot (<code>""</code>) so downstream consumers can zip the three tags by index to produce multi-valued FLAC artist tags.</p>
+<p><strong>Lookup precedence</strong> for each unique artist name:</p>
+<ol>
+<li><strong>User override file</strong>: <code>~/.cratedigger/artist_mbids.json</code> (case-insensitive, never expires).</li>
+<li><strong>Auto cache</strong>: <code>~/.cratedigger/mbid_cache.json</code> (TTL-bound, populated by MusicBrainz searches).</li>
+<li><strong>MusicBrainz search</strong>: fresh HTTP lookup, result written to the auto cache.</li>
+</ol>
+<p>The override file is user-curated; CrateDigger never writes to it, and overrides are never promoted into the auto cache.</p>
+<p><strong>Override file format</strong> (<code>~/.cratedigger/artist_mbids.json</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">&quot;Oliver Heldens&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6e7dde91-4c02-47ea-a2b4-2222222222bb&quot;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>Keys match artist names case-insensitively.</p>
+<p><strong>Unresolved names</strong> log a WARNING, once per unique name per run:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>No MBID resolved for artist: &lt;name&gt; (add to ~/.cratedigger/artist_mbids.json)
+</code></pre></div>
+<p>Fix loop: run <code>enrich --only chapter_mbids</code>, read the WARNING lines, look up the correct MBIDs on <a href="https://musicbrainz.org/">musicbrainz.org</a>, add them to the override file, then rerun:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_mbids<span class="w"> </span>--regenerate
+</code></pre></div>
+<p><code>--regenerate</code> re-runs the MBID path even on chapters that already have a <code>MUSICBRAINZ_ARTISTIDS</code> tag, which is how newly added overrides reach files that were enriched earlier.</p>
 <h2 id="examples">Examples</h2>
 <p>Enrich an entire library with all operations:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
 </code></pre></div>
 <p>Only generate NFO files:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>nfo
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>nfo
 </code></pre></div>
 <p>Regenerate posters even if they already exist:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
 </code></pre></div>
 <p>Enrich and sync with Kodi:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--kodi-sync
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--kodi-sync
 </code></pre></div>
 
 
