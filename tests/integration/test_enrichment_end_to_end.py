@@ -772,8 +772,10 @@ def _find_chapter_tags(root: ET.Element) -> list[ET.Element]:
     return out
 
 
-def _parse_chapter_time(s: str) -> int:
-    """Parse 'HH:MM:SS.fffffffff' into nanoseconds."""
+def _parse_chapter_time(s: str | None) -> int | None:
+    """Parse 'HH:MM:SS.fffffffff' into nanoseconds. None-safe."""
+    if not s:
+        return None
     h, m, rest = s.split(":")
     sec, _, nanos = rest.partition(".")
     return (int(h) * 3600 + int(m) * 60 + int(sec)) * 1_000_000_000 + int((nanos or "0").ljust(9, "0")[:9])
@@ -852,6 +854,7 @@ def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
             prev_ns = None
             continue
         cur_ns = _parse_chapter_time(t_el.text)
+        assert cur_ns is not None
         if prev_ns is not None:
             assert cur_ns > prev_ns, (
                 f"ChapterTimeStart not strictly increasing: "
