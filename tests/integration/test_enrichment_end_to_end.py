@@ -225,6 +225,52 @@ def test_embedding(fixture_key: str, tmp_path):
 
 
 @pytest.mark.integration
+def test_embedding_idempotent(tmp_path):
+    """Re-enriching the same MKV twice produces identical tag contents.
+
+    Guards against: (a) tag duplication on re-embed, (b) values drifting
+    between calls (e.g. cache pollution, non-deterministic ordering that
+    affects tag selection), (c) stale data carryover.
+
+    Uses the Tiesto fixture only: idempotency is a code-path property, not
+    a per-fixture property, so a single representative fixture suffices.
+    """
+    assert MKV_DIR is not None
+    fixture = FIXTURES["tiesto-we-belong-here"]
+    src = MKV_DIR / fixture["filename"]
+    if not src.exists():
+        pytest.skip(f"fixture MKV missing: {fixture['filename']}")
+
+    mkv = tmp_path / "test.mkv"
+    shutil.copy(src, mkv)
+
+    run1 = tmp_path / "run1"
+    run1.mkdir()
+    tags1, _ = _run_enrich(
+        mkv, fixture["tracklist_id"], run1,
+        tracklist_date=fixture.get("tracklist_date"),
+    )
+    canon1 = _canonicalize_tags(tags1)
+
+    run2 = tmp_path / "run2"
+    run2.mkdir()
+    tags2, _ = _run_enrich(
+        mkv, fixture["tracklist_id"], run2,
+        tracklist_date=fixture.get("tracklist_date"),
+    )
+    canon2 = _canonicalize_tags(tags2)
+
+    assert canon1["global"] == canon2["global"], (
+        "global tags diverged across re-enrich: "
+        f"first={canon1['global']} second={canon2['global']}"
+    )
+    assert canon1["chapters"] == canon2["chapters"], (
+        "per-chapter tag contents diverged across re-enrich "
+        f"(counts: first={len(canon1['chapters'])}, second={len(canon2['chapters'])})"
+    )
+
+
+@pytest.mark.integration
 @pytest.mark.skipif(
     not FULL_PIPELINE,
     reason="Set CRATEDIGGER_TEST_FULL_PIPELINE=1 to run the CLI pipeline test",
@@ -333,6 +379,63 @@ def test_full_pipeline_in_place(fixture_key: str, tmp_path):
         assert _any_image(folder, "poster"), f"no poster beside {mkvs[0].name}"
     if pip.get("fanart_must_exist"):
         assert _any_image(folder, "fanart"), f"no fanart beside {mkvs[0].name}"
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    not FULL_PIPELINE,
+    reason="Set CRATEDIGGER_TEST_FULL_PIPELINE=1 to run the CLI pipeline test",
+)
+def test_full_pipeline_idempotent(tmp_path):
+    """A second identify on an already-identified file reports up_to_date.
+
+    Verifies the CLI's self-healing / already-done detection, which is the
+    user-facing contract for re-running commands on a maintained library.
+    """
+    assert MKV_DIR is not None and CONFIG is not None
+    fixture = FIXTURES["tiesto-we-belong-here"]
+    src = MKV_DIR / fixture["filename"]
+    if not src.exists():
+        pytest.skip(f"fixture MKV missing: {fixture['filename']}")
+
+    inbox = tmp_path / "inbox"
+    library = tmp_path / "library"
+    inbox.mkdir()
+    library.mkdir()
+    shutil.copy(src, inbox / fixture["filename"])
+
+    cfg_arg = ["--config", str(CONFIG)]
+
+    # First pass: full pipeline through organize (enrich is not required
+    # for identify's up_to_date check, and skipping it saves ~5 min).
+    subprocess.run(
+        ["cratedigger", "identify", *cfg_arg,
+         "--tracklist", fixture["tracklist_id"], "--auto",
+         str(inbox / fixture["filename"])],
+        check=True, timeout=600,
+    )
+    subprocess.run(
+        ["cratedigger", "organize", *cfg_arg,
+         "--output", str(library), "--move", "--yes",
+         str(inbox)],
+        check=True, timeout=300,
+    )
+
+    organized = next(library.rglob("*.mkv"), None)
+    assert organized is not None, f"no MKV found under {library} after organize"
+
+    # Second identify on the organized file should be a no-op.
+    result = subprocess.run(
+        ["cratedigger", "identify", *cfg_arg,
+         "--tracklist", fixture["tracklist_id"], "--auto",
+         str(organized)],
+        check=True, capture_output=True, text=True, timeout=300,
+    )
+    assert "up_to_date: 1" in result.stdout, (
+        "second identify did not report up_to_date: 1\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
 
 
 @pytest.mark.integration
@@ -636,3 +739,39 @@ def _assert_pipeline_expect(library_root: Path, expect: dict) -> None:
         assert _any_image(folder, "poster"), f"no poster beside {matches[0].name}"
     if expect.get("fanart_must_exist"):
         assert _any_image(folder, "fanart"), f"no fanart beside {matches[0].name}"
+
+
+def _canonicalize_tags(tags_root: ET.Element) -> dict:
+    """Return a deterministic representation of tag contents for re-run diffs.
+
+    Returns: {"global": {(ttv, name): value, ...},
+              "chapters": [sorted tuple of (name, value) pairs per chapter, ...]}
+
+    Chapter UIDs may change across re-embeds (Matroska assigns fresh UIDs on
+    write), so chapter tags are returned as a multiset keyed by contents, not
+    by UID. Global tags (TTV=50/70, no ChapterUID) are keyed by (ttv, name).
+    """
+    global_tags: dict[tuple[str, str], str] = {}
+    chapters: list[tuple[tuple[str, str], ...]] = []
+    for tag in tags_root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            continue
+        ttv_el = targets.find("TargetTypeValue")
+        ttv = (ttv_el.text if ttv_el is not None else "") or ""
+        uid_el = targets.find("ChapterUID")
+        pairs: list[tuple[str, str]] = []
+        for simple in tag.findall("Simple"):
+            n_el = simple.find("Name")
+            s_el = simple.find("String")
+            name = ((n_el.text if n_el is not None else "") or "")
+            value = ((s_el.text if s_el is not None else "") or "")
+            pairs.append((name, value))
+        pairs.sort()
+        if uid_el is not None and uid_el.text:
+            chapters.append(tuple(pairs))
+        else:
+            for name, value in pairs:
+                global_tags[(ttv, name)] = value
+    chapters.sort()
+    return {"global": global_tags, "chapters": chapters}
