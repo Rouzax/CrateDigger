@@ -221,9 +221,18 @@ def _mb_search(artist_name: str) -> str | None:
     _mb_rate_limit()
 
     url = f"{MB_BASE_URL}/artist/"
-    query = f'artist:"{artist_name}" AND (type:person OR type:group)'
+    # Query without a type filter, then post-filter in code. An AND type:...
+    # clause would drop MB entries whose type field is null, which is common
+    # for mid-profile DJs whose MB entry has never been type-tagged (e.g.
+    # Hannah Laing, score 100 exact match, but type:null -> excluded).
+    query = f'artist:"{artist_name}"'
     params = {"query": query, "fmt": "json", "limit": "25"}
     headers = {"User-Agent": USER_AGENT}
+
+    # Reject explicit non-artist types so results don't include record labels,
+    # orchestras, characters, etc. Missing type ("" or None) is allowed because
+    # real artists often have no type set on MB.
+    non_artist_types = {"Orchestra", "Choir", "Character", "Other"}
 
     for attempt in range(3):
         try:
@@ -239,8 +248,12 @@ def _mb_search(artist_name: str) -> str | None:
             if not artists:
                 return None
 
-            # Filter to candidates with sufficient score
-            candidates = [a for a in artists if a.get("score", 0) >= 80]
+            # Filter: drop non-artist types; require score >= 80.
+            candidates = [
+                a for a in artists
+                if a.get("score", 0) >= 80
+                and (a.get("type") or "") not in non_artist_types
+            ]
             if not candidates:
                 logger.debug("Best match score %d < 80 for '%s'",
                              artists[0].get("score", 0), artist_name)
