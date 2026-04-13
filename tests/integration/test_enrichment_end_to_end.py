@@ -50,7 +50,7 @@ MKV_DIR = _env_path("CRATEDIGGER_TEST_MKV_DIR")
 #   embedding.ttv70_artists_contains: list[str]  # each substring must appear
 #   embedding.min_chapters: int                  # >= N TTV=30 tags
 #   embedding.min_performer_chapters: int        # >= N chapters with PERFORMER
-#   embedding.performer_must_not_contain: list[str]  # no PERFORMER equals any of these
+#   embedding.performer_must_not_equal: list[str]  # no PERFORMER value equals any of these
 #   embedding.dj_cache_min_entries: int          # >= N entries in dj_cache.json
 #   pipeline.library_path_glob: str              # at least one match after organize
 #   pipeline.(nfo|poster|fanart)_must_exist: bool  # sidecar file beside matched MKV
@@ -82,7 +82,7 @@ FIXTURES = {
         "expect": {
             "embedding": {
                 "ttv70_artists": "SOMETHING ELSE",
-                "performer_must_not_contain": ["ALOK"],
+                "performer_must_not_equal": ["ALOK"],
                 "min_performer_chapters": 1,
             },
             "pipeline": {
@@ -541,32 +541,49 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
             f"only {len(perf_values)} PERFORMER values, expected >= {expect['min_performer_chapters']}"
         )
 
-    if "performer_must_not_contain" in expect:
-        for banned in expect["performer_must_not_contain"]:
+    if "performer_must_not_equal" in expect:
+        for banned in expect["performer_must_not_equal"]:
             assert all(v != banned for v in perf_values), (
                 f"per-chapter PERFORMER contains banned value {banned!r}"
             )
 
     if "dj_cache_min_entries" in expect:
-        cache_data = json.loads((tmp_path / "dj_cache.json").read_text())
+        cache_path = tmp_path / "dj_cache.json"
+        assert cache_path.exists(), f"expected dj_cache.json at {cache_path}"
+        cache_data = json.loads(cache_path.read_text())
         assert len(cache_data) >= expect["dj_cache_min_entries"]
+
+
+_IMAGE_EXTS = ("jpg", "jpeg", "png", "webp")
+
+
+def _any_image(folder: Path, stem: str) -> bool:
+    for ext in _IMAGE_EXTS:
+        if any(folder.glob(f"{stem}.{ext}")) or any(folder.glob(f"*-{stem}.{ext}")):
+            return True
+    return False
 
 
 def _assert_pipeline_expect(library_root: Path, expect: dict) -> None:
     """Apply a fixture's `expect.pipeline` assertions against the library tree."""
+    if not expect:
+        return
+    sidecar_keys = ("nfo_must_exist", "poster_must_exist", "fanart_must_exist")
+    has_sidecar_asserts = any(expect.get(k) for k in sidecar_keys)
     if "library_path_glob" not in expect:
+        assert not has_sidecar_asserts, (
+            "pipeline expect has sidecar assertions but no library_path_glob"
+        )
         return
     matches = list(library_root.glob(expect["library_path_glob"]))
     assert matches, f"no files matched {expect['library_path_glob']!r} under {library_root}"
     folder = matches[0].parent
 
     if expect.get("nfo_must_exist"):
-        assert any(folder.glob("*.nfo")), f"no .nfo beside {matches[0].name}"
+        assert any(p.is_file() for p in folder.glob("*.nfo")), (
+            f"no .nfo beside {matches[0].name}"
+        )
     if expect.get("poster_must_exist"):
-        assert any(folder.glob("poster.*")) or any(folder.glob("*-poster.*")), (
-            f"no poster beside {matches[0].name}"
-        )
+        assert _any_image(folder, "poster"), f"no poster beside {matches[0].name}"
     if expect.get("fanart_must_exist"):
-        assert any(folder.glob("fanart.*")) or any(folder.glob("*-fanart.*")), (
-            f"no fanart beside {matches[0].name}"
-        )
+        assert _any_image(folder, "fanart"), f"no fanart beside {matches[0].name}"
