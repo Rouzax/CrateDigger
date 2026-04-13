@@ -73,8 +73,10 @@ In addition to chapters, CrateDigger embeds several MKV tags:
 | Stage | Global | Stage name (if listed) |
 | Festival/venue/radio | Global | Source information by type |
 | Artists | Global | DJ names associated with the tracklist (display form, pipe-separated) |
-| PERFORMER | Per chapter | Canonical artist of this track (resolved via DJ cache + artist aliases) |
+| PERFORMER | Per chapter | Primary artist of this track, display name taken directly from the 1001TL track row HTML and then passed through `artists.json` alias resolution (e.g. `SOMETHING ELSE` → `ALOK`). Preserves original casing (`deadmau5`, `CIElll`, `S3PPA`). |
 | PERFORMER_SLUGS | Per chapter | Pipe-separated 1001TL slugs for every artist linked on the track row |
+| TITLE | Per chapter | Clean track title with artist prefix stripped (e.g. `Take Over Control` from the row `AFROJACK ft. Eva Simons - Take Over Control`) |
+| LABEL | Per chapter | Record label as plain text (e.g. `WALL`, `MAU5TRAP`) |
 | GENRE | Per chapter | Pipe-separated per-track genres |
 
 Per-chapter tags use Matroska `TargetTypeValue=30` targeting each chapter's `ChapterUID`. They surface directly in `ffprobe -show_chapters` output (under `chapters[].tags`), which makes them readable by downstream tools like TrackSplit without any format bridge.

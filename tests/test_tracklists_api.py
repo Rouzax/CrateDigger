@@ -410,3 +410,35 @@ def test_fetch_dj_profile_maximizes_squarespace_url():
     with patch.object(session, "_request", return_value=mock_resp):
         result = session._fetch_dj_profile("someone")
     assert result["artwork_url"] == "https://images.squarespace-cdn.com/content/v1/abc/image.jpg"
+
+
+# --- Encoding fix ---
+
+def test_request_forces_utf8_encoding(tmp_path):
+    """TracklistSession._request must set resp.encoding = 'utf-8' so that
+    .text decodes UTF-8 bytes correctly even when the server does not
+    include charset= in Content-Type (requests defaults to ISO-8859-1 for
+    text/* responses per RFC 7231, which produces mojibake on UTF-8 bodies)."""
+    from festival_organizer.tracklists.api import TracklistSession
+    # "Tiësto" in UTF-8 bytes: 54 69 C3 AB 73 74 6F
+    utf8_bytes = "Tiësto".encode("utf-8")
+
+    with patch.object(TracklistSession, "throttle"):
+        sess = TracklistSession(cookie_cache_path=tmp_path / "cookies.json", delay=0)
+        # Mock the underlying session.get to return a response with no
+        # charset header; requests would otherwise default to ISO-8859-1.
+        resp = MagicMock()
+        resp.status_code = 200
+        resp.content = utf8_bytes
+        resp.encoding = "ISO-8859-1"  # what requests would default to
+        resp.text = utf8_bytes.decode("ISO-8859-1")  # mojibake
+        # Make .text recompute when encoding is set
+        def text_property(self):
+            return self.content.decode(self.encoding)
+        type(resp).text = PropertyMock(side_effect=lambda: resp.content.decode(resp.encoding))
+        sess._session.get = MagicMock(return_value=resp)
+
+        result = sess._request("GET", "https://example.com/page")
+
+    assert result.encoding == "utf-8"
+    assert result.text == "Tiësto"

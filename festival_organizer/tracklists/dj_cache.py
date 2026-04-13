@@ -166,8 +166,14 @@ class DjCache:
         return {entry["name"].lower() for entry in self._data.values() if entry.get("name")}
 
     def canonical_name(self, slug: str, fallback: str | None = None) -> str:
-        """Return the canonical name for a slug, or fallback/slug when unknown."""
+        """Return the canonical name for a slug, or fallback/slug when unknown.
+
+        Applies mojibake normalisation on read so cache entries written by an
+        earlier buggy version (with Latin-1-decoded UTF-8 bytes like "Ti├½sto"
+        or "KÃ¶lsch") self-heal the first time they are read back.
+        """
+        from festival_organizer.normalization import fix_mojibake
         entry = self._data.get(slug)
         if entry and entry.get("name"):
-            return entry["name"]
+            return fix_mojibake(entry["name"])
         return fallback if fallback is not None else slug

@@ -16,17 +16,17 @@ def test_build_chapter_tags_map_matches_by_ms(tmp_path):
     ]
     uids = [111, 222]
     tracks = [
-        Track(start_ms=0, raw_text="AFROJACK - Take Over Control",
+        Track(start_ms=0, raw_text="AFROJACK ft. Eva Simons - Take Over Control",
               artist_slugs=["afrojack"], genres=["House"]),
-        Track(start_ms=60000, raw_text="Guest - Track",
-              artist_slugs=["guest-artist"], genres=["Techno", "Tech House"]),
+        Track(start_ms=60000, raw_text="Guest & Someone - Track",
+              artist_slugs=["guest-artist", "someone"], genres=["Techno", "Tech House"]),
     ]
     result = _build_chapter_tags_map(chapters, uids, tracks, cache)
-    assert result[111]["PERFORMER"] == "Afrojack"
+    assert result[111]["PERFORMER"] == "AFROJACK ft. Eva Simons"
     assert result[111]["PERFORMER_SLUGS"] == "afrojack"
     assert result[111]["GENRE"] == "House"
-    assert result[222]["PERFORMER"] == "guest-artist"  # fallback when not in cache
-    assert result[222]["PERFORMER_SLUGS"] == "guest-artist"
+    assert result[222]["PERFORMER"] == "Guest & Someone"
+    assert result[222]["PERFORMER_SLUGS"] == "guest-artist|someone"
     assert result[222]["GENRE"] == "Techno|Tech House"
 
 
@@ -42,9 +42,11 @@ def test_build_chapter_tags_map_skips_unmatched(tmp_path):
 def test_build_chapter_tags_map_no_dj_cache(tmp_path):
     chapters = [Chapter(timestamp="00:00:00.000", title="A")]
     uids = [111]
-    tracks = [Track(start_ms=0, raw_text="x", artist_slugs=["foo"], genres=["House"])]
+    tracks = [Track(start_ms=0, raw_text="Artist Name - Some Title",
+                    artist_slugs=["artist-slug"], genres=["House"])]
     result = _build_chapter_tags_map(chapters, uids, tracks, None)
-    assert result[111]["PERFORMER"] == "foo"  # no cache, fall back to slug
+    # PERFORMER comes from raw_text prefix; DjCache is not consulted for it.
+    assert result[111]["PERFORMER"] == "Artist Name"
     assert result[111]["GENRE"] == "House"
 
 
@@ -64,12 +66,12 @@ def test_build_chapter_tags_map_pairs_by_index(tmp_path):
     ]
     uids = [111, 222]
     tracks = [
-        Track(start_ms=0, raw_text="x", artist_slugs=["a"], genres=[]),
-        Track(start_ms=120000, raw_text="y", artist_slugs=["b"], genres=[]),
+        Track(start_ms=0, raw_text="Artist A - Song A", artist_slugs=["a"], genres=[]),
+        Track(start_ms=120000, raw_text="Artist B - Song B", artist_slugs=["b"], genres=[]),
     ]
     result = _build_chapter_tags_map(chapters, uids, tracks, None)
-    assert result[111]["PERFORMER"] == "a"
-    assert result[222]["PERFORMER"] == "b"
+    assert result[111]["PERFORMER"] == "Artist A"
+    assert result[222]["PERFORMER"] == "Artist B"
 
 
 def test_embed_chapters_canonical_artists_tag(tmp_path):
@@ -121,3 +123,92 @@ def test_embed_chapters_without_dj_cache_uses_display_name(tmp_path):
         )
         tags_payload = mock_write.call_args[0][1]
         assert tags_payload[70]["CRATEDIGGER_1001TL_ARTISTS"] == "AFROJACK"
+
+
+def test_performer_preserves_full_display_line_from_raw_text(tmp_path):
+    """PERFORMER is the raw_text prefix (everything before the final ' - ')."""
+    chapters = [Chapter(timestamp="00:00:00.000", title="Intro")]
+    uids = [111]
+    tracks = [Track(
+        start_ms=0,
+        raw_text="Fred again.. & Jamie T - Lights Burn Dimmer (Tiësto Remix)",
+        artist_slugs=["fred-again..", "jamie-t", "tiesto"],
+        genres=[],
+    )]
+    result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
+    # Full display artist line, multi-artist preserved, no drop.
+    assert result[111]["PERFORMER"] == "Fred again.. & Jamie T"
+    assert result[111]["PERFORMER_SLUGS"] == "fred-again..|jamie-t|tiesto"
+
+
+def test_performer_handles_mashup_composite_display():
+    """Mashup rows put the full composite artist string before the ' - '."""
+    chapters = [Chapter(timestamp="00:00:00.000", title="x")]
+    uids = [111]
+    tracks = [Track(
+        start_ms=0,
+        raw_text=("NLW & MureKian vs. Ivan Gough & Feenixpawl & Georgi Kay vs. "
+                  "RÜFÜS DU SOL - Loco vs. In My Mind vs. Innerbloom (AFROJACK Mashup)"),
+        artist_slugs=["nlw-murekian-vs-ivan-gough-feenixpawl-georgi-kay-vs-rufus-du-sol", "afrojack"],
+        genres=[],
+    )]
+    result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
+    assert result[111]["PERFORMER"] == (
+        "NLW & MureKian vs. Ivan Gough & Feenixpawl & Georgi Kay vs. RÜFÜS DU SOL"
+    )
+
+
+def test_performer_preserves_1001tl_display_form_not_alias():
+    """Per-chapter PERFORMER keeps the 1001TL display form; alias resolution
+    (e.g. SOMETHING ELSE -> ALOK) is only applied to the top-level ARTIST
+    tag for filesystem routing, NOT to per-chapter tags which document what
+    the DJ / crowd knows the track as."""
+    aliases = {"SOMETHING ELSE": "ALOK"}
+    def resolver(name: str) -> str:
+        return aliases.get(name, name)
+    chapters = [Chapter(timestamp="00:00:00.000", title="x")]
+    uids = [111]
+    tracks = [Track(
+        start_ms=0,
+        raw_text="SOMETHING ELSE - Ignite",
+        artist_slugs=["somethingelse-br"],
+        genres=[],
+    )]
+    result = _build_chapter_tags_map(chapters, uids, tracks, None, resolver)
+    # Display form preserved. ALOK would only be correct for filesystem
+    # routing (top-level ARTIST tag handled elsewhere).
+    assert result[111]["PERFORMER"] == "SOMETHING ELSE"
+
+
+def test_chapter_tags_include_title_and_label():
+    """TITLE and LABEL are emitted when the track carries them."""
+    chapters = [Chapter(timestamp="00:00:00.000", title="x")]
+    uids = [111]
+    tracks = [Track(
+        start_ms=0,
+        raw_text="AFROJACK ft. Eva Simons - Take Over Control",
+        artist_slugs=["afrojack"],
+        genres=[],
+        title="Take Over Control",
+        label="WALL",
+    )]
+    result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
+    assert result[111]["TITLE"] == "Take Over Control"
+    assert result[111]["LABEL"] == "WALL"
+
+
+def test_chapter_tags_omit_title_and_label_when_empty():
+    """TITLE and LABEL omitted when track fields are empty strings."""
+    chapters = [Chapter(timestamp="00:00:00.000", title="x")]
+    uids = [111]
+    tracks = [Track(
+        start_ms=0,
+        raw_text="Artist - Song",
+        artist_slugs=["slug"],
+        genres=[],
+        title="",
+        label="",
+    )]
+    result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
+    assert "TITLE" not in result[111]
+    assert "LABEL" not in result[111]

@@ -32,16 +32,6 @@ if TYPE_CHECKING:
     from festival_organizer.tracklists.dj_cache import DjCache
 
 
-def _shared_console():
-    """Return the project's shared Rich Console instance.
-
-    Centralised so Progress, logging, and other UI all write to the same stream
-    (stdout). Rich auto-strips formatting when stdout is piped.
-    """
-    from festival_organizer.console import make_console
-    return make_console()
-
-
 @dataclass
 class Chapter:
     """A single chapter marker."""
@@ -346,28 +336,6 @@ def chapters_are_identical(existing: list[Chapter] | None, new: list[Chapter]) -
     return True
 
 
-def _resolve_canonical(
-    slug: str,
-    dj_cache: "DjCache | None",
-    alias_resolver: "Callable[[str], str] | None",
-    fallback: str | None = None,
-) -> str:
-    """Two-step canonicalisation: DjCache slug -> name, then artists.json alias.
-
-    Mirrors how the top-level ARTIST tag is composed (DJ name resolved via
-    DjCache, then run through Config.resolve_artist for deadmau5 -> Deadmau5
-    and SOMETHING ELSE -> ALOK style aliases). Caller supplies the resolver
-    callable so this module doesn't depend on Config.
-    """
-    if dj_cache is not None:
-        name = dj_cache.canonical_name(slug, fallback=fallback if fallback is not None else slug)
-    else:
-        name = fallback if fallback is not None else slug
-    if alias_resolver is not None:
-        name = alias_resolver(name)
-    return name
-
-
 def _build_chapter_tags_map(
     chapters: list[Chapter],
     chapter_uids: list[int],
@@ -401,9 +369,25 @@ def _build_chapter_tags_map(
             # mediainfo flattens all ARTIST values across scopes into its
             # extra.ARTIST field, which would clobber the set-level DJ name.
             entry["PERFORMER_SLUGS"] = "|".join(track.artist_slugs)
-            entry["PERFORMER"] = _resolve_canonical(
-                track.artist_slugs[0], dj_cache, alias_resolver
-            )
+            # PERFORMER is the full artist display line exactly as 1001TL
+            # renders it: everything before the final " - " in raw_text.
+            # Covers solo ("AFROJACK ft. Eva Simons"), multi-artist
+            # ("Fred again.. & Jamie T"), and mashup composites
+            # ("NLW & MureKian vs. ... vs. RÜFÜS DU SOL") in one rule.
+            # Alias resolution is deliberately NOT applied here: this tag
+            # preserves the 1001TL display form so players can show what the
+            # DJ / crowd knows the track as. Alias -> canonical substitution
+            # (e.g. SOMETHING ELSE -> ALOK) is only for filesystem routing
+            # and happens at the top-level ARTIST tag, not here.
+            if " - " in track.raw_text:
+                display = track.raw_text.rsplit(" - ", 1)[0].strip()
+            else:
+                display = track.raw_text.strip() or track.artist_slugs[0]
+            entry["PERFORMER"] = display
+        if track.title:
+            entry["TITLE"] = track.title
+        if track.label:
+            entry["LABEL"] = track.label
         if track.genres:
             entry["GENRE"] = "|".join(track.genres)
         if entry:
@@ -426,7 +410,6 @@ def embed_chapters(
     country: str = "",
     tracks: list["Track"] | None = None,
     dj_cache: "DjCache | None" = None,
-    fetcher: "Callable[[str], dict | None] | None" = None,
     alias_resolver: "Callable[[str], str] | None" = None,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
@@ -444,49 +427,6 @@ def embed_chapters(
 
     chapter_file = None
     chapter_uids: list[int] = []
-
-    # Pre-fetch per-track artist profiles so canonical name resolution is populated.
-    # Only runs when the caller threads all three kwargs (tracks, dj_cache, fetcher).
-    if tracks and dj_cache is not None and fetcher is not None:
-        slugs_needed = sorted({s for t in tracks for s in t.artist_slugs})
-        if slugs_needed:
-            n_cached = sum(1 for s in slugs_needed if dj_cache.get(s) is not None)
-            n_missing = len(slugs_needed) - n_cached
-            if n_missing > 0:
-                from rich.progress import (
-                    BarColumn,
-                    Progress,
-                    SpinnerColumn,
-                    TextColumn,
-                )
-                console = _shared_console()
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("{task.description}"),
-                    BarColumn(),
-                    TextColumn("{task.completed}/{task.total}"),
-                    console=console,
-                    transient=True,
-                ) as bar:
-                    task_id = bar.add_task("Fetching artist pages", total=n_missing)
-
-                    def on_progress(slug, done, total):
-                        bar.update(
-                            task_id,
-                            advance=1,
-                            description=f"Fetching artist pages ({slug})",
-                        )
-
-                    dj_cache.get_or_fetch_many(
-                        slugs_needed, fetcher=fetcher, progress=on_progress
-                    )
-            else:
-                # All cached already; still call the batch helper for symmetry.
-                dj_cache.get_or_fetch_many(slugs_needed, fetcher=fetcher)
-            logger.info(
-                "Resolved %d per-track artists (%d cached, %d fetched)",
-                len(slugs_needed), n_cached, n_missing,
-            )
 
     try:
         # Write chapters via mkvpropedit --chapters (only if chapters provided)
