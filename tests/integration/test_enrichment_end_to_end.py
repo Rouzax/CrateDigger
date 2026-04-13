@@ -52,6 +52,8 @@ FULL_PIPELINE = os.environ.get("CRATEDIGGER_TEST_FULL_PIPELINE") == "1"
 #   embedding.min_chapters: int                  # >= N TTV=30 tags
 #   embedding.min_performer_chapters: int        # >= N chapters with PERFORMER
 #   embedding.performer_must_not_equal: list[str]  # no PERFORMER value equals any of these
+#   embedding.performer_must_include: list[str]  # each value must equal some chapter's PERFORMER
+#   embedding.max_chapters: int                  # <= N TTV=30 tags
 #   embedding.dj_cache_min_entries: int          # >= N entries in dj_cache.json
 #   pipeline.library_path_glob: str              # at least one match after organize
 #   pipeline.(nfo|poster|fanart)_must_exist: bool  # sidecar file beside matched MKV
@@ -752,7 +754,8 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
     """Apply a fixture's `expect.embedding` assertions.
 
     Supported keys: ttv70_artists, ttv70_artists_contains, min_chapters,
-    min_performer_chapters, performer_must_not_equal, dj_cache_min_entries.
+    max_chapters, min_performer_chapters, performer_must_not_equal,
+    performer_must_include, dj_cache_min_entries.
     """
     if "ttv70_artists" in expect:
         assert _find_global_tag(tags_root, 70, "CRATEDIGGER_1001TL_ARTISTS") == expect["ttv70_artists"]
@@ -767,6 +770,11 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
     if "min_chapters" in expect:
         assert len(ttv30) >= expect["min_chapters"], (
             f"only {len(ttv30)} TTV30 tags, expected >= {expect['min_chapters']}"
+        )
+
+    if "max_chapters" in expect:
+        assert len(ttv30) <= expect["max_chapters"], (
+            f"{len(ttv30)} TTV30 tags, expected <= {expect['max_chapters']}"
         )
 
     perf_values: list[str] = []
@@ -786,6 +794,13 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
         for banned in expect["performer_must_not_equal"]:
             assert all(v != banned for v in perf_values), (
                 f"per-chapter PERFORMER contains banned value {banned!r}"
+            )
+
+    if "performer_must_include" in expect:
+        for needle in expect["performer_must_include"]:
+            assert any(v == needle for v in perf_values), (
+                f"expected PERFORMER {needle!r} on at least one chapter, "
+                f"got {perf_values!r}"
             )
 
     if "dj_cache_min_entries" in expect:
