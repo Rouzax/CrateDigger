@@ -45,6 +45,15 @@ CONFIG = _env_path("CRATEDIGGER_TEST_CONFIG")
 COOKIES = _env_path("CRATEDIGGER_TEST_COOKIES")
 MKV_DIR = _env_path("CRATEDIGGER_TEST_MKV_DIR")
 
+# `expect` schema (consumed by _assert_embedding_expect / _assert_pipeline_expect):
+#   embedding.ttv70_artists: str                 # exact match on TTV=70 CRATEDIGGER_1001TL_ARTISTS
+#   embedding.ttv70_artists_contains: list[str]  # each substring must appear
+#   embedding.min_chapters: int                  # >= N TTV=30 tags
+#   embedding.min_performer_chapters: int        # >= N chapters with PERFORMER
+#   embedding.performer_must_not_contain: list[str]  # no PERFORMER equals any of these
+#   embedding.dj_cache_min_entries: int          # >= N entries in dj_cache.json
+#   pipeline.library_path_glob: str              # at least one match after organize
+#   pipeline.(nfo|poster|fanart)_must_exist: bool  # sidecar file beside matched MKV
 FIXTURES = {
     "tiesto-we-belong-here": {
         "filename": "Tiësto - Live at We Belong Here Miami 2026 [2EQGqEvLAuE].mkv",
@@ -461,3 +470,103 @@ def _find_chapter_tags(root: ET.Element) -> list[ET.Element]:
         if ttv_el is not None and ttv_el.text == "30":
             out.append(tag)
     return out
+
+
+def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
+    """Invariants every enriched MKV must satisfy.
+
+    - No mojibake in chapter titles or tag values.
+    - No legacy ARTIST / ARTIST_SLUGS tag names at chapter scope.
+    - Every TTV=30 tag references a real ChapterUID.
+    """
+    for atom in chapters_root.findall(".//ChapterAtom"):
+        title_el = atom.find("ChapterDisplay/ChapterString")
+        title = (title_el.text if title_el is not None else "") or ""
+        assert "├" not in title, f"mojibake in chapter: {title!r}"
+    for simple in tags_root.iter("Simple"):
+        str_el = simple.find("String")
+        value = (str_el.text if str_el is not None else "") or ""
+        assert "├" not in value, f"mojibake in tag: {value!r}"
+
+    ttv30 = _find_chapter_tags(tags_root)
+    for tag in ttv30:
+        for simple in tag.findall("Simple"):
+            n_el = simple.find("Name")
+            name = (n_el.text if n_el is not None else "") or ""
+            assert name not in ("ARTIST", "ARTIST_SLUGS"), (
+                f"Per-chapter tag still using legacy name {name!r}"
+            )
+
+    atom_uids: set[str] = set()
+    for a in chapters_root.findall(".//ChapterAtom"):
+        u_el = a.find("ChapterUID")
+        if u_el is not None and u_el.text:
+            atom_uids.add(u_el.text)
+    for tag in ttv30:
+        uid_el = tag.find("Targets/ChapterUID")
+        assert uid_el is not None and uid_el.text in atom_uids
+
+
+def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path) -> None:
+    """Apply a fixture's `expect.embedding` assertions.
+
+    Supported keys: ttv70_artists, ttv70_artists_contains, min_chapters,
+    min_performer_chapters, performer_must_not_contain, dj_cache_min_entries.
+    """
+    if "ttv70_artists" in expect:
+        assert _find_global_tag(tags_root, 70, "CRATEDIGGER_1001TL_ARTISTS") == expect["ttv70_artists"]
+
+    if "ttv70_artists_contains" in expect:
+        value = _find_global_tag(tags_root, 70, "CRATEDIGGER_1001TL_ARTISTS") or ""
+        for needle in expect["ttv70_artists_contains"]:
+            assert needle in value, f"{needle!r} not in TTV70 artists {value!r}"
+
+    ttv30 = _find_chapter_tags(tags_root)
+
+    if "min_chapters" in expect:
+        assert len(ttv30) >= expect["min_chapters"], (
+            f"only {len(ttv30)} TTV30 tags, expected >= {expect['min_chapters']}"
+        )
+
+    perf_values: list[str] = []
+    for tag in ttv30:
+        for simple in tag.findall("Simple"):
+            n_el = simple.find("Name")
+            if n_el is not None and (n_el.text or "") == "PERFORMER":
+                s_el = simple.find("String")
+                perf_values.append(s_el.text if s_el is not None else "")
+
+    if "min_performer_chapters" in expect:
+        assert len(perf_values) >= expect["min_performer_chapters"], (
+            f"only {len(perf_values)} PERFORMER values, expected >= {expect['min_performer_chapters']}"
+        )
+
+    if "performer_must_not_contain" in expect:
+        for banned in expect["performer_must_not_contain"]:
+            assert all(v != banned for v in perf_values), (
+                f"per-chapter PERFORMER contains banned value {banned!r}"
+            )
+
+    if "dj_cache_min_entries" in expect:
+        cache_data = json.loads((tmp_path / "dj_cache.json").read_text())
+        assert len(cache_data) >= expect["dj_cache_min_entries"]
+
+
+def _assert_pipeline_expect(library_root: Path, expect: dict) -> None:
+    """Apply a fixture's `expect.pipeline` assertions against the library tree."""
+    if "library_path_glob" not in expect:
+        return
+    matches = list(library_root.glob(expect["library_path_glob"]))
+    assert matches, f"no files matched {expect['library_path_glob']!r} under {library_root}"
+    folder = matches[0].parent
+
+    if expect.get("nfo_must_exist"):
+        assert any(folder.glob("*.nfo")), f"no .nfo beside {matches[0].name}"
+    if expect.get("poster_must_exist"):
+        assert any(folder.glob("poster.*")) or any(folder.glob("*-poster.*")), (
+            f"no poster beside {matches[0].name}"
+        )
+    if expect.get("fanart_must_exist"):
+        assert any(folder.glob("fanart.*")) or any(folder.glob("*-fanart.*")), (
+            f"no fanart beside {matches[0].name}"
+        )
