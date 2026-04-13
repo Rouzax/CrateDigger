@@ -436,7 +436,7 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
     """Apply a fixture's `expect.embedding` assertions.
 
     Supported keys: ttv70_artists, ttv70_artists_contains, min_chapters,
-    min_performer_chapters, performer_must_not_contain, dj_cache_min_entries.
+    min_performer_chapters, performer_must_not_equal, dj_cache_min_entries.
     """
     if "ttv70_artists" in expect:
         assert _find_global_tag(tags_root, 70, "CRATEDIGGER_1001TL_ARTISTS") == expect["ttv70_artists"]
