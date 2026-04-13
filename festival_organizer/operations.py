@@ -21,6 +21,7 @@ import requests
 
 from festival_organizer.cache_ttl import hashed_jitter_factor
 from festival_organizer.config import Config
+from festival_organizer.fanart import lookup_mbid
 from festival_organizer.models import MediaFile
 
 logger = logging.getLogger(__name__)
@@ -765,3 +766,133 @@ class TagsOperation(Operation):
             return OperationResult(self.name, status)
         except (OSError, subprocess.SubprocessError) as e:
             return OperationResult(self.name, "error", str(e))
+
+
+def _extract_chapter_tags_by_uid(filepath: Path) -> dict[int, dict[str, str]]:
+    """Return TTV=30 chapter tag blocks keyed by ChapterUID. Empty dict if none."""
+    from festival_organizer.mkv_tags import extract_all_tags
+    root = extract_all_tags(filepath)
+    if root is None:
+        return {}
+    result: dict[int, dict[str, str]] = {}
+    for tag in root.iter("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            continue
+        ttv = targets.find("TargetTypeValue")
+        uid_el = targets.find("ChapterUID")
+        if ttv is None or uid_el is None or int(ttv.text or "0") != 30:
+            continue
+        try:
+            uid = int(uid_el.text or "0")
+        except ValueError:
+            continue
+        block: dict[str, str] = {}
+        for simple in tag.iter("Simple"):
+            name_el = simple.find("Name")
+            string_el = simple.find("String")
+            if name_el is not None and string_el is not None and name_el.text:
+                block[name_el.text] = string_el.text or ""
+        if block:
+            result[uid] = block
+    return result
+
+
+def write_chapter_mbid_tags(
+    filepath: Path,
+    merged_chapter_tags: dict[int, dict[str, str]],
+) -> None:
+    """Write merged TTV=30 chapter tags via mkv_tags.write_merged_tags.
+
+    IMPORTANT: write_merged_tags replaces existing TTV=30 blocks wholesale
+    when chapter_tags is provided. The `merged_chapter_tags` argument here
+    must therefore already contain every tag that should remain on each
+    chapter (PERFORMER, TITLE, LABEL, GENRE, etc.) plus the new
+    MUSICBRAINZ_ARTISTIDS. Callers that pass only the MBID dict will wipe
+    the file's existing per-chapter metadata.
+    """
+    from festival_organizer.mkv_tags import write_merged_tags
+    write_merged_tags(filepath, new_tags={}, chapter_tags=merged_chapter_tags)
+
+
+class ChapterMbidsOperation(Operation):
+    """Write per-chapter MUSICBRAINZ_ARTISTIDS based on PERFORMER_NAMES.
+
+    Runs in the enrich pipeline (wired by cli.py). Reads the file's existing
+    chapter tags, resolves each unique PERFORMER_NAMES entry via
+    lookup_mbid (which consults ArtistMbidOverrides before the cache and
+    network), and writes pipe-joined MBIDs with empty slots for misses so
+    downstream consumers can zip SLUGS / NAMES / MBIDS by index.
+
+    Existing per-chapter tags (PERFORMER, TITLE, LABEL, GENRE,
+    PERFORMER_SLUGS, PERFORMER_NAMES) are preserved; only MBIDs are added
+    or updated.
+    """
+    name = "chapter_mbids"
+
+    def __init__(self, config=None, force: bool = False):
+        self.config = config
+        self.force = force
+        self._cache = None
+        self._overrides = None
+
+    def _get_cache(self):
+        if self._cache is None:
+            from festival_organizer.fanart import MBIDCache
+            ttl = 90
+            if self.config is not None:
+                ttl = self.config.cache_ttl.get("mbid_days", 90)
+            self._cache = MBIDCache(ttl_days=ttl)
+        return self._cache
+
+    def _get_overrides(self):
+        if self._overrides is None:
+            from festival_organizer.fanart import ArtistMbidOverrides
+            self._overrides = ArtistMbidOverrides()
+        return self._overrides
+
+    def is_needed(self, file_path: Path, media_file) -> bool:
+        from festival_organizer.mkv_tags import MATROSKA_EXTS
+        return file_path.suffix.lower() in MATROSKA_EXTS
+
+    def execute(self, file_path: Path, media_file) -> OperationResult:
+        from festival_organizer.fanart import compute_chapter_mbid_tags
+
+        existing = _extract_chapter_tags_by_uid(file_path)
+        if not existing:
+            return OperationResult(self.name, "skipped", "no chapter tags")
+        if not any("PERFORMER_NAMES" in block for block in existing.values()):
+            return OperationResult(
+                self.name, "skipped",
+                "no PERFORMER_NAMES on any chapter (run identify --regenerate)",
+            )
+
+        cache = self._get_cache()
+        overrides = self._get_overrides()
+
+        def resolver(name: str) -> str | None:
+            return lookup_mbid(name, cache, overrides=overrides)
+
+        new_mbid_tags = compute_chapter_mbid_tags(existing, resolver)
+
+        # Short-circuit when every computed MBID matches what's already on disk.
+        if not self.force:
+            already_current = all(
+                existing.get(uid, {}).get("MUSICBRAINZ_ARTISTIDS")
+                == entry["MUSICBRAINZ_ARTISTIDS"]
+                for uid, entry in new_mbid_tags.items()
+            )
+            if already_current and new_mbid_tags:
+                return OperationResult(self.name, "skipped", "MBIDs already current")
+
+        # Merge new MBIDs INTO a copy of the existing chapter blocks so
+        # write_merged_tags does not wipe PERFORMER / TITLE / etc.
+        merged: dict[int, dict[str, str]] = {}
+        for uid, block in existing.items():
+            merged_block = dict(block)
+            if uid in new_mbid_tags:
+                merged_block["MUSICBRAINZ_ARTISTIDS"] = new_mbid_tags[uid]["MUSICBRAINZ_ARTISTIDS"]
+            merged[uid] = merged_block
+
+        write_chapter_mbid_tags(file_path, merged)
+        return OperationResult(self.name, "done", f"wrote MBIDs for {len(new_mbid_tags)} chapters")
