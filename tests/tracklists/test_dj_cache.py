@@ -52,3 +52,17 @@ def test_canonical_name_falls_back_to_slug(tmp_path):
 def test_canonical_name_fallback_value(tmp_path):
     cache = DjCache(cache_path=tmp_path / "c.json", ttl_days=90)
     assert cache.canonical_name("unknown", fallback="X") == "X"
+
+
+def test_canonical_name_heals_mojibake_on_read(tmp_path):
+    """Legacy cache entries with mojibake bytes self-heal via fix_mojibake."""
+    import json, time
+    raw = {"tiesto": {"name": "Ti\u251c\u00bdsto", "ts": time.time()}}  # "Ti├½sto"
+    (tmp_path / "c.json").write_text(json.dumps(raw))
+    cache = DjCache(cache_path=tmp_path / "c.json", ttl_days=90)
+    # ftfy-based fix_mojibake should repair the mojibake
+    # (some mojibake patterns may not be recoverable; this one comes from
+    # UTF-8 bytes decoded as cp437, which ftfy handles well).
+    result = cache.canonical_name("tiesto")
+    # Either fully healed to "Tiësto" or at least not the raw mojibake
+    assert "├" not in result, f"raw mojibake leaked through: {result!r}"

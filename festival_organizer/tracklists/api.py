@@ -59,12 +59,18 @@ class Track:
     start_ms: chapter start in milliseconds
     raw_text: the visible track label, as exported by 1001TL (e.g. 'Artist - Title (Remix) [Label]')
     artist_slugs: 1001TL slugs for every linked artist on the track row, in link order
+    artist_names: HTML display text for every linked artist, paired by index with artist_slugs
+    title: track title portion only, without artist prefix or label brackets
+    label: record label as plain text (e.g. "WALL"), empty if not listed
     genres: per-track <meta itemprop="genre"> values for this row
     """
     start_ms: int
     raw_text: str
     artist_slugs: list[str]
     genres: list[str]
+    artist_names: list[str] = field(default_factory=list)
+    title: str = ""
+    label: str = ""
 
 
 @dataclass
@@ -129,24 +135,68 @@ def _parse_tracks(html: str) -> list["Track"]:
             start_ms = int(float(cue_el.get("value", "0")) * 1000)
         except ValueError:
             continue
+        from festival_organizer.normalization import fix_mojibake
         name_meta = row.select_one('meta[itemprop="name"]')
-        raw_text = name_meta.get("content", "") if name_meta else ""
+        raw_text = fix_mojibake(name_meta.get("content", "")) if name_meta else ""
         genres = [
-            m.get("content", "")
+            fix_mojibake(m.get("content", ""))
             for m in row.select('meta[itemprop="genre"]')
             if m.get("content")
         ]
+        # Walk artist anchors in document order; capture (slug, display_name)
+        # pairs. Display name is the stripped text of the nearest ancestor
+        # <span class="notranslate"> that wraps the anchor.
         slugs: list[str] = []
+        names: list[str] = []
         for a in row.select("a[href^='/artist/']"):
             m = re.match(r"/artist/[^/]+/([^/]+)/", a.get("href", ""))
-            if m and m.group(1) not in slugs:
-                slugs.append(m.group(1))
+            if not m:
+                continue
+            slug = m.group(1)
+            if slug in slugs:
+                continue
+            display = ""
+            parent = a
+            for _ in range(4):  # walk up at most 4 levels
+                parent = parent.parent if parent else None
+                if parent is None:
+                    break
+                parent_classes = parent.get("class", []) if hasattr(parent, "get") else []
+                if "notranslate" in parent_classes:
+                    display = parent.get_text(" ", strip=True)
+                    break
+            slugs.append(slug)
+            names.append(fix_mojibake(display))
+        # Title: split raw_text on the last " - " to drop the artist prefix.
+        # Many tracks are formatted "Artist - Title" on 1001TL; mashups use
+        # "A vs. B - Title (Mashup)" with the hyphen still delimiting the
+        # title. rsplit on the last ' - ' handles both.
+        title = ""
+        if " - " in raw_text:
+            title = raw_text.rsplit(" - ", 1)[1].strip()
+        elif raw_text:
+            title = raw_text.strip()
+        # Label: the first <span class="trackLabel">LABEL<a>...</a></span> in
+        # the row. The label text is the span's content before the nested
+        # icon-only <a>. Some rows omit the label entirely.
+        label = ""
+        label_span = row.select_one("span.trackLabel")
+        if label_span is not None:
+            # Clone and strip nested <a> icons so only the plain label text remains.
+            label_copy = BeautifulSoup(str(label_span), "html.parser").select_one("span.trackLabel")
+            if label_copy is not None:
+                for sub in label_copy.select("a"):
+                    sub.decompose()
+                label = fix_mojibake(label_copy.get_text(" ", strip=True))
         tracks.append(
             Track(
                 start_ms=start_ms,
                 raw_text=raw_text,
                 artist_slugs=slugs,
                 genres=genres,
+                artist_names=names,
+                title=title,
+                label=label,
             )
         )
     return tracks
@@ -385,6 +435,12 @@ class TracklistSession:
                         f"Server error {resp.status_code} after {max_retries} attempts"
                     )
 
+                # Force UTF-8 decoding for every 1001TL response. The server
+                # serves UTF-8 but does not always include an explicit
+                # charset= on Content-Type, which makes requests default to
+                # ISO-8859-1 per RFC 7231. On Windows that default produces
+                # mojibake in chapter titles and per-chapter tags.
+                resp.encoding = "utf-8"
                 self._last_request_time = time.monotonic()
                 return resp
 
