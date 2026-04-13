@@ -874,6 +874,8 @@ class ChapterMbidsOperation(Operation):
             return lookup_mbid(name, cache, overrides=overrides)
 
         new_mbid_tags = compute_chapter_mbid_tags(existing, resolver)
+        if not new_mbid_tags:
+            return OperationResult(self.name, "skipped", "no resolvable PERFORMER_NAMES")
 
         # Short-circuit when every computed MBID matches what's already on disk.
         if not self.force:
@@ -882,7 +884,7 @@ class ChapterMbidsOperation(Operation):
                 == entry["MUSICBRAINZ_ARTISTIDS"]
                 for uid, entry in new_mbid_tags.items()
             )
-            if already_current and new_mbid_tags:
+            if already_current:
                 return OperationResult(self.name, "skipped", "MBIDs already current")
 
         # Merge new MBIDs INTO a copy of the existing chapter blocks so
