@@ -151,9 +151,11 @@ class ArtistMbidOverrides:
         }
 
     def get(self, artist_name: str) -> str | None:
+        """Return the pinned MBID for an artist, or None when not pinned."""
         return self._data.get(artist_name.lower())
 
     def has(self, artist_name: str) -> bool:
+        """True when the artist has a pinned MBID override."""
         return artist_name.lower() in self._data
 
 

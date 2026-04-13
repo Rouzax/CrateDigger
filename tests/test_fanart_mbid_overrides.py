@@ -41,7 +41,7 @@ def test_malformed_json_does_not_raise(tmp_path, caplog):
     assert any("artist_mbids.json" in rec.message.lower() for rec in caplog.records)
 
 
-def test_non_dict_top_level_does_not_raise(tmp_path, caplog):
+def test_non_dict_top_level_does_not_raise(tmp_path):
     # Must tolerate a JSON file whose top level is a list or string.
     (tmp_path / "artist_mbids.json").write_text("[]")
     overrides = ArtistMbidOverrides(overrides_dir=tmp_path)
