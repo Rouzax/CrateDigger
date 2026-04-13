@@ -4,8 +4,11 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from festival_organizer.cli import run, _analyse_parallel
+from rich.console import Console
+
+from festival_organizer.cli import run, _analyse_parallel, _run_kodi_sync
 from festival_organizer.config import Config
+from festival_organizer.operations import OperationResult
 from tests.conftest import TEST_CONFIG
 
 
@@ -200,3 +203,84 @@ def test_analyse_parallel_propagates_exception():
     with patch("festival_organizer.cli.analyse_file", side_effect=RuntimeError("mediainfo exploded")):
         with pytest.raises(RuntimeError, match="mediainfo exploded"):
             _analyse_parallel(files, root, cfg, max_workers=4)
+
+
+class _StubOp:
+    def __init__(self, name: str):
+        self.name = name
+
+
+def _make_kodi_inputs(tmp_path, results_per_file):
+    """Build (pipeline_files, all_results) for a list of (video_path, [OperationResult])."""
+    pipeline_files = []
+    all_results = []
+    for video, results in results_per_file:
+        ops = [_StubOp(r.name) for r in results]
+        pipeline_files.append((video, MagicMock(), ops))
+        all_results.append(results)
+    return pipeline_files, all_results
+
+
+def test_run_kodi_sync_calls_sync_library_when_op_done(tmp_path):
+    """A 'done' nfo result should trigger sync_library with the video path."""
+    cfg = Config(TEST_CONFIG)
+    video = tmp_path / "set.mkv"
+    video.touch()
+    results = [OperationResult(name="nfo", status="done", display_name="nfo")]
+    pipeline_files, all_results = _make_kodi_inputs(tmp_path, [(video, results)])
+
+    with patch("festival_organizer.kodi.sync_library") as mock_sync, \
+         patch("festival_organizer.kodi.KodiClient") as mock_client:
+        _run_kodi_sync(all_results, pipeline_files, cfg, Console(), quiet=True)
+
+    mock_client.assert_called_once()
+    mock_sync.assert_called_once()
+    called_paths = mock_sync.call_args[0][1]
+    assert video in called_paths
+
+
+def test_run_kodi_sync_empty_logs_debug_and_skips_sync(tmp_path, caplog):
+    """All-skipped pipeline should log DEBUG and not invoke sync_library."""
+    cfg = Config(TEST_CONFIG)
+    video = tmp_path / "set.mkv"
+    video.touch()
+    results = [OperationResult(name="nfo", status="skipped", detail="exists", display_name="nfo")]
+    pipeline_files, all_results = _make_kodi_inputs(tmp_path, [(video, results)])
+
+    caplog.set_level(logging.DEBUG, logger="festival_organizer.kodi")
+    with patch("festival_organizer.kodi.sync_library") as mock_sync, \
+         patch("festival_organizer.kodi.KodiClient"):
+        _run_kodi_sync(all_results, pipeline_files, cfg, Console(), quiet=True)
+
+    mock_sync.assert_not_called()
+    assert any(
+        "no kodi-affecting changes" in rec.getMessage()
+        for rec in caplog.records
+        if rec.name == "festival_organizer.kodi"
+    )
+
+
+def test_run_kodi_sync_album_poster_expands_to_folder_siblings(tmp_path):
+    """album_poster display_name should fan out to every video sibling in the folder."""
+    cfg = Config(TEST_CONFIG)
+    folder = tmp_path / "festival"
+    folder.mkdir()
+    video_a = folder / "a.mkv"
+    video_b = folder / "b.mkv"
+    video_a.touch()
+    video_b.touch()
+    # Also add a non-video file to confirm filtering
+    (folder / "notes.txt").write_text("x")
+
+    results = [OperationResult(name="posters", status="done", display_name="album_poster")]
+    pipeline_files, all_results = _make_kodi_inputs(tmp_path, [(video_a, results)])
+
+    with patch("festival_organizer.kodi.sync_library") as mock_sync, \
+         patch("festival_organizer.kodi.KodiClient"):
+        _run_kodi_sync(all_results, pipeline_files, cfg, Console(), quiet=True)
+
+    mock_sync.assert_called_once()
+    called_paths = mock_sync.call_args[0][1]
+    assert video_a in called_paths
+    assert video_b in called_paths
+    assert not any(p.suffix == ".txt" for p in called_paths)

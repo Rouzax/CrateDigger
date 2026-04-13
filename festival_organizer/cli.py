@@ -415,6 +415,13 @@ def _run_command(args: types.SimpleNamespace) -> int:
         }
         if getattr(args, "enrich", False):
             header_rows["Enrich"] = "yes"
+
+    if args.command in ("enrich", "organize"):
+        if getattr(args, "kodi_sync", False):
+            header_rows["Kodi sync"] = "yes (flag)"
+        elif config.kodi_enabled:
+            header_rows["Kodi sync"] = "yes (config)"
+
     progress.print_header(command=command_label, rows=header_rows, missing_tools=missing_tools)
 
     if not files:
@@ -583,10 +590,11 @@ def _run_kodi_sync(
     """Notify Kodi to refresh items that had changes affecting Kodi display."""
     from festival_organizer.kodi import KodiClient, sync_library
 
-    RELEVANT_OPS = {"nfo", "art", "posters", "album_poster", "fanart"}
+    RELEVANT_OPS = {"nfo", "art", "posters", "fanart"}
     video_exts = config.video_extensions
     changed_paths: list[Path] = []
     album_poster_folders: set[Path] = set()
+    kodi_logger = logging.getLogger("festival_organizer.kodi")
 
     for (fp, _mf, ops), results in zip(pipeline_files, all_results):
         final_path = fp
@@ -597,7 +605,7 @@ def _run_kodi_sync(
         for r in results:
             if r.status != "done":
                 continue
-            if r.name == "album_poster":
+            if r.display_name == "album_poster":
                 # folder.jpg changed; all videos in that folder need refresh
                 album_poster_folders.add(final_path.parent)
             elif r.name in RELEVANT_OPS:
@@ -610,6 +618,11 @@ def _run_kodi_sync(
                 changed_paths.append(sibling)
 
     if not changed_paths:
+        kodi_logger.debug(
+            "Kodi sync: no kodi-affecting changes (%d files processed, "
+            "all skipped or non-relevant); nothing to refresh",
+            len(pipeline_files),
+        )
         return
 
     try:
