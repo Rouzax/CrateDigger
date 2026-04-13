@@ -173,8 +173,24 @@ def _mb_rate_limit() -> None:
     _last_mb_request = time.monotonic()
 
 
-def lookup_mbid(artist_name: str, cache: MBIDCache) -> str | None:
-    """Look up MusicBrainz ID for an artist name. Uses cache, respects rate limit."""
+def lookup_mbid(
+    artist_name: str,
+    cache: MBIDCache,
+    overrides: "ArtistMbidOverrides | None" = None,
+) -> str | None:
+    """Look up MusicBrainz ID for an artist name.
+
+    Precedence: user override (never expires, never written to) > local
+    cache (TTL-bound) > MusicBrainz search. Overrides are returned as-is
+    and are NOT promoted into the cache: that keeps the curated file the
+    single source of truth and prevents a TTL refresh from stomping a pin.
+    """
+    if overrides is not None:
+        pinned = overrides.get(artist_name)
+        if pinned:
+            logger.debug("MBID override hit: %s -> %s", artist_name, pinned)
+            return pinned
+
     if cache.has(artist_name):
         mbid = cache.get(artist_name)
         if mbid:
