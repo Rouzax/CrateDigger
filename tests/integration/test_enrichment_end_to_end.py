@@ -74,7 +74,9 @@ FIXTURES = {
             "embedding": {
                 "ttv70_artists": "Tiësto",
                 "min_chapters": 20,
+                "max_chapters": 60,
                 "min_performer_chapters": 20,
+                "performer_must_include": ["Tiësto"],
                 "dj_cache_min_entries": 1,
             },
             "pipeline": {
@@ -98,6 +100,8 @@ FIXTURES = {
             "embedding": {
                 "ttv70_artists": "SOMETHING ELSE",
                 "performer_must_not_equal": ["ALOK"],
+                "performer_must_include": ["SOMETHING ELSE"],
+                "max_chapters": 50,
                 "min_performer_chapters": 1,
             },
             "pipeline": {
@@ -113,6 +117,8 @@ FIXTURES = {
             "embedding": {
                 "ttv70_artists_contains": ["Armin", "Marlon"],
                 "min_chapters": 15,
+                "max_chapters": 50,
+                "performer_must_include": ["Armin van Buuren", "Marlon Hoffstadt"],
             },
         },
     },
@@ -120,13 +126,21 @@ FIXTURES = {
         "filename": "AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 [fLyb8KvtSzw].mkv",
         "tracklist_id": "22r0yk79",
         "scenarios": ["solo"],
-        "expect": {"embedding": {"ttv70_artists": "AFROJACK"}},
+        "expect": {"embedding": {
+            "ttv70_artists": "AFROJACK",
+            "performer_must_include": ["AFROJACK"],
+            "max_chapters": 50,
+        }},
     },
     "eric-prydz-resistance": {
         "filename": "ERIC PRYDZ LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 ｜ RESISTANCE MEGASTRUCTURE [hU-z3iV0LOg].mkv",
         "tracklist_id": "qy9yyy9",
         "scenarios": ["solo", "single-genre"],
-        "expect": {"embedding": {"ttv70_artists": "Eric Prydz"}},
+        "expect": {"embedding": {
+            "ttv70_artists": "Eric Prydz",
+            "performer_must_include": ["Eric Prydz"],
+            "max_chapters": 50,
+        }},
     },
 }
 
