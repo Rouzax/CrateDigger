@@ -396,3 +396,56 @@ def test_merge_tags_fold_does_not_touch_chapter_scoped_blocks():
     chap_tags = [t for t in root.findall("Tag")
                  if t.find("Targets/ChapterUID") is not None]
     assert len(chap_tags) == 2
+
+
+def test_has_chapter_tags_returns_false_when_no_tags(tmp_path, monkeypatch):
+    """File with no tags at all: extract_all_tags returns None → False."""
+    from festival_organizer.mkv_tags import has_chapter_tags
+    import festival_organizer.mkv_tags as mod
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: None)
+    assert has_chapter_tags(tmp_path / "x.mkv") is False
+
+
+def test_has_chapter_tags_returns_false_when_only_global(monkeypatch):
+    """File with only TTV=50 and TTV=70 blocks: False."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.mkv_tags import has_chapter_tags
+    import festival_organizer.mkv_tags as mod
+    xml = """<Tags>
+<Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+<Simple><Name>ARTIST</Name><String>Tiësto</String></Simple></Tag>
+<Tag><Targets><TargetTypeValue>70</TargetTypeValue></Targets>
+<Simple><Name>CRATEDIGGER_1001TL_ID</Name><String>abc</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+    from pathlib import Path
+    assert has_chapter_tags(Path("/x.mkv")) is False
+
+
+def test_has_chapter_tags_returns_true_with_ttv30(monkeypatch):
+    """File with at least one TTV=30 block: True."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.mkv_tags import has_chapter_tags
+    import festival_organizer.mkv_tags as mod
+    xml = """<Tags>
+<Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+<Simple><Name>ARTIST</Name><String>x</String></Simple></Tag>
+<Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
+<Simple><Name>PERFORMER</Name><String>y</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+    from pathlib import Path
+    assert has_chapter_tags(Path("/x.mkv")) is True
+
+
+def test_has_chapter_tags_ignores_targets_without_ttv(monkeypatch):
+    """<Targets/> empty block (defaults to TTV=50 semantically): not a chapter tag."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.mkv_tags import has_chapter_tags
+    import festival_organizer.mkv_tags as mod
+    xml = """<Tags>
+<Tag><Targets/><Simple><Name>ARTIST</Name><String>x</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+    from pathlib import Path
+    assert has_chapter_tags(Path("/x.mkv")) is False

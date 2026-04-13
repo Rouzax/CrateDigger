@@ -32,7 +32,7 @@ from festival_organizer.tracklists.api import (
     RateLimitError,
     ExportError,
 )
-from festival_organizer.mkv_tags import write_merged_tags
+from festival_organizer.mkv_tags import has_chapter_tags
 from festival_organizer.tracklists.source_cache import SourceCache, SOURCE_TYPE_TO_TAG
 from festival_organizer.tracklists.chapters import (
     parse_tracklist_lines,
@@ -289,6 +289,7 @@ def _process_file(
                     session, stored["url"], filepath, duration_mins,
                     config, preview, quiet, language, console=con,
                     verbose=verbose, duration_seconds=mf.duration_seconds,
+                    regenerate=ignore_stored,
                 )
             else:
                 con.print(f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]")
@@ -298,6 +299,7 @@ def _process_file(
                         session, stored["url"], filepath, duration_mins,
                         config, preview, quiet, language, console=con,
                         verbose=verbose, duration_seconds=mf.duration_seconds,
+                        regenerate=ignore_stored,
                     )
                 elif choice in ("s", "skip"):
                     return "skipped"
@@ -317,6 +319,7 @@ def _process_file(
             session, source["value"], filepath, duration_mins,
             config, preview, quiet, language, console=con,
             verbose=verbose, duration_seconds=mf.duration_seconds,
+            regenerate=ignore_stored,
         )
     elif source["type"] == "id":
         return _fetch_and_embed(
@@ -324,6 +327,7 @@ def _process_file(
             config, preview, quiet, language, console=con,
             tracklist_id=source["value"],
             verbose=verbose, duration_seconds=mf.duration_seconds,
+            regenerate=ignore_stored,
         )
 
     # Search
@@ -375,6 +379,7 @@ def _process_file(
         tracklist_id=tl_id,
         tracklist_date=selected.date,
         verbose=verbose, duration_seconds=mf.duration_seconds,
+        regenerate=ignore_stored,
     )
 
 
@@ -392,6 +397,7 @@ def _fetch_and_embed(
     console: Console | None = None,
     verbose: bool = False,
     duration_seconds: float | None = None,
+    regenerate: bool = False,
 ) -> str:
     """Fetch tracklist, parse chapters, and embed."""
     con = console or make_console()
@@ -428,7 +434,7 @@ def _fetch_and_embed(
     if chapters_are_identical(existing, chapters):
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
-            # Chapters match, check if tags need updating
+            # Chapters match. Decide whether a re-tag is needed.
             desired = {
                 "CRATEDIGGER_1001TL_URL": export.url,
                 "CRATEDIGGER_1001TL_TITLE": export.title,
@@ -473,27 +479,51 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_COUNTRY": stored.get("country", ""),
                 "CRATEDIGGER_1001TL_SOURCE_TYPE": stored.get("source_type", ""),
             }
-            # Only update tags that have a new non-empty value different from stored
+            # Tags that would change at TTV=70
             tags_to_update = {
                 k: v for k, v in desired.items()
                 if v and v != stored_map.get(k, "")
             }
-            if not tags_to_update:
+            # Self-heal: legacy files enriched before 0.9.9 lack TTV=30
+            # per-chapter tags. Detect and route through the full embed path
+            # so they get populated on next run without requiring a flag.
+            missing_chapter_tags = not has_chapter_tags(filepath)
+            if not tags_to_update and not missing_chapter_tags and not regenerate:
                 if not quiet:
                     con.print(f"  [green]Up to date[/green] ({len(chapters)} chapters)")
                 return "up_to_date"
-            # Re-embed only the changed tags, skip chapter writing
-            if not preview:
-                if write_merged_tags(filepath, {70: tags_to_update}):
-                    if not quiet:
+            # Otherwise route through embed_chapters: it writes TTV=70 +
+            # per-chapter TTV=30 + folds any duplicate global Tag blocks.
+            # Deterministic ChapterUIDs make this byte-idempotent on re-run.
+            if preview:
+                return "updated"
+            success = embed_chapters(
+                filepath, chapters,
+                tracklist_url=export.url, tracklist_title=export.title,
+                tracklist_id=tracklist_id, tracklist_date=tracklist_date,
+                genres=export.genres, dj_artwork_url=export.dj_artwork_url,
+                stage_text=export.stage_text,
+                sources_by_type=export.sources_by_type,
+                dj_artists=export.dj_artists, country=export.country,
+                tracks=export.tracks, dj_cache=session._dj_cache,
+                fetcher=(lambda slug: _fetch_full_dj_profile(session, slug)),
+                alias_resolver=config.resolve_artist,
+            )
+            if success:
+                if not quiet:
+                    if missing_chapter_tags:
+                        reason = "populated per-chapter tags"
+                    elif tags_to_update:
                         friendly = ", ".join(
                             _FRIENDLY_TAG_NAMES.get(k, k) for k in tags_to_update
                         )
-                        con.print(f"  [cyan]Updated tags:[/cyan] {escape(friendly)} ({len(chapters)} chapters)")
-                    return "updated"
-                else:
-                    logger.warning("Failed to write tags for %s", filepath)
-                    return "skipped"
+                        reason = f"updated {escape(friendly)}"
+                    else:
+                        reason = "refreshed (regenerate)"
+                    con.print(f"  [cyan]Re-tagged:[/cyan] {reason} ({len(chapters)} chapters)")
+                return "updated"
+            logger.warning("Failed to re-tag %s", filepath)
+            return "skipped"
 
     # Display chapters
     if not quiet or preview:
