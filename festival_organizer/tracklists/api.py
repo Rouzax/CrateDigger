@@ -155,30 +155,56 @@ def _parse_tracks(html: str) -> list["Track"]:
             slug = m.group(1)
             if slug in slugs:
                 continue
-            # Walk up to the nearest per-artist notranslate wrapper. Skip the
-            # outer trackValue span because it also has class notranslate but
-            # wraps the WHOLE track line ("Artist ft. X - Title (Y Mashup)"),
-            # which would leak garbage into the tag. Also reject per-artist
-            # spans whose text is a mashup/edit credit rather than a clean
-            # name (1001TL wraps anchors like Afrojack in "( AFROJACK Mashup )"
-            # spans on remix rows). In either failure mode, derive the display
-            # from the slug so PERFORMER_NAMES stays safe to write to disk.
+            # Extract the per-artist display name. 1001TL renders three
+            # distinct shapes around artist anchors and we handle each:
+            #
+            # 1. Primary artist (left side of track): the anchor lives inside
+            #    <span class="tgHid spL"> inside <span class="notranslate
+            #    blueTxt">NAME<tgHid/></span>. The walk-up below picks up
+            #    "NAME" from that outer blueTxt wrapper.
+            #
+            # 2. Remix-credit artist (right side, inside parentheses): the
+            #    anchor lives inside <span class="tgHid spR"> and the NAME
+            #    is the preceding sibling <span class="blueTxt">NAME</span>.
+            #    This path preserves casing and punctuation exactly (LAWTON,
+            #    Kø:lab, Armin van Buuren with lowercase "van", etc.) rather
+            #    than losing it to a slug-derived fallback.
+            #
+            # 3. Feature-prefix inline (e.g. " ft. Caroline Roxy<a/>"): the
+            #    anchor is a direct child of a notranslate span whose text
+            #    carries a feature prefix. Falls into the walk-up below; the
+            #    ft./feat. prefix is stripped afterwards.
+            #
+            # Parenthetical credits where 1001TL wraps the anchor itself
+            # inside a <span class="notranslate">( NAME Mashup )</span>
+            # (Afrojack-as-mashup-credit) are rejected: the text is an edit
+            # annotation, not a clean name. Slug-fallback wins in that case.
             display = ""
-            parent = a
-            for _ in range(4):
-                parent = parent.parent if parent else None
-                if parent is None:
-                    break
-                parent_classes = parent.get("class", []) if hasattr(parent, "get") else []
-                if "notranslate" in parent_classes and "trackValue" not in parent_classes:
-                    candidate = parent.get_text(" ", strip=True)
-                    # Reject parenthetical credits: "( AFROJACK Mashup )",
-                    # "( Marlon Hoffstadt Rave Revival Edit )", etc.
-                    if not (candidate.startswith("(") and candidate.endswith(")")):
-                        display = candidate
-                    break
-            # Strip ft./feat. prefixes that occasionally leak through when the
-            # per-artist wrapper itself carries the feature prefix inline.
+            parent_wrapper = a.parent
+            if (parent_wrapper is not None and hasattr(parent_wrapper, "get")
+                    and "tgHid" in parent_wrapper.get("class", [])
+                    and "spR" in parent_wrapper.get("class", [])):
+                prev = parent_wrapper.previous_sibling
+                while prev is not None and getattr(prev, "name", None) is None:
+                    if str(prev).strip():
+                        break
+                    prev = prev.previous_sibling
+                if (prev is not None and getattr(prev, "name", None) == "span"
+                        and hasattr(prev, "get")
+                        and "blueTxt" in prev.get("class", [])):
+                    display = prev.get_text(" ", strip=True)
+            if not display:
+                parent = a
+                for _ in range(4):
+                    parent = parent.parent if parent else None
+                    if parent is None:
+                        break
+                    parent_classes = parent.get("class", []) if hasattr(parent, "get") else []
+                    if "notranslate" in parent_classes and "trackValue" not in parent_classes:
+                        candidate = parent.get_text(" ", strip=True)
+                        if not (candidate.startswith("(") and candidate.endswith(")")):
+                            display = candidate
+                        break
             display = re.sub(r"^(ft\.?\s+|feat\.?\s+)", "", display, flags=re.IGNORECASE)
             if not display:
                 display = slug.replace("-", " ").title()

@@ -249,6 +249,44 @@ def test_artist_names_fall_back_to_slug_preserves_alignment_with_slugs():
     assert tracks[0].artist_names[2] == "Wippenberg"    # slug-derived
 
 
+def test_artist_names_remix_credit_uses_preceding_blueTxt_sibling():
+    """When the anchor sits inside <span class='tgHid spR'>, the remix-credit
+    artist name is in the preceding sibling <span class='blueTxt'>. Reading it
+    preserves casing and punctuation (LAWTON, Kø:lab) exactly, avoiding the
+    lossy slug-fallback that would turn "Kø:lab" into "Kolab"."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="Madonna - Frozen ( LAWTON Lick )">
+<span class="trackValue notranslate">
+  <span class="notranslate blueTxt">Madonna<span class="tgHid spL"><a href="/artist/u/madonna/index.html"></a></span></span>
+  <span class="notranslate"> - </span>
+  <span class="blueTxt">Frozen</span>
+  <span class="notranslate"> (<span class="blueTxt">LAWTON</span><span class="tgHid spR"><a href="/artist/l/lawton/index.html"></a></span><span class="remixValue"> Lick</span>)</span>
+</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].artist_slugs == ["madonna", "lawton"]
+    # Proper all-caps preserved (not slug-fallback title-case "Lawton"):
+    assert tracks[0].artist_names == ["Madonna", "LAWTON"]
+
+
+def test_artist_names_remix_credit_preserves_diacritics_and_punctuation():
+    """Real-world regression: Kø:lab remix credit must not degrade to "Kolab"."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="Artist - Track ( Kø:lab Rave Edit )">
+<span class="trackValue notranslate">
+  <span class="notranslate blueTxt">Artist<span class="tgHid spL"><a href="/artist/a/artist/index.html"></a></span></span>
+  <span class="notranslate"> - </span>
+  <span class="blueTxt">Track</span>
+  <span class="notranslate"> (<span class="blueTxt">Kø:lab</span><span class="tgHid spR"><a href="/artist/k/kolab/index.html"></a></span><span class="remixValue"> Rave Edit</span>)</span>
+</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].artist_slugs == ["artist", "kolab"]
+    assert tracks[0].artist_names == ["Artist", "Kø:lab"]
+
+
 def test_artist_names_real_fixture_still_clean():
     """Sanity: the existing afrojack fixture continues to yield clean names."""
     tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
