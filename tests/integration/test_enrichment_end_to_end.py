@@ -55,6 +55,9 @@ FULL_PIPELINE = os.environ.get("CRATEDIGGER_TEST_FULL_PIPELINE") == "1"
 #   embedding.dj_cache_min_entries: int          # >= N entries in dj_cache.json
 #   pipeline.library_path_glob: str              # at least one match after organize
 #   pipeline.(nfo|poster|fanart)_must_exist: bool  # sidecar file beside matched MKV
+#   pipeline_in_place.nfo_must_exist: bool      # after --rename-only, sidecar beside renamed mkv
+#   pipeline_in_place.poster_must_exist: bool
+#   pipeline_in_place.fanart_must_exist: bool
 FIXTURES = {
     "tiesto-we-belong-here": {
         "filename": "Tiësto - Live at We Belong Here Miami 2026 [2EQGqEvLAuE].mkv",
@@ -70,6 +73,11 @@ FIXTURES = {
             },
             "pipeline": {
                 "library_path_glob": "**/Tiësto/*We Belong Here*2026*.mkv",
+                "nfo_must_exist": True,
+                "poster_must_exist": True,
+                "fanart_must_exist": True,
+            },
+            "pipeline_in_place": {
                 "nfo_must_exist": True,
                 "poster_must_exist": True,
                 "fanart_must_exist": True,
@@ -256,6 +264,71 @@ def test_full_pipeline(fixture_key: str, tmp_path):
     )
 
     _assert_pipeline_expect(library, fixture.get("expect", {}).get("pipeline", {}))
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    not FULL_PIPELINE,
+    reason="Set CRATEDIGGER_TEST_FULL_PIPELINE=1 to run the CLI pipeline test",
+)
+@pytest.mark.parametrize(
+    "fixture_key",
+    list(FIXTURES.keys()),
+    ids=list(FIXTURES.keys()),
+)
+def test_full_pipeline_in_place(fixture_key: str, tmp_path):
+    """Run identify -> organize --rename-only -> enrich; assert in-place shape.
+
+    Unlike test_full_pipeline, this covers the rename-in-place code path where
+    files are not moved to a separate library root. After organize, the mkv
+    should still live in the inbox dir but under its canonical name.
+    """
+    fixture = FIXTURES[fixture_key]
+    assert MKV_DIR is not None and CONFIG is not None
+    src = MKV_DIR / fixture["filename"]
+    if not src.exists():
+        pytest.skip(f"fixture MKV missing: {fixture['filename']}")
+
+    inbox = tmp_path / "inbox"
+    inbox.mkdir()
+    shutil.copy(src, inbox / fixture["filename"])
+
+    cfg_arg = ["--config", str(CONFIG)]
+
+    subprocess.run(
+        ["cratedigger", "identify", *cfg_arg,
+         "--tracklist", fixture["tracklist_id"], "--auto",
+         str(inbox / fixture["filename"])],
+        check=True, timeout=600,
+    )
+    subprocess.run(
+        ["cratedigger", "organize", *cfg_arg,
+         "--rename-only", "--yes",
+         str(inbox)],
+        check=True, timeout=300,
+    )
+    subprocess.run(
+        ["cratedigger", "enrich", *cfg_arg, str(inbox)],
+        check=True, timeout=900,
+    )
+
+    # After --rename-only, exactly one .mkv should remain in the inbox dir
+    # (renamed to its canonical form, but not moved out).
+    mkvs = list(inbox.glob("*.mkv"))
+    assert len(mkvs) == 1, (
+        f"expected exactly 1 mkv in inbox after --rename-only, got {len(mkvs)}: {mkvs}"
+    )
+    folder = mkvs[0].parent
+
+    pip = fixture.get("expect", {}).get("pipeline_in_place", {})
+    if pip.get("nfo_must_exist"):
+        assert any(p.is_file() for p in folder.glob("*.nfo")), (
+            f"no .nfo beside {mkvs[0].name}"
+        )
+    if pip.get("poster_must_exist"):
+        assert _any_image(folder, "poster"), f"no poster beside {mkvs[0].name}"
+    if pip.get("fanart_must_exist"):
+        assert _any_image(folder, "fanart"), f"no fanart beside {mkvs[0].name}"
 
 
 @pytest.mark.integration
