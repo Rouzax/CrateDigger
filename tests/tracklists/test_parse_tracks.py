@@ -168,3 +168,16 @@ def test_parse_tracks_titles_handle_apostrophes():
     tracks = _parse_tracks(FIXTURE_ALIAS.read_text(encoding="utf-8"))
     titles_with_apos = [t.title for t in tracks if "'" in t.title]
     assert titles_with_apos, "expected at least one apostrophe-containing title"
+
+
+def test_parse_tracks_label_no_stray_space_around_nested_icon():
+    """A label span with a nested icon <a> between text nodes must not
+    produce a stray space (regression: SHEFFIELD TUNES (KONTOR ) bug)."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="Some Artist - Some Title">
+<span class="trackLabel">SHEFFIELD TUNES (KONTOR<a href="/label/kontor/index.html" title="open label page"><i class="fa fa-external-link"></i></a>)</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert len(tracks) == 1
+    assert tracks[0].label == "SHEFFIELD TUNES (KONTOR)"
