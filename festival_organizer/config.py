@@ -90,6 +90,11 @@ DEFAULT_CONFIG = {
         "delay_seconds": 5,
         "chapter_language": "eng",
         "auto_select": False,
+        # Cap on the set-level CRATEDIGGER_1001TL_GENRES tag: keep only the
+        # top-N most frequent per-track genres. Ties are broken by first
+        # appearance, so the result is deterministic. Set to 0 to disable
+        # the cap and write every per-track genre (noisy on some sets).
+        "genre_top_n": 5,
     },
     "fanart": {
         "project_api_key": "9fb9273dbec3739bd0fdb49f10d6a129",

@@ -192,3 +192,116 @@ def test_ttv70_tag_diff_also_routes_through_embed_chapters(tmp_path):
         )
     assert status == "updated"
     mocks["embed_chapters"].assert_called_once()
+
+
+def test_set_genres_capped_via_config_genre_top_n(tmp_path):
+    """_fetch_and_embed honours config.tracklists_settings.genre_top_n, capping
+    the set-level CRATEDIGGER_1001TL_GENRES to top-N per-track genres."""
+    from unittest.mock import MagicMock, patch
+    from festival_organizer.tracklists.api import Track, TracklistExport
+    from festival_organizer.tracklists.cli_handler import _fetch_and_embed
+
+    # Tracks produce 7 distinct genres with varying frequency.
+    tracks = [
+        Track(start_ms=i * 60000, raw_text=f"Artist{i} - T{i}",
+              artist_slugs=[f"a{i}"], genres=[g])
+        for i, g in enumerate([
+            "House", "House", "Tech House", "Tech House", "Trance",
+            "Mainstage", "Techno", "Progressive", "Hard Dance",
+        ])
+    ]
+    export = TracklistExport(
+        lines=[f"[{i:02d}:00] t{i}" for i in range(len(tracks))],
+        url="https://www.1001tracklists.com/tracklist/abc/",
+        title="Test",
+        genres=["House", "Tech House", "Trance", "Mainstage", "Techno",
+                "Progressive", "Hard Dance"],  # 7 genres flat
+        dj_artists=[("test", "Test")],
+        tracks=tracks,
+    )
+
+    session = MagicMock()
+    session.export_tracklist.return_value = export
+    session._dj_cache = MagicMock()
+
+    config = MagicMock()
+    config.tracklists_settings = {"genre_top_n": 3}  # cap at 3
+    config.resolve_artist = lambda n: n
+
+    captured: dict = {}
+
+    def fake_embed(filepath, chapters, **kwargs):
+        captured["genres"] = kwargs.get("genres")
+        return True
+
+    fake_mkv = tmp_path / "x.mkv"
+    fake_mkv.write_bytes(b"")
+
+    with patch("festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
+               return_value=[MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
+                             for i in range(len(tracks))]), \
+         patch("festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
+               side_effect=lambda chs, dur: chs), \
+         patch("festival_organizer.tracklists.cli_handler.extract_existing_chapters",
+               return_value=None), \
+         patch("festival_organizer.tracklists.cli_handler.chapters_are_identical",
+               return_value=False), \
+         patch("festival_organizer.tracklists.cli_handler.embed_chapters",
+               side_effect=fake_embed), \
+         patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
+               return_value="abc"):
+        _fetch_and_embed(session, "https://x", fake_mkv, 0, config,
+                         preview=False, quiet=True, language="eng",
+                         tracklist_id="abc", tracklist_date=None,
+                         duration_seconds=None, regenerate=False)
+
+    # Top 3 by frequency: House (2), Tech House (2), Trance (1)
+    # (ties broken by first-appearance order)
+    assert captured["genres"] == ["House", "Tech House", "Trance"]
+
+
+def test_set_genres_uncapped_when_config_zero(tmp_path):
+    """genre_top_n=0 disables the cap; full export.genres flows through."""
+    from unittest.mock import MagicMock, patch
+    from festival_organizer.tracklists.api import Track, TracklistExport
+    from festival_organizer.tracklists.cli_handler import _fetch_and_embed
+
+    tracks = [Track(start_ms=0, raw_text="A - t", artist_slugs=["a"], genres=["X"])]
+    export = TracklistExport(
+        lines=["[00:00] t"], url="https://x", title="T",
+        genres=["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],  # 10 genres
+        dj_artists=[("test", "Test")], tracks=tracks,
+    )
+    session = MagicMock()
+    session.export_tracklist.return_value = export
+    session._dj_cache = MagicMock()
+    config = MagicMock()
+    config.tracklists_settings = {"genre_top_n": 0}
+    config.resolve_artist = lambda n: n
+
+    captured: dict = {}
+    def fake_embed(filepath, chapters, **kwargs):
+        captured["genres"] = kwargs.get("genres")
+        return True
+
+    fake_mkv = tmp_path / "x.mkv"
+    fake_mkv.write_bytes(b"")
+    with patch("festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
+               return_value=[MagicMock(timestamp="00:00:00.000", title="t")]), \
+         patch("festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
+               side_effect=lambda chs, dur: chs), \
+         patch("festival_organizer.tracklists.cli_handler.extract_existing_chapters",
+               return_value=None), \
+         patch("festival_organizer.tracklists.cli_handler.chapters_are_identical",
+               return_value=False), \
+         patch("festival_organizer.tracklists.cli_handler.embed_chapters",
+               side_effect=fake_embed), \
+         patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
+               return_value="abc"):
+        _fetch_and_embed(session, "https://x", fake_mkv, 0, config,
+                         preview=False, quiet=True, language="eng",
+                         tracklist_id="abc", tracklist_date=None,
+                         duration_seconds=None, regenerate=False)
+
+    # Cap disabled — we keep whatever the flat scrape produced.
+    assert captured["genres"] == export.genres
