@@ -103,6 +103,7 @@ def test_parse_tracks_title_handles_no_separator():
 # --- Edge-case fixtures ---
 
 FIXTURE_B2B = Path(__file__).parent / "fixtures" / "armin_kiki_amf_2025.html"
+FIXTURE_B2B_2026 = Path(__file__).parent / "fixtures" / "armin_marlon_ultra_miami_2026.html"
 FIXTURE_ALIAS = Path(__file__).parent / "fixtures" / "something_else_tomorrowland_winter_2026.html"
 FIXTURE_LOWERCASE = Path(__file__).parent / "fixtures" / "deadmau5_tomorrowland_brasil_2025.html"
 
@@ -121,6 +122,21 @@ def test_parse_tracks_b2b_multi_artist_rows():
             # original casing), or they happen to match because the display
             # form IS title case for that artist. Both are legitimate.
             assert name  # never empty
+
+
+def test_parse_tracks_b2b_2026_markup():
+    """2026-markup B2B fixture: Armin van Buuren + Marlon Hoffstadt at ASOT Ultra Miami."""
+    tracks = _parse_tracks(FIXTURE_B2B_2026.read_text(encoding="utf-8"))
+    assert len(tracks) >= 15
+    multi = [t for t in tracks if len(t.artist_slugs) >= 2]
+    assert multi, "expected at least one multi-artist row in B2B set"
+    for t in multi:
+        assert len(t.artist_names) == len(t.artist_slugs), (
+            f"slug/name pairing broken: {t.artist_slugs} vs {t.artist_names}"
+        )
+    all_names = {n for t in tracks for n in t.artist_names}
+    assert "Armin van Buuren" in all_names, f"Armin missing from {sorted(all_names)[:20]}..."
+    assert "Marlon Hoffstadt" in all_names, f"Marlon missing from {sorted(all_names)[:20]}..."
 
 
 def test_parse_tracks_preserves_lowercase_artist():
