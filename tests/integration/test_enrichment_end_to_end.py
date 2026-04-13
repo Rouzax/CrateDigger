@@ -45,11 +45,42 @@ CONFIG = _env_path("CRATEDIGGER_TEST_CONFIG")
 COOKIES = _env_path("CRATEDIGGER_TEST_COOKIES")
 MKV_DIR = _env_path("CRATEDIGGER_TEST_MKV_DIR")
 
-TIESTO_MKV = (MKV_DIR / "tiesto-we-belong-here.mkv") if MKV_DIR else None
-TIESTO_ID = "2dyq04n9"
+FIXTURES = {
+    "tiesto-we-belong-here": {
+        "filename": "Tiësto - Live at We Belong Here Miami 2026 [2EQGqEvLAuE].mkv",
+        "tracklist_id": "2dyq04n9",
+    },
+    "alok-something-else": {
+        "filename": "Alok presents Something Else ｜ Tomorrowland Winter 2026 [kttWNVHJKDo].mkv",
+        "tracklist_id": "upk4l6k",
+    },
+    "armin-b2b-marlon": {
+        "filename": "ARMIN VAN BUUREN B2B MARLON HOFFSTADT LIVE AT ULTRA MIAMI 2026 ASOT WORLDWIDE STAGE [XM0zfkqLMzI].mkv",
+        "tracklist_id": "2gugf5b9",
+    },
+    "afrojack-ultra": {
+        "filename": "AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 [fLyb8KvtSzw].mkv",
+        "tracklist_id": "22r0yk79",
+    },
+    "eric-prydz-resistance": {
+        "filename": "ERIC PRYDZ LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 ｜ RESISTANCE MEGASTRUCTURE [hU-z3iV0LOg].mkv",
+        "tracklist_id": "qy9yyy9",
+    },
+}
 
-SOMETHING_ELSE_MKV = (MKV_DIR / "something-else-tomorrowland-winter.mkv") if MKV_DIR else None
-SOMETHING_ELSE_ID = "upk4l6k"
+
+def _fixture_mkv(key: str) -> Path | None:
+    if MKV_DIR is None:
+        return None
+    path = MKV_DIR / FIXTURES[key]["filename"]
+    return path if path.exists() else None
+
+
+TIESTO_MKV = _fixture_mkv("tiesto-we-belong-here")
+TIESTO_ID = FIXTURES["tiesto-we-belong-here"]["tracklist_id"]
+
+SOMETHING_ELSE_MKV = _fixture_mkv("alok-something-else")
+SOMETHING_ELSE_ID = FIXTURES["alok-something-else"]["tracklist_id"]
 
 
 pytestmark = pytest.mark.skipif(
