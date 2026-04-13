@@ -540,6 +540,9 @@ def compute_chapter_mbid_tags(
         names_str = entry.get("PERFORMER_NAMES")
         if not names_str:
             continue
-        mbids = [resolved.get(name) or "" for name in names_str.split("|")]
+        mbids = [
+            "" if (m := resolved.get(name)) is None else m
+            for name in names_str.split("|")
+        ]
         result[uid] = {"MUSICBRAINZ_ARTISTIDS": "|".join(mbids)}
     return result
