@@ -17,7 +17,7 @@ The `<folder_or_file>` argument accepts a single MKV/WEBM file or a folder conta
 | `--tracklist <value>` | `-t` | Tracklist URL, numeric ID, or search query |
 | `--auto` | | Batch mode; auto-select best match without prompts |
 | `--preview` | | Show matched chapters without embedding them |
-| `--regenerate` / `--fresh` | | Redo identification even if chapters already exist |
+| `--regenerate` / `--fresh` | | Redo identification and re-tag even when chapters already exist |
 | `--delay <seconds>` | | Delay between files in seconds (default: 5) |
 | `--config <path>` | | Path to config.json |
 | `--quiet` | `-q` | Suppress per-file progress |
@@ -65,7 +65,11 @@ Once a tracklist is selected, CrateDigger:
 
 If a file already has a stored tracklist URL from a previous run, CrateDigger reuses it by default. In auto mode, it fetches and verifies the stored URL directly. In interactive mode, it prompts you to use the stored URL, skip, or research.
 
-Use `--regenerate` to ignore stored URLs and search again.
+Use `--regenerate` to ignore stored URLs and search again. This flag also forces a full re-tag of the MKV even when the chapter structure is already current, which is useful for picking up new tag types (e.g. per-chapter PERFORMER / GENRE) or updated canonical names on files enriched by earlier CrateDigger versions.
+
+### Self-healing legacy files
+
+When `identify` runs against a file whose chapter structure is already current, it normally reports `Up to date` and skips the write step. CrateDigger now also checks whether the file has the per-chapter tags (`PERFORMER`, `PERFORMER_SLUGS`, `GENRE` at `TargetTypeValue=30`) that were introduced in version 0.9.9. If those tags are missing, the full tagging flow runs automatically on the next `identify` pass, no flag required. Subsequent runs are byte-idempotent because chapter UIDs are deterministic.
 
 ## Examples
 

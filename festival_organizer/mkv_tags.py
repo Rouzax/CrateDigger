@@ -136,6 +136,27 @@ def extract_tag_values(filepath: Path) -> dict[int, dict[str, str]]:
     return _tag_values_from_root(root)
 
 
+def has_chapter_tags(filepath: Path) -> bool:
+    """Return True if the MKV file has any per-chapter (TTV=30) tag blocks.
+
+    Used by the identify flow to self-heal legacy files that were enriched
+    before TTV=30 per-chapter tags were introduced: when this returns False,
+    the identify handler re-runs full embed_chapters to populate them rather
+    than short-circuiting on "chapters are identical".
+    """
+    root = extract_all_tags(filepath)
+    if root is None:
+        return False
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            continue
+        ttv_el = targets.find("TargetTypeValue")
+        if ttv_el is not None and ttv_el.text == "30":
+            return True
+    return False
+
+
 def merge_tags(
     existing: ET.Element | None,
     new_tags: dict[int, dict[str, str]],
