@@ -1317,12 +1317,22 @@
 <tr>
 <td>PERFORMER</td>
 <td>Per chapter</td>
-<td>Canonical artist of this track (resolved via DJ cache + artist aliases)</td>
+<td>Primary artist of this track, display name taken directly from the 1001TL track row HTML and then passed through <code>artists.json</code> alias resolution (e.g. <code>SOMETHING ELSE</code> → <code>ALOK</code>). Preserves original casing (<code>deadmau5</code>, <code>CIElll</code>, <code>S3PPA</code>).</td>
 </tr>
 <tr>
 <td>PERFORMER_SLUGS</td>
 <td>Per chapter</td>
 <td>Pipe-separated 1001TL slugs for every artist linked on the track row</td>
+</tr>
+<tr>
+<td>TITLE</td>
+<td>Per chapter</td>
+<td>Clean track title with artist prefix stripped (e.g. <code>Take Over Control</code> from the row <code>AFROJACK ft. Eva Simons - Take Over Control</code>)</td>
+</tr>
+<tr>
+<td>LABEL</td>
+<td>Per chapter</td>
+<td>Record label as plain text (e.g. <code>WALL</code>, <code>MAU5TRAP</code>)</td>
 </tr>
 <tr>
 <td>GENRE</td>
