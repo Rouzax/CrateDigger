@@ -660,12 +660,22 @@ def _find_chapter_tags(root: ET.Element) -> list[ET.Element]:
     return out
 
 
+def _parse_chapter_time(s: str) -> int:
+    """Parse 'HH:MM:SS.fffffffff' into nanoseconds."""
+    h, m, rest = s.split(":")
+    sec, _, nanos = rest.partition(".")
+    return (int(h) * 3600 + int(m) * 60 + int(sec)) * 1_000_000_000 + int((nanos or "0").ljust(9, "0")[:9])
+
+
 def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
     """Invariants every enriched MKV must satisfy.
 
     - No mojibake in chapter titles or tag values.
     - No legacy ARTIST / ARTIST_SLUGS tag names at chapter scope.
     - Every TTV=30 tag references a real ChapterUID.
+    - No empty Name or String in any TTV=30 Simple element (silent blanking bug).
+    - PERFORMER_NAMES and ARTIST_SLUGS have equal pipe-count when both present.
+    - Consecutive ChapterAtoms with ChapterTimeStart are strictly increasing.
     """
     for atom in chapters_root.findall(".//ChapterAtom"):
         title_el = atom.find("ChapterDisplay/ChapterString")
@@ -693,6 +703,49 @@ def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
     for tag in ttv30:
         uid_el = tag.find("Targets/ChapterUID")
         assert uid_el is not None and uid_el.text in atom_uids
+
+    # No-empty invariant: every TTV=30 Simple must have non-empty Name and String.
+    for tag in ttv30:
+        for simple in tag.findall("Simple"):
+            n_el = simple.find("Name")
+            s_el = simple.find("String")
+            name = (n_el.text if n_el is not None else "") or ""
+            value = (s_el.text if s_el is not None else "") or ""
+            assert name, f"empty Name in TTV=30 Simple (value={value!r})"
+            assert value, f"empty String in TTV=30 Simple (name={name!r})"
+
+    # Pipe-count alignment between PERFORMER_NAMES and ARTIST_SLUGS per chapter.
+    for tag in ttv30:
+        names_by_key: dict[str, str] = {}
+        for simple in tag.findall("Simple"):
+            n_el = simple.find("Name")
+            s_el = simple.find("String")
+            key = (n_el.text if n_el is not None else "") or ""
+            val = (s_el.text if s_el is not None else "") or ""
+            names_by_key[key] = val
+        perf = names_by_key.get("PERFORMER_NAMES")
+        slugs = names_by_key.get("ARTIST_SLUGS")
+        if perf and slugs:
+            assert len(perf.split("|")) == len(slugs.split("|")), (
+                f"PERFORMER_NAMES/ARTIST_SLUGS pipe-count mismatch: "
+                f"names={perf!r} slugs={slugs!r}"
+            )
+
+    # Monotonic chapter times: consecutive atoms with ChapterTimeStart must
+    # strictly increase.
+    prev_ns: int | None = None
+    for atom in chapters_root.findall(".//ChapterAtom"):
+        t_el = atom.find("ChapterTimeStart")
+        if t_el is None or not (t_el.text or ""):
+            prev_ns = None
+            continue
+        cur_ns = _parse_chapter_time(t_el.text)
+        if prev_ns is not None:
+            assert cur_ns > prev_ns, (
+                f"ChapterTimeStart not strictly increasing: "
+                f"prev={prev_ns}ns cur={cur_ns}ns ({t_el.text!r})"
+            )
+        prev_ns = cur_ns
 
 
 def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path) -> None:
