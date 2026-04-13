@@ -422,8 +422,8 @@ def test_has_chapter_tags_returns_false_when_only_global(monkeypatch):
     assert has_chapter_tags(Path("/x.mkv")) is False
 
 
-def test_has_chapter_tags_returns_true_with_ttv30(monkeypatch):
-    """File with at least one TTV=30 block: True."""
+def test_has_chapter_tags_returns_true_when_performer_names_present(monkeypatch):
+    """TTV=30 block carrying PERFORMER_NAMES: True (current contract)."""
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_chapter_tags
     import festival_organizer.mkv_tags as mod
@@ -431,11 +431,28 @@ def test_has_chapter_tags_returns_true_with_ttv30(monkeypatch):
 <Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
 <Simple><Name>ARTIST</Name><String>x</String></Simple></Tag>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
-<Simple><Name>PERFORMER</Name><String>y</String></Simple></Tag>
+<Simple><Name>PERFORMER</Name><String>y</String></Simple>
+<Simple><Name>PERFORMER_NAMES</Name><String>y</String></Simple></Tag>
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
     assert has_chapter_tags(Path("/x.mkv")) is True
+
+
+def test_has_chapter_tags_returns_false_when_ttv30_lacks_performer_names(monkeypatch):
+    """Legacy file (pre-0.10.0) with TTV=30 blocks but no PERFORMER_NAMES: False,
+    so identify self-heals on next run."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.mkv_tags import has_chapter_tags
+    import festival_organizer.mkv_tags as mod
+    xml = """<Tags>
+<Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
+<Simple><Name>PERFORMER</Name><String>y</String></Simple>
+<Simple><Name>PERFORMER_SLUGS</Name><String>y</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+    from pathlib import Path
+    assert has_chapter_tags(Path("/x.mkv")) is False
 
 
 def test_has_chapter_tags_ignores_targets_without_ttv(monkeypatch):
