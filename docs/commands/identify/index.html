@@ -655,6 +655,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#self-healing-legacy-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-healing legacy files
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1021,6 +1032,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#self-healing-legacy-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-healing legacy files
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1091,7 +1113,7 @@
 <tr>
 <td><code>--regenerate</code> / <code>--fresh</code></td>
 <td></td>
-<td>Redo identification even if chapters already exist</td>
+<td>Redo identification and re-tag even when chapters already exist</td>
 </tr>
 <tr>
 <td><code>--delay &lt;seconds&gt;</code></td>
@@ -1148,7 +1170,9 @@
 </ol>
 <h3 id="stored-url-handling">Stored URL handling</h3>
 <p>If a file already has a stored tracklist URL from a previous run, CrateDigger reuses it by default. In auto mode, it fetches and verifies the stored URL directly. In interactive mode, it prompts you to use the stored URL, skip, or research.</p>
-<p>Use <code>--regenerate</code> to ignore stored URLs and search again.</p>
+<p>Use <code>--regenerate</code> to ignore stored URLs and search again. This flag also forces a full re-tag of the MKV even when the chapter structure is already current, which is useful for picking up new tag types (e.g. per-chapter PERFORMER / GENRE) or updated canonical names on files enriched by earlier CrateDigger versions.</p>
+<h3 id="self-healing-legacy-files">Self-healing legacy files</h3>
+<p>When <code>identify</code> runs against a file whose chapter structure is already current, it normally reports <code>Up to date</code> and skips the write step. CrateDigger now also checks whether the file has the per-chapter tags (<code>PERFORMER</code>, <code>PERFORMER_SLUGS</code>, <code>GENRE</code> at <code>TargetTypeValue=30</code>) that were introduced in version 0.9.9. If those tags are missing, the full tagging flow runs automatically on the next <code>identify</code> pass, no flag required. Subsequent runs are byte-idempotent because chapter UIDs are deterministic.</p>
 <h2 id="examples">Examples</h2>
 <p>Identify all files in a folder interactively:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
