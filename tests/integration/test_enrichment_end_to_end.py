@@ -492,6 +492,102 @@ def test_full_pipeline_idempotent(tmp_path):
 
 @pytest.mark.integration
 @pytest.mark.skipif(
+    not FULL_PIPELINE,
+    reason="Set CRATEDIGGER_TEST_FULL_PIPELINE=1 to run the CLI pipeline test",
+)
+def test_full_pipeline_enrich_idempotent(tmp_path):
+    """A second `cratedigger enrich` on an already-enriched library produces
+    byte-identical sidecars and byte-identical MKV tags.
+
+    Guards against: (a) sidecar regeneration with different bytes (timestamp
+    drift, shuffled content), (b) duplicate TTV tag entries appended on each
+    enrich, (c) user edits silently overwritten.
+
+    Uses the Tiesto fixture only.
+    """
+    import hashlib
+    assert MKV_DIR is not None and CONFIG is not None
+    fixture = FIXTURES["tiesto-we-belong-here"]
+    src = MKV_DIR / fixture["filename"]
+    if not src.exists():
+        pytest.skip(f"fixture MKV missing: {fixture['filename']}")
+
+    inbox = tmp_path / "inbox"
+    library = tmp_path / "library"
+    inbox.mkdir()
+    library.mkdir()
+    shutil.copy(src, inbox / fixture["filename"])
+
+    cfg_arg = ["--config", str(CONFIG)]
+
+    subprocess.run(
+        ["cratedigger", "identify", *cfg_arg,
+         "--tracklist", fixture["tracklist_id"], "--auto",
+         str(inbox / fixture["filename"])],
+        check=True, timeout=600,
+    )
+    subprocess.run(
+        ["cratedigger", "organize", *cfg_arg,
+         "--output", str(library), "--move", "--yes",
+         str(inbox)],
+        check=True, timeout=300,
+    )
+    subprocess.run(
+        ["cratedigger", "enrich", *cfg_arg, str(library)],
+        check=True, timeout=900,
+    )
+
+    def _hash_sidecars(root: Path) -> dict[str, str]:
+        """Hash every non-MKV file under root. MKV is huge; its tags are
+        compared separately via mkvextract."""
+        out = {}
+        for p in sorted(root.rglob("*")):
+            if not p.is_file():
+                continue
+            if p.suffix == ".mkv":
+                continue
+            if ".cratedigger" in p.parts:
+                continue
+            out[str(p.relative_to(root))] = hashlib.sha256(p.read_bytes()).hexdigest()
+        return out
+
+    def _mkv_tags(library_root: Path, work: Path) -> bytes:
+        work.mkdir(parents=True, exist_ok=True)
+        mkv = next(library_root.rglob("*.mkv"))
+        out_xml = work / "tags.xml"
+        subprocess.run(["mkvextract", str(mkv), "tags", str(out_xml)], check=True)
+        return out_xml.read_bytes()
+
+    snap1 = _hash_sidecars(library)
+    tags1 = _mkv_tags(library, tmp_path)
+
+    # Second enrich, the thing we're testing.
+    subprocess.run(
+        ["cratedigger", "enrich", *cfg_arg, str(library)],
+        check=True, timeout=900,
+    )
+
+    snap2 = _hash_sidecars(library)
+    tags2 = _mkv_tags(library, tmp_path / "work2")
+
+    added = set(snap2) - set(snap1)
+    removed = set(snap1) - set(snap2)
+    assert not added, f"second enrich created new sidecar files: {sorted(added)}"
+    assert not removed, f"second enrich removed sidecar files: {sorted(removed)}"
+
+    differing = sorted(p for p in snap1 if snap1[p] != snap2[p])
+    assert not differing, f"second enrich changed sidecar bytes: {differing}"
+
+    assert tags1 == tags2, (
+        "second enrich changed MKV tags. Likely a duplicate-append or "
+        "non-deterministic write. First tags bytes len={}, second={}".format(
+            len(tags1), len(tags2)
+        )
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
     TIESTO_MKV is None or not TIESTO_MKV.exists(),
     reason="Tiësto fixture MKV missing (expected at $CRATEDIGGER_TEST_MKV_DIR/tiesto-we-belong-here.mkv)",
 )
