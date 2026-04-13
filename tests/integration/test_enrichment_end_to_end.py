@@ -197,6 +197,42 @@ def _run_enrich(mkv: Path, tracklist_id: str, tmp_path: Path, tracklist_date: st
     return ET.parse(tags_xml).getroot(), ET.parse(chapters_xml).getroot()
 
 
+def _canonicalize_tags(tags_root: ET.Element) -> dict:
+    """Return a deterministic representation of tag contents for re-run diffs.
+
+    Returns: {"global": {(ttv, name): value, ...},
+              "chapters": [sorted tuple of (name, value) pairs per chapter, ...]}
+
+    Chapter UIDs may change across re-embeds (Matroska assigns fresh UIDs on
+    write), so chapter tags are returned as a multiset keyed by contents, not
+    by UID. Global tags (TTV=50/70, no ChapterUID) are keyed by (ttv, name).
+    """
+    global_tags: dict[tuple[str, str], str] = {}
+    chapters: list[tuple[tuple[str, str], ...]] = []
+    for tag in tags_root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            continue
+        ttv_el = targets.find("TargetTypeValue")
+        ttv = (ttv_el.text if ttv_el is not None else "") or ""
+        uid_el = targets.find("ChapterUID")
+        pairs: list[tuple[str, str]] = []
+        for simple in tag.findall("Simple"):
+            n_el = simple.find("Name")
+            s_el = simple.find("String")
+            name = ((n_el.text if n_el is not None else "") or "")
+            value = ((s_el.text if s_el is not None else "") or "")
+            pairs.append((name, value))
+        pairs.sort()
+        if uid_el is not None and uid_el.text:
+            chapters.append(tuple(pairs))
+        else:
+            for name, value in pairs:
+                global_tags[(ttv, name)] = value
+    chapters.sort()
+    return {"global": global_tags, "chapters": chapters}
+
+
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "fixture_key",
@@ -741,37 +777,3 @@ def _assert_pipeline_expect(library_root: Path, expect: dict) -> None:
         assert _any_image(folder, "fanart"), f"no fanart beside {matches[0].name}"
 
 
-def _canonicalize_tags(tags_root: ET.Element) -> dict:
-    """Return a deterministic representation of tag contents for re-run diffs.
-
-    Returns: {"global": {(ttv, name): value, ...},
-              "chapters": [sorted tuple of (name, value) pairs per chapter, ...]}
-
-    Chapter UIDs may change across re-embeds (Matroska assigns fresh UIDs on
-    write), so chapter tags are returned as a multiset keyed by contents, not
-    by UID. Global tags (TTV=50/70, no ChapterUID) are keyed by (ttv, name).
-    """
-    global_tags: dict[tuple[str, str], str] = {}
-    chapters: list[tuple[tuple[str, str], ...]] = []
-    for tag in tags_root.findall("Tag"):
-        targets = tag.find("Targets")
-        if targets is None:
-            continue
-        ttv_el = targets.find("TargetTypeValue")
-        ttv = (ttv_el.text if ttv_el is not None else "") or ""
-        uid_el = targets.find("ChapterUID")
-        pairs: list[tuple[str, str]] = []
-        for simple in tag.findall("Simple"):
-            n_el = simple.find("Name")
-            s_el = simple.find("String")
-            name = ((n_el.text if n_el is not None else "") or "")
-            value = ((s_el.text if s_el is not None else "") or "")
-            pairs.append((name, value))
-        pairs.sort()
-        if uid_el is not None and uid_el.text:
-            chapters.append(tuple(pairs))
-        else:
-            for name, value in pairs:
-                global_tags[(ttv, name)] = value
-    chapters.sort()
-    return {"global": global_tags, "chapters": chapters}
