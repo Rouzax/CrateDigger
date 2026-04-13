@@ -114,7 +114,7 @@ FIXTURES = {
         "filename": "AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 [fLyb8KvtSzw].mkv",
         "tracklist_id": "22r0yk79",
         "scenarios": ["solo"],
-        "expect": {"embedding": {"ttv70_artists": "Afrojack"}},
+        "expect": {"embedding": {"ttv70_artists": "AFROJACK"}},
     },
     "eric-prydz-resistance": {
         "filename": "ERIC PRYDZ LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 ｜ RESISTANCE MEGASTRUCTURE [hU-z3iV0LOg].mkv",
