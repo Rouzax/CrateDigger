@@ -534,7 +534,7 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
             n_el = simple.find("Name")
             if n_el is not None and (n_el.text or "") == "PERFORMER":
                 s_el = simple.find("String")
-                perf_values.append(s_el.text if s_el is not None else "")
+                perf_values.append((s_el.text if s_el is not None else "") or "")
 
     if "min_performer_chapters" in expect:
         assert len(perf_values) >= expect["min_performer_chapters"], (
