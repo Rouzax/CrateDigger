@@ -55,6 +55,10 @@ FULL_PIPELINE = os.environ.get("CRATEDIGGER_TEST_FULL_PIPELINE") == "1"
 #   embedding.dj_cache_min_entries: int          # >= N entries in dj_cache.json
 #   pipeline.library_path_glob: str              # at least one match after organize
 #   pipeline.(nfo|poster|fanart)_must_exist: bool  # sidecar file beside matched MKV
+# NOTE: library_path_glob patterns are coupled to the user's config layout
+# (filename template and folder structure). The defaults here assume the
+# "YYYY - Artist - Event[...].mkv" filename template and an artist-per-folder
+# layout; fixture globs will need updating if CRATEDIGGER_TEST_CONFIG changes.
 #   pipeline_in_place.nfo_must_exist: bool      # after --rename-only, sidecar beside renamed mkv
 #   pipeline_in_place.poster_must_exist: bool
 #   pipeline_in_place.fanart_must_exist: bool
@@ -72,7 +76,7 @@ FIXTURES = {
                 "dj_cache_min_entries": 1,
             },
             "pipeline": {
-                "library_path_glob": "**/Tiësto/*We Belong Here*2026*.mkv",
+                "library_path_glob": "**/Tiësto/*We Belong Here*.mkv",
                 "nfo_must_exist": True,
                 "poster_must_exist": True,
                 "fanart_must_exist": True,
@@ -95,7 +99,7 @@ FIXTURES = {
                 "min_performer_chapters": 1,
             },
             "pipeline": {
-                "library_path_glob": "**/ALOK/*Tomorrowland Winter*2026*.mkv",
+                "library_path_glob": "**/ALOK/*SOMETHING ELSE*Tomorrowland Winter*.mkv",
             },
         },
     },
