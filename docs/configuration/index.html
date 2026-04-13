@@ -1399,9 +1399,10 @@
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">        </span><span class="nt">&quot;password&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">        </span><span class="nt">&quot;delay_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
 <a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">        </span><span class="nt">&quot;chapter_language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;eng&quot;</span><span class="p">,</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">        </span><span class="nt">&quot;auto_select&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="p">}</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">        </span><span class="nt">&quot;auto_select&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">        </span><span class="nt">&quot;genre_top_n&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="p">}</span>
 </code></pre></div>
 <p>Settings for 1001Tracklists integration. See <a href="../tracklists/">1001Tracklists</a> for details.</p>
 <table>
@@ -1431,6 +1432,10 @@
 <tr>
 <td><code>auto_select</code></td>
 <td>Default auto-select behavior (overridden by <code>--auto</code> flag)</td>
+</tr>
+<tr>
+<td><code>genre_top_n</code></td>
+<td>Cap on the set-level <code>CRATEDIGGER_1001TL_GENRES</code> tag: keep only the top-N most frequent per-track genres (default: 5). Ties broken by first-appearance order so the result is deterministic. Set to <code>0</code> to disable the cap and write every per-track genre.</td>
 </tr>
 </tbody>
 </table>
