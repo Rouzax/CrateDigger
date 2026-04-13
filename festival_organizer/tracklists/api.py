@@ -187,7 +187,12 @@ def _parse_tracks(html: str) -> list["Track"]:
             if label_copy is not None:
                 for sub in label_copy.select("a"):
                     sub.decompose()
-                label = fix_mojibake(label_copy.get_text(" ", strip=True))
+                # No separator between text nodes: when 1001TL nests an icon
+                # <a> inside the label span (e.g. the external-link chevron),
+                # using a space separator inserts a stray space where the <a>
+                # was, producing 'SHEFFIELD TUNES (KONTOR )'. Concatenating
+                # without a separator gives us 'SHEFFIELD TUNES (KONTOR)'.
+                label = fix_mojibake(label_copy.get_text(strip=True))
         tracks.append(
             Track(
                 start_ms=start_ms,
