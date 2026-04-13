@@ -117,6 +117,46 @@ class MBIDCache:
         self._save()
 
 
+class ArtistMbidOverrides:
+    """User-curated artist-name-to-MBID pins, read-only and never expiring.
+
+    Keys are artist display names, matched case-insensitively. This file is
+    owned by the user: the code never writes to it and never promotes
+    entries into MBIDCache, keeping curated pins separate from disposable
+    cache data.
+    """
+
+    _FILENAME = "artist_mbids.json"
+
+    def __init__(self, overrides_dir: Path | None = None):
+        self._path = (overrides_dir or (Path.home() / ".cratedigger")) / self._FILENAME
+        self._data: dict[str, str] = {}
+        self._load()
+
+    def _load(self) -> None:
+        if not self._path.exists():
+            return
+        try:
+            raw = json.loads(self._path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning("Could not load artist_mbids.json: %s", e)
+            return
+        if not isinstance(raw, dict):
+            logger.warning("artist_mbids.json must be a JSON object; ignoring")
+            return
+        self._data = {
+            k.lower(): v
+            for k, v in raw.items()
+            if isinstance(v, str) and v
+        }
+
+    def get(self, artist_name: str) -> str | None:
+        return self._data.get(artist_name.lower())
+
+    def has(self, artist_name: str) -> bool:
+        return artist_name.lower() in self._data
+
+
 # --- MusicBrainz Client ---
 
 _last_mb_request: float = 0.0
