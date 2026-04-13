@@ -369,6 +369,7 @@ def _build_chapter_tags_map(
             # mediainfo flattens all ARTIST values across scopes into its
             # extra.ARTIST field, which would clobber the set-level DJ name.
             entry["PERFORMER_SLUGS"] = "|".join(track.artist_slugs)
+            # Length must match PERFORMER_SLUGS: enrich zips SLUGS/NAMES/MBIDS by index.
             if track.artist_names and len(track.artist_names) == len(track.artist_slugs):
                 entry["PERFORMER_NAMES"] = "|".join(track.artist_names)
             # PERFORMER is the full artist display line exactly as 1001TL

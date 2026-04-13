@@ -42,3 +42,22 @@ def test_performer_names_preserves_diacritics():
     )
     out = _build_chapter_tags_map([_chapter()], [111], [track], dj_cache=None)
     assert out[111]["PERFORMER_NAMES"] == "Tiësto|Kölsch"
+
+
+def test_performer_names_omitted_when_slug_and_name_lengths_mismatch():
+    # Alignment invariant is load-bearing for enrich (zips SLUGS|NAMES|MBIDS by index).
+    # When parser yields misaligned data, omit NAMES entirely rather than emit something
+    # that would silently corrupt downstream zips.
+    track = Track(
+        raw_text="Afrojack & Oliver Heldens - Happy",
+        title="Happy",
+        label="",
+        genres=[],
+        artist_slugs=["afrojack", "oliver-heldens"],
+        start_ms=0,
+        artist_names=["Afrojack"],  # only one name for two slugs
+    )
+    out = _build_chapter_tags_map([_chapter()], [111], [track], dj_cache=None)
+    entry = out[111]
+    assert entry["PERFORMER_SLUGS"] == "afrojack|oliver-heldens"
+    assert "PERFORMER_NAMES" not in entry
