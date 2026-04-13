@@ -25,6 +25,7 @@ import logging
 import re
 import time
 from pathlib import Path
+from typing import Callable
 
 import requests
 
@@ -497,3 +498,48 @@ def download_artist_images(
                     bg_ok = _download_image(bg_url, fanart_path)
 
     return (logo_ok, bg_ok)
+
+
+def compute_chapter_mbid_tags(
+    chapter_tags: dict[int, dict[str, str]],
+    resolver: Callable[[str], str | None],
+) -> dict[int, dict[str, str]]:
+    """Build a per-chapter MUSICBRAINZ_ARTISTIDS map from PERFORMER_NAMES.
+
+    Resolves each unique display name via `resolver` (typically a closure
+    over lookup_mbid + shared cache + overrides). Missing MBIDs produce
+    empty slots so the pipe-split count stays aligned with PERFORMER_NAMES
+    and PERFORMER_SLUGS, preserving the positional zip invariant downstream
+    consumers rely on.
+
+    Chapters without PERFORMER_NAMES are skipped (legacy files must be
+    re-identified first, not half-enriched).
+
+    The resolver is invoked at most once per unique name across all
+    chapters. Unresolved names are logged once at WARNING, not once per
+    occurrence, to keep the miss log readable.
+    """
+    resolved: dict[str, str | None] = {}
+    for entry in chapter_tags.values():
+        names_str = entry.get("PERFORMER_NAMES")
+        if not names_str:
+            continue
+        for name in names_str.split("|"):
+            if name and name not in resolved:
+                resolved[name] = resolver(name)
+
+    for name, mbid in resolved.items():
+        if mbid is None:
+            logger.warning(
+                "No MBID resolved for artist: %r (add to ~/.cratedigger/artist_mbids.json)",
+                name,
+            )
+
+    result: dict[int, dict[str, str]] = {}
+    for uid, entry in chapter_tags.items():
+        names_str = entry.get("PERFORMER_NAMES")
+        if not names_str:
+            continue
+        mbids = [resolved.get(name) or "" for name in names_str.split("|")]
+        result[uid] = {"MUSICBRAINZ_ARTISTIDS": "|".join(mbids)}
+    return result
