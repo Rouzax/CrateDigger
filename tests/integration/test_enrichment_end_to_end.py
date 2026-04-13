@@ -52,7 +52,7 @@ FULL_PIPELINE = os.environ.get("CRATEDIGGER_TEST_FULL_PIPELINE") == "1"
 #   embedding.min_chapters: int                  # >= N TTV=30 tags
 #   embedding.min_performer_chapters: int        # >= N chapters with PERFORMER
 #   embedding.performer_must_not_equal: list[str]  # no PERFORMER value equals any of these
-#   embedding.performer_must_include: list[str]  # each value must equal some chapter's PERFORMER
+#   embedding.performer_must_include: list[str]  # each value must be a substring of some chapter's PERFORMER
 #   embedding.max_chapters: int                  # <= N TTV=30 tags
 #   embedding.dj_cache_min_entries: int          # >= N entries in dj_cache.json
 #   pipeline.library_path_glob: str              # at least one match after organize
@@ -100,7 +100,10 @@ FIXTURES = {
             "embedding": {
                 "ttv70_artists": "SOMETHING ELSE",
                 "performer_must_not_equal": ["ALOK"],
-                "performer_must_include": ["SOMETHING ELSE"],
+                # No performer_must_include: SOMETHING ELSE is a stage brand,
+                # not a track artist; per-track PERFORMER values use underlying
+                # artist names (e.g. "ALOK & Khalid") and ALOK would collide
+                # with the performer_must_not_equal invariant above.
                 "max_chapters": 50,
                 "min_performer_chapters": 1,
             },
@@ -911,8 +914,8 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
 
     if "performer_must_include" in expect:
         for needle in expect["performer_must_include"]:
-            assert any(v == needle for v in perf_values), (
-                f"expected PERFORMER {needle!r} on at least one chapter, "
+            assert any(needle in v for v in perf_values), (
+                f"expected PERFORMER containing {needle!r} on at least one chapter, "
                 f"got {perf_values!r}"
             )
 
