@@ -86,4 +86,4 @@ cratedigger enrich ~/Music/Library/ --only posters --regenerate
 ## Related
 
 - [enrich: posters](enrich.md#posters-poster-images): how logos feed into poster generation
-- [Library layout: curated festival logos](../library-layout.md#curated-festival-logos): logo file convention and location precedence
+- [Library layout: festival logos](../library-layout.md#festival-logos): logo file convention and location precedence

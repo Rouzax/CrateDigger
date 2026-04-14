@@ -66,9 +66,9 @@ Environment variables override config file values. If your email is not configur
 
 For each identified tracklist, CrateDigger captures:
 
-- **Chapter markers:** one per track with timestamp and title, written directly into the MKV as Matroska chapters. See [per-chapter tags](tag-reference.md#per-chapter-ttv30).
-- **Per-track metadata:** artist, title, label, and genre per chapter, with pipe-aligned multi-artist support. See [per-chapter tags](tag-reference.md#per-chapter-ttv30).
-- **Album-level event context:** tracklist URL, title, ID, date, and source taxonomy (festival, venue, conference, event promoter, country, stage). See [collection-level tags](tag-reference.md#collection-level-ttv70).
+- **Chapter markers:** one per track with timestamp and title, written directly into the MKV as Matroska chapters. See [per-chapter tags](tag-reference.md#per-chapter-tags-ttv30).
+- **Per-track metadata:** artist, title, label, and genre per chapter, with pipe-aligned multi-artist support. See [per-chapter tags](tag-reference.md#per-chapter-tags-ttv30).
+- **Album-level event context:** tracklist URL, title, ID, date, and source taxonomy (festival, venue, conference, event promoter, country, stage). See [collection-level tags](tag-reference.md#collection-level-tags-ttv70).
 - **DJ list and album-artist MBIDs:** canonical DJ names, 1001Tracklists slugs, and aligned MusicBrainz IDs for multi-value album-artist credits. See [album-level artist tags](tag-reference.md#album-level-artist-tags).
 - **DJ artwork URL:** the DJ photo from the tracklist page, used as a background source in the [poster pipeline](library-layout.md#poster-layouts).
 
