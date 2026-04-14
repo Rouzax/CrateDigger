@@ -1456,27 +1456,27 @@
 </thead>
 <tbody>
 <tr>
-<td><code>PERFORMER</code></td>
+<td><code>CRATEDIGGER_TRACK_PERFORMER</code></td>
 <td>identify</td>
-<td>Primary artist display name of the track, after alias resolution</td>
-<td><code>deadmau5</code></td>
+<td>Primary artist display name of the track, exactly as 1001Tracklists renders it</td>
+<td><code>AFROJACK ft. Eva Simons</code></td>
 </tr>
 <tr>
-<td><code>PERFORMER_SLUGS</code></td>
+<td><code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code></td>
 <td>identify</td>
 <td>Pipe-separated 1001Tracklists slugs for every artist on the track</td>
 <td><code>afrojack\|oliver-heldens</code></td>
 </tr>
 <tr>
-<td><code>PERFORMER_NAMES</code></td>
+<td><code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code></td>
 <td>identify</td>
-<td>Pipe-separated display names for every artist, aligned with <code>PERFORMER_SLUGS</code></td>
+<td>Pipe-separated display names for every artist, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code></td>
 <td><code>Afrojack\|Oliver Heldens</code></td>
 </tr>
 <tr>
 <td><code>MUSICBRAINZ_ARTISTIDS</code></td>
 <td>enrich</td>
-<td>Pipe-separated MusicBrainz artist IDs, aligned with <code>PERFORMER_NAMES</code>. Empty slot <code>""</code> for unresolved names.</td>
+<td>Pipe-separated MusicBrainz artist IDs, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code>. Empty slot <code>""</code> for unresolved names.</td>
 <td><code>&lt;afrojack-mbid&gt;\|&lt;heldens-mbid&gt;</code></td>
 </tr>
 <tr>
@@ -1486,26 +1486,27 @@
 <td><code>Take Over Control</code></td>
 </tr>
 <tr>
-<td><code>LABEL</code></td>
+<td><code>CRATEDIGGER_TRACK_LABEL</code></td>
 <td>identify</td>
 <td>Record label</td>
 <td><code>WALL</code></td>
 </tr>
 <tr>
-<td><code>GENRE</code></td>
+<td><code>CRATEDIGGER_TRACK_GENRE</code></td>
 <td>identify</td>
 <td>Pipe-separated per-track genres</td>
 <td><code>Big Room\|Electro House</code></td>
 </tr>
 </tbody>
 </table>
+<p>The <code>CRATEDIGGER_TRACK_*</code> prefix is deliberate: it keeps these per-chapter tags out of mediainfo's flattened "General" section. Unprefixed standard Matroska names (<code>PERFORMER</code>, <code>LABEL</code>, <code>GENRE</code>) at TTV=30 get promoted into mediainfo's file-level display (last chapter wins), making files look like they carry the last chapter's values at file scope. The prefix avoids that without changing playback behaviour in Matroska-aware readers (Kodi uses the chapter's <code>ChapterString</code> for the title, not these tags).</p>
 <hr />
 <h2 id="pipe-alignment">Pipe alignment</h2>
 <p>Two tag families use pipe-separated values that are positionally aligned. You can zip them by index to produce multi-value credits with MBIDs attached.</p>
 <p><strong>Per-chapter:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>PERFORMER_SLUGS  |  PERFORMER_NAMES  |  MUSICBRAINZ_ARTISTIDS
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>     slot 0      |      slot 0       |         slot 0
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>     slot 1      |      slot 1       |         slot 1
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>CRATEDIGGER_TRACK_PERFORMER_SLUGS  |  CRATEDIGGER_TRACK_PERFORMER_NAMES  |  MUSICBRAINZ_ARTISTIDS
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>              slot 0                |               slot 0                 |         slot 0
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>              slot 1                |               slot 1                 |         slot 1
 </code></pre></div>
 <p><strong>Album-level:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>CRATEDIGGER_1001TL_ARTISTS  |  CRATEDIGGER_ALBUMARTIST_SLUGS  |  CRATEDIGGER_ALBUMARTIST_MBIDS
@@ -1524,7 +1525,9 @@
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>CRATEDIGGER_ALBUMARTIST_DISPLAY=Armin van Buuren &amp; KIKI
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a># Per chapter (TTV=30):
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>#   PERFORMER, PERFORMER_SLUGS, PERFORMER_NAMES, TITLE, LABEL, GENRE
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>#   CRATEDIGGER_TRACK_PERFORMER, CRATEDIGGER_TRACK_PERFORMER_SLUGS,
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>#   CRATEDIGGER_TRACK_PERFORMER_NAMES, TITLE,
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>#   CRATEDIGGER_TRACK_LABEL, CRATEDIGGER_TRACK_GENRE
 </code></pre></div>
 <h3 id="after-enrich">After <code>enrich</code></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a># File-level (TTV=50):
@@ -1540,7 +1543,7 @@
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>CRATEDIGGER_ENRICHED_AT=2026-04-14T10:15:30+00:00
 <a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
 <a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a># Per chapter (TTV=30) additions:
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>#   MUSICBRAINZ_ARTISTIDS (aligned with PERFORMER_NAMES)
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>#   MUSICBRAINZ_ARTISTIDS (aligned with CRATEDIGGER_TRACK_PERFORMER_NAMES)
 </code></pre></div>
 <p>If KIKI's MBID is not yet in the cache, her slot in <code>CRATEDIGGER_ALBUMARTIST_MBIDS</code> and the per-chapter <code>MUSICBRAINZ_ARTISTIDS</code> will be an empty string. Add her to <code>~/.cratedigger/artist_mbids.json</code> and re-run:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids,album_artist_mbids
