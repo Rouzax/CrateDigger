@@ -62,15 +62,15 @@ Chapters are embedded using `mkvpropedit`. The chapter language defaults to "eng
 
 Alongside chapters, CrateDigger writes per-chapter Matroska tags at `TargetTypeValue=30`, targeting each chapter's `ChapterUID`:
 
-| Tag | Content |
-|-----|---------|
-| PERFORMER | Primary artist of this track, display name taken directly from the 1001TL track row HTML and then passed through `artists.json` alias resolution (e.g. `SOMETHING ELSE` → `ALOK`). Preserves original casing (`deadmau5`, `CIElll`, `S3PPA`). |
-| PERFORMER_SLUGS | Pipe-separated 1001TL slugs for every artist linked on the track row |
-| PERFORMER_NAMES | Pipe-separated display names for every artist, aligned slot-for-slot with `PERFORMER_SLUGS` (written by identify) |
-| MUSICBRAINZ_ARTISTIDS | Pipe-separated MusicBrainz artist IDs, aligned slot-for-slot with `PERFORMER_NAMES`; empty slot `""` for unresolved names (written by enrich `chapter_artist_mbids`) |
-| TITLE | Clean track title with artist prefix stripped (e.g. `Take Over Control` from the row `AFROJACK ft. Eva Simons - Take Over Control`) |
-| LABEL | Record label as plain text (e.g. `WALL`, `MAU5TRAP`) |
-| GENRE | Pipe-separated per-track genres |
+| Tag | Written by | Content |
+|-----|------------|---------|
+| PERFORMER | identify | Primary artist of this track, display name taken directly from the 1001TL track row HTML and then passed through `artists.json` alias resolution (e.g. `SOMETHING ELSE` → `ALOK`). Preserves original casing (`deadmau5`, `CIElll`, `S3PPA`). |
+| PERFORMER_SLUGS | identify | Pipe-separated 1001TL slugs for every artist linked on the track row. |
+| PERFORMER_NAMES | identify | Pipe-separated display names for every artist, aligned slot-for-slot with `PERFORMER_SLUGS`. |
+| MUSICBRAINZ_ARTISTIDS | enrich (`chapter_artist_mbids`) | Pipe-separated MusicBrainz artist IDs, aligned slot-for-slot with `PERFORMER_NAMES`; empty slot `""` for unresolved names. |
+| TITLE | identify | Clean track title with artist prefix stripped (e.g. `Take Over Control` from the row `AFROJACK ft. Eva Simons - Take Over Control`). |
+| LABEL | identify | Record label as plain text (e.g. `WALL`, `MAU5TRAP`). |
+| GENRE | identify | Pipe-separated per-track genres. |
 
 Per-chapter tags surface directly in `ffprobe -show_chapters` output (under `chapters[].tags`), which makes them readable by downstream tools like TrackSplit without any format bridge.
 
