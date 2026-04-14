@@ -104,6 +104,56 @@ def test_organize_op_not_needed_when_at_target(tmp_path):
     assert op.is_needed(target, _make_mf()) is False
 
 
+def test_organize_op_needed_for_case_only_rename(tmp_path):
+    """Canonical-casing rename (e.g. Alok -> ALOK) must still run.
+
+    On case-insensitive filesystems (NTFS, APFS default) Path.resolve()
+    normalises both sides to the same string; is_needed must not treat that
+    as "already at target".
+    """
+    source = tmp_path / "2025 - Alok - EDC.mkv"
+    source.write_bytes(b"")
+    target = tmp_path / "2025 - ALOK - EDC.mkv"
+    op = OrganizeOperation(target=target)
+    assert op.is_needed(source, _make_mf()) is True
+
+
+def test_organize_op_case_only_rename_executes_without_collision_suffix(tmp_path):
+    """Case-only rename lands on the exact target, not on a (1) variant.
+
+    resolve_collision must recognise that the 'colliding' target is the
+    source file itself on a case-insensitive fs and allow the rename.
+    Simulated here by monkey-patching Path.samefile so the scenario works
+    on Linux too.
+    """
+    source = tmp_path / "alok.mkv"
+    source.write_bytes(b"payload")
+    target = tmp_path / "ALOK.mkv"
+    # On a case-sensitive fs these are distinct files. Create the "collision"
+    # and teach samefile to treat it as identical to the source, matching
+    # case-insensitive fs behaviour.
+    target.write_bytes(b"payload")
+
+    real_samefile = Path.samefile
+
+    def fake_samefile(self, other):
+        a = str(self).lower()
+        b = str(other).lower()
+        if a == b:
+            return True
+        return real_samefile(self, other)
+
+    with patch.object(Path, "samefile", fake_samefile):
+        op = OrganizeOperation(target=target, action="rename")
+        assert op.is_needed(source, _make_mf()) is True
+        result = op.execute(source, _make_mf())
+
+    assert result.status == "done"
+    assert op.target == target
+    # No (1) sibling was produced.
+    assert not (tmp_path / "ALOK (1).mkv").exists()
+
+
 def test_album_poster_needed_when_missing(tmp_path):
     """Album poster needed when folder.jpg doesn't exist."""
     video = tmp_path / "test.mkv"

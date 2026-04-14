@@ -58,7 +58,10 @@ class OrganizeOperation(Operation):
         self.action = action  # "move", "copy", "rename"
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
-        return file_path.resolve() != self.target.resolve()
+        # Case-sensitive string compare: a canonical-casing rename such as
+        # Alok -> ALOK must run even on case-insensitive filesystems, where
+        # Path.resolve() would normalise both sides to the same string.
+        return str(file_path) != str(self.target)
 
     # Folder-level files that belong to the folder, not individual videos.
     FOLDER_LEVEL_FILES = frozenset({"folder.jpg", "fanart.jpg"})
@@ -67,7 +70,7 @@ class OrganizeOperation(Operation):
         from festival_organizer.executor import resolve_collision
         import shutil
 
-        target = resolve_collision(self.target)
+        target = resolve_collision(self.target, source=file_path)
         target.parent.mkdir(parents=True, exist_ok=True)
 
         old_stem = file_path.stem

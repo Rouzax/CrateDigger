@@ -5,9 +5,28 @@ from pathlib import Path
 from festival_organizer.models import FileAction
 
 
-def resolve_collision(target: Path) -> Path:
-    """If target exists, append (1), (2), etc. until a free name is found."""
+def paths_are_same_file(a: Path, b: Path) -> bool:
+    """True iff a and b refer to the same on-disk file.
+
+    Correct on case-insensitive filesystems (NTFS, APFS default), where
+    "Alok.mkv" and "ALOK.mkv" share one inode/file-id; samefile reports True.
+    """
+    try:
+        return a.exists() and b.exists() and a.samefile(b)
+    except OSError:
+        return False
+
+
+def resolve_collision(target: Path, source: Path | None = None) -> Path:
+    """If target exists, append (1), (2), etc. until a free name is found.
+
+    When source is provided and refers to the same on-disk file as target
+    (case-only rename on a case-insensitive filesystem), the target is not a
+    real collision; return it unchanged so the rename can proceed.
+    """
     if not target.exists():
+        return target
+    if source is not None and paths_are_same_file(target, source):
         return target
     stem = target.stem
     ext = target.suffix

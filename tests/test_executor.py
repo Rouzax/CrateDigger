@@ -4,7 +4,9 @@ from unittest.mock import patch
 
 import pytest
 
-from festival_organizer.executor import execute_actions, resolve_collision
+from festival_organizer.executor import (
+    execute_actions, paths_are_same_file, resolve_collision,
+)
 from festival_organizer.models import FileAction, MediaFile
 
 
@@ -90,6 +92,69 @@ def test_resolve_collision_no_conflict():
     with tempfile.TemporaryDirectory() as tmp:
         target = Path(tmp) / "new.mkv"
         assert resolve_collision(target) == target
+
+
+def test_resolve_collision_ignores_self_on_case_insensitive_fs():
+    """Case-only rename: the 'colliding' target IS the source file.
+
+    Simulated by patching Path.samefile so the test also passes on
+    case-sensitive filesystems. On Windows/macOS the real samefile
+    already reports True for Alok.mkv vs ALOK.mkv.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        source = root / "alok.mkv"
+        source.write_text("x")
+        target = root / "ALOK.mkv"
+        target.write_text("x")  # stand-in for "target exists because it IS source"
+
+        real_samefile = Path.samefile
+
+        def fake_samefile(self, other):
+            if str(self).lower() == str(other).lower():
+                return True
+            return real_samefile(self, other)
+
+        with patch.object(Path, "samefile", fake_samefile):
+            resolved = resolve_collision(target, source=source)
+
+        assert resolved == target
+        assert not (root / "ALOK (1).mkv").exists()
+
+
+def test_resolve_collision_without_source_still_collides():
+    """Back-compat: existing callers that don't pass source are unaffected."""
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        existing = root / "file.mkv"
+        existing.write_text("x")
+        assert resolve_collision(existing) == root / "file (1).mkv"
+
+
+def test_paths_are_same_file_identifies_same_inode():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        a = root / "x.mkv"
+        a.write_text("x")
+        assert paths_are_same_file(a, a) is True
+
+
+def test_paths_are_same_file_distinguishes_different_files():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        a = root / "x.mkv"
+        b = root / "y.mkv"
+        a.write_text("x")
+        b.write_text("y")
+        assert paths_are_same_file(a, b) is False
+
+
+def test_paths_are_same_file_false_when_target_missing():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        a = root / "x.mkv"
+        a.write_text("x")
+        assert paths_are_same_file(a, root / "missing.mkv") is False
 
 
 def test_execute_handles_collision():
