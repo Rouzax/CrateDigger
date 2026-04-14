@@ -104,6 +104,62 @@ def test_embed_chapters_canonical_artists_tag(tmp_path):
         assert tags_payload[70]["CRATEDIGGER_1001TL_ARTISTS"] == "Afrojack"
 
 
+def test_embed_chapters_writes_albumartist_display_and_slugs(tmp_path):
+    """ALBUMARTIST_DISPLAY and ALBUMARTIST_SLUGS are written alongside 1001TL_ARTISTS
+    and stay positionally aligned (canonical names joined with ' & ', slugs with '|')."""
+    cache = DjCache(cache_path=tmp_path / "c.json", ttl_days=90)
+    cache.put("arminvanbuuren", {"name": "Armin van Buuren"})
+    cache.put("kislashki", {"name": "KI/KI"})
+    dj_artists = [("arminvanbuuren", "ARMIN VAN BUUREN"), ("kislashki", "KI/KI")]
+
+    fake_mkv = tmp_path / "x.mkv"
+    fake_mkv.write_bytes(b"")
+
+    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
+         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
+         patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        mock_write.return_value = True
+        embed_chapters(
+            fake_mkv,
+            chapters=[],
+            tracklist_url="https://x",
+            dj_artists=dj_artists,
+            dj_cache=cache,
+        )
+        tags = mock_write.call_args[0][1][70]
+        assert tags["CRATEDIGGER_1001TL_ARTISTS"] == "Armin van Buuren|KI/KI"
+        assert tags["CRATEDIGGER_ALBUMARTIST_SLUGS"] == "arminvanbuuren|kislashki"
+        assert tags["CRATEDIGGER_ALBUMARTIST_DISPLAY"] == "Armin van Buuren & KI/KI"
+
+
+def test_embed_chapters_single_artist_writes_length_1_albumartist_tags(tmp_path):
+    """Single-artist sets still emit all three tags with one slot each."""
+    cache = DjCache(cache_path=tmp_path / "c.json", ttl_days=90)
+    cache.put("afrojack", {"name": "Afrojack"})
+    dj_artists = [("afrojack", "AFROJACK")]
+
+    fake_mkv = tmp_path / "x.mkv"
+    fake_mkv.write_bytes(b"")
+
+    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
+         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
+         patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        mock_write.return_value = True
+        embed_chapters(
+            fake_mkv,
+            chapters=[],
+            tracklist_url="https://x",
+            dj_artists=dj_artists,
+            dj_cache=cache,
+        )
+        tags = mock_write.call_args[0][1][70]
+        assert tags["CRATEDIGGER_1001TL_ARTISTS"] == "Afrojack"
+        assert tags["CRATEDIGGER_ALBUMARTIST_SLUGS"] == "afrojack"
+        assert tags["CRATEDIGGER_ALBUMARTIST_DISPLAY"] == "Afrojack"
+
+
 def test_embed_chapters_without_dj_cache_uses_display_name(tmp_path):
     """Backwards compat: no dj_cache means no canonical rewrite."""
     dj_artists = [("afrojack", "AFROJACK")]

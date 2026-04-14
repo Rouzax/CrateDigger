@@ -1,4 +1,4 @@
-"""Tests for wiring ChapterMbidsOperation into the enrich CLI pipeline.
+"""Tests for wiring ChapterArtistMbidsOperation into the enrich CLI pipeline.
 
 These tests verify observable behaviour (the ops list passed to
 run_pipeline) rather than internal dispatch details.
@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 
 from festival_organizer.cli import run
 from festival_organizer.operations import (
-    ChapterMbidsOperation,
+    ChapterArtistMbidsOperation,
     NfoOperation,
     TagsOperation,
 )
@@ -54,33 +54,33 @@ def _run_enrich_and_capture_ops(tmp_path, extra_args=None):
     return pipeline_files[0][2]
 
 
-def test_enrich_default_includes_chapter_mbids_op(tmp_path):
-    """Default enrich (no --only) appends a ChapterMbidsOperation."""
+def test_enrich_default_includes_chapter_artist_mbids_op(tmp_path):
+    """Default enrich (no --only) appends a ChapterArtistMbidsOperation."""
     ops = _run_enrich_and_capture_ops(tmp_path)
-    assert any(isinstance(op, ChapterMbidsOperation) for op in ops), \
-        f"expected ChapterMbidsOperation in default enrich ops; got {[type(o).__name__ for o in ops]}"
+    assert any(isinstance(op, ChapterArtistMbidsOperation) for op in ops), \
+        f"expected ChapterArtistMbidsOperation in default enrich ops; got {[type(o).__name__ for o in ops]}"
 
 
-def test_enrich_only_chapter_mbids_selects_only_that_op(tmp_path):
-    """--only chapter_mbids includes the op and excludes others."""
-    ops = _run_enrich_and_capture_ops(tmp_path, ["--only", "chapter_mbids"])
+def test_enrich_only_chapter_artist_mbids_selects_only_that_op(tmp_path):
+    """--only chapter_artist_mbids includes the op and excludes others."""
+    ops = _run_enrich_and_capture_ops(tmp_path, ["--only", "chapter_artist_mbids"])
     types = [type(op) for op in ops]
-    assert ChapterMbidsOperation in types
+    assert ChapterArtistMbidsOperation in types
     assert NfoOperation not in types
     assert TagsOperation not in types
 
 
-def test_enrich_only_tags_excludes_chapter_mbids(tmp_path):
-    """--only tags must not include ChapterMbidsOperation."""
+def test_enrich_only_tags_excludes_chapter_artist_mbids(tmp_path):
+    """--only tags must not include ChapterArtistMbidsOperation."""
     ops = _run_enrich_and_capture_ops(tmp_path, ["--only", "tags"])
     types = [type(op) for op in ops]
     assert TagsOperation in types
-    assert ChapterMbidsOperation not in types
+    assert ChapterArtistMbidsOperation not in types
 
 
-def test_enrich_regenerate_propagates_force_to_chapter_mbids(tmp_path):
-    """--regenerate sets force=True on the ChapterMbidsOperation instance."""
+def test_enrich_regenerate_propagates_force_to_chapter_artist_mbids(tmp_path):
+    """--regenerate sets force=True on the ChapterArtistMbidsOperation instance."""
     ops = _run_enrich_and_capture_ops(tmp_path, ["--regenerate"])
-    chapter_ops = [op for op in ops if isinstance(op, ChapterMbidsOperation)]
-    assert chapter_ops, "ChapterMbidsOperation missing when --regenerate is set"
+    chapter_ops = [op for op in ops if isinstance(op, ChapterArtistMbidsOperation)]
+    assert chapter_ops, "ChapterArtistMbidsOperation missing when --regenerate is set"
     assert chapter_ops[0].force is True

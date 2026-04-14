@@ -488,7 +488,10 @@ def embed_chapters(
                     dj_cache.canonical_name(slug, fallback=name) if dj_cache is not None else name
                     for slug, name in dj_artists
                 ]
+                slugs = [slug for slug, _name in dj_artists]
                 tags["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(names)
+                tags["CRATEDIGGER_ALBUMARTIST_SLUGS"] = "|".join(slugs)
+                tags["CRATEDIGGER_ALBUMARTIST_DISPLAY"] = " & ".join(names)
             chapter_tags: dict[int, dict[str, str]] | None = None
             if tracks and chapters and chapter_uids:
                 chapter_tags = _build_chapter_tags_map(

@@ -33,7 +33,8 @@ Use `--only` to run a subset of operations. Valid values:
 | `fanart` | Look up artist artwork on fanart.tv |
 | `posters` | Generate poster images |
 | `tags` | Write MKV tags |
-| `chapter_mbids` | Resolve per-chapter MusicBrainz artist IDs |
+| `chapter_artist_mbids` | Resolve per-chapter MusicBrainz artist IDs |
+| `album_artist_mbids` | Resolve album-level (set) MusicBrainz artist IDs |
 
 Combine multiple values with commas:
 
@@ -74,7 +75,7 @@ Creates Kodi-compatible NFO metadata files alongside each media file. NFO files 
 
 Writes structured MKV tags into each file, including artist, title, date, and other metadata fields extracted during analysis and identification.
 
-### Chapter MBIDs (`chapter_mbids`)
+### Chapter artist MBIDs (`chapter_artist_mbids`)
 
 Reads `PERFORMER_NAMES` on each chapter (written by [identify](identify.md)), resolves every unique artist name to a MusicBrainz artist ID, and writes `MUSICBRAINZ_ARTISTIDS` back onto the chapter. The value is pipe-joined and aligned slot-for-slot with `PERFORMER_NAMES` and `PERFORMER_SLUGS`; unresolved names leave an empty slot (`""`) so downstream consumers can zip the three tags by index to produce multi-valued FLAC artist tags.
 
@@ -103,13 +104,25 @@ Keys match artist names case-insensitively.
 No MBID resolved for artist: <name> (add to ~/.cratedigger/artist_mbids.json)
 ```
 
-Fix loop: run `enrich --only chapter_mbids`, read the WARNING lines, look up the correct MBIDs on [musicbrainz.org](https://musicbrainz.org/), add them to the override file, then rerun:
+Fix loop: run `enrich --only chapter_artist_mbids`, read the WARNING lines, look up the correct MBIDs on [musicbrainz.org](https://musicbrainz.org/), add them to the override file, then rerun:
 
 ```bash
-cratedigger enrich ~/Music/Library/ --only chapter_mbids --regenerate
+cratedigger enrich ~/Music/Library/ --only chapter_artist_mbids --regenerate
 ```
 
 `--regenerate` re-runs the MBID path even on chapters that already have a `MUSICBRAINZ_ARTISTIDS` tag, which is how newly added overrides reach files that were enriched earlier.
+
+### Album-artist MBIDs (`album_artist_mbids`)
+
+Reads `CRATEDIGGER_1001TL_ARTISTS` from the file (written by [identify](identify.md)), resolves each pipe-separated artist name to a MusicBrainz artist ID, and writes `CRATEDIGGER_ALBUMARTIST_MBIDS` back onto the file at collection scope (TTV=70). The value is pipe-joined and positionally aligned with `CRATEDIGGER_1001TL_ARTISTS` and `CRATEDIGGER_ALBUMARTIST_SLUGS`; unresolved names leave an empty slot.
+
+This mirrors the per-chapter pattern at the album (file) level so downstream taggers (TrackSplit -> Lyrion/Jellyfin) can produce a multi-value album-artist credit with MusicBrainz IDs aligned to individual DJ names.
+
+The override file, cache, and fix loop are shared with `chapter_artist_mbids` above: a single entry in `~/.cratedigger/artist_mbids.json` pins the MBID for both per-chapter and album-level tags. MBIDs are properties of the artist, not of the tag context.
+
+The existing single-MBID `CRATEDIGGER_MBID` tag (primary DJ only, written by `tags`) is not modified; it remains the compatibility fallback for single-value consumers.
+
+See [tag reference](../tag-reference.md) for the full tag taxonomy and alignment invariants.
 
 ## Examples
 

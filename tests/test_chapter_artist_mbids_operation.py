@@ -1,9 +1,9 @@
-"""ChapterMbidsOperation: orchestrate extract → compute → merge → write."""
+"""ChapterArtistMbidsOperation: orchestrate extract → compute → merge → write."""
 from pathlib import Path
 from unittest.mock import patch
 
 from festival_organizer.models import MediaFile
-from festival_organizer.operations import ChapterMbidsOperation
+from festival_organizer.operations import ChapterArtistMbidsOperation
 
 
 def _make_mf():
@@ -17,19 +17,19 @@ def _make_mf():
 
 
 def test_is_needed_false_without_matroska_extension(tmp_path):
-    op = ChapterMbidsOperation()
+    op = ChapterArtistMbidsOperation()
     (tmp_path / "foo.mp4").write_bytes(b"")
     assert op.is_needed(tmp_path / "foo.mp4", _make_mf()) is False
 
 
 def test_is_needed_true_for_mkv(tmp_path):
-    op = ChapterMbidsOperation()
+    op = ChapterArtistMbidsOperation()
     (tmp_path / "foo.mkv").write_bytes(b"")
     assert op.is_needed(tmp_path / "foo.mkv", _make_mf()) is True
 
 
 def test_is_needed_true_for_webm(tmp_path):
-    op = ChapterMbidsOperation()
+    op = ChapterArtistMbidsOperation()
     (tmp_path / "foo.webm").write_bytes(b"")
     assert op.is_needed(tmp_path / "foo.webm", _make_mf()) is True
 
@@ -59,7 +59,7 @@ def test_execute_writes_mbids_aligned_with_names(tmp_path):
                return_value=existing), \
          patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn, \
          patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup):
-        op = ChapterMbidsOperation()
+        op = ChapterArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
 
     assert result.status == "done"
@@ -83,7 +83,7 @@ def test_execute_skipped_when_no_chapter_tags(tmp_path):
     with patch("festival_organizer.operations._extract_chapter_tags_by_uid",
                return_value={}), \
          patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn:
-        op = ChapterMbidsOperation()
+        op = ChapterArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
     assert result.status == "skipped"
     write_fn.assert_not_called()
@@ -96,7 +96,7 @@ def test_execute_skipped_when_no_performer_names(tmp_path):
     with patch("festival_organizer.operations._extract_chapter_tags_by_uid",
                return_value={111: {"PERFORMER": "Afrojack"}}), \
          patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn:
-        op = ChapterMbidsOperation()
+        op = ChapterArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
     assert result.status == "skipped"
     write_fn.assert_not_called()
@@ -115,7 +115,7 @@ def test_execute_skipped_when_mbids_already_current(tmp_path):
                return_value=existing), \
          patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn, \
          patch("festival_organizer.operations.lookup_mbid", return_value="A"):
-        op = ChapterMbidsOperation()
+        op = ChapterArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
     assert result.status == "skipped"
     write_fn.assert_not_called()
@@ -134,7 +134,7 @@ def test_force_rewrites_even_when_mbids_already_match(tmp_path):
                return_value=existing), \
          patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn, \
          patch("festival_organizer.operations.lookup_mbid", return_value="A"):
-        op = ChapterMbidsOperation(force=True)
+        op = ChapterArtistMbidsOperation(force=True)
         result = op.execute(mkv, _make_mf())
     assert result.status == "done"
     write_fn.assert_called_once()
@@ -153,7 +153,7 @@ def test_force_rewrites_when_stale_mbids_present(tmp_path):
                return_value=existing), \
          patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn, \
          patch("festival_organizer.operations.lookup_mbid", return_value="FRESH"):
-        op = ChapterMbidsOperation()
+        op = ChapterArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
     assert result.status == "done"
     _, merged = write_fn.call_args.args

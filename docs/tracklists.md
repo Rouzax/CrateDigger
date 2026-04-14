@@ -58,32 +58,25 @@ Tracklists are converted into MKV chapter markers. Each track entry becomes a ch
 
 Chapters are embedded using `mkvpropedit`. The chapter language defaults to "eng" and can be changed via the `chapter_language` config setting.
 
-### Metadata tags
+### Per-chapter tags
 
-In addition to chapters, CrateDigger embeds several MKV tags:
+Alongside chapters, CrateDigger writes per-chapter Matroska tags at `TargetTypeValue=30`, targeting each chapter's `ChapterUID`:
 
-| Tag | Scope | Content |
-|-----|-------|---------|
-| Tracklist URL | Global | Link to the 1001Tracklists page |
-| Tracklist title | Global | Title of the tracklist |
-| Tracklist ID | Global | Numeric identifier |
-| Tracklist date | Global | Event date |
-| Genres | Global | Top 5 most frequent per-track genres from the tracklist page |
-| DJ artwork | Global | URL to the DJ photo from the page |
-| Stage | Global | Stage name (if listed) |
-| Festival/venue/radio | Global | Source information by type |
-| Artists | Global | DJ names associated with the tracklist (display form, pipe-separated) |
-| PERFORMER | Per chapter | Primary artist of this track, display name taken directly from the 1001TL track row HTML and then passed through `artists.json` alias resolution (e.g. `SOMETHING ELSE` → `ALOK`). Preserves original casing (`deadmau5`, `CIElll`, `S3PPA`). |
-| PERFORMER_SLUGS | Per chapter | Pipe-separated 1001TL slugs for every artist linked on the track row |
-| PERFORMER_NAMES | Per chapter | Pipe-separated display names for every artist, aligned slot-for-slot with `PERFORMER_SLUGS` (written by identify) |
-| MUSICBRAINZ_ARTISTIDS | Per chapter | Pipe-separated MusicBrainz artist IDs, aligned slot-for-slot with `PERFORMER_NAMES`; empty slot `""` for unresolved names (written by enrich `chapter_mbids`) |
-| TITLE | Per chapter | Clean track title with artist prefix stripped (e.g. `Take Over Control` from the row `AFROJACK ft. Eva Simons - Take Over Control`) |
-| LABEL | Per chapter | Record label as plain text (e.g. `WALL`, `MAU5TRAP`) |
-| GENRE | Per chapter | Pipe-separated per-track genres |
+| Tag | Content |
+|-----|---------|
+| PERFORMER | Primary artist of this track, display name taken directly from the 1001TL track row HTML and then passed through `artists.json` alias resolution (e.g. `SOMETHING ELSE` → `ALOK`). Preserves original casing (`deadmau5`, `CIElll`, `S3PPA`). |
+| PERFORMER_SLUGS | Pipe-separated 1001TL slugs for every artist linked on the track row |
+| PERFORMER_NAMES | Pipe-separated display names for every artist, aligned slot-for-slot with `PERFORMER_SLUGS` (written by identify) |
+| MUSICBRAINZ_ARTISTIDS | Pipe-separated MusicBrainz artist IDs, aligned slot-for-slot with `PERFORMER_NAMES`; empty slot `""` for unresolved names (written by enrich `chapter_artist_mbids`) |
+| TITLE | Clean track title with artist prefix stripped (e.g. `Take Over Control` from the row `AFROJACK ft. Eva Simons - Take Over Control`) |
+| LABEL | Record label as plain text (e.g. `WALL`, `MAU5TRAP`) |
+| GENRE | Pipe-separated per-track genres |
 
-Per-chapter tags use Matroska `TargetTypeValue=30` targeting each chapter's `ChapterUID`. They surface directly in `ffprobe -show_chapters` output (under `chapters[].tags`), which makes them readable by downstream tools like TrackSplit without any format bridge.
+Per-chapter tags surface directly in `ffprobe -show_chapters` output (under `chapters[].tags`), which makes them readable by downstream tools like TrackSplit without any format bridge.
 
-**Alignment invariant**: when `MUSICBRAINZ_ARTISTIDS` is present on a chapter, its pipe count matches the other two artist-aligned tags: `len(PERFORMER_SLUGS.split("|")) == len(PERFORMER_NAMES.split("|")) == len(MUSICBRAINZ_ARTISTIDS.split("|"))`. Downstream tools can zip the three lists by index to produce multi-valued FLAC artist tags. See [Enrich / Chapter MBIDs](commands/enrich.md#chapter-mbids-chapter_mbids) and [artist_mbids.json](configuration.md#artist-mbid-override-file).
+**Alignment invariant**: when `MUSICBRAINZ_ARTISTIDS` is present on a chapter, its pipe count matches the other two artist-aligned tags: `len(PERFORMER_SLUGS.split("|")) == len(PERFORMER_NAMES.split("|")) == len(MUSICBRAINZ_ARTISTIDS.split("|"))`. Downstream tools can zip the three lists by index to produce multi-valued FLAC artist tags. See [Enrich / Chapter artist MBIDs](commands/enrich.md#chapter-artist-mbids-chapter_artist_mbids) and [artist_mbids.json](configuration.md#artist-mbid-override-file).
+
+For the full tag taxonomy (file-level `ARTIST`, collection-level `CRATEDIGGER_*` tags, album-artist tags, alignment invariants across scopes, and a worked example), see the [tag reference](tag-reference.md).
 
 These tags are used by later pipeline stages (enrich) for artwork lookups, poster generation, and NFO metadata; per-chapter tags feed per-track FLAC metadata when extracting individual tracks from a set.
 

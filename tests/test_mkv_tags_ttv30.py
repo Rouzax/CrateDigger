@@ -96,3 +96,23 @@ def test_merge_tags_chapter_tag_value_types_are_strings():
     })
     chap_tags = _find_chapter_tags(result)
     assert chap_tags[0].find("Targets/ChapterUID").text == "12345678901234567"
+
+
+def test_merge_tags_chapter_tags_preserve_empty_string_values():
+    """Empty-string chapter tag values are legitimate (alignment contract for
+    MUSICBRAINZ_ARTISTIDS and similar pipe-aligned lists where unresolved
+    slots are empty). They must be emitted as <Simple><String></String></Simple>,
+    not silently dropped — otherwise a 1-slot all-unresolved chapter loses
+    the tag entirely and the slot-count invariant breaks.
+    """
+    result = merge_tags(None, {}, chapter_tags={
+        111: {"PERFORMER_NAMES": "Mystery", "MUSICBRAINZ_ARTISTIDS": ""},
+    })
+    chap_tags = _find_chapter_tags(result)
+    simples = {s.find("Name").text: s.find("String").text
+               for s in chap_tags[0].findall("Simple")}
+    assert "MUSICBRAINZ_ARTISTIDS" in simples, (
+        "empty-string MBID was dropped; expected a <Simple> element with an "
+        "empty <String> to preserve slot alignment"
+    )
+    assert simples["MUSICBRAINZ_ARTISTIDS"] in ("", None)  # empty-string or None-text both serialize as empty

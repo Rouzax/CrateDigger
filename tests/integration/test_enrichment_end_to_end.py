@@ -594,7 +594,7 @@ def test_full_pipeline_enrich_idempotent(tmp_path):
     TIESTO_MKV is None or not TIESTO_MKV.exists(),
     reason="Tiësto fixture MKV missing (expected at $CRATEDIGGER_TEST_MKV_DIR/tiesto-we-belong-here.mkv)",
 )
-def test_chapter_mbids_end_to_end(tmp_path, caplog):
+def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
     """End-to-end: PERFORMER_NAMES -> MUSICBRAINZ_ARTISTIDS slot alignment.
 
     Covers the per-track MBID write path with:
@@ -688,8 +688,14 @@ def test_chapter_mbids_end_to_end(tmp_path, caplog):
         if not names:
             continue
         chapters_with_names += 1
-        mbids = block.get("MUSICBRAINZ_ARTISTIDS", "")
-        assert mbids, f"chapter {uid} has PERFORMER_NAMES but no MUSICBRAINZ_ARTISTIDS"
+        # Alignment contract: MUSICBRAINZ_ARTISTIDS must be present as a tag
+        # (even when all artists in the chapter are unresolvable, which
+        # produces an empty string for a 1-slot chapter). Distinguish
+        # missing-key from empty-string-value via explicit `in` check.
+        assert "MUSICBRAINZ_ARTISTIDS" in block, (
+            f"chapter {uid} has PERFORMER_NAMES but no MUSICBRAINZ_ARTISTIDS tag"
+        )
+        mbids = block["MUSICBRAINZ_ARTISTIDS"]
         name_slots = names.split("|")
         mbid_slots = mbids.split("|")
         assert len(name_slots) == len(mbid_slots), (
@@ -846,6 +852,39 @@ def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
             assert len(perf.split("|")) == len(slugs.split("|")), (
                 f"PERFORMER_NAMES/ARTIST_SLUGS pipe-count mismatch: "
                 f"names={perf!r} slugs={slugs!r}"
+            )
+
+    # Album-artist tag family: when CRATEDIGGER_1001TL_ARTISTS is present,
+    # the SLUGS + DISPLAY siblings must also be present and pipe-aligned.
+    # If ALBUMARTIST_MBIDS is present (post-enrich), it must align too.
+    artists_val = _find_global_tag(tags_root, 70, "CRATEDIGGER_1001TL_ARTISTS")
+    if artists_val:
+        slugs_val = _find_global_tag(tags_root, 70, "CRATEDIGGER_ALBUMARTIST_SLUGS")
+        display_val = _find_global_tag(tags_root, 70, "CRATEDIGGER_ALBUMARTIST_DISPLAY")
+        assert slugs_val is not None, (
+            "CRATEDIGGER_ALBUMARTIST_SLUGS missing alongside "
+            f"CRATEDIGGER_1001TL_ARTISTS={artists_val!r}"
+        )
+        assert display_val is not None, (
+            "CRATEDIGGER_ALBUMARTIST_DISPLAY missing alongside "
+            f"CRATEDIGGER_1001TL_ARTISTS={artists_val!r}"
+        )
+        names = artists_val.split("|")
+        assert len(slugs_val.split("|")) == len(names), (
+            f"ALBUMARTIST_SLUGS slot count {len(slugs_val.split('|'))} != "
+            f"1001TL_ARTISTS slot count {len(names)} "
+            f"(slugs={slugs_val!r} artists={artists_val!r})"
+        )
+        assert display_val == " & ".join(names), (
+            f"ALBUMARTIST_DISPLAY={display_val!r} does not equal "
+            f"' & '.join(1001TL_ARTISTS split) = {' & '.join(names)!r}"
+        )
+        mbids_val = _find_global_tag(tags_root, 70, "CRATEDIGGER_ALBUMARTIST_MBIDS")
+        if mbids_val is not None:
+            assert len(mbids_val.split("|")) == len(names), (
+                f"ALBUMARTIST_MBIDS slot count {len(mbids_val.split('|'))} != "
+                f"1001TL_ARTISTS slot count {len(names)} "
+                f"(mbids={mbids_val!r} artists={artists_val!r})"
             )
 
     # Monotonic chapter times: consecutive atoms with ChapterTimeStart must

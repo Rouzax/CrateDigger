@@ -320,8 +320,6 @@ def merge_tags(
             uid_el = ET.SubElement(targets, "ChapterUID")
             uid_el.text = str(chapter_uid)
             for name, value in tag_dict.items():
-                if not value:
-                    continue
                 simple = ET.SubElement(tag_block, "Simple")
                 name_el = ET.SubElement(simple, "Name")
                 name_el.text = name

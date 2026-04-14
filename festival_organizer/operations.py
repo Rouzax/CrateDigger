@@ -815,7 +815,7 @@ def write_chapter_mbid_tags(
     write_merged_tags(filepath, new_tags={}, chapter_tags=merged_chapter_tags)
 
 
-class ChapterMbidsOperation(Operation):
+class ChapterArtistMbidsOperation(Operation):
     """Write per-chapter MUSICBRAINZ_ARTISTIDS based on PERFORMER_NAMES.
 
     Runs in the enrich pipeline (wired by cli.py). Reads the file's existing
@@ -828,7 +828,8 @@ class ChapterMbidsOperation(Operation):
     PERFORMER_SLUGS, PERFORMER_NAMES) are preserved; only MBIDs are added
     or updated.
     """
-    name = "chapter_mbids"
+    name = "chapter_artist_mbids"
+    display_name = "chapter_artist_mbids"
 
     def __init__(self, config=None, force: bool = False):
         self.config = config
@@ -898,3 +899,91 @@ class ChapterMbidsOperation(Operation):
 
         write_chapter_mbid_tags(file_path, merged)
         return OperationResult(self.name, "done", f"wrote MBIDs for {len(new_mbid_tags)} chapters")
+
+
+class AlbumArtistMbidsOperation(Operation):
+    """Write album-level CRATEDIGGER_ALBUMARTIST_MBIDS from CRATEDIGGER_1001TL_ARTISTS.
+
+    Mirrors ChapterArtistMbidsOperation but at TTV=70 (collection scope). Reads
+    the file's CRATEDIGGER_1001TL_ARTISTS tag (written during identify),
+    resolves each pipe-separated name via lookup_mbid, and writes an
+    aligned pipe-joined MBID list with empty slots for misses so downstream
+    consumers can zip SLUGS / ARTISTS / MBIDS by index.
+
+    The shared ArtistMbidOverrides + MBIDCache mean a pin here also applies
+    to per-chapter MUSICBRAINZ_ARTISTIDS (intended: MBIDs are properties of
+    the artist, not of the tag context).
+    """
+    name = "album_artist_mbids"
+    display_name = "album_artist_mbids"
+
+    def __init__(self, config=None, force: bool = False):
+        self.config = config
+        self.force = force
+        self._cache = None
+        self._overrides = None
+
+    def _get_cache(self):
+        if self._cache is None:
+            from festival_organizer.fanart import MBIDCache
+            ttl = 90
+            if self.config is not None:
+                ttl = self.config.cache_ttl.get("mbid_days", 90)
+            self._cache = MBIDCache(ttl_days=ttl)
+        return self._cache
+
+    def _get_overrides(self):
+        if self._overrides is None:
+            from festival_organizer.fanart import ArtistMbidOverrides
+            self._overrides = ArtistMbidOverrides()
+        return self._overrides
+
+    def is_needed(self, file_path: Path, media_file) -> bool:
+        from festival_organizer.mkv_tags import MATROSKA_EXTS
+        return file_path.suffix.lower() in MATROSKA_EXTS
+
+    def execute(self, file_path: Path, media_file) -> OperationResult:
+        from festival_organizer.fanart import resolve_mbids_aligned
+        from festival_organizer.mkv_tags import (
+            _tag_values_from_root, extract_all_tags, write_merged_tags,
+        )
+
+        root = extract_all_tags(file_path)
+        existing_70 = (_tag_values_from_root(root) if root is not None else {}).get(70, {})
+
+        names_str = existing_70.get("CRATEDIGGER_1001TL_ARTISTS", "")
+        if not names_str:
+            return OperationResult(
+                self.name, "skipped",
+                "no CRATEDIGGER_1001TL_ARTISTS (run identify)",
+            )
+
+        names = [n for n in names_str.split("|") if n]
+        if not names:
+            return OperationResult(self.name, "skipped", "empty artists list")
+
+        cache = self._get_cache()
+        overrides = self._get_overrides()
+
+        def resolver(name: str) -> str | None:
+            return lookup_mbid(name, cache, overrides=overrides)
+
+        mbids = resolve_mbids_aligned(names, resolver)
+        if not any(mbids):
+            return OperationResult(self.name, "skipped", "no resolvable artists")
+
+        new_value = "|".join(mbids)
+
+        if not self.force and existing_70.get("CRATEDIGGER_ALBUMARTIST_MBIDS", "") == new_value:
+            return OperationResult(self.name, "skipped", "MBIDs already current")
+
+        write_merged_tags(
+            file_path,
+            {70: {"CRATEDIGGER_ALBUMARTIST_MBIDS": new_value}},
+            existing_root=root,
+        )
+        resolved_count = sum(1 for m in mbids if m)
+        return OperationResult(
+            self.name, "done",
+            f"wrote MBIDs for {resolved_count}/{len(mbids)} artists",
+        )

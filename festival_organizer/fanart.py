@@ -513,49 +513,60 @@ def download_artist_images(
     return (logo_ok, bg_ok)
 
 
-def compute_chapter_mbid_tags(
-    chapter_tags: dict[int, dict[str, str]],
+def resolve_mbids_aligned(
+    names: list[str],
     resolver: Callable[[str], str | None],
-) -> dict[int, dict[str, str]]:
-    """Build a per-chapter MUSICBRAINZ_ARTISTIDS map from PERFORMER_NAMES.
+) -> list[str]:
+    """Resolve artist names to MBIDs, preserving positional alignment.
 
-    Resolves each unique display name via `resolver` (typically a closure
-    over lookup_mbid + shared cache + overrides). Missing MBIDs produce
-    empty slots so the pipe-split count stays aligned with PERFORMER_NAMES
-    and PERFORMER_SLUGS, preserving the positional zip invariant downstream
-    consumers rely on.
+    Resolver is called at most once per unique name. Missing MBIDs become
+    empty strings so pipe-joined output stays slot-aligned with `names`.
+    Unresolved names are logged once at WARNING, not once per occurrence.
 
-    Chapters without PERFORMER_NAMES are skipped (legacy files must be
-    re-identified first, not half-enriched).
-
-    The resolver is invoked at most once per unique name across all
-    chapters. Unresolved names are logged once at WARNING, not once per
-    occurrence, to keep the miss log readable.
+    Used by `compute_chapter_mbid_tags` (per-chapter PERFORMER_NAMES) and
+    by AlbumArtistMbidsOperation (album-level CRATEDIGGER_1001TL_ARTISTS).
     """
-    resolved: dict[str, str | None] = {}
-    for entry in chapter_tags.values():
-        names_str = entry.get("PERFORMER_NAMES")
-        if not names_str:
-            continue
-        for name in names_str.split("|"):
-            if name and name not in resolved:
-                resolved[name] = resolver(name)
+    unique: dict[str, str | None] = {}
+    for name in names:
+        if name and name not in unique:
+            unique[name] = resolver(name)
 
-    for name, mbid in resolved.items():
+    for name, mbid in unique.items():
         if mbid is None:
             logger.warning(
                 "No MBID resolved for artist: %r (add to ~/.cratedigger/artist_mbids.json)",
                 name,
             )
 
+    return ["" if (m := unique.get(name)) is None else m for name in names]
+
+
+def compute_chapter_mbid_tags(
+    chapter_tags: dict[int, dict[str, str]],
+    resolver: Callable[[str], str | None],
+) -> dict[int, dict[str, str]]:
+    """Build a per-chapter MUSICBRAINZ_ARTISTIDS map from PERFORMER_NAMES.
+
+    Delegates the per-name dedupe / resolve / log-once / empty-slot logic
+    to `resolve_mbids_aligned`. Retains the chapter-shape iteration so
+    callers keep a simple per-uid contract.
+
+    Chapters without PERFORMER_NAMES are skipped (legacy files must be
+    re-identified first, not half-enriched).
+    """
+    all_names = [
+        name
+        for entry in chapter_tags.values()
+        for name in (entry.get("PERFORMER_NAMES") or "").split("|")
+        if name
+    ]
+    mbid_by_name = dict(zip(all_names, resolve_mbids_aligned(all_names, resolver)))
+
     result: dict[int, dict[str, str]] = {}
     for uid, entry in chapter_tags.items():
         names_str = entry.get("PERFORMER_NAMES")
         if not names_str:
             continue
-        mbids = [
-            "" if (m := resolved.get(name)) is None else m
-            for name in names_str.split("|")
-        ]
+        mbids = [mbid_by_name.get(name, "") for name in names_str.split("|")]
         result[uid] = {"MUSICBRAINZ_ARTISTIDS": "|".join(mbids)}
     return result

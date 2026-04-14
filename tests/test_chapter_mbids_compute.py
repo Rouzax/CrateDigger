@@ -1,7 +1,7 @@
 """Pure computation of per-chapter MUSICBRAINZ_ARTISTIDS from PERFORMER_NAMES."""
 import logging
 
-from festival_organizer.fanart import compute_chapter_mbid_tags
+from festival_organizer.fanart import compute_chapter_mbid_tags, resolve_mbids_aligned
 
 
 def test_all_resolved():
@@ -96,3 +96,39 @@ def test_mbids_for_chapters_preserved_even_when_other_chapters_have_no_names():
         111: {"MUSICBRAINZ_ARTISTIDS": "A"},
         333: {"MUSICBRAINZ_ARTISTIDS": "O"},
     }
+
+
+# --- resolve_mbids_aligned: the shared helper ---------------------------------
+
+def test_resolve_mbids_aligned_empty():
+    assert resolve_mbids_aligned([], lambda n: "x") == []
+
+
+def test_resolve_mbids_aligned_all_miss_preserves_slots():
+    out = resolve_mbids_aligned(["A", "B", "C"], lambda n: None)
+    assert out == ["", "", ""]
+
+
+def test_resolve_mbids_aligned_mixed_hits_and_misses():
+    def resolver(name):
+        return {"A": "mbid_a", "C": "mbid_c"}.get(name)
+    out = resolve_mbids_aligned(["A", "B", "C"], resolver)
+    assert out == ["mbid_a", "", "mbid_c"]
+
+
+def test_resolve_mbids_aligned_dedupes_resolver_calls():
+    calls = []
+
+    def resolver(name):
+        calls.append(name)
+        return "x"
+
+    resolve_mbids_aligned(["A", "B", "A", "B", "A"], resolver)
+    assert sorted(calls) == ["A", "B"]
+
+
+def test_resolve_mbids_aligned_warns_once_per_miss(caplog):
+    caplog.set_level(logging.WARNING, logger="festival_organizer.fanart")
+    resolve_mbids_aligned(["Mystery", "Mystery", "Mystery"], lambda n: None)
+    mystery_warnings = [r for r in caplog.records if "Mystery" in r.message]
+    assert len(mystery_warnings) == 1
