@@ -552,13 +552,35 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # Run pipeline
     all_results = run_pipeline(pipeline_files, progress)
 
-    # Post-pipeline: clean up empty source directories after organize (move)
+    # Post-pipeline: folder-level integrity after organize.
+    #   - "move" across libraries: remove emptied source folders (historical).
+    #   - "rename" (in-place re-organize): when a file renames into a different
+    #     folder and leaves its source folder empty of videos, follow
+    #     folder.jpg/fanart.jpg to the new folder and then remove the empty
+    #     source folder.
     if args.command == "organize":
         action = "move" if getattr(args, "move", False) else \
                  "rename" if getattr(args, "rename_only", False) else "copy"
-        if action == "move" and root.resolve() != output.resolve():
-            from festival_organizer.library import cleanup_empty_dirs
-            cleanup_empty_dirs(root)
+        if action in ("move", "rename"):
+            from festival_organizer.library import (
+                cleanup_empty_dirs, migrate_folder_artefacts,
+            )
+            if action == "rename":
+                moves: list[tuple[Path, Path]] = []
+                for (orig_path, _mf, ops) in pipeline_files:
+                    for op in ops:
+                        if op.name == "organize" and getattr(op, "target", None):
+                            src_dir = orig_path.parent
+                            tgt_dir = op.target.parent
+                            if src_dir.resolve() != tgt_dir.resolve():
+                                moves.append((src_dir, tgt_dir))
+                if moves:
+                    migrate_folder_artefacts(
+                        moves, video_exts=set(config.video_extensions)
+                    )
+                cleanup_empty_dirs(output)
+            elif root.resolve() != output.resolve():
+                cleanup_empty_dirs(root)
 
     progress.print_summary()
 

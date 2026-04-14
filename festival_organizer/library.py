@@ -35,6 +35,77 @@ FOLDER_SIDECARS = frozenset({
 })
 
 
+def migrate_folder_artefacts(
+    moves: list[tuple[Path, Path]],
+    video_exts: set[str] | frozenset[str],
+) -> None:
+    """Move folder-level artefacts (folder.jpg, fanart.jpg, ...) to follow the
+    videos they belong to, when a cross-directory rename leaves the source
+    folder with no remaining videos.
+
+    Per-file sidecars (stem-matched) are already handled by
+    ``OrganizeOperation._move_sidecars``. Folder-level files are intentionally
+    excluded there because they belong to the folder, not any single video.
+    This helper handles the folder-level case after the fact, for the common
+    festival_flat alias-change scenario where an entire folder's contents
+    shift to a new folder name.
+
+    Args:
+        moves: list of ``(source_folder, target_folder)`` pairs collected from
+            successful organize operations. Pairs where source==target are
+            no-ops.
+        video_exts: file extensions that count as videos (e.g. ``{".mkv",
+            ".mp4"}``). Used to decide whether a source folder has "no
+            remaining videos".
+
+    Pre-existing files in the target folder take precedence; the source copy
+    is still removed so the source folder can be cleaned up later.
+    """
+    # Deduplicate; a single source folder may emit multiple moves but we only
+    # need to process it once.
+    by_source: dict[Path, Path] = {}
+    for src_dir, tgt_dir in moves:
+        if src_dir.resolve() == tgt_dir.resolve():
+            continue
+        by_source.setdefault(src_dir, tgt_dir)
+
+    video_exts_lower = {e.lower() for e in video_exts}
+
+    for src_dir, tgt_dir in by_source.items():
+        if not src_dir.is_dir():
+            continue
+
+        remaining_videos = any(
+            p.is_file() and p.suffix.lower() in video_exts_lower
+            for p in src_dir.iterdir()
+        )
+        if remaining_videos:
+            continue
+
+        for name in FOLDER_SIDECARS:
+            src = src_dir / name
+            if not src.is_file():
+                continue
+            tgt = tgt_dir / name
+            try:
+                if tgt.exists():
+                    src.unlink()
+                    logger.debug(
+                        "Folder artefact %s already present at target; "
+                        "removed source copy", name
+                    )
+                else:
+                    tgt_dir.mkdir(parents=True, exist_ok=True)
+                    src.rename(tgt)
+                    logger.debug(
+                        "Folder artefact moved: %s -> %s", src, tgt
+                    )
+            except OSError as exc:
+                logger.warning(
+                    "Could not migrate folder artefact %s: %s", src, exc
+                )
+
+
 def find_library_root(start_path: Path) -> Path | None:
     """Walk up from start_path looking for .cratedigger/ marker.
 

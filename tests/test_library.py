@@ -2,7 +2,10 @@ import json
 import logging
 import os
 from pathlib import Path
-from festival_organizer.library import find_library_root, init_library, cleanup_empty_dirs
+from festival_organizer.library import (
+    find_library_root, init_library, cleanup_empty_dirs,
+    migrate_folder_artefacts,
+)
 
 
 def test_find_library_root_at_path(tmp_path):
@@ -329,3 +332,77 @@ def test_resolve_library_root_output_nonexistent(tmp_path):
 
     result = resolve_library_root(source=source, output=output)
     assert result == library
+
+
+# ── migrate_folder_artefacts tests ────────────────────────────────────
+
+
+def test_migrate_folder_artefacts_moves_files_to_target(tmp_path):
+    """When a video has been moved to a new folder and the source folder no
+    longer contains any videos, folder.jpg / fanart.jpg follow to the target
+    folder. This is the festival_flat alias-change scenario."""
+    old_dir = tmp_path / "UMF Miami"
+    new_dir = tmp_path / "Ultra Music Festival Miami"
+    old_dir.mkdir()
+    new_dir.mkdir()
+    # Video + per-file sidecars already moved by OrganizeOperation._move_sidecars
+    (new_dir / "2026 - Eric Prydz.mkv").write_bytes(b"video")
+    (new_dir / "2026 - Eric Prydz.nfo").write_text("<nfo/>")
+    # Folder-level artefacts left behind in old_dir
+    (old_dir / "folder.jpg").write_bytes(b"\xff\xd8folder")
+    (old_dir / "fanart.jpg").write_bytes(b"\xff\xd8fanart")
+
+    migrate_folder_artefacts([(old_dir, new_dir)], video_exts={".mkv", ".mp4"})
+
+    assert (new_dir / "folder.jpg").read_bytes() == b"\xff\xd8folder"
+    assert (new_dir / "fanart.jpg").read_bytes() == b"\xff\xd8fanart"
+    assert not (old_dir / "folder.jpg").exists()
+    assert not (old_dir / "fanart.jpg").exists()
+
+
+def test_migrate_folder_artefacts_noop_when_source_still_has_videos(tmp_path):
+    """If the source folder still contains other videos, don't steal its
+    folder-level artefacts — they still belong to that folder."""
+    old_dir = tmp_path / "Shared"
+    new_dir = tmp_path / "Moved"
+    old_dir.mkdir()
+    new_dir.mkdir()
+    (new_dir / "moved.mkv").write_bytes(b"video")
+    # Another video stayed in old_dir
+    (old_dir / "stayed.mkv").write_bytes(b"video")
+    (old_dir / "folder.jpg").write_bytes(b"\xff\xd8")
+
+    migrate_folder_artefacts([(old_dir, new_dir)], video_exts={".mkv"})
+
+    assert (old_dir / "folder.jpg").exists()
+    assert not (new_dir / "folder.jpg").exists()
+
+
+def test_migrate_folder_artefacts_noop_when_same_dir(tmp_path):
+    """Rename that stays inside the same folder (artist_flat, artist unchanged)
+    must not touch folder-level artefacts."""
+    same_dir = tmp_path / "Eric Prydz"
+    same_dir.mkdir()
+    (same_dir / "2026.mkv").write_bytes(b"video")
+    (same_dir / "folder.jpg").write_bytes(b"\xff\xd8")
+
+    migrate_folder_artefacts([(same_dir, same_dir)], video_exts={".mkv"})
+
+    assert (same_dir / "folder.jpg").exists()
+
+
+def test_migrate_folder_artefacts_target_overwrite_preserves_target(tmp_path):
+    """If the target folder already has a folder.jpg (e.g. prior enrich run),
+    don't overwrite it. The new folder's existing artefact is authoritative."""
+    old_dir = tmp_path / "Old"
+    new_dir = tmp_path / "New"
+    old_dir.mkdir()
+    new_dir.mkdir()
+    (new_dir / "moved.mkv").write_bytes(b"video")
+    (old_dir / "folder.jpg").write_bytes(b"old")
+    (new_dir / "folder.jpg").write_bytes(b"new")
+
+    migrate_folder_artefacts([(old_dir, new_dir)], video_exts={".mkv"})
+
+    assert (new_dir / "folder.jpg").read_bytes() == b"new"
+    assert not (old_dir / "folder.jpg").exists()  # source still got cleaned
