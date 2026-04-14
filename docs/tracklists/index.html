@@ -14,7 +14,7 @@
         <link rel="prev" href="../festivals/">
       
       
-        <link rel="next" href="../kodi-integration/">
+        <link rel="next" href="../tag-reference/">
       
       
         
@@ -300,6 +300,25 @@
     
   
   1001Tracklists
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../tag-reference/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Tag reference
 
       </a>
     </li>
@@ -814,10 +833,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#metadata-tags" class="md-nav__link">
+  <a href="#per-chapter-tags" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Metadata tags
+        Per-chapter tags
       
     </span>
   </a>
@@ -922,6 +941,33 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tag-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tag reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1086,10 +1132,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#metadata-tags" class="md-nav__link">
+  <a href="#per-chapter-tags" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Metadata tags
+        Per-chapter tags
       
     </span>
   </a>
@@ -1258,101 +1304,57 @@
 <li>A title (the track name, artist, and mix information)</li>
 </ul>
 <p>Chapters are embedded using <code>mkvpropedit</code>. The chapter language defaults to "eng" and can be changed via the <code>chapter_language</code> config setting.</p>
-<h3 id="metadata-tags">Metadata tags</h3>
-<p>In addition to chapters, CrateDigger embeds several MKV tags:</p>
+<h3 id="per-chapter-tags">Per-chapter tags</h3>
+<p>Alongside chapters, CrateDigger writes per-chapter Matroska tags at <code>TargetTypeValue=30</code>, targeting each chapter's <code>ChapterUID</code>:</p>
 <table>
 <thead>
 <tr>
 <th>Tag</th>
-<th>Scope</th>
+<th>Written by</th>
 <th>Content</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Tracklist URL</td>
-<td>Global</td>
-<td>Link to the 1001Tracklists page</td>
-</tr>
-<tr>
-<td>Tracklist title</td>
-<td>Global</td>
-<td>Title of the tracklist</td>
-</tr>
-<tr>
-<td>Tracklist ID</td>
-<td>Global</td>
-<td>Numeric identifier</td>
-</tr>
-<tr>
-<td>Tracklist date</td>
-<td>Global</td>
-<td>Event date</td>
-</tr>
-<tr>
-<td>Genres</td>
-<td>Global</td>
-<td>Top 5 most frequent per-track genres from the tracklist page</td>
-</tr>
-<tr>
-<td>DJ artwork</td>
-<td>Global</td>
-<td>URL to the DJ photo from the page</td>
-</tr>
-<tr>
-<td>Stage</td>
-<td>Global</td>
-<td>Stage name (if listed)</td>
-</tr>
-<tr>
-<td>Festival/venue/radio</td>
-<td>Global</td>
-<td>Source information by type</td>
-</tr>
-<tr>
-<td>Artists</td>
-<td>Global</td>
-<td>DJ names associated with the tracklist (display form, pipe-separated)</td>
-</tr>
-<tr>
 <td>PERFORMER</td>
-<td>Per chapter</td>
+<td>identify</td>
 <td>Primary artist of this track, display name taken directly from the 1001TL track row HTML and then passed through <code>artists.json</code> alias resolution (e.g. <code>SOMETHING ELSE</code> → <code>ALOK</code>). Preserves original casing (<code>deadmau5</code>, <code>CIElll</code>, <code>S3PPA</code>).</td>
 </tr>
 <tr>
 <td>PERFORMER_SLUGS</td>
-<td>Per chapter</td>
-<td>Pipe-separated 1001TL slugs for every artist linked on the track row</td>
+<td>identify</td>
+<td>Pipe-separated 1001TL slugs for every artist linked on the track row.</td>
 </tr>
 <tr>
 <td>PERFORMER_NAMES</td>
-<td>Per chapter</td>
-<td>Pipe-separated display names for every artist, aligned slot-for-slot with <code>PERFORMER_SLUGS</code> (written by identify)</td>
+<td>identify</td>
+<td>Pipe-separated display names for every artist, aligned slot-for-slot with <code>PERFORMER_SLUGS</code>.</td>
 </tr>
 <tr>
 <td>MUSICBRAINZ_ARTISTIDS</td>
-<td>Per chapter</td>
-<td>Pipe-separated MusicBrainz artist IDs, aligned slot-for-slot with <code>PERFORMER_NAMES</code>; empty slot <code>""</code> for unresolved names (written by enrich <code>chapter_mbids</code>)</td>
+<td>enrich (<code>chapter_artist_mbids</code>)</td>
+<td>Pipe-separated MusicBrainz artist IDs, aligned slot-for-slot with <code>PERFORMER_NAMES</code>; empty slot <code>""</code> for unresolved names.</td>
 </tr>
 <tr>
 <td>TITLE</td>
-<td>Per chapter</td>
-<td>Clean track title with artist prefix stripped (e.g. <code>Take Over Control</code> from the row <code>AFROJACK ft. Eva Simons - Take Over Control</code>)</td>
+<td>identify</td>
+<td>Clean track title with artist prefix stripped (e.g. <code>Take Over Control</code> from the row <code>AFROJACK ft. Eva Simons - Take Over Control</code>).</td>
 </tr>
 <tr>
 <td>LABEL</td>
-<td>Per chapter</td>
-<td>Record label as plain text (e.g. <code>WALL</code>, <code>MAU5TRAP</code>)</td>
+<td>identify</td>
+<td>Record label as plain text (e.g. <code>WALL</code>, <code>MAU5TRAP</code>).</td>
 </tr>
 <tr>
 <td>GENRE</td>
-<td>Per chapter</td>
-<td>Pipe-separated per-track genres</td>
+<td>identify</td>
+<td>Pipe-separated per-track genres.</td>
 </tr>
 </tbody>
 </table>
-<p>Per-chapter tags use Matroska <code>TargetTypeValue=30</code> targeting each chapter's <code>ChapterUID</code>. They surface directly in <code>ffprobe -show_chapters</code> output (under <code>chapters[].tags</code>), which makes them readable by downstream tools like TrackSplit without any format bridge.</p>
-<p><strong>Alignment invariant</strong>: when <code>MUSICBRAINZ_ARTISTIDS</code> is present on a chapter, its pipe count matches the other two artist-aligned tags: <code>len(PERFORMER_SLUGS.split("|")) == len(PERFORMER_NAMES.split("|")) == len(MUSICBRAINZ_ARTISTIDS.split("|"))</code>. Downstream tools can zip the three lists by index to produce multi-valued FLAC artist tags. See <a href="../commands/enrich/#chapter-mbids-chapter_mbids">Enrich / Chapter MBIDs</a> and <a href="../configuration/#artist-mbid-override-file">artist_mbids.json</a>.</p>
+<p>Per-chapter tags surface directly in <code>ffprobe -show_chapters</code> output (under <code>chapters[].tags</code>), which makes them readable by downstream tools like TrackSplit without any format bridge.</p>
+<p><strong>Alignment invariant</strong>: when <code>MUSICBRAINZ_ARTISTIDS</code> is present on a chapter, its pipe count matches the other two artist-aligned tags: <code>len(PERFORMER_SLUGS.split("|")) == len(PERFORMER_NAMES.split("|")) == len(MUSICBRAINZ_ARTISTIDS.split("|"))</code>. Downstream tools can zip the three lists by index to produce multi-valued FLAC artist tags. See <a href="../commands/enrich/#chapter-artist-mbids-chapter_artist_mbids">Enrich / Chapter artist MBIDs</a> and <a href="../configuration/#artist-mbid-override-file">artist_mbids.json</a>.</p>
+<p>For the full tag taxonomy (file-level <code>ARTIST</code>, collection-level <code>CRATEDIGGER_*</code> tags, album-artist tags, alignment invariants across scopes, and a worked example), see the <a href="../tag-reference/">tag reference</a>.</p>
 <p>These tags are used by later pipeline stages (enrich) for artwork lookups, poster generation, and NFO metadata; per-chapter tags feed per-track FLAC metadata when extracting individual tracks from a set.</p>
 <h2 id="caching-and-rate-limiting">Caching and rate limiting</h2>
 <h3 id="rate-limiting">Rate limiting</h3>

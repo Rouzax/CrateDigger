@@ -312,6 +312,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../tag-reference/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Tag reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../kodi-integration/" class="md-tabs__link">
         
   
@@ -970,6 +989,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../tag-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tag reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../kodi-integration/" class="md-nav__link">
         
   
@@ -1546,7 +1592,7 @@
 </tbody>
 </table>
 <h2 id="artist-mbid-override-file">Artist MBID override file</h2>
-<p><code>~/.cratedigger/artist_mbids.json</code> is a user-curated flat JSON map from artist display name to MusicBrainz artist ID. It is consulted first by the <code>enrich --only chapter_mbids</code> operation, ahead of the auto cache and any live MusicBrainz lookup.</p>
+<p><code>~/.cratedigger/artist_mbids.json</code> is a user-curated flat JSON map from artist display name to MusicBrainz artist ID. It is consulted first by both the <code>chapter_artist_mbids</code> and <code>album_artist_mbids</code> enrich operations, ahead of the auto cache and any live MusicBrainz lookup. A pin here applies to both per-chapter and album-level artist MBID tags, since MusicBrainz IDs are properties of the artist, not of the tag context.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="p">{</span>
 <a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span><span class="p">,</span>
 <a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="nt">&quot;Oliver Heldens&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6e7dde91-4c02-47ea-a2b4-2222222222bb&quot;</span>
@@ -1587,7 +1633,7 @@
 </tbody>
 </table>
 <p><strong>Distinction from <code>mbid_cache.json</code></strong>: <code>mbid_cache.json</code> is disposable, TTL-bound (see <code>cache_ttl.mbid_days</code>), and populated automatically by CrateDigger from MusicBrainz search results. It can be deleted at any time and will refill. <code>artist_mbids.json</code> is your curated override list, and is the correct place to record MBIDs for artists that MusicBrainz searches misidentify or fail to find.</p>
-<p>See <a href="../commands/enrich/#chapter-mbids-chapter_mbids">Enrich / Chapter MBIDs</a> for the full fix loop.</p>
+<p>See <a href="../commands/enrich/#chapter-artist-mbids-chapter_artist_mbids">Enrich / Chapter artist MBIDs</a> for the full fix loop.</p>
 <h2 id="environment-variables">Environment variables</h2>
 <table>
 <thead>
