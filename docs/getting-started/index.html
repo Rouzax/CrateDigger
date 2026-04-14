@@ -665,6 +665,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#without-a-1001tracklists-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Without a 1001Tracklists account
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1209,6 +1220,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#without-a-1001tracklists-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Without a 1001Tracklists account
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1302,9 +1324,9 @@
 </code></pre></div>
 <p>Edit <code>~/.cratedigger/config.json</code> to add your credentials and preferences. At minimum, you may want to:</p>
 <ul>
-<li>Set your 1001Tracklists email and password (for the <code>identify</code> command)</li>
-<li>Set your fanart.tv personal API key (for artist artwork lookups)</li>
-<li>Choose a default layout</li>
+<li><strong>1001Tracklists credentials</strong> (required for <code>identify</code>, optional overall). Set email and password to fetch tracklists. Without them, the <code>identify</code> step is skipped; the rest of the pipeline still works from filename parsing and embedded metadata. See <a href="../tracklists/#do-i-need-an-account">Do I need an account?</a> for what's gained with vs. without.</li>
+<li><strong>fanart.tv personal API key</strong> (optional). Speeds up artist artwork lookups. A built-in project key is used as a fallback.</li>
+<li><strong>Default layout</strong> — folder structure used by <code>organize</code>.</li>
 </ul>
 <p>See <a href="../configuration/">Configuration</a> for all available options.</p>
 <h3 id="2-copy-the-example-festivals-file">2. Copy the example festivals file</h3>
@@ -1331,6 +1353,11 @@
 <p>You can combine organizing and enriching in a single pass:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
 </code></pre></div>
+<h3 id="without-a-1001tracklists-account">Without a 1001Tracklists account</h3>
+<p>If you don't want a 1001TL account, skip step 1 and run organize + enrich directly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
+</code></pre></div>
+<p>The resulting library uses filename parsing (via your <code>festivals.json</code> aliases and <code>artists.json</code> rules) and embedded MKV metadata. You keep the organized folder tree, NFO files, posters, cover art, and artist artwork from fanart.tv. You lose chapter markers, per-track metadata, album-level multi-artist tags, stage/venue/event taxonomy, and DJ artwork from 1001TL. See <a href="../tracklists/#do-i-need-an-account">Do I need an account?</a> for the full matrix.</p>
 
 
 
