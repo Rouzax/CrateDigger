@@ -106,8 +106,6 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
 
     # Enrichment tags at TTV=70 (collection level)
     tags_70: dict[str, str] = {}
-    if media_file.mbid:
-        tags_70["CRATEDIGGER_MBID"] = media_file.mbid
     if media_file.fanart_url:
         tags_70["CRATEDIGGER_FANART_URL"] = media_file.fanart_url
     if media_file.clearlogo_url:

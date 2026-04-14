@@ -34,7 +34,6 @@ class MediaFile:
     dj_artwork_url: str = ""
 
     # Enrichment identifiers
-    mbid: str = ""
     fanart_url: str = ""
     clearlogo_url: str = ""
     enriched_at: str = ""

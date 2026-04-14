@@ -264,7 +264,7 @@ def test_parse_mediainfo_json_new_tag_preferred_over_old():
 
 
 def test_parse_mediainfo_json_enrichment_tags():
-    """CRATEDIGGER_MBID etc. are read into metadata dict."""
+    """CRATEDIGGER_FANART_URL etc. are read into metadata dict."""
     raw = {
         "media": {
             "track": [
@@ -272,7 +272,6 @@ def test_parse_mediainfo_json_enrichment_tags():
                     "@type": "General",
                     "Duration": "3600.0",
                     "Format": "Matroska",
-                    "CRATEDIGGER_MBID": "12345-abcde",
                     "CRATEDIGGER_FANART_URL": "https://fanart.tv/img.jpg",
                     "CRATEDIGGER_CLEARLOGO_URL": "https://fanart.tv/logo.png",
                     "CRATEDIGGER_ENRICHED_AT": "2025-06-01T12:00:00",
@@ -281,7 +280,6 @@ def test_parse_mediainfo_json_enrichment_tags():
         }
     }
     meta = parse_mediainfo_json(raw)
-    assert meta["mbid"] == "12345-abcde"
     assert meta["fanart_url"] == "https://fanart.tv/img.jpg"
     assert meta["clearlogo_url"] == "https://fanart.tv/logo.png"
     assert meta["enriched_at"] == "2025-06-01T12:00:00"
@@ -301,7 +299,6 @@ def test_parse_mediainfo_json_enrichment_tags_default_empty():
         }
     }
     meta = parse_mediainfo_json(raw)
-    assert meta["mbid"] == ""
     assert meta["fanart_url"] == ""
     assert meta["clearlogo_url"] == ""
     assert meta["enriched_at"] == ""

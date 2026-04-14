@@ -44,7 +44,6 @@ Written by `identify` (1001TL-sourced) or `enrich / TagsOperation` (MBID, fanart
 | `CRATEDIGGER_1001TL_EVENT` | identify / embed_chapters | Event/conference display name. | `Amsterdam Dance Event` |
 | `CRATEDIGGER_1001TL_COUNTRY` | identify / embed_chapters | Country of the event. | `Netherlands` |
 | `CRATEDIGGER_1001TL_SOURCE_TYPE` | identify / embed_chapters | Priority-ranked source category: Open Air / Festival > Event Location > Conference > ... | `Open Air / Festival` |
-| `CRATEDIGGER_MBID` | enrich / TagsOperation | Primary DJ MusicBrainz artist ID (from FanartOperation's first successful lookup). Retained for single-value consumers; see `CRATEDIGGER_ALBUMARTIST_MBIDS` below for the multi-value variant. | `477b8c0c-c5fc-4ad2-b5b2-191f0bf2a9df` |
 | `CRATEDIGGER_FANART_URL` | enrich / TagsOperation | URL of the artist background downloaded from fanart.tv. | `https://...` |
 | `CRATEDIGGER_CLEARLOGO_URL` | enrich / TagsOperation | URL of the artist clear logo from fanart.tv. | `https://...` |
 | `CRATEDIGGER_ENRICHED_AT` | enrich / TagsOperation | ISO-8601 timestamp of the most recent enrich pass that wrote TTV=70 tags. | `2026-04-14T10:15:30+00:00` |
@@ -120,7 +119,6 @@ DATE_RELEASED=2025-10-25
 SYNOPSIS=...
 
 # Collection-level (TTV=70) added:
-CRATEDIGGER_MBID=477b8c0c-c5fc-4ad2-b5b2-191f0bf2a9df   # primary DJ MBID only
 CRATEDIGGER_FANART_URL=https://assets.fanart.tv/...
 CRATEDIGGER_CLEARLOGO_URL=https://assets.fanart.tv/...
 CRATEDIGGER_ALBUMARTIST_MBIDS=477b8c0c-c5fc-4ad2-b5b2-191f0bf2a9df|<kiki-mbid-or-empty>

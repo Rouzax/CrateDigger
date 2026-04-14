@@ -528,7 +528,9 @@ def _run_command(args: types.SimpleNamespace) -> int:
             images_ttl = config.cache_ttl.get("images_days", 90)
             fanart_op = FanartOperation(config, library_root=output, force=force,
                                         ttl_days=images_ttl)
-        if args.command == "enrich" and (not only or "posters" in only):
+        should_album_poster = (args.command == "enrich" and (not only or "posters" in only)) or \
+                              (args.command == "organize" and getattr(args, "enrich", False))
+        if should_album_poster:
             images_ttl = config.cache_ttl.get("images_days", 90)
             album_poster_op = AlbumPosterOperation(config, force=force, library_root=output,
                                                     ttl_days=images_ttl)
@@ -565,7 +567,11 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 if fanart_op:
                     ops.append(fanart_op)
                 ops.append(PosterOperation(config))
+                if album_poster_op:
+                    ops.append(album_poster_op)
                 ops.append(TagsOperation())
+                ops.append(ChapterArtistMbidsOperation(config=config, force=force))
+                ops.append(AlbumArtistMbidsOperation(config=config, force=force))
 
         elif args.command == "enrich":
             if not only or "nfo" in only:

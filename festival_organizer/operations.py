@@ -701,12 +701,9 @@ class FanartOperation(Operation):
                 continue
             d = self._artist_dir(artist)
             try:
-                # Look up MBID and store on MediaFile
                 mbid = lookup_mbid(artist, self._get_cache())
-                if mbid and not media_file.mbid:
-                    media_file.mbid = mbid
 
-                # Fetch fanart.tv data once — extract URLs and pass to downloader
+                # Fetch fanart.tv data once, extract URLs and pass to downloader
                 fanart_data = None
                 if mbid:
                     fanart_data = fetch_artist_images(

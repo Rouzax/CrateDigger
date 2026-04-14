@@ -209,6 +209,16 @@ def _run_enrich(mkv: Path, tracklist_id: str, tmp_path: Path, tracklist_date: st
     )
     assert ok, "embed_chapters returned False"
 
+    # Exercise the MBID enrich operations on the embedded MKV so tests cover
+    # the tags they write (CRATEDIGGER_ALBUMARTIST_MBIDS and per-chapter
+    # MUSICBRAINZ_ARTISTIDS). Both ops read from on-disk tags and ignore
+    # their `media_file` argument, so passing None is safe.
+    from festival_organizer.operations import (
+        AlbumArtistMbidsOperation, ChapterArtistMbidsOperation,
+    )
+    ChapterArtistMbidsOperation(config=cfg).execute(mkv, media_file=None)  # pyright: ignore[reportArgumentType]
+    AlbumArtistMbidsOperation(config=cfg).execute(mkv, media_file=None)  # pyright: ignore[reportArgumentType]
+
     tags_xml = tmp_path / "tags.xml"
     subprocess.run(["mkvextract", str(mkv), "tags", str(tags_xml)], check=True)
     chapters_xml = tmp_path / "chapters.xml"
@@ -1055,6 +1065,65 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
         assert cache_path.exists(), f"expected dj_cache.json at {cache_path}"
         cache_data = json.loads(cache_path.read_text())
         assert len(cache_data) >= expect["dj_cache_min_entries"]
+
+    # MBID assertions: only enforce when at least one slot resolved. This lets
+    # the test stay green on machines with a cold MBID cache / no network, while
+    # still catching the "op is wired but silently producing empty output" gap.
+    artists_val = _find_global_tag(tags_root, 70, "CRATEDIGGER_1001TL_ARTISTS") or ""
+    mbids_val = _find_global_tag(tags_root, 70, "CRATEDIGGER_ALBUMARTIST_MBIDS")
+    if artists_val and mbids_val is not None and any(mbids_val.split("|")):
+        names = [n for n in artists_val.split("|") if n]
+        mbid_slots = mbids_val.split("|")
+        assert len(mbid_slots) == len(names), (
+            f"ALBUMARTIST_MBIDS slot count {len(mbid_slots)} != "
+            f"1001TL_ARTISTS slot count {len(names)}"
+        )
+
+    # Per-chapter MUSICBRAINZ_ARTISTIDS: where a chapter has PERFORMER_NAMES
+    # and the albumartist MBID lookup resolved at least one artist (proxy for
+    # "network/cache is functional"), at least one chapter with cached names
+    # should carry aligned MBIDs with at least one non-empty slot.
+    if mbids_val is not None and any((mbids_val or "").split("|")):
+        chapter_tags_by_uid: dict[str, dict[str, str]] = {}
+        for tag in tags_root.findall("Tag"):
+            targets = tag.find("Targets")
+            if targets is None:
+                continue
+            ttv_el = targets.find("TargetTypeValue")
+            uid_el = targets.find("ChapterUID")
+            if ttv_el is None or uid_el is None or (ttv_el.text or "") != "30":
+                continue
+            uid = (uid_el.text or "")
+            block: dict[str, str] = {}
+            for simple in tag.findall("Simple"):
+                n_el = simple.find("Name")
+                s_el = simple.find("String")
+                if n_el is not None and n_el.text:
+                    block[n_el.text] = (s_el.text if s_el is not None else "") or ""
+            chapter_tags_by_uid[uid] = block
+
+        chapters_with_names = [
+            b for b in chapter_tags_by_uid.values()
+            if b.get("PERFORMER_NAMES", "").strip()
+        ]
+        if chapters_with_names:
+            chapters_with_mbids = [
+                b for b in chapters_with_names
+                if any((b.get("MUSICBRAINZ_ARTISTIDS", "") or "").split("|"))
+            ]
+            assert chapters_with_mbids, (
+                "no chapter carries MUSICBRAINZ_ARTISTIDS despite albumartist "
+                "MBID resolution succeeding; ChapterArtistMbidsOperation may "
+                "not be wired or is silently skipping"
+            )
+            # Alignment invariant: slot count matches PERFORMER_NAMES count.
+            for block in chapters_with_mbids:
+                names_n = len([x for x in block["PERFORMER_NAMES"].split("|") if x])
+                mbid_slots_n = len(block["MUSICBRAINZ_ARTISTIDS"].split("|"))
+                assert mbid_slots_n == names_n, (
+                    f"chapter MUSICBRAINZ_ARTISTIDS slot count {mbid_slots_n} "
+                    f"!= PERFORMER_NAMES count {names_n}"
+                )
 
 
 _IMAGE_EXTS = ("jpg", "jpeg", "png", "webp")

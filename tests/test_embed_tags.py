@@ -78,11 +78,10 @@ def test_embed_tags_title_fallback_no_stage(tmp_path):
 
 
 def test_embed_tags_writes_enrichment_tags_at_ttv70(tmp_path):
-    """Enrichment tags (MBID, fanart/clearlogo URLs) are written at TTV=70."""
+    """Enrichment tags (fanart/clearlogo URLs) are written at TTV=70."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
-        mbid="abc-123-def",
         fanart_url="https://fanart.tv/bg.jpg",
         clearlogo_url="https://fanart.tv/logo.png",
     )
@@ -94,7 +93,6 @@ def test_embed_tags_writes_enrichment_tags_at_ttv70(tmp_path):
     assert result == "done"
     tags_dict = mock_wmt.call_args[0][1]
     assert 70 in tags_dict
-    assert tags_dict[70]["CRATEDIGGER_MBID"] == "abc-123-def"
     assert tags_dict[70]["CRATEDIGGER_FANART_URL"] == "https://fanart.tv/bg.jpg"
     assert tags_dict[70]["CRATEDIGGER_CLEARLOGO_URL"] == "https://fanart.tv/logo.png"
     # CRATEDIGGER_ENRICHED_AT should be a current ISO timestamp
@@ -106,7 +104,7 @@ def test_embed_tags_skips_empty_enrichment_fields(tmp_path):
     """Empty enrichment fields are not written to TTV=70."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
-    mf = _make_mf(mbid="", fanart_url="", clearlogo_url="")
+    mf = _make_mf(fanart_url="", clearlogo_url="")
 
     with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
         with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
@@ -192,7 +190,7 @@ def test_embed_tags_skipped_with_enrichment_tags_match(tmp_path):
     video.write_bytes(b"")
     mf = _make_mf(
         artist="Tiesto", festival="TML", year="2024",
-        mbid="abc-123", fanart_url="https://fanart.tv/bg.jpg",
+        fanart_url="https://fanart.tv/bg.jpg",
         clearlogo_url="https://fanart.tv/logo.png",
     )
 
@@ -208,7 +206,6 @@ TML</String></Simple>
   </Tag>
   <Tag>
     <Targets><TargetTypeValue>70</TargetTypeValue></Targets>
-    <Simple><Name>CRATEDIGGER_MBID</Name><String>abc-123</String></Simple>
     <Simple><Name>CRATEDIGGER_FANART_URL</Name><String>https://fanart.tv/bg.jpg</String></Simple>
     <Simple><Name>CRATEDIGGER_CLEARLOGO_URL</Name><String>https://fanart.tv/logo.png</String></Simple>
     <Simple><Name>CRATEDIGGER_ENRICHED_AT</Name><String>2024-01-01T00:00:00+00:00</String></Simple>

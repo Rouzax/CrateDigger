@@ -120,8 +120,6 @@ This mirrors the per-chapter pattern at the album (file) level so downstream tag
 
 The override file, cache, and fix loop are shared with `chapter_artist_mbids` above: a single entry in `~/.cratedigger/artist_mbids.json` pins the MBID for both per-chapter and album-level tags. MBIDs are properties of the artist, not of the tag context.
 
-The existing single-MBID `CRATEDIGGER_MBID` tag (primary DJ only, written by `tags`) is not modified; it remains the compatibility fallback for single-value consumers.
-
 See [tag reference](../tag-reference.md) for the full tag taxonomy and alignment invariants.
 
 ## Examples

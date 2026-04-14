@@ -207,7 +207,6 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         dj_artwork_url=meta.get("tracklists_dj_artwork", ""),
         country=meta.get("tracklists_country", ""),
         source_type=meta.get("tracklists_source_type", ""),
-        mbid=meta.get("mbid", ""),
         fanart_url=meta.get("fanart_url", ""),
         clearlogo_url=meta.get("clearlogo_url", ""),
         enriched_at=meta.get("enriched_at", ""),

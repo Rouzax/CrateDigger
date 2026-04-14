@@ -563,33 +563,7 @@ def test_organize_sidecar_stem_rename(tmp_path):
     assert not (src / "2024 - AMF - Tiësto-poster.jpg").exists()
 
 
-# --- FanartOperation stores MBID and URLs on MediaFile ---
-
-
-def test_fanart_op_stores_mbid_on_mediafile(tmp_path):
-    """FanartOperation stores the resolved MBID on the MediaFile."""
-    config = Config({
-        **DEFAULT_CONFIG,
-        "fanart": {"enabled": True, "project_api_key": "test-key"},
-    })
-    lib = tmp_path / "lib"
-    lib.mkdir()
-    video = tmp_path / "test.mkv"
-    video.write_bytes(b"")
-    mf = _make_mf(artist="Hardwell")
-
-    mock_cache = MagicMock()
-    mock_cache.has.return_value = False
-    mock_cache.get.side_effect = KeyError
-
-    with patch("festival_organizer.fanart.download_artist_images", return_value=(True, True)):
-        with patch("festival_organizer.fanart.lookup_mbid", return_value="mbid-abc-123"):
-            with patch("festival_organizer.fanart.fetch_artist_images", return_value=None):
-                op = FanartOperation(config, lib)
-                op._cache = mock_cache
-                result = op.execute(video, mf)
-
-    assert mf.mbid == "mbid-abc-123"
+# --- FanartOperation stores URLs on MediaFile ---
 
 
 def test_fanart_op_stores_urls_on_mediafile(tmp_path):

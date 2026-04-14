@@ -127,7 +127,6 @@ _1001TL_TAG_KEYS: dict[str, list[str]] = {
 }
 
 _ENRICHMENT_TAG_KEYS: dict[str, str] = {
-    "mbid": "CRATEDIGGER_MBID",
     "fanart_url": "CRATEDIGGER_FANART_URL",
     "clearlogo_url": "CRATEDIGGER_CLEARLOGO_URL",
     "enriched_at": "CRATEDIGGER_ENRICHED_AT",
