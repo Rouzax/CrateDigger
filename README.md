@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="GPL-3.0">
-  <img src="https://img.shields.io/badge/version-v0.9.8-orange" alt="v0.9.8">
+  <img src="https://img.shields.io/badge/version-v0.12.3-orange" alt="v0.12.3">
 </p>
 
 <p align="center"><em>Festival set & concert library manager. Organize, enrich, and curate your collection with professional artwork, metadata, and chapter markers.</em></p>
@@ -84,7 +84,7 @@ pip install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git
 cratedigger identify /path/to/downloads
 
 # Step 2: Organize files into your library
-cratedigger organize /path/to/downloads --library /path/to/library
+cratedigger organize /path/to/downloads --output /path/to/library
 
 # Step 3: Generate artwork, posters, NFO files, and embed tags
 cratedigger enrich /path/to/library
