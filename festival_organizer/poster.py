@@ -546,34 +546,38 @@ def _accent_from_base(base_color: tuple[int, int, int]) -> tuple[int, int, int]:
     return (int(r2 * 255), int(g2 * 255), int(b2 * 255))
 
 
-def _make_gradient_bg(base_color: tuple[int, int, int]) -> Image.Image:
+def _make_gradient_bg(
+    base_color: tuple[int, int, int],
+    width: int = POSTER_W,
+    height: int = POSTER_H,
+) -> Image.Image:
     """Create a smooth gradient background with radial highlight and noise grain."""
     r, g, b = base_color
-    bg = Image.new("RGB", (POSTER_W, POSTER_H), (0, 0, 0))
+    bg = Image.new("RGB", (width, height), (0, 0, 0))
     draw = ImageDraw.Draw(bg)
 
     # Vertical gradient: lighter at top, darker at bottom
-    for y in range(POSTER_H):
-        progress = y / POSTER_H
+    for y in range(height):
+        progress = y / height
         brightness = 0.55 * (1 - progress ** 0.8) + 0.08
         sat_factor = 1.0 - 0.3 * progress
         line_r = int(r * brightness * sat_factor)
         line_g = int(g * brightness * sat_factor)
         line_b = int(b * brightness * sat_factor)
-        draw.line([(0, y), (POSTER_W, y)], fill=(line_r, line_g, line_b))
+        draw.line([(0, y), (width, y)], fill=(line_r, line_g, line_b))
 
     # Radial highlight in upper center
-    highlight = Image.new("RGBA", (POSTER_W, POSTER_H), (0, 0, 0, 0))
+    highlight = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     hd = ImageDraw.Draw(highlight)
-    cx, cy = POSTER_W // 2, int(POSTER_H * 0.30)
-    radius = int(POSTER_W * 0.6)
+    cx, cy = width // 2, int(height * 0.30)
+    radius = int(width * 0.6)
     for dist in range(radius, 0, -2):
         alpha = int(40 * (1 - dist / radius) ** 2)
         hd.ellipse([(cx - dist, cy - dist), (cx + dist, cy + dist)], fill=(r, g, b, alpha))
     bg = Image.alpha_composite(bg.convert("RGBA"), highlight).convert("RGB")
 
     # Subtle noise grain
-    noise = np.random.default_rng(42).normal(0, 3, (POSTER_H, POSTER_W, 3)).astype(np.int16)
+    noise = np.random.default_rng(42).normal(0, 3, (height, width, 3)).astype(np.int16)
     bg_arr = np.array(bg, dtype=np.int16) + noise
     bg_arr = np.clip(bg_arr, 0, 255).astype(np.uint8)
     bg = Image.fromarray(bg_arr)

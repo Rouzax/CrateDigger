@@ -24,6 +24,9 @@ def extract_cover(source: Path, target_dir: Path) -> Path | None:
     Priority:
     1. Extract embedded MKV attachment via mkvextract
     2. Fallback: smart-sample a video frame via frame_sampler
+    3. Final fallback: write a plain gradient thumb so downstream poster
+       generation still has something to work with. The gradient carries no
+       text, so set-poster layout is identical to the normal path.
 
     Saves as {source.stem}-thumb.jpg in the target directory.
     Returns the path to the thumb file, or None on failure.
@@ -40,6 +43,10 @@ def extract_cover(source: Path, target_dir: Path) -> Path | None:
 
     # 2. Fallback: sample best frame from video
     if _sample_frame_fallback(source, thumb_path):
+        return thumb_path
+
+    # 3. Last resort: synthesise a gradient thumb
+    if _gradient_thumb_fallback(thumb_path):
         return thumb_path
 
     return None
@@ -96,4 +103,22 @@ def _sample_frame_fallback(source: Path, thumb_path: Path) -> bool:
         return False
     except (OSError, subprocess.SubprocessError) as e:
         logger.debug("Frame sampling failed for %s: %s", source, e)
+        return False
+
+
+def _gradient_thumb_fallback(thumb_path: Path) -> bool:
+    """Write a 16:9 gradient-only thumb as last-resort fallback.
+
+    The gradient carries no text or decoration; set-poster rendering stays
+    identical to the normal path (only the upper sharp-image region differs).
+    """
+    try:
+        from festival_organizer.poster import _make_gradient_bg
+        # Neutral brand blue; deterministic across runs and files.
+        base_color = (60, 90, 140)
+        bg = _make_gradient_bg(base_color, width=1920, height=1080)
+        bg.save(str(thumb_path), "JPEG", quality=95)
+        return thumb_path.exists()
+    except (OSError, ValueError) as e:
+        logger.debug("Gradient thumb fallback failed for %s: %s", thumb_path, e)
         return False

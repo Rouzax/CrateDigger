@@ -170,7 +170,7 @@ class ArtOperation(Operation):
         try:
             result = extract_cover(file_path, file_path.parent)
             if not result:
-                return OperationResult(self.name, "error", "no embedded art, no frames")
+                return OperationResult(self.name, "error", "no art available")
             # Copy thumb as fanart sidecar (Kodi expects -fanart.jpg on disk)
             thumb = file_path.with_name(f"{file_path.stem}-thumb.jpg")
             fanart = file_path.with_name(f"{file_path.stem}-fanart.jpg")

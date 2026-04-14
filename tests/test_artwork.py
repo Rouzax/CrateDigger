@@ -20,13 +20,14 @@ def test_find_mkvextract_not_installed():
 
 
 def test_extract_cover_no_tool(tmp_path):
-    """Should return None if mkvextract is not available and frame_sampler fails."""
+    """Returns None only when all three tiers fail."""
     source = tmp_path / "source.mkv"
     source.touch()
     with patch("festival_organizer.metadata.MKVEXTRACT_PATH", None):
         with patch("festival_organizer.artwork._sample_frame_fallback", return_value=False):
-            result = extract_cover(source, tmp_path)
-            assert result is None
+            with patch("festival_organizer.artwork._gradient_thumb_fallback", return_value=False):
+                result = extract_cover(source, tmp_path)
+                assert result is None
 
 
 def test_extract_cover_success(tmp_path):
@@ -78,8 +79,9 @@ def test_extract_cover_no_attachment(tmp_path):
     with patch("festival_organizer.metadata.MKVEXTRACT_PATH", "mkvextract"):
         with patch("subprocess.run", return_value=mock_result):
             with patch("festival_organizer.artwork._sample_frame_fallback", return_value=False):
-                result = extract_cover(source, target_dir)
-                assert result is None
+                with patch("festival_organizer.artwork._gradient_thumb_fallback", return_value=False):
+                    result = extract_cover(source, target_dir)
+                    assert result is None
 
 
 def test_extract_cover_frame_sampler_fallback(tmp_path):
@@ -164,6 +166,37 @@ def test_mkvextract_failure_logged(tmp_path, caplog):
                 result = _extract_mkvattachment(video, thumb)
     assert result is False
     assert "fail" in caplog.text
+
+
+def test_extract_cover_gradient_fallback(tmp_path):
+    """Tier 3 kicks in when both mkvextract and frame sampler fail; thumb is 1920x1080 JPEG."""
+    from PIL import Image as PILImage
+
+    source = tmp_path / "source.mkv"
+    source.touch()
+    target_dir = tmp_path / "output"
+    target_dir.mkdir()
+    thumb_path = target_dir / "source-thumb.jpg"
+
+    with patch("festival_organizer.metadata.MKVEXTRACT_PATH", None):
+        with patch("festival_organizer.artwork._sample_frame_fallback", return_value=False):
+            result = extract_cover(source, target_dir)
+
+    assert result == thumb_path
+    assert thumb_path.exists()
+    with PILImage.open(thumb_path) as img:
+        assert img.size == (1920, 1080)
+        assert img.format == "JPEG"
+
+
+def test_gradient_thumb_fallback_handles_poster_error(tmp_path):
+    """Gradient fallback returns False (not raise) on PIL errors."""
+    from festival_organizer.artwork import _gradient_thumb_fallback
+
+    thumb = tmp_path / "x-thumb.jpg"
+    with patch("festival_organizer.poster._make_gradient_bg", side_effect=OSError("boom")):
+        assert _gradient_thumb_fallback(thumb) is False
+    assert not thumb.exists()
 
 
 def test_extract_cover_skip_existing(tmp_path):

@@ -511,3 +511,20 @@ def test_generate_album_poster_brand_color_darkened(tmp_path):
         top_strip = arr[50:150, 300:700]
         mean_r = top_strip[:, :, 0].mean()
         assert mean_r < 150, f"Gradient too bright ({mean_r:.0f}), brand color not darkened"
+
+
+def test_make_gradient_bg_custom_dimensions():
+    """Explicit width/height override defaults; used by the thumb fallback tier."""
+    from festival_organizer.poster import _make_gradient_bg
+
+    bg = _make_gradient_bg((60, 90, 140), width=1920, height=1080)
+    assert bg.size == (1920, 1080)
+    assert bg.mode == "RGB"
+
+
+def test_make_gradient_bg_defaults_to_poster_size():
+    """Default call path (used by generate_album_poster) still produces poster-sized gradient."""
+    from festival_organizer.poster import _make_gradient_bg
+
+    bg = _make_gradient_bg((60, 90, 140))
+    assert bg.size == (POSTER_W, POSTER_H)
