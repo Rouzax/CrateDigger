@@ -71,6 +71,7 @@ def _patch_identify_internals(**overrides):
             "source_type": "",
         }),
         "has_chapter_tags": MagicMock(return_value=True),
+        "has_album_artist_display_tags": MagicMock(return_value=True),
         "embed_chapters": MagicMock(return_value=True),
         "trim_chapters_to_duration": lambda chapters, duration: chapters,
     }
@@ -89,6 +90,7 @@ def test_up_to_date_when_ttv30_present_and_tags_match(tmp_path):
         chapters_are_identical=mocks["chapters_are_identical"],
         extract_stored_tracklist_info=mocks["extract_stored_tracklist_info"],
         has_chapter_tags=mocks["has_chapter_tags"],
+        has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
@@ -113,6 +115,7 @@ def test_self_heal_triggers_when_ttv30_missing(tmp_path):
         chapters_are_identical=mocks["chapters_are_identical"],
         extract_stored_tracklist_info=mocks["extract_stored_tracklist_info"],
         has_chapter_tags=mocks["has_chapter_tags"],
+        has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
@@ -126,6 +129,68 @@ def test_self_heal_triggers_when_ttv30_missing(tmp_path):
     mocks["embed_chapters"].assert_called_once()
 
 
+def test_self_heal_triggers_when_album_artist_display_missing(tmp_path):
+    """Pre-0.12.4 file: chapters + TTV=30 + 1001TL_ARTISTS all match stored,
+    but _DISPLAY/_SLUGS were never written. Must re-embed via the stored URL,
+    not print 'Up to date' and not force a 1001TL re-search."""
+    mocks = _patch_identify_internals(
+        has_chapter_tags=MagicMock(return_value=True),
+        has_album_artist_display_tags=MagicMock(return_value=False),
+    )
+    fake = tmp_path / "x.mkv"
+    fake.write_bytes(b"")
+    with patch.multiple(
+        "festival_organizer.tracklists.cli_handler",
+        extract_existing_chapters=mocks["extract_existing_chapters"],
+        chapters_are_identical=mocks["chapters_are_identical"],
+        extract_stored_tracklist_info=mocks["extract_stored_tracklist_info"],
+        has_chapter_tags=mocks["has_chapter_tags"],
+        has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
+        embed_chapters=mocks["embed_chapters"],
+        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
+    ):
+        status = _fetch_and_embed(
+            _make_session(), "https://x", fake, 126, _make_config(),
+            preview=False, quiet=True, language="eng",
+            tracklist_id="abc", tracklist_date="",
+            duration_seconds=7560, regenerate=False,
+        )
+    assert status == "updated"
+    mocks["embed_chapters"].assert_called_once()
+
+
+def test_album_artist_check_skipped_when_no_dj_artists(tmp_path):
+    """If the export carries no dj_artists, the album tags aren't applicable,
+    so their absence must not force a re-embed."""
+    session = _make_session()
+    export = session.export_tracklist.return_value
+    export.dj_artists = []  # no-op self-heal
+    mocks = _patch_identify_internals(
+        has_chapter_tags=MagicMock(return_value=True),
+        has_album_artist_display_tags=MagicMock(return_value=False),
+    )
+    fake = tmp_path / "x.mkv"
+    fake.write_bytes(b"")
+    with patch.multiple(
+        "festival_organizer.tracklists.cli_handler",
+        extract_existing_chapters=mocks["extract_existing_chapters"],
+        chapters_are_identical=mocks["chapters_are_identical"],
+        extract_stored_tracklist_info=mocks["extract_stored_tracklist_info"],
+        has_chapter_tags=mocks["has_chapter_tags"],
+        has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
+        embed_chapters=mocks["embed_chapters"],
+        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
+    ):
+        status = _fetch_and_embed(
+            session, "https://x", fake, 126, _make_config(),
+            preview=False, quiet=True, language="eng",
+            tracklist_id="abc", tracklist_date="",
+            duration_seconds=7560, regenerate=False,
+        )
+    assert status == "up_to_date"
+    mocks["embed_chapters"].assert_not_called()
+
+
 def test_regenerate_forces_retag_even_when_up_to_date(tmp_path):
     """--regenerate/--fresh must force re-tag even if nothing visibly differs."""
     mocks = _patch_identify_internals(has_chapter_tags=MagicMock(return_value=True))
@@ -137,6 +202,7 @@ def test_regenerate_forces_retag_even_when_up_to_date(tmp_path):
         chapters_are_identical=mocks["chapters_are_identical"],
         extract_stored_tracklist_info=mocks["extract_stored_tracklist_info"],
         has_chapter_tags=mocks["has_chapter_tags"],
+        has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
@@ -181,6 +247,7 @@ def test_ttv70_tag_diff_also_routes_through_embed_chapters(tmp_path):
         chapters_are_identical=mocks["chapters_are_identical"],
         extract_stored_tracklist_info=mocks["extract_stored_tracklist_info"],
         has_chapter_tags=mocks["has_chapter_tags"],
+        has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):

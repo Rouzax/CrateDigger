@@ -165,6 +165,38 @@ def has_chapter_tags(filepath: Path) -> bool:
     return False
 
 
+def has_album_artist_display_tags(filepath: Path) -> bool:
+    """Return True if the MKV file carries the album-level display/slug tags.
+
+    Canary for the album-artist contract added in 0.12.4: files enriched
+    before that version only have CRATEDIGGER_1001TL_ARTISTS, not the
+    companion CRATEDIGGER_ALBUMARTIST_DISPLAY and _ALBUMARTIST_SLUGS. When
+    this returns False, identify self-heals via embed_chapters using the
+    stored URL; no --regenerate is needed and no re-search runs against
+    1001Tracklists. CRATEDIGGER_ALBUMARTIST_DISPLAY is the canary because
+    it and _SLUGS are always written together by embed_chapters.
+    """
+    root = extract_all_tags(filepath)
+    if root is None:
+        return False
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            continue
+        if targets.find("ChapterUID") is not None:
+            continue
+        if targets.find("TrackUID") is not None:
+            continue
+        ttv_el = targets.find("TargetTypeValue")
+        if ttv_el is None or ttv_el.text != "70":
+            continue
+        for simple in tag.iter("Simple"):
+            name_el = simple.find("Name")
+            if name_el is not None and name_el.text == "CRATEDIGGER_ALBUMARTIST_DISPLAY":
+                return True
+    return False
+
+
 def merge_tags(
     existing: ET.Element | None,
     new_tags: dict[int, dict[str, str]],

@@ -466,3 +466,56 @@ def test_has_chapter_tags_ignores_targets_without_ttv(monkeypatch):
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
     assert has_chapter_tags(Path("/x.mkv")) is False
+
+
+def test_has_album_artist_display_tags_false_when_no_tags(tmp_path, monkeypatch):
+    """File with no tags at all: extract_all_tags returns None → False."""
+    from festival_organizer.mkv_tags import has_album_artist_display_tags
+    import festival_organizer.mkv_tags as mod
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: None)
+    assert has_album_artist_display_tags(tmp_path / "x.mkv") is False
+
+
+def test_has_album_artist_display_tags_false_for_legacy_only_artists(monkeypatch):
+    """Pre-0.12.4 file with only CRATEDIGGER_1001TL_ARTISTS: self-heal needed."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.mkv_tags import has_album_artist_display_tags
+    import festival_organizer.mkv_tags as mod
+    xml = """<Tags>
+<Tag><Targets><TargetTypeValue>70</TargetTypeValue></Targets>
+<Simple><Name>CRATEDIGGER_1001TL_ARTISTS</Name><String>Martin Garrix|Alesso</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+    from pathlib import Path
+    assert has_album_artist_display_tags(Path("/x.mkv")) is False
+
+
+def test_has_album_artist_display_tags_true_when_display_present(monkeypatch):
+    """Current contract (0.12.4+): _DISPLAY present at TTV=70 global → True."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.mkv_tags import has_album_artist_display_tags
+    import festival_organizer.mkv_tags as mod
+    xml = """<Tags>
+<Tag><Targets><TargetTypeValue>70</TargetTypeValue></Targets>
+<Simple><Name>CRATEDIGGER_1001TL_ARTISTS</Name><String>Martin Garrix|Alesso</String></Simple>
+<Simple><Name>CRATEDIGGER_ALBUMARTIST_SLUGS</Name><String>martin-garrix|alesso</String></Simple>
+<Simple><Name>CRATEDIGGER_ALBUMARTIST_DISPLAY</Name><String>Martin Garrix &amp; Alesso</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+    from pathlib import Path
+    assert has_album_artist_display_tags(Path("/x.mkv")) is True
+
+
+def test_has_album_artist_display_tags_ignores_chapter_scoped_name(monkeypatch):
+    """A TTV=30 chapter block that happens to mention the album name must not
+    count as album-level coverage."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.mkv_tags import has_album_artist_display_tags
+    import festival_organizer.mkv_tags as mod
+    xml = """<Tags>
+<Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
+<Simple><Name>CRATEDIGGER_ALBUMARTIST_DISPLAY</Name><String>misplaced</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+    from pathlib import Path
+    assert has_album_artist_display_tags(Path("/x.mkv")) is False

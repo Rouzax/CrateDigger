@@ -202,9 +202,10 @@ alone.
 
 ### Self-healing
 
-If a file has chapters but is missing some expected per-chapter tags (for example, files
-identified with an older version of CrateDigger), the full tagging pass runs automatically
-on the next `identify` run. You do not need `--regenerate` for this. CrateDigger detects
+If a file has chapters but is missing some expected per-chapter or album-level tags (for
+example, files identified with an older version of CrateDigger), the full tagging pass
+runs automatically on the next `identify` run, reusing the stored tracklist URL so your
+curated match is preserved. You do not need `--regenerate` for this. CrateDigger detects
 the gap and fills it in.
 
 ## Preview mode

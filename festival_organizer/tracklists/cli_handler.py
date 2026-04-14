@@ -33,7 +33,7 @@ from festival_organizer.tracklists.api import (
     ExportError,
     top_genres_by_frequency,
 )
-from festival_organizer.mkv_tags import has_chapter_tags
+from festival_organizer.mkv_tags import has_album_artist_display_tags, has_chapter_tags
 from festival_organizer.tracklists.source_cache import SourceCache, SOURCE_TYPE_TO_TAG
 from festival_organizer.tracklists.chapters import (
     parse_tracklist_lines,
@@ -483,7 +483,14 @@ def _fetch_and_embed(
             # per-chapter tags. Detect and route through the full embed path
             # so they get populated on next run without requiring a flag.
             missing_chapter_tags = not has_chapter_tags(filepath)
-            if not tags_to_update and not missing_chapter_tags and not regenerate:
+            # Second self-heal: files enriched before 0.12.4 only carry
+            # CRATEDIGGER_1001TL_ARTISTS, not the companion _DISPLAY/_SLUGS
+            # album-level tags. Force a re-embed using the stored URL so the
+            # user doesn't have to --regenerate (which would re-search 1001TL
+            # and risk rebinding to a different tracklist).
+            missing_album_tags = bool(export.dj_artists) and not has_album_artist_display_tags(filepath)
+            if (not tags_to_update and not missing_chapter_tags
+                    and not missing_album_tags and not regenerate):
                 if not quiet:
                     con.print(f"  [green]Up to date[/green] ({len(chapters)} chapters)")
                 return "up_to_date"
@@ -507,6 +514,8 @@ def _fetch_and_embed(
                 if not quiet:
                     if missing_chapter_tags:
                         reason = "populated per-chapter tags"
+                    elif missing_album_tags:
+                        reason = "populated album-artist tags"
                     elif tags_to_update:
                         friendly = ", ".join(
                             _FRIENDLY_TAG_NAMES.get(k, k) for k in tags_to_update
