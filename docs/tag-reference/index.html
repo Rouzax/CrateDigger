@@ -1338,12 +1338,6 @@
 <td><code>Open Air / Festival</code></td>
 </tr>
 <tr>
-<td><code>CRATEDIGGER_MBID</code></td>
-<td>enrich / TagsOperation</td>
-<td>Primary DJ MusicBrainz artist ID (from FanartOperation's first successful lookup). Retained for single-value consumers; see <code>CRATEDIGGER_ALBUMARTIST_MBIDS</code> below for the multi-value variant.</td>
-<td><code>477b8c0c-c5fc-4ad2-b5b2-191f0bf2a9df</code></td>
-</tr>
-<tr>
 <td><code>CRATEDIGGER_FANART_URL</code></td>
 <td>enrich / TagsOperation</td>
 <td>URL of the artist background downloaded from fanart.tv.</td>
@@ -1486,14 +1480,13 @@
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>SYNOPSIS=...
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a># Collection-level (TTV=70) added:
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>CRATEDIGGER_MBID=477b8c0c-c5fc-4ad2-b5b2-191f0bf2a9df   # primary DJ MBID only
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>CRATEDIGGER_FANART_URL=https://assets.fanart.tv/...
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>CRATEDIGGER_CLEARLOGO_URL=https://assets.fanart.tv/...
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>CRATEDIGGER_ALBUMARTIST_MBIDS=477b8c0c-c5fc-4ad2-b5b2-191f0bf2a9df|&lt;kiki-mbid-or-empty&gt;
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>CRATEDIGGER_ENRICHED_AT=2026-04-14T10:15:30+00:00
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a># Per-chapter (TTV=30) updated with:
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>#   MUSICBRAINZ_ARTISTIDS (aligned with PERFORMER_NAMES)
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>CRATEDIGGER_FANART_URL=https://assets.fanart.tv/...
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>CRATEDIGGER_CLEARLOGO_URL=https://assets.fanart.tv/...
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>CRATEDIGGER_ALBUMARTIST_MBIDS=477b8c0c-c5fc-4ad2-b5b2-191f0bf2a9df|&lt;kiki-mbid-or-empty&gt;
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>CRATEDIGGER_ENRICHED_AT=2026-04-14T10:15:30+00:00
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a># Per-chapter (TTV=30) updated with:
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>#   MUSICBRAINZ_ARTISTIDS (aligned with PERFORMER_NAMES)
 </code></pre></div>
 <p>When KI/KI's MBID is not yet in the MBID cache and MusicBrainz search misses, the corresponding slots in <code>CRATEDIGGER_ALBUMARTIST_MBIDS</code> and per-chapter <code>MUSICBRAINZ_ARTISTIDS</code> are empty strings (<code>477b8c0c-...|</code>). Adding KI/KI to <code>~/.cratedigger/artist_mbids.json</code> and re-running <code>enrich --only chapter_artist_mbids,album_artist_mbids --regenerate</code> fills those slots.</p>
 <h2 id="see-also">See also</h2>

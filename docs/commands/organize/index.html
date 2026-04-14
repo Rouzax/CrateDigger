@@ -655,6 +655,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#action-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Action selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#layouts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1119,6 +1130,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#action-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Action selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#layouts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1322,12 +1344,7 @@
 <tr>
 <td><code>--move</code></td>
 <td></td>
-<td>Move files instead of copying (default: copy)</td>
-</tr>
-<tr>
-<td><code>--rename-only</code></td>
-<td></td>
-<td>Rename files in place without moving them</td>
+<td>When importing: move files instead of copying (ignored for in-place re-organize, which always uses atomic rename)</td>
 </tr>
 <tr>
 <td><code>--dry-run</code></td>
@@ -1371,10 +1388,48 @@
 </tr>
 </tbody>
 </table>
-<div class="admonition warning">
-<p class="admonition-title">Mutually exclusive options</p>
-<p>The flags <code>--move</code>, <code>--rename-only</code>, and <code>--dry-run</code> cannot be combined. Only one action mode can be active at a time.</p>
-</div>
+<h2 id="action-selection">Action selection</h2>
+<p><code>organize</code> picks the file operation automatically from the source/output
+relationship:</p>
+<table>
+<thead>
+<tr>
+<th>You ran</th>
+<th>Relationship</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>organize &lt;inbox&gt;</code> (no library marker, no <code>--output</code>)</td>
+<td>source == output</td>
+<td><strong>rename</strong> (in place)</td>
+</tr>
+<tr>
+<td><code>organize &lt;library&gt;</code> or <code>organize &lt;library&gt;/sub</code></td>
+<td>source ⊆ output</td>
+<td><strong>rename</strong> (in place)</td>
+</tr>
+<tr>
+<td><code>organize &lt;inbox&gt; --output &lt;library&gt;</code></td>
+<td>disjoint</td>
+<td><strong>copy</strong></td>
+</tr>
+<tr>
+<td><code>organize &lt;inbox&gt; --output &lt;library&gt; --move</code></td>
+<td>disjoint</td>
+<td><strong>move</strong></td>
+</tr>
+<tr>
+<td>any of the above with <code>--dry-run</code></td>
+<td>—</td>
+<td>preview only</td>
+</tr>
+</tbody>
+</table>
+<p>The in-place rename is atomic and only changes the filename / folder within
+the library; <code>--move</code> has no effect in this case (same-filesystem rename is
+already what you'd get). <code>--dry-run</code> and <code>--move</code> cannot be combined.</p>
 <h2 id="layouts">Layouts</h2>
 <p>CrateDigger supports four folder layouts. Each layout defines separate templates for festival sets and concert recordings.</p>
 <h3 id="artist_flat">artist_flat</h3>
@@ -1539,8 +1594,8 @@
 <p>Organize and enrich in one pass:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
 </code></pre></div>
-<p>Rename files in place (no move or copy):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Music/Library/<span class="w"> </span>--rename-only
+<p>Re-organize an existing library in place (atomic rename, no duplication):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Music/Library/
 </code></pre></div>
 
 

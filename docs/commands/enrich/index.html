@@ -1370,7 +1370,6 @@
 <p>Reads <code>CRATEDIGGER_1001TL_ARTISTS</code> from the file (written by <a href="../identify/">identify</a>), resolves each pipe-separated artist name to a MusicBrainz artist ID, and writes <code>CRATEDIGGER_ALBUMARTIST_MBIDS</code> back onto the file at collection scope (TTV=70). The value is pipe-joined and positionally aligned with <code>CRATEDIGGER_1001TL_ARTISTS</code> and <code>CRATEDIGGER_ALBUMARTIST_SLUGS</code>; unresolved names leave an empty slot.</p>
 <p>This mirrors the per-chapter pattern at the album (file) level so downstream taggers (TrackSplit -&gt; Lyrion/Jellyfin) can produce a multi-value album-artist credit with MusicBrainz IDs aligned to individual DJ names.</p>
 <p>The override file, cache, and fix loop are shared with <code>chapter_artist_mbids</code> above: a single entry in <code>~/.cratedigger/artist_mbids.json</code> pins the MBID for both per-chapter and album-level tags. MBIDs are properties of the artist, not of the tag context.</p>
-<p>The existing single-MBID <code>CRATEDIGGER_MBID</code> tag (primary DJ only, written by <code>tags</code>) is not modified; it remains the compatibility fallback for single-value consumers.</p>
 <p>See <a href="../../tag-reference/">tag reference</a> for the full tag taxonomy and alignment invariants.</p>
 <h2 id="examples">Examples</h2>
 <p>Enrich an entire library with all operations:</p>
