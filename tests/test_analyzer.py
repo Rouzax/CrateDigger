@@ -47,6 +47,67 @@ def test_analyse_with_1001tl_overrides_filename():
     assert mf.has_cover == True
 
 
+def test_analyse_identified_file_ignores_filename_set_title():
+    """For identified files (tracklists_url present), set_title/title should not
+    be derived from the filename. Without this gate, re-analyzing an already-
+    canonical filename yields a different set_title than the first pass, which
+    makes `render(analyze(render(mf))) != render(mf)` and causes organize to
+    rename on every run."""
+    # Mirrors the Eric Prydz fixture: the file has been organized once, so its
+    # name already contains "[stage] - SET_TITLE"; a second analyze on this
+    # name must not produce yet another set_title.
+    fake_meta = {
+        "title": "",
+        "tracklists_title": "Eric Prydz @ Resistance Megastructure, Ultra Music Festival Miami, United States 2026-03-27",
+        "tracklists_url": "https://www.1001tracklists.com/tracklist/qy9yyy9/",
+        "tracklists_artists": "Eric Prydz",
+        "tracklists_stage": "Resistance Megastructure",
+        "tracklists_festival": "Ultra Music Festival Miami",
+        "tracklists_date": "2026-03-27",
+        "artist_tag": "",
+        "date_tag": "",
+        "duration_seconds": 7200.0,
+        "width": 1920, "height": 1080,
+        "video_format": "", "audio_format": "",
+        "audio_bitrate": "", "overall_bitrate": "",
+        "has_cover": True,
+        "description": "", "comment": "", "purl": "",
+    }
+    # Pre-organize YouTube-style filename — current code derives
+    # set_title='RESISTANCE MEGASTRUCTURE' from the tail of this name,
+    # which then churns on the next render cycle.
+    orig_name = "ERIC PRYDZ LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 ｜ RESISTANCE MEGASTRUCTURE [hU-z3iV0LOg].mkv"
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path(f"//lib/{orig_name}"),
+            Path("//lib"),
+            CFG,
+        )
+    assert mf.metadata_source == "1001tracklists"
+    assert mf.set_title == "", (
+        f"identified file leaked filename-derived set_title: {mf.set_title!r}"
+    )
+    assert mf.title == "", (
+        f"identified file leaked filename-derived title: {mf.title!r}"
+    )
+
+
+def test_analyse_unidentified_file_keeps_filename_set_title():
+    """Unidentified files still salvage set_title from the filename tail —
+    otherwise the filename template loses information for files the user hasn't
+    matched to a tracklist yet."""
+    with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
+        mf = analyse_file(
+            Path("//hyperv/Data/Concerts/Tomorrowland/Martin Garrix @ Tomorrowland 2024 Mainstage Closing Set.mkv"),
+            Path("//hyperv/Data/Concerts"),
+            CFG,
+        )
+    assert mf.metadata_source == "filename"
+    assert mf.set_title == "Mainstage Closing Set", (
+        f"filename salvage must still populate set_title, got {mf.set_title!r}"
+    )
+
+
 def test_analyse_filename_only():
     """When no metadata is available, filename parsing should work."""
     with patch("festival_organizer.analyzer.extract_metadata", return_value={}):

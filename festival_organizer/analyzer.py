@@ -176,6 +176,16 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     logger.info("Parsed: artist=%s, festival=%s, year=%s, source=%s",
                 artist, festival, info.get("year", ""), metadata_source)
 
+    # Identified files (anything with 1001TL tags) get their canonical fields
+    # from the embedded tags, not from filename parsing. set_title and title are
+    # filename-only salvage fields: keeping them for identified files breaks
+    # render idempotency because the filename shape mutates between runs while
+    # the tags stay put. Gate them on the identified-ness signal so renders
+    # converge after one organize.
+    identified = bool(meta.get("tracklists_url") or meta.get("tracklists_title"))
+    set_title = "" if identified else normalise_name(info.get("set_title", ""))
+    title_field = "" if identified else normalise_name(info.get("title", ""))
+
     return MediaFile(
         source_path=filepath,
         artist=artist,
@@ -185,8 +195,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         festival_full=meta.get("tracklists_festival", ""),
         year=info.get("year", "").strip(),
         date=info.get("date", ""),
-        set_title=normalise_name(info.get("set_title", "")),
-        title=normalise_name(info.get("title", "")),
+        set_title=set_title,
+        title=title_field,
         stage=info.get("stage", ""),
         venue=info.get("venue", ""),
         edition=info.get("edition", ""),
