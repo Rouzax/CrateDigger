@@ -1123,95 +1123,96 @@
 
 
 <h1 id="1001tracklists-integration">1001Tracklists Integration</h1>
-<p>CrateDigger integrates with <a href="https://www.1001tracklists.com/">1001Tracklists</a> to match your recordings against known tracklists, embed chapter markers, and populate rich per-track and per-set metadata. 1001TL is the source of everything in CrateDigger that goes beyond what the filename and embedded metadata can tell us.</p>
+<p>CrateDigger integrates with <a href="https://www.1001tracklists.com/">1001Tracklists</a> to match your recordings against known tracklists, embed chapter markers, and populate rich per-track and per-set metadata. 1001Tracklists is a community website that logs exactly what tracks DJs played during sets, including timestamps. It is the source of everything in CrateDigger that goes beyond what a filename and embedded video tags can provide.</p>
 <h2 id="do-i-need-an-account">Do I need an account?</h2>
 <p>Short answer: no, but the feature gap is significant.</p>
 <table>
 <thead>
 <tr>
 <th>Capability</th>
-<th>No account (best-effort)</th>
+<th>Without account</th>
 <th>With account</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Filename + embedded-metadata parsing</td>
-<td>✓</td>
-<td>✓</td>
+<td>Filename and embedded metadata parsing</td>
+<td>Yes</td>
+<td>Yes</td>
 </tr>
 <tr>
-<td>Alias resolution (<code>artists.json</code>, festival aliases)</td>
-<td>✓</td>
-<td>✓</td>
+<td>Alias resolution (artists.json, festival aliases)</td>
+<td>Yes</td>
+<td>Yes</td>
 </tr>
 <tr>
 <td>Organize into library tree</td>
-<td>✓</td>
-<td>✓</td>
+<td>Yes</td>
+<td>Yes</td>
 </tr>
 <tr>
-<td>Cover art (embedded → frame sample)</td>
-<td>✓</td>
-<td>✓</td>
+<td>Cover art (embedded or sampled video frame)</td>
+<td>Yes</td>
+<td>Yes</td>
 </tr>
 <tr>
-<td>Posters (per-video + folder)</td>
-<td>✓</td>
-<td>✓</td>
+<td>Posters (per-video and folder)</td>
+<td>Yes</td>
+<td>Yes</td>
 </tr>
 <tr>
-<td>fanart.tv / TheAudioDB artist artwork</td>
-<td>✓</td>
-<td>✓</td>
+<td>Artist artwork from fanart.tv and TheAudioDB</td>
+<td>Yes</td>
+<td>Yes</td>
 </tr>
 <tr>
 <td>NFO metadata</td>
-<td>✓ (from filename + embedded tags)</td>
-<td>✓ (richer, 1001TL-sourced)</td>
+<td>Yes (from filename and embedded tags)</td>
+<td>Yes (richer, from 1001Tracklists)</td>
 </tr>
 <tr>
-<td>MKV file-level tags (<code>ARTIST</code>, <code>TITLE</code>, <code>DATE_RELEASED</code>)</td>
-<td>✓ (from filename)</td>
-<td>✓ (+ canonicalized DJ names)</td>
+<td>MKV file-level tags (ARTIST, TITLE, DATE_RELEASED)</td>
+<td>Yes (from filename)</td>
+<td>Yes (with canonicalized DJ names)</td>
 </tr>
 <tr>
 <td>Chapter markers per track</td>
-<td>✗</td>
-<td>✓</td>
+<td>No</td>
+<td>Yes</td>
 </tr>
 <tr>
 <td>Per-chapter track metadata (title, label, genre, artist MBIDs)</td>
-<td>✗</td>
-<td>✓</td>
+<td>No</td>
+<td>Yes</td>
 </tr>
 <tr>
-<td>Album-level multi-artist tags (<code>CRATEDIGGER_ALBUMARTIST_*</code>)</td>
-<td>✗</td>
-<td>✓</td>
+<td>Album-level multi-artist tags</td>
+<td>No</td>
+<td>Yes</td>
 </tr>
 <tr>
-<td>Stage / venue / festival / event taxonomy</td>
-<td>partial (aliases only)</td>
-<td>full</td>
+<td>Stage, venue, festival, and event taxonomy</td>
+<td>Partial (aliases only)</td>
+<td>Full</td>
 </tr>
 <tr>
-<td>DJ artwork from 1001TL</td>
-<td>✗</td>
-<td>✓</td>
+<td>DJ artwork from 1001Tracklists</td>
+<td>No</td>
+<td>Yes</td>
 </tr>
 <tr>
 <td>Canonical DJ name (casing, learned aliases)</td>
-<td>partial</td>
-<td>full</td>
+<td>Partial</td>
+<td>Full</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Without an account</strong>, CrateDigger still produces a watchable library. Metadata comes from parsing the filename (using your <code>festivals.json</code> aliases and <code>artists.json</code> rules), reading embedded MKV tags via MediaInfo, looking up fanart.tv artwork via a MusicBrainz ID resolved from the parsed artist name, and extracting cover art from embedded attachments or sampled video frames. You get decent posters and a sensibly organized folder tree. What you lose is everything tied to the authoritative tracklist: chapter markers, per-track metadata (title, label, genre, artist MBIDs), canonical DJ naming beyond your manual aliases, and the stage/venue/event taxonomy that drives album-level context tags.</p>
-<p><strong>With an account</strong>, every item in the matrix is filled in. <code>identify</code> runs against 1001TL, picks a matching tracklist, and embeds per-chapter metadata plus album-level event context into the MKV.</p>
+<p><strong>Without an account</strong>, CrateDigger still produces a usable library. Metadata comes from parsing your filenames using your <code>festivals.json</code> aliases and <code>artists.json</code> rules, reading any embedded MKV tags, looking up artist artwork from fanart.tv via a resolved MusicBrainz ID, and extracting cover art from embedded attachments or sampled video frames. You get organized folders, reasonable posters, and NFO files. What you lose is everything tied to the authoritative tracklist: chapter markers, per-track metadata (title, label, genre, artist MBIDs), canonical DJ naming beyond your manual aliases, and the stage and venue context tags.</p>
+<p><strong>With an account</strong>, every row in the table is filled in. <code>identify</code> matches your recording against 1001Tracklists, and embeds per-chapter metadata plus album-level event context directly into the MKV.</p>
 <h2 id="account-setup">Account setup</h2>
-<p>Configure credentials in one of two ways.</p>
+<p>You need a free account at <a href="https://www.1001tracklists.com/">1001Tracklists</a>. Configure your credentials in one of two ways.</p>
 <h3 id="config-file">Config file</h3>
+<p>Add your email and password under the <code>tracklists</code> section in <code>~/.cratedigger/config.json</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="nt">&quot;tracklists&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">        </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;your@email.com&quot;</span><span class="p">,</span>
@@ -1220,35 +1221,47 @@
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
 </code></pre></div>
 <h3 id="environment-variables">Environment variables</h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Linux / macOS</label><label for="__tabbed_1_2">Windows (PowerShell)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_EMAIL</span><span class="o">=</span><span class="s2">&quot;your@email.com&quot;</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_PASSWORD</span><span class="o">=</span><span class="s2">&quot;your-password&quot;</span>
 </code></pre></div>
-<p>Environment variables take priority over config file values. If no credentials are configured at all, CrateDigger prompts for them interactively on first use.</p>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">$env:TRACKLISTS_EMAIL</span> <span class="p">=</span> <span class="s2">&quot;your@email.com&quot;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">$env:TRACKLISTS_PASSWORD</span> <span class="p">=</span> <span class="s2">&quot;your-password&quot;</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Environment variables override config file values. If your email is not configured at all, CrateDigger prompts for both credentials interactively before starting. If your email is set but your password is missing, it exits with an error.</p>
 <h2 id="what-cratedigger-extracts-from-a-tracklist">What CrateDigger extracts from a tracklist</h2>
 <p>For each identified tracklist, CrateDigger captures:</p>
 <ul>
-<li><strong>Chapter markers</strong> — one per track with timestamp and title. Written directly into the MKV as Matroska chapters. See <a href="../tag-reference/#per-chapter-ttv30">per-chapter tags</a> for details.</li>
-<li><strong>Per-track metadata</strong> — artist, title, label, genre, and MusicBrainz artist IDs per chapter. All pipe-aligned for multi-artist tracks. See <a href="../tag-reference/#per-chapter-ttv30">per-chapter tags</a>.</li>
-<li><strong>Album-level event context</strong> — tracklist URL, title, ID, date, and source taxonomy (festival / venue / conference / event promoter / country / stage). See <a href="../tag-reference/#collection-level-ttv70">collection-level tags</a>.</li>
-<li><strong>DJ list and album-artist MBIDs</strong> — canonical DJ names, 1001TL slugs, and aligned MusicBrainz IDs for multi-value album-artist credits. See <a href="../tag-reference/#album-level-artist-tags">album-level artist tags</a>.</li>
-<li><strong>DJ artwork URL</strong> — the DJ photo from the tracklist page, used as a background source in the <a href="../library-layout/#poster-layouts">poster pipeline</a>.</li>
+<li><strong>Chapter markers:</strong> one per track with timestamp and title, written directly into the MKV as Matroska chapters. See <a href="../tag-reference/#per-chapter-ttv30">per-chapter tags</a>.</li>
+<li><strong>Per-track metadata:</strong> artist, title, label, and genre per chapter, with pipe-aligned multi-artist support. See <a href="../tag-reference/#per-chapter-ttv30">per-chapter tags</a>.</li>
+<li><strong>Album-level event context:</strong> tracklist URL, title, ID, date, and source taxonomy (festival, venue, conference, event promoter, country, stage). See <a href="../tag-reference/#collection-level-ttv70">collection-level tags</a>.</li>
+<li><strong>DJ list and album-artist MBIDs:</strong> canonical DJ names, 1001Tracklists slugs, and aligned MusicBrainz IDs for multi-value album-artist credits. See <a href="../tag-reference/#album-level-artist-tags">album-level artist tags</a>.</li>
+<li><strong>DJ artwork URL:</strong> the DJ photo from the tracklist page, used as a background source in the <a href="../library-layout/#poster-layouts">poster pipeline</a>.</li>
 </ul>
 <h2 id="what-identification-looks-like">What identification looks like</h2>
-<p>Interactive selection is the default mode. <code>identify</code> prints a ranked results panel and prompts you to pick the correct match (or skip). See <a href="../commands/identify/#interactive-selection">identify command: interactive selection</a> for a sample transcript and the auto-mode behaviour.</p>
+<p>Interactive selection is the default mode. <code>identify</code> prints a ranked list of results and prompts you to pick the correct match or skip. See <a href="../commands/identify/#step-by-step-what-happens-when-you-run-identify">identify: step-by-step</a> for a sample transcript and auto-mode behavior.</p>
 <h2 id="rate-limiting-and-caching">Rate limiting and caching</h2>
-<p>CrateDigger respects 1001TL's rate limits with a configurable delay between requests (default 5 seconds). The delay uses smart throttling: if you already spent time picking a result in interactive mode, the explicit sleep is reduced or skipped.</p>
-<p>Two local caches make subsequent runs faster and more accurate:</p>
+<p>CrateDigger waits between requests to avoid hitting 1001Tracklists rate limits (default: 5 seconds, configurable via <code>tracklists.delay_seconds</code>). The delay is smart: it tracks the time that has already elapsed since the last request and only sleeps for whatever remains. In interactive mode, if you spent more than the delay period choosing a match, no extra sleep is added.</p>
+<p>If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds and retries. After the retry limit, it stops with a message asking you to solve a captcha on the 1001Tracklists website.</p>
+<p>Two local caches make subsequent runs faster:</p>
 <ul>
-<li><strong>DJ cache</strong> — canonical DJ names and aliases learned from tracklist pages. Used to canonicalize casing (so 1001TL's "SOMETHING ELSE" becomes "Something Else" on disk) and to improve search scoring on subsequent identifies.</li>
-<li><strong>Source cache</strong> — festival, venue, radio, and conference names. Used to classify tracklists by source type.</li>
+<li><strong>DJ cache:</strong> canonical DJ names and aliases learned from tracklist pages. Used to standardize name casing and improve search scoring on later runs.</li>
+<li><strong>Source cache:</strong> festival, venue, radio, and conference names. Used to classify tracklists by source type.</li>
 </ul>
-<p>Each cache entry randomises its TTL within ±20% of the configured base, so a bulk first-run population doesn't all expire at the same time and stampede the API on the next run. Config keys (<code>delay_seconds</code>, <code>cache_ttl.dj_days</code>, <code>cache_ttl.source_days</code>) live in <a href="../configuration/#cache-ttl">configuration</a>.</p>
+<p>Each cache entry's actual lifetime jitters by ±20% around the configured base (see <a href="../configuration/#cache-ttl">Configuration: cache TTL</a>), so a bulk first-run fill does not cause all entries to expire at the same time.</p>
 <h2 id="see-also">See also</h2>
 <ul>
-<li><a href="../commands/identify/">Identify command</a> — command reference, flags, interactive/auto selection, examples.</li>
-<li><a href="../tag-reference/">Tag reference</a> — every tag written into the MKV.</li>
-<li><a href="../library-layout/">Library layout</a> — sidecar files, NFO contents, poster layouts, artwork sources.</li>
-<li><a href="../configuration/">Configuration</a> — config keys for tracklists, caching, and credentials.</li>
+<li><a href="../commands/identify/">identify command</a>: command reference, flags, interactive and auto selection, examples</li>
+<li><a href="../tag-reference/">Tag reference</a>: every tag written into the MKV</li>
+<li><a href="../library-layout/">Library layout</a>: sidecar files, NFO contents, poster layouts, artwork sources</li>
+<li><a href="../configuration/">Configuration</a>: config keys for tracklists, caching, and credentials</li>
 </ul>
 
 

@@ -746,6 +746,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-this-file-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this file controls
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#file-location" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -807,10 +818,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-festivals-are-matched" class="md-nav__link">
+  <a href="#how-matching-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How festivals are matched
+        How matching works
       
     </span>
   </a>
@@ -818,10 +829,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#adding-custom-festivals" class="md-nav__link">
+  <a href="#alias-rules-and-pitfalls" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Adding custom festivals
+        Alias rules and pitfalls
       
     </span>
   </a>
@@ -829,10 +840,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-file" class="md-nav__link">
+  <a href="#adding-your-own-festivals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example file
+        Adding your own festivals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-example-file-includes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the example file includes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
       
     </span>
   </a>
@@ -1009,6 +1042,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-this-file-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this file controls
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#file-location" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1070,10 +1114,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-festivals-are-matched" class="md-nav__link">
+  <a href="#how-matching-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How festivals are matched
+        How matching works
       
     </span>
   </a>
@@ -1081,10 +1125,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#adding-custom-festivals" class="md-nav__link">
+  <a href="#alias-rules-and-pitfalls" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Adding custom festivals
+        Alias rules and pitfalls
       
     </span>
   </a>
@@ -1092,10 +1136,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-file" class="md-nav__link">
+  <a href="#adding-your-own-festivals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example file
+        Adding your own festivals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-example-file-includes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the example file includes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
       
     </span>
   </a>
@@ -1123,28 +1189,51 @@
 
 
 <h1 id="festival-database">Festival Database</h1>
-<p>CrateDigger uses a festival configuration file to recognize festival names, resolve aliases, handle regional editions, and assign brand colors for poster generation.</p>
+<p>CrateDigger uses a <code>festivals.json</code> file to recognize festival names and abbreviations in your filenames and metadata. What you put in this file directly affects how your library is organized and named.</p>
+<h2 id="what-this-file-controls">What this file controls</h2>
+<p><strong>Name recognition and folder names.</strong> When CrateDigger sees <code>AMF</code> in a filename, it looks it up in the festival database and finds it is <code>Amsterdam Music Festival</code>. The canonical name (<code>AMF</code>) is what appears in your folder and file names. Without an entry for a festival, CrateDigger can only use whatever text appears literally in the filename.</p>
+<p><strong>Edition detection.</strong> When a filename contains <code>"Dreamstate SoCal"</code>, CrateDigger splits it into festival <code>"Dreamstate"</code> and edition <code>"SoCal"</code>. This powers the <code>{edition}</code> field in your folder and filename templates, so edition-specific events get their own folders in nested layouts.</p>
+<p><strong>Poster brand colors.</strong> The <code>color</code> field sets the gradient base and accent color used in poster generation when no logo or fanart image is available. Without a color, CrateDigger derives a generic gradient from the metadata.</p>
+<p><strong>Search query expansion.</strong> Short uppercase abbreviations (like <code>AMF</code>, <code>EDC</code>, <code>ASOT</code>) are expanded to their full names when CrateDigger searches 1001Tracklists for a match. This improves match quality without affecting your folder names.</p>
+<p><strong>Festival classification.</strong> Recognized festival names help CrateDigger classify a file as a festival set rather than a concert recording.</p>
 <h2 id="file-location">File location</h2>
-<p>The festival database is stored in <code>festivals.json</code>. CrateDigger looks for it in:</p>
+<p>CrateDigger looks for <code>festivals.json</code> in two places, checking the library-local location first:</p>
 <ol>
-<li><code>&lt;library&gt;/.cratedigger/festivals.json</code> (library-specific)</li>
-<li><code>~/.cratedigger/festivals.json</code> (user-level)</li>
+<li><code>{library}/.cratedigger/festivals.json</code> (library-specific overrides)</li>
+<li><code>~/.cratedigger/festivals.json</code> (user-level, applies to all libraries)</li>
 </ol>
-<p>Copy the example file to get started:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cp<span class="w"> </span>festivals.example.json<span class="w"> </span>~/.cratedigger/festivals.json
+<p>If neither file exists, CrateDigger falls back to its built-in festival knowledge.</p>
+<p>To get the full example file as a starting point:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Linux / macOS</label><label for="__tabbed_1_2">Windows (PowerShell)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/.cratedigger/festivals.json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json&quot;</span> <span class="p">`</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\.cratedigger\festivals.json&quot;</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Or, if you have cloned the repository:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cp<span class="w"> </span>festivals.example.json<span class="w"> </span>~/.cratedigger/festivals.json
 </code></pre></div>
 <h2 id="format">Format</h2>
-<p>Each top-level key is the canonical festival name. The value is an object with optional fields:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nt">&quot;Tomorrowland&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;TML&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tomorrowland Weekend 1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tomorrowland Weekend 2&quot;</span><span class="p">],</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">        </span><span class="nt">&quot;editions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">            </span><span class="nt">&quot;Brasil&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#2A9D8F&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">            </span><span class="nt">&quot;Winter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#5B9BD5&quot;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="p">},</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#9B1B5A&quot;</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">}</span>
+<p>Each top-level key is the canonical festival name. This is the name that appears in your folder structure and filenames. The value is an object with optional fields:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="nt">&quot;Tomorrowland&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;TML&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tomorrowland Weekend 1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tomorrowland Weekend 2&quot;</span><span class="p">],</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">        </span><span class="nt">&quot;editions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">            </span><span class="nt">&quot;Brasil&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#2A9D8F&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">            </span><span class="nt">&quot;Winter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#5B9BD5&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">        </span><span class="p">},</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#9B1B5A&quot;</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">}</span>
 </code></pre></div>
 <h3 id="fields">Fields</h3>
 <table>
@@ -1159,66 +1248,91 @@
 <tr>
 <td><code>aliases</code></td>
 <td>list of strings</td>
-<td>Alternative names that resolve to this festival</td>
+<td>Alternative names and abbreviations that resolve to this festival</td>
 </tr>
 <tr>
 <td><code>editions</code></td>
 <td>object</td>
-<td>Regional or seasonal editions</td>
+<td>Regional or seasonal variants (see below)</td>
 </tr>
 <tr>
 <td><code>color</code></td>
-<td>string</td>
-<td>Hex color code for poster generation</td>
+<td>hex string</td>
+<td>Brand color used in gradient poster generation</td>
 </tr>
 </tbody>
 </table>
+<p>If an edition has its own <code>color</code>, that edition color takes priority over the festival-level color.</p>
 <h3 id="editions">Editions</h3>
 <p>Editions represent regional or seasonal variants of a festival. Each edition can have its own aliases and color:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="nt">&quot;EDC&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Electric Daisy Carnival&quot;</span><span class="p">],</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">        </span><span class="nt">&quot;editions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">            </span><span class="nt">&quot;Las Vegas&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;EDC Las Vegas&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">            </span><span class="nt">&quot;Mexico&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">            </span><span class="nt">&quot;Orlando&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">            </span><span class="nt">&quot;Thailand&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">        </span><span class="p">},</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#ED3895&quot;</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nt">&quot;EDC&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Electric Daisy Carnival&quot;</span><span class="p">],</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">        </span><span class="nt">&quot;editions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">            </span><span class="nt">&quot;Las Vegas&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;EDC Las Vegas&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">            </span><span class="nt">&quot;Mexico&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">            </span><span class="nt">&quot;Orlando&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">        </span><span class="p">},</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#ED3895&quot;</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">}</span>
 </code></pre></div>
-<p>When a file contains "EDC Las Vegas" or "Electric Daisy Carnival Las Vegas", CrateDigger resolves it to the canonical festival "EDC" with edition "Las Vegas".</p>
+<p>When CrateDigger encounters "EDC Las Vegas" in a filename, it resolves to festival <code>"EDC"</code> with edition <code>"Las Vegas"</code>. The edition name appears in folder paths and filenames wherever <code>{edition}</code> is used in your templates.</p>
 <h3 id="minimal-entries">Minimal entries</h3>
-<p>A festival with no aliases, editions, or color can be an empty object:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="nt">&quot;Awakenings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">&quot;Glastonbury&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">&quot;Creamfields&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
+<p>A festival with no aliases, editions, or color can be an empty object. CrateDigger still recognizes the name during analysis and classification:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="nt">&quot;Awakenings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">&quot;Glastonbury&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">&quot;Creamfields&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">}</span>
 </code></pre></div>
-<p>These entries still allow CrateDigger to recognize the name during classification.</p>
-<h2 id="how-festivals-are-matched">How festivals are matched</h2>
-<p>During file analysis and classification, CrateDigger checks filenames and metadata against the festival database:</p>
+<h2 id="how-matching-works">How matching works</h2>
+<p>When CrateDigger analyzes a filename or tag, it checks against the festival database in this order:</p>
 <ol>
 <li><strong>Exact match</strong> against canonical names</li>
 <li><strong>Alias match</strong> (case-insensitive) against all aliases</li>
-<li><strong>Edition decomposition</strong> splits names like "Dreamstate SoCal" into festival "Dreamstate" + edition "SoCal"</li>
-<li><strong>Diacritics-insensitive matching</strong> handles accented characters</li>
+<li><strong>Edition decomposition:</strong> names like "Dreamstate SoCal" are split into festival "Dreamstate" and edition "SoCal"</li>
+<li><strong>Diacritics-insensitive match</strong> handles accented characters</li>
 </ol>
-<p>The canonical name is used in folder paths and filenames. The edition appears when the template includes <code>{edition}</code> or <code>{ edition}</code>.</p>
-<h2 id="adding-custom-festivals">Adding custom festivals</h2>
-<p>Add new festivals by editing your <code>festivals.json</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nt">&quot;My Local Festival&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;MLF&quot;</span><span class="p">],</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#FF6600&quot;</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+<h2 id="alias-rules-and-pitfalls">Alias rules and pitfalls</h2>
+<p>The canonical name is automatically recognized without needing to be listed as its own alias. CrateDigger adds a self-mapping for every canonical key, so <code>"EDC"</code> already resolves to <code>"EDC"</code> the moment you add it as a top-level key.</p>
+<p><strong>Do not add a canonical name as an alias for another entry.</strong> If your file has:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nt">&quot;Electric Daisy Carnival&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;EDC&quot;</span><span class="p">]</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="p">}</span>
 </code></pre></div>
-<p>After adding a festival, CrateDigger will recognize it during classification and use the canonical name for organization.</p>
-<h2 id="example-file">Example file</h2>
-<p>The included <code>festivals.example.json</code> covers major electronic music festivals worldwide, including Tomorrowland, Ultra Music Festival, EDC, ASOT, AMF, Dreamstate, and many more. Use it as a starting point and customize to match your collection.</p>
+<p>...then <code>"EDC"</code> will resolve to <code>"Electric Daisy Carnival"</code> instead of itself. Any files with <code>"EDC"</code> in their name would be named after the full festival name, which may not be what you want. CrateDigger will also log a warning if two entries point at each other.</p>
+<p><strong>Do not list the same name as a canonical key in one entry and as an alias in another.</strong> The second definition silently wins. Choose one entry as the canonical and list all alternative names under its <code>aliases</code>.</p>
+<p><strong>Wrong:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="nt">&quot;EDC&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">&quot;Electric Daisy Carnival&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;EDC&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">}</span>
+</code></pre></div></p>
+<p><strong>Correct:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="nt">&quot;EDC&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Electric Daisy Carnival&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="p">}</span>
+</code></pre></div></p>
+<h2 id="adding-your-own-festivals">Adding your own festivals</h2>
+<p>Add new entries by editing your <code>festivals.json</code>. For example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="nt">&quot;My Local Festival&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;MLF&quot;</span><span class="p">],</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#FF6600&quot;</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">}</span>
+</code></pre></div>
+<p>CrateDigger picks up the new entry on the next run.</p>
+<h2 id="what-the-example-file-includes">What the example file includes</h2>
+<p><code>festivals.example.json</code> covers major electronic music festivals including Tomorrowland, Ultra Music Festival, EDC, ASOT, AMF, Dreamstate, and more. It is a good starting point for most libraries. Add your own entries for any festivals it does not cover.</p>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="../configuration/#artist-aliases">Configuration: artists.json</a>: artist name aliases and B2B group definitions</li>
+<li><a href="../commands/audit-logos/">audit-logos</a>: check which festivals in your library have curated poster logos</li>
+</ul>
 
 
 

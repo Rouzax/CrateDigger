@@ -689,6 +689,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-this-is-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this is for
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#before-you-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before you start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -711,10 +733,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-it-does" class="md-nav__link">
+  <a href="#what-it-reports" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What it does
+        What it reports
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-place-logo-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where to place logo files
       
     </span>
   </a>
@@ -733,10 +766,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
+  <a href="#related" class="md-nav__link">
     <span class="md-ellipsis">
       
-        See also
+        Related
       
     </span>
   </a>
@@ -975,6 +1008,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-this-is-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this is for
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#before-you-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Before you start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -997,10 +1052,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-it-does" class="md-nav__link">
+  <a href="#what-it-reports" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What it does
+        What it reports
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-place-logo-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where to place logo files
       
     </span>
   </a>
@@ -1019,10 +1085,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
+  <a href="#related" class="md-nav__link">
     <span class="md-ellipsis">
       
-        See also
+        Related
       
     </span>
   </a>
@@ -1049,12 +1115,16 @@
   
 
 
-<h1 id="audit-logos">Audit Logos</h1>
-<p>Check curated festival logo coverage for your library.</p>
+<h1 id="audit-logos">audit-logos</h1>
+<p>Check which festivals in your library have curated logo files for poster generation.</p>
+<h2 id="what-this-is-for">What this is for</h2>
+<p>When <code>enrich</code> generates a <code>folder.jpg</code> poster for a festival folder, it uses a curated logo if one is available. Without a logo, the poster falls back to a color gradient. <code>audit-logos</code> shows you exactly which festivals in your library have logos and which do not, and tells you where to place a logo file for any that are missing.</p>
+<p>Run this any time you want to improve poster quality for a specific festival, or after adding a new logo to verify it was picked up correctly.</p>
+<h2 id="before-you-start">Before you start</h2>
+<p><code>audit-logos</code> requires a CrateDigger library. Run <a href="../organize/"><code>organize</code></a> first. Without the <code>.cratedigger/</code> marker folder that <code>organize</code> creates, <code>audit-logos</code> exits with an error.</p>
 <h2 id="usage">Usage</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cratedigger<span class="w"> </span>audit-logos<span class="w"> </span>&lt;library&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
 </code></pre></div>
-<p>The <code>&lt;library&gt;</code> argument must point to an existing CrateDigger library.</p>
 <h2 id="options">Options</h2>
 <table>
 <thead>
@@ -1068,29 +1138,52 @@
 <tr>
 <td><code>--config &lt;path&gt;</code></td>
 <td></td>
-<td>Path to config.json</td>
+<td>Path to a config.json file</td>
 </tr>
 <tr>
 <td><code>--verbose</code></td>
 <td><code>-v</code></td>
-<td>Show detailed progress and decisions</td>
+<td>Show detailed progress</td>
 </tr>
 <tr>
 <td><code>--debug</code></td>
 <td></td>
-<td>Show cache hits, retries, and internal mechanics</td>
+<td>Show internal mechanics</td>
 </tr>
 </tbody>
 </table>
-<h2 id="what-it-does">What it does</h2>
-<p>The audit-logos command scans your library for all festival names, then checks whether a curated logo file exists for each one. It reports:</p>
-<ul>
-<li><strong>Festivals with logos</strong> and the path to each logo file.</li>
-<li><strong>Festivals missing logos</strong> with suggested paths for placing them.</li>
-<li><strong>Unmatched logo folders</strong> that exist but do not correspond to any festival in your library.</li>
-<li><strong>Unsupported formats</strong> (SVG, GIF, BMP, TIFF are not supported).</li>
-</ul>
-<p>Curated logos drive the festival-gradient album poster layout. When a logo is missing, album posters for that festival fall back to fanart-derived or pure-gradient layouts. The <a href="../../library-layout/#curated-festival-logos">library layout page</a> documents the logo file convention, the library-local vs user-level precedence, and which supported image formats land where.</p>
+<h2 id="what-it-reports">What it reports</h2>
+<p><code>audit-logos</code> scans your library for all recognized festival names, then checks whether a logo file exists for each one.</p>
+<p><strong>Festivals with logos:</strong> the festival name and the path to the logo file being used.</p>
+<p><strong>Festivals missing logos:</strong> the festival name and two suggested paths where you can place a logo file (library-local or user-level).</p>
+<p><strong>Unmatched logo folders:</strong> folders that exist inside your logo directories but do not match any festival currently in your library. Usually these are leftovers from files you removed.</p>
+<p><strong>Unsupported formats:</strong> any logo files using a format CrateDigger cannot read (SVG, GIF, BMP, TIFF). Rename or convert them to a supported format.</p>
+<h2 id="where-to-place-logo-files">Where to place logo files</h2>
+<p>Logo files go in a folder named after the festival, inside one of two locations:</p>
+<table>
+<thead>
+<tr>
+<th>Location</th>
+<th>Path</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User-level</td>
+<td><code>~/.cratedigger/festivals/{Festival Name}/logo.{ext}</code></td>
+<td>All libraries</td>
+</tr>
+<tr>
+<td>Library-local</td>
+<td><code>{library}/.cratedigger/festivals/{Festival Name}/logo.{ext}</code></td>
+<td>This library only</td>
+</tr>
+</tbody>
+</table>
+<p>The library-local location takes precedence over the user-level location if both exist.</p>
+<p>The festival folder name must match the canonical display name CrateDigger uses for that festival (the same name shown in the audit output).</p>
+<p><strong>Supported formats:</strong> JPG, PNG, WebP.</p>
 <h2 id="example">Example</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cratedigger<span class="w"> </span>audit-logos<span class="w"> </span>~/Music/Library/
 </code></pre></div>
@@ -1109,10 +1202,13 @@
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>       or user-level: /home/user/.cratedigger/festivals/Awakenings/logo.png
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>  ...
 </code></pre></div>
-<h2 id="see-also">See also</h2>
+<p>After adding a logo for a missing festival, regenerate its poster:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
+</code></pre></div>
+<h2 id="related">Related</h2>
 <ul>
-<li><a href="../../library-layout/#curated-festival-logos">Library layout: curated festival logos</a> — file convention, location precedence, supported formats.</li>
-<li><a href="../../library-layout/#album-poster-folderjpg">Library layout: album poster layouts</a> — how logos feed the poster pipeline and which layout fires when a logo is or isn't available.</li>
+<li><a href="../enrich/#posters-poster-images">enrich: posters</a>: how logos feed into poster generation</li>
+<li><a href="../../library-layout/#curated-festival-logos">Library layout: curated festival logos</a>: logo file convention and location precedence</li>
 </ul>
 
 

@@ -492,10 +492,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-it-does" class="md-nav__link">
+  <a href="#what-you-get" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What it does
+        What you get
       
     </span>
   </a>
@@ -514,21 +514,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
+  <a href="#install" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick start
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#additional-tools" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Additional tools
+        Install
       
     </span>
   </a>
@@ -547,10 +536,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#learn-more" class="md-nav__link">
+  <a href="#documentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Learn more
+        Documentation
       
     </span>
   </a>
@@ -979,10 +968,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-it-does" class="md-nav__link">
+  <a href="#what-you-get" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What it does
+        What you get
       
     </span>
   </a>
@@ -1001,21 +990,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
+  <a href="#install" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick start
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#additional-tools" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Additional tools
+        Install
       
     </span>
   </a>
@@ -1034,10 +1012,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#learn-more" class="md-nav__link">
+  <a href="#documentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Learn more
+        Documentation
       
     </span>
   </a>
@@ -1065,51 +1043,99 @@
 
 
 <h1 id="cratedigger">CrateDigger</h1>
-<p>Festival set and concert library manager. CrateDigger organizes, enriches, and tags your media files with artwork, metadata, and chapter markers.</p>
-<h2 id="what-it-does">What it does</h2>
-<p>CrateDigger takes a collection of festival sets and concert recordings and turns them into a well-organized, richly tagged media library. It handles everything from matching tracklists and embedding chapter markers to generating poster artwork and syncing with Kodi.</p>
+<p>Festival set and concert library manager. CrateDigger organizes, enriches, and tags your DJ set and concert recordings into a clean, media-player-ready library.</p>
+<h2 id="what-you-get">What you get</h2>
+<p>After running CrateDigger on a folder of recordings:</p>
+<ul>
+<li>Consistent folder structure and filenames, organized by artist, festival, year, or any combination</li>
+<li>Cover art and generated poster images for every recording and every folder</li>
+<li>NFO files that Kodi, Jellyfin, and Plex read to display title, artist, genre, and artwork</li>
+<li>Structured MKV metadata tags for any tag-aware tool</li>
+<li>Chapter markers (one per track) for navigation inside DJ sets, sourced from <a href="https://www.1001tracklists.com/">1001Tracklists</a></li>
+<li>MusicBrainz artist IDs, aligned with track-level performer tags</li>
+</ul>
 <h2 id="three-command-workflow">Three-command workflow</h2>
-<p>CrateDigger follows a simple pipeline:</p>
-<ol>
-<li><strong><a href="commands/identify/">Identify</a></strong>: Match recordings against 1001Tracklists, embed chapter markers and metadata tags into MKV files.</li>
-<li><strong><a href="commands/organize/">Organize</a></strong>: Move or copy files into a structured library with smart folder layouts and consistent filenames.</li>
-<li><strong><a href="commands/enrich/">Enrich</a></strong>: Add cover art, fanart, poster images, NFO files, and MKV tags to your library.</li>
-</ol>
-<p>You can run each step independently, or chain them together. The organize command can optionally run enrichment in a single pass with <code>--enrich</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Match recordings against 1001Tracklists, embed chapter markers</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Organize into a library with consistent folder and file names</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Add artwork, posters, NFO files, and metadata tags</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
+</code></pre></div>
+<p>Or organize and enrich in one pass:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
+</code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">1001Tracklists account (optional)</p>
-<p>The <code>identify</code> command needs a free <a href="https://www.1001tracklists.com/">1001Tracklists</a> account to fetch tracklists. Without one, skip to <code>organize</code> and <code>enrich</code> — you'll still get a tagged, organized library built from filename parsing and embedded metadata. See <a href="tracklists/#do-i-need-an-account">what you get with vs. without an account</a>.</p>
+<p><code>identify</code> needs a free <a href="https://www.1001tracklists.com/">1001Tracklists</a> account. Without one, skip straight to <code>organize</code> and <code>enrich</code>. You still get an organized library, artwork, posters, and NFO files built from filename parsing and embedded metadata. See <a href="tracklists/#do-i-need-an-account">what you get with vs. without an account</a>.</p>
 </div>
-<h2 id="quick-start">Quick start</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Install from GitHub</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/Rouzax/CrateDigger.git
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Identify tracklists and embed chapters</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Organize into a library</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># Enrich with artwork and metadata</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
+<h2 id="install">Install</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/Rouzax/CrateDigger.git
 </code></pre></div>
-<p>See the <a href="getting-started/">Getting Started</a> guide for detailed setup instructions.</p>
-<h2 id="additional-tools">Additional tools</h2>
-<ul>
-<li><strong><a href="commands/audit-logos/">Audit Logos</a></strong>: Check which festivals in your library have curated logo artwork available for poster generation.</li>
-</ul>
+<p>See <a href="getting-started/">Getting Started</a> for required tools, config setup, and the recommended yt-dlp download settings.</p>
 <h2 id="related-projects">Related projects</h2>
-<ul>
-<li><strong><a href="https://rouzax.github.io/TrackSplit/">TrackSplit</a></strong>: A sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. TrackSplit reads CrateDigger's festival and artist config, so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries. CrateDigger emits per-chapter PERFORMER and GENRE tags (Matroska <code>TargetTypeValue=30</code>) that TrackSplit picks up via <code>ffprobe</code> to write accurate per-track FLAC metadata. See the <a href="https://rouzax.github.io/TrackSplit/docs/">TrackSplit documentation</a> or <a href="https://github.com/Rouzax/TrackSplit">source on GitHub</a>.</li>
-</ul>
-<h2 id="learn-more">Learn more</h2>
-<ul>
-<li><a href="configuration/">Configuration</a>: Full reference for all config options</li>
-<li><a href="festivals/">Festival Database</a>: How festivals are defined, matched, and customized</li>
-<li><a href="tracklists/">1001Tracklists Integration</a>: Account setup, searching, and chapter embedding</li>
-<li><a href="kodi-integration/">Kodi Integration</a>: Automatic library sync with Kodi</li>
-<li><a href="faq/">FAQ</a>: Common questions and troubleshooting</li>
-</ul>
+<p><strong><a href="https://rouzax.github.io/TrackSplit/">TrackSplit</a></strong> is a sibling CLI that extracts chapter-based audio from your CrateDigger library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. TrackSplit reads CrateDigger's festival and artist config so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries. See the <a href="https://rouzax.github.io/TrackSplit/docs/">TrackSplit documentation</a> or <a href="https://github.com/Rouzax/TrackSplit">source on GitHub</a>.</p>
+<h2 id="documentation">Documentation</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="getting-started/">Getting Started</a></td>
+<td>Installation, required tools, first run</td>
+</tr>
+<tr>
+<td><a href="commands/identify/">identify</a></td>
+<td>Match tracklists, embed chapters</td>
+</tr>
+<tr>
+<td><a href="commands/organize/">organize</a></td>
+<td>Library layouts, move vs. copy, templates</td>
+</tr>
+<tr>
+<td><a href="commands/enrich/">enrich</a></td>
+<td>Artwork, posters, NFO, MBIDs</td>
+</tr>
+<tr>
+<td><a href="commands/audit-logos/">audit-logos</a></td>
+<td>Check festival logo coverage</td>
+</tr>
+<tr>
+<td><a href="configuration/">Configuration</a></td>
+<td>All config options</td>
+</tr>
+<tr>
+<td><a href="festivals/">Festivals</a></td>
+<td>Festival names, aliases, editions</td>
+</tr>
+<tr>
+<td><a href="tracklists/">1001Tracklists</a></td>
+<td>Account setup, caching, what you get</td>
+</tr>
+<tr>
+<td><a href="library-layout/">Library layout</a></td>
+<td>Every file CrateDigger writes and why</td>
+</tr>
+<tr>
+<td><a href="tag-reference/">Tag reference</a></td>
+<td>Every MKV tag CrateDigger writes</td>
+</tr>
+<tr>
+<td><a href="kodi-integration/">Kodi Integration</a></td>
+<td>JSON-RPC sync, path mapping</td>
+</tr>
+<tr>
+<td><a href="faq/">FAQ</a></td>
+<td>Common problems and troubleshooting</td>
+</tr>
+</tbody>
+</table>
 
 
 

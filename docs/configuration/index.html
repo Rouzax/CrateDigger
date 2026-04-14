@@ -727,22 +727,16 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Config file locations">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-a-starter-config" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Getting started
+        Getting a starter config
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -906,6 +900,45 @@
     <span class="md-ellipsis">
       
         Cache TTL
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#external-config-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External config files
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="External config files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#festivalsjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        festivals.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#artist-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        artists.json
       
     </span>
   </a>
@@ -1144,22 +1177,16 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Config file locations">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-a-starter-config" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Getting started
+        Getting a starter config
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1335,6 +1362,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#external-config-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External config files
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="External config files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#festivalsjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        festivals.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#artist-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        artists.json
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#artist-mbid-override-file" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1377,107 +1443,124 @@
 
 
 <h1 id="configuration">Configuration</h1>
-<p>CrateDigger works without a config file, using sensible defaults for everything. Create a config file only to override specific settings.</p>
+<p>CrateDigger works without a config file. Built-in defaults cover everything. Create a config file only to override specific settings.</p>
 <h2 id="config-file-locations">Config file locations</h2>
-<p>CrateDigger merges configuration from three layers (later layers override earlier ones):</p>
+<p>CrateDigger merges configuration from three layers in this order, with later layers overriding earlier ones:</p>
 <ol>
-<li><strong>Built-in defaults</strong>: Always present, covers all settings</li>
-<li><strong>User config</strong>: <code>~/.cratedigger/config.json</code></li>
-<li><strong>Library config</strong>: <code>&lt;library&gt;/.cratedigger/config.json</code></li>
+<li><strong>Built-in defaults:</strong> always present, covers all settings</li>
+<li><strong>User config:</strong> <code>~/.cratedigger/config.json</code> (Linux/macOS) or <code>$env:USERPROFILE\.cratedigger\config.json</code> (Windows)</li>
+<li><strong>Library config:</strong> <code>{library}/.cratedigger/config.json</code></li>
 </ol>
-<p>You can also pass an explicit config path with the <code>--config</code> flag on any command.</p>
-<h3 id="getting-started">Getting started</h3>
-<p>Copy the example config as your starting point:</p>
+<p>Only include the settings you want to change. Everything else falls back to built-in defaults.</p>
+<p>You can also pass an explicit path with <code>--config &lt;path&gt;</code> on any command. This acts as your user config for that run.</p>
+<h2 id="getting-a-starter-config">Getting a starter config</h2>
+<p>The example config contains all available settings with comments:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Linux / macOS</label><label for="__tabbed_1_2">Windows (PowerShell)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/.cratedigger
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>cp<span class="w"> </span>config.example.json<span class="w"> </span>~/.cratedigger/config.json
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/.cratedigger/config.json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.json
 </code></pre></div>
-<p>Only include settings you want to override. Omitted settings fall back to built-in defaults.</p>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">New-Item</span> <span class="n">-ItemType</span> <span class="n">Directory</span> <span class="n">-Force</span> <span class="s2">&quot;$env:USERPROFILE\.cratedigger&quot;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.json&quot;</span> <span class="p">`</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\.cratedigger\config.json&quot;</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Or, if you have cloned the repository:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cp<span class="w"> </span>config.example.json<span class="w"> </span>~/.cratedigger/config.json
+</code></pre></div>
 <h2 id="config-sections">Config sections</h2>
 <h3 id="default-layout">Default layout</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nt">&quot;default_layout&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;artist_flat&quot;</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span>
-</code></pre></div>
-<p>Sets the folder layout used by the organize command. Available layouts: <code>artist_flat</code>, <code>festival_flat</code>, <code>artist_nested</code>, <code>festival_nested</code>. See <a href="../commands/organize/#layouts">Organize layouts</a> for details.</p>
-<h3 id="layouts">Layouts</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="nt">&quot;layouts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="nt">&quot;artist_flat&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">            </span><span class="nt">&quot;festival_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">            </span><span class="nt">&quot;concert_film&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="p">},</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">        </span><span class="nt">&quot;festival_flat&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">            </span><span class="nt">&quot;festival_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{festival}{ edition}&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">            </span><span class="nt">&quot;concert_film&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">        </span><span class="p">},</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">        </span><span class="nt">&quot;artist_nested&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">            </span><span class="nt">&quot;festival_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}/{festival}{ edition}/{year}&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">            </span><span class="nt">&quot;concert_film&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}/{year} - {title}&quot;</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">        </span><span class="p">},</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">        </span><span class="nt">&quot;festival_nested&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">            </span><span class="nt">&quot;festival_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{festival}{ edition}/{year}/{artist}&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">            </span><span class="nt">&quot;concert_film&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}/{year} - {title}&quot;</span>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">        </span><span class="p">}</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="p">}</span>
-</code></pre></div>
-<p>Folder path templates for each layout and content type. Uses <a href="../commands/organize/#template-syntax">collapsing token syntax</a>.</p>
-<h3 id="filename-templates">Filename templates</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="nt">&quot;filename_templates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">        </span><span class="nt">&quot;festival_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{year} - {artist} - {festival}{ edition}{ [stage]}{ - set_title}&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">        </span><span class="nt">&quot;concert_film&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist} - {title}{ (year)}&quot;</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">}</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="nt">&quot;default_layout&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;artist_flat&quot;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">}</span>
 </code></pre></div>
-<p>Templates for generated filenames. The original file extension is preserved automatically.</p>
-<h3 id="content-type-rules">Content type rules</h3>
+<p>The folder layout used by <code>organize</code> when <code>--layout</code> is not specified. Available values: <code>artist_flat</code>, <code>festival_flat</code>, <code>artist_nested</code>, <code>festival_nested</code>. See <a href="../commands/organize/#layouts">Organize: layouts</a> for what each looks like.</p>
+<h3 id="layouts">Layouts</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nt">&quot;content_type_rules&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="nt">&quot;force_concert&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">            </span><span class="s2">&quot;Adele/*&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">            </span><span class="s2">&quot;Coldplay/*&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">            </span><span class="s2">&quot;U2/*&quot;</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">        </span><span class="p">],</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">        </span><span class="nt">&quot;force_festival&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">}</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nt">&quot;layouts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="nt">&quot;artist_flat&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">            </span><span class="nt">&quot;festival_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">            </span><span class="nt">&quot;concert_film&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">        </span><span class="p">},</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">        </span><span class="nt">&quot;festival_flat&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">            </span><span class="nt">&quot;festival_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{festival}{ edition}&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">            </span><span class="nt">&quot;concert_film&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">        </span><span class="p">},</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">        </span><span class="nt">&quot;artist_nested&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">            </span><span class="nt">&quot;festival_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}/{festival}{ edition}/{year}&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">            </span><span class="nt">&quot;concert_film&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}/{year} - {title}&quot;</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">        </span><span class="p">},</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">        </span><span class="nt">&quot;festival_nested&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">            </span><span class="nt">&quot;festival_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{festival}{ edition}/{year}/{artist}&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">            </span><span class="nt">&quot;concert_film&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist}/{year} - {title}&quot;</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="p">}</span>
 </code></pre></div>
-<p>Glob patterns (relative to the source root) that force a file to be classified as <code>concert_film</code> or <code>festival_set</code>, bypassing automatic classification.</p>
-<h3 id="skip-patterns">Skip patterns</h3>
+<p>Folder path templates for each layout and content type. See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for how optional tokens work.</p>
+<h3 id="filename-templates">Filename templates</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="nt">&quot;skip_patterns&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;*/BDMV/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Dolby*&quot;</span><span class="p">]</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">}</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="nt">&quot;filename_templates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">        </span><span class="nt">&quot;festival_set&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{year} - {artist} - {festival}{ edition}{ [stage]}{ - set_title}&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">        </span><span class="nt">&quot;concert_film&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{artist} - {title}{ (year)}&quot;</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">}</span>
 </code></pre></div>
-<p>Glob patterns for paths to skip during scanning. Matched against the relative path (forward slashes).</p>
-<h3 id="media-extensions">Media extensions</h3>
+<p>Templates for generated filenames. The original file extension is preserved automatically. See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for field names and optional token syntax.</p>
+<h3 id="content-type-rules">Content type rules</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nt">&quot;media_extensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">        </span><span class="nt">&quot;video&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.mp4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.mkv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.webm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.avi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.mov&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.m2ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.ts&quot;</span><span class="p">],</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">        </span><span class="nt">&quot;audio&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.mp3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.m4a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.flac&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.wav&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.aac&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.ogg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.opus&quot;</span><span class="p">]</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">}</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nt">&quot;content_type_rules&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">        </span><span class="nt">&quot;force_concert&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">            </span><span class="s2">&quot;Adele/*&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">            </span><span class="s2">&quot;Coldplay/*&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">            </span><span class="s2">&quot;U2/*&quot;</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">        </span><span class="p">],</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">        </span><span class="nt">&quot;force_festival&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="p">}</span>
 </code></pre></div>
-<p>File extensions recognized as media files, grouped by type.</p>
-<h3 id="fallback-values">Fallback values</h3>
+<p>Path rules that force a file to be classified as <code>concert_film</code> or <code>festival_set</code>, bypassing automatic classification. Each rule is a pattern matched against the file's path relative to the source root. Use <code>*</code> to match anything within a single folder name, or <code>/*</code> after a folder name to match everything inside it. For example, <code>Coldplay/*</code> matches any file directly inside a <code>Coldplay</code> folder.</p>
+<h3 id="skip-patterns">Skip patterns</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="nt">&quot;fallback_values&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">        </span><span class="nt">&quot;unknown_artist&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unknown Artist&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">        </span><span class="nt">&quot;unknown_festival&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;_Needs Review&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">        </span><span class="nt">&quot;unknown_year&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unknown Year&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">        </span><span class="nt">&quot;unknown_title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unknown Title&quot;</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="p">}</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="nt">&quot;skip_patterns&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;*/BDMV/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Dolby*&quot;</span><span class="p">]</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="p">}</span>
 </code></pre></div>
-<p>Placeholder values used in templates when metadata is missing.</p>
-<h3 id="poster-settings">Poster settings</h3>
+<p>Path patterns for files and folders to skip during scanning. Matched against the relative path. Useful for ignoring Blu-ray disc structures (<code>*/BDMV/*</code>) or demo content.</p>
+<h3 id="media-extensions">Media extensions</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">{</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="nt">&quot;poster_settings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">        </span><span class="nt">&quot;artist_background_priority&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;dj_artwork&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;fanart_tv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">],</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">        </span><span class="nt">&quot;festival_background_priority&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;curated_logo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">],</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">        </span><span class="nt">&quot;year_background_priority&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">}</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="nt">&quot;media_extensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">        </span><span class="nt">&quot;video&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.mp4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.mkv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.webm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.avi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.mov&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.m2ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.ts&quot;</span><span class="p">],</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">        </span><span class="nt">&quot;audio&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.mp3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.m4a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.flac&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.wav&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.aac&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.ogg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.opus&quot;</span><span class="p">]</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="p">}</span>
+</code></pre></div>
+<p>File extensions recognized as media files, grouped by type. Add extensions here if CrateDigger is not picking up a file type you use.</p>
+<h3 id="fallback-values">Fallback values</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="nt">&quot;fallback_values&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">        </span><span class="nt">&quot;unknown_artist&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unknown Artist&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">        </span><span class="nt">&quot;unknown_festival&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;_Needs Review&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">        </span><span class="nt">&quot;unknown_year&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unknown Year&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">        </span><span class="nt">&quot;unknown_title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unknown Title&quot;</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="p">}</span>
+</code></pre></div>
+<p>Placeholder values used in folder and filename templates when metadata is missing. <code>_Needs Review</code> sorts near the top in most file managers, making unclassified files easy to find.</p>
+<h3 id="poster-settings">Poster settings</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="nt">&quot;poster_settings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">        </span><span class="nt">&quot;artist_background_priority&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;dj_artwork&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;fanart_tv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">],</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">        </span><span class="nt">&quot;festival_background_priority&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;curated_logo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">],</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">        </span><span class="nt">&quot;year_background_priority&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="p">}</span>
 </code></pre></div>
 <p>Priority chains for poster background image selection. CrateDigger tries each source in order and uses the first one available.</p>
 <table>
@@ -1498,27 +1581,27 @@
 </tr>
 <tr>
 <td><code>curated_logo</code></td>
-<td>Hand-placed festival logo (see <a href="../commands/audit-logos/">Audit Logos</a>)</td>
+<td>Hand-placed festival logo (see <a href="../commands/audit-logos/">audit-logos</a>)</td>
 </tr>
 <tr>
 <td><code>gradient</code></td>
-<td>Solid gradient fallback (always available)</td>
+<td>Color gradient generated from metadata (always available)</td>
 </tr>
 </tbody>
 </table>
 <h3 id="tracklists">Tracklists</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="nt">&quot;tracklists&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">        </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">        </span><span class="nt">&quot;password&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">        </span><span class="nt">&quot;delay_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">        </span><span class="nt">&quot;chapter_language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;eng&quot;</span><span class="p">,</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">        </span><span class="nt">&quot;auto_select&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">        </span><span class="nt">&quot;genre_top_n&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">{</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="nt">&quot;tracklists&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">        </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">        </span><span class="nt">&quot;password&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">        </span><span class="nt">&quot;delay_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">        </span><span class="nt">&quot;chapter_language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;eng&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">        </span><span class="nt">&quot;auto_select&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">        </span><span class="nt">&quot;genre_top_n&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="p">}</span>
 </code></pre></div>
-<p>Settings for 1001Tracklists integration. See <a href="../tracklists/">1001Tracklists</a> for details.</p>
+<p>Settings for 1001Tracklists integration. See <a href="../tracklists/">Tracklists integration</a> for account setup details.</p>
 <table>
 <thead>
 <tr>
@@ -1537,80 +1620,33 @@
 </tr>
 <tr>
 <td><code>delay_seconds</code></td>
-<td>Delay between API requests in seconds (default: 5)</td>
+<td>Pause between files during identify (default: 5 seconds)</td>
 </tr>
 <tr>
 <td><code>chapter_language</code></td>
-<td>Language code for chapter names (default: "eng")</td>
+<td>Language code embedded in chapter names (default: <code>"eng"</code>)</td>
 </tr>
 <tr>
 <td><code>auto_select</code></td>
-<td>Default auto-select behavior (overridden by <code>--auto</code> flag)</td>
+<td>Set to <code>true</code> to make <code>--auto</code> the default for <code>identify</code> (default: <code>false</code>)</td>
 </tr>
 <tr>
 <td><code>genre_top_n</code></td>
-<td>Cap on the set-level <code>CRATEDIGGER_1001TL_GENRES</code> tag: keep only the top-N most frequent per-track genres (default: 5). Ties broken by first-appearance order so the result is deterministic. Set to <code>0</code> to disable the cap and write every per-track genre.</td>
+<td>Maximum number of genres to write to the album-level genre tag. CrateDigger tallies per-track genres across the set and keeps the top N by frequency. Ties are broken by first appearance. Set to <code>0</code> to disable the cap and write every genre. Default: <code>5</code>.</td>
 </tr>
 </tbody>
 </table>
-<p>Credentials can also be set via environment variables <code>TRACKLISTS_EMAIL</code> and <code>TRACKLISTS_PASSWORD</code>.</p>
+<p>Credentials can also be set via environment variables: <code>TRACKLISTS_EMAIL</code> and <code>TRACKLISTS_PASSWORD</code>.</p>
 <h3 id="fanart">Fanart</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">{</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="nt">&quot;fanart&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">        </span><span class="nt">&quot;personal_api_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">        </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="p">}</span>
-</code></pre></div>
-<p>Settings for fanart.tv artwork lookups. A project API key is built into CrateDigger. Adding your personal API key provides faster cache updates.</p>
-<p>Get a personal API key at <a href="https://fanart.tv/get-an-api-key/">fanart.tv</a>.</p>
-<p>The personal API key can also be set via the <code>FANART_PERSONAL_API_KEY</code> environment variable. The project API key can be overridden with <code>FANART_PROJECT_API_KEY</code>.</p>
-<h3 id="kodi">Kodi</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">{</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">        </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">        </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">        </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">        </span><span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;kodi&quot;</span><span class="p">,</span>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">        </span><span class="nt">&quot;password&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="p">}</span>
-</code></pre></div>
-<p>Kodi JSON-RPC settings for automatic library sync. See <a href="../kodi-integration/">Kodi Integration</a> for setup instructions.</p>
-<p>All Kodi settings can be overridden with environment variables: <code>KODI_HOST</code>, <code>KODI_PORT</code>, <code>KODI_USERNAME</code>, <code>KODI_PASSWORD</code>.</p>
-<h3 id="nfo-settings">NFO settings</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">{</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="nt">&quot;nfo_settings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">        </span><span class="nt">&quot;genre_festival&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Electronic&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">        </span><span class="nt">&quot;genre_concert&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Live&quot;</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="nt">&quot;fanart&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">        </span><span class="nt">&quot;personal_api_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">        </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 <a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="p">}</span>
 </code></pre></div>
-<p>Genre tags written into NFO files. <code>genre_festival</code> is used for festival sets, <code>genre_concert</code> for concert recordings.</p>
-<h3 id="tool-paths">Tool paths</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nt">&quot;tool_paths&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">        </span><span class="nt">&quot;mediainfo&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">        </span><span class="nt">&quot;ffprobe&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">        </span><span class="nt">&quot;mkvextract&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">        </span><span class="nt">&quot;mkvpropedit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">        </span><span class="nt">&quot;mkvmerge&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
-<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="p">}</span>
-</code></pre></div>
-<p>Explicit paths to external tools. Set these if the tools are not on your system PATH. Use <code>null</code> for auto-detection.</p>
-<h3 id="cache-ttl">Cache TTL</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="nt">&quot;cache_ttl&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">        </span><span class="nt">&quot;mbid_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">        </span><span class="nt">&quot;dj_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">        </span><span class="nt">&quot;source_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">365</span><span class="p">,</span>
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">        </span><span class="nt">&quot;images_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span>
-<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="p">}</span>
-</code></pre></div>
-<p>Base time-to-live settings for various caches, in days. After a cache entry's TTL expires, cached data is refreshed on the next lookup.</p>
-<p>Values are <em>base</em> TTLs: each cache entry's actual lifetime jitters by ±20% around the base (so a <code>dj_days: 90</code> entry lives 72-108 days). This prevents synchronised expiry after a bulk first-run cache fill, which would otherwise cause a thundering-herd re-fetch on a single day months later.</p>
+<p>Settings for fanart.tv artist artwork lookups. A project API key is built into CrateDigger. Adding your own personal key improves rate limits for large libraries.</p>
+<p>Get a personal API key at <a href="https://fanart.tv/get-an-api-key/">fanart.tv</a>.</p>
 <table>
 <thead>
 <tr>
@@ -1620,29 +1656,152 @@
 </thead>
 <tbody>
 <tr>
-<td><code>mbid_days</code></td>
-<td>MusicBrainz ID cache (default: 90)</td>
+<td><code>personal_api_key</code></td>
+<td>Your personal fanart.tv API key (optional)</td>
 </tr>
 <tr>
-<td><code>dj_days</code></td>
-<td>DJ name and alias cache (default: 90)</td>
-</tr>
-<tr>
-<td><code>source_days</code></td>
-<td>Source/venue name cache (default: 365)</td>
-</tr>
-<tr>
-<td><code>images_days</code></td>
-<td>Downloaded images cache (default: 90)</td>
+<td><code>enabled</code></td>
+<td>Set to <code>false</code> to disable fanart.tv lookups entirely (default: <code>true</code>)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="artist-mbid-override-file">Artist MBID override file</h2>
-<p><code>~/.cratedigger/artist_mbids.json</code> is a user-curated flat JSON map from artist display name to MusicBrainz artist ID. It is consulted first by both the <code>chapter_artist_mbids</code> and <code>album_artist_mbids</code> enrich operations, ahead of the auto cache and any live MusicBrainz lookup. A pin here applies to both per-chapter and album-level artist MBID tags, since MusicBrainz IDs are properties of the artist, not of the tag context.</p>
+<p>Environment variable overrides: <code>FANART_PERSONAL_API_KEY</code>, <code>FANART_PROJECT_API_KEY</code> (for the built-in project key).</p>
+<h3 id="kodi">Kodi</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">        </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">        </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">        </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">        </span><span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;kodi&quot;</span><span class="p">,</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">        </span><span class="nt">&quot;password&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="p">}</span>
+</code></pre></div>
+<p>Kodi JSON-RPC connection settings for automatic library refresh after <code>enrich</code> or <code>organize</code>. See <a href="../kodi-integration/">Kodi integration</a> for setup instructions.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>enabled</code></td>
+<td>Set to <code>true</code> to enable Kodi sync (default: <code>false</code>)</td>
+</tr>
+<tr>
+<td><code>host</code></td>
+<td>Kodi host name or IP address (default: <code>"localhost"</code>)</td>
+</tr>
+<tr>
+<td><code>port</code></td>
+<td>Kodi JSON-RPC port (default: <code>8080</code>)</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td>Kodi username (default: <code>"kodi"</code>)</td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>Kodi password</td>
+</tr>
+</tbody>
+</table>
+<p>All Kodi settings can also be set via environment variables: <code>KODI_HOST</code>, <code>KODI_PORT</code>, <code>KODI_USERNAME</code>, <code>KODI_PASSWORD</code>.</p>
+<h3 id="nfo-settings">NFO settings</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="nt">&quot;nfo_settings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">        </span><span class="nt">&quot;genre_festival&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Electronic&quot;</span><span class="p">,</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">        </span><span class="nt">&quot;genre_concert&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Live&quot;</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="p">}</span>
+</code></pre></div>
+<p>Genre written into NFO files when no genre is available from 1001Tracklists metadata. <code>genre_festival</code> applies to festival sets; <code>genre_concert</code> applies to concert recordings.</p>
+<h3 id="tool-paths">Tool paths</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="p">{</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span><span class="p">,</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="nt">&quot;Oliver Heldens&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6e7dde91-4c02-47ea-a2b4-2222222222bb&quot;</span>
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="p">}</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">    </span><span class="nt">&quot;tool_paths&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">        </span><span class="nt">&quot;mediainfo&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">        </span><span class="nt">&quot;ffprobe&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">        </span><span class="nt">&quot;mkvextract&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">        </span><span class="nt">&quot;mkvpropedit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">        </span><span class="nt">&quot;mkvmerge&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="p">}</span>
+</code></pre></div>
+<p>Explicit paths to external tools. Set these only if the tools are installed somewhere not on your system PATH. Use <code>null</code> to let CrateDigger find them automatically.</p>
+<h3 id="cache-ttl">Cache TTL</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="p">{</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">    </span><span class="nt">&quot;cache_ttl&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">        </span><span class="nt">&quot;mbid_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">        </span><span class="nt">&quot;dj_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">        </span><span class="nt">&quot;source_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">365</span><span class="p">,</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">        </span><span class="nt">&quot;images_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="p">}</span>
+</code></pre></div>
+<p>Base lifetimes for CrateDigger's caches, in days. When a cache entry expires, CrateDigger refreshes it on the next lookup.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>What it controls</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mbid_days</code></td>
+<td>MusicBrainz ID cache</td>
+<td>90</td>
+</tr>
+<tr>
+<td><code>dj_days</code></td>
+<td>DJ name and alias cache</td>
+<td>90</td>
+</tr>
+<tr>
+<td><code>source_days</code></td>
+<td>Source and venue name cache</td>
+<td>365</td>
+</tr>
+<tr>
+<td><code>images_days</code></td>
+<td>Downloaded artwork and images</td>
+<td>90</td>
+</tr>
+</tbody>
+</table>
+<p>Each entry's actual lifetime jitters by ±20% around the base value (for example, <code>mbid_days: 90</code> means entries live 72 to 108 days). This prevents all cached entries from expiring at the same time after a bulk first-run fill, which would cause a large number of network requests in one go.</p>
+<h2 id="external-config-files">External config files</h2>
+<p>Two external JSON files can live alongside your <code>config.json</code> and control name resolution.</p>
+<h3 id="festivalsjson">festivals.json</h3>
+<p>Controls festival name recognition, aliases, and editions. CrateDigger includes built-in festival knowledge. To add your own festivals or customize aliases, place a <code>festivals.json</code> in <code>~/.cratedigger/</code>. See <a href="../festivals/">Festivals</a> for the file format and how to add entries.</p>
+<h3 id="artist-aliases">artists.json</h3>
+<p>Controls artist name aliases and B2B group definitions.</p>
+<p>Place it at <code>~/.cratedigger/artists.json</code>. Example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="p">{</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">    </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">        </span><span class="nt">&quot;Armin van Buuren&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Rising Star&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">        </span><span class="nt">&quot;Martin Garrix&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;GRX&quot;</span><span class="p">],</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">        </span><span class="nt">&quot;Nicky Romero&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Monocule&quot;</span><span class="p">]</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">    </span><span class="nt">&quot;groups&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">        </span><span class="s2">&quot;Above &amp; Beyond&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">        </span><span class="s2">&quot;Swedish House Mafia&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="w">        </span><span class="s2">&quot;W&amp;W&quot;</span>
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="w">    </span><span class="p">]</span>
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong><code>aliases</code>:</strong> maps a canonical artist name to a list of aliases. When CrateDigger encounters an alias in a filename or tag, it substitutes the canonical name. Matching is case-insensitive and diacritics-insensitive.</p>
+<p><strong><code>groups</code>:</strong> a list of act names that should be kept as-is even when they contain <code>&amp;</code>, <code>B2B</code>, <code>vs.</code>, or similar separators. Without a group entry, CrateDigger splits multi-artist names and uses only the first artist as the folder name. Add an act here when the full name is the canonical identity (for example, <code>"Swedish House Mafia"</code> or <code>"W&amp;W"</code>).</p>
+<p>Note: CrateDigger automatically discovers artist aliases and group memberships from 1001Tracklists profiles via the DJ cache. You only need entries in <code>artists.json</code> for corrections that the DJ cache gets wrong, or for artists with no 1001Tracklists profile.</p>
+<h2 id="artist-mbid-override-file">Artist MBID override file</h2>
+<p><code>~/.cratedigger/artist_mbids.json</code> is a flat JSON map from artist display name to MusicBrainz artist ID. It is checked first by both the <code>chapter_artist_mbids</code> and <code>album_artist_mbids</code> enrich operations, before the auto cache and any live MusicBrainz search.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="p">{</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span><span class="p">,</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span><span class="nt">&quot;Oliver Heldens&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6e7dde91-4c02-47ea-a2b4-2222222222bb&quot;</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="p">}</span>
 </code></pre></div>
 <table>
 <thead>
@@ -1658,7 +1817,7 @@
 </tr>
 <tr>
 <td>Format</td>
-<td>Flat JSON object, <code>{"Artist Name": "mbid-uuid"}</code></td>
+<td>Flat JSON object: <code>{"Artist Name": "mbid-uuid"}</code></td>
 </tr>
 <tr>
 <td>Matching</td>
@@ -1673,13 +1832,13 @@
 <td>Never expires</td>
 </tr>
 <tr>
-<td>Written by code</td>
-<td>No; CrateDigger never writes to this file</td>
+<td>Written by CrateDigger</td>
+<td>No; this file is only edited by you</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Distinction from <code>mbid_cache.json</code></strong>: <code>mbid_cache.json</code> is disposable, TTL-bound (see <code>cache_ttl.mbid_days</code>), and populated automatically by CrateDigger from MusicBrainz search results. It can be deleted at any time and will refill. <code>artist_mbids.json</code> is your curated override list, and is the correct place to record MBIDs for artists that MusicBrainz searches misidentify or fail to find.</p>
-<p>See <a href="../commands/enrich/#chapter-artist-mbids-chapter_artist_mbids">Enrich / Chapter artist MBIDs</a> for the full fix loop.</p>
+<p><strong>Distinction from <code>mbid_cache.json</code>:</strong> <code>mbid_cache.json</code> is populated automatically from MusicBrainz search results and expires after <code>cache_ttl.mbid_days</code>. It can be deleted and will refill. <code>artist_mbids.json</code> is your curated override list for artists that MusicBrainz searches misidentify or fail to find.</p>
+<p>See <a href="../commands/enrich/#chapter_artist_mbids-per-track-artist-ids">enrich: chapter_artist_mbids</a> for the fix workflow.</p>
 <h2 id="environment-variables">Environment variables</h2>
 <table>
 <thead>
@@ -1699,7 +1858,7 @@
 </tr>
 <tr>
 <td><code>FANART_PROJECT_API_KEY</code></td>
-<td><code>fanart.project_api_key</code></td>
+<td>Built-in fanart.tv project key</td>
 </tr>
 <tr>
 <td><code>FANART_PERSONAL_API_KEY</code></td>

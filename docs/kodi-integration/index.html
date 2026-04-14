@@ -866,10 +866,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#in-config" class="md-nav__link">
+  <a href="#always-on-config" class="md-nav__link">
     <span class="md-ellipsis">
       
-        In config
+        Always on (config)
       
     </span>
   </a>
@@ -877,10 +877,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#per-command" class="md-nav__link">
+  <a href="#per-run-flag" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Per-command
+        Per run (flag)
       
     </span>
   </a>
@@ -904,10 +904,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-it-works" class="md-nav__link">
+  <a href="#how-the-sync-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How it works
+        How the sync works
       
     </span>
   </a>
@@ -948,10 +948,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
+  <a href="#common-problems" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Troubleshooting
+        Common problems
       
     </span>
   </a>
@@ -1043,10 +1043,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#in-config" class="md-nav__link">
+  <a href="#always-on-config" class="md-nav__link">
     <span class="md-ellipsis">
       
-        In config
+        Always on (config)
       
     </span>
   </a>
@@ -1054,10 +1054,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#per-command" class="md-nav__link">
+  <a href="#per-run-flag" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Per-command
+        Per run (flag)
       
     </span>
   </a>
@@ -1081,10 +1081,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-it-works" class="md-nav__link">
+  <a href="#how-the-sync-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How it works
+        How the sync works
       
     </span>
   </a>
@@ -1125,10 +1125,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
+  <a href="#common-problems" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Troubleshooting
+        Common problems
       
     </span>
   </a>
@@ -1167,11 +1167,11 @@
 
 
 <h1 id="kodi-integration">Kodi Integration</h1>
-<p>CrateDigger writes media-server-compatible metadata: Kodi-style NFO files alongside each MKV plus sidecar artwork. Kodi and Jellyfin both read the same musicvideo NFO spec and the same artwork sidecar conventions, so everything on this page applies to both. Plex can read these files via agents that support musicvideo NFOs.</p>
-<p>This page covers the Kodi-specific parts: enabling the JSON-RPC sync that refreshes the Kodi library after a CrateDigger run, path mapping when CrateDigger and Kodi access the library through different paths, and environment overrides. For the NFO contents, poster/thumb/fanart files, and their sources, see <a href="../library-layout/">library layout</a>.</p>
+<p>CrateDigger writes Kodi-compatible NFO files and sidecar artwork alongside each MKV. Kodi and Jellyfin both read the same musicvideo NFO format and the same artwork sidecar conventions, so most of this page applies to both. Plex can read these files via agents that support musicvideo NFOs.</p>
+<p>This page covers the Kodi-specific parts: enabling the JSON-RPC sync that refreshes your Kodi library after a CrateDigger run, path mapping when CrateDigger and Kodi access the library through different paths, and troubleshooting. For the NFO contents, artwork files, and poster layouts, see <a href="../library-layout/">library layout</a>.</p>
 <h2 id="enabling-kodi-sync">Enabling Kodi sync</h2>
-<h3 id="in-config">In config</h3>
-<p>Set <code>enabled</code> to <code>true</code> in the <code>kodi</code> section of your config:</p>
+<h3 id="always-on-config">Always on (config)</h3>
+<p>Set <code>enabled</code> to <code>true</code> in the <code>kodi</code> section of <code>~/.cratedigger/config.json</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">        </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
@@ -1182,36 +1182,34 @@
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
 </code></pre></div>
-<p>When enabled, CrateDigger syncs with Kodi automatically after every organize or enrich run.</p>
-<h3 id="per-command">Per-command</h3>
-<p>Use the <code>--kodi-sync</code> flag to trigger sync for a single run, without enabling it globally:</p>
+<p>When enabled, CrateDigger syncs with Kodi at the end of every <code>organize</code> or <code>enrich</code> run.</p>
+<h3 id="per-run-flag">Per run (flag)</h3>
+<p>Use <code>--kodi-sync</code> to sync for a single run without enabling it globally:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--kodi-sync
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--kodi-sync
 </code></pre></div>
-<p>The enrich/organize header box shows a <code>Kodi sync: yes (flag)</code> or <code>yes (config)</code> row when either trigger is active, so you can tell at a glance whether the sync will run.</p>
 <h2 id="setting-up-kodi-json-rpc">Setting up Kodi JSON-RPC</h2>
-<p>CrateDigger communicates with Kodi via its JSON-RPC HTTP interface. You need to enable the web server in Kodi:</p>
+<p>CrateDigger communicates with Kodi via its JSON-RPC HTTP interface. Enable it in Kodi:</p>
 <ol>
 <li>Open Kodi and go to <strong>Settings</strong> &gt; <strong>Services</strong> &gt; <strong>Control</strong>.</li>
 <li>Enable <strong>Allow remote control via HTTP</strong>.</li>
-<li>Set a <strong>Port</strong> (default: 8080).</li>
+<li>Set the <strong>Port</strong> (default: 8080).</li>
 <li>Set a <strong>Username</strong> and <strong>Password</strong>.</li>
-<li>Optionally enable <strong>Allow remote control from applications on other systems</strong> if CrateDigger runs on a different machine.</li>
+<li>If CrateDigger runs on a different machine, also enable <strong>Allow remote control from applications on other systems</strong>.</li>
 </ol>
-<h2 id="how-it-works">How it works</h2>
-<p>After the organize or enrich pipeline completes, CrateDigger checks which files had relevant changes (NFO updates, artwork changes, poster generation, fanart downloads). It then tells Kodi to refresh only those specific items rather than triggering a full library scan.</p>
-<p>Relevant operations that trigger a Kodi refresh:</p>
+<h2 id="how-the-sync-works">How the sync works</h2>
+<p>After the <code>organize</code> or <code>enrich</code> pipeline completes, CrateDigger checks which files had relevant changes and tells Kodi to refresh only those specific items. Changes that trigger a refresh:</p>
 <ul>
-<li>NFO file creation or update (the <code>nfo</code> op)</li>
-<li>Cover art changes (the <code>art</code> op)</li>
-<li>Per-video poster generation (the <code>posters</code> op)</li>
-<li>Album poster generation — when <code>folder.jpg</code> changes, every video in that folder is refreshed so Kodi picks up the new folder artwork</li>
+<li>NFO file created or updated</li>
+<li>Cover art (<code>{stem}-thumb.jpg</code>, <code>{stem}-fanart.jpg</code>) changed</li>
+<li>Per-video poster (<code>{stem}-poster.jpg</code>) generated</li>
+<li>Album poster (<code>folder.jpg</code>) changed; when this happens, every video in that folder is refreshed so Kodi picks up the new folder artwork</li>
 </ul>
-<p>Under <code>--debug</code>, CrateDigger logs <code>Kodi sync: no kodi-affecting changes</code> when a run produces nothing to refresh (for example, an idempotent re-enrich on a fully-enriched library) so you can confirm the sync pathway ran.</p>
-<p>See <a href="../library-layout/">library layout</a> for what each of those files contains and where the data comes from.</p>
+<p>If nothing changed (for example, a re-enrich run where all artifacts were already up to date), no sync request is sent. Run with <code>--debug</code> to confirm whether the sync pathway fired.</p>
 <h2 id="path-mapping">Path mapping</h2>
-<p>When CrateDigger and Kodi access the same library through different paths (e.g., CrateDigger uses a local path while Kodi uses a network share), path mapping translates between them.</p>
-<p>CrateDigger attempts to auto-detect path mappings from the Kodi library. If auto-detection does not work for your setup, you can configure explicit mappings in the <code>kodi</code> config section:</p>
+<p>If CrateDigger and Kodi access the same library through different paths (for example, CrateDigger uses a local path while Kodi uses a network share), CrateDigger needs to translate between them.</p>
+<p><strong>Auto-detection (default):</strong> CrateDigger compares the filenames it just changed against Kodi's video index and infers the path prefix pair automatically. This works for most setups without any configuration.</p>
+<p><strong>Manual mapping:</strong> If auto-detection does not work for your setup, configure explicit path prefixes:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
@@ -1220,56 +1218,58 @@
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;kodi&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">        </span><span class="nt">&quot;password&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;your-password&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">        </span><span class="nt">&quot;path_mapping&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">            </span><span class="nt">&quot;/home/user/Music/Library/&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;smb://server/music/Library/&quot;</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">        </span><span class="p">}</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">            </span><span class="nt">&quot;local&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/home/user/Music/Library/&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">            </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;smb://server/music/Library/&quot;</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">}</span>
 </code></pre></div>
+<p><code>local</code> is the path CrateDigger uses on this machine. <code>kodi</code> is the path Kodi uses to reach the same location.</p>
 <h2 id="environment-variables">Environment variables</h2>
-<p>All Kodi settings can be overridden with environment variables:</p>
 <table>
 <thead>
 <tr>
 <th>Variable</th>
-<th>Description</th>
+<th>Overrides</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>KODI_HOST</code></td>
-<td>Kodi hostname or IP</td>
+<td><code>kodi.host</code></td>
 </tr>
 <tr>
 <td><code>KODI_PORT</code></td>
-<td>Kodi HTTP port</td>
+<td><code>kodi.port</code></td>
 </tr>
 <tr>
 <td><code>KODI_USERNAME</code></td>
-<td>Kodi web server username</td>
+<td><code>kodi.username</code></td>
 </tr>
 <tr>
 <td><code>KODI_PASSWORD</code></td>
-<td>Kodi web server password</td>
+<td><code>kodi.password</code></td>
 </tr>
 </tbody>
 </table>
 <h2 id="jellyfin-and-plex">Jellyfin and Plex</h2>
-<p>Jellyfin reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes; no Jellyfin-specific setup is needed. Point Jellyfin at the library and it picks up titles, artists, genres, album grouping, posters, thumbs, and fanart from the sidecar files.</p>
-<p>Plex can read the same files through agents that support musicvideo NFOs. Plex does not have an equivalent of the JSON-RPC sync hook, so run a manual library refresh in Plex after a CrateDigger run.</p>
-<h2 id="troubleshooting">Troubleshooting</h2>
-<p><strong>"Kodi sync failed: connection refused"</strong>
-: Verify that Kodi is running and the web server is enabled. Check the host and port in your config.</p>
-<p><strong>"Kodi sync failed: 401 Unauthorized"</strong>
-: The username or password is incorrect. Check your Kodi web server credentials.</p>
-<p><strong>Items not updating in Kodi</strong>
-: Make sure the library path in Kodi matches the output path used by CrateDigger. If paths differ, configure <code>path_mapping</code>.</p>
-<p><strong>Sync runs but nothing changes in Kodi</strong>
-: CrateDigger only refreshes items that had actual changes. If all artifacts were already up to date (skipped), no sync is triggered. Run with <code>--debug</code> to confirm the sync pathway fired; use <code>--regenerate</code> to force regeneration.</p>
+<p><strong>Jellyfin</strong> reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, album grouping, posters, thumbs, and fanart from the sidecar files automatically.</p>
+<p><strong>Plex</strong> can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run.</p>
+<h2 id="common-problems">Common problems</h2>
+<p><strong>"Kodi sync failed: connection refused"</strong></p>
+<p>Kodi is not running, or its web server is not enabled. Verify the JSON-RPC settings in Kodi and check that the host and port in your config match.</p>
+<p><strong>"Kodi sync failed: 401 Unauthorized"</strong></p>
+<p>The username or password is incorrect. Check your Kodi web server credentials against your config.</p>
+<p><strong>Items not updating in Kodi</strong></p>
+<p>The library path in Kodi may not match the path CrateDigger is using. If they differ (for example, one is a network share and one is a local mount), configure <code>path_mapping</code> as shown above.</p>
+<p><strong>Sync runs but nothing changes in Kodi</strong></p>
+<p>CrateDigger only refreshes items that had actual changes in that run. If all artifacts were already up to date, no sync request is sent. Use <code>--regenerate</code> to force regeneration of artifacts, which will trigger a sync.</p>
 <h2 id="see-also">See also</h2>
 <ul>
-<li><a href="../library-layout/">Library layout</a> — NFO contents, sidecar files, poster layouts, artwork sources. What Kodi/Jellyfin actually read.</li>
-<li><a href="../tag-reference/">Tag reference</a> — tags inside the MKV that Kodi and Jellyfin surface alongside NFO data.</li>
-<li><a href="../commands/enrich/">Enrich command</a> — the <code>--kodi-sync</code> flag and operations that trigger refresh.</li>
+<li><a href="../library-layout/">Library layout</a>: NFO contents, sidecar files, poster layouts, and artwork sources</li>
+<li><a href="../tag-reference/">Tag reference</a>: MKV tags that Kodi and Jellyfin surface alongside NFO data</li>
+<li><a href="../commands/enrich/">enrich command</a>: the <code>--kodi-sync</code> flag and operations that trigger a refresh</li>
+<li><a href="../configuration/">Configuration</a>: full Kodi config reference</li>
 </ul>
 
 
