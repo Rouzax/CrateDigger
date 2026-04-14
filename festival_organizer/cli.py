@@ -126,22 +126,21 @@ def organize(
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
-    move: Annotated[bool, typer.Option("--move", help="Move instead of copy (default: copy)")] = False,
-    rename_only: Annotated[bool, typer.Option("--rename-only", help="Rename in place only")] = False,
+    move: Annotated[bool, typer.Option("--move", help="When importing (source != output): move files instead of copying. Ignored for in-place re-organize — in-place always uses atomic rename.")] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run", help="Preview what would happen without making changes")] = False,
     enrich: Annotated[bool, typer.Option("--enrich", help="Run all enrichment after organizing (use enrich command for selective operations)")] = False,
     yes: Annotated[bool, typer.Option("--yes", "-y", help="Skip confirmation prompts")] = False,
     kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
 ) -> int:
-    """Move/copy files into library structure."""
+    """Organize files into the library layout.
+
+    Action is chosen automatically:
+      - in-place (source is the library or inside it): rename
+      - importing (source disjoint from output): copy, or move with --move
+      - --dry-run previews without changing anything
+    """
     if dry_run and move:
         print("Error: --dry-run and --move cannot be used together.", file=sys.stderr)
-        raise SystemExit(1)
-    if dry_run and rename_only:
-        print("Error: --dry-run and --rename-only cannot be used together.", file=sys.stderr)
-        raise SystemExit(1)
-    if move and rename_only:
-        print("Error: --move and --rename-only cannot be used together.", file=sys.stderr)
         raise SystemExit(1)
     return _dispatch("organize", locals())
 
@@ -241,6 +240,46 @@ def run(argv: list[str] | None = None) -> int:
         return 1
     finally:
         _cleanup_console()
+
+
+def resolve_action(
+    *, source: Path, output: Path, move: bool, dry_run: bool,
+) -> str:
+    """Decide the organize action from flags plus the source/output relationship.
+
+    Returns one of: "dry_run", "rename", "move", "copy".
+
+    The rule:
+      - --dry-run trumps everything; preview only.
+      - If source equals output (or is a descendant): the user is re-organizing
+        within a library. Use atomic rename (same filesystem guaranteed).
+      - If source is disjoint from output: the user is importing. --move clears
+        the inbox after transfer; otherwise copy (safe default, leaves source
+        intact for verification).
+    """
+    if dry_run:
+        return "dry_run"
+    if source_inside_or_equals_output(source, output):
+        return "rename"
+    return "move" if move else "copy"
+
+
+def source_inside_or_equals_output(source: Path, output: Path) -> bool:
+    """True when ``source`` is ``output`` or any descendant of it — the
+    "reorganize in-place" signal."""
+    try:
+        src = source.resolve()
+        out = output.resolve()
+    except OSError:
+        src = source
+        out = output
+    if src == out:
+        return True
+    try:
+        src.relative_to(out)
+        return True
+    except ValueError:
+        return False
 
 
 def _analyse_parallel(
@@ -343,6 +382,18 @@ def _run_command(args: types.SimpleNamespace) -> int:
     if output is None:
         output = library_root if library_root else root
 
+    # Resolve the organize action once from flags + source/output relationship.
+    # This is the single source of truth the header, operation construction,
+    # and post-pipeline cleanup all read.
+    if args.command == "organize":
+        action = resolve_action(
+            source=root, output=output,
+            move=getattr(args, "move", False),
+            dry_run=getattr(args, "dry_run", False),
+        )
+    else:
+        action = ""
+
     # Organize safety: confirm when source is inside existing library
     if args.command == "organize" and not getattr(args, "dry_run", False) and library_root and not explicit_output:
         try:
@@ -353,7 +404,8 @@ def _run_command(args: types.SimpleNamespace) -> int:
 
         if is_inside_library and not getattr(args, "yes", False):
             print(f"Re-organizing library at {library_root} "
-                  f"with layout '{config.default_layout}'",
+                  f"with layout '{config.default_layout}'. "
+                  f"Files will be renamed in place to match the layout.",
                   file=sys.stderr)
             if sys.stdin.isatty():
                 try:
@@ -403,15 +455,17 @@ def _run_command(args: types.SimpleNamespace) -> int:
         if getattr(args, "regenerate", False):
             header_rows["Regenerate"] = "yes"
     else:
-        action = "move" if getattr(args, "move", False) else \
-                 "rename" if getattr(args, "rename_only", False) else "copy"
         dry_run = getattr(args, "dry_run", False)
-        command_label = f"Organize (dry run, {action})" if dry_run else "Organize"
+        header_action = action if not dry_run else (
+            "move" if getattr(args, "move", False) else
+            "rename" if source_inside_or_equals_output(root, output) else "copy"
+        )
+        command_label = f"Organize (dry run, {header_action})" if dry_run else "Organize"
         header_rows = {
             "Source": str(root),
             "Output": str(output),
             "Layout": config.default_layout,
-            "Action": action,
+            "Action": header_action,
             "Files": str(len(files)),
         }
         if getattr(args, "enrich", False):
@@ -503,8 +557,6 @@ def _run_command(args: types.SimpleNamespace) -> int:
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
-            action = "move" if getattr(args, "move", False) else \
-                     "rename" if getattr(args, "rename_only", False) else "copy"
             ops.append(OrganizeOperation(target=target, action=action))
 
             if getattr(args, "enrich", False):
@@ -559,8 +611,6 @@ def _run_command(args: types.SimpleNamespace) -> int:
     #     folder.jpg/fanart.jpg to the new folder and then remove the empty
     #     source folder.
     if args.command == "organize":
-        action = "move" if getattr(args, "move", False) else \
-                 "rename" if getattr(args, "rename_only", False) else "copy"
         if action in ("move", "rename"):
             from festival_organizer.library import (
                 cleanup_empty_dirs, migrate_folder_artefacts,

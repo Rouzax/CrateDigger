@@ -6,7 +6,7 @@ import pytest
 
 from rich.console import Console
 
-from festival_organizer.cli import run, _analyse_parallel, _run_kodi_sync
+from festival_organizer.cli import run, _analyse_parallel, _run_kodi_sync, resolve_action
 from festival_organizer.config import Config
 from festival_organizer.operations import OperationResult
 from tests.conftest import TEST_CONFIG
@@ -55,16 +55,64 @@ def test_organize_dry_run_move_conflict(capsys):
     assert result != 0
 
 
-def test_organize_dry_run_rename_only_conflict(capsys):
-    """--dry-run and --rename-only cannot be used together."""
-    result = run(["organize", "/tmp", "--dry-run", "--rename-only"])
-    assert result != 0
+def test_organize_rename_only_flag_is_gone(capsys):
+    """--rename-only was removed: smart default now picks rename for in-place
+    runs automatically, so the flag became redundant and was dropped."""
+    result = run(["organize", "/tmp", "--rename-only"])
+    assert result != 0  # Typer rejects unknown flag
 
 
-def test_organize_move_rename_only_conflict(capsys):
-    """--move and --rename-only cannot be used together."""
-    result = run(["organize", "/tmp", "--move", "--rename-only"])
-    assert result != 0
+# ── resolve_action tests ──────────────────────────────────────────────
+
+
+def test_resolve_action_dry_run_wins(tmp_path):
+    """--dry-run overrides everything; action is 'dry_run'."""
+    assert resolve_action(
+        source=tmp_path, output=tmp_path / "lib",
+        move=False, dry_run=True,
+    ) == "dry_run"
+    assert resolve_action(
+        source=tmp_path, output=tmp_path / "lib",
+        move=True, dry_run=True,
+    ) == "dry_run"
+
+
+def test_resolve_action_in_place_is_rename(tmp_path):
+    """When source equals output, the default action is rename (atomic,
+    same-filesystem guaranteed). --move has no effect in this case."""
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    assert resolve_action(source=lib, output=lib, move=False, dry_run=False) == "rename"
+    assert resolve_action(source=lib, output=lib, move=True, dry_run=False) == "rename"
+
+
+def test_resolve_action_source_inside_output_is_rename(tmp_path):
+    """When source is a descendant of output (e.g. organizing a subfolder of
+    an existing library), the default is still rename — we're reorganizing
+    within the library, not importing across it."""
+    lib = tmp_path / "lib"
+    sub = lib / "Artist"
+    sub.mkdir(parents=True)
+    assert resolve_action(source=sub, output=lib, move=False, dry_run=False) == "rename"
+
+
+def test_resolve_action_import_default_is_copy(tmp_path):
+    """Disjoint source/output defaults to copy: the user is importing, and the
+    safe default is to leave the source untouched."""
+    inbox = tmp_path / "inbox"
+    lib = tmp_path / "lib"
+    inbox.mkdir()
+    lib.mkdir()
+    assert resolve_action(source=inbox, output=lib, move=False, dry_run=False) == "copy"
+
+
+def test_resolve_action_import_with_move(tmp_path):
+    """Disjoint source/output with --move: clear the inbox after copying."""
+    inbox = tmp_path / "inbox"
+    lib = tmp_path / "lib"
+    inbox.mkdir()
+    lib.mkdir()
+    assert resolve_action(source=inbox, output=lib, move=True, dry_run=False) == "move"
 
 
 def test_organize_inside_library_requires_confirmation(tmp_path, capsys):

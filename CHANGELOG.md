@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.12.0] - 2026-04-14
+
+### Changed
+
+- `organize` now picks the action automatically from the source/output relationship: atomic rename when you organize an existing library (source == output, or source inside output), copy when importing into a separate library, `--move` still opts into moving on import. The old copy-default when `source == output` silently duplicated files; the new behaviour re-organizes in place without duplication.
+- Confirmation prompt for re-organizing inside an existing library now clarifies that files will be renamed to match the layout.
+- In-place re-organize now follows `folder.jpg` / `fanart.jpg` across a layout or alias change, and cleans up emptied source folders — previously these were orphaned and only the `--move` path ran cleanup.
+
+### Removed
+
+- `--rename-only` flag: the new smart default already picks rename for in-place organize, and `--rename-only` added nothing beyond that intent. Scripts using `--rename-only` will get a Typer error; drop the flag.
+
+### Fixed
+
+- `organize` is now idempotent for identified files: the filename-only `set_title` / `title` fields are no longer parsed from the filename when any `CRATEDIGGER_1001TL_*` tag is present, so the rendered name converges after one pass and subsequent runs skip cleanly.
+
 ## [0.9.1] - 2026-04-05
 
 ### Added

@@ -61,7 +61,7 @@ FULL_PIPELINE = os.environ.get("CRATEDIGGER_TEST_FULL_PIPELINE") == "1"
 # (filename template and folder structure). The defaults here assume the
 # "YYYY - Artist - Event[...].mkv" filename template and an artist-per-folder
 # layout; fixture globs will need updating if CRATEDIGGER_TEST_CONFIG changes.
-#   pipeline_in_place.nfo_must_exist: bool      # after --rename-only, sidecar beside renamed mkv
+#   pipeline_in_place.nfo_must_exist: bool      # after in-place organize, sidecar beside renamed mkv
 #   pipeline_in_place.poster_must_exist: bool
 #   pipeline_in_place.fanart_must_exist: bool
 FIXTURES = {
@@ -382,11 +382,12 @@ def test_full_pipeline(fixture_key: str, tmp_path):
     ids=list(FIXTURES.keys()),
 )
 def test_full_pipeline_in_place(fixture_key: str, tmp_path):
-    """Run identify -> organize --rename-only -> enrich; assert in-place shape.
+    """Run identify -> organize (in-place) -> enrich; assert in-place shape.
 
-    Unlike test_full_pipeline, this covers the rename-in-place code path where
-    files are not moved to a separate library root. After organize, the mkv
-    should still live in the inbox dir but under its canonical name.
+    Unlike test_full_pipeline, this covers the in-place code path where files
+    are not moved to a separate library root. The smart-default action for
+    source == output is atomic rename, and the full layout still applies, so
+    under artist_flat the mkv lives at inbox/<artist>/<canonical>.mkv.
     """
     fixture = FIXTURES[fixture_key]
     assert MKV_DIR is not None and CONFIG is not None
@@ -407,9 +408,7 @@ def test_full_pipeline_in_place(fixture_key: str, tmp_path):
         check=True, timeout=600,
     )
     subprocess.run(
-        ["cratedigger", "organize", *cfg_arg,
-         "--rename-only", "--yes",
-         str(inbox)],
+        ["cratedigger", "organize", *cfg_arg, "--yes", str(inbox)],
         check=True, timeout=300,
     )
     subprocess.run(
@@ -417,13 +416,18 @@ def test_full_pipeline_in_place(fixture_key: str, tmp_path):
         check=True, timeout=900,
     )
 
-    # After --rename-only, exactly one .mkv should remain in the inbox dir
-    # (renamed to its canonical form, but not moved out).
-    mkvs = list(inbox.glob("*.mkv"))
+    # In-place organize (source == output) picks the rename action by the new
+    # smart default, and the full layout still applies. With artist_flat that
+    # means the mkv lives one level below the inbox, under {artist}/.
+    mkvs = list(inbox.rglob("*.mkv"))
     assert len(mkvs) == 1, (
-        f"expected exactly 1 mkv in inbox after --rename-only, got {len(mkvs)}: {mkvs}"
+        f"expected exactly 1 mkv under inbox after in-place organize, "
+        f"got {len(mkvs)}: {mkvs}"
     )
     folder = mkvs[0].parent
+    assert folder.parent == inbox, (
+        f"artist_flat should place the file at inbox/<artist>/; got {folder}"
+    )
 
     pip = fixture.get("expect", {}).get("pipeline_in_place", {})
     if pip.get("nfo_must_exist"):

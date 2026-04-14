@@ -16,8 +16,7 @@ The `<source>` argument is a file or folder to organize. When given a folder, al
 |--------|-------|-------------|
 | `--output <path>` | `-o` | Output folder for the library |
 | `--layout <name>` | | Folder layout (see below) |
-| `--move` | | Move files instead of copying (default: copy) |
-| `--rename-only` | | Rename files in place without moving them |
+| `--move` | | When importing: move files instead of copying (ignored for in-place re-organize, which always uses atomic rename) |
 | `--dry-run` | | Preview what would happen without making changes |
 | `--enrich` | | Run all enrichment operations after organizing |
 | `--yes` | `-y` | Skip confirmation prompts |
@@ -27,8 +26,22 @@ The `<source>` argument is a file or folder to organize. When given a folder, al
 | `--verbose` | `-v` | Show detailed progress and decisions |
 | `--debug` | | Show cache hits, retries, and internal mechanics |
 
-!!! warning "Mutually exclusive options"
-    The flags `--move`, `--rename-only`, and `--dry-run` cannot be combined. Only one action mode can be active at a time.
+## Action selection
+
+`organize` picks the file operation automatically from the source/output
+relationship:
+
+| You ran | Relationship | Action |
+|---------|--------------|--------|
+| `organize <inbox>` (no library marker, no `--output`) | source == output | **rename** (in place) |
+| `organize <library>` or `organize <library>/sub` | source ⊆ output | **rename** (in place) |
+| `organize <inbox> --output <library>` | disjoint | **copy** |
+| `organize <inbox> --output <library> --move` | disjoint | **move** |
+| any of the above with `--dry-run` | — | preview only |
+
+The in-place rename is atomic and only changes the filename / folder within
+the library; `--move` has no effect in this case (same-filesystem rename is
+already what you'd get). `--dry-run` and `--move` cannot be combined.
 
 ## Layouts
 
@@ -175,8 +188,8 @@ Organize and enrich in one pass:
 cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/ --enrich
 ```
 
-Rename files in place (no move or copy):
+Re-organize an existing library in place (atomic rename, no duplication):
 
 ```bash
-cratedigger organize ~/Music/Library/ --rename-only
+cratedigger organize ~/Music/Library/
 ```
