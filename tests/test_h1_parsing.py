@@ -112,6 +112,54 @@ def test_stage_from_source_link_the_cove():
     assert len(result["dj_artists"]) == 2
 
 
+def test_no_sources_strips_trailing_country_and_date():
+    """FISHER @ Bay Oval Park, New Zealand 2026-01-31 (no source links).
+
+    Without source-link delimiters, the trailing "Country YYYY-MM-DD" would
+    otherwise be absorbed into stage_text. Stage should be venue only, and
+    country should surface via the new fallback.
+    """
+    h1 = (
+        '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
+        ' @ Bay Oval Park, New Zealand 2026-01-31'
+    )
+    result = _parse_h1_structure(h1)
+    assert result["stage_text"] == "Bay Oval Park"
+    assert result["country"] == "New Zealand"
+    assert result["sources"] == []
+
+
+def test_no_sources_strips_trailing_date_only():
+    """No country present, just trailing date."""
+    h1 = (
+        '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
+        ' @ Bay Oval Park 2026-01-31'
+    )
+    result = _parse_h1_structure(h1)
+    assert result["stage_text"] == "Bay Oval Park"
+    assert result["country"] == ""
+
+
+def test_no_sources_unknown_country_kept_in_stage():
+    """Unknown country names stay in stage (defensive, avoids false positives)."""
+    h1 = (
+        '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
+        ' @ Some Venue, Unknownland 2026-01-31'
+    )
+    result = _parse_h1_structure(h1)
+    assert result["stage_text"] == "Some Venue, Unknownland"
+    assert result["country"] == ""
+
+
+def test_sources_present_country_field_empty():
+    """When source links are present, h1 country field stays empty (source
+    cache is the authoritative country provider in that path)."""
+    h1 = '<a href="/dj/afrojack/index.html" class="notranslate ">AFROJACK</a> @ kineticFIELD, <a href="/source/unkguv/edc-las-vegas/index.html">EDC Las Vegas</a>, United States 2025-05-17'
+    result = _parse_h1_structure(h1)
+    assert result["country"] == ""
+    assert result["stage_text"] == "kineticFIELD"
+
+
 def test_bare_promoter_source_is_not_stage():
     """Tiesto @ We Belong Here, Historic Virginia Key Park.
 

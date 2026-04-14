@@ -398,6 +398,8 @@ class TracklistSession:
             h1_info = _parse_h1_structure(h1_match.group(1))
             stage_text = h1_info["stage_text"]
             dj_artists = h1_info["dj_artists"]
+            if h1_info.get("country"):
+                country = h1_info["country"]
 
             if h1_info["sources"] and self._source_cache:
                 for sid, slug, display_name in h1_info["sources"]:
@@ -667,6 +669,20 @@ class TracklistSession:
             return False
 
 
+_H1_FALLBACK_COUNTRIES: frozenset[str] = frozenset({
+    "United States", "USA", "United Kingdom", "UK", "Netherlands", "Germany",
+    "Belgium", "Spain", "France", "Italy", "Portugal", "Switzerland", "Austria",
+    "Poland", "Czech Republic", "Hungary", "Romania", "Bulgaria", "Greece",
+    "Turkey", "Sweden", "Norway", "Denmark", "Finland", "Iceland", "Ireland",
+    "Croatia", "Serbia", "Slovenia", "Slovakia", "Ukraine", "Russia",
+    "Australia", "New Zealand", "Japan", "South Korea", "China", "India",
+    "Thailand", "Vietnam", "Indonesia", "Singapore", "Malaysia", "Philippines",
+    "Canada", "Mexico", "Brazil", "Argentina", "Chile", "Colombia", "Peru",
+    "Uruguay", "Ecuador", "Venezuela", "South Africa", "Egypt", "Morocco",
+    "United Arab Emirates", "UAE", "Israel", "Lebanon", "Saudi Arabia",
+})
+
+
 def _parse_h1_structure(h1_html: str) -> dict:
     """Parse the structured <h1> content from a tracklist page.
 
@@ -674,8 +690,11 @@ def _parse_h1_structure(h1_html: str) -> dict:
         dj_artists: list of (slug, display_name) tuples from /dj/ links before @
         stage_text: str, plain text between @ and first /source/ link
         sources: list of (id, slug, display_name) tuples from /source/ links
+        country: str, country fallback from trailing h1 text when no source
+            links are present (empty otherwise)
     """
-    result: dict = {"stage_text": "", "sources": [], "dj_artists": []}
+    result: dict = {"stage_text": "", "sources": [], "dj_artists": [],
+                    "country": ""}
 
     if "@" not in h1_html:
         return result
@@ -721,6 +740,21 @@ def _parse_h1_structure(h1_html: str) -> dict:
         }
         if first_segment and first_segment not in source_names:
             plain = first_segment
+
+    if not sources:
+        # No /source/ link to delimit the trailing "Country YYYY-MM-DD" suffix.
+        # Strip the ISO date, then if the last comma-segment is a known
+        # country, move it to result["country"] and drop from stage.
+        plain = re.sub(r"[,\s]*\d{4}-\d{2}-\d{2}\s*$", "", plain).strip()
+        if "," in plain:
+            head, _, tail = plain.rpartition(",")
+            tail = tail.strip()
+            if tail in _H1_FALLBACK_COUNTRIES:
+                result["country"] = tail
+                plain = head.strip().rstrip(",").strip()
+        elif plain in _H1_FALLBACK_COUNTRIES:
+            result["country"] = plain
+            plain = ""
 
     result["stage_text"] = _html_decode(plain)
 
