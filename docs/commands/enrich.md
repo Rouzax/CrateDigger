@@ -1,6 +1,22 @@
-# Enrich
+# enrich
 
-Add artwork, posters, NFO metadata files, and MKV tags to your library.
+Add artwork, posters, metadata files, and tags to your CrateDigger library.
+
+## What this is for
+
+After your files are organized into a library, `enrich` fills in everything that makes
+the library usable in a media player. It generates the cover art thumbnails, poster
+images, and NFO files that Kodi, Plex, and Jellyfin read to display your recordings
+correctly. It also embeds structured metadata tags into the MKV files themselves.
+
+You can run `enrich` as many times as you like. It skips files that already have
+up-to-date artifacts, so re-running it is fast and safe.
+
+## Before you start
+
+`enrich` requires a CrateDigger library. Run [`organize`](organize.md) first. The
+`.cratedigger/` folder that `organize` creates is what `enrich` uses to confirm it is
+working on the right folder. Without it, `enrich` exits with an error.
 
 ## Usage
 
@@ -8,86 +24,134 @@ Add artwork, posters, NFO metadata files, and MKV tags to your library.
 cratedigger enrich <library> [options]
 ```
 
-The `<library>` argument must point to an existing CrateDigger library (a folder containing a `.cratedigger` marker created by the organize command).
-
 ## Options
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--only <ops>` | | Comma-separated list of operations to run |
-| `--regenerate` | | Regenerate artifacts even if they already exist |
-| `--kodi-sync` | | Notify Kodi to refresh updated items |
-| `--config <path>` | | Path to config.json |
-| `--quiet` | `-q` | Suppress per-file progress |
-| `--verbose` | `-v` | Show detailed progress and decisions |
-| `--debug` | | Show cache hits, retries, and internal mechanics |
+| Option | Short | Default | Description |
+|--------|-------|---------|-------------|
+| `--only <ops>` | | (all) | Run only specific operations. Comma-separated. See below. |
+| `--regenerate` | | off | Re-create artifacts even if they already exist |
+| `--kodi-sync` | | off | Notify Kodi to refresh updated items after enriching |
+| `--config <path>` | | (none) | Path to a config.json file |
+| `--quiet` | `-q` | off | Suppress per-file progress output |
+| `--verbose` | `-v` | off | Show detailed progress and decisions |
+| `--debug` | | off | Show cache hits, retries, and internal mechanics |
 
-### The --only flag
+## What enrich does
 
-Use `--only` to run a subset of operations. Valid values:
-
-| Value | Operation |
-|-------|-----------|
-| `nfo` | Generate NFO metadata files |
-| `art` | Extract or set cover art |
-| `fanart` | Look up artist artwork on fanart.tv |
-| `posters` | Generate poster images |
-| `tags` | Write MKV tags |
-| `chapter_artist_mbids` | Resolve per-chapter MusicBrainz artist IDs |
-| `album_artist_mbids` | Resolve album-level (set) MusicBrainz artist IDs |
-
-Combine multiple values with commas:
+By default, `enrich` runs all operations in sequence. Use `--only` to run a subset:
 
 ```bash
-cratedigger enrich ~/Music/Library/ --only nfo,art
-cratedigger enrich ~/Music/Library/ --only posters,tags
+cratedigger enrich ~/Music/Library/ --only nfo,posters
 ```
 
-When `--only` is omitted, all operations run.
+### art: cover art
 
-## Operations
+Extracts the thumbnail image used by everything else.
 
-### Cover art (`art`)
+CrateDigger looks for artwork embedded inside the MKV file. If found, it saves it as
+`{name}-thumb.jpg` alongside the video. It also copies the same image as `{name}-fanart.jpg`,
+which is the filename Kodi expects for its fanart slot.
 
-Extracts or assigns cover art for each media file. The cover image is placed alongside the media file.
+If no embedded artwork exists and the `vision` extra is installed, CrateDigger samples a
+frame from the video instead. Without embedded art and without the `vision` extra, a color
+gradient image is generated as a fallback so the rest of the pipeline always has a thumbnail
+to work with. See [getting started](../getting-started.md#optional-video-frame-sampling) for
+how to install the `vision` extra.
 
-### Fanart (`fanart`)
+**Skipped if:** `{name}-thumb.jpg` already exists (unless `--regenerate`).
 
-Looks up artist artwork on [fanart.tv](https://fanart.tv) using the MusicBrainz ID. Downloads artist backgrounds and thumbnails for use in poster generation and Kodi display.
+### fanart: artist artwork
 
-Requires `fanart.enabled: true` in your config (enabled by default). A built-in project API key is included. You can optionally add your own personal API key for faster cache updates.
+Downloads high-quality artist images from [fanart.tv](https://fanart.tv) (a community
+site with artist logos, backgrounds, and thumbnails). These are saved to a shared cache
+folder (`~/.cratedigger/artists/{artist}/`) and used as backgrounds in poster generation.
 
-### Posters (`posters`)
+To find an artist's images on fanart.tv, CrateDigger first resolves their MusicBrainz ID.
+It uses the same lookup chain as the MBID operations: your override file first, then the
+auto-cache, then a live MusicBrainz search. This lookup is used only for image retrieval
+and is not written to your MKV files. For that, see `chapter_artist_mbids` and
+`album_artist_mbids` below. Artists whose name cannot be resolved to a MusicBrainz ID
+are skipped.
 
-Generates poster images for each media file and album-level poster images (`folder.jpg`) for each folder. Poster backgrounds are selected based on priority chains defined in `poster_settings`:
+Requires `fanart.enabled: true` in your config (the default). A built-in API key is
+included; you can optionally add your own personal key for faster lookups.
 
-- **Artist backgrounds**: dj_artwork (from 1001Tracklists), fanart_tv, gradient fallback
-- **Festival backgrounds**: curated_logo, gradient fallback
-- **Year backgrounds**: gradient fallback
+**Skipped if:** artwork is already cached and not expired. Cache lifetimes use the TTL
+you configure (default 90 days) with a ±20% random spread per entry, so individual
+artists may refresh slightly earlier or later than the exact configured value. This
+prevents all cached items from expiring at the same time on large libraries.
 
-Album posters are generated per folder and use a festival logo if available. Use the [audit-logos](audit-logos.md) command to check logo coverage.
+### posters: poster images
 
-### NFO files (`nfo`)
+Generates two types of poster image for each recording:
 
-Creates Kodi-compatible NFO metadata files alongside each media file. NFO files include title, artist, year, genre, and other metadata. Genre defaults are configurable via `nfo_settings`.
+- **`{name}-poster.jpg`**: a per-video poster showing artist name, festival, date, and
+  stage, overlaid on a background image
+- **`folder.jpg`**: an album-level poster for the folder, used by media players to
+  represent the whole event
 
-### MKV tags (`tags`)
+The background image used for each poster depends on the folder type:
 
-Writes structured MKV tags into each file, including artist, title, date, and other metadata fields extracted during analysis and identification.
+| Folder type | Background sources tried in order |
+|-------------|----------------------------------|
+| Artist folder | DJ artwork from 1001Tracklists, then fanart.tv, then gradient |
+| Festival folder | Curated festival logo, then gradient |
+| Year folder | Gradient only |
 
-### Chapter artist MBIDs (`chapter_artist_mbids`)
+If no background image is available, a color gradient is generated from the available
+metadata. Curated festival logos can be added to improve festival folder posters. See
+[audit-logos](audit-logos.md) to check which festivals have logos.
 
-Reads `PERFORMER_NAMES` on each chapter (written by [identify](identify.md)), resolves every unique artist name to a MusicBrainz artist ID, and writes `MUSICBRAINZ_ARTISTIDS` back onto the chapter. The value is pipe-joined and aligned slot-for-slot with `PERFORMER_NAMES` and `PERFORMER_SLUGS`; unresolved names leave an empty slot (`""`) so downstream consumers can zip the three tags by index to produce multi-valued FLAC artist tags.
+Both the per-video poster and the folder poster fall back to a color gradient if no
+background image is available, so every recording and every folder gets a poster regardless
+of whether a thumbnail exists. Use `--regenerate` to rebuild existing posters.
 
-**Lookup precedence** for each unique artist name:
+### nfo: metadata files
 
-1. **User override file**: `~/.cratedigger/artist_mbids.json` (case-insensitive, never expires).
-2. **Auto cache**: `~/.cratedigger/mbid_cache.json` (TTL-bound, populated by MusicBrainz searches).
-3. **MusicBrainz search**: fresh HTTP lookup, result written to the auto cache.
+Writes an NFO file alongside each video. An NFO file is a small XML file that media
+players like Kodi, Plex, and Jellyfin read to display the recording's title, artist,
+genre, year, and artwork references. CrateDigger follows the Kodi musicvideo NFO format.
 
-The override file is user-curated; CrateDigger never writes to it, and overrides are never promoted into the auto cache.
+The NFO includes:
 
-**Override file format** (`~/.cratedigger/artist_mbids.json`):
+- Title, artist(s), album, year, runtime
+- Genre (from 1001Tracklists if identified; otherwise from `nfo_settings` in your config)
+- Stage or venue
+- References to the thumbnail, poster, and fanart images
+
+**Skipped if:** `{name}.nfo` already exists (unless `--regenerate`).
+
+### tags: MKV metadata tags
+
+Writes structured metadata tags into each MKV file at the file level. These are the
+tags that general media players and tag editors read, covering artist, title, date, and
+description. CrateDigger sets `SYNOPSIS` to a generated description and explicitly
+clears the `DESCRIPTION` tag, which yt-dlp often fills with the full video description
+from YouTube.
+
+**Only applies to MKV and WEBM files.** Other formats are skipped.
+
+### chapter_artist_mbids: per-track artist IDs
+
+Resolves each performer named in the chapter tags to a MusicBrainz ID (a permanent
+unique identifier from [musicbrainz.org](https://musicbrainz.org)), then writes those
+IDs back into the chapter tags.
+
+This only runs on files that were processed by [`identify`](identify.md), since that
+is what embeds the per-chapter performer names.
+
+**Lookup order for each artist name:**
+
+1. Your override file (`~/.cratedigger/artist_mbids.json`): manually curated, never
+   expires, never auto-written by CrateDigger
+2. Auto cache (`~/.cratedigger/mbid_cache.json`): populated automatically by MusicBrainz
+   searches, expires after 90 days by default
+3. Live MusicBrainz search: result is saved to the auto cache
+
+If an artist cannot be resolved, a WARNING is logged and an empty slot is left in the
+tag so the alignment with performer names is preserved.
+
+**If artists are not resolving correctly**, add them to the override file manually:
 
 ```json
 {
@@ -96,54 +160,116 @@ The override file is user-curated; CrateDigger never writes to it, and overrides
 }
 ```
 
-Keys match artist names case-insensitively.
-
-**Unresolved names** log a WARNING, once per unique name per run:
-
-```
-No MBID resolved for artist: <name> (add to ~/.cratedigger/artist_mbids.json)
-```
-
-Fix loop: run `enrich --only chapter_artist_mbids`, read the WARNING lines, look up the correct MBIDs on [musicbrainz.org](https://musicbrainz.org/), add them to the override file, then rerun:
+Then rerun to apply:
 
 ```bash
-cratedigger enrich ~/Music/Library/ --only chapter_artist_mbids --regenerate
+cratedigger enrich ~/Music/Library/ --only chapter_artist_mbids
 ```
 
-`--regenerate` re-runs the MBID path even on chapters that already have a `MUSICBRAINZ_ARTISTIDS` tag, which is how newly added overrides reach files that were enriched earlier.
+No `--regenerate` needed. CrateDigger compares the newly resolved IDs against what is
+already stored and writes the update automatically when they differ.
 
-### Album-artist MBIDs (`album_artist_mbids`)
+### album_artist_mbids: set-level artist IDs
 
-Reads `CRATEDIGGER_1001TL_ARTISTS` from the file (written by [identify](identify.md)), resolves each pipe-separated artist name to a MusicBrainz artist ID, and writes `CRATEDIGGER_ALBUMARTIST_MBIDS` back onto the file at collection scope (TTV=70). The value is pipe-joined and positionally aligned with `CRATEDIGGER_1001TL_ARTISTS` and `CRATEDIGGER_ALBUMARTIST_SLUGS`; unresolved names leave an empty slot.
+The same lookup process as `chapter_artist_mbids`, but applied at the file level rather
+than per chapter. Resolves the full list of artists for the set and writes their
+MusicBrainz IDs as a set-level tag.
 
-This mirrors the per-chapter pattern at the album (file) level so downstream taggers (TrackSplit -> Lyrion/Jellyfin) can produce a multi-value album-artist credit with MusicBrainz IDs aligned to individual DJ names.
+The same override file (`~/.cratedigger/artist_mbids.json`) is used for both operations.
+An entry in that file fixes the ID everywhere, per-chapter and album-level alike.
 
-The override file, cache, and fix loop are shared with `chapter_artist_mbids` above: a single entry in `~/.cratedigger/artist_mbids.json` pins the MBID for both per-chapter and album-level tags. MBIDs are properties of the artist, not of the tag context.
+## What files change
 
-See [tag reference](../tag-reference.md) for the full tag taxonomy and alignment invariants.
+For each video, `enrich` may create or update:
 
-## Examples
+| File | Created by |
+|------|-----------|
+| `{name}-thumb.jpg` | `art` |
+| `{name}-fanart.jpg` | `art` (copy of thumb) |
+| `{name}-poster.jpg` | `posters` |
+| `{name}.nfo` | `nfo` |
+| `folder.jpg` | `posters` (one per folder; generated even without a thumbnail, using gradient fallback) |
 
-Enrich an entire library with all operations:
+Artist artwork is cached to `~/.cratedigger/artists/{artist}/` and reused across runs.
+MKV tag changes (`tags`, `chapter_artist_mbids`, `album_artist_mbids`) are written
+directly into the MKV file's metadata section. The video and audio streams are not touched.
+
+## Common examples
+
+**Enrich an entire library:**
 
 ```bash
 cratedigger enrich ~/Music/Library/
 ```
 
-Only generate NFO files:
-
-```bash
-cratedigger enrich ~/Music/Library/ --only nfo
-```
-
-Regenerate posters even if they already exist:
+**Regenerate all posters (for example, after adding a festival logo):**
 
 ```bash
 cratedigger enrich ~/Music/Library/ --only posters --regenerate
 ```
 
-Enrich and sync with Kodi:
+**Update only NFO files:**
+
+```bash
+cratedigger enrich ~/Music/Library/ --only nfo --regenerate
+```
+
+**Fix unresolved MusicBrainz IDs after updating the override file:**
+
+```bash
+cratedigger enrich ~/Music/Library/ --only chapter_artist_mbids,album_artist_mbids
+```
+
+**Enrich and notify Kodi when done:**
 
 ```bash
 cratedigger enrich ~/Music/Library/ --kodi-sync
 ```
+
+## Common problems
+
+**"not a CrateDigger library"**
+
+The folder you pointed `enrich` at has no `.cratedigger/` marker. Run
+[`organize`](organize.md) on your library first to create it.
+
+**Posters are not generated for some files**
+
+The poster operation requires `{name}-thumb.jpg` to exist first. Run `enrich` without
+`--only` (so `art` runs before `posters`), or run `--only art` first, then `--only posters`.
+
+**Artist artwork from fanart.tv is missing**
+
+The artist may not have a MusicBrainz ID resolved yet. Run `--only chapter_artist_mbids`
+first, then rerun the full enrich. See the [FAQ](../faq.md) for more fanart troubleshooting.
+
+## Re-running enrich after identify
+
+If you re-run [`identify`](identify.md) on your library to pick up updated tracklist data
+from the 1001Tracklists community, run `enrich` again afterward to apply the new metadata
+to your NFO files, MKV tags, and posters:
+
+```bash
+cratedigger enrich ~/Music/Library/ --regenerate
+```
+
+Updated artist names, genres, stage information, and other tracklist fields are picked up
+from the newly embedded tags.
+
+## Optional: curated festival logos
+
+Festival folder posters use a curated logo if one is available, and fall back to a color
+gradient if not. Adding a logo for a festival upgrades its folder poster from a plain
+gradient to a logo-based design. You can add logos at any time and then re-run to rebuild:
+
+```bash
+cratedigger enrich ~/Music/Library/ --only posters --regenerate
+```
+
+Use [`audit-logos`](audit-logos.md) to see which festivals in your library have logos
+and which are missing them.
+
+## Related
+
+- [Kodi integration](../kodi-integration.md): automatic Kodi refresh after enrich
+- [Tag reference](../tag-reference.md): full list of tags written by enrich and identify

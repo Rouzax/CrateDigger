@@ -1,54 +1,65 @@
 # CrateDigger
 
-Festival set and concert library manager. CrateDigger organizes, enriches, and tags your media files with artwork, metadata, and chapter markers.
+Festival set and concert library manager. CrateDigger organizes, enriches, and tags your DJ set and concert recordings into a clean, media-player-ready library.
 
-## What it does
+## What you get
 
-CrateDigger takes a collection of festival sets and concert recordings and turns them into a well-organized, richly tagged media library. It handles everything from matching tracklists and embedding chapter markers to generating poster artwork and syncing with Kodi.
+After running CrateDigger on a folder of recordings:
+
+- Consistent folder structure and filenames, organized by artist, festival, year, or any combination
+- Cover art and generated poster images for every recording and every folder
+- NFO files that Kodi, Jellyfin, and Plex read to display title, artist, genre, and artwork
+- Structured MKV metadata tags for any tag-aware tool
+- Chapter markers (one per track) for navigation inside DJ sets, sourced from [1001Tracklists](https://www.1001tracklists.com/)
+- MusicBrainz artist IDs, aligned with track-level performer tags
 
 ## Three-command workflow
 
-CrateDigger follows a simple pipeline:
-
-1. **[Identify](commands/identify.md)**: Match recordings against 1001Tracklists, embed chapter markers and metadata tags into MKV files.
-2. **[Organize](commands/organize.md)**: Move or copy files into a structured library with smart folder layouts and consistent filenames.
-3. **[Enrich](commands/enrich.md)**: Add cover art, fanart, poster images, NFO files, and MKV tags to your library.
-
-You can run each step independently, or chain them together. The organize command can optionally run enrichment in a single pass with `--enrich`.
-
-!!! note "1001Tracklists account (optional)"
-    The `identify` command needs a free [1001Tracklists](https://www.1001tracklists.com/) account to fetch tracklists. Without one, skip to `organize` and `enrich` — you'll still get a tagged, organized library built from filename parsing and embedded metadata. See [what you get with vs. without an account](tracklists.md#do-i-need-an-account).
-
-## Quick start
-
 ```bash
-# Install from GitHub
-pip install git+https://github.com/Rouzax/CrateDigger.git
-
-# Identify tracklists and embed chapters
+# Match recordings against 1001Tracklists, embed chapter markers
 cratedigger identify ~/Downloads/sets/
 
-# Organize into a library
+# Organize into a library with consistent folder and file names
 cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/
 
-# Enrich with artwork and metadata
+# Add artwork, posters, NFO files, and metadata tags
 cratedigger enrich ~/Music/Library/
 ```
 
-See the [Getting Started](getting-started.md) guide for detailed setup instructions.
+Or organize and enrich in one pass:
 
-## Additional tools
+```bash
+cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/ --enrich
+```
 
-- **[Audit Logos](commands/audit-logos.md)**: Check which festivals in your library have curated logo artwork available for poster generation.
+!!! note "1001Tracklists account (optional)"
+    `identify` needs a free [1001Tracklists](https://www.1001tracklists.com/) account. Without one, skip straight to `organize` and `enrich`. You still get an organized library, artwork, posters, and NFO files built from filename parsing and embedded metadata. See [what you get with vs. without an account](tracklists.md#do-i-need-an-account).
+
+## Install
+
+```bash
+pip install git+https://github.com/Rouzax/CrateDigger.git
+```
+
+See [Getting Started](getting-started.md) for required tools, config setup, and the recommended yt-dlp download settings.
 
 ## Related projects
 
-- **[TrackSplit](https://rouzax.github.io/TrackSplit/)**: A sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. TrackSplit reads CrateDigger's festival and artist config, so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries. CrateDigger emits per-chapter PERFORMER and GENRE tags (Matroska `TargetTypeValue=30`) that TrackSplit picks up via `ffprobe` to write accurate per-track FLAC metadata. See the [TrackSplit documentation](https://rouzax.github.io/TrackSplit/docs/) or [source on GitHub](https://github.com/Rouzax/TrackSplit).
+**[TrackSplit](https://rouzax.github.io/TrackSplit/)** is a sibling CLI that extracts chapter-based audio from your CrateDigger library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. TrackSplit reads CrateDigger's festival and artist config so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries. See the [TrackSplit documentation](https://rouzax.github.io/TrackSplit/docs/) or [source on GitHub](https://github.com/Rouzax/TrackSplit).
 
-## Learn more
+## Documentation
 
-- [Configuration](configuration.md): Full reference for all config options
-- [Festival Database](festivals.md): How festivals are defined, matched, and customized
-- [1001Tracklists Integration](tracklists.md): Account setup, searching, and chapter embedding
-- [Kodi Integration](kodi-integration.md): Automatic library sync with Kodi
-- [FAQ](faq.md): Common questions and troubleshooting
+| | |
+|---|---|
+| [Getting Started](getting-started.md) | Installation, required tools, first run |
+| [identify](commands/identify.md) | Match tracklists, embed chapters |
+| [organize](commands/organize.md) | Library layouts, move vs. copy, templates |
+| [enrich](commands/enrich.md) | Artwork, posters, NFO, MBIDs |
+| [audit-logos](commands/audit-logos.md) | Check festival logo coverage |
+| [Configuration](configuration.md) | All config options |
+| [Festivals](festivals.md) | Festival names, aliases, editions |
+| [1001Tracklists](tracklists.md) | Account setup, caching, what you get |
+| [Library layout](library-layout.md) | Every file CrateDigger writes and why |
+| [Tag reference](tag-reference.md) | Every MKV tag CrateDigger writes |
+| [Kodi Integration](kodi-integration.md) | JSON-RPC sync, path mapping |
+| [FAQ](faq.md) | Common problems and troubleshooting |

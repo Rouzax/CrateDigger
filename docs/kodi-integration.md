@@ -1,14 +1,14 @@
 # Kodi Integration
 
-CrateDigger writes media-server-compatible metadata: Kodi-style NFO files alongside each MKV plus sidecar artwork. Kodi and Jellyfin both read the same musicvideo NFO spec and the same artwork sidecar conventions, so everything on this page applies to both. Plex can read these files via agents that support musicvideo NFOs.
+CrateDigger writes Kodi-compatible NFO files and sidecar artwork alongside each MKV. Kodi and Jellyfin both read the same musicvideo NFO format and the same artwork sidecar conventions, so most of this page applies to both. Plex can read these files via agents that support musicvideo NFOs.
 
-This page covers the Kodi-specific parts: enabling the JSON-RPC sync that refreshes the Kodi library after a CrateDigger run, path mapping when CrateDigger and Kodi access the library through different paths, and environment overrides. For the NFO contents, poster/thumb/fanart files, and their sources, see [library layout](library-layout.md).
+This page covers the Kodi-specific parts: enabling the JSON-RPC sync that refreshes your Kodi library after a CrateDigger run, path mapping when CrateDigger and Kodi access the library through different paths, and troubleshooting. For the NFO contents, artwork files, and poster layouts, see [library layout](library-layout.md).
 
 ## Enabling Kodi sync
 
-### In config
+### Always on (config)
 
-Set `enabled` to `true` in the `kodi` section of your config:
+Set `enabled` to `true` in the `kodi` section of `~/.cratedigger/config.json`:
 
 ```json
 {
@@ -22,49 +22,45 @@ Set `enabled` to `true` in the `kodi` section of your config:
 }
 ```
 
-When enabled, CrateDigger syncs with Kodi automatically after every organize or enrich run.
+When enabled, CrateDigger syncs with Kodi at the end of every `organize` or `enrich` run.
 
-### Per-command
+### Per run (flag)
 
-Use the `--kodi-sync` flag to trigger sync for a single run, without enabling it globally:
+Use `--kodi-sync` to sync for a single run without enabling it globally:
 
 ```bash
 cratedigger enrich ~/Music/Library/ --kodi-sync
 cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/ --kodi-sync
 ```
 
-The enrich/organize header box shows a `Kodi sync: yes (flag)` or `yes (config)` row when either trigger is active, so you can tell at a glance whether the sync will run.
-
 ## Setting up Kodi JSON-RPC
 
-CrateDigger communicates with Kodi via its JSON-RPC HTTP interface. You need to enable the web server in Kodi:
+CrateDigger communicates with Kodi via its JSON-RPC HTTP interface. Enable it in Kodi:
 
 1. Open Kodi and go to **Settings** > **Services** > **Control**.
 2. Enable **Allow remote control via HTTP**.
-3. Set a **Port** (default: 8080).
+3. Set the **Port** (default: 8080).
 4. Set a **Username** and **Password**.
-5. Optionally enable **Allow remote control from applications on other systems** if CrateDigger runs on a different machine.
+5. If CrateDigger runs on a different machine, also enable **Allow remote control from applications on other systems**.
 
-## How it works
+## How the sync works
 
-After the organize or enrich pipeline completes, CrateDigger checks which files had relevant changes (NFO updates, artwork changes, poster generation, fanart downloads). It then tells Kodi to refresh only those specific items rather than triggering a full library scan.
+After the `organize` or `enrich` pipeline completes, CrateDigger checks which files had relevant changes and tells Kodi to refresh only those specific items. Changes that trigger a refresh:
 
-Relevant operations that trigger a Kodi refresh:
+- NFO file created or updated
+- Cover art (`{stem}-thumb.jpg`, `{stem}-fanart.jpg`) changed
+- Per-video poster (`{stem}-poster.jpg`) generated
+- Album poster (`folder.jpg`) changed; when this happens, every video in that folder is refreshed so Kodi picks up the new folder artwork
 
-- NFO file creation or update (the `nfo` op)
-- Cover art changes (the `art` op)
-- Per-video poster generation (the `posters` op)
-- Album poster generation — when `folder.jpg` changes, every video in that folder is refreshed so Kodi picks up the new folder artwork
-
-Under `--debug`, CrateDigger logs `Kodi sync: no kodi-affecting changes` when a run produces nothing to refresh (for example, an idempotent re-enrich on a fully-enriched library) so you can confirm the sync pathway ran.
-
-See [library layout](library-layout.md) for what each of those files contains and where the data comes from.
+If nothing changed (for example, a re-enrich run where all artifacts were already up to date), no sync request is sent. Run with `--debug` to confirm whether the sync pathway fired.
 
 ## Path mapping
 
-When CrateDigger and Kodi access the same library through different paths (e.g., CrateDigger uses a local path while Kodi uses a network share), path mapping translates between them.
+If CrateDigger and Kodi access the same library through different paths (for example, CrateDigger uses a local path while Kodi uses a network share), CrateDigger needs to translate between them.
 
-CrateDigger attempts to auto-detect path mappings from the Kodi library. If auto-detection does not work for your setup, you can configure explicit mappings in the `kodi` config section:
+**Auto-detection (default):** CrateDigger compares the filenames it just changed against Kodi's video index and infers the path prefix pair automatically. This works for most setups without any configuration.
+
+**Manual mapping:** If auto-detection does not work for your setup, configure explicit path prefixes:
 
 ```json
 {
@@ -75,45 +71,51 @@ CrateDigger attempts to auto-detect path mappings from the Kodi library. If auto
         "username": "kodi",
         "password": "your-password",
         "path_mapping": {
-            "/home/user/Music/Library/": "smb://server/music/Library/"
+            "local": "/home/user/Music/Library/",
+            "kodi": "smb://server/music/Library/"
         }
     }
 }
 ```
 
+`local` is the path CrateDigger uses on this machine. `kodi` is the path Kodi uses to reach the same location.
+
 ## Environment variables
 
-All Kodi settings can be overridden with environment variables:
-
-| Variable | Description |
-|----------|-------------|
-| `KODI_HOST` | Kodi hostname or IP |
-| `KODI_PORT` | Kodi HTTP port |
-| `KODI_USERNAME` | Kodi web server username |
-| `KODI_PASSWORD` | Kodi web server password |
+| Variable | Overrides |
+|----------|----------|
+| `KODI_HOST` | `kodi.host` |
+| `KODI_PORT` | `kodi.port` |
+| `KODI_USERNAME` | `kodi.username` |
+| `KODI_PASSWORD` | `kodi.password` |
 
 ## Jellyfin and Plex
 
-Jellyfin reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes; no Jellyfin-specific setup is needed. Point Jellyfin at the library and it picks up titles, artists, genres, album grouping, posters, thumbs, and fanart from the sidecar files.
+**Jellyfin** reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, album grouping, posters, thumbs, and fanart from the sidecar files automatically.
 
-Plex can read the same files through agents that support musicvideo NFOs. Plex does not have an equivalent of the JSON-RPC sync hook, so run a manual library refresh in Plex after a CrateDigger run.
+**Plex** can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run.
 
-## Troubleshooting
+## Common problems
 
 **"Kodi sync failed: connection refused"**
-: Verify that Kodi is running and the web server is enabled. Check the host and port in your config.
+
+Kodi is not running, or its web server is not enabled. Verify the JSON-RPC settings in Kodi and check that the host and port in your config match.
 
 **"Kodi sync failed: 401 Unauthorized"**
-: The username or password is incorrect. Check your Kodi web server credentials.
+
+The username or password is incorrect. Check your Kodi web server credentials against your config.
 
 **Items not updating in Kodi**
-: Make sure the library path in Kodi matches the output path used by CrateDigger. If paths differ, configure `path_mapping`.
+
+The library path in Kodi may not match the path CrateDigger is using. If they differ (for example, one is a network share and one is a local mount), configure `path_mapping` as shown above.
 
 **Sync runs but nothing changes in Kodi**
-: CrateDigger only refreshes items that had actual changes. If all artifacts were already up to date (skipped), no sync is triggered. Run with `--debug` to confirm the sync pathway fired; use `--regenerate` to force regeneration.
+
+CrateDigger only refreshes items that had actual changes in that run. If all artifacts were already up to date, no sync request is sent. Use `--regenerate` to force regeneration of artifacts, which will trigger a sync.
 
 ## See also
 
-- [Library layout](library-layout.md) — NFO contents, sidecar files, poster layouts, artwork sources. What Kodi/Jellyfin actually read.
-- [Tag reference](tag-reference.md) — tags inside the MKV that Kodi and Jellyfin surface alongside NFO data.
-- [Enrich command](commands/enrich.md) — the `--kodi-sync` flag and operations that trigger refresh.
+- [Library layout](library-layout.md): NFO contents, sidecar files, poster layouts, and artwork sources
+- [Tag reference](tag-reference.md): MKV tags that Kodi and Jellyfin surface alongside NFO data
+- [enrich command](commands/enrich.md): the `--kodi-sync` flag and operations that trigger a refresh
+- [Configuration](configuration.md): full Kodi config reference

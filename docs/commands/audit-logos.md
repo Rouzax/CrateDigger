@@ -1,6 +1,16 @@
-# Audit Logos
+# audit-logos
 
-Check curated festival logo coverage for your library.
+Check which festivals in your library have curated logo files for poster generation.
+
+## What this is for
+
+When `enrich` generates a `folder.jpg` poster for a festival folder, it uses a curated logo if one is available. Without a logo, the poster falls back to a color gradient. `audit-logos` shows you exactly which festivals in your library have logos and which do not, and tells you where to place a logo file for any that are missing.
+
+Run this any time you want to improve poster quality for a specific festival, or after adding a new logo to verify it was picked up correctly.
+
+## Before you start
+
+`audit-logos` requires a CrateDigger library. Run [`organize`](organize.md) first. Without the `.cratedigger/` marker folder that `organize` creates, `audit-logos` exits with an error.
 
 ## Usage
 
@@ -8,26 +18,40 @@ Check curated festival logo coverage for your library.
 cratedigger audit-logos <library> [options]
 ```
 
-The `<library>` argument must point to an existing CrateDigger library.
-
 ## Options
 
 | Option | Short | Description |
 |--------|-------|-------------|
-| `--config <path>` | | Path to config.json |
-| `--verbose` | `-v` | Show detailed progress and decisions |
-| `--debug` | | Show cache hits, retries, and internal mechanics |
+| `--config <path>` | | Path to a config.json file |
+| `--verbose` | `-v` | Show detailed progress |
+| `--debug` | | Show internal mechanics |
 
-## What it does
+## What it reports
 
-The audit-logos command scans your library for all festival names, then checks whether a curated logo file exists for each one. It reports:
+`audit-logos` scans your library for all recognized festival names, then checks whether a logo file exists for each one.
 
-- **Festivals with logos** and the path to each logo file.
-- **Festivals missing logos** with suggested paths for placing them.
-- **Unmatched logo folders** that exist but do not correspond to any festival in your library.
-- **Unsupported formats** (SVG, GIF, BMP, TIFF are not supported).
+**Festivals with logos:** the festival name and the path to the logo file being used.
 
-Curated logos drive the festival-gradient album poster layout. When a logo is missing, album posters for that festival fall back to fanart-derived or pure-gradient layouts. The [library layout page](../library-layout.md#curated-festival-logos) documents the logo file convention, the library-local vs user-level precedence, and which supported image formats land where.
+**Festivals missing logos:** the festival name and two suggested paths where you can place a logo file (library-local or user-level).
+
+**Unmatched logo folders:** folders that exist inside your logo directories but do not match any festival currently in your library. Usually these are leftovers from files you removed.
+
+**Unsupported formats:** any logo files using a format CrateDigger cannot read (SVG, GIF, BMP, TIFF). Rename or convert them to a supported format.
+
+## Where to place logo files
+
+Logo files go in a folder named after the festival, inside one of two locations:
+
+| Location | Path | Scope |
+|----------|------|-------|
+| User-level | `~/.cratedigger/festivals/{Festival Name}/logo.{ext}` | All libraries |
+| Library-local | `{library}/.cratedigger/festivals/{Festival Name}/logo.{ext}` | This library only |
+
+The library-local location takes precedence over the user-level location if both exist.
+
+The festival folder name must match the canonical display name CrateDigger uses for that festival (the same name shown in the audit output).
+
+**Supported formats:** JPG, PNG, WebP.
 
 ## Example
 
@@ -53,7 +77,13 @@ Missing curated logo (4):
   ...
 ```
 
-## See also
+After adding a logo for a missing festival, regenerate its poster:
 
-- [Library layout: curated festival logos](../library-layout.md#curated-festival-logos) — file convention, location precedence, supported formats.
-- [Library layout: album poster layouts](../library-layout.md#album-poster-folderjpg) — how logos feed the poster pipeline and which layout fires when a logo is or isn't available.
+```bash
+cratedigger enrich ~/Music/Library/ --only posters --regenerate
+```
+
+## Related
+
+- [enrich: posters](enrich.md#posters-poster-images): how logos feed into poster generation
+- [Library layout: curated festival logos](../library-layout.md#curated-festival-logos): logo file convention and location precedence
