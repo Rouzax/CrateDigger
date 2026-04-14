@@ -16,6 +16,9 @@ CrateDigger follows a simple pipeline:
 
 You can run each step independently, or chain them together. The organize command can optionally run enrichment in a single pass with `--enrich`.
 
+!!! note "1001Tracklists account (optional)"
+    The `identify` command needs a free [1001Tracklists](https://www.1001tracklists.com/) account to fetch tracklists. Without one, skip to `organize` and `enrich` — you'll still get a tagged, organized library built from filename parsing and embedded metadata. See [what you get with vs. without an account](tracklists.md#do-i-need-an-account).
+
 ## Quick start
 
 ```bash

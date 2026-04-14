@@ -71,9 +71,9 @@ cp config.example.json ~/.cratedigger/config.json
 
 Edit `~/.cratedigger/config.json` to add your credentials and preferences. At minimum, you may want to:
 
-- Set your 1001Tracklists email and password (for the `identify` command)
-- Set your fanart.tv personal API key (for artist artwork lookups)
-- Choose a default layout
+- **1001Tracklists credentials** (required for `identify`, optional overall). Set email and password to fetch tracklists. Without them, the `identify` step is skipped; the rest of the pipeline still works from filename parsing and embedded metadata. See [Do I need an account?](tracklists.md#do-i-need-an-account) for what's gained with vs. without.
+- **fanart.tv personal API key** (optional). Speeds up artist artwork lookups. A built-in project key is used as a fallback.
+- **Default layout** — folder structure used by `organize`.
 
 See [Configuration](configuration.md) for all available options.
 
@@ -124,3 +124,13 @@ You can combine organizing and enriching in a single pass:
 ```bash
 cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/ --enrich
 ```
+
+### Without a 1001Tracklists account
+
+If you don't want a 1001TL account, skip step 1 and run organize + enrich directly:
+
+```bash
+cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/ --enrich
+```
+
+The resulting library uses filename parsing (via your `festivals.json` aliases and `artists.json` rules) and embedded MKV metadata. You keep the organized folder tree, NFO files, posters, cover art, and artist artwork from fanart.tv. You lose chapter markers, per-track metadata, album-level multi-artist tags, stage/venue/event taxonomy, and DJ artwork from 1001TL. See [Do I need an account?](tracklists.md#do-i-need-an-account) for the full matrix.
