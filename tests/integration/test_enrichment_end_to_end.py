@@ -445,6 +445,94 @@ def test_full_pipeline_in_place(fixture_key: str, tmp_path):
     not FULL_PIPELINE,
     reason="Set CRATEDIGGER_TEST_FULL_PIPELINE=1 to run the CLI pipeline test",
 )
+def test_in_place_layout_switch_migrates_sidecars_and_folder_artefacts(tmp_path):
+    """Switching layouts on an existing library moves the file into a new
+    folder; per-file sidecars and folder-level artefacts both follow, and the
+    emptied old folder is cleaned up.
+
+    Guards against: (a) _move_sidecars regressions on cross-directory rename,
+    (b) the migrate_folder_artefacts post-pipeline pass breaking, (c) the
+    cleanup_empty_dirs trigger forgetting the rename action."""
+    assert MKV_DIR is not None and CONFIG is not None
+    fixture = FIXTURES["eric-prydz-resistance"]
+    src = MKV_DIR / fixture["filename"]
+    if not src.exists():
+        pytest.skip(f"fixture MKV missing: {fixture['filename']}")
+
+    inbox = tmp_path / "inbox"
+    inbox.mkdir()
+    shutil.copy(src, inbox / fixture["filename"])
+
+    cfg_arg = ["--config", str(CONFIG)]
+
+    subprocess.run(
+        ["cratedigger", "identify", *cfg_arg,
+         "--tracklist", fixture["tracklist_id"], "--auto",
+         str(inbox / fixture["filename"])],
+        check=True, timeout=600,
+    )
+    # First organize lands the file in artist_flat layout: inbox/<artist>/<stem>.mkv
+    subprocess.run(
+        ["cratedigger", "organize", *cfg_arg, "--yes", str(inbox)],
+        check=True, timeout=300,
+    )
+
+    mkvs_after_first = list(inbox.rglob("*.mkv"))
+    assert len(mkvs_after_first) == 1, mkvs_after_first
+    first_mkv = mkvs_after_first[0]
+    artist_dir = first_mkv.parent
+    stem = first_mkv.stem
+
+    # Seed synthetic artefacts on disk: per-file sidecars share the video stem,
+    # folder-level files are the ones excluded from _move_sidecars.
+    (artist_dir / f"{stem}.nfo").write_text("<nfo/>")
+    (artist_dir / f"{stem}-thumb.jpg").write_bytes(b"thumb")
+    (artist_dir / f"{stem}-poster.jpg").write_bytes(b"poster")
+    (artist_dir / "folder.jpg").write_bytes(b"folder-contents")
+    (artist_dir / "fanart.jpg").write_bytes(b"fanart-contents")
+
+    # Second organize switches the folder layout. The video crosses directories;
+    # sidecars must come with it, folder-level artefacts must migrate, and the
+    # now-empty artist_dir must be removed.
+    subprocess.run(
+        ["cratedigger", "organize", *cfg_arg,
+         "--layout", "festival_flat", "--yes", str(inbox)],
+        check=True, timeout=300,
+    )
+
+    mkvs_after_second = list(inbox.rglob("*.mkv"))
+    assert len(mkvs_after_second) == 1, mkvs_after_second
+    new_mkv = mkvs_after_second[0]
+    new_dir = new_mkv.parent
+
+    assert new_dir != artist_dir, (
+        f"layout switch did not move the file out of {artist_dir}"
+    )
+    assert not artist_dir.exists(), (
+        f"emptied artist folder should be cleaned up: {artist_dir} still exists"
+    )
+
+    new_stem = new_mkv.stem
+    assert (new_dir / f"{new_stem}.nfo").exists(), "nfo sidecar did not follow"
+    assert (new_dir / f"{new_stem}-thumb.jpg").exists(), "thumb sidecar did not follow"
+    assert (new_dir / f"{new_stem}-poster.jpg").exists(), "poster sidecar did not follow"
+    folder_jpg = new_dir / "folder.jpg"
+    fanart_jpg = new_dir / "fanart.jpg"
+    assert folder_jpg.exists(), "folder.jpg did not migrate to the new folder"
+    assert folder_jpg.read_bytes() == b"folder-contents", (
+        "folder.jpg content changed during migration"
+    )
+    assert fanart_jpg.exists(), "fanart.jpg did not migrate to the new folder"
+    assert fanart_jpg.read_bytes() == b"fanart-contents", (
+        "fanart.jpg content changed during migration"
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    not FULL_PIPELINE,
+    reason="Set CRATEDIGGER_TEST_FULL_PIPELINE=1 to run the CLI pipeline test",
+)
 def test_full_pipeline_idempotent(tmp_path):
     """A second identify on an already-identified file reports up_to_date.
 
