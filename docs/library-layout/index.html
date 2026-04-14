@@ -1,0 +1,1598 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://rouzax.github.io/CrateDigger/docs/library-layout/">
+      
+      
+        <link rel="prev" href="../tag-reference/">
+      
+      
+        <link rel="next" href="../kodi-integration/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Library layout - CrateDigger</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#library-layout" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            CrateDigger
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Library layout
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rouzax/CrateDigger
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../commands/identify/" class="md-tabs__link">
+          
+  
+  
+  Commands
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../configuration/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Configuration
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../festivals/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Festivals
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../tracklists/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  1001Tracklists
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../tag-reference/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Tag reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Library layout
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../kodi-integration/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Kodi Integration
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    CrateDigger
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Rouzax/CrateDigger
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commands
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Commands
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/identify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/organize/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Organize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/enrich/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Enrich
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/audit-logos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Logos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../festivals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Festivals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tracklists/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1001Tracklists
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tag-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tag reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library layout
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#library-tree-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library tree example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-video-sidecars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-video sidecars
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#folder-level-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Folder-level files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cover-art-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cover art sources
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#poster-layouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Poster layouts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Poster layouts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#set-poster-stem-posterjpg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Set poster ({stem}-poster.jpg)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#album-poster-folderjpg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Album poster (folder.jpg)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#background-source-precedence-per-folder-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background source precedence per folder type
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#color-derivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Color derivation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nfo-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NFO contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#curated-festival-logos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Curated festival logos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Curated festival logos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#location-precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location precedence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coverage-auditing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage auditing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kodi-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kodi Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#library-tree-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library tree example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-video-sidecars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-video sidecars
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#folder-level-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Folder-level files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cover-art-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cover art sources
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#poster-layouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Poster layouts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Poster layouts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#set-poster-stem-posterjpg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Set poster ({stem}-poster.jpg)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#album-poster-folderjpg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Album poster (folder.jpg)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#background-source-precedence-per-folder-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Background source precedence per folder type
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#color-derivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Color derivation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nfo-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NFO contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#curated-festival-logos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Curated festival logos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Curated festival logos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#location-precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location precedence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coverage-auditing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage auditing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="library-layout">Library layout</h1>
+<p>After you run <code>organize</code> and <code>enrich</code>, your library is more than a folder tree of MKV files. Each video has sidecar files beside it, each folder has album-level files, and a cache of downloaded artwork lives under <code>~/.cratedigger/</code>. This page is the canonical map of every file CrateDigger writes and where each piece of data comes from.</p>
+<p>For tags inside the MKV, see the <a href="../tag-reference/">tag reference</a>.</p>
+<h2 id="library-tree-example">Library tree example</h2>
+<p>A B2B set (Armin van Buuren &amp; KI/KI at AMF 2025) after a full <code>identify</code> → <code>organize</code> → <code>enrich</code> pass looks like this:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Music/Library/
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>└── Armin van Buuren/
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ├── folder.jpg                                        ← album poster for this folder
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ├── 2025 - Armin van Buuren &amp; KI_KI - Amsterdam Music Festival.mkv
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ├── 2025 - Armin van Buuren &amp; KI_KI - Amsterdam Music Festival.nfo
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ├── 2025 - Armin van Buuren &amp; KI_KI - Amsterdam Music Festival-thumb.jpg
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ├── 2025 - Armin van Buuren &amp; KI_KI - Amsterdam Music Festival-poster.jpg
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    └── 2025 - Armin van Buuren &amp; KI_KI - Amsterdam Music Festival-fanart.jpg
+</code></pre></div>
+<p>CrateDigger routes the file to the primary DJ's folder (<code>Armin van Buuren</code>); the B2B partner is carried in the MKV tags, not the filesystem. The primary-artist routing is what <code>media_file.artist</code> and the TTV=50 <code>ARTIST</code> tag preserve.</p>
+<h2 id="per-video-sidecars">Per-video sidecars</h2>
+<p>Written into the same folder as the MKV, sharing the video's stem:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Written by</th>
+<th>Source</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{stem}.nfo</code></td>
+<td>enrich / <code>NfoOperation</code></td>
+<td>Metadata from identify + analyzer (artist, festival, date, genres, stage)</td>
+<td>Kodi, Jellyfin, Plex (musicvideo NFO spec)</td>
+</tr>
+<tr>
+<td><code>{stem}-thumb.jpg</code></td>
+<td>enrich / <code>ArtOperation</code></td>
+<td>Embedded MKV attachment via <code>mkvextract</code>; ffmpeg frame sample fallback</td>
+<td>Kodi/Jellyfin/Plex thumbnail view; <code>PosterOperation</code> reads this to compose <code>{stem}-poster.jpg</code></td>
+</tr>
+<tr>
+<td><code>{stem}-poster.jpg</code></td>
+<td>enrich / <code>PosterOperation</code></td>
+<td>Composite of thumb + festival logo + metadata text (see <a href="#poster-layouts">poster layouts</a>)</td>
+<td>Kodi/Jellyfin poster view</td>
+</tr>
+<tr>
+<td><code>{stem}-fanart.jpg</code></td>
+<td>enrich / <code>ArtOperation</code></td>
+<td>Copy of <code>{stem}-thumb.jpg</code> (Kodi expects the sidecar to exist on disk for per-item fanart)</td>
+<td>Kodi/Jellyfin fanart view</td>
+</tr>
+</tbody>
+</table>
+<p>All four are generated during <code>enrich</code>. The <code>art</code> op produces <code>-thumb.jpg</code> and <code>-fanart.jpg</code>; the <code>posters</code> op produces <code>-poster.jpg</code> (per-video) and <code>folder.jpg</code> (per-folder). The <code>nfo</code> op produces <code>.nfo</code>.</p>
+<h2 id="folder-level-files">Folder-level files</h2>
+<p>Written into the folder containing the MKV, shared by all videos in that folder:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Written by</th>
+<th>Source</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>folder.jpg</code></td>
+<td>enrich / <code>AlbumPosterOperation</code></td>
+<td>Composite following <a href="#poster-layouts">poster layouts</a>; folder type (festival / artist / year) selected from the layout template in config</td>
+<td>Kodi/Jellyfin album/folder artwork</td>
+</tr>
+<tr>
+<td><code>fanart.jpg</code></td>
+<td>Not written automatically</td>
+<td>User-placed only; CrateDigger recognises it as a folder-level sidecar (for cleanup and organize-time preservation) but does not generate it</td>
+<td>Kodi/Jellyfin folder fanart</td>
+</tr>
+</tbody>
+</table>
+<p>Per-artist fanart (from fanart.tv) lives in the cache at <code>~/.cratedigger/artists/&lt;Artist&gt;/fanart.jpg</code> and <code>clearlogo.png</code>. It's fetched by <code>FanartOperation</code> and read by the poster pipeline; it isn't copied into the library tree itself.</p>
+<h2 id="cover-art-sources">Cover art sources</h2>
+<p>The thumb is the root of the artwork chain — every per-video image derives from it. Source precedence in <code>festival_organizer/artwork.py:extract_cover</code>:</p>
+<ol>
+<li><strong>Embedded MKV attachment</strong> — <code>mkvextract</code> pulls <code>cover.jpg</code>/<code>cover.png</code> if the file carries one.</li>
+<li><strong>Frame sample fallback</strong> — <code>festival_organizer/frame_sampler.py</code> scans the video for the best-quality frame (sharp, non-uniform, avoiding title cards and black frames) and encodes it as JPG.</li>
+</ol>
+<p>Once the thumb exists, <code>ArtOperation</code> copies it to <code>{stem}-fanart.jpg</code> so Kodi's per-item fanart slot is populated. The poster pipeline consumes the thumb to compose <code>{stem}-poster.jpg</code> and contributes it (along with any sibling thumbs) to folder-level color derivation.</p>
+<h2 id="poster-layouts">Poster layouts</h2>
+<p>CrateDigger composes two kinds of poster: per-video set posters and per-folder album posters. The set-poster layout is fixed; the album-poster layout is auto-selected from four variants.</p>
+<p>Run with <code>--verbose</code> to see which layout fired: <code>PosterOperation</code> / <code>AlbumPosterOperation</code> emit a <code>layout.branch</code> INFO event on every poster written.</p>
+<h3 id="set-poster-stem-posterjpg">Set poster (<code>{stem}-poster.jpg</code>)</h3>
+<p>Single "v5b line-anchored" layout. The source image (the thumb) is:</p>
+<ul>
+<li>Blurred and darkened to form the full-poster background.</li>
+<li>Cropped and resized sharp on top, flush to the top edge, with a fade mask starting at 60% of its height.</li>
+<li>Overlaid with stacked centered text: artist name, festival name (accent-colored from the source), date, stage, venue.</li>
+</ul>
+<p>Background source priority for the sharp top image: 1001TL DJ artwork → fanart.tv artist background → the thumb itself as a last resort.</p>
+<h3 id="album-poster-folderjpg">Album poster (<code>folder.jpg</code>)</h3>
+<p>Four variants, auto-selected by the source image shape and folder type:</p>
+<table>
+<thead>
+<tr>
+<th>Layout</th>
+<th>Selected when</th>
+<th>Visual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Festival gradient + logo</td>
+<td>A curated festival logo is available and is smaller than 600px wide</td>
+<td>Gradient base derived from the logo's dominant hue; sharp centered logo; festival text</td>
+</tr>
+<tr>
+<td>Artist centered on blur</td>
+<td>Small source image and the folder is an artist folder (hero text override set)</td>
+<td>Gradient base + blurred overlay of the source + sharp centered logo + artist name</td>
+</tr>
+<tr>
+<td>Large source with fade</td>
+<td>Background image is ≥ 600px wide (fanart.tv photo, DJ artwork)</td>
+<td>Sharp top half of the image; fades to dark; hero text below</td>
+</tr>
+<tr>
+<td>Gradient fallback</td>
+<td>No background image available at all</td>
+<td>Pure gradient derived from thumb color or config override; hero text only</td>
+</tr>
+</tbody>
+</table>
+<h3 id="background-source-precedence-per-folder-type">Background source precedence per folder type</h3>
+<p><code>AlbumPosterOperation</code> picks the background image for each folder based on the layout template in your config:</p>
+<ul>
+<li><strong>Festival folders</strong> (first segment of template is <code>{festival}</code>): curated <code>festivals/&lt;Festival&gt;/logo.png</code> → gradient fallback.</li>
+<li><strong>Artist folders</strong> (first segment is <code>{artist}</code>): 1001TL DJ artwork (if a single artist in folder) → fanart.tv artist background → gradient fallback.</li>
+<li><strong>Year folders</strong> (first segment is <code>{year}</code>): gradient only.</li>
+</ul>
+<p>Multi-artist folders (multiple DJs in the same directory) are treated as festival-style even if they live under an artist path; fanart.tv is not used because there's no single artist to key it on.</p>
+<h3 id="color-derivation">Color derivation</h3>
+<p>Priority chain for the gradient base color and accent:</p>
+<ol>
+<li><code>poster_settings</code> config override (hex) — used verbatim if set for this festival/artist.</li>
+<li>Logo-derived — saturation-aware circular hue mean of the logo image, ignoring low-saturation pixels; gives a brand color that survives dark/light variants.</li>
+<li>Thumb-derived — dominant color across sibling <code>*-thumb.jpg</code> files in the folder.</li>
+<li>Gradient composition — base color darkened to ~50% value, radial highlight in the upper center, low-amplitude noise grain.</li>
+</ol>
+<p>All posters run the final text through a WCAG contrast check against the base and nudge colors if the ratio would drop below 4.5:1.</p>
+<h2 id="nfo-contents">NFO contents</h2>
+<p>CrateDigger writes Kodi-compatible musicvideo NFO files. Jellyfin reads the same spec, so these files work in both without modification. Plex can also read them via agents that support musicvideo NFOs.</p>
+<p>Elements written by <code>festival_organizer/nfo.py:generate_nfo</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;title&gt;</code></td>
+<td>Display title from <code>build_display_title</code>: for festival sets, <code>Artist @ Stage, Festival [SetTitle]</code>; for concerts, the concert title.</td>
+</tr>
+<tr>
+<td><code>&lt;artist&gt;</code></td>
+<td>One element per DJ in <code>media_file.artists</code> (from 1001TL). Falls back to a single primary artist when no list is available.</td>
+</tr>
+<tr>
+<td><code>&lt;album&gt;</code></td>
+<td>For festival sets: <code>Festival Year</code> (e.g. <code>Amsterdam Music Festival 2025</code>). For concerts: concert title or festival name.</td>
+</tr>
+<tr>
+<td><code>&lt;premiered&gt;</code></td>
+<td>Release date (<code>YYYY-MM-DD</code>), or <code>YYYY-01-01</code> if only a year is known.</td>
+</tr>
+<tr>
+<td><code>&lt;genre&gt;</code></td>
+<td>One element per extracted 1001TL track genre; falls back to <code>nfo_settings.genre_festival</code> or <code>genre_concert</code> from config.</td>
+</tr>
+<tr>
+<td><code>&lt;tag&gt;</code></td>
+<td>Content type, festival, edition, each artist name, plus expanded group members (e.g. <code>Swedish House Mafia</code> -&gt; each individual member). Used for Kodi smart playlists. Deduplicated case-insensitively.</td>
+</tr>
+<tr>
+<td><code>&lt;studio&gt;</code></td>
+<td>Stage name for festival sets, venue for concerts.</td>
+</tr>
+<tr>
+<td><code>&lt;plot&gt;</code></td>
+<td>Multi-line description: <code>Stage: &lt;stage&gt;</code>, <code>Edition: &lt;edition&gt;</code>, <code>Edition: &lt;set_title&gt;</code>. Only lines with data are emitted.</td>
+</tr>
+<tr>
+<td><code>&lt;runtime&gt;</code></td>
+<td>Duration in whole minutes.</td>
+</tr>
+<tr>
+<td><code>&lt;thumb aspect="thumb"&gt;</code></td>
+<td>Reference to <code>{stem}-thumb.jpg</code>.</td>
+</tr>
+<tr>
+<td><code>&lt;thumb aspect="poster"&gt;</code></td>
+<td>Reference to <code>{stem}-poster.jpg</code>.</td>
+</tr>
+<tr>
+<td><code>&lt;fanart&gt;&lt;thumb&gt;</code></td>
+<td>Reference to <code>{stem}-fanart.jpg</code>.</td>
+</tr>
+<tr>
+<td><code>&lt;dateadded&gt;</code></td>
+<td>Timestamp of the most recent enrich pass that wrote this NFO.</td>
+</tr>
+</tbody>
+</table>
+<p>Sample NFO for the Armin b2b KI/KI example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">&lt;musicvideo&gt;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&lt;title&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KI/KI<span class="w"> </span>@<span class="w"> </span>Two<span class="w"> </span>Is<span class="w"> </span>One,<span class="w"> </span>Amsterdam<span class="w"> </span>Music<span class="w"> </span>Festival<span class="nt">&lt;/title&gt;</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&lt;artist&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="nt">&lt;/artist&gt;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">&lt;artist&gt;</span>KI/KI<span class="nt">&lt;/artist&gt;</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">&lt;album&gt;</span>Amsterdam<span class="w"> </span>Music<span class="w"> </span>Festival<span class="w"> </span>2025<span class="nt">&lt;/album&gt;</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">&lt;premiered&gt;</span>2025-10-25<span class="nt">&lt;/premiered&gt;</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">&lt;genre&gt;</span>Big<span class="w"> </span>Room<span class="nt">&lt;/genre&gt;</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">&lt;genre&gt;</span>Tech<span class="w"> </span>House<span class="nt">&lt;/genre&gt;</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">&lt;genre&gt;</span>Techno<span class="nt">&lt;/genre&gt;</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>festival_set<span class="nt">&lt;/tag&gt;</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>Amsterdam<span class="w"> </span>Music<span class="w"> </span>Festival<span class="nt">&lt;/tag&gt;</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="nt">&lt;/tag&gt;</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>KI/KI<span class="nt">&lt;/tag&gt;</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="nt">&lt;studio&gt;</span>Two<span class="w"> </span>Is<span class="w"> </span>One<span class="nt">&lt;/studio&gt;</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="nt">&lt;plot&gt;</span>Stage:<span class="w"> </span>Two<span class="w"> </span>Is<span class="w"> </span>One<span class="nt">&lt;/plot&gt;</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nt">&lt;runtime&gt;</span>75<span class="nt">&lt;/runtime&gt;</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">  </span><span class="nt">&lt;thumb</span><span class="w"> </span><span class="na">aspect=</span><span class="s">&quot;thumb&quot;</span><span class="nt">&gt;</span>2025<span class="w"> </span>-<span class="w"> </span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KI_KI<span class="w"> </span>-<span class="w"> </span>Amsterdam<span class="w"> </span>Music<span class="w"> </span>Festival-thumb.jpg<span class="nt">&lt;/thumb&gt;</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">  </span><span class="nt">&lt;thumb</span><span class="w"> </span><span class="na">aspect=</span><span class="s">&quot;poster&quot;</span><span class="nt">&gt;</span>2025<span class="w"> </span>-<span class="w"> </span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KI_KI<span class="w"> </span>-<span class="w"> </span>Amsterdam<span class="w"> </span>Music<span class="w"> </span>Festival-poster.jpg<span class="nt">&lt;/thumb&gt;</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="nt">&lt;fanart&gt;</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">    </span><span class="nt">&lt;thumb&gt;</span>2025<span class="w"> </span>-<span class="w"> </span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KI_KI<span class="w"> </span>-<span class="w"> </span>Amsterdam<span class="w"> </span>Music<span class="w"> </span>Festival-fanart.jpg<span class="nt">&lt;/thumb&gt;</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">  </span><span class="nt">&lt;/fanart&gt;</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">  </span><span class="nt">&lt;dateadded&gt;</span>2026-04-14<span class="w"> </span>10:15:30<span class="nt">&lt;/dateadded&gt;</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="nt">&lt;/musicvideo&gt;</span>
+</code></pre></div>
+<p>Without a 1001TL account, the NFO still populates from filename parsing and embedded metadata: <code>&lt;title&gt;</code>, primary <code>&lt;artist&gt;</code>, <code>&lt;album&gt;</code>, <code>&lt;premiered&gt;</code> (year-derived), fallback <code>&lt;genre&gt;</code>. What drops away is the multi-artist list, 1001TL-extracted genres, stage, set title, and any field the filename parser can't infer.</p>
+<h2 id="curated-festival-logos">Curated festival logos</h2>
+<p>For festival-style posters, CrateDigger looks for a curated festival logo to use as the centered mark. The filename convention is <code>logo.&lt;ext&gt;</code> inside a folder named after the canonical festival display name (e.g. <code>Tomorrowland</code>, <code>Tomorrowland Winter</code>, <code>EDC Las Vegas</code>).</p>
+<p>Supported formats: JPG, JPEG, PNG, WEBP. SVG, GIF, BMP, and TIFF are not supported.</p>
+<h3 id="location-precedence">Location precedence</h3>
+<p>CrateDigger searches two locations, library-local first:</p>
+<ol>
+<li><code>&lt;library&gt;/.cratedigger/festivals/&lt;FestivalName&gt;/logo.&lt;ext&gt;</code> — library-local override, travels with the library.</li>
+<li><code>~/.cratedigger/festivals/&lt;FestivalName&gt;/logo.&lt;ext&gt;</code> — user-level shared across all libraries.</li>
+</ol>
+<p>The library-local file wins when both exist. Ship a library-local logo when you want a different crop or brand variant for a specific library; use the user-level location for general-purpose logos you want across all your libraries.</p>
+<h3 id="coverage-auditing">Coverage auditing</h3>
+<p>Use <a href="../commands/audit-logos/"><code>cratedigger audit-logos</code></a> to list festivals in your library that are missing curated logos. The command reports:</p>
+<ul>
+<li>Festivals with logos, and the path to each file.</li>
+<li>Festivals missing logos, with both suggested placement paths.</li>
+<li>Unmatched logo folders that exist but don't correspond to any festival in your library.</li>
+<li>Unsupported format warnings.</li>
+</ul>
+<p>When a curated logo is missing, the album poster for that festival falls back to fanart-derived or pure-gradient layout (see <a href="#album-poster-folderjpg">album poster layouts</a> above).</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="../tag-reference/">Tag reference</a> — metadata tags written inside the MKV.</li>
+<li><a href="../commands/enrich/">Enrich command</a> — operations that produce these files (<code>art</code>, <code>posters</code>, <code>nfo</code>, <code>fanart</code>).</li>
+<li><a href="../commands/audit-logos/">Audit Logos command</a> — check festival logo coverage.</li>
+<li><a href="../kodi-integration/">Kodi integration</a> — how Kodi (and Jellyfin, which reads the same NFO and sidecar conventions) consume these files.</li>
+<li><a href="../configuration/">Configuration</a> — <code>poster_settings</code>, <code>nfo_settings</code>, layout template keys.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

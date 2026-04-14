@@ -331,6 +331,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../library-layout/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Library layout
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../kodi-integration/" class="md-tabs__link">
         
   
@@ -703,10 +722,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#logo-locations" class="md-nav__link">
+  <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Logo locations
+        Example
       
     </span>
   </a>
@@ -714,10 +733,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+  <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example
+        See also
       
     </span>
   </a>
@@ -855,6 +874,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../library-layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../kodi-integration/" class="md-nav__link">
         
   
@@ -962,10 +1008,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#logo-locations" class="md-nav__link">
+  <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Logo locations
+        Example
       
     </span>
   </a>
@@ -973,10 +1019,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+  <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example
+        See also
       
     </span>
   </a>
@@ -1039,19 +1085,12 @@
 <h2 id="what-it-does">What it does</h2>
 <p>The audit-logos command scans your library for all festival names, then checks whether a curated logo file exists for each one. It reports:</p>
 <ul>
-<li><strong>Festivals with logos</strong> and the path to each logo file</li>
-<li><strong>Festivals missing logos</strong> with suggested paths for placing them</li>
-<li><strong>Unmatched logo folders</strong> that exist but do not correspond to any festival in your library</li>
-<li><strong>Unsupported formats</strong> (SVG, GIF, BMP, TIFF are not supported)</li>
+<li><strong>Festivals with logos</strong> and the path to each logo file.</li>
+<li><strong>Festivals missing logos</strong> with suggested paths for placing them.</li>
+<li><strong>Unmatched logo folders</strong> that exist but do not correspond to any festival in your library.</li>
+<li><strong>Unsupported formats</strong> (SVG, GIF, BMP, TIFF are not supported).</li>
 </ul>
-<h2 id="logo-locations">Logo locations</h2>
-<p>CrateDigger searches for logos in two directories:</p>
-<ol>
-<li><code>&lt;library&gt;/.cratedigger/festivals/&lt;FestivalName&gt;/logo.&lt;ext&gt;</code></li>
-<li><code>~/.cratedigger/festivals/&lt;FestivalName&gt;/logo.&lt;ext&gt;</code></li>
-</ol>
-<p>Supported image formats: JPG, JPEG, PNG, WEBP.</p>
-<p>The festival name in the directory path must match the canonical display name exactly (e.g., <code>Tomorrowland</code>, <code>Tomorrowland Winter</code>, <code>EDC Las Vegas</code>).</p>
+<p>Curated logos drive the festival-gradient album poster layout. When a logo is missing, album posters for that festival fall back to fanart-derived or pure-gradient layouts. The <a href="../../library-layout/#curated-festival-logos">library layout page</a> documents the logo file convention, the library-local vs user-level precedence, and which supported image formats land where.</p>
 <h2 id="example">Example</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cratedigger<span class="w"> </span>audit-logos<span class="w"> </span>~/Music/Library/
 </code></pre></div>
@@ -1070,6 +1109,11 @@
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>       or user-level: /home/user/.cratedigger/festivals/Awakenings/logo.png
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>  ...
 </code></pre></div>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="../../library-layout/#curated-festival-logos">Library layout: curated festival logos</a> — file convention, location precedence, supported formats.</li>
+<li><a href="../../library-layout/#album-poster-folderjpg">Library layout: album poster layouts</a> — how logos feed the poster pipeline and which layout fires when a logo is or isn't available.</li>
+</ul>
 
 
 

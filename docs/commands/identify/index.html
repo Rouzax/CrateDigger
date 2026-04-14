@@ -331,6 +331,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../library-layout/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Library layout
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../kodi-integration/" class="md-tabs__link">
         
   
@@ -642,10 +661,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#interactive-vs-auto-mode" class="md-nav__link">
+  <a href="#interactive-selection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Interactive vs auto mode
+        Interactive selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#auto-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auto mode
       
     </span>
   </a>
@@ -675,10 +705,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#per-chapter-tags" class="md-nav__link">
+  <a href="#tags-written" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Per-chapter tags
+        Tags written
       
     </span>
   </a>
@@ -927,6 +957,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../library-layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../kodi-integration/" class="md-nav__link">
         
   
@@ -1057,10 +1114,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#interactive-vs-auto-mode" class="md-nav__link">
+  <a href="#interactive-selection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Interactive vs auto mode
+        Interactive selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#auto-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auto mode
       
     </span>
   </a>
@@ -1090,10 +1158,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#per-chapter-tags" class="md-nav__link">
+  <a href="#tags-written" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Per-chapter tags
+        Tags written
       
     </span>
   </a>
@@ -1224,10 +1292,36 @@
 <li>DJ and source name recognition from cached data</li>
 </ul>
 <p>Results are ranked by score, with the best match shown first.</p>
-<h3 id="interactive-vs-auto-mode">Interactive vs auto mode</h3>
-<p>In <strong>interactive mode</strong> (default), CrateDigger displays a ranked results table and prompts you to select the correct tracklist. You can type a number to select, or 0 to skip.</p>
-<p>In <strong>auto mode</strong> (<code>--auto</code>), the top result is selected automatically if it meets minimum confidence thresholds (score and gap to the runner-up). Files that fall below the threshold are skipped.</p>
-<p>The <code>auto_select</code> option in your config file sets the default behavior. The <code>--auto</code> flag overrides it.</p>
+<h3 id="interactive-selection">Interactive selection</h3>
+<p>In <strong>interactive mode</strong> (default), CrateDigger displays a ranked results table and prompts you to pick the correct tracklist. Type a number to select, or <code>0</code> to skip.</p>
+<p>The scoring rule of thumb: higher scores mean stronger matches. The top result is typically correct; the ranking surfaces alternatives when the filename is ambiguous or the file is mistitled. A large score gap between the top result and runner-up is a stronger signal than a high absolute score.</p>
+<p>Sample session:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Analyzing 1 file...
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  Tiësto - Live at We Belong Here Miami 2026 [2EQGqEvLAuE].mkv (2h 18m)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Search: &quot;Tiesto We Belong Here Miami 2026&quot;
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Top matches:
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  #   Score  Date        Duration  Title
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  1   314    2026-03-01  2h 19m    Tiësto @ We Belong Here, Miami 2026
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  2   186    2026-03-01  0h 58m    Tiësto @ Main Stage, We Belong Here Miami 2026 (Radio Edit)
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>  3   142    2025-02-28  1h 45m    Tiësto @ We Belong Here 2025
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>  4   121    2024-11-15  2h 02m    Tiësto @ EDC Orlando 2024
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>  5   98     2023-08-12  1h 30m    Tiësto @ Tomorrowland 2023
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>Select [1-5, 0=skip]: 1
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>Selected: Tiësto @ We Belong Here, Miami 2026 (2026-03-01)
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>Fetching tracklist... 38 tracks
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>Embedding chapters and tags...
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>  Chapters: 38 written
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>  TTV=70 tags: 14 written
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>  Per-chapter tags: 38 × (PERFORMER, PERFORMER_SLUGS, PERFORMER_NAMES, TITLE, LABEL, GENRE) written
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>Done.
+</code></pre></div>
+<p>If a file has a stored tracklist URL from a previous run, CrateDigger reuses it by default. In interactive mode you're prompted to use the stored URL, skip the file, or research (search again and pick a different result).</p>
+<h3 id="auto-mode">Auto mode</h3>
+<p>With <code>--auto</code>, CrateDigger picks the top-scoring result automatically if it meets two thresholds: minimum absolute score and minimum gap to the runner-up. Files that fail either threshold are skipped without prompting. This makes <code>--auto</code> safe for batch processing: ambiguous matches get deferred to a later interactive pass rather than silently misidentified.</p>
+<p>Set <code>auto_select: true</code> in your config to make auto mode the default; <code>--auto</code> on the CLI overrides the config either way.</p>
 <h3 id="chapter-embedding">Chapter embedding</h3>
 <p>Once a tracklist is selected, CrateDigger:</p>
 <ol>
@@ -1239,67 +1333,25 @@
 <h3 id="stored-url-handling">Stored URL handling</h3>
 <p>If a file already has a stored tracklist URL from a previous run, CrateDigger reuses it by default. In auto mode, it fetches and verifies the stored URL directly. In interactive mode, it prompts you to use the stored URL, skip, or research.</p>
 <p>Use <code>--regenerate</code> to ignore stored URLs and search again. This flag also forces a full re-tag of the MKV even when the chapter structure is already current, which is useful for picking up new tag types (e.g. per-chapter PERFORMER / PERFORMER_NAMES / GENRE) or updated canonical names on files enriched by earlier CrateDigger versions.</p>
-<h3 id="per-chapter-tags">Per-chapter tags</h3>
-<p><code>identify</code> writes these per-chapter tags at Matroska <code>TargetTypeValue=30</code>, one set per chapter:</p>
-<table>
-<thead>
-<tr>
-<th>Tag</th>
-<th>Example</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>PERFORMER</code></td>
-<td><code>Afrojack</code></td>
-<td>Primary artist, alias-resolved</td>
-</tr>
-<tr>
-<td><code>PERFORMER_SLUGS</code></td>
-<td><code>afrojack\|oliver-heldens</code></td>
-<td>Pipe-separated 1001TL slugs for every linked artist</td>
-</tr>
-<tr>
-<td><code>PERFORMER_NAMES</code></td>
-<td><code>Afrojack\|Oliver Heldens</code></td>
-<td>Pipe-separated display names, aligned slot-for-slot with <code>PERFORMER_SLUGS</code></td>
-</tr>
-<tr>
-<td><code>TITLE</code></td>
-<td><code>Take Over Control</code></td>
-<td>Clean track title</td>
-</tr>
-<tr>
-<td><code>LABEL</code></td>
-<td><code>WALL</code></td>
-<td>Record label</td>
-</tr>
-<tr>
-<td><code>GENRE</code></td>
-<td><code>Electro House\|Big Room</code></td>
-<td>Pipe-separated per-track genres</td>
-</tr>
-</tbody>
-</table>
-<p><code>PERFORMER_NAMES</code> is read by <code>enrich</code> to resolve per-artist MusicBrainz IDs. See <a href="../enrich/">Enrich</a> for the <code>MUSICBRAINZ_ARTISTIDS</code> tag it writes alongside.</p>
+<h3 id="tags-written">Tags written</h3>
+<p><code>identify</code> writes per-chapter Matroska tags (<code>TargetTypeValue=30</code>) and album-level collection tags (<code>TargetTypeValue=70</code>) from the parsed tracklist. See the <a href="../../tag-reference/">tag reference</a> for the full list with examples. <code>PERFORMER_NAMES</code> (per-chapter) and <code>CRATEDIGGER_1001TL_ARTISTS</code> (album-level) are later read by <code>enrich</code> to resolve MusicBrainz artist IDs.</p>
 <h3 id="self-healing-legacy-files">Self-healing legacy files</h3>
 <p>When <code>identify</code> runs against a file whose chapter structure is already current, it normally reports <code>Up to date</code> and skips the write step. CrateDigger also checks whether the file has the per-chapter tags (<code>PERFORMER</code>, <code>PERFORMER_SLUGS</code>, <code>PERFORMER_NAMES</code>, <code>GENRE</code> at <code>TargetTypeValue=30</code>). If any are missing, the full tagging flow runs automatically on the next <code>identify</code> pass, no flag required. Subsequent runs are byte-idempotent because chapter UIDs are deterministic.</p>
 <h2 id="examples">Examples</h2>
 <p>Identify all files in a folder interactively:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
 </code></pre></div>
 <p>Identify a single file with a known tracklist URL:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="s2">&quot;https://www.1001tracklists.com/tracklist/xyz&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="s2">&quot;https://www.1001tracklists.com/tracklist/xyz&quot;</span>
 </code></pre></div>
 <p>Batch process with auto-selection:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--auto
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--auto
 </code></pre></div>
 <p>Preview chapters without embedding:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--preview
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--preview
 </code></pre></div>
 <p>Re-identify files that were already processed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--regenerate<span class="w"> </span>--auto
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--regenerate<span class="w"> </span>--auto
 </code></pre></div>
 
 
