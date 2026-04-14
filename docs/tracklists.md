@@ -1,10 +1,35 @@
 # 1001Tracklists Integration
 
-CrateDigger integrates with [1001Tracklists](https://www.1001tracklists.com/) to match your recordings against known tracklists and embed chapter markers into MKV files.
+CrateDigger integrates with [1001Tracklists](https://www.1001tracklists.com/) to match your recordings against known tracklists, embed chapter markers, and populate rich per-track and per-set metadata. 1001TL is the source of everything in CrateDigger that goes beyond what the filename and embedded metadata can tell us.
+
+## Do I need an account?
+
+Short answer: no, but the feature gap is significant.
+
+| Capability | No account (best-effort) | With account |
+|---|---|---|
+| Filename + embedded-metadata parsing | ✓ | ✓ |
+| Alias resolution (`artists.json`, festival aliases) | ✓ | ✓ |
+| Organize into library tree | ✓ | ✓ |
+| Cover art (embedded → frame sample) | ✓ | ✓ |
+| Posters (per-video + folder) | ✓ | ✓ |
+| fanart.tv / TheAudioDB artist artwork | ✓ | ✓ |
+| NFO metadata | ✓ (from filename + embedded tags) | ✓ (richer, 1001TL-sourced) |
+| MKV file-level tags (`ARTIST`, `TITLE`, `DATE_RELEASED`) | ✓ (from filename) | ✓ (+ canonicalized DJ names) |
+| Chapter markers per track | ✗ | ✓ |
+| Per-chapter track metadata (title, label, genre, artist MBIDs) | ✗ | ✓ |
+| Album-level multi-artist tags (`CRATEDIGGER_ALBUMARTIST_*`) | ✗ | ✓ |
+| Stage / venue / festival / event taxonomy | partial (aliases only) | full |
+| DJ artwork from 1001TL | ✗ | ✓ |
+| Canonical DJ name (casing, learned aliases) | partial | full |
+
+**Without an account**, CrateDigger still produces a watchable library. Metadata comes from parsing the filename (using your `festivals.json` aliases and `artists.json` rules), reading embedded MKV tags via MediaInfo, looking up fanart.tv artwork via a MusicBrainz ID resolved from the parsed artist name, and extracting cover art from embedded attachments or sampled video frames. You get decent posters and a sensibly organized folder tree. What you lose is everything tied to the authoritative tracklist: chapter markers, per-track metadata (title, label, genre, artist MBIDs), canonical DJ naming beyond your manual aliases, and the stage/venue/event taxonomy that drives album-level context tags.
+
+**With an account**, every item in the matrix is filled in. `identify` runs against 1001TL, picks a matching tracklist, and embeds per-chapter metadata plus album-level event context into the MKV.
 
 ## Account setup
 
-A 1001Tracklists account is required for the identify command. Configure your credentials in one of two ways:
+Configure credentials in one of two ways.
 
 ### Config file
 
@@ -24,120 +49,36 @@ export TRACKLISTS_EMAIL="your@email.com"
 export TRACKLISTS_PASSWORD="your-password"
 ```
 
-Environment variables take priority over config file values. If no credentials are configured, CrateDigger prompts for them interactively.
+Environment variables take priority over config file values. If no credentials are configured at all, CrateDigger prompts for them interactively on first use.
 
-## How searching works
+## What CrateDigger extracts from a tracklist
 
-When you run `cratedigger identify`, the tool processes each MKV/WEBM file:
+For each identified tracklist, CrateDigger captures:
 
-1. **Query generation**: CrateDigger builds a search query from the filename, extracting artist names, festival names, and year information.
+- **Chapter markers** — one per track with timestamp and title. Written directly into the MKV as Matroska chapters. See [per-chapter tags](tag-reference.md#per-chapter-ttv30) for details.
+- **Per-track metadata** — artist, title, label, genre, and MusicBrainz artist IDs per chapter. All pipe-aligned for multi-artist tracks. See [per-chapter tags](tag-reference.md#per-chapter-ttv30).
+- **Album-level event context** — tracklist URL, title, ID, date, and source taxonomy (festival / venue / conference / event promoter / country / stage). See [collection-level tags](tag-reference.md#collection-level-ttv70).
+- **DJ list and album-artist MBIDs** — canonical DJ names, 1001TL slugs, and aligned MusicBrainz IDs for multi-value album-artist credits. See [album-level artist tags](tag-reference.md#album-level-artist-tags).
+- **DJ artwork URL** — the DJ photo from the tracklist page, used as a background source in the [poster pipeline](library-layout.md#poster-layouts).
 
-2. **Alias expansion**: Short festival abbreviations (AMF, ASOT, EDC, UMF) are expanded to their full names using your festival configuration, improving search accuracy on 1001Tracklists.
+## What identification looks like
 
-3. **Search**: The query is sent to 1001Tracklists. Results come back with titles, durations, and dates.
+Interactive selection is the default mode. `identify` prints a ranked results panel and prompts you to pick the correct match (or skip). See [identify command: interactive selection](commands/identify.md#interactive-selection) for a sample transcript and the auto-mode behaviour.
 
-4. **Scoring**: Results are scored based on artist match, festival match, year match, and duration similarity. Known DJ names and source names from the cache improve scoring accuracy.
+## Rate limiting and caching
 
-5. **Selection**: In interactive mode, you pick from the ranked results. In auto mode, the top result is selected if it meets confidence thresholds.
+CrateDigger respects 1001TL's rate limits with a configurable delay between requests (default 5 seconds). The delay uses smart throttling: if you already spent time picking a result in interactive mode, the explicit sleep is reduced or skipped.
 
-### Direct URL or ID
+Two local caches make subsequent runs faster and more accurate:
 
-You can bypass searching by providing a tracklist URL or numeric ID directly:
+- **DJ cache** — canonical DJ names and aliases learned from tracklist pages. Used to canonicalize casing (so 1001TL's "SOMETHING ELSE" becomes "Something Else" on disk) and to improve search scoring on subsequent identifies.
+- **Source cache** — festival, venue, radio, and conference names. Used to classify tracklists by source type.
 
-```bash
-cratedigger identify recording.mkv --tracklist "https://www.1001tracklists.com/tracklist/abc123"
-cratedigger identify recording.mkv --tracklist 12345
-```
+Each cache entry randomises its TTL within ±20% of the configured base, so a bulk first-run population doesn't all expire at the same time and stampede the API on the next run. Config keys (`delay_seconds`, `cache_ttl.dj_days`, `cache_ttl.source_days`) live in [configuration](configuration.md#cache-ttl).
 
-## Chapter format and embedding
+## See also
 
-Tracklists are converted into MKV chapter markers. Each track entry becomes a chapter with:
-
-- A timestamp (from the tracklist timing data)
-- A title (the track name, artist, and mix information)
-
-Chapters are embedded using `mkvpropedit`. The chapter language defaults to "eng" and can be changed via the `chapter_language` config setting.
-
-### Per-chapter tags
-
-Alongside chapters, CrateDigger writes per-chapter Matroska tags at `TargetTypeValue=30`, targeting each chapter's `ChapterUID`:
-
-| Tag | Written by | Content |
-|-----|------------|---------|
-| PERFORMER | identify | Primary artist of this track, display name taken directly from the 1001TL track row HTML and then passed through `artists.json` alias resolution (e.g. `SOMETHING ELSE` → `ALOK`). Preserves original casing (`deadmau5`, `CIElll`, `S3PPA`). |
-| PERFORMER_SLUGS | identify | Pipe-separated 1001TL slugs for every artist linked on the track row. |
-| PERFORMER_NAMES | identify | Pipe-separated display names for every artist, aligned slot-for-slot with `PERFORMER_SLUGS`. |
-| MUSICBRAINZ_ARTISTIDS | enrich (`chapter_artist_mbids`) | Pipe-separated MusicBrainz artist IDs, aligned slot-for-slot with `PERFORMER_NAMES`; empty slot `""` for unresolved names. |
-| TITLE | identify | Clean track title with artist prefix stripped (e.g. `Take Over Control` from the row `AFROJACK ft. Eva Simons - Take Over Control`). |
-| LABEL | identify | Record label as plain text (e.g. `WALL`, `MAU5TRAP`). |
-| GENRE | identify | Pipe-separated per-track genres. |
-
-Per-chapter tags surface directly in `ffprobe -show_chapters` output (under `chapters[].tags`), which makes them readable by downstream tools like TrackSplit without any format bridge.
-
-**Alignment invariant**: when `MUSICBRAINZ_ARTISTIDS` is present on a chapter, its pipe count matches the other two artist-aligned tags: `len(PERFORMER_SLUGS.split("|")) == len(PERFORMER_NAMES.split("|")) == len(MUSICBRAINZ_ARTISTIDS.split("|"))`. Downstream tools can zip the three lists by index to produce multi-valued FLAC artist tags. See [Enrich / Chapter artist MBIDs](commands/enrich.md#chapter-artist-mbids-chapter_artist_mbids) and [artist_mbids.json](configuration.md#artist-mbid-override-file).
-
-For the full tag taxonomy (file-level `ARTIST`, collection-level `CRATEDIGGER_*` tags, album-artist tags, alignment invariants across scopes, and a worked example), see the [tag reference](tag-reference.md).
-
-These tags are used by later pipeline stages (enrich) for artwork lookups, poster generation, and NFO metadata; per-chapter tags feed per-track FLAC metadata when extracting individual tracks from a set.
-
-## Caching and rate limiting
-
-### Rate limiting
-
-CrateDigger respects 1001Tracklists rate limits with a configurable delay between requests. The default is 5 seconds, adjustable via `tracklists.delay_seconds`.
-
-The delay uses smart throttling: if you already spent time making a selection in interactive mode, the delay is reduced or skipped entirely.
-
-### Caching
-
-CrateDigger maintains local caches that improve search accuracy and reduce API calls:
-
-- **DJ cache**: Stores DJ names and aliases learned from tracklist pages. Used for search scoring and artist alias resolution. TTL: 90 days (configurable via `cache_ttl.dj_days`).
-- **Source cache**: Stores festival, venue, radio, and conference names. Used for scoring and classification. TTL: 365 days (configurable via `cache_ttl.source_days`).
-
-Each cache entry stamps its own randomised TTL within ±20% of the configured base to prevent synchronised expiry and thundering-herd re-fetches after a bulk first-run fill.
-
-Cache files are stored in `~/.cratedigger/`.
-
-## Auto mode vs interactive mode
-
-### Interactive mode (default)
-
-CrateDigger shows a ranked results table for each file and prompts you to select the correct tracklist. Options:
-
-- Enter a number (1-15) to select a result
-- Enter 0 to skip the file
-- If a stored URL exists: use it, skip, or research
-
-### Auto mode (`--auto`)
-
-The top-scoring result is selected automatically if it meets two thresholds:
-
-- **Minimum score**: The best result must score at least 150 points
-- **Minimum gap**: The best result must lead the runner-up by at least 20 points
-
-Files that fall below either threshold are skipped. This prevents incorrect matches when the search is ambiguous.
-
-Enable auto mode per-run with the `--auto` flag, or set `auto_select: true` in the tracklists config to make it the default.
-
-## Config reference
-
-```json
-{
-    "tracklists": {
-        "email": "",
-        "password": "",
-        "delay_seconds": 5,
-        "chapter_language": "eng",
-        "auto_select": false
-    }
-}
-```
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `email` | `""` | 1001Tracklists account email |
-| `password` | `""` | 1001Tracklists account password |
-| `delay_seconds` | `5` | Delay between API requests in seconds |
-| `chapter_language` | `"eng"` | ISO 639-2 language code for chapter names |
-| `auto_select` | `false` | Use auto-select by default |
+- [Identify command](commands/identify.md) — command reference, flags, interactive/auto selection, examples.
+- [Tag reference](tag-reference.md) — every tag written into the MKV.
+- [Library layout](library-layout.md) — sidecar files, NFO contents, poster layouts, artwork sources.
+- [Configuration](configuration.md) — config keys for tracklists, caching, and credentials.

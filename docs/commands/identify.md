@@ -44,13 +44,45 @@ Search results are scored based on multiple factors:
 
 Results are ranked by score, with the best match shown first.
 
-### Interactive vs auto mode
+### Interactive selection
 
-In **interactive mode** (default), CrateDigger displays a ranked results table and prompts you to select the correct tracklist. You can type a number to select, or 0 to skip.
+In **interactive mode** (default), CrateDigger displays a ranked results table and prompts you to pick the correct tracklist. Type a number to select, or `0` to skip.
 
-In **auto mode** (`--auto`), the top result is selected automatically if it meets minimum confidence thresholds (score and gap to the runner-up). Files that fall below the threshold are skipped.
+The scoring rule of thumb: higher scores mean stronger matches. The top result is typically correct; the ranking surfaces alternatives when the filename is ambiguous or the file is mistitled. A large score gap between the top result and runner-up is a stronger signal than a high absolute score.
 
-The `auto_select` option in your config file sets the default behavior. The `--auto` flag overrides it.
+Sample session:
+
+```
+Analyzing 1 file...
+  Tiësto - Live at We Belong Here Miami 2026 [2EQGqEvLAuE].mkv (2h 18m)
+
+Search: "Tiesto We Belong Here Miami 2026"
+
+Top matches:
+  #   Score  Date        Duration  Title
+  1   314    2026-03-01  2h 19m    Tiësto @ We Belong Here, Miami 2026
+  2   186    2026-03-01  0h 58m    Tiësto @ Main Stage, We Belong Here Miami 2026 (Radio Edit)
+  3   142    2025-02-28  1h 45m    Tiësto @ We Belong Here 2025
+  4   121    2024-11-15  2h 02m    Tiësto @ EDC Orlando 2024
+  5   98     2023-08-12  1h 30m    Tiësto @ Tomorrowland 2023
+
+Select [1-5, 0=skip]: 1
+Selected: Tiësto @ We Belong Here, Miami 2026 (2026-03-01)
+Fetching tracklist... 38 tracks
+Embedding chapters and tags...
+  Chapters: 38 written
+  TTV=70 tags: 14 written
+  Per-chapter tags: 38 × (PERFORMER, PERFORMER_SLUGS, PERFORMER_NAMES, TITLE, LABEL, GENRE) written
+Done.
+```
+
+If a file has a stored tracklist URL from a previous run, CrateDigger reuses it by default. In interactive mode you're prompted to use the stored URL, skip the file, or research (search again and pick a different result).
+
+### Auto mode
+
+With `--auto`, CrateDigger picks the top-scoring result automatically if it meets two thresholds: minimum absolute score and minimum gap to the runner-up. Files that fail either threshold are skipped without prompting. This makes `--auto` safe for batch processing: ambiguous matches get deferred to a later interactive pass rather than silently misidentified.
+
+Set `auto_select: true` in your config to make auto mode the default; `--auto` on the CLI overrides the config either way.
 
 ### Chapter embedding
 
@@ -67,20 +99,9 @@ If a file already has a stored tracklist URL from a previous run, CrateDigger re
 
 Use `--regenerate` to ignore stored URLs and search again. This flag also forces a full re-tag of the MKV even when the chapter structure is already current, which is useful for picking up new tag types (e.g. per-chapter PERFORMER / PERFORMER_NAMES / GENRE) or updated canonical names on files enriched by earlier CrateDigger versions.
 
-### Per-chapter tags
+### Tags written
 
-`identify` writes these per-chapter tags at Matroska `TargetTypeValue=30`, one set per chapter:
-
-| Tag | Example | Description |
-|-----|---------|-------------|
-| `PERFORMER` | `Afrojack` | Primary artist, alias-resolved |
-| `PERFORMER_SLUGS` | `afrojack\|oliver-heldens` | Pipe-separated 1001TL slugs for every linked artist |
-| `PERFORMER_NAMES` | `Afrojack\|Oliver Heldens` | Pipe-separated display names, aligned slot-for-slot with `PERFORMER_SLUGS` |
-| `TITLE` | `Take Over Control` | Clean track title |
-| `LABEL` | `WALL` | Record label |
-| `GENRE` | `Electro House\|Big Room` | Pipe-separated per-track genres |
-
-`PERFORMER_NAMES` is read by `enrich` to resolve per-artist MusicBrainz IDs. See [Enrich](enrich.md) for the `MUSICBRAINZ_ARTISTIDS` tag it writes alongside.
+`identify` writes per-chapter Matroska tags (`TargetTypeValue=30`) and album-level collection tags (`TargetTypeValue=70`) from the parsed tracklist. See the [tag reference](../tag-reference.md) for the full list with examples. `PERFORMER_NAMES` (per-chapter) and `CRATEDIGGER_1001TL_ARTISTS` (album-level) are later read by `enrich` to resolve MusicBrainz artist IDs.
 
 ### Self-healing legacy files
 

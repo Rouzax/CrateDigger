@@ -22,21 +22,12 @@ The `<library>` argument must point to an existing CrateDigger library.
 
 The audit-logos command scans your library for all festival names, then checks whether a curated logo file exists for each one. It reports:
 
-- **Festivals with logos** and the path to each logo file
-- **Festivals missing logos** with suggested paths for placing them
-- **Unmatched logo folders** that exist but do not correspond to any festival in your library
-- **Unsupported formats** (SVG, GIF, BMP, TIFF are not supported)
+- **Festivals with logos** and the path to each logo file.
+- **Festivals missing logos** with suggested paths for placing them.
+- **Unmatched logo folders** that exist but do not correspond to any festival in your library.
+- **Unsupported formats** (SVG, GIF, BMP, TIFF are not supported).
 
-## Logo locations
-
-CrateDigger searches for logos in two directories:
-
-1. `<library>/.cratedigger/festivals/<FestivalName>/logo.<ext>`
-2. `~/.cratedigger/festivals/<FestivalName>/logo.<ext>`
-
-Supported image formats: JPG, JPEG, PNG, WEBP.
-
-The festival name in the directory path must match the canonical display name exactly (e.g., `Tomorrowland`, `Tomorrowland Winter`, `EDC Las Vegas`).
+Curated logos drive the festival-gradient album poster layout. When a logo is missing, album posters for that festival fall back to fanart-derived or pure-gradient layouts. The [library layout page](../library-layout.md#curated-festival-logos) documents the logo file convention, the library-local vs user-level precedence, and which supported image formats land where.
 
 ## Example
 
@@ -61,3 +52,8 @@ Missing curated logo (4):
        or user-level: /home/user/.cratedigger/festivals/Awakenings/logo.png
   ...
 ```
+
+## See also
+
+- [Library layout: curated festival logos](../library-layout.md#curated-festival-logos) — file convention, location precedence, supported formats.
+- [Library layout: album poster layouts](../library-layout.md#album-poster-folderjpg) — how logos feed the poster pipeline and which layout fires when a logo is or isn't available.
