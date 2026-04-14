@@ -737,7 +737,7 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
     unique_names: list[str] = []
     seen: set[str] = set()
     for block in existing.values():
-        names = block.get("PERFORMER_NAMES", "")
+        names = block.get("CRATEDIGGER_TRACK_PERFORMER_NAMES", "")
         for n in names.split("|"):
             if n and n not in seen:
                 seen.add(n)
@@ -786,7 +786,7 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
     # MUSICBRAINZ_ARTISTIDS with matching pipe-count.
     chapters_with_names = 0
     for uid, block in after.items():
-        names = block.get("PERFORMER_NAMES", "")
+        names = block.get("CRATEDIGGER_TRACK_PERFORMER_NAMES", "")
         if not names:
             continue
         chapters_with_names += 1
@@ -809,7 +809,7 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
     # (b) pinned override lands in the correct slot(s).
     hits = 0
     for uid, block in after.items():
-        names = block.get("PERFORMER_NAMES", "").split("|")
+        names = block.get("CRATEDIGGER_TRACK_PERFORMER_NAMES", "").split("|")
         mbids = block.get("MUSICBRAINZ_ARTISTIDS", "").split("|")
         for idx, name in enumerate(names):
             if name == pinned_artist:
@@ -838,7 +838,7 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
     # only assert the shape IF there is at least one empty MBID slot.
     had_miss = any(
         "" in block.get("MUSICBRAINZ_ARTISTIDS", "").split("|")
-        and block.get("PERFORMER_NAMES")
+        and block.get("CRATEDIGGER_TRACK_PERFORMER_NAMES")
         for block in after.values()
     )
     if had_miss:
@@ -948,7 +948,7 @@ def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
             key = (n_el.text if n_el is not None else "") or ""
             val = (s_el.text if s_el is not None else "") or ""
             names_by_key[key] = val
-        perf = names_by_key.get("PERFORMER_NAMES")
+        perf = names_by_key.get("CRATEDIGGER_TRACK_PERFORMER_NAMES")
         slugs = names_by_key.get("ARTIST_SLUGS")
         if perf and slugs:
             assert len(perf.split("|")) == len(slugs.split("|")), (
@@ -1038,7 +1038,7 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
     for tag in ttv30:
         for simple in tag.findall("Simple"):
             n_el = simple.find("Name")
-            if n_el is not None and (n_el.text or "") == "PERFORMER":
+            if n_el is not None and (n_el.text or "") == "CRATEDIGGER_TRACK_PERFORMER":
                 s_el = simple.find("String")
                 perf_values.append((s_el.text if s_el is not None else "") or "")
 
@@ -1104,7 +1104,7 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
 
         chapters_with_names = [
             b for b in chapter_tags_by_uid.values()
-            if b.get("PERFORMER_NAMES", "").strip()
+            if b.get("CRATEDIGGER_TRACK_PERFORMER_NAMES", "").strip()
         ]
         if chapters_with_names:
             chapters_with_mbids = [
@@ -1118,7 +1118,7 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
             )
             # Alignment invariant: slot count matches PERFORMER_NAMES count.
             for block in chapters_with_mbids:
-                names_n = len([x for x in block["PERFORMER_NAMES"].split("|") if x])
+                names_n = len([x for x in block["CRATEDIGGER_TRACK_PERFORMER_NAMES"].split("|") if x])
                 mbid_slots_n = len(block["MUSICBRAINZ_ARTISTIDS"].split("|"))
                 assert mbid_slots_n == names_n, (
                     f"chapter MUSICBRAINZ_ARTISTIDS slot count {mbid_slots_n} "

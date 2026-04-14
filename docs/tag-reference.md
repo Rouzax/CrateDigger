@@ -86,13 +86,15 @@ Written by `identify`, except `MUSICBRAINZ_ARTISTIDS` which is written by `enric
 
 | Tag | Written by | Content | Example |
 |-----|-----------|---------|---------|
-| `PERFORMER` | identify | Primary artist display name of the track, after alias resolution | `deadmau5` |
-| `PERFORMER_SLUGS` | identify | Pipe-separated 1001Tracklists slugs for every artist on the track | `afrojack\|oliver-heldens` |
-| `PERFORMER_NAMES` | identify | Pipe-separated display names for every artist, aligned with `PERFORMER_SLUGS` | `Afrojack\|Oliver Heldens` |
-| `MUSICBRAINZ_ARTISTIDS` | enrich | Pipe-separated MusicBrainz artist IDs, aligned with `PERFORMER_NAMES`. Empty slot `""` for unresolved names. | `<afrojack-mbid>\|<heldens-mbid>` |
+| `CRATEDIGGER_TRACK_PERFORMER` | identify | Primary artist display name of the track, exactly as 1001Tracklists renders it | `AFROJACK ft. Eva Simons` |
+| `CRATEDIGGER_TRACK_PERFORMER_SLUGS` | identify | Pipe-separated 1001Tracklists slugs for every artist on the track | `afrojack\|oliver-heldens` |
+| `CRATEDIGGER_TRACK_PERFORMER_NAMES` | identify | Pipe-separated display names for every artist, aligned with `CRATEDIGGER_TRACK_PERFORMER_SLUGS` | `Afrojack\|Oliver Heldens` |
+| `MUSICBRAINZ_ARTISTIDS` | enrich | Pipe-separated MusicBrainz artist IDs, aligned with `CRATEDIGGER_TRACK_PERFORMER_NAMES`. Empty slot `""` for unresolved names. | `<afrojack-mbid>\|<heldens-mbid>` |
 | `TITLE` | identify | Track title with the artist prefix stripped | `Take Over Control` |
-| `LABEL` | identify | Record label | `WALL` |
-| `GENRE` | identify | Pipe-separated per-track genres | `Big Room\|Electro House` |
+| `CRATEDIGGER_TRACK_LABEL` | identify | Record label | `WALL` |
+| `CRATEDIGGER_TRACK_GENRE` | identify | Pipe-separated per-track genres | `Big Room\|Electro House` |
+
+The `CRATEDIGGER_TRACK_*` prefix is deliberate: it keeps these per-chapter tags out of mediainfo's flattened "General" section. Unprefixed standard Matroska names (`PERFORMER`, `LABEL`, `GENRE`) at TTV=30 get promoted into mediainfo's file-level display (last chapter wins), making files look like they carry the last chapter's values at file scope. The prefix avoids that without changing playback behaviour in Matroska-aware readers (Kodi uses the chapter's `ChapterString` for the title, not these tags).
 
 ---
 
@@ -103,9 +105,9 @@ Two tag families use pipe-separated values that are positionally aligned. You ca
 **Per-chapter:**
 
 ```
-PERFORMER_SLUGS  |  PERFORMER_NAMES  |  MUSICBRAINZ_ARTISTIDS
-     slot 0      |      slot 0       |         slot 0
-     slot 1      |      slot 1       |         slot 1
+CRATEDIGGER_TRACK_PERFORMER_SLUGS  |  CRATEDIGGER_TRACK_PERFORMER_NAMES  |  MUSICBRAINZ_ARTISTIDS
+              slot 0                |               slot 0                 |         slot 0
+              slot 1                |               slot 1                 |         slot 1
 ```
 
 **Album-level:**
@@ -134,7 +136,9 @@ CRATEDIGGER_ALBUMARTIST_SLUGS=arminvanbuuren|kislashki
 CRATEDIGGER_ALBUMARTIST_DISPLAY=Armin van Buuren & KIKI
 
 # Per chapter (TTV=30):
-#   PERFORMER, PERFORMER_SLUGS, PERFORMER_NAMES, TITLE, LABEL, GENRE
+#   CRATEDIGGER_TRACK_PERFORMER, CRATEDIGGER_TRACK_PERFORMER_SLUGS,
+#   CRATEDIGGER_TRACK_PERFORMER_NAMES, TITLE,
+#   CRATEDIGGER_TRACK_LABEL, CRATEDIGGER_TRACK_GENRE
 ```
 
 ### After `enrich`
@@ -153,7 +157,7 @@ CRATEDIGGER_ALBUMARTIST_MBIDS=477b8c0c-c5fc-4ad2-b5b2-191f0bf2a9df|<kiki-mbid-or
 CRATEDIGGER_ENRICHED_AT=2026-04-14T10:15:30+00:00
 
 # Per chapter (TTV=30) additions:
-#   MUSICBRAINZ_ARTISTIDS (aligned with PERFORMER_NAMES)
+#   MUSICBRAINZ_ARTISTIDS (aligned with CRATEDIGGER_TRACK_PERFORMER_NAMES)
 ```
 
 If KIKI's MBID is not yet in the cache, her slot in `CRATEDIGGER_ALBUMARTIST_MBIDS` and the per-chapter `MUSICBRAINZ_ARTISTIDS` will be an empty string. Add her to `~/.cratedigger/artist_mbids.json` and re-run:

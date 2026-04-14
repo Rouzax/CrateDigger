@@ -423,7 +423,7 @@ def test_has_chapter_tags_returns_false_when_only_global(monkeypatch):
 
 
 def test_has_chapter_tags_returns_true_when_performer_names_present(monkeypatch):
-    """TTV=30 block carrying PERFORMER_NAMES: True (current contract)."""
+    """TTV=30 block carrying CRATEDIGGER_TRACK_PERFORMER_NAMES: True (current contract)."""
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_chapter_tags
     import festival_organizer.mkv_tags as mod
@@ -431,8 +431,8 @@ def test_has_chapter_tags_returns_true_when_performer_names_present(monkeypatch)
 <Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
 <Simple><Name>ARTIST</Name><String>x</String></Simple></Tag>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
-<Simple><Name>PERFORMER</Name><String>y</String></Simple>
-<Simple><Name>PERFORMER_NAMES</Name><String>y</String></Simple></Tag>
+<Simple><Name>CRATEDIGGER_TRACK_PERFORMER</Name><String>y</String></Simple>
+<Simple><Name>CRATEDIGGER_TRACK_PERFORMER_NAMES</Name><String>y</String></Simple></Tag>
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
@@ -440,15 +440,15 @@ def test_has_chapter_tags_returns_true_when_performer_names_present(monkeypatch)
 
 
 def test_has_chapter_tags_returns_false_when_ttv30_lacks_performer_names(monkeypatch):
-    """Legacy file (pre-0.10.0) with TTV=30 blocks but no PERFORMER_NAMES: False,
-    so identify self-heals on next run."""
+    """Legacy file carrying only the pre-rename unprefixed PERFORMER_NAMES:
+    False, so identify self-heals on next run and switches to the prefixed name."""
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_chapter_tags
     import festival_organizer.mkv_tags as mod
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
 <Simple><Name>PERFORMER</Name><String>y</String></Simple>
-<Simple><Name>PERFORMER_SLUGS</Name><String>y</String></Simple></Tag>
+<Simple><Name>PERFORMER_NAMES</Name><String>y</String></Simple></Tag>
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path

@@ -22,12 +22,12 @@ def test_build_chapter_tags_map_matches_by_ms(tmp_path):
               artist_slugs=["guest-artist", "someone"], genres=["Techno", "Tech House"]),
     ]
     result = _build_chapter_tags_map(chapters, uids, tracks, cache)
-    assert result[111]["PERFORMER"] == "AFROJACK ft. Eva Simons"
-    assert result[111]["PERFORMER_SLUGS"] == "afrojack"
-    assert result[111]["GENRE"] == "House"
-    assert result[222]["PERFORMER"] == "Guest & Someone"
-    assert result[222]["PERFORMER_SLUGS"] == "guest-artist|someone"
-    assert result[222]["GENRE"] == "Techno|Tech House"
+    assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "AFROJACK ft. Eva Simons"
+    assert result[111]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "afrojack"
+    assert result[111]["CRATEDIGGER_TRACK_GENRE"] == "House"
+    assert result[222]["CRATEDIGGER_TRACK_PERFORMER"] == "Guest & Someone"
+    assert result[222]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "guest-artist|someone"
+    assert result[222]["CRATEDIGGER_TRACK_GENRE"] == "Techno|Tech House"
 
 
 def test_build_chapter_tags_map_skips_unmatched(tmp_path):
@@ -46,8 +46,8 @@ def test_build_chapter_tags_map_no_dj_cache(tmp_path):
                     artist_slugs=["artist-slug"], genres=["House"])]
     result = _build_chapter_tags_map(chapters, uids, tracks, None)
     # PERFORMER comes from raw_text prefix; DjCache is not consulted for it.
-    assert result[111]["PERFORMER"] == "Artist Name"
-    assert result[111]["GENRE"] == "House"
+    assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "Artist Name"
+    assert result[111]["CRATEDIGGER_TRACK_GENRE"] == "House"
 
 
 def test_build_chapter_tags_map_empty_tracks_omits_uid(tmp_path):
@@ -70,8 +70,8 @@ def test_build_chapter_tags_map_pairs_by_index(tmp_path):
         Track(start_ms=120000, raw_text="Artist B - Song B", artist_slugs=["b"], genres=[]),
     ]
     result = _build_chapter_tags_map(chapters, uids, tracks, None)
-    assert result[111]["PERFORMER"] == "Artist A"
-    assert result[222]["PERFORMER"] == "Artist B"
+    assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "Artist A"
+    assert result[222]["CRATEDIGGER_TRACK_PERFORMER"] == "Artist B"
 
 
 def test_embed_chapters_canonical_artists_tag(tmp_path):
@@ -193,8 +193,8 @@ def test_performer_preserves_full_display_line_from_raw_text(tmp_path):
     )]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
     # Full display artist line, multi-artist preserved, no drop.
-    assert result[111]["PERFORMER"] == "Fred again.. & Jamie T"
-    assert result[111]["PERFORMER_SLUGS"] == "fred-again..|jamie-t|tiesto"
+    assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "Fred again.. & Jamie T"
+    assert result[111]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "fred-again..|jamie-t|tiesto"
 
 
 def test_performer_handles_mashup_composite_display():
@@ -209,7 +209,7 @@ def test_performer_handles_mashup_composite_display():
         genres=[],
     )]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
-    assert result[111]["PERFORMER"] == (
+    assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == (
         "NLW & MureKian vs. Ivan Gough & Feenixpawl & Georgi Kay vs. RÜFÜS DU SOL"
     )
 
@@ -233,7 +233,7 @@ def test_performer_preserves_1001tl_display_form_not_alias():
     result = _build_chapter_tags_map(chapters, uids, tracks, None, resolver)
     # Display form preserved. ALOK would only be correct for filesystem
     # routing (top-level ARTIST tag handled elsewhere).
-    assert result[111]["PERFORMER"] == "SOMETHING ELSE"
+    assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "SOMETHING ELSE"
 
 
 def test_chapter_tags_include_title_and_label():
@@ -250,7 +250,7 @@ def test_chapter_tags_include_title_and_label():
     )]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
     assert result[111]["TITLE"] == "Take Over Control"
-    assert result[111]["LABEL"] == "WALL"
+    assert result[111]["CRATEDIGGER_TRACK_LABEL"] == "WALL"
 
 
 def test_chapter_tags_omit_title_and_label_when_empty():
@@ -267,4 +267,4 @@ def test_chapter_tags_omit_title_and_label_when_empty():
     )]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
     assert "TITLE" not in result[111]
-    assert "LABEL" not in result[111]
+    assert "CRATEDIGGER_TRACK_LABEL" not in result[111]

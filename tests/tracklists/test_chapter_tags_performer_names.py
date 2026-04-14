@@ -1,4 +1,4 @@
-"""PERFORMER_NAMES per-chapter tag: pipe-joined display names aligned with SLUGS."""
+"""CRATEDIGGER_TRACK_PERFORMER_NAMES per-chapter tag: pipe-joined display names aligned with SLUGS."""
 from festival_organizer.tracklists.api import Track
 from festival_organizer.tracklists.chapters import Chapter, _build_chapter_tags_map
 
@@ -19,9 +19,9 @@ def test_performer_names_emitted_aligned_with_slugs():
     )
     out = _build_chapter_tags_map([_chapter()], [111], [track], dj_cache=None)
     entry = out[111]
-    assert entry["PERFORMER_SLUGS"] == "afrojack|oliver-heldens"
-    assert entry["PERFORMER_NAMES"] == "Afrojack|Oliver Heldens"
-    assert entry["PERFORMER_NAMES"].count("|") == entry["PERFORMER_SLUGS"].count("|")
+    assert entry["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "afrojack|oliver-heldens"
+    assert entry["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Afrojack|Oliver Heldens"
+    assert entry["CRATEDIGGER_TRACK_PERFORMER_NAMES"].count("|") == entry["CRATEDIGGER_TRACK_PERFORMER_SLUGS"].count("|")
 
 
 def test_performer_names_absent_when_parser_did_not_populate():
@@ -31,7 +31,7 @@ def test_performer_names_absent_when_parser_did_not_populate():
         artist_slugs=["afrojack"], start_ms=0, artist_names=[],
     )
     out = _build_chapter_tags_map([_chapter()], [111], [track], dj_cache=None)
-    assert "PERFORMER_NAMES" not in out[111]
+    assert "CRATEDIGGER_TRACK_PERFORMER_NAMES" not in out[111]
 
 
 def test_performer_names_preserves_diacritics():
@@ -41,7 +41,7 @@ def test_performer_names_preserves_diacritics():
         artist_names=["Tiësto", "Kölsch"],
     )
     out = _build_chapter_tags_map([_chapter()], [111], [track], dj_cache=None)
-    assert out[111]["PERFORMER_NAMES"] == "Tiësto|Kölsch"
+    assert out[111]["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Tiësto|Kölsch"
 
 
 def test_performer_names_omitted_when_slug_and_name_lengths_mismatch():
@@ -59,5 +59,5 @@ def test_performer_names_omitted_when_slug_and_name_lengths_mismatch():
     )
     out = _build_chapter_tags_map([_chapter()], [111], [track], dj_cache=None)
     entry = out[111]
-    assert entry["PERFORMER_SLUGS"] == "afrojack|oliver-heldens"
-    assert "PERFORMER_NAMES" not in entry
+    assert entry["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "afrojack|oliver-heldens"
+    assert "CRATEDIGGER_TRACK_PERFORMER_NAMES" not in entry

@@ -816,17 +816,18 @@ def write_chapter_mbid_tags(
 
 
 class ChapterArtistMbidsOperation(Operation):
-    """Write per-chapter MUSICBRAINZ_ARTISTIDS based on PERFORMER_NAMES.
+    """Write per-chapter MUSICBRAINZ_ARTISTIDS based on CRATEDIGGER_TRACK_PERFORMER_NAMES.
 
     Runs in the enrich pipeline (wired by cli.py). Reads the file's existing
-    chapter tags, resolves each unique PERFORMER_NAMES entry via
-    lookup_mbid (which consults ArtistMbidOverrides before the cache and
-    network), and writes pipe-joined MBIDs with empty slots for misses so
-    downstream consumers can zip SLUGS / NAMES / MBIDS by index.
+    chapter tags, resolves each unique CRATEDIGGER_TRACK_PERFORMER_NAMES
+    entry via lookup_mbid (which consults ArtistMbidOverrides before the
+    cache and network), and writes pipe-joined MBIDs with empty slots for
+    misses so downstream consumers can zip SLUGS / NAMES / MBIDS by index.
 
-    Existing per-chapter tags (PERFORMER, TITLE, LABEL, GENRE,
-    PERFORMER_SLUGS, PERFORMER_NAMES) are preserved; only MBIDs are added
-    or updated.
+    Existing per-chapter tags (CRATEDIGGER_TRACK_PERFORMER, TITLE,
+    CRATEDIGGER_TRACK_LABEL, CRATEDIGGER_TRACK_GENRE,
+    CRATEDIGGER_TRACK_PERFORMER_SLUGS, CRATEDIGGER_TRACK_PERFORMER_NAMES)
+    are preserved; only MBIDs are added or updated.
     """
     name = "chapter_artist_mbids"
     display_name = "chapter_artist_mbids"
@@ -862,10 +863,10 @@ class ChapterArtistMbidsOperation(Operation):
         existing = _extract_chapter_tags_by_uid(file_path)
         if not existing:
             return OperationResult(self.name, "skipped", "no chapter tags")
-        if not any("PERFORMER_NAMES" in block for block in existing.values()):
+        if not any("CRATEDIGGER_TRACK_PERFORMER_NAMES" in block for block in existing.values()):
             return OperationResult(
                 self.name, "skipped",
-                "no PERFORMER_NAMES on any chapter (run identify --regenerate)",
+                "no CRATEDIGGER_TRACK_PERFORMER_NAMES on any chapter (run identify)",
             )
 
         cache = self._get_cache()
@@ -876,7 +877,7 @@ class ChapterArtistMbidsOperation(Operation):
 
         new_mbid_tags = compute_chapter_mbid_tags(existing, resolver)
         if not new_mbid_tags:
-            return OperationResult(self.name, "skipped", "no resolvable PERFORMER_NAMES")
+            return OperationResult(self.name, "skipped", "no resolvable CRATEDIGGER_TRACK_PERFORMER_NAMES")
 
         # Short-circuit when every computed MBID matches what's already on disk.
         if not self.force:

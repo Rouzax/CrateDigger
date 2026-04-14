@@ -141,12 +141,14 @@ def has_chapter_tags(filepath: Path) -> bool:
 
     Used by identify to self-heal legacy files: when this returns False the
     handler re-runs full embed_chapters rather than short-circuiting on
-    "chapters are identical". PERFORMER_NAMES is the canary because it is
-    the newest tag in the contract, so presence of at least one such Simple
-    inside a TTV=30 block proves the file was enriched by the current
-    CrateDigger version (or later). Files enriched by pre-PERFORMER_NAMES
-    versions will auto-heal on the next identify run without requiring
-    --regenerate.
+    "chapters are identical". CRATEDIGGER_TRACK_PERFORMER_NAMES is the
+    canary because it's the newest tag in the contract (it replaced the
+    unprefixed PERFORMER_NAMES so mediainfo would stop flattening per-
+    chapter artist names into the file-level General section); presence of
+    at least one such Simple inside a TTV=30 block proves the file was
+    enriched by the current CrateDigger version (or later). Files enriched
+    by earlier versions will auto-heal on the next identify run without
+    requiring --regenerate.
     """
     root = extract_all_tags(filepath)
     if root is None:
@@ -160,7 +162,7 @@ def has_chapter_tags(filepath: Path) -> bool:
             continue
         for simple in tag.iter("Simple"):
             name_el = simple.find("Name")
-            if name_el is not None and name_el.text == "PERFORMER_NAMES":
+            if name_el is not None and name_el.text == "CRATEDIGGER_TRACK_PERFORMER_NAMES":
                 return True
     return False
 

@@ -523,8 +523,9 @@ def resolve_mbids_aligned(
     empty strings so pipe-joined output stays slot-aligned with `names`.
     Unresolved names are logged once at WARNING, not once per occurrence.
 
-    Used by `compute_chapter_mbid_tags` (per-chapter PERFORMER_NAMES) and
-    by AlbumArtistMbidsOperation (album-level CRATEDIGGER_1001TL_ARTISTS).
+    Used by `compute_chapter_mbid_tags` (per-chapter
+    CRATEDIGGER_TRACK_PERFORMER_NAMES) and by AlbumArtistMbidsOperation
+    (album-level CRATEDIGGER_1001TL_ARTISTS).
     """
     unique: dict[str, str | None] = {}
     for name in names:
@@ -545,26 +546,26 @@ def compute_chapter_mbid_tags(
     chapter_tags: dict[int, dict[str, str]],
     resolver: Callable[[str], str | None],
 ) -> dict[int, dict[str, str]]:
-    """Build a per-chapter MUSICBRAINZ_ARTISTIDS map from PERFORMER_NAMES.
+    """Build a per-chapter MUSICBRAINZ_ARTISTIDS map from CRATEDIGGER_TRACK_PERFORMER_NAMES.
 
     Delegates the per-name dedupe / resolve / log-once / empty-slot logic
     to `resolve_mbids_aligned`. Retains the chapter-shape iteration so
     callers keep a simple per-uid contract.
 
-    Chapters without PERFORMER_NAMES are skipped (legacy files must be
-    re-identified first, not half-enriched).
+    Chapters without CRATEDIGGER_TRACK_PERFORMER_NAMES are skipped (legacy
+    files must be re-identified first, not half-enriched).
     """
     all_names = [
         name
         for entry in chapter_tags.values()
-        for name in (entry.get("PERFORMER_NAMES") or "").split("|")
+        for name in (entry.get("CRATEDIGGER_TRACK_PERFORMER_NAMES") or "").split("|")
         if name
     ]
     mbid_by_name = dict(zip(all_names, resolve_mbids_aligned(all_names, resolver)))
 
     result: dict[int, dict[str, str]] = {}
     for uid, entry in chapter_tags.items():
-        names_str = entry.get("PERFORMER_NAMES")
+        names_str = entry.get("CRATEDIGGER_TRACK_PERFORMER_NAMES")
         if not names_str:
             continue
         mbids = [mbid_by_name.get(name, "") for name in names_str.split("|")]

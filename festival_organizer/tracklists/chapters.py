@@ -364,18 +364,20 @@ def _build_chapter_tags_map(
             continue
         entry: dict[str, str] = {}
         if track.artist_slugs:
-            # Use PERFORMER (Matroska convention for per-chapter artist) instead
-            # of ARTIST to avoid collision with the global TTV=50 ARTIST tag:
-            # mediainfo flattens all ARTIST values across scopes into its
-            # extra.ARTIST field, which would clobber the set-level DJ name.
-            entry["PERFORMER_SLUGS"] = "|".join(track.artist_slugs)
-            # Length must match PERFORMER_SLUGS: enrich zips SLUGS/NAMES/MBIDS by index.
+            # CrateDigger-prefixed per-chapter names avoid mediainfo's
+            # flattening behavior: standard Matroska slot names (PERFORMER,
+            # LABEL, GENRE) at TTV=30 get promoted into mediainfo's General
+            # section (last-wins), making files look like they carry the
+            # last chapter's artist/label at file level. Prefixed names are
+            # unknown to mediainfo so they stay scoped where we put them.
+            entry["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] = "|".join(track.artist_slugs)
+            # Length must match CRATEDIGGER_TRACK_PERFORMER_SLUGS: enrich zips SLUGS/NAMES/MBIDS by index.
             if track.artist_names and len(track.artist_names) == len(track.artist_slugs):
-                entry["PERFORMER_NAMES"] = "|".join(track.artist_names)
-            # PERFORMER is the full artist display line exactly as 1001TL
-            # renders it: everything before the final " - " in raw_text.
-            # Covers solo ("AFROJACK ft. Eva Simons"), multi-artist
-            # ("Fred again.. & Jamie T"), and mashup composites
+                entry["CRATEDIGGER_TRACK_PERFORMER_NAMES"] = "|".join(track.artist_names)
+            # CRATEDIGGER_TRACK_PERFORMER is the full artist display line
+            # exactly as 1001TL renders it: everything before the final
+            # " - " in raw_text. Covers solo ("AFROJACK ft. Eva Simons"),
+            # multi-artist ("Fred again.. & Jamie T"), and mashup composites
             # ("NLW & MureKian vs. ... vs. RÜFÜS DU SOL") in one rule.
             # Alias resolution is deliberately NOT applied here: this tag
             # preserves the 1001TL display form so players can show what the
@@ -386,13 +388,16 @@ def _build_chapter_tags_map(
                 display = track.raw_text.rsplit(" - ", 1)[0].strip()
             else:
                 display = track.raw_text.strip() or track.artist_slugs[0]
-            entry["PERFORMER"] = display
+            entry["CRATEDIGGER_TRACK_PERFORMER"] = display
         if track.title:
+            # TITLE is kept as-is: Matroska's standard per-chapter name and
+            # not subject to mediainfo's General-section flattening for
+            # video files (the ChapterString already drives chapter display).
             entry["TITLE"] = track.title
         if track.label:
-            entry["LABEL"] = track.label
+            entry["CRATEDIGGER_TRACK_LABEL"] = track.label
         if track.genres:
-            entry["GENRE"] = "|".join(track.genres)
+            entry["CRATEDIGGER_TRACK_GENRE"] = "|".join(track.genres)
         if entry:
             result[uid] = entry
     return result
