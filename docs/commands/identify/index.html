@@ -1631,9 +1631,10 @@ re-fetched from 1001Tracklists and updated if anything changed; files without a 
 are searched and auto-selected if CrateDigger is confident enough; everything else is left
 alone.</p>
 <h3 id="self-healing">Self-healing</h3>
-<p>If a file has chapters but is missing some expected per-chapter tags (for example, files
-identified with an older version of CrateDigger), the full tagging pass runs automatically
-on the next <code>identify</code> run. You do not need <code>--regenerate</code> for this. CrateDigger detects
+<p>If a file has chapters but is missing some expected per-chapter or album-level tags (for
+example, files identified with an older version of CrateDigger), the full tagging pass
+runs automatically on the next <code>identify</code> run, reusing the stored tracklist URL so your
+curated match is preserved. You do not need <code>--regenerate</code> for this. CrateDigger detects
 the gap and fills it in.</p>
 <h2 id="preview-mode">Preview mode</h2>
 <p><code>--preview</code> shows you what chapters would be embedded without writing anything to disk.
