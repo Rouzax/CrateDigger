@@ -1,5 +1,6 @@
 """Tests for _print_tagged_metadata_from_stored."""
 import io
+from pathlib import Path
 
 from rich.console import Console
 
@@ -19,7 +20,7 @@ def test_print_tagged_metadata_from_stored_happy_path(monkeypatch):
 
     buf = io.StringIO()
     con = Console(file=buf, no_color=True, width=120)
-    cli_handler._print_tagged_metadata_from_stored("fake.mkv", con)
+    cli_handler._print_tagged_metadata_from_stored(Path("fake.mkv"), con)
     out = buf.getvalue()
     assert "Tagged:" in out
     assert "Armin van Buuren, Marlon Hoffstadt" in out
@@ -36,7 +37,7 @@ def test_print_tagged_metadata_from_stored_empty_noop(monkeypatch):
 
     buf = io.StringIO()
     con = Console(file=buf, no_color=True, width=120)
-    cli_handler._print_tagged_metadata_from_stored("fake.mkv", con)
+    cli_handler._print_tagged_metadata_from_stored(Path("fake.mkv"), con)
     assert "Tagged:" not in buf.getvalue()
 
 
@@ -54,7 +55,7 @@ def test_print_tagged_metadata_from_stored_prefers_festival_over_radio(monkeypat
 
     buf = io.StringIO()
     con = Console(file=buf, no_color=True, width=120)
-    cli_handler._print_tagged_metadata_from_stored("fake.mkv", con)
+    cli_handler._print_tagged_metadata_from_stored(Path("fake.mkv"), con)
     out = buf.getvalue()
     assert "Big Fest" in out
     assert "Some Radio Show" not in out
