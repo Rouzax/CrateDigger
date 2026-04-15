@@ -185,6 +185,8 @@ The interactive candidate table is unchanged from previous versions. The selecti
 itself has been tightened so it no longer collides with the next file's output (previously
 the `Select` line and the following file could stitch onto one visual line).
 
+## What changes in your files
+
 `identify` modifies only the files it processes. For each matched file:
 
 - Chapter markers are embedded (one per track, with track name and timestamp)
