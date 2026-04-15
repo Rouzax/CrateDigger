@@ -699,6 +699,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#what-you-see-when-it-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you see when it runs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What you see when it runs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verdict-badges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verdict badges
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbosity-and-piping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verbosity and piping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-changes-in-your-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1252,6 +1302,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#what-you-see-when-it-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What you see when it runs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What you see when it runs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verdict-badges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verdict badges
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbosity-and-piping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verbosity and piping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-changes-in-your-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1534,25 +1634,20 @@ part of the search text.</p>
 <li>How close the tracklist duration is to your file duration</li>
 <li>Whether artist or source names appear in CrateDigger's DJ cache</li>
 </ul>
-<p>Results are ranked by score, highest first. Example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Analyzing 1 file...
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  Tiësto - Live at We Belong Here Miami 2026 [2EQGqEvLAuE].mkv (2h 18m)
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Search: &quot;Tiesto We Belong Here Miami 2026&quot;
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Top matches:
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  #   Score  Date        Duration  Title
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  1   314    2026-03-01  2h 19m    Tiësto @ We Belong Here, Miami 2026
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  2   186    2026-03-01  0h 58m    Tiësto @ Main Stage, We Belong Here Miami 2026 (Radio Edit)
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>  3   142    2025-02-28  1h 45m    Tiësto @ We Belong Here 2025
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>  4   121    2024-11-15  2h 02m    Tiësto @ EDC Orlando 2024
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>  5   98     2023-08-12  1h 30m    Tiësto @ Tomorrowland 2023
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>Select [1-5, 0=skip]: 1
+<p>Results are ranked by score, highest first. A higher score means a stronger match. The gap
+between the top result and second place matters more than the raw score; a large gap means
+CrateDigger is more confident in the top result.</p>
+<p>In interactive mode you see a numbered table of candidates and a prompt:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Top matches:
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  #   Score  Date        Duration  Title
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  1   314    2026-03-01  2h 19m    Tiësto @ We Belong Here, Miami 2026
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  2   186    2026-03-01  0h 58m    Tiësto @ Main Stage, We Belong Here Miami 2026 (Radio Edit)
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  3   142    2025-02-28  1h 45m    Tiësto @ We Belong Here 2025
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  4   121    2024-11-15  2h 02m    Tiësto @ EDC Orlando 2024
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  5   98     2023-08-12  1h 30m    Tiësto @ Tomorrowland 2023
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Select (1-5, or 0 to skip): 1
 </code></pre></div>
-<p>A higher score means a stronger match. The gap between the top result and second place
-matters more than the raw score. A large gap means CrateDigger is more confident in the
-top result.</p>
 <p>Type a number to select that tracklist, or <code>0</code> to skip the file.</p>
 <h3 id="3-chapters-and-metadata-are-embedded">3. Chapters and metadata are embedded</h3>
 <p>Once you confirm a match, CrateDigger:</p>
@@ -1569,14 +1664,128 @@ top result.</p>
 files, and resolve MusicBrainz artist IDs.</p>
 <p>If the tracklist has fewer than 2 chapters (for example, a tracklist with only a single
 entry), CrateDigger skips the embed. A single chapter provides no navigation value.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Selected: Tiësto @ We Belong Here, Miami 2026 (2026-03-01)
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Fetching tracklist... 38 tracks
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>Embedding chapters and tags...
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  Chapters: 38 written
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  Album-level tags: 14 written
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  Per-chapter tags: 38 written
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>Done.
+<h2 id="what-you-see-when-it-runs">What you see when it runs</h2>
+<p>For each file, CrateDigger prints one verdict line: a padded badge, the file position, the
+filename, a short note, and how long that file took. A transient spinner shows the current
+step (sign-in, search, fetch, embed, throttle) while each file is processed; it disappears
+as soon as the verdict line is printed. At the end a summary panel shows totals and lists
+any files that did not get embedded.</p>
+<p>A real batch of five festival recordings looks like this:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>[ done        ] [1/5] Tiesto - Live at We Belong Here Miami 2026.mkv  -&gt;  Tiesto @ We Belong Here, Miami 2026 (2026-03-01) - 38 tracks  (12.4s)
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>[ done        ] [2/5] Martin Garrix @ AMF 2026.webm  -&gt;  Martin Garrix @ Amsterdam Music Festival 2026 (2026-10-18) - 24 tracks  (9.8s)
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>[ up-to-date  ] [3/5] David Guetta @ Tomorrowland 2026.mkv  -&gt;  already embedded (stored URL)  (2.1s)
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>[ skipped     ] [4/5] unknown_set_001.mkv  -&gt;  low confidence (score 84)  (6.5s)
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>[ done        ] [5/5] Armin van Buuren @ ASOT 2026.mkv  -&gt;  Armin van Buuren @ A State of Trance 2026 (2026-02-15) - 42 tracks  (11.2s)
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>Summary
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  added: 3  updated: 0  up_to_date: 1  skipped: 1  error: 0  previewed: 0
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>  Metadata tagged: 4 files
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>  Festivals:       Ultra Music Festival Miami (3), Tomorrowland Winter (1)
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>  Unmatched:       1 (unknown_set_001.mkv)
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>  Elapsed: 42.0s
 </code></pre></div>
+<h3 id="verdict-badges">Verdict badges</h3>
+<p>Every file ends with exactly one badge. The badges are padded to a fixed width so the lines
+align in a terminal and stay grep-friendly in log files.</p>
+<table>
+<thead>
+<tr>
+<th>Badge</th>
+<th>Meaning for that file</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>done</code></td>
+<td>Matched a tracklist and embedded fresh chapters and tags</td>
+</tr>
+<tr>
+<td><code>updated</code></td>
+<td>Already had chapters; re-fetched and wrote newer or missing tags (for example self-healing, or <code>--regenerate</code>)</td>
+</tr>
+<tr>
+<td><code>up-to-date</code></td>
+<td>File already has a stored tracklist and all tags are current; nothing written</td>
+</tr>
+<tr>
+<td><code>skipped</code></td>
+<td>No confident match (auto mode), user entered <code>0</code>, tracklist had fewer than 2 tracks, or file type is not supported</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>A tool failed (for example <code>mkvpropedit</code>) or the tracklist fetch raised. The file is left untouched.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="summary-panel">Summary panel</h3>
+<p>The summary at the end of a run shows counts for each verdict plus a total <code>Elapsed</code> row.
+The <code>Unmatched</code> list includes both <code>skipped</code> files (with the reason, for example
+<code>low confidence (score 84)</code>) and <code>error</code> files (with the short error), so you can see at a
+glance which files still need attention.</p>
+<h3 id="verbosity-and-piping">Verbosity and piping</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Verdict lines</th>
+<th>Summary panel</th>
+<th>Transient spinner</th>
+<th>Extra output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>default (interactive)</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>candidate table, selection prompt</td>
+</tr>
+<tr>
+<td><code>--auto</code></td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>none (no prompt)</td>
+</tr>
+<tr>
+<td><code>--quiet</code> / <code>-q</code></td>
+<td>no</td>
+<td>yes</td>
+<td>no</td>
+<td>nothing per file</td>
+</tr>
+<tr>
+<td><code>--verbose</code> / <code>-v</code></td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>INFO lines (key decisions, search results, parse info)</td>
+</tr>
+<tr>
+<td><code>--debug</code></td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>INFO + DEBUG (cache hits, retries, internals)</td>
+</tr>
+<tr>
+<td>piped to a file (for example <code>cratedigger identify ... &gt; run.log</code>)</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>same as interactive otherwise</td>
+</tr>
+</tbody>
+</table>
+<p>The spinner is a convenience for live terminals. Anything that captures or logs the output
+(pipes, <code>--verbose</code>, <code>--debug</code>, <code>--quiet</code>) drops the spinner so the captured log stays
+clean; the verdict lines and summary are identical in every mode.</p>
+<p>The interactive candidate table is unchanged from previous versions. The selection prompt
+itself has been tightened so it no longer collides with the next file's output (previously
+the <code>Select</code> line and the following file could stitch onto one visual line).</p>
 <h2 id="what-changes-in-your-files">What changes in your files</h2>
 <p><code>identify</code> modifies only the files it processes. For each matched file:</p>
 <ul>
@@ -1677,6 +1886,25 @@ environment variables <code>TRACKLISTS_EMAIL</code> and <code>TRACKLISTS_PASSWOR
 <p><strong>File is skipped in auto mode</strong></p>
 <p>The top result scored below 150, or the gap to the second result was less than 20. Run the
 same folder interactively (without <code>--auto</code>) to see the matches and pick manually.</p>
+<p><strong>Verdict is <code>skipped</code> with detail <code>low confidence (score X)</code></strong></p>
+<p>Same cause as above: auto mode was not confident. Re-run without <code>--auto</code> to see the
+candidate table, or pass <code>--tracklist</code> with the right URL.</p>
+<p><strong>Verdict is <code>skipped (no results)</code></strong></p>
+<p>CrateDigger's generated search returned nothing. Try a broader query:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="s2">&quot;Tiesto Miami 2026&quot;</span>
+</code></pre></div>
+<p>If you already know the tracklist, pass the URL or numeric ID directly with <code>--tracklist</code>.</p>
+<p><strong>Verdict is <code>error (mkvpropedit failed)</code></strong></p>
+<p><code>mkvpropedit</code> is missing or could not write to the file. Confirm MKVToolNix is installed
+and on your PATH (<code>mkvpropedit --version</code>), and that the file is writable.</p>
+<p><strong>Verdict is <code>error (TracklistError: ...)</code></strong></p>
+<p>1001Tracklists returned an unexpected response (rate limit, transient 5xx, parse hiccup).
+Re-run the command; a single retry usually clears it. If it persists for the same file,
+pass <code>--tracklist</code> with the URL so the search step is skipped.</p>
+<p><strong>No spinner appears while a file is processing</strong></p>
+<p>The spinner is disabled when output is being captured or when you passed <code>--quiet</code>,
+<code>--verbose</code>, or <code>--debug</code>. That is expected. Per-file verdict lines and the summary panel
+still print in every mode.</p>
 <p><strong>Chapters not embedded (file is not MKV or WEBM)</strong></p>
 <p>Only MKV and WEBM files support chapter embedding. MP4 and other formats are skipped.
 Convert your file to MKV first with FFmpeg or MKVToolNix if needed.</p>
