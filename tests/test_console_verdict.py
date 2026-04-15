@@ -74,3 +74,22 @@ def test_verdict_unknown_status_raises():
     with pytest.raises(ValueError):
         verdict(status="weird", index=1, total=1, filename="f.mkv",
                 detail="x", elapsed_s=1.0)
+
+
+@pytest.mark.parametrize("status", ["done", "updated", "up-to-date", "skipped", "error"])
+def test_verdict_has_gap_between_badge_and_counter(status):
+    """Every status must have at least 2 spaces between the badge label
+    and the [i/N] counter. Regression: up-to-date (10 chars) previously
+    collided with the counter when badge width was 11.
+    """
+    row = verdict(status=status, index=1, total=5, filename="f.mkv",
+                  detail="x", elapsed_s=1.0)
+    plain = row.plain
+    # Find the badge label and verify what follows contains at least 2 spaces
+    # before the counter.
+    idx = plain.index("[1/5]")
+    # Characters immediately before "[1/5]" must include >= 2 spaces.
+    assert plain[idx - 2:idx] == "  ", (
+        f"Expected 2-space gap before [i/N] for status={status}, "
+        f"got: {plain!r}"
+    )

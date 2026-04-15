@@ -313,7 +313,7 @@ _VERDICT_STYLES = {
     "error":      ("error",       "red"),
 }
 
-_VERDICT_BADGE_WIDTH = 11
+_VERDICT_BADGE_WIDTH = 14
 _ELAPSED_THRESHOLD_S = 0.5
 
 
