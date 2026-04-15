@@ -488,7 +488,9 @@ def _build_export_mock_responses(page_html: str):
 
 
 def test_export_tracklist_invokes_on_progress_with_dj_count():
-    """When on_progress is provided, it's called exactly once with the DJ count."""
+    """When on_progress is provided, it's called exactly once with the count
+    of DJs to fetch (which drives the fetch loop), not just DJs parsed from h1.
+    """
     page_html = _ARMIN_MARLON_FIXTURE.read_text(encoding="utf-8")
     session = TracklistSession()
 
@@ -502,6 +504,47 @@ def test_export_tracklist_invokes_on_progress_with_dj_count():
 
     assert len(calls) == 1
     assert "2" in calls[0]
+    assert "DJ" in calls[0]
+
+
+def test_export_tracklist_callback_counts_dj_slugs_not_just_dj_artists(monkeypatch):
+    """When dj_artists is empty but the dj_slugs fallback finds DJs on the
+    page, the callback must report the dj_slugs count (which drives the
+    actual fetch loop), not zero.
+    """
+    from festival_organizer.tracklists import api as api_module
+
+    # Fallback path: parse finds no h1 DJ artists, but _extract_dj_slugs
+    # picks up links elsewhere on the page.
+    monkeypatch.setattr(
+        api_module,
+        "_extract_dj_slugs",
+        lambda html: ["dj-one", "dj-two", "dj-three"],
+    )
+
+    # Force h1 parser to yield empty dj_artists so the fallback branch runs.
+    original_parse_h1 = api_module._parse_h1_structure
+
+    def _parse_h1_no_djs(h1_html: str) -> dict:
+        info = original_parse_h1(h1_html)
+        info["dj_artists"] = []
+        return info
+
+    monkeypatch.setattr(api_module, "_parse_h1_structure", _parse_h1_no_djs)
+
+    page_html = _ARMIN_MARLON_FIXTURE.read_text(encoding="utf-8")
+    session = TracklistSession()
+
+    calls: list[str] = []
+    with patch.object(session, "_request", side_effect=_build_export_mock_responses(page_html)):
+        with patch.object(session, "_fetch_dj_profile", return_value={"artwork_url": ""}):
+            session.export_tracklist(
+                "abc123",
+                on_progress=lambda msg: calls.append(msg),
+            )
+
+    assert len(calls) == 1
+    assert "3" in calls[0]  # reflects dj_slugs count, not dj_artists
     assert "DJ" in calls[0]
 
 

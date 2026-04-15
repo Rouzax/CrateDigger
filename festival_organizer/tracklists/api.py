@@ -441,7 +441,7 @@ class TracklistSession:
         dj_slugs = [slug for slug, _name in dj_artists] if dj_artists else _extract_dj_slugs(page_resp.text)
         dj_name_map = {slug: name for slug, name in dj_artists}
         if on_progress:
-            on_progress(f"Fetching tracklist ({len(dj_artists)} DJs)")
+            on_progress(f"Fetching tracklist ({len(dj_slugs)} DJs)")
         for i, dj_slug in enumerate(dj_slugs):
             cached = self._dj_cache.get(dj_slug) if self._dj_cache else None
             if cached:
