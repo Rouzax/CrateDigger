@@ -143,7 +143,7 @@ Summary
   Elapsed:      42.0s
 
   Unmatched:
-    - unknown_set_001.mkv (low confidence (score 84))
+    - unknown_set_001.mkv
 ```
 
 ### Verdict badges
