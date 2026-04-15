@@ -24,7 +24,9 @@ TTV=30 PERFORMER (1001TL display form, no alias resolution).
 import json
 import logging
 import os
+import re
 import shutil
+import site
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -1176,14 +1178,10 @@ def test_identify_console_contract(tmp_path):
 
     Copies fixtures into a scratch dir so originals are not mutated.
     """
-    import re
-    import shutil as _shutil
-    import subprocess as _subprocess
-
     assert MKV_DIR is not None  # narrowed by module-level pytestmark
-    cratedigger_bin = _shutil.which("cratedigger")
+    cratedigger_bin = shutil.which("cratedigger")
     if cratedigger_bin is None:
-        pytest.skip("cratedigger console script not on PATH")
+        pytest.skip("cratedigger console script not on PATH (run 'pip install -e .')")
 
     scratch = tmp_path / "mkvs"
     scratch.mkdir()
@@ -1191,15 +1189,31 @@ def test_identify_console_contract(tmp_path):
     if not fixtures:
         pytest.skip("No MKVs in CRATEDIGGER_TEST_MKV_DIR")
     for src in fixtures:
-        _shutil.copy2(src, scratch / src.name)
+        shutil.copy2(src, scratch / src.name)
 
-    result = _subprocess.run(
+    # Isolate ~/.cratedigger so the test doesn't mutate the developer's
+    # real DJ / source / mbid caches and warm-cache between runs doesn't
+    # mask contract regressions. Copy cookies into the scratch home so
+    # login still works. Preserve PYTHONUSERBASE so editable installs in
+    # the real ~/.local/ still resolve under the faked HOME.
+    fake_home = tmp_path / "home"
+    (fake_home / ".cratedigger").mkdir(parents=True)
+    shutil.copy2(COOKIES, fake_home / COOKIES.name)
+    env = {
+        **os.environ,
+        "HOME": str(fake_home),
+        "PYTHONUSERBASE": os.environ.get(
+            "PYTHONUSERBASE", site.getuserbase()
+        ),
+    }
+
+    result = subprocess.run(
         [
             cratedigger_bin,
             "identify", str(scratch), "--auto",
             "--config", str(CONFIG),
         ],
-        capture_output=True, text=True, timeout=600,
+        capture_output=True, text=True, timeout=600, env=env,
     )
 
     out = result.stdout
