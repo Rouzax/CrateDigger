@@ -130,7 +130,7 @@ A real batch of five festival recordings looks like this:
 [ done        ] [1/5] Tiesto - Live at We Belong Here Miami 2026.mkv  ->  Tiesto @ We Belong Here, Miami 2026 (2026-03-01) - 38 tracks  (12.4s)
 [ done        ] [2/5] Martin Garrix @ AMF 2026.webm  ->  Martin Garrix @ Amsterdam Music Festival 2026 (2026-10-18) - 24 tracks  (9.8s)
 [ up-to-date  ] [3/5] David Guetta @ Tomorrowland 2026.mkv  ->  already embedded (stored URL)  (2.1s)
-[ skipped     ] [4/5] unknown_set_001.mkv  ->  no confident match (top score 84)  (6.5s)
+[ skipped     ] [4/5] unknown_set_001.mkv  ->  low confidence (score 84)  (6.5s)
 [ done        ] [5/5] Armin van Buuren @ ASOT 2026.mkv  ->  Armin van Buuren @ A State of Trance 2026 (2026-02-15) - 42 tracks  (11.2s)
 
 Summary
@@ -143,7 +143,7 @@ Summary
   Elapsed:      42.0s
 
   Unmatched:
-    - unknown_set_001.mkv (no confident match)
+    - unknown_set_001.mkv (low confidence (score 84))
 ```
 
 ### Verdict badges
@@ -163,7 +163,7 @@ align in a terminal and stay grep-friendly in log files.
 
 The summary at the end of a run shows counts for each verdict plus a total `Elapsed` row.
 The `Unmatched` list includes both `skipped` files (with the reason, for example
-`low confidence: score 84`) and `error` files (with the short error), so you can see at a
+`low confidence (score 84)`) and `error` files (with the short error), so you can see at a
 glance which files still need attention.
 
 ### Verbosity and piping
@@ -331,7 +331,7 @@ CrateDigger could not find a matching tracklist. Try:
 The top result scored below 150, or the gap to the second result was less than 20. Run the
 same folder interactively (without `--auto`) to see the matches and pick manually.
 
-**Verdict is `skipped (low confidence: score X)`**
+**Verdict is `skipped` with detail `low confidence (score X)`**
 
 Same cause as above: auto mode was not confident. Re-run without `--auto` to see the
 candidate table, or pass `--tracklist` with the right URL.

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `identify` now emits one padded-badge verdict line per file (`done`, `updated`, `up-to-date`, `skipped`, `error`) with a per-file elapsed time, plus a total `Elapsed` row in the summary panel. Previous runs mixed several ad-hoc status phrases into the scrollback; the new shape is consistent and grep-friendly.
 - A transient spinner now shows the current step (sign-in, search, fetch, embed, throttle) during blocking operations in a live terminal. The spinner auto-disables when stdout is piped, or when running with `--quiet`, `--verbose`, or `--debug`, so captured logs and CI output stay clean.
+- If you had shell scripts grepping old phrases like `Embedded N chapters` or `Up to date`, update them to key off the new verdict badges (`done`, `updated`, `up-to-date`, `skipped`, `error`). The new shape is documented at `docs/commands/identify.md` (section: "What you see when it runs").
 
 ### Added
 
