@@ -13,6 +13,7 @@ from festival_organizer.console import (
     results_table,
     status_text,
     summary_panel,
+    suppression_enabled,
 )
 from festival_organizer.tracklists.scoring import QueryParts, SearchResult
 
@@ -278,3 +279,34 @@ def test_identify_summary_panel():
     assert "45" in output
     assert "Unmatched" in output
     assert "Musical 8B" in output
+
+
+# --- suppression_enabled ---
+
+def test_suppression_enabled_non_tty():
+    con = make_console(file=io.StringIO())
+    assert suppression_enabled(con, quiet=False, verbose=False, debug=False) is True
+
+
+def test_suppression_enabled_tty_default_false(monkeypatch):
+    con = make_console()
+    monkeypatch.setattr(Console, "is_terminal", True)
+    assert suppression_enabled(con, quiet=False, verbose=False, debug=False) is False
+
+
+def test_suppression_enabled_quiet(monkeypatch):
+    con = make_console()
+    monkeypatch.setattr(Console, "is_terminal", True)
+    assert suppression_enabled(con, quiet=True, verbose=False, debug=False) is True
+
+
+def test_suppression_enabled_verbose(monkeypatch):
+    con = make_console()
+    monkeypatch.setattr(Console, "is_terminal", True)
+    assert suppression_enabled(con, quiet=False, verbose=True, debug=False) is True
+
+
+def test_suppression_enabled_debug(monkeypatch):
+    con = make_console()
+    monkeypatch.setattr(Console, "is_terminal", True)
+    assert suppression_enabled(con, quiet=False, verbose=False, debug=True) is True

@@ -28,6 +28,28 @@ def make_console(file=None) -> Console:
     return Console(file=file or sys.stdout, highlight=False)
 
 
+def suppression_enabled(
+    console: Console,
+    *,
+    quiet: bool,
+    verbose: bool,
+    debug: bool,
+) -> bool:
+    """Return True when transient live display must be disabled.
+
+    Rules (single source of truth for every command):
+    - stdout is not a TTY
+    - --quiet
+    - --verbose or --debug (log lines would collide with Live)
+
+    When True, commands still emit header/verdict/summary prints;
+    only transient spinners are skipped.
+    """
+    if not console.is_terminal:
+        return True
+    return bool(quiet or verbose or debug)
+
+
 def header_panel(title: str, rows: dict[str, str]) -> Panel:
     """Bordered header box with a title and key-value rows."""
     body = Text()
