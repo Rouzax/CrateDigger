@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.12.7] - 2026-04-15
+
+### Changed
+
+- `identify` now emits one padded-badge verdict line per file (`done`, `updated`, `up-to-date`, `skipped`, `error`) with a per-file elapsed time, plus a total `Elapsed` row in the summary panel. Previous runs mixed several ad-hoc status phrases into the scrollback; the new shape is consistent and grep-friendly.
+- A transient spinner now shows the current step (sign-in, search, fetch, embed, throttle) during blocking operations in a live terminal. The spinner auto-disables when stdout is piped, or when running with `--quiet`, `--verbose`, or `--debug`, so captured logs and CI output stay clean.
+
+### Added
+
+- Summary panel now lists errored files in the `Unmatched` section alongside skipped files, so failures are not lost between runs.
+
+### Fixed
+
+- Interactive selection prompt no longer collides with the next file's output. The `Select (1-N, or 0):` line and the following file's verdict used to be stitched onto one visual line.
+
 ## [0.12.0] - 2026-04-14
 
 ### Changed

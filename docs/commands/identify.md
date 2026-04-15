@@ -78,14 +78,13 @@ CrateDigger queries 1001Tracklists and scores each result based on:
 - How close the tracklist duration is to your file duration
 - Whether artist or source names appear in CrateDigger's DJ cache
 
-Results are ranked by score, highest first. Example:
+Results are ranked by score, highest first. A higher score means a stronger match. The gap
+between the top result and second place matters more than the raw score; a large gap means
+CrateDigger is more confident in the top result.
+
+In interactive mode you see a numbered table of candidates and a prompt:
 
 ```
-Analyzing 1 file...
-  Tiësto - Live at We Belong Here Miami 2026 [2EQGqEvLAuE].mkv (2h 18m)
-
-Search: "Tiesto We Belong Here Miami 2026"
-
 Top matches:
   #   Score  Date        Duration  Title
   1   314    2026-03-01  2h 19m    Tiësto @ We Belong Here, Miami 2026
@@ -94,12 +93,8 @@ Top matches:
   4   121    2024-11-15  2h 02m    Tiësto @ EDC Orlando 2024
   5   98     2023-08-12  1h 30m    Tiësto @ Tomorrowland 2023
 
-Select [1-5, 0=skip]: 1
+Select (1-5, or 0 to skip): 1
 ```
-
-A higher score means a stronger match. The gap between the top result and second place
-matters more than the raw score. A large gap means CrateDigger is more confident in the
-top result.
 
 Type a number to select that tracklist, or `0` to skip the file.
 
@@ -121,17 +116,74 @@ files, and resolve MusicBrainz artist IDs.
 If the tracklist has fewer than 2 chapters (for example, a tracklist with only a single
 entry), CrateDigger skips the embed. A single chapter provides no navigation value.
 
+## What you see when it runs
+
+For each file, CrateDigger prints one verdict line: a padded badge, the file position, the
+filename, a short note, and how long that file took. A transient spinner shows the current
+step (sign-in, search, fetch, embed, throttle) while each file is processed; it disappears
+as soon as the verdict line is printed. At the end a summary panel shows totals and lists
+any files that did not get embedded.
+
+A real batch of five festival recordings looks like this:
+
 ```
-Selected: Tiësto @ We Belong Here, Miami 2026 (2026-03-01)
-Fetching tracklist... 38 tracks
-Embedding chapters and tags...
-  Chapters: 38 written
-  Album-level tags: 14 written
-  Per-chapter tags: 38 written
-Done.
+[ done        ] [1/5] Tiesto - Live at We Belong Here Miami 2026.mkv  ->  Tiesto @ We Belong Here, Miami 2026 (2026-03-01) - 38 tracks  (12.4s)
+[ done        ] [2/5] Martin Garrix @ AMF 2026.webm  ->  Martin Garrix @ Amsterdam Music Festival 2026 (2026-10-18) - 24 tracks  (9.8s)
+[ up-to-date  ] [3/5] David Guetta @ Tomorrowland 2026.mkv  ->  already embedded (stored URL)  (2.1s)
+[ skipped     ] [4/5] unknown_set_001.mkv  ->  no confident match (top score 84)  (6.5s)
+[ done        ] [5/5] Armin van Buuren @ ASOT 2026.mkv  ->  Armin van Buuren @ A State of Trance 2026 (2026-02-15) - 42 tracks  (11.2s)
+
+Summary
+  Processed:    5
+  Embedded:     3
+  Updated:      0
+  Up-to-date:   1
+  Skipped:      1
+  Errors:       0
+  Elapsed:      42.0s
+
+  Unmatched:
+    - unknown_set_001.mkv (no confident match)
 ```
 
-## What changes in your files
+### Verdict badges
+
+Every file ends with exactly one badge. The badges are padded to a fixed width so the lines
+align in a terminal and stay grep-friendly in log files.
+
+| Badge | Meaning for that file |
+|-------|-----------------------|
+| `done` | Matched a tracklist and embedded fresh chapters and tags |
+| `updated` | Already had chapters; re-fetched and wrote newer or missing tags (for example self-healing, or `--regenerate`) |
+| `up-to-date` | File already has a stored tracklist and all tags are current; nothing written |
+| `skipped` | No confident match (auto mode), user entered `0`, tracklist had fewer than 2 tracks, or file type is not supported |
+| `error` | A tool failed (for example `mkvpropedit`) or the tracklist fetch raised. The file is left untouched. |
+
+### Summary panel
+
+The summary at the end of a run shows counts for each verdict plus a total `Elapsed` row.
+The `Unmatched` list includes both `skipped` files (with the reason, for example
+`low confidence: score 84`) and `error` files (with the short error), so you can see at a
+glance which files still need attention.
+
+### Verbosity and piping
+
+| Mode | Verdict lines | Summary panel | Transient spinner | Extra output |
+|------|---------------|---------------|-------------------|--------------|
+| default (interactive) | yes | yes | yes | candidate table, selection prompt |
+| `--auto` | yes | yes | yes | none (no prompt) |
+| `--quiet` / `-q` | no | yes | no | nothing per file |
+| `--verbose` / `-v` | yes | yes | no | INFO lines (key decisions, search results, parse info) |
+| `--debug` | yes | yes | no | INFO + DEBUG (cache hits, retries, internals) |
+| piped to a file (for example `cratedigger identify ... > run.log`) | yes | yes | no | same as interactive otherwise |
+
+The spinner is a convenience for live terminals. Anything that captures or logs the output
+(pipes, `--verbose`, `--debug`, `--quiet`) drops the spinner so the captured log stays
+clean; the verdict lines and summary are identical in every mode.
+
+The interactive candidate table is unchanged from previous versions. The selection prompt
+itself has been tightened so it no longer collides with the next file's output (previously
+the `Select` line and the following file could stitch onto one visual line).
 
 `identify` modifies only the files it processes. For each matched file:
 
@@ -276,6 +328,38 @@ CrateDigger could not find a matching tracklist. Try:
 
 The top result scored below 150, or the gap to the second result was less than 20. Run the
 same folder interactively (without `--auto`) to see the matches and pick manually.
+
+**Verdict is `skipped (low confidence: score X)`**
+
+Same cause as above: auto mode was not confident. Re-run without `--auto` to see the
+candidate table, or pass `--tracklist` with the right URL.
+
+**Verdict is `skipped (no results)`**
+
+CrateDigger's generated search returned nothing. Try a broader query:
+
+```bash
+cratedigger identify recording.mkv --tracklist "Tiesto Miami 2026"
+```
+
+If you already know the tracklist, pass the URL or numeric ID directly with `--tracklist`.
+
+**Verdict is `error (mkvpropedit failed)`**
+
+`mkvpropedit` is missing or could not write to the file. Confirm MKVToolNix is installed
+and on your PATH (`mkvpropedit --version`), and that the file is writable.
+
+**Verdict is `error (TracklistError: ...)`**
+
+1001Tracklists returned an unexpected response (rate limit, transient 5xx, parse hiccup).
+Re-run the command; a single retry usually clears it. If it persists for the same file,
+pass `--tracklist` with the URL so the search step is skipped.
+
+**No spinner appears while a file is processing**
+
+The spinner is disabled when output is being captured or when you passed `--quiet`,
+`--verbose`, or `--debug`. That is expected. Per-file verdict lines and the summary panel
+still print in every mode.
 
 **Chapters not embedded (file is not MKV or WEBM)**
 
