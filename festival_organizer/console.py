@@ -305,6 +305,80 @@ class StepProgress:
         self.stop()
 
 
+_VERDICT_STYLES = {
+    "done":       ("done",        "green"),
+    "updated":    ("updated",     "cyan"),
+    "up-to-date": ("up-to-date",  "dim green"),
+    "skipped":    ("skipped",     "yellow"),
+    "error":      ("error",       "red"),
+}
+
+_VERDICT_BADGE_WIDTH = 11
+_ELAPSED_THRESHOLD_S = 0.5
+
+
+def _truncate_preserving_id(name: str, max_len: int) -> str:
+    """Truncate a filename with an ellipsis while keeping a trailing
+    YouTube-style [id].ext suffix visible. Falls back to plain middle
+    truncation when no bracketed ID is present.
+    """
+    if len(name) <= max_len:
+        return name
+    m = re.search(r"\s*\[[^\]]+\]\.[A-Za-z0-9]+$", name)
+    if m:
+        suffix = m.group(0)
+        head_len = max_len - len(suffix) - 1
+        if head_len <= 1:
+            return "\u2026" + suffix
+        return name[:head_len] + "\u2026" + suffix
+    head = max_len // 2 - 1
+    tail = max_len - head - 1
+    return name[:head] + "\u2026" + name[-tail:]
+
+
+def verdict(
+    *,
+    status: str,
+    index: int,
+    total: int,
+    filename: str,
+    detail: str,
+    elapsed_s: float,
+    width: int | None = None,
+) -> Text:
+    """One-line padded badge + [i/N] + filename + arrow + detail + elapsed.
+
+    width: when supplied, filename is truncated to fit. When None, no
+    truncation (the terminal will soft-wrap).
+    """
+    if status not in _VERDICT_STYLES:
+        raise ValueError(f"Unknown verdict status: {status}")
+    label, style = _VERDICT_STYLES[status]
+
+    fname_display = filename
+    if width is not None:
+        budget = max(10, width - _VERDICT_BADGE_WIDTH - len(f"[{index}/{total}] ")
+                     - len(" -> ") - len(detail) - 10)
+        fname_display = _truncate_preserving_id(filename, budget)
+
+    text = Text()
+    text.append("  ")
+    text.append(label, style=style)
+    pad = _VERDICT_BADGE_WIDTH - len(label) - 2
+    if pad > 0:
+        text.append(" " * pad)
+
+    text.append(f"[{index}/{total}] ")
+    text.append(fname_display)
+    if detail:
+        text.append("  ->  ")
+        text.append(detail)
+    if elapsed_s >= _ELAPSED_THRESHOLD_S:
+        text.append("  .  ")
+        text.append(f"{elapsed_s:.1f}s", style="dim")
+    return text
+
+
 def print_error(message: str, console: Console | None = None) -> None:
     """Print a styled error message.
 
