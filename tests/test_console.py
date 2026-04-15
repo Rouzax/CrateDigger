@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import io
 
+import pytest
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -341,3 +342,17 @@ def test_identify_summary_panel_omits_elapsed_when_none():
     buf = io.StringIO()
     Console(file=buf, no_color=True, width=120).print(panel)
     assert "Elapsed:" not in buf.getvalue()
+
+
+@pytest.mark.parametrize("seconds,expected", [
+    (0.0, "0.0s"),
+    (0.5, "0.5s"),
+    (29.0, "29.0s"),
+    (59.9, "59.9s"),
+    (60.0, "1m 0s"),
+    (83.2, "1m 23s"),
+    (600.0, "10m 0s"),
+])
+def test_format_elapsed_ranges(seconds, expected):
+    from festival_organizer.console import _format_elapsed
+    assert _format_elapsed(seconds) == expected

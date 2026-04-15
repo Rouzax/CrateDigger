@@ -240,7 +240,10 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 con.print("\nAborted by user.")
                 aborted = True
                 break
+            except (TracklistError, AuthenticationError, RateLimitError, ExportError) as e:
+                stat_key, vstatus, detail = "error", "error", f"{type(e).__name__}: {e}"
             except Exception as e:
+                logger.exception("Unexpected error processing %s", filepath.name)
                 stat_key, vstatus, detail = "error", "error", f"{type(e).__name__}: {e}"
 
             elapsed = time.perf_counter() - file_start
@@ -256,6 +259,8 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 stored = extract_stored_tracklist_info(filepath)
                 if not stored or not stored.get("url"):
                     unmatched_files.append(filepath.name)
+            elif stat_key == "error":
+                unmatched_files.append(filepath.name)
 
             # Pause the spinner while we emit the verdict line so it doesn't
             # flicker over static output. Restart afterward for the next file.
@@ -305,7 +310,7 @@ def _process_file(
     language: str,
     console: Console | None = None,
     verbose: bool = False,
-    spinner: "StepProgress | None" = None,
+    spinner: StepProgress | None = None,
     index: int = 0,
     total: int = 0,
 ) -> tuple[str, str, str]:
@@ -456,7 +461,7 @@ def _fetch_and_embed(
     verbose: bool = False,
     duration_seconds: float | None = None,
     regenerate: bool = False,
-    spinner: "StepProgress | None" = None,
+    spinner: StepProgress | None = None,
     index: int = 0,
     total: int = 0,
 ) -> tuple[str, str, str]:
