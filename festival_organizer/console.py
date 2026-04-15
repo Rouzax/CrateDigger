@@ -8,10 +8,13 @@ from __future__ import annotations
 
 import re
 import sys
+import threading
 
 from rich.console import Console
+from rich.live import Live
 from rich.markup import escape
 from rich.panel import Panel
+from rich.spinner import Spinner
 from rich.table import Table
 from rich.text import Text
 
@@ -223,6 +226,83 @@ def summary_panel(counts: dict, log_path=None) -> Panel:
         body.append(str(log_path), style="dim")
 
     return Panel(body, title="Summary", expand=True)
+
+
+class StepProgress:
+    """Transient live spinner with a step label (and optional sub-counter).
+
+    Drives feedback for blocking ops like HTTP calls, subprocess writes,
+    and inter-file throttling. Auto-disables when ``enabled=False``,
+    matching the product-wide suppression rules (see ``suppression_enabled``).
+
+    Usage::
+
+        with StepProgress(console, enabled=not suppressed) as sp:
+            sp.update("Searching 1001TL", filename=fname)
+            results = session.search(...)
+            sp.update("Fetching tracklist", filename=fname)
+            ...
+    """
+
+    def __init__(self, console: Console, enabled: bool = True) -> None:
+        self._console = console
+        self._enabled = enabled
+        self._lock = threading.Lock()
+        self.step = ""
+        self.filename: str | None = None
+        self.current = 0
+        self.total = 0
+        self.live: Live | None = None
+
+    def _render(self) -> Text:
+        text = Text()
+        label = self.step
+        if self.total > 0:
+            label = f"{label} {self.current}/{self.total}"
+        text.append(label, style="cyan")
+        if self.filename:
+            text.append(f"  {self.filename}", style="dim")
+        return text
+
+    def update(
+        self,
+        step: str,
+        *,
+        filename: str | None = None,
+        current: int = 0,
+        total: int = 0,
+    ) -> None:
+        with self._lock:
+            self.step = step
+            if filename is not None:
+                self.filename = filename
+            self.current = current
+            self.total = total
+            if self.live is not None:
+                self.live.update(Spinner("dots", text=self._render()))
+
+    def start(self) -> None:
+        if not self._enabled or self.live is not None:
+            return
+        self.live = Live(
+            Spinner("dots", text=self._render()),
+            console=self._console,
+            refresh_per_second=10,
+            transient=True,
+        )
+        self.live.__enter__()
+
+    def stop(self) -> None:
+        if self.live is not None:
+            self.live.__exit__(None, None, None)
+            self.live = None
+
+    def __enter__(self) -> "StepProgress":
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.stop()
 
 
 def print_error(message: str, console: Console | None = None) -> None:
