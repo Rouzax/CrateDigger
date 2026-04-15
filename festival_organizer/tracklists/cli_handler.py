@@ -9,6 +9,7 @@ Logging:
 import logging
 import re
 import sys
+import time
 from pathlib import Path
 
 from rich.console import Console
@@ -18,11 +19,13 @@ from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import Config
 from festival_organizer.console import (
+    StepProgress,
     escape,
     header_panel,
     identify_summary_panel,
     make_console,
     results_table,
+    suppression_enabled,
 )
 from festival_organizer.scanner import scan_folder
 from festival_organizer.tracklists.api import (
@@ -119,6 +122,13 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
     quiet = getattr(args, "quiet", False)
     language = config.tracklists_settings.get("chapter_language", "eng")
 
+    suppressed = suppression_enabled(
+        con,
+        quiet=quiet,
+        verbose=getattr(args, "verbose", False),
+        debug=getattr(args, "debug", False),
+    )
+
     # Determine files to process
     if root.is_file():
         files = [root]
@@ -144,11 +154,14 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         print("Error: credentials required. Set TRACKLISTS_EMAIL and TRACKLISTS_PASSWORD environment variables.", file=sys.stderr)
         return 1
 
-    try:
-        session.login(email, password)
-    except AuthenticationError as e:
-        print(f"Login failed: {e}", file=sys.stderr)
-        return 1
+    with StepProgress(con, enabled=not suppressed) as spinner:
+        spinner.update("Signing in to 1001Tracklists...")
+        try:
+            session.login(email, password)
+        except AuthenticationError as e:
+            spinner.stop()
+            print(f"Login failed: {e}", file=sys.stderr)
+            return 1
 
     rows = {
         "Source": str(root),
@@ -176,6 +189,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
     tagged_count = 0
     verbose = logger.isEnabledFor(logging.INFO)
 
+    total_start = time.perf_counter()
     for i, filepath in enumerate(files):
         if i > 0 and not preview:
             session.throttle()
