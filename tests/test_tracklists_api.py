@@ -444,3 +444,75 @@ def test_request_forces_utf8_encoding(tmp_path):
 
     assert result.encoding == "utf-8"
     assert result.text == "Tiësto"
+
+
+# --- export_tracklist on_progress callback ---
+
+_ARMIN_MARLON_FIXTURE = (
+    Path(__file__).parent / "tracklists" / "fixtures" / "armin_marlon_ultra_miami_2026.html"
+)
+
+
+def _build_export_mock_responses(page_html: str):
+    """Return a callable suitable for patching TracklistSession._request.
+
+    First call (GET page) returns a response carrying the fixture HTML.
+    Second call (POST export AJAX) returns a JSON-shaped response with a
+    minimal successful export payload.
+    """
+    page_resp = MagicMock()
+    page_resp.text = page_html
+    page_resp.url = "https://www.1001tracklists.com/tracklist/abc123/armin-marlon-ultra-miami-2026.html"
+
+    ajax_resp = MagicMock()
+    ajax_resp.json.return_value = {
+        "success": True,
+        "data": "00:00 Track One\n01:00 Track Two\n",
+    }
+
+    responses = [page_resp, ajax_resp]
+    calls = {"i": 0}
+
+    def _side_effect(method, url, *args, **kwargs):
+        i = calls["i"]
+        calls["i"] += 1
+        if i < len(responses):
+            return responses[i]
+        # Any additional calls (e.g. stray requests) get an empty response
+        extra = MagicMock()
+        extra.text = ""
+        extra.json.return_value = {"success": False, "message": "unexpected"}
+        return extra
+
+    return _side_effect
+
+
+def test_export_tracklist_invokes_on_progress_with_dj_count():
+    """When on_progress is provided, it's called exactly once with the DJ count."""
+    page_html = _ARMIN_MARLON_FIXTURE.read_text(encoding="utf-8")
+    session = TracklistSession()
+
+    calls: list[str] = []
+    with patch.object(session, "_request", side_effect=_build_export_mock_responses(page_html)):
+        with patch.object(session, "_fetch_dj_profile", return_value={"artwork_url": ""}):
+            session.export_tracklist(
+                "abc123",
+                on_progress=lambda msg: calls.append(msg),
+            )
+
+    assert len(calls) == 1
+    assert "2" in calls[0]
+    assert "DJ" in calls[0]
+
+
+def test_export_tracklist_no_callback_does_not_crash():
+    """When on_progress is None, behaviour is unchanged."""
+    page_html = _ARMIN_MARLON_FIXTURE.read_text(encoding="utf-8")
+    session = TracklistSession()
+
+    with patch.object(session, "_request", side_effect=_build_export_mock_responses(page_html)):
+        with patch.object(session, "_fetch_dj_profile", return_value={"artwork_url": ""}):
+            export = session.export_tracklist("abc123")
+
+    assert export is not None
+    assert len(export.dj_artists) == 2

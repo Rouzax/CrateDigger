@@ -24,6 +24,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Callable
 
 import requests
 
@@ -338,8 +339,18 @@ class TracklistSession:
 
         return results
 
-    def export_tracklist(self, tracklist_id: str, full_url: str | None = None) -> TracklistExport:
+    def export_tracklist(
+        self,
+        tracklist_id: str,
+        full_url: str | None = None,
+        on_progress: Callable[[str], None] | None = None,
+    ) -> TracklistExport:
         """Fetch tracklist data (timestamps + track titles).
+
+        If *on_progress* is provided it's invoked exactly once, after the
+        tracklist page HTML has been parsed and the linked DJ list is known,
+        before any per-DJ profile fetch. The message format is
+        "Fetching tracklist ({N} DJs)".
 
         Raises ExportError on failure.
         """
@@ -429,6 +440,8 @@ class TracklistSession:
         dj_artwork_url = ""
         dj_slugs = [slug for slug, _name in dj_artists] if dj_artists else _extract_dj_slugs(page_resp.text)
         dj_name_map = {slug: name for slug, name in dj_artists}
+        if on_progress:
+            on_progress(f"Fetching tracklist ({len(dj_artists)} DJs)")
         for i, dj_slug in enumerate(dj_slugs):
             cached = self._dj_cache.get(dj_slug) if self._dj_cache else None
             if cached:
