@@ -134,16 +134,13 @@ A real batch of five festival recordings looks like this:
 [ done        ] [5/5] Armin van Buuren @ ASOT 2026.mkv  ->  Armin van Buuren @ A State of Trance 2026 (2026-02-15) - 42 tracks  (11.2s)
 
 Summary
-  Processed:    5
-  Embedded:     3
-  Updated:      0
-  Up-to-date:   1
-  Skipped:      1
-  Errors:       0
-  Elapsed:      42.0s
+  added: 3  updated: 0  up_to_date: 1  skipped: 1  error: 0  previewed: 0
 
-  Unmatched:
-    - unknown_set_001.mkv
+  Metadata tagged: 4 files
+  Festivals:       Ultra Music Festival Miami (3), Tomorrowland Winter (1)
+  Unmatched:       1 (unknown_set_001.mkv)
+
+  Elapsed: 42.0s
 ```
 
 ### Verdict badges
