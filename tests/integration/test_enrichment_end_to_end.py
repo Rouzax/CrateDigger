@@ -1161,3 +1161,67 @@ def _assert_pipeline_expect(library_root: Path, expect: dict) -> None:
         assert _any_image(folder, "fanart"), f"no fanart beside {matches[0].name}"
 
 
+@pytest.mark.integration
+def test_identify_console_contract(tmp_path):
+    """Piped `identify --auto` emits one verdict line per MKV and no prompt collision.
+
+    Runs the `cratedigger` CLI as a subprocess with captured (non-TTY) stdout
+    over all fixture MKVs in CRATEDIGGER_TEST_MKV_DIR. Asserts:
+
+    1. No interactive prompt appears (``Select (`` absent) and the pre-fix
+       bug signature ``":   Tracklist:"`` (prompt text glued onto the same
+       line as a verdict) does not appear.
+    2. Exactly one verdict line per fixture MKV, matched via the verdict
+       primitive's padded badge format.
+
+    Copies fixtures into a scratch dir so originals are not mutated.
+    """
+    import re
+    import shutil as _shutil
+    import subprocess as _subprocess
+
+    assert MKV_DIR is not None  # narrowed by module-level pytestmark
+    cratedigger_bin = _shutil.which("cratedigger")
+    if cratedigger_bin is None:
+        pytest.skip("cratedigger console script not on PATH")
+
+    scratch = tmp_path / "mkvs"
+    scratch.mkdir()
+    fixtures = sorted(MKV_DIR.glob("*.mkv"))
+    if not fixtures:
+        pytest.skip("No MKVs in CRATEDIGGER_TEST_MKV_DIR")
+    for src in fixtures:
+        _shutil.copy2(src, scratch / src.name)
+
+    result = _subprocess.run(
+        [
+            cratedigger_bin,
+            "identify", str(scratch), "--auto",
+            "--config", str(CONFIG),
+        ],
+        capture_output=True, text=True, timeout=600,
+    )
+
+    out = result.stdout
+
+    # 1. No interactive prompt under --auto, and no prompt/verdict collision.
+    # The literal substring ":   Tracklist:" is the canonical pre-fix bug
+    # signature (prompt text glued onto the verdict line).
+    assert "Select (" not in out, (
+        f"--auto must not prompt. stdout:\n{out}\nstderr:\n{result.stderr}"
+    )
+    assert ":   Tracklist:" not in out, (
+        f"Prompt/verdict collision detected. stdout:\n{out}"
+    )
+
+    # 2. Exactly one verdict line per fixture MKV.
+    verdict_pattern = re.compile(
+        r"^\s+(done|updated|up-to-date|skipped|error)\s+\[\d+/\d+\]",
+        re.MULTILINE,
+    )
+    matches = verdict_pattern.findall(out)
+    assert len(matches) == len(fixtures), (
+        f"Expected {len(fixtures)} verdict lines, got {len(matches)}: {matches}\n"
+        f"Full stdout:\n{out}\nstderr:\n{result.stderr}"
+    )
+
