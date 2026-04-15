@@ -94,7 +94,7 @@ def test_up_to_date_when_ttv30_present_and_tags_match(tmp_path):
         embed_chapters=mocks["embed_chapters"],
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
-        status = _fetch_and_embed(
+        status, _, _ = _fetch_and_embed(
             _make_session(), "https://x", fake, 126, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
@@ -119,7 +119,7 @@ def test_self_heal_triggers_when_ttv30_missing(tmp_path):
         embed_chapters=mocks["embed_chapters"],
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
-        status = _fetch_and_embed(
+        status, _, _ = _fetch_and_embed(
             _make_session(), "https://x", fake, 126, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
@@ -149,7 +149,7 @@ def test_self_heal_triggers_when_album_artist_display_missing(tmp_path):
         embed_chapters=mocks["embed_chapters"],
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
-        status = _fetch_and_embed(
+        status, _, _ = _fetch_and_embed(
             _make_session(), "https://x", fake, 126, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
@@ -181,7 +181,7 @@ def test_album_artist_check_skipped_when_no_dj_artists(tmp_path):
         embed_chapters=mocks["embed_chapters"],
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
-        status = _fetch_and_embed(
+        status, _, _ = _fetch_and_embed(
             session, "https://x", fake, 126, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
@@ -206,7 +206,7 @@ def test_regenerate_forces_retag_even_when_up_to_date(tmp_path):
         embed_chapters=mocks["embed_chapters"],
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
-        status = _fetch_and_embed(
+        status, _, _ = _fetch_and_embed(
             _make_session(), "https://x", fake, 126, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
@@ -251,7 +251,7 @@ def test_ttv70_tag_diff_also_routes_through_embed_chapters(tmp_path):
         embed_chapters=mocks["embed_chapters"],
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
-        status = _fetch_and_embed(
+        status, _, _ = _fetch_and_embed(
             _make_session(), "https://x", fake, 126, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",

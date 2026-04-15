@@ -13,7 +13,6 @@ import time
 from pathlib import Path
 
 from rich.console import Console
-from rich.text import Text
 
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
@@ -26,6 +25,7 @@ from festival_organizer.console import (
     make_console,
     results_table,
     suppression_enabled,
+    verdict,
 )
 from festival_organizer.scanner import scan_folder
 from festival_organizer.tracklists.api import (
@@ -96,16 +96,25 @@ _FRIENDLY_TAG_NAMES = {
 }
 
 
-def _print_tagged_metadata(export, console: Console) -> None:
-    """Print per-file tagged metadata (verbose mode only)."""
+def _print_tagged_metadata_from_stored(filepath: Path, console: Console) -> None:
+    """Print per-file tagged metadata from stored tags (post-verdict, under --verbose).
+
+    Reads tags with extract_stored_tracklist_info instead of consuming a live
+    TracklistExport object. Use when the export isn't on hand.
+    """
+    stored = extract_stored_tracklist_info(filepath)
+    if not stored:
+        return
     parts = []
-    if export.dj_artists:
-        parts.append(", ".join(name for _, name in export.dj_artists))
-    for source_type, names in export.sources_by_type.items():
-        if source_type == "Open Air / Festival" and names:
-            parts.append(names[0])
-    if export.stage_text:
-        parts.append(export.stage_text)
+    if stored.get("artists"):
+        parts.append(stored["artists"].replace("|", ", "))
+    for key in ("festival", "conference", "radio"):
+        val = stored.get(key, "")
+        if val:
+            parts.append(val.split("|")[0])
+            break
+    if stored.get("stage"):
+        parts.append(stored["stage"])
     if parts:
         console.print(f"  [dim]Tagged: {escape(', '.join(parts))}[/dim]")
 
@@ -154,6 +163,8 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         print("Error: credentials required. Set TRACKLISTS_EMAIL and TRACKLISTS_PASSWORD environment variables.", file=sys.stderr)
         return 1
 
+    total_start = time.perf_counter()
+
     with StepProgress(con, enabled=not suppressed) as spinner:
         spinner.update("Signing in to 1001Tracklists...")
         try:
@@ -163,80 +174,106 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
             print(f"Login failed: {e}", file=sys.stderr)
             return 1
 
-    rows = {
-        "Source": str(root),
-        "Files": str(len(files)),
-        "Mode": "preview" if preview else "embed",
-        "Select": "auto" if auto_select else "interactive",
-    }
-    con.print(header_panel("CrateDigger: Identify", rows))
+        rows = {
+            "Source": str(root),
+            "Files": str(len(files)),
+            "Mode": "preview" if preview else "embed",
+            "Select": "auto" if auto_select else "interactive",
+        }
+        spinner.stop()
+        con.print(header_panel("CrateDigger: Identify", rows))
+        spinner.start()
 
-    # Pre-compute search expansion and name sets (constant across all files)
-    search_expansion = _build_search_expansion(config)
+        # Pre-compute search expansion and name sets (constant across all files)
+        search_expansion = _build_search_expansion(config)
 
-    dj_name_set = dj_cache.all_names_lower() if dj_cache else set()
-    dj_name_set |= {n.lower() for n in config.artist_aliases.keys()}
-    dj_name_set |= {n.lower() for n in config.artist_aliases.values()}
-    dj_name_set |= {g.lower() for g in config.artist_groups}
+        dj_name_set = dj_cache.all_names_lower() if dj_cache else set()
+        dj_name_set |= {n.lower() for n in config.artist_aliases.keys()}
+        dj_name_set |= {n.lower() for n in config.artist_aliases.values()}
+        dj_name_set |= {g.lower() for g in config.artist_groups}
 
-    source_name_set = source_cache.all_names_lower() if source_cache else set()
-    source_name_set |= {n.lower() for n in config.known_festivals}
+        source_name_set = source_cache.all_names_lower() if source_cache else set()
+        source_name_set |= {n.lower() for n in config.known_festivals}
 
-    # Process files
-    stats = {"added": 0, "updated": 0, "up_to_date": 0, "skipped": 0, "error": 0}
-    tagged_festivals: dict[str, int] = {}
-    unmatched_files: list[str] = []
-    tagged_count = 0
-    verbose = logger.isEnabledFor(logging.INFO)
+        # Process files
+        stats = {"added": 0, "updated": 0, "up_to_date": 0, "skipped": 0,
+                 "error": 0, "previewed": 0}
+        tagged_festivals: dict[str, int] = {}
+        unmatched_files: list[str] = []
+        tagged_count = 0
+        info_enabled = logger.isEnabledFor(logging.INFO)
 
-    total_start = time.perf_counter()
-    for i, filepath in enumerate(files):
-        if i > 0 and not preview:
-            session.throttle()
+        aborted = False
+        for i, filepath in enumerate(files):
+            if i > 0 and not preview:
+                spinner.update(
+                    f"[{i+1}/{len(files)}] Throttling {delay}s",
+                    filename=filepath.name,
+                )
+                session.throttle()
 
-        if not quiet:
-            text = Text()
-            text.append(f"\n[{i+1}/{len(files)}] ", style="bold")
-            text.append(filepath.name)
-            con.print(text)
+            file_start = time.perf_counter()
+            try:
+                stat_key, vstatus, detail = _process_file(
+                    filepath=filepath,
+                    scan_root=scan_root,
+                    session=session,
+                    config=config,
+                    source_cache=source_cache,
+                    search_expansion=search_expansion,
+                    dj_name_set=dj_name_set,
+                    source_name_set=source_name_set,
+                    tracklist_input=tracklist_input,
+                    auto_select=auto_select,
+                    ignore_stored=ignore_stored,
+                    preview=preview,
+                    quiet=quiet,
+                    language=language,
+                    console=con,
+                    verbose=info_enabled,
+                    spinner=spinner,
+                    index=i + 1,
+                    total=len(files),
+                )
+            except KeyboardInterrupt:
+                spinner.stop()
+                con.print("\nAborted by user.")
+                aborted = True
+                break
+            except Exception as e:
+                stat_key, vstatus, detail = "error", "error", f"{type(e).__name__}: {e}"
 
-        try:
-            status = _process_file(
-                filepath=filepath,
-                scan_root=scan_root,
-                session=session,
-                config=config,
-                source_cache=source_cache,
-                search_expansion=search_expansion,
-                dj_name_set=dj_name_set,
-                source_name_set=source_name_set,
-                tracklist_input=tracklist_input,
-                auto_select=auto_select,
-                ignore_stored=ignore_stored,
-                preview=preview,
-                quiet=quiet,
-                language=language,
-                console=con,
-                verbose=verbose,
-            )
-            stats[status] = stats.get(status, 0) + 1
-            if status in ("added", "updated", "up_to_date"):
+            elapsed = time.perf_counter() - file_start
+            stats[stat_key] = stats.get(stat_key, 0) + 1
+
+            if stat_key in ("added", "updated", "up_to_date", "previewed"):
                 stored = extract_stored_tracklist_info(filepath)
                 fest = stored.get("festival", "") if stored else ""
                 if fest:
                     tagged_festivals[fest] = tagged_festivals.get(fest, 0) + 1
                     tagged_count += 1
-            elif status == "skipped":
+            elif stat_key == "skipped":
                 stored = extract_stored_tracklist_info(filepath)
                 if not stored or not stored.get("url"):
                     unmatched_files.append(filepath.name)
-            # previewed = tracklist found in preview mode, not unmatched
-        except KeyboardInterrupt:
-            con.print("\nAborted by user.")
-            break
-        except Exception as e:
-            con.print(f"  [red]Error:[/red] {escape(str(e))}")
-            stats["error"] += 1
+
+            # Pause the spinner while we emit the verdict line so it doesn't
+            # flicker over static output. Restart afterward for the next file.
+            spinner.stop()
+            console_width = con.size.width if con.size else 120
+            con.print(verdict(
+                status=vstatus, index=i + 1, total=len(files),
+                filename=filepath.name, detail=detail, elapsed_s=elapsed,
+                width=console_width,
+            ))
+            if info_enabled and stat_key in ("added", "updated"):
+                _print_tagged_metadata_from_stored(filepath, con)
+            spinner.start()
+
+        if aborted:
+            spinner.stop()
+
+    total_elapsed = time.perf_counter() - total_start
 
     # Summary
     con.print()
@@ -245,6 +282,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         tagged_count=tagged_count,
         festivals=tagged_festivals,
         unmatched=unmatched_files,
+        elapsed_s=total_elapsed,
     ))
 
     return 0
@@ -267,9 +305,15 @@ def _process_file(
     language: str,
     console: Console | None = None,
     verbose: bool = False,
-) -> str:
-    """Process a single file. Returns status string."""
+    spinner: "StepProgress | None" = None,
+    index: int = 0,
+    total: int = 0,
+) -> tuple[str, str, str]:
+    """Process a single file. Returns a (stat_key, verdict_status, detail) triple."""
     con = console or make_console()
+
+    if spinner is not None:
+        spinner.update(f"[{index}/{total}] Analysing", filename=filepath.name)
 
     # Analyse file for metadata
     mf = analyse_file(filepath, scan_root, config)
@@ -281,25 +325,41 @@ def _process_file(
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
             if auto_select:
-                con.print(f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]")
+                if spinner is not None:
+                    spinner.update(
+                        f"[{index}/{total}] Verifying stored tracklist",
+                        filename=filepath.name,
+                    )
                 return _fetch_and_embed(
                     session, stored["url"], filepath, duration_mins,
                     config, preview, quiet, language, console=con,
                     verbose=verbose, duration_seconds=mf.duration_seconds,
                     regenerate=ignore_stored,
+                    spinner=spinner, index=index, total=total,
                 )
             else:
+                if spinner is not None:
+                    spinner.stop()
                 con.print(f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]")
                 choice = input("  Use stored? [Y]es / (S)kip / (R)esearch: ").strip().lower()
+                con.print()
+                if spinner is not None:
+                    spinner.start()
                 if choice in ("y", "yes", ""):
+                    if spinner is not None:
+                        spinner.update(
+                            f"[{index}/{total}] Verifying stored tracklist",
+                            filename=filepath.name,
+                        )
                     return _fetch_and_embed(
                         session, stored["url"], filepath, duration_mins,
                         config, preview, quiet, language, console=con,
                         verbose=verbose, duration_seconds=mf.duration_seconds,
                         regenerate=ignore_stored,
+                        spinner=spinner, index=index, total=total,
                     )
                 elif choice in ("s", "skip"):
-                    return "skipped"
+                    return ("skipped", "skipped", "user skipped")
                 # else: fall through to search
 
     # Determine search query
@@ -311,12 +371,12 @@ def _process_file(
 
     # Handle direct URL or ID
     if source["type"] == "url":
-        tl_id = extract_tracklist_id(source["value"])
         return _fetch_and_embed(
             session, source["value"], filepath, duration_mins,
             config, preview, quiet, language, console=con,
             verbose=verbose, duration_seconds=mf.duration_seconds,
             regenerate=ignore_stored,
+            spinner=spinner, index=index, total=total,
         )
     elif source["type"] == "id":
         return _fetch_and_embed(
@@ -325,6 +385,7 @@ def _process_file(
             tracklist_id=source["value"],
             verbose=verbose, duration_seconds=mf.duration_seconds,
             regenerate=ignore_stored,
+            spinner=spinner, index=index, total=total,
         )
 
     # Search
@@ -333,22 +394,20 @@ def _process_file(
     # Expand abbreviations for better 1001TL search results
     query_str = expand_aliases_in_query(query_str, search_expansion)
 
-    if not quiet:
-        con.print(f"  [bold]Query:[/bold] {escape(query_str)}")
+    if spinner is not None:
+        spinner.update(f"[{index}/{total}] Searching 1001TL", filename=filepath.name)
 
     results = session.search(query_str, duration_minutes=duration_mins, year=mf.year or None)
 
     if not results:
-        con.print("  [dim]No results found.[/dim]")
-        return "skipped"
+        return ("skipped", "skipped", "no results")
 
     query_parts = parse_query(query_str, search_expansion)
     scored = score_results(results, query_parts, duration_mins,
                            dj_names=dj_name_set or None, source_names=source_name_set or None)
 
     if not scored:
-        con.print("  [dim]No relevant results after filtering.[/dim]")
-        return "skipped"
+        return ("skipped", "skipped", "no results")
 
     # Select result
     if auto_select:
@@ -356,17 +415,18 @@ def _process_file(
         runner_up = scored[1].score if len(scored) > 1 else 0
         gap = selected.score - runner_up
 
-        if selected.score < AUTO_SELECT_MIN_SCORE or gap < AUTO_SELECT_MIN_GAP:
-            if not quiet:
-                reason = f"score {selected.score:.0f}" if selected.score < AUTO_SELECT_MIN_SCORE else f"gap {gap:.0f}"
-                con.print(f"  [yellow]Skipped (low confidence: {reason})[/yellow]")
-            return "skipped"
-        if not quiet:
-            _display_auto_selected(selected, duration_mins, con)
+        if selected.score < AUTO_SELECT_MIN_SCORE:
+            return ("skipped", "skipped", f"low confidence (score {selected.score:.0f})")
+        if gap < AUTO_SELECT_MIN_GAP:
+            return ("skipped", "skipped", f"low confidence (gap {gap:.0f})")
     else:
+        if spinner is not None:
+            spinner.stop()
         selected = _select_interactive(scored, duration_mins, query_parts, con)
+        if spinner is not None:
+            spinner.start()
         if selected is None:
-            return "skipped"
+            return ("skipped", "skipped", "user cancelled")
 
     # Fetch and embed
     tl_id = selected.id
@@ -377,6 +437,7 @@ def _process_file(
         tracklist_date=selected.date,
         verbose=verbose, duration_seconds=mf.duration_seconds,
         regenerate=ignore_stored,
+        spinner=spinner, index=index, total=total,
     )
 
 
@@ -395,14 +456,33 @@ def _fetch_and_embed(
     verbose: bool = False,
     duration_seconds: float | None = None,
     regenerate: bool = False,
-) -> str:
-    """Fetch tracklist, parse chapters, and embed."""
+    spinner: "StepProgress | None" = None,
+    index: int = 0,
+    total: int = 0,
+) -> tuple[str, str, str]:
+    """Fetch tracklist, parse chapters, and embed.
+
+    Returns a (stat_key, verdict_status, detail) triple.
+    """
     con = console or make_console()
 
     if not tracklist_id and url:
         tracklist_id = extract_tracklist_id(url)
 
-    export = session.export_tracklist(tracklist_id, full_url=url)
+    if spinner is not None:
+        spinner.update(
+            f"[{index}/{total}] Fetching tracklist",
+            filename=filepath.name,
+        )
+        export = session.export_tracklist(
+            tracklist_id,
+            full_url=url,
+            on_progress=lambda msg: spinner.update(
+                f"[{index}/{total}] {msg}", filename=filepath.name
+            ),
+        )
+    else:
+        export = session.export_tracklist(tracklist_id, full_url=url)
 
     # Cap the set-level GENRES tag per config. top_genres_by_frequency counts
     # per-track genre occurrences and keeps the top-N with deterministic
@@ -419,24 +499,19 @@ def _fetch_and_embed(
     try:
         chapters = parse_tracklist_lines(export.lines, language=language)
         chapters = trim_chapters_to_duration(chapters, duration_seconds)
-    except ValueError as e:
-        con.print(f"  {escape(str(e))}")
+    except ValueError:
         if not preview:
             # Tag file with URL for future pickup
             embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
-            con.print("  Tagged with URL for future pickup.")
-        return "skipped"
+        return ("skipped", "skipped", "no chapters parsed")
 
     if not chapters:
-        con.print("  [dim]No chapters found in tracklist.[/dim]")
-        return "skipped"
+        return ("skipped", "skipped", "no chapters parsed")
 
     if len(chapters) < 2:
-        con.print("  [dim]Only 1 chapter, skipping (not useful for navigation)[/dim]")
         if not preview:
             embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
-            con.print("  Tagged with URL for future pickup.")
-        return "skipped"
+        return ("skipped", "skipped", "only 1 chapter")
 
     # Check for duplicates
     existing = extract_existing_chapters(filepath)
@@ -505,14 +580,28 @@ def _fetch_and_embed(
             missing_album_tags = bool(export.dj_artists) and not has_album_artist_display_tags(filepath)
             if (not tags_to_update and not missing_chapter_tags
                     and not missing_album_tags and not regenerate):
-                if not quiet:
-                    con.print(f"  [green]Up to date[/green] ({len(chapters)} chapters)")
-                return "up_to_date"
+                return ("up_to_date", "up-to-date", f"{len(chapters)} chapters")
             # Otherwise route through embed_chapters: it writes TTV=70 +
             # per-chapter TTV=30 + folds any duplicate global Tag blocks.
             # Deterministic ChapterUIDs make this byte-idempotent on re-run.
+            if missing_chapter_tags:
+                reason = "populated per-chapter tags"
+            elif missing_album_tags:
+                reason = "populated album-artist tags"
+            elif tags_to_update:
+                friendly = ", ".join(
+                    _FRIENDLY_TAG_NAMES.get(k, k) for k in tags_to_update
+                )
+                reason = f"updated {friendly}"
+            else:
+                reason = "refreshed (regenerate)"
             if preview:
-                return "updated"
+                return ("updated", "updated", f"{export.title} . {reason} . {len(chapters)} chapters")
+            if spinner is not None:
+                spinner.update(
+                    f"[{index}/{total}] Embedding {len(chapters)} chapters",
+                    filename=filepath.name,
+                )
             success = embed_chapters(
                 filepath, chapters,
                 tracklist_url=export.url, tracklist_title=export.title,
@@ -525,45 +614,29 @@ def _fetch_and_embed(
                 alias_resolver=config.resolve_artist,
             )
             if success:
-                if not quiet:
-                    if missing_chapter_tags:
-                        reason = "populated per-chapter tags"
-                    elif missing_album_tags:
-                        reason = "populated album-artist tags"
-                    elif tags_to_update:
-                        friendly = ", ".join(
-                            _FRIENDLY_TAG_NAMES.get(k, k) for k in tags_to_update
-                        )
-                        reason = f"updated {escape(friendly)}"
-                    else:
-                        reason = "refreshed (regenerate)"
-                    con.print(f"  [cyan]Re-tagged:[/cyan] {reason} ({len(chapters)} chapters)")
-                return "updated"
+                return ("updated", "updated", f"{export.title} . {reason} . {len(chapters)} chapters")
             logger.warning("Failed to re-tag %s", filepath)
-            return "skipped"
+            return ("error", "error", "mkvpropedit failed")
 
-    # Display chapters
-    if not quiet or preview:
-        con.print(f"  [bold]Tracklist:[/bold] {escape(export.title)}")
-        con.print(f"  [bold]Chapters:[/bold]  {len(chapters)}")
-        if preview:
+    # Preview-only: show the planned chapter list, don't write.
+    if preview:
+        if not quiet:
+            con.print(f"  [bold]Tracklist:[/bold] {escape(export.title)}")
+            con.print(f"  [bold]Chapters:[/bold]  {len(chapters)}")
             for ch in chapters:
                 con.print(f"    [dim]{ch.timestamp[:8]}[/dim] {escape(ch.title)}")
-
-    if preview:
-        return "previewed"
+        return ("previewed", "done", f"{export.title} . {len(chapters)} chapters (preview)")
 
     # Embed
+    if spinner is not None:
+        spinner.update(
+            f"[{index}/{total}] Embedding {len(chapters)} chapters",
+            filename=filepath.name,
+        )
     success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
     if success:
-        if not quiet:
-            con.print(f"  [green]Embedded {len(chapters)} chapters.[/green]")
-            if verbose:
-                _print_tagged_metadata(export, con)
-        return "added"
-    else:
-        con.print("  [red]Failed to embed chapters (mkvpropedit error).[/red]")
-        return "error"
+        return ("added", "done", f"{export.title} . {len(chapters)} chapters")
+    return ("error", "error", "mkvpropedit failed")
 
 
 def _select_interactive(results: list, duration_mins: int, query_parts=None, console: Console | None = None) -> object | None:
@@ -576,6 +649,7 @@ def _select_interactive(results: list, duration_mins: int, query_parts=None, con
     con.print("   [dim]0. Cancel[/dim]\n")
 
     max_show = min(len(results), 15)
+    selected: object | None = None
     while True:
         try:
             choice = input(f"  Select (1-{max_show}, or 0): ").strip()
@@ -583,25 +657,20 @@ def _select_interactive(results: list, duration_mins: int, query_parts=None, con
                 continue
             num = int(choice)
             if num == 0:
-                return None
+                selected = None
+                break
             if 1 <= num <= max_show:
-                return results[num - 1]
+                selected = results[num - 1]
+                break
         except ValueError:
             con.print(f"  [dim]Enter a number (1-{max_show}) or 0 to skip[/dim]")
             continue
         except EOFError:
-            return None
-
-
-def _display_auto_selected(result, duration_mins: int, console: Console | None = None) -> None:
-    """Print auto-selection info."""
-    con = console or make_console()
-    dur_str = f"{result.duration_mins}m" if result.duration_mins else "?"
-    diff_str = ""
-    if result.duration_mins and duration_mins:
-        diff = result.duration_mins - duration_mins
-        diff_str = f" ({diff:+d}m)" if diff != 0 else ""
-    con.print(f"  [bold]Auto-selected:[/bold] {escape(result.title)} [dim]\\[{dur_str}{diff_str}] (score: {result.score:.0f})[/dim]")
+            selected = None
+            break
+    # Emit a trailing newline so the next print starts on a fresh line.
+    con.print()
+    return selected
 
 
 def _get_credentials(config: Config) -> tuple[str, str]:

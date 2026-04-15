@@ -310,3 +310,34 @@ def test_suppression_enabled_debug(monkeypatch):
     con = make_console()
     monkeypatch.setattr(Console, "is_terminal", True)
     assert suppression_enabled(con, quiet=False, verbose=False, debug=True) is True
+
+
+def test_identify_summary_panel_includes_elapsed():
+    from festival_organizer.console import identify_summary_panel
+    panel = identify_summary_panel(
+        stats={"added": 1, "updated": 0, "up_to_date": 0, "skipped": 0, "error": 0, "previewed": 0},
+        tagged_count=1,
+        festivals={"Foo": 1},
+        unmatched=[],
+        elapsed_s=83.2,
+    )
+    from rich.console import Console
+    import io
+    buf = io.StringIO()
+    Console(file=buf, no_color=True, width=120).print(panel)
+    out = buf.getvalue()
+    assert "Elapsed:" in out
+    assert "1m 23s" in out
+
+
+def test_identify_summary_panel_omits_elapsed_when_none():
+    from festival_organizer.console import identify_summary_panel
+    panel = identify_summary_panel(
+        stats={"added": 0, "updated": 0, "up_to_date": 0, "skipped": 0, "error": 0, "previewed": 0},
+        tagged_count=0,
+    )
+    from rich.console import Console
+    import io
+    buf = io.StringIO()
+    Console(file=buf, no_color=True, width=120).print(panel)
+    assert "Elapsed:" not in buf.getvalue()

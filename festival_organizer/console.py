@@ -75,6 +75,14 @@ def _score_style(score: float) -> tuple[str, str]:
     return "-", "red"
 
 
+def _format_elapsed(seconds: float) -> str:
+    """Human-readable elapsed time for summary panels."""
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    mins, secs = divmod(int(seconds), 60)
+    return f"{mins}m {secs}s"
+
+
 def _duration_style(diff_mins: float) -> str:
     """Return a style string for a duration difference."""
     abs_diff = abs(diff_mins)
@@ -417,6 +425,7 @@ def identify_summary_panel(
     tagged_count: int = 0,
     festivals: dict[str, int] | None = None,
     unmatched: list[str] | None = None,
+    elapsed_s: float | None = None,
 ) -> Panel:
     """Summary panel for the identify command with metadata breakdown."""
     body = Text()
@@ -460,5 +469,10 @@ def identify_summary_panel(
         body.append(f" ({', '.join(unmatched[:5])})", style="yellow")
         if len(unmatched) > 5:
             body.append(f", ... +{len(unmatched) - 5} more", style="dim")
+
+    if elapsed_s is not None:
+        body.append("\n\n")
+        body.append("Elapsed: ", style="bold")
+        body.append(_format_elapsed(elapsed_s), style="dim")
 
     return Panel(body, title="Summary", expand=True)
