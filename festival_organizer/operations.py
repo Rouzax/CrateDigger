@@ -211,10 +211,21 @@ class PosterOperation(Operation):
                 )
             # Festival-slot fallback chain: real festival wins, then venue,
             # then freeform location, finally the MKV title as a backstop.
-            festival_slot = festival_display or mf.venue or mf.location or mf.title or ""
-            # If the venue filled the festival slot, suppress the venue subline
-            # so "Red Rocks Amphitheatre" doesn't render twice on the poster.
-            venue_for_subline = "" if festival_slot == mf.venue else (mf.venue or "")
+            # Venue and location pass through the festival alias resolver so
+            # user-configured aliases like "Red Rocks Amphitheatre" -> "Red
+            # Rocks" apply to the accent line regardless of which tag the
+            # value came from.
+            resolve = self.config.resolve_festival_alias
+            resolved_venue = resolve(mf.venue) if mf.venue else ""
+            resolved_location = resolve(mf.location) if mf.location else ""
+            festival_slot = (festival_display or resolved_venue
+                             or resolved_location or mf.title or "")
+            # When the venue was the fallback source, suppress the venue
+            # subline so the same place doesn't render twice (once in the
+            # accent slot, once below). Compare by source, not displayed
+            # value, so aliasing doesn't defeat the dedup.
+            venue_used_in_slot = (not festival_display) and bool(mf.venue)
+            venue_for_subline = "" if venue_used_in_slot else (mf.venue or "")
             generate_set_poster(
                 source_image_path=thumb,
                 output_path=poster,

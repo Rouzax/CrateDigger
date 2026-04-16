@@ -154,6 +154,27 @@ def test_poster_venue_subline_rendered_when_festival_has_real_festival(tmp_path)
     assert kwargs["venue"] == "Johan Cruijff ArenA Amsterdam"
 
 
+def test_poster_venue_fallback_runs_through_festival_alias(tmp_path):
+    """User-configured festival aliases apply to the venue when it fills
+    the festival slot. Preserves the short-form display users set up in
+    their festivals config."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    cfg = load_config()
+    cfg.resolve_festival_alias = (
+        lambda name: "Red Rocks" if name == "Red Rocks Amphitheatre" else name
+    )
+    mf = _make_mf(festival="", venue="Red Rocks Amphitheatre",
+                  stage="", title="irrelevant")
+    with patch("festival_organizer.poster.generate_set_poster") as gen:
+        PosterOperation(cfg).execute(video, mf)
+    kwargs = gen.call_args.kwargs
+    assert kwargs["festival"] == "Red Rocks"
+    # Venue subline still suppressed — dedup is by source, not display form
+    assert kwargs["venue"] == ""
+
+
 def test_organize_op_needed_when_not_at_target(tmp_path):
     """Organize operation needed when file is not at target location."""
     video = tmp_path / "test.mkv"
