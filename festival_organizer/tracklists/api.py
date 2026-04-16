@@ -86,6 +86,7 @@ class TracklistExport:
     stage_text: str = ""
     sources_by_type: dict[str, list[str]] = field(default_factory=dict)
     country: str = ""
+    location: str = ""
     source_type: str = ""
     tracks: list[Track] = field(default_factory=list)
 
@@ -404,6 +405,7 @@ class TracklistSession:
         dj_artists: list[tuple[str, str]] = []
         sources_by_type: dict[str, list[str]] = {}
         country = ""
+        location = ""
         source_type_str = ""
         if h1_match:
             h1_info = _parse_h1_structure(h1_match.group(1))
@@ -411,6 +413,8 @@ class TracklistSession:
             dj_artists = h1_info["dj_artists"]
             if h1_info.get("country"):
                 country = h1_info["country"]
+            if h1_info.get("location"):
+                location = h1_info["location"]
 
             if h1_info["sources"] and self._source_cache:
                 for sid, slug, display_name in h1_info["sources"]:
@@ -466,7 +470,8 @@ class TracklistSession:
             genres=genres, dj_artists=dj_artists,
             dj_artwork_url=dj_artwork_url,
             stage_text=stage_text, sources_by_type=sources_by_type,
-            country=country, source_type=source_type_str,
+            country=country, location=location,
+            source_type=source_type_str,
             tracks=tracks,
         )
 

@@ -559,3 +559,112 @@ def test_export_tracklist_no_callback_does_not_crash():
 
     assert export is not None
     assert len(export.dj_artists) == 2
+
+
+# --- h1 location surfacing + suppression ---
+
+def _build_minimal_page_html(h1_inner: str) -> str:
+    """Wrap a bare h1 payload in a minimal HTML document that the exporter
+    can parse (the exporter only needs <title> and <h1>)."""
+    return (
+        "<html><head><title>Fred again.. @ USB002 | 1001Tracklists</title>"
+        "</head><body>"
+        f'<h1 class="notranslate">{h1_inner}</h1>'
+        "</body></html>"
+    )
+
+
+class _StubSourceCache:
+    """Minimal source cache double: pre-seeded with per-id type entries."""
+
+    def __init__(self, entries: dict[str, dict]):
+        self._data = dict(entries)
+
+    def get(self, sid: str):
+        return self._data.get(sid)
+
+    def put(self, sid: str, entry: dict) -> None:
+        self._data[sid] = entry
+
+    def group_by_type(self, source_ids: list[str]) -> dict[str, list[str]]:
+        groups: dict[str, list[str]] = {}
+        for sid in source_ids:
+            entry = self._data.get(sid)
+            if entry:
+                groups.setdefault(entry["type"], []).append(entry["name"])
+        return groups
+
+
+def test_export_tracklist_surfaces_h1_location():
+    """When the h1 tail carries a middle venue string and no linked source
+    is of a location-bearing type, export.location reflects that string."""
+    h1_inner = (
+        '<a href="/dj/fredagain/index.html" class="notranslate ">Fred again..</a>'
+        ' @ <a href="/source/abc/usb002/index.html">USB002</a>,'
+        " Alexandra Palace London, United Kingdom 2026-02-27"
+    )
+    page_html = _build_minimal_page_html(h1_inner)
+
+    # Event Promoter is NOT location-bearing, so suppression must not fire.
+    cache = _StubSourceCache({
+        "abc": {"name": "USB002", "type": "Event Promoter",
+                "country": "United Kingdom"},
+    })
+    session = TracklistSession(source_cache=cache)
+
+    with patch.object(session, "_request",
+                      side_effect=_build_export_mock_responses(page_html)):
+        with patch.object(session, "_fetch_dj_profile",
+                          return_value={"artwork_url": ""}):
+            export = session.export_tracklist("abc123")
+
+    assert export.location == "Alexandra Palace London"
+
+
+def test_export_tracklist_suppresses_location_when_festival_source_present():
+    """Linked 'Open Air / Festival' source is authoritative; the h1
+    middle location is suppressed to avoid duplicate / stale data."""
+    h1_inner = (
+        '<a href="/dj/fredagain/index.html" class="notranslate ">Fred again..</a>'
+        ' @ <a href="/source/fest/some-festival/index.html">Some Festival</a>,'
+        " Alexandra Palace London, United Kingdom 2026-02-27"
+    )
+    page_html = _build_minimal_page_html(h1_inner)
+
+    cache = _StubSourceCache({
+        "fest": {"name": "Some Festival", "type": "Open Air / Festival",
+                 "country": "United Kingdom"},
+    })
+    session = TracklistSession(source_cache=cache)
+
+    with patch.object(session, "_request",
+                      side_effect=_build_export_mock_responses(page_html)):
+        with patch.object(session, "_fetch_dj_profile",
+                          return_value={"artwork_url": ""}):
+            export = session.export_tracklist("abc123")
+
+    assert export.location == ""
+
+
+def test_export_tracklist_suppresses_location_when_event_location_source_present():
+    """Linked 'Event Location' source suppresses the h1 location too."""
+    h1_inner = (
+        '<a href="/dj/fredagain/index.html" class="notranslate ">Fred again..</a>'
+        ' @ <a href="/source/venue/alexandra-palace/index.html">Alexandra Palace</a>,'
+        " Alexandra Palace London, United Kingdom 2026-02-27"
+    )
+    page_html = _build_minimal_page_html(h1_inner)
+
+    cache = _StubSourceCache({
+        "venue": {"name": "Alexandra Palace", "type": "Event Location",
+                  "country": "United Kingdom"},
+    })
+    session = TracklistSession(source_cache=cache)
+
+    with patch.object(session, "_request",
+                      side_effect=_build_export_mock_responses(page_html)):
+        with patch.object(session, "_fetch_dj_profile",
+                          return_value={"artwork_url": ""}):
+            export = session.export_tracklist("abc123")
+
+    assert export.location == ""
