@@ -151,13 +151,66 @@ def test_no_sources_unknown_country_kept_in_stage():
     assert result["country"] == ""
 
 
-def test_sources_present_country_field_empty():
-    """When source links are present, h1 country field stays empty (source
-    cache is the authoritative country provider in that path)."""
+def test_sources_present_country_still_extracted_from_tail():
+    """When source links are present, the trailing country is still parsed
+    out of the tail (the new unconditional path). Callers that prefer the
+    source cache as authoritative suppress the h1 result themselves."""
     h1 = '<a href="/dj/afrojack/index.html" class="notranslate ">AFROJACK</a> @ kineticFIELD, <a href="/source/unkguv/edc-las-vegas/index.html">EDC Las Vegas</a>, United States 2025-05-17'
     result = _parse_h1_structure(h1)
-    assert result["country"] == ""
+    assert result["country"] == "United States"
     assert result["stage_text"] == "kineticFIELD"
+
+
+def test_parse_h1_extracts_country_when_source_link_present():
+    """h1 tail with a linked source still yields country from the trailing text.
+
+    Fred again.. @ USB002, Alexandra Palace London, United Kingdom 2026-02-27.
+    The source link ("USB002") precedes a venue + country + date tail; the
+    trailing country must be captured even when source links are present.
+    """
+    h1 = (
+        '<a href="/dj/fredagain/index.html" class="notranslate ">Fred again..</a>'
+        ' @ <a href="/source/abc/usb002-slug/index.html">USB002</a>,'
+        " Alexandra Palace London, United Kingdom 2026-02-27"
+    )
+    result = _parse_h1_structure(h1)
+    assert result["country"] == "United Kingdom"
+
+
+def test_parse_h1_extracts_location_when_source_link_present():
+    """Same h1 as above: location field holds the middle segment."""
+    h1 = (
+        '<a href="/dj/fredagain/index.html" class="notranslate ">Fred again..</a>'
+        ' @ <a href="/source/abc/usb002-slug/index.html">USB002</a>,'
+        " Alexandra Palace London, United Kingdom 2026-02-27"
+    )
+    result = _parse_h1_structure(h1)
+    assert result["location"] == "Alexandra Palace London"
+
+
+def test_parse_h1_location_empty_when_no_middle_segment():
+    """Tail with only country + date → country set, location empty."""
+    h1 = (
+        '<a href="/dj/fredagain/index.html" class="notranslate ">Fred again..</a>'
+        ' @ <a href="/source/abc/someevent-slug/index.html">Some Event</a>,'
+        " Belgium 2026-02-27"
+    )
+    result = _parse_h1_structure(h1)
+    assert result["country"] == "Belgium"
+    assert result["location"] == ""
+
+
+def test_parse_h1_no_country_match_still_captures_location():
+    """When the trailing tail ends in an unknown country, location keeps the
+    full middle text and country stays empty."""
+    h1 = (
+        '<a href="/dj/fredagain/index.html" class="notranslate ">Fred again..</a>'
+        ' @ <a href="/source/abc/someevent-slug/index.html">Some Event</a>,'
+        " Some Venue, Atlantis 2026-02-27"
+    )
+    result = _parse_h1_structure(h1)
+    assert result["country"] == ""
+    assert result["location"] == "Some Venue, Atlantis"
 
 
 def test_bare_promoter_source_is_not_stage():
