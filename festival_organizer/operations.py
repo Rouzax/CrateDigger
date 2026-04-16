@@ -209,15 +209,21 @@ class PosterOperation(Operation):
                 festival_display = self.config.get_festival_display(
                     mf.festival, mf.edition
                 )
+            # Festival-slot fallback chain: real festival wins, then venue,
+            # then freeform location, finally the MKV title as a backstop.
+            festival_slot = festival_display or mf.venue or mf.location or mf.title or ""
+            # If the venue filled the festival slot, suppress the venue subline
+            # so "Red Rocks Amphitheatre" doesn't render twice on the poster.
+            venue_for_subline = "" if festival_slot == mf.venue else (mf.venue or "")
             generate_set_poster(
                 source_image_path=thumb,
                 output_path=poster,
                 artist=mf.display_artist or mf.artist or "Unknown",
-                festival=festival_display or mf.venue or mf.location or mf.title or "",
+                festival=festival_slot,
                 date=mf.date,
                 year=mf.year,
                 detail=mf.stage or "",
-                venue=mf.venue or "",
+                venue=venue_for_subline,
             )
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:

@@ -95,6 +95,15 @@ def _run_poster_and_capture_festival(tmp_path, mf):
     return gen.call_args.kwargs["festival"]
 
 
+def _run_poster_and_capture_kwargs(tmp_path, mf):
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    with patch("festival_organizer.poster.generate_set_poster") as gen:
+        PosterOperation(load_config()).execute(video, mf)
+    return gen.call_args.kwargs
+
+
 def test_poster_festival_slot_prefers_festival_over_venue(tmp_path):
     """Festival set: the festival_display wins the headline slot."""
     mf = _make_mf(festival="Tomorrowland", venue="Some Venue",
@@ -122,6 +131,27 @@ def test_poster_festival_slot_falls_back_to_title_when_no_location_fields(tmp_pa
     mf = _make_mf(festival="", venue="", location="",
                   title="Artist @ Some Unknown Place")
     assert _run_poster_and_capture_festival(tmp_path, mf) == "Artist @ Some Unknown Place"
+
+
+def test_poster_venue_subline_suppressed_when_venue_filled_festival_slot(tmp_path):
+    """When the venue is rendered as the big accent line (festival fallback),
+    the venue subline below must be blank to avoid duplicate rendering."""
+    mf = _make_mf(festival="", venue="Red Rocks Amphitheatre",
+                  stage="", title="Martin Garrix @ Red Rocks")
+    kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
+    assert kwargs["festival"] == "Red Rocks Amphitheatre"
+    assert kwargs["venue"] == ""
+
+
+def test_poster_venue_subline_rendered_when_festival_has_real_festival(tmp_path):
+    """When a real festival fills the slot, the venue still renders as a
+    subline (it adds useful info like 'Johan Cruijff ArenA Amsterdam')."""
+    mf = _make_mf(festival="Amsterdam Music Festival",
+                  venue="Johan Cruijff ArenA Amsterdam",
+                  stage="Mainstage", title="irrelevant")
+    kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
+    assert kwargs["festival"] == "Amsterdam Music Festival"
+    assert kwargs["venue"] == "Johan Cruijff ArenA Amsterdam"
 
 
 def test_organize_op_needed_when_not_at_target(tmp_path):
