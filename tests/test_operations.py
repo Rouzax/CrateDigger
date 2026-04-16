@@ -86,6 +86,44 @@ def test_poster_op_not_needed_when_no_thumb(tmp_path):
     assert op.is_needed(video, _make_mf()) is False
 
 
+def _run_poster_and_capture_festival(tmp_path, mf):
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    with patch("festival_organizer.poster.generate_set_poster") as gen:
+        PosterOperation(load_config()).execute(video, mf)
+    return gen.call_args.kwargs["festival"]
+
+
+def test_poster_festival_slot_prefers_festival_over_venue(tmp_path):
+    """Festival set: the festival_display wins the headline slot."""
+    mf = _make_mf(festival="Tomorrowland", venue="Some Venue",
+                  location="Some Location", title="Artist @ Stage, TML")
+    assert _run_poster_and_capture_festival(tmp_path, mf) == "Tomorrowland"
+
+
+def test_poster_festival_slot_falls_back_to_venue_when_no_festival(tmp_path):
+    """Concert at a linked venue (Club / Event Location): venue wins the slot."""
+    mf = _make_mf(festival="", venue="Alexandra Palace London",
+                  location="ignored freeform",
+                  title="Fred again.. @ USB002")
+    assert _run_poster_and_capture_festival(tmp_path, mf) == "Alexandra Palace London"
+
+
+def test_poster_festival_slot_falls_back_to_location_when_no_venue(tmp_path):
+    """Freeform h1 location fills in when no festival and no linked venue."""
+    mf = _make_mf(festival="", venue="", location="Some Unlinked Venue",
+                  title="Artist @ Stage")
+    assert _run_poster_and_capture_festival(tmp_path, mf) == "Some Unlinked Venue"
+
+
+def test_poster_festival_slot_falls_back_to_title_when_no_location_fields(tmp_path):
+    """Last-resort backstop: title fires only when festival+venue+location all empty."""
+    mf = _make_mf(festival="", venue="", location="",
+                  title="Artist @ Some Unknown Place")
+    assert _run_poster_and_capture_festival(tmp_path, mf) == "Artist @ Some Unknown Place"
+
+
 def test_organize_op_needed_when_not_at_target(tmp_path):
     """Organize operation needed when file is not at target location."""
     video = tmp_path / "test.mkv"

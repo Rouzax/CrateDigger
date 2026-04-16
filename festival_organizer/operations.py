@@ -213,7 +213,7 @@ class PosterOperation(Operation):
                 source_image_path=thumb,
                 output_path=poster,
                 artist=mf.display_artist or mf.artist or "Unknown",
-                festival=festival_display or mf.title or "",
+                festival=festival_display or mf.venue or mf.location or mf.title or "",
                 date=mf.date,
                 year=mf.year,
                 detail=mf.stage or "",
