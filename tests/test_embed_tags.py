@@ -380,6 +380,58 @@ def test_embed_tags_description_cleared(tmp_path):
     assert "SYNOPSIS" in tags_dict[50]
 
 
+def test_embed_tags_description_uses_location_when_festival_and_venue_empty(tmp_path):
+    """SYNOPSIS falls back to plain-text location when no festival/venue.
+
+    A file with only CRATEDIGGER_1001TL_LOCATION (e.g. "Alexandra Palace
+    London") should still get a useful line 2 in the synopsis.
+    """
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(
+        artist="Fred again..",
+        display_artist="Fred again..",
+        festival="", festival_full="", venue="",
+        location="Alexandra Palace London",
+        country="United Kingdom",
+        year="2024",
+    )
+
+    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            embed_tags(mf, video)
+
+    tags_dict = mock_wmt.call_args[0][1]
+    desc = tags_dict[50]["SYNOPSIS"]
+    assert "Alexandra Palace London" in desc
+    assert "United Kingdom" in desc
+
+
+def test_embed_tags_description_prefers_venue_over_location(tmp_path):
+    """SYNOPSIS prefers structured venue over plain-text location fallback."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(
+        artist="DJ",
+        display_artist="DJ",
+        stage="Main",
+        festival="", festival_full="",
+        venue="Structured Venue",
+        location="Free Text Location",
+        country="Belgium",
+        year="2024",
+    )
+
+    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+            embed_tags(mf, video)
+
+    tags_dict = mock_wmt.call_args[0][1]
+    desc = tags_dict[50]["SYNOPSIS"]
+    assert "Structured Venue" in desc
+    assert "Free Text Location" not in desc
+
+
 def test_embed_tags_synopsis_uses_festival_full(tmp_path):
     """SYNOPSIS uses festival_full (raw 1001TL name) over resolved alias."""
     video = tmp_path / "test.mkv"

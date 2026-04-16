@@ -46,7 +46,10 @@ def _build_curated_description(mf: MediaFile) -> str:
         lines.append(artist)
 
     # Line 2: location with source type and country
-    location = mf.festival_full or mf.festival or mf.venue
+    # Fallback chain (highest to lowest tier):
+    #   festival_full (raw 1001TL name) > resolved festival > structured venue
+    #   > plain-text location from h1 tail (e.g. "Alexandra Palace London")
+    location = mf.festival_full or mf.festival or mf.venue or mf.location
     if location:
         qualifiers: list[str] = []
         if mf.source_type:

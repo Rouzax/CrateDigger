@@ -29,7 +29,7 @@ Written by `enrich` (`tags` operation). These are the tags any MKV-aware media p
 | `ARTIST` | Primary artist only, after alias resolution. Used for folder routing and single-value consumers. | `Armin van Buuren` |
 | `TITLE` | Display title. For festival sets: `Artist @ Stage, Festival`. For concerts: the concert title. | `Armin van Buuren & KIKI @ Two Is One, AMF` |
 | `DATE_RELEASED` | Event date or year. | `2025-10-25` |
-| `SYNOPSIS` | Generated description: artist and stage, festival and country, edition and set title. Only lines with data are included. | (multi-line) |
+| `SYNOPSIS` | Generated description: artist and stage, then festival (falling back to venue, then freeform location) with country, then edition and set title. Only lines with data are included. | (multi-line) |
 | `DESCRIPTION` | Cleared to empty. Removes the auto-generated description yt-dlp embeds from the YouTube page. | `` |
 
 ---
