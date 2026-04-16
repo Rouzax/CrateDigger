@@ -465,6 +465,12 @@ class TracklistSession:
 
         tracks = _parse_tracks(page_resp.text)
 
+        # Suppress the h1-derived location when a linked source already
+        # carries authoritative location info (festival, venue, conference,
+        # radio channel). The cached source entry wins in those cases.
+        if any(t in sources_by_type for t in LOCATION_BEARING_TYPES):
+            location = ""
+
         return TracklistExport(
             lines=lines, url=short_url, title=title,
             genres=genres, dj_artists=dj_artists,
@@ -685,6 +691,17 @@ class TracklistSession:
         except (OSError, json.JSONDecodeError, KeyError, TypeError) as e:
             logger.debug("Cookie restore failed: %s", e)
             return False
+
+
+LOCATION_BEARING_TYPES: tuple[str, ...] = (
+    "Open Air / Festival",
+    "Event Location",
+    "Conference",
+    "Radio Channel",
+)
+"""Source types that carry authoritative location information. When any of
+these appears in sources_by_type, the h1-derived location string is
+suppressed because the source cache entry is the canonical source."""
 
 
 _H1_FALLBACK_COUNTRIES: frozenset[str] = frozenset({
