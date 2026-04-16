@@ -55,6 +55,7 @@ Written by `identify`.
 | `CRATEDIGGER_1001TL_VENUE` | Venue display name | `Johan Cruijff ArenA` |
 | `CRATEDIGGER_1001TL_EVENT` | Event or conference display name | `Amsterdam Dance Event` |
 | `CRATEDIGGER_1001TL_COUNTRY` | Country of the event | `Netherlands` |
+| `CRATEDIGGER_1001TL_LOCATION` | Freeform location text from the tracklist header, written only when no linked festival/venue/conference/radio source is present | `Alexandra Palace London` |
 | `CRATEDIGGER_1001TL_SOURCE_TYPE` | Source category: Open Air / Festival, Event Location, Conference, etc. | `Open Air / Festival` |
 
 ### Fanart URLs

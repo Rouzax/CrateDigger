@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 from festival_organizer import metadata
 from festival_organizer.embed_tags import xml_escape
-from festival_organizer.mkv_tags import MATROSKA_EXTS, extract_all_tags, write_merged_tags
+from festival_organizer.mkv_tags import CLEAR_TAG, MATROSKA_EXTS, extract_all_tags, write_merged_tags
 from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
 
 if TYPE_CHECKING:
@@ -285,6 +285,7 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         "CRATEDIGGER_1001TL_RADIO": "radio",
         "CRATEDIGGER_1001TL_ARTISTS": "artists",
         "CRATEDIGGER_1001TL_COUNTRY": "country",
+        "CRATEDIGGER_1001TL_LOCATION": "location",
         "CRATEDIGGER_1001TL_SOURCE_TYPE": "source_type",
         # Old names (backward compatibility)
         "1001TRACKLISTS_URL": "url",
@@ -416,6 +417,7 @@ def embed_chapters(
     sources_by_type: dict[str, list[str]] | None = None,
     dj_artists: list[tuple[str, str]] | None = None,
     country: str = "",
+    location: str = "",
     tracks: list["Track"] | None = None,
     dj_cache: "DjCache | None" = None,
     alias_resolver: "Callable[[str], str] | None" = None,
@@ -475,6 +477,23 @@ def embed_chapters(
                         tags[tag_name] = "|".join(names)
             if country:
                 tags["CRATEDIGGER_1001TL_COUNTRY"] = country
+            # CRATEDIGGER_1001TL_LOCATION is a lowest-tier fallback derived
+            # from the 1001TL h1 plain-text tail. It only applies when no
+            # linked location-bearing source (Festival / Venue / Conference /
+            # Radio) is present. When such a source IS present, any stale
+            # LOCATION tag from a prior run must be cleared so the file
+            # doesn't carry a contradictory freeform value.
+            LOCATION_BEARING_TAGS = (
+                "CRATEDIGGER_1001TL_FESTIVAL",
+                "CRATEDIGGER_1001TL_VENUE",
+                "CRATEDIGGER_1001TL_CONFERENCE",
+                "CRATEDIGGER_1001TL_RADIO",
+            )
+            linked_source_tag_present = any(t in tags for t in LOCATION_BEARING_TAGS)
+            if location and not linked_source_tag_present:
+                tags["CRATEDIGGER_1001TL_LOCATION"] = location
+            elif linked_source_tag_present:
+                tags["CRATEDIGGER_1001TL_LOCATION"] = CLEAR_TAG
             # TODO: source_type priority is also derived in api.py export_tracklist().
             # Consider passing source_type as a parameter instead of re-deriving.
             for stype in ("Open Air / Festival", "Event Location", "Conference",
