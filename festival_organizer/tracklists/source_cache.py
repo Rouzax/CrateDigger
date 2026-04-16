@@ -17,10 +17,13 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_PATH = Path.home() / ".cratedigger" / "source_cache.json"
 
-# Maps 1001TL source types to MKV tag names.
+# Maps 1001TL source types to MKV tag names. Club is treated as a venue,
+# since 1001TL uses it for physical venues like Alexandra Palace London that
+# are not categorized as "Event Location".
 SOURCE_TYPE_TO_TAG: dict[str, str] = {
     "Open Air / Festival": "CRATEDIGGER_1001TL_FESTIVAL",
     "Event Location": "CRATEDIGGER_1001TL_VENUE",
+    "Club": "CRATEDIGGER_1001TL_VENUE",
     "Conference": "CRATEDIGGER_1001TL_CONFERENCE",
     "Radio Channel": "CRATEDIGGER_1001TL_RADIO",
 }

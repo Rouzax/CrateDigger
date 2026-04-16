@@ -429,8 +429,8 @@ class TracklistSession:
                 )
 
                 # Derive country and source_type from the primary source
-                for stype in ("Open Air / Festival", "Event Location", "Conference",
-                              "Concert / Live Event", "Event Promoter"):
+                for stype in ("Open Air / Festival", "Event Location", "Club",
+                              "Conference", "Concert / Live Event", "Event Promoter"):
                     if stype in sources_by_type:
                         source_type_str = stype
                         for sid, _slug, _name in h1_info["sources"]:
@@ -696,6 +696,7 @@ class TracklistSession:
 LOCATION_BEARING_TYPES: tuple[str, ...] = (
     "Open Air / Festival",
     "Event Location",
+    "Club",
     "Conference",
     "Radio Channel",
 )

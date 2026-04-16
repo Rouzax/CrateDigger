@@ -496,8 +496,8 @@ def embed_chapters(
                 tags["CRATEDIGGER_1001TL_LOCATION"] = CLEAR_TAG
             # TODO: source_type priority is also derived in api.py export_tracklist().
             # Consider passing source_type as a parameter instead of re-deriving.
-            for stype in ("Open Air / Festival", "Event Location", "Conference",
-                          "Concert / Live Event", "Event Promoter"):
+            for stype in ("Open Air / Festival", "Event Location", "Club",
+                          "Conference", "Concert / Live Event", "Event Promoter"):
                 if sources_by_type and stype in sources_by_type:
                     tags["CRATEDIGGER_1001TL_SOURCE_TYPE"] = stype
                     break
