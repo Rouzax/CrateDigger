@@ -107,7 +107,7 @@ Once you confirm a match, CrateDigger:
 3. Embeds the chapters into your MKV file using `mkvpropedit`
 4. Writes metadata tags into the file:
    - **Album-level tags**: tracklist URL, title, ID, date, genres, stage name, venue,
-     festival, country, artist names, and DJ artwork URL
+     festival, country, free-text location, artist names, and DJ artwork URL
    - **Per-chapter tags**: for each track, performer name(s), track title, label, and genre
 
 These tags are later read by the [`enrich`](enrich.md) command to generate artwork, NFO
@@ -192,6 +192,37 @@ the `Select` line and the following file could stitch onto one visual line).
 
 No files are created, moved, or copied. The original video stream and audio are untouched.
 Only the metadata section of the MKV file changes.
+
+### Location and country tags
+
+CrateDigger records the set's venue or city using two separate tags, in this order of
+preference:
+
+1. **A linked source on the tracklist page.** When the 1001Tracklists page links to a
+   festival, venue, conference, or radio channel, that source is written to the matching
+   tag (`CRATEDIGGER_1001TL_FESTIVAL`, `CRATEDIGGER_1001TL_VENUE`,
+   `CRATEDIGGER_1001TL_CONFERENCE`, or `CRATEDIGGER_1001TL_RADIO`). These are the
+   authoritative location fields.
+2. **A free-text location from the page title.** When no linked location source is
+   present, CrateDigger falls back to the plain-text venue and city pulled from the page
+   heading, for example "Alexandra Palace London" on a Fred again.. set. This value is
+   written to `CRATEDIGGER_1001TL_LOCATION`.
+
+Only one of these paths is used at a time. If the page carries a linked festival, venue,
+conference, or radio source, the free-text `CRATEDIGGER_1001TL_LOCATION` is not written.
+
+**Re-identify cleans up stale location data.** If a file was identified earlier, before
+1001Tracklists linked a proper source (so it only got the free-text
+`CRATEDIGGER_1001TL_LOCATION`), a later re-identify against the updated page clears the
+stale `CRATEDIGGER_1001TL_LOCATION` and writes the authoritative tag (for example
+`CRATEDIGGER_1001TL_VENUE = "Alexandra Palace"`) instead. You do not need `--regenerate`
+for this; the normal re-identify path handles it.
+
+`CRATEDIGGER_1001TL_COUNTRY` is always populated when the page heading carries a
+recognised country name, whether a linked source is present or not. Earlier versions only
+set the country when no source link existed; now it is extracted unconditionally so
+country-derived downstream logic (organize folder layout, NFO country field) has the
+same signal regardless of whether the tracklist links a dedicated source.
 
 ## Auto mode
 
@@ -377,8 +408,9 @@ is not useful for navigation.
 `identify` writes two types of tags into the MKV container:
 
 - **Album-level tags (TargetTypeValue=70):** Set-wide information including the 1001Tracklists
-  URL, tracklist title and ID, date, genre list, stage, venue, festival, country, source type,
-  artist names, and DJ artwork URL. These are stored in the `CRATEDIGGER_1001TL_*` namespace.
+  URL, tracklist title and ID, date, genre list, stage, venue, festival, country, free-text
+  location, source type, artist names, and DJ artwork URL. These are stored in the
+  `CRATEDIGGER_1001TL_*` namespace.
 
 - **Per-chapter tags (TargetTypeValue=30):** One tag block per chapter containing performer
   name(s), performer slugs, performer display names, track title, label, and genre.
