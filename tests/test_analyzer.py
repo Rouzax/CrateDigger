@@ -47,6 +47,47 @@ def test_analyse_with_1001tl_overrides_filename():
     assert mf.has_cover == True
 
 
+def test_analyser_surfaces_location_from_metadata():
+    """CRATEDIGGER_1001TL_LOCATION is surfaced onto MediaFile.location.
+
+    The location tag carries a plain-text venue+city scraped from the 1001TL
+    h1 tail when no linked festival/venue source is present. The analyzer
+    must read it via the `tracklists_location` alias and expose it as
+    `MediaFile.location` for downstream consumers (embedded synopsis, NFOs).
+    """
+    fake_meta = {
+        "title": "",
+        "tracklists_title": "Fred again.. @ Alexandra Palace London, United Kingdom 2024-11-02",
+        "tracklists_url": "https://www.1001tracklists.com/tracklist/abc/",
+        "tracklists_artists": "Fred again..",
+        "tracklists_date": "2024-11-02",
+        "tracklists_country": "United Kingdom",
+        "tracklists_location": "Alexandra Palace London",
+        "duration_seconds": 3600.0,
+        "width": 1920,
+        "height": 1080,
+        "video_format": "",
+        "audio_format": "",
+        "audio_bitrate": "",
+        "overall_bitrate": "",
+        "has_cover": False,
+        "artist_tag": "",
+        "date_tag": "",
+        "description": "",
+        "comment": "",
+        "purl": "",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("//lib/Fred again.. @ Alexandra Palace London.mkv"),
+            Path("//lib"),
+            CFG,
+        )
+    assert isinstance(mf, MediaFile)
+    assert mf.location == "Alexandra Palace London"
+    assert mf.country == "United Kingdom"
+
+
 def test_analyse_identified_file_ignores_filename_set_title():
     """For identified files (tracklists_url present), set_title/title should not
     be derived from the filename. Without this gate, re-analyzing an already-

@@ -19,6 +19,7 @@ class MediaFile:
     title: str = ""          # For concert films: the concert/show title
     stage: str = ""
     venue: str = ""
+    location: str = ""  # Plain-text venue+city from 1001TL h1 tail (fallback when no linked source)
     edition: str = ""
     content_type: str = ""   # "festival_set" | "concert_film" | "unknown"
     artists: list[str] = field(default_factory=list)  # All artists from 1001TL pipe-separated tag

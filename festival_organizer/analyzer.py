@@ -50,6 +50,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         "edition": "",
         "youtube_id": "",
         "venue": "",
+        "location": "",
     }
 
     # Layer 1 (lowest priority): parent directory info
@@ -99,6 +100,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         info["stage"] = meta["tracklists_stage"]
     if meta.get("tracklists_venue"):
         info["venue"] = meta["tracklists_venue"]
+    if meta.get("tracklists_location"):
+        info["location"] = meta["tracklists_location"]
     # Layer 5: Direct 1001TL festival tag (written by chapters command from
     # source cache). Authoritative for festival + edition.
     if meta.get("tracklists_festival"):
@@ -199,6 +202,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         title=title_field,
         stage=info.get("stage", ""),
         venue=info.get("venue", ""),
+        location=info.get("location", ""),
         edition=info.get("edition", ""),
         youtube_id=info.get("youtube_id", ""),
         tracklists_url=meta.get("tracklists_url", ""),

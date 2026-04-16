@@ -120,6 +120,7 @@ _1001TL_TAG_KEYS: dict[str, list[str]] = {
     "tracklists_dj_artwork": ["CRATEDIGGER_1001TL_DJ_ARTWORK", "1001TRACKLISTS_DJ_ARTWORK", "_1001TRACKLISTS_DJ_ARTWORK"],
     "tracklists_stage": ["CRATEDIGGER_1001TL_STAGE"],
     "tracklists_venue": ["CRATEDIGGER_1001TL_VENUE"],
+    "tracklists_location": ["CRATEDIGGER_1001TL_LOCATION"],
     "tracklists_festival": ["CRATEDIGGER_1001TL_FESTIVAL"],
     "tracklists_artists": ["CRATEDIGGER_1001TL_ARTISTS"],
     "tracklists_country": ["CRATEDIGGER_1001TL_COUNTRY"],
