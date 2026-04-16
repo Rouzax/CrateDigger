@@ -1,5 +1,6 @@
 """Orchestration tests: embed_chapters builds per-chapter tag map and canonical names."""
 from unittest.mock import patch, MagicMock
+from festival_organizer.mkv_tags import CLEAR_TAG
 from festival_organizer.tracklists.chapters import (
     Chapter, _build_chapter_tags_map, embed_chapters,
 )
@@ -268,3 +269,106 @@ def test_chapter_tags_omit_title_and_label_when_empty():
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
     assert "TITLE" not in result[111]
     assert "CRATEDIGGER_TRACK_LABEL" not in result[111]
+
+
+def test_embed_chapters_writes_location_when_no_linked_source(tmp_path):
+    """CRATEDIGGER_1001TL_LOCATION is written when there's no linked
+    location-bearing source (Festival / Venue / Conference / Radio).
+    This is the lowest-tier fallback derived from the 1001TL h1 tail.
+    """
+    fake_mkv = tmp_path / "x.mkv"
+    fake_mkv.write_bytes(b"")
+
+    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
+         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
+         patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        mock_write.return_value = True
+        embed_chapters(
+            fake_mkv,
+            chapters=[],
+            tracklist_url="https://x",
+            location="Alexandra Palace London",
+            sources_by_type={},
+        )
+        tags = mock_write.call_args[0][1][70]
+        assert tags["CRATEDIGGER_1001TL_LOCATION"] == "Alexandra Palace London"
+
+
+def test_embed_chapters_clears_location_when_linked_venue_present(tmp_path):
+    """When a linked location-bearing source (e.g. Event Location -> VENUE)
+    is present, any stale CRATEDIGGER_1001TL_LOCATION must be cleared.
+
+    This is the cleanup path: a file previously enriched with LOCATION is
+    now being re-identified against a tracklist that carries a linked venue,
+    so LOCATION should no longer apply. The clear must trigger even when
+    the passed-in location is the empty string (the prior-work suppression
+    rule in export_tracklist already blanks it, but the file may still have
+    a stale value on disk).
+    """
+    fake_mkv = tmp_path / "x.mkv"
+    fake_mkv.write_bytes(b"")
+
+    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
+         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
+         patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        mock_write.return_value = True
+        embed_chapters(
+            fake_mkv,
+            chapters=[],
+            tracklist_url="https://x",
+            location="",
+            sources_by_type={"Event Location": ["Alexandra Palace"]},
+        )
+        tags = mock_write.call_args[0][1][70]
+        assert tags["CRATEDIGGER_1001TL_LOCATION"] is CLEAR_TAG
+        # The linked venue is still written normally
+        assert tags["CRATEDIGGER_1001TL_VENUE"] == "Alexandra Palace"
+
+
+def test_embed_chapters_clears_location_when_festival_present(tmp_path):
+    """Festival source (Open Air / Festival) also triggers the clear path."""
+    fake_mkv = tmp_path / "x.mkv"
+    fake_mkv.write_bytes(b"")
+
+    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
+         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
+         patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        mock_write.return_value = True
+        embed_chapters(
+            fake_mkv,
+            chapters=[],
+            tracklist_url="https://x",
+            location="Some leftover venue string",
+            sources_by_type={"Open Air / Festival": ["Tomorrowland"]},
+        )
+        tags = mock_write.call_args[0][1][70]
+        assert tags["CRATEDIGGER_1001TL_LOCATION"] is CLEAR_TAG
+        assert tags["CRATEDIGGER_1001TL_FESTIVAL"] == "Tomorrowland"
+
+
+def test_embed_chapters_omits_location_when_empty_and_no_linked_source(tmp_path):
+    """When location is empty AND no linked source is present, the tag is
+    neither written nor cleared: no CRATEDIGGER_1001TL_LOCATION key at all
+    in the tags dict. This matches files that never had LOCATION and
+    shouldn't get an empty-string entry added.
+    """
+    fake_mkv = tmp_path / "x.mkv"
+    fake_mkv.write_bytes(b"")
+
+    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
+         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
+         patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        mock_write.return_value = True
+        embed_chapters(
+            fake_mkv,
+            chapters=[],
+            tracklist_url="https://x",
+            location="",
+            sources_by_type={},
+        )
+        tags = mock_write.call_args[0][1][70]
+        assert "CRATEDIGGER_1001TL_LOCATION" not in tags
