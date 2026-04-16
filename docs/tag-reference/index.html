@@ -1290,7 +1290,7 @@
 </tr>
 <tr>
 <td><code>SYNOPSIS</code></td>
-<td>Generated description: artist and stage, festival and country, edition and set title. Only lines with data are included.</td>
+<td>Generated description: artist and stage, then festival (falling back to venue, then freeform location) with country, then edition and set title. Only lines with data are included.</td>
 <td>(multi-line)</td>
 </tr>
 <tr>
@@ -1368,6 +1368,11 @@
 <td><code>CRATEDIGGER_1001TL_COUNTRY</code></td>
 <td>Country of the event</td>
 <td><code>Netherlands</code></td>
+</tr>
+<tr>
+<td><code>CRATEDIGGER_1001TL_LOCATION</code></td>
+<td>Freeform location text from the tracklist header, written only when no linked festival/venue/conference/radio source is present</td>
+<td><code>Alexandra Palace London</code></td>
 </tr>
 <tr>
 <td><code>CRATEDIGGER_1001TL_SOURCE_TYPE</code></td>

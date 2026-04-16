@@ -757,6 +757,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="What changes in your files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#location-and-country-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location and country tags
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1360,6 +1377,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="What changes in your files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#location-and-country-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location and country tags
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1657,7 +1691,7 @@ CrateDigger is more confident in the top result.</p>
 <li>Embeds the chapters into your MKV file using <code>mkvpropedit</code></li>
 <li>Writes metadata tags into the file:</li>
 <li><strong>Album-level tags</strong>: tracklist URL, title, ID, date, genres, stage name, venue,
-     festival, country, artist names, and DJ artwork URL</li>
+     festival, country, free-text location, artist names, and DJ artwork URL</li>
 <li><strong>Per-chapter tags</strong>: for each track, performer name(s), track title, label, and genre</li>
 </ol>
 <p>These tags are later read by the <a href="../enrich/"><code>enrich</code></a> command to generate artwork, NFO
@@ -1795,6 +1829,33 @@ the <code>Select</code> line and the following file could stitch onto one visual
 </ul>
 <p>No files are created, moved, or copied. The original video stream and audio are untouched.
 Only the metadata section of the MKV file changes.</p>
+<h3 id="location-and-country-tags">Location and country tags</h3>
+<p>CrateDigger records the set's venue or city using two separate tags, in this order of
+preference:</p>
+<ol>
+<li><strong>A linked source on the tracklist page.</strong> When the 1001Tracklists page links to a
+   festival, venue, conference, or radio channel, that source is written to the matching
+   tag (<code>CRATEDIGGER_1001TL_FESTIVAL</code>, <code>CRATEDIGGER_1001TL_VENUE</code>,
+   <code>CRATEDIGGER_1001TL_CONFERENCE</code>, or <code>CRATEDIGGER_1001TL_RADIO</code>). These are the
+   authoritative location fields.</li>
+<li><strong>A free-text location from the page title.</strong> When no linked location source is
+   present, CrateDigger falls back to the plain-text venue and city pulled from the page
+   heading, for example "Alexandra Palace London" on a Fred again.. set. This value is
+   written to <code>CRATEDIGGER_1001TL_LOCATION</code>.</li>
+</ol>
+<p>Only one of these paths is used at a time. If the page carries a linked festival, venue,
+conference, or radio source, the free-text <code>CRATEDIGGER_1001TL_LOCATION</code> is not written.</p>
+<p><strong>Re-identify cleans up stale location data.</strong> If a file was identified earlier, before
+1001Tracklists linked a proper source (so it only got the free-text
+<code>CRATEDIGGER_1001TL_LOCATION</code>), a later re-identify against the updated page clears the
+stale <code>CRATEDIGGER_1001TL_LOCATION</code> and writes the authoritative tag (for example
+<code>CRATEDIGGER_1001TL_VENUE = "Alexandra Palace"</code>) instead. You do not need <code>--regenerate</code>
+for this; the normal re-identify path handles it.</p>
+<p><code>CRATEDIGGER_1001TL_COUNTRY</code> is always populated when the page heading carries a
+recognised country name, whether a linked source is present or not. Earlier versions only
+set the country when no source link existed; now it is extracted unconditionally so
+country-derived downstream logic (organize folder layout, NFO country field) has the
+same signal regardless of whether the tracklist links a dedicated source.</p>
 <h2 id="auto-mode">Auto mode</h2>
 <p>With <code>--auto</code>, CrateDigger picks the top result automatically without prompting. It only
 does this when it is confident:</p>
@@ -1917,8 +1978,9 @@ is not useful for navigation.</p>
 <ul>
 <li>
 <p><strong>Album-level tags (TargetTypeValue=70):</strong> Set-wide information including the 1001Tracklists
-  URL, tracklist title and ID, date, genre list, stage, venue, festival, country, source type,
-  artist names, and DJ artwork URL. These are stored in the <code>CRATEDIGGER_1001TL_*</code> namespace.</p>
+  URL, tracklist title and ID, date, genre list, stage, venue, festival, country, free-text
+  location, source type, artist names, and DJ artwork URL. These are stored in the
+  <code>CRATEDIGGER_1001TL_*</code> namespace.</p>
 </li>
 <li>
 <p><strong>Per-chapter tags (TargetTypeValue=30):</strong> One tag block per chapter containing performer
