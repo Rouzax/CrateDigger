@@ -703,11 +703,16 @@ def _parse_h1_structure(h1_html: str) -> dict:
         dj_artists: list of (slug, display_name) tuples from /dj/ links before @
         stage_text: str, plain text between @ and first /source/ link
         sources: list of (id, slug, display_name) tuples from /source/ links
-        country: str, country fallback from trailing h1 text when no source
-            links are present (empty otherwise)
+        country: str, country parsed from the trailing tail of the h1 (the
+            text after the last /source/ link, or the whole post-@ string
+            when no source links are present). Empty when the tail does not
+            end in a known country name.
+        location: str, the remaining middle text from the tail after
+            country and trailing ISO date are stripped. Empty when the tail
+            carries nothing other than country + date.
     """
     result: dict = {"stage_text": "", "sources": [], "dj_artists": [],
-                    "country": ""}
+                    "country": "", "location": ""}
 
     if "@" not in h1_html:
         return result
@@ -726,11 +731,12 @@ def _parse_h1_structure(h1_html: str) -> dict:
     source_pattern = re.compile(
         r'<a[^>]*href="/source/([^/]+)/([^/]+)/[^"]*"[^>]*>([^<]+)</a>'
     )
+    source_matches = list(source_pattern.finditer(after_at))
     sources = [(m.group(1), m.group(2), _html_decode(m.group(3).strip()))
-               for m in source_pattern.finditer(after_at)]
+               for m in source_matches]
     result["sources"] = sources
 
-    first_source = source_pattern.search(after_at)
+    first_source = source_matches[0] if source_matches else None
     if first_source:
         plain = after_at[:first_source.start()]
     else:
@@ -754,20 +760,37 @@ def _parse_h1_structure(h1_html: str) -> dict:
         if first_segment and first_segment not in source_names:
             plain = first_segment
 
-    if not sources:
-        # No /source/ link to delimit the trailing "Country YYYY-MM-DD" suffix.
-        # Strip the ISO date, then if the last comma-segment is a known
-        # country, move it to result["country"] and drop from stage.
-        plain = re.sub(r"[,\s]*\d{4}-\d{2}-\d{2}\s*$", "", plain).strip()
-        if "," in plain:
-            head, _, tail = plain.rpartition(",")
-            tail = tail.strip()
-            if tail in _H1_FALLBACK_COUNTRIES:
-                result["country"] = tail
-                plain = head.strip().rstrip(",").strip()
-        elif plain in _H1_FALLBACK_COUNTRIES:
-            result["country"] = plain
-            plain = ""
+    # Tail parsing: text after the last /source/ link (or the full post-@
+    # text when no source links are present). Strip HTML, a leading comma
+    # left by the preceding link, and a trailing ISO date. If the final
+    # comma-segment is a known country, lift it into result["country"];
+    # whatever remains is result["location"].
+    if source_matches:
+        tail_raw = after_at[source_matches[-1].end():]
+    else:
+        tail_raw = after_at
+
+    tail = re.sub(r"<[^>]+>", "", tail_raw)
+    tail = tail.lstrip().lstrip(",").strip()
+    tail = re.sub(r"[,\s]*\d{4}-\d{2}-\d{2}\s*$", "", tail).strip()
+
+    if "," in tail:
+        head, _, last = tail.rpartition(",")
+        last = last.strip()
+        if last in _H1_FALLBACK_COUNTRIES:
+            result["country"] = last
+            tail = head.strip().rstrip(",").strip()
+    elif tail in _H1_FALLBACK_COUNTRIES:
+        result["country"] = tail
+        tail = ""
+
+    result["location"] = _html_decode(tail)
+
+    # When no source links exist, the "stage" and the tail refer to the same
+    # post-@ text; expose the cleaned location as the stage so the trailing
+    # country/date does not bleed into stage_text.
+    if not source_matches:
+        plain = tail
 
     result["stage_text"] = _html_decode(plain)
 
