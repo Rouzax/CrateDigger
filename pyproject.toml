@@ -4,7 +4,7 @@ version = "0.12.13"
 description = "Festival set & concert library manager"
 requires-python = ">=3.11"
 dependencies = [
-    "beautifulsoup4>=4.12",
+    "beautifulsoup4>=4.14.3",
     "Pillow>=10.0",
     "ftfy>=6.0",
     "numpy>=1.24",
