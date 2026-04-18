@@ -76,15 +76,11 @@ def run_pipeline(
                     elapsed_s=elapsed,
                 )
             if enrich_results:
-                if step_progress is not None:
-                    step_progress.stop()
                 progress.enrich.file_done(
                     source=current_path,
                     results=enrich_results,
                     elapsed_s=elapsed,
                 )
-                if step_progress is not None:
-                    step_progress.start()
         elif is_organize_contract:
             # Find the organize operation and its result
             organize_op = None
@@ -101,15 +97,11 @@ def run_pipeline(
                     elapsed_s=elapsed,
                 )
         elif is_enrich_contract:
-            if step_progress is not None:
-                step_progress.stop()
             progress.file_done(
                 source=file_path,
                 results=file_results,
                 elapsed_s=elapsed,
             )
-            if step_progress is not None:
-                step_progress.start()
         else:
             progress.file_done(file_results)
 
