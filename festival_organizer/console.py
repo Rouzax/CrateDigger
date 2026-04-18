@@ -543,3 +543,36 @@ def organize_summary_panel(
         body.append(_format_elapsed(elapsed_s), style="dim")
 
     return Panel(body, title="Summary", expand=True)
+
+
+def library_sync_summary_line(
+    name: str,
+    stats: dict[str, int],
+    elapsed_s: float,
+) -> Text:
+    """One-line contract-styled summary for a library sync sub-phase.
+
+    Shape: ``done  <name> sync  ->  refreshed N, M not yet in library  .  Ns``
+    """
+    label, style = _VERDICT_STYLES["done"]
+
+    text = Text()
+    text.append("  ")
+    text.append(label, style=style)
+    pad = _VERDICT_BADGE_WIDTH - len(label) - 2
+    if pad > 0:
+        text.append(" " * pad)
+
+    text.append(f"{name} sync")
+
+    non_zero = [(k, v) for k, v in stats.items() if v]
+    if non_zero:
+        text.append("  ->  ")
+        parts = [f"{k} {v}" for k, v in non_zero]
+        text.append(", ".join(parts))
+
+    if elapsed_s >= _ELAPSED_THRESHOLD_S:
+        text.append("  .  ")
+        text.append(f"{elapsed_s:.1f}s", style="dim")
+
+    return text
