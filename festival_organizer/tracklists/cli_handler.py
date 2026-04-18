@@ -263,9 +263,6 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
             elif stat_key == "error":
                 unmatched_files.append(filepath.name)
 
-            # Pause the spinner while we emit the verdict line so it doesn't
-            # flicker over static output. Restart afterward for the next file.
-            spinner.stop()
             console_width = con.size.width if con.size else 120
             con.print(verdict(
                 status=vstatus, index=i + 1, total=len(files),
@@ -276,7 +273,6 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
             ))
             if info_enabled and stat_key in ("added", "updated"):
                 _print_tagged_metadata_from_stored(filepath, con)
-            spinner.start()
 
         if aborted:
             spinner.stop()
