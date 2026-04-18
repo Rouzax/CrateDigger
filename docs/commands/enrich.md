@@ -226,6 +226,31 @@ cratedigger enrich ~/Music/Library/ --only chapter_artist_mbids,album_artist_mbi
 cratedigger enrich ~/Music/Library/ --kodi-sync
 ```
 
+## Console output
+
+Each file gets a two-line verdict block showing what happened:
+
+```
+done  [3/12] Afrojack - Ultra Miami 2024.mkv  .  4.2s
+             nfo, art, posters
+```
+
+The second line lists the operations that ran. If everything was already
+up to date, it shows `all up to date` instead. Errors are called out
+inline:
+
+```
+error  [5/12] Eric Prydz - Creamfields 2023.mkv  .  1.1s
+              nfo; posters error: no thumbnail found
+```
+
+Use `--verbose` to see a per-operation breakdown under each verdict,
+showing which operations ran, were skipped, or failed and why.
+
+After all files are processed, a summary panel shows total file counts
+(done, up to date, errors), a per-operation breakdown, any errors
+encountered, and total elapsed time.
+
 ## Common problems
 
 **"not a CrateDigger library"**

@@ -15,7 +15,19 @@ usage flows through `festival_organizer/console.py`.
    `--verbose`, or `--debug`. Under suppression, header, per-file
    verdict line, and summary still print. Nothing transient is
    emitted.
-4. Exactly one verdict line per processed file. Shape:
+4. Exactly one verdict block per processed file. Standard shape is
+   two lines:
+
+       <badge>  [i/N] <filename>  .  <elapsed>
+                      <detail_line>
+
+   Line 2 is aligned under the filename. Content is command-specific:
+   - identify: match info + chapter count
+   - organize: target path
+   - enrich: done ops summary, error callouts
+
+   When `detail_line` is None, falls back to single-line format with
+   `->` (backward compat):
 
        <badge>  [i/N] <filename>  ->  <detail>  .  <elapsed>
 
@@ -40,7 +52,8 @@ Reference implementation:
 Verdict statuses: `done`, `up-to-date`, `preview`, `skipped`,
 `error`. Does not use `updated`.
 
-Detail field is context-aware (shows only what changed):
+Organize uses the two-line verdict block. Detail line (line 2) is
+context-aware (shows only what changed):
 - Rename (same folder): new filename.
 - Import (same name): target folder relative to output root, trailing `/`.
 - Both changed: relative path including new filename.
@@ -60,12 +73,29 @@ Kodi sync: distinct sub-phase after the pipeline. Dim rule header,
 `StepProgress` for transient phases, one `library_sync_summary_line`
 at end.
 
+`organize --enrich` uses `OrganizeEnrichProgress` (composite) which
+emits dual verdict blocks: the organize verdict followed immediately
+by the enrich verdict for the same file.
+
 ### enrich
-- Parallel pipeline. Each file emits one verdict line summarising all
-  operations (e.g. `done  ...  nfo+art+poster`).
-- Existing `ProgressPrinter` in `festival_organizer/progress.py` is
-  the migration target; fold its counts into the summary panel.
-- Use `StepProgress.update` to label each operation as it starts.
+Reference implementation:
+`festival_organizer/progress.py` (`EnrichContractProgress`).
+
+Verdict badge uses worst-wins: error > done > up-to-date.
+
+Detail line (line 2): comma-separated done op names. Errors called out
+with `; op error: detail`. All skipped: `all up to date`.
+Trivial skip reasons ("exists") are silently omitted; non-trivial
+reasons (e.g. "run identify") are called out.
+
+`--verbose` emits dim per-op breakdown lines after the verdict block
+(checkmark/circle/cross + op name + detail).
+
+Summary panel: `enrich_summary_panel(...)` with file-level stats,
+per-op breakdown, errors list, unresolved artists count, elapsed.
+
+Spinner policy: `StepProgress` updates label per op being executed.
+Paused before verdict emission, restarted after.
 
 ### festival, chapters
 - One verdict line per input. No network calls; step labels optional.
@@ -82,6 +112,8 @@ at end.
 - `summary_panel(counts, log_path=None) -> Panel`
 - `identify_summary_panel(...)` identify-specific extension
 - `organize_summary_panel(...)` organize-specific summary
+- `enrich_summary_panel(...)` enrich-specific summary (file stats, per-op breakdown, errors, unresolved artists)
+- `OrganizeEnrichProgress` composite progress for `organize --enrich` (dual verdict blocks per file)
 - `library_sync_summary_line(name, stats, elapsed_s)` post-pipeline sync summary
 - `results_table(results, video_duration_mins, query_parts=None) -> Table`
 - `print_error(message, console=None) -> None`
