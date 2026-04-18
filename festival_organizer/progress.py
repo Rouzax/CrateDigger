@@ -344,3 +344,113 @@ class OrganizeContractProgress:
             errors=self._errors or None,
             elapsed_s=elapsed_s,
         ))
+
+
+class EnrichContractProgress:
+    """Contract-compliant progress output for the enrich command."""
+
+    _STATUS_ICONS = {
+        "done": "[green]\u2713[/green]",
+        "skipped": "[dim]-[/dim]",
+        "error": "[red]\u2717[/red]",
+    }
+
+    def __init__(
+        self,
+        total: int,
+        console: Console | None = None,
+        quiet: bool = False,
+        verbose: bool = False,
+    ):
+        self.total = total
+        self.console = console or make_console()
+        self.quiet = quiet
+        self.verbose = verbose
+        self._file_index = 0
+        self._file_stats: dict[str, int] = {"done": 0, "up_to_date": 0, "error": 0}
+        self._op_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self._errors: list[tuple[str, str, str]] = []
+        self._unresolved_artists: set[str] = set()
+
+    def print_header(
+        self,
+        command: str,
+        rows: dict[str, str],
+        missing_tools: list[str] | None = None,
+    ) -> None:
+        """Print the run header with command-specific rows."""
+        self.console.print(header_panel(f"CrateDigger: {command}", rows))
+        if missing_tools:
+            for tool in missing_tools:
+                self.console.print(
+                    f"  [yellow]Warning: {tool} not found"
+                    f" (some features may be limited)[/yellow]"
+                )
+
+    def file_start(self, filename: Path, target_folder: str) -> None:
+        """No-op. The contract uses verdict lines only."""
+        pass
+
+    def file_done(
+        self,
+        source: Path,
+        results: list[OperationResult],
+        elapsed_s: float,
+    ) -> None:
+        """Emit a verdict block for a completed enrich file."""
+        self._file_index += 1
+
+        badge = _enrich_badge(results)
+        detail = _enrich_detail(results)
+
+        # Track file-level stats
+        if badge == "up-to-date":
+            self._file_stats["up_to_date"] += 1
+        elif badge == "error":
+            self._file_stats["error"] += 1
+        else:
+            self._file_stats["done"] += 1
+
+        # Track per-operation counts
+        for r in results:
+            self._op_counts[r.name][r.status] += 1
+
+        # Track errors
+        for r in results:
+            if r.status == "error":
+                self._errors.append((source.name, r.name, r.detail or ""))
+
+        if self.quiet:
+            return
+
+        console_width = self.console.size.width if self.console.size else 120
+        self.console.print(verdict(
+            status=badge,
+            index=self._file_index,
+            total=self.total,
+            filename=source.name,
+            detail_line=detail,
+            elapsed_s=elapsed_s,
+            width=console_width,
+        ))
+
+        if self.verbose:
+            self._print_op_breakdown(results)
+
+    def _print_op_breakdown(self, results: list[OperationResult]) -> None:
+        """Print a dim per-operation breakdown line for verbose mode."""
+        for r in results:
+            icon = self._STATUS_ICONS.get(r.status, "?")
+            parts = [f"    {icon} {r.name}"]
+            if r.detail:
+                parts.append(f": {r.detail}")
+            self.console.print("".join(parts), style="dim")
+
+    def record_results(self, results: list[OperationResult]) -> None:
+        """No-op. Stats are tracked inline in file_done."""
+        pass
+
+    def print_summary(self, elapsed_s: float | None = None, log_path: Path | None = None) -> None:
+        """Print the enrich summary panel (stub using legacy summary_panel)."""
+        counts = dict(self._op_counts)
+        self.console.print(summary_panel(counts, log_path=log_path))
