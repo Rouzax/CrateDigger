@@ -269,7 +269,9 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
             console_width = con.size.width if con.size else 120
             con.print(verdict(
                 status=vstatus, index=i + 1, total=len(files),
-                filename=filepath.name, detail=detail, elapsed_s=elapsed,
+                filename=filepath.name,
+                detail_line=detail if detail else None,
+                elapsed_s=elapsed,
                 width=console_width,
             ))
             if info_enabled and stat_key in ("added", "updated"):
