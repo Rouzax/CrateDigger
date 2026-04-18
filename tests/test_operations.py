@@ -1075,3 +1075,29 @@ def test_download_dj_artwork_returns_cached(tmp_path):
         result = op._download_dj_artwork("https://example.com/photo.jpg", "Tiesto")
 
     assert result == cached
+
+
+def test_organize_op_tracks_sidecars_moved(tmp_path):
+    """OrganizeOperation.sidecars_moved counts sidecars after execute."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"video")
+    (tmp_path / "test.nfo").write_text("<nfo/>")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+
+    target = tmp_path / "sub" / "test.mkv"
+    op = OrganizeOperation(target=target, action="move")
+    result = op.execute(video, _make_mf())
+    assert result.status == "done"
+    assert op.sidecars_moved == 2
+
+
+def test_organize_op_sidecars_moved_zero_when_none(tmp_path):
+    """sidecars_moved is 0 when no sidecars exist."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"video")
+
+    target = tmp_path / "sub" / "test.mkv"
+    op = OrganizeOperation(target=target, action="move")
+    result = op.execute(video, _make_mf())
+    assert result.status == "done"
+    assert op.sidecars_moved == 0

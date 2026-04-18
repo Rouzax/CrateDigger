@@ -56,6 +56,7 @@ class OrganizeOperation(Operation):
     def __init__(self, target: Path, action: str = "move"):
         self.target = target
         self.action = action  # "move", "copy", "rename"
+        self.sidecars_moved = 0
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         # Case-sensitive string compare: a canonical-casing rename such as
@@ -90,8 +91,10 @@ class OrganizeOperation(Operation):
 
             # Move sidecar files that share the video's stem
             new_stem = target.stem
-            self._move_sidecars(old_dir, old_stem, target.parent, new_stem,
-                                shutil, self.action)
+            self.sidecars_moved = self._move_sidecars(
+                old_dir, old_stem, target.parent, new_stem,
+                shutil, self.action,
+            )
 
             return OperationResult(self.name, "done")
         except OSError as e:
@@ -99,8 +102,9 @@ class OrganizeOperation(Operation):
 
     def _move_sidecars(self, old_dir: Path, old_stem: str,
                        new_dir: Path, new_stem: str,
-                       shutil, action: str) -> None:
+                       shutil, action: str) -> int:
         """Move/copy sidecar files from old_dir to new_dir, renaming stems."""
+        moved = 0
         # Collect sidecars: {old_stem}.* (exact stem match) and {old_stem}-*
         sidecars: list[Path] = []
         for candidate in old_dir.iterdir():
@@ -127,8 +131,10 @@ class OrganizeOperation(Operation):
                 else:
                     shutil.move(str(sidecar), str(new_path))
                 logger.debug("Sidecar %s: %s -> %s", action, sidecar.name, new_path.name)
+                moved += 1
             except OSError as e:
                 logger.warning("Failed to %s sidecar %s: %s", action, sidecar.name, e)
+        return moved
 
 
 class NfoOperation(Operation):
