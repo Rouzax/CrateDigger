@@ -581,7 +581,11 @@ def organize_summary_panel(
     return Panel(body, title="Summary", expand=True)
 
 
-_OP_ORDER = ["nfo", "art", "fanart", "posters", "tags", "chapter_artist_mbids", "album_artist_mbids"]
+_OP_ORDER = [
+    "nfo", "art", "fanart",
+    "poster", "album_poster", "posters",
+    "tags", "chapter_artist_mbids", "album_artist_mbids",
+]
 
 
 def enrich_summary_panel(

@@ -47,12 +47,13 @@ def _enrich_detail(results: list[OperationResult]) -> str:
     notable_skips: list[str] = []
 
     for r in results:
+        label = r.display_name or r.name
         if r.status == "done":
-            done_names.append(r.name)
+            done_names.append(label)
         elif r.status == "error":
-            error_parts.append(f"{r.name} error: {r.detail}")
+            error_parts.append(f"{label} error: {r.detail}")
         elif r.status == "skipped" and r.detail not in _TRIVIAL_SKIP_REASONS:
-            notable_skips.append(f"{r.name} skipped: {r.detail}")
+            notable_skips.append(f"{label} skipped: {r.detail}")
 
     has_callouts = bool(error_parts) or bool(notable_skips)
 
@@ -412,14 +413,12 @@ class EnrichContractProgress:
         else:
             self._file_stats["done"] += 1
 
-        # Track per-operation counts
+        # Track per-operation counts and errors
         for r in results:
-            self._op_counts[r.name][r.status] += 1
-
-        # Track errors
-        for r in results:
+            op_label = r.display_name or r.name
+            self._op_counts[op_label][r.status] += 1
             if r.status == "error":
-                self._errors.append((source.name, r.name, r.detail or ""))
+                self._errors.append((source.name, op_label, r.detail or ""))
 
         if self.quiet:
             return
@@ -442,7 +441,7 @@ class EnrichContractProgress:
         """Print a dim per-operation breakdown line for verbose mode."""
         for r in results:
             icon = self._STATUS_ICONS.get(r.status, "?")
-            parts = [f"    {icon} {r.name}"]
+            parts = [f"    {icon} {r.display_name or r.name}"]
             if r.detail:
                 parts.append(f": {r.detail}")
             self.console.print("".join(parts), style="dim")
