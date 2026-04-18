@@ -96,6 +96,74 @@ def test_verdict_has_gap_between_badge_and_counter(status):
     )
 
 
+def test_verdict_two_line_block():
+    row = verdict(
+        status="done",
+        index=1,
+        total=5,
+        filename="my_set.mkv",
+        detail="",
+        detail_line="Artist @ Stage . 25 chapters",
+        elapsed_s=12.4,
+    )
+    plain = row.plain
+    lines = plain.split("\n")
+    assert len(lines) == 2
+    assert "->" not in lines[0]
+    assert "[1/5]" in lines[0]
+    assert "my_set.mkv" in lines[0]
+    assert "12.4s" in lines[0]
+    assert "Artist @ Stage . 25 chapters" in lines[1]
+
+
+def test_verdict_detail_line_alignment():
+    row = verdict(
+        status="done",
+        index=1,
+        total=5,
+        filename="my_set.mkv",
+        detail="",
+        detail_line="some detail",
+        elapsed_s=1.0,
+    )
+    plain = row.plain
+    lines = plain.split("\n")
+    fname_col = lines[0].index("my_set.mkv")
+    detail_col = lines[1].index("some detail")
+    assert fname_col == detail_col
+
+
+def test_verdict_detail_line_none_keeps_single_line():
+    row = verdict(
+        status="done",
+        index=1,
+        total=5,
+        filename="my_set.mkv",
+        detail="Artist @ Stage . 25 chapters",
+        elapsed_s=12.4,
+    )
+    plain = row.plain
+    assert "\n" not in plain
+    assert "->" in plain
+    assert "Artist @ Stage . 25 chapters" in plain
+
+
+def test_verdict_detail_line_overrides_detail():
+    row = verdict(
+        status="done",
+        index=1,
+        total=5,
+        filename="my_set.mkv",
+        detail="old",
+        detail_line="new",
+        elapsed_s=1.0,
+    )
+    plain = row.plain
+    assert "old" not in plain
+    assert "new" in plain
+    assert "->" not in plain
+
+
 def test_verdict_preview_shape():
     row = verdict(
         status="preview",

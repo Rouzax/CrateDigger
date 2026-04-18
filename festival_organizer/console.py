@@ -351,11 +351,20 @@ def verdict(
     index: int,
     total: int,
     filename: str,
-    detail: str,
+    detail: str = "",
     elapsed_s: float,
     width: int | None = None,
+    detail_line: str | None = None,
 ) -> Text:
-    """One-line padded badge + [i/N] + filename + arrow + detail + elapsed.
+    """Padded badge + [i/N] + filename + detail + elapsed.
+
+    When detail_line is None (default), produces a single line with an
+    arrow separator before the detail text.
+
+    When detail_line is provided, produces a two-line block: line 1 has
+    the badge, counter, filename, and elapsed; line 2 has detail_line
+    content aligned under the filename. The detail parameter is ignored
+    in this mode.
 
     width: when supplied, filename is truncated to fit. When None, no
     truncation (the terminal will soft-wrap).
@@ -364,20 +373,47 @@ def verdict(
         raise ValueError(f"Unknown verdict status: {status}")
     label, style = _VERDICT_STYLES[status]
 
+    counter = f"[{index}/{total}] "
+    pad = _VERDICT_BADGE_WIDTH - len(label) - 2
+    if pad < 0:
+        pad = 0
+    fname_offset = 2 + len(label) + pad + len(counter)
+
     fname_display = filename
+    if detail_line is not None:
+        # Two-line mode: no arrow/detail on line 1, more room for filename
+        if width is not None:
+            budget = max(10, width - fname_offset - 10)
+            fname_display = _truncate_preserving_id(filename, budget)
+
+        text = Text()
+        text.append("  ")
+        text.append(label, style=style)
+        if pad > 0:
+            text.append(" " * pad)
+        text.append(counter)
+        text.append(fname_display)
+        if elapsed_s >= _ELAPSED_THRESHOLD_S:
+            text.append("  .  ")
+            text.append(f"{elapsed_s:.1f}s", style="dim")
+        text.append("\n")
+        text.append(" " * fname_offset)
+        text.append(detail_line)
+        return text
+
+    # Single-line mode (original behaviour)
     if width is not None:
-        budget = max(10, width - _VERDICT_BADGE_WIDTH - len(f"[{index}/{total}] ")
+        budget = max(10, width - _VERDICT_BADGE_WIDTH - len(counter)
                      - len(" -> ") - len(detail) - 10)
         fname_display = _truncate_preserving_id(filename, budget)
 
     text = Text()
     text.append("  ")
     text.append(label, style=style)
-    pad = _VERDICT_BADGE_WIDTH - len(label) - 2
     if pad > 0:
         text.append(" " * pad)
 
-    text.append(f"[{index}/{total}] ")
+    text.append(counter)
     text.append(fname_display)
     if detail:
         text.append("  ->  ")
