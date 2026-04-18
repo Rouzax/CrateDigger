@@ -51,6 +51,7 @@ def test_verdict_error_style():
     ("done", "green"),
     ("updated", "cyan"),
     ("up-to-date", "dim green"),
+    ("preview", "cyan"),
     ("skipped", "yellow"),
     ("error", "red"),
 ])
@@ -76,7 +77,7 @@ def test_verdict_unknown_status_raises():
                 detail="x", elapsed_s=1.0)
 
 
-@pytest.mark.parametrize("status", ["done", "updated", "up-to-date", "skipped", "error"])
+@pytest.mark.parametrize("status", ["done", "updated", "up-to-date", "preview", "skipped", "error"])
 def test_verdict_has_gap_between_badge_and_counter(status):
     """Every status must have at least 2 spaces between the badge label
     and the [i/N] counter. Regression: up-to-date (10 chars) previously
@@ -93,3 +94,20 @@ def test_verdict_has_gap_between_badge_and_counter(status):
         f"Expected 2-space gap before [i/N] for status={status}, "
         f"got: {plain!r}"
     )
+
+
+def test_verdict_preview_shape():
+    row = verdict(
+        status="preview",
+        index=1,
+        total=5,
+        filename="my_set.mkv",
+        detail="would copy to Festivals/Ultra Miami 2026/",
+        elapsed_s=0.0,
+    )
+    plain = row.plain
+    assert plain.startswith("  preview")
+    assert "[1/5]" in plain
+    assert "would copy to" in plain
+    # No elapsed shown for 0.0s (below 0.5s threshold)
+    assert "0.0s" not in plain

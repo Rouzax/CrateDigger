@@ -317,6 +317,7 @@ _VERDICT_STYLES = {
     "done":       ("done",        "green"),
     "updated":    ("updated",     "cyan"),
     "up-to-date": ("up-to-date",  "dim green"),
+    "preview":    ("preview",     "cyan"),
     "skipped":    ("skipped",     "yellow"),
     "error":      ("error",       "red"),
 }
