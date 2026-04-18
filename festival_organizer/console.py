@@ -581,6 +581,83 @@ def organize_summary_panel(
     return Panel(body, title="Summary", expand=True)
 
 
+_OP_ORDER = ["nfo", "art", "fanart", "posters", "tags", "chapter_artist_mbids", "album_artist_mbids"]
+
+
+def enrich_summary_panel(
+    file_stats: dict[str, int],
+    op_counts: dict[str, dict[str, int]],
+    errors: list[tuple[str, str, str]] | None = None,
+    unresolved_count: int = 0,
+    elapsed_s: float | None = None,
+) -> Panel:
+    """Summary panel for the enrich command.
+
+    Sections: file stats row, per-operation breakdown, errors (capped at 10),
+    unresolved artist count, and elapsed time.
+    """
+    _stat_styles = {
+        "done": "green",
+        "up_to_date": "dim green",
+        "error": "red",
+    }
+
+    body = Text()
+
+    # Stats row
+    first = True
+    for key, value in file_stats.items():
+        if not first:
+            body.append("  ")
+        first = False
+        body.append(f"{key}: ", style="bold")
+        body.append(str(value), style=_stat_styles.get(key, "dim"))
+
+    # Operations breakdown
+    if op_counts:
+        ordered_keys = [k for k in _OP_ORDER if k in op_counts]
+        ordered_keys += [k for k in op_counts if k not in _OP_ORDER]
+
+        body.append("\n")
+        for op_name in ordered_keys:
+            statuses = op_counts[op_name]
+            body.append("\n")
+            label = op_name.upper()
+            body.append(f"{label}: ", style="bold")
+            done = statuses.get("done", 0)
+            body.append(str(done), style="green")
+            skipped = statuses.get("skipped", 0)
+            if skipped:
+                body.append(f"  skipped {skipped}", style="dim")
+            error = statuses.get("error", 0)
+            if error:
+                body.append(f"  error {error}", style="red")
+
+    # Errors
+    if errors:
+        body.append("\n\n")
+        body.append("Errors:", style="bold")
+        for filename, op, detail in errors[:10]:
+            body.append(f"\n  {filename} ({op}) -> {detail}", style="red")
+        remaining = len(errors) - 10
+        if remaining > 0:
+            body.append(f"\n  ... +{remaining} more", style="dim")
+
+    # Unresolved artists
+    if unresolved_count > 0:
+        body.append("\n\n")
+        body.append("Unresolved artists: ", style="bold")
+        body.append(str(unresolved_count), style="yellow")
+
+    # Elapsed
+    if elapsed_s is not None and elapsed_s >= _ELAPSED_THRESHOLD_S:
+        body.append("\n\n")
+        body.append("Elapsed: ", style="bold")
+        body.append(_format_elapsed(elapsed_s), style="dim")
+
+    return Panel(body, title="Summary", expand=True)
+
+
 def library_sync_summary_line(
     name: str,
     stats: dict[str, int],

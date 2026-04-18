@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.text import Text
 
 from festival_organizer.console import (
+    enrich_summary_panel,
     escape,
     header_panel,
     make_console,
@@ -451,6 +452,12 @@ class EnrichContractProgress:
         pass
 
     def print_summary(self, elapsed_s: float | None = None, log_path: Path | None = None) -> None:
-        """Print the enrich summary panel (stub using legacy summary_panel)."""
-        counts = dict(self._op_counts)
-        self.console.print(summary_panel(counts, log_path=log_path))
+        """Print the enrich summary panel."""
+        self.console.print()
+        self.console.print(enrich_summary_panel(
+            file_stats=self._file_stats,
+            op_counts=dict(self._op_counts),
+            errors=self._errors or None,
+            unresolved_count=len(self._unresolved_artists),
+            elapsed_s=elapsed_s,
+        ))
