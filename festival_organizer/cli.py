@@ -32,7 +32,7 @@ from festival_organizer.operations import (
     AlbumArtistMbidsOperation,
     ChapterArtistMbidsOperation,
 )
-from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress, EnrichContractProgress
+from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress, EnrichContractProgress, OrganizeEnrichProgress
 from festival_organizer.runner import run_pipeline
 from festival_organizer.scanner import scan_folder
 from festival_organizer.templates import render_folder, render_filename
@@ -446,13 +446,25 @@ def _run_command(args: types.SimpleNamespace) -> int:
             action=header_action,
             layout=config.default_layout,
         )
+    elif args.command == "organize" and getattr(args, "enrich", False):
+        organize_prog = OrganizeContractProgress(
+            total=0, console=console, quiet=quiet, verbose=verbose,
+            output_root=output,
+            dry_run=getattr(args, "dry_run", False),
+            action=header_action,
+            layout=config.default_layout,
+        )
+        enrich_prog = EnrichContractProgress(
+            total=0, console=console, quiet=quiet, verbose=verbose,
+        )
+        progress = OrganizeEnrichProgress(organize_prog, enrich_prog)
     elif args.command == "enrich":
         progress = EnrichContractProgress(
             total=0, console=console, quiet=quiet, verbose=verbose,
         )
     else:
         progress = ProgressPrinter(total=0, console=console, quiet=quiet, verbose=verbose)
-    use_contract = isinstance(progress, (OrganizeContractProgress, EnrichContractProgress))
+    use_contract = isinstance(progress, (OrganizeContractProgress, EnrichContractProgress, OrganizeEnrichProgress))
     all_tools = {
         "mediainfo": metadata.MEDIAINFO_PATH,
         "ffprobe": metadata.FFPROBE_PATH,
@@ -617,7 +629,10 @@ def _run_command(args: types.SimpleNamespace) -> int:
         pipeline_files.append((fp, mf, ops))
 
     if getattr(args, "dry_run", False):
-        if use_contract:
+        if isinstance(progress, OrganizeEnrichProgress):
+            elapsed = time.monotonic() - start_time
+            progress.organize.print_summary(elapsed_s=elapsed)
+        elif use_contract:
             elapsed = time.monotonic() - start_time
             progress.print_summary(elapsed_s=elapsed)
         else:
@@ -635,7 +650,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
         return 0
 
     # Run pipeline
-    if isinstance(progress, EnrichContractProgress):
+    if isinstance(progress, (EnrichContractProgress, OrganizeEnrichProgress)):
         from festival_organizer.console import StepProgress, suppression_enabled
         suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
         step = StepProgress(console, enabled=not suppressed)
@@ -672,7 +687,11 @@ def _run_command(args: types.SimpleNamespace) -> int:
             elif root.resolve() != output.resolve():
                 cleanup_empty_dirs(root)
 
-    if use_contract:
+    if isinstance(progress, OrganizeEnrichProgress):
+        elapsed = time.monotonic() - start_time
+        progress.organize.print_summary(elapsed_s=elapsed)
+        progress.enrich.print_summary(elapsed_s=elapsed)
+    elif use_contract:
         elapsed = time.monotonic() - start_time
         progress.print_summary(elapsed_s=elapsed)
     else:

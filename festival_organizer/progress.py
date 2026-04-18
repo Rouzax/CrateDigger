@@ -460,3 +460,33 @@ class EnrichContractProgress:
             unresolved_count=len(self._unresolved_artists),
             elapsed_s=elapsed_s,
         ))
+
+
+class OrganizeEnrichProgress:
+    """Composite progress for organize --enrich: emits organize verdict then enrich verdict per file."""
+
+    def __init__(self, organize: OrganizeContractProgress, enrich: EnrichContractProgress):
+        self.organize = organize
+        self.enrich = enrich
+
+    @property
+    def total(self):
+        return self.organize.total
+
+    @total.setter
+    def total(self, value):
+        self.organize.total = value
+        self.enrich.total = value
+
+    def print_header(self, command, rows, missing_tools=None):
+        self.organize.print_header(command, rows, missing_tools)
+
+    def file_start(self, filename, target_folder):
+        pass  # No-op, verdicts are the output
+
+    def file_preview(self, source, media_file, target):
+        """Delegate to organize preview only (no enrich ops exist in dry-run)."""
+        self.organize.file_preview(source=source, media_file=media_file, target=target)
+
+    def record_results(self, results):
+        pass  # Tracked inline by the runner calling organize/enrich file_done

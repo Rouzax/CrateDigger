@@ -6,7 +6,7 @@ from pathlib import Path
 
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import Operation, OperationResult
-from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress, EnrichContractProgress
+from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress, EnrichContractProgress, OrganizeEnrichProgress
 
 
 def run_pipeline(
@@ -16,6 +16,7 @@ def run_pipeline(
 ) -> list[list[OperationResult]]:
     """Run operations for each file, emitting live progress."""
     all_results = []
+    is_dual = isinstance(progress, OrganizeEnrichProgress)
     is_organize_contract = isinstance(progress, OrganizeContractProgress)
     is_enrich_contract = isinstance(progress, EnrichContractProgress)
 
@@ -57,7 +58,34 @@ def run_pipeline(
 
         elapsed = time.perf_counter() - file_start_time
 
-        if is_organize_contract:
+        if is_dual:
+            # Dual mode: emit organize verdict, then enrich verdict
+            organize_op = None
+            organize_result = None
+            enrich_results = []
+            for op, r in zip(operations, file_results):
+                if op.name == "organize":
+                    organize_op = op
+                    organize_result = r
+                else:
+                    enrich_results.append(r)
+            if organize_op and organize_result:
+                progress.organize.file_done(
+                    source=file_path, media_file=media_file,
+                    op=organize_op, result=organize_result,
+                    elapsed_s=elapsed,
+                )
+            if enrich_results:
+                if step_progress is not None:
+                    step_progress.stop()
+                progress.enrich.file_done(
+                    source=current_path,
+                    results=enrich_results,
+                    elapsed_s=elapsed,
+                )
+                if step_progress is not None:
+                    step_progress.start()
+        elif is_organize_contract:
             # Find the organize operation and its result
             organize_op = None
             organize_result = None
