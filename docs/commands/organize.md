@@ -124,6 +124,61 @@ are handled differently:
 
 The `.cratedigger/` marker folder is created inside the output library on the first run.
 
+## Console output
+
+When you run `organize`, CrateDigger shows one line per file describing what happened.
+
+### Per-file verdict
+
+Each file gets a single result line in this format:
+
+```
+  <badge>  [i/N] <filename>  ->  <detail>  .  <elapsed>
+```
+
+The badge tells you the outcome:
+
+| Badge | Meaning |
+|-------|---------|
+| `done` | File was successfully copied, moved, or renamed |
+| `up-to-date` | File is already at the correct location; nothing changed |
+| `preview` | Dry-run preview showing what would happen |
+| `skipped` | File was skipped (not a recognized media file, or user declined) |
+| `error` | Something went wrong (permission denied, disk full, etc.) |
+
+The detail field shows only what changed:
+
+- **Rename in place (same folder):** the new filename.
+- **Import (same filename, new folder):** the destination folder.
+- **Both changed:** the full relative path.
+- **Dry-run:** prefixed with `would copy to`, `would move to`, or `would rename to`.
+
+Elapsed time appears only when an operation takes more than half a second.
+
+### Verbose output
+
+With `--verbose`, each verdict is followed by a dim metadata line showing:
+
+- The file's classification (festival set or concert)
+- The layout rule applied
+- How many sidecar files were moved alongside the video
+
+### Summary panel
+
+After all files are processed, a summary panel shows:
+
+- **Counts:** how many files were done, up-to-date, previewed, skipped, or errored.
+- **Destinations:** which folders files ended up in, sorted by count.
+- **Skipped reasons:** why files were skipped, if any.
+- **Errors:** which files failed and why, if any.
+- **Elapsed:** total wall time.
+
+### Kodi sync
+
+When `--kodi-sync` is active, a separate Kodi sync section appears after the summary. It
+shows transient progress while fetching the Kodi library and refreshing items, followed by
+a one-line summary of how many items were refreshed and how many are not yet in the library.
+
 ## Layouts
 
 CrateDigger supports four folder layouts, each with separate templates for festival sets
