@@ -437,8 +437,8 @@ def identify_summary_panel(
         if not first:
             body.append("  ")
         first = False
-        style = "green" if key in ("added", "done", "up_to_date", "previewed") else (
-            "cyan" if key == "updated" else (
+        style = "green" if key in ("added", "done", "up_to_date") else (
+            "cyan" if key in ("updated", "previewed") else (
                 "red" if key == "error" else "dim"
             )
         )

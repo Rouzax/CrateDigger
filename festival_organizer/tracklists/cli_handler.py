@@ -635,7 +635,7 @@ def _fetch_and_embed(
             con.print(f"  [bold]Chapters:[/bold]  {len(chapters)}")
             for ch in chapters:
                 con.print(f"    [dim]{ch.timestamp[:8]}[/dim] {escape(ch.title)}")
-        return ("previewed", "done", f"{export.title} . {len(chapters)} chapters (preview)")
+        return ("previewed", "preview", f"{export.title} . {len(chapters)} chapters")
 
     # Embed
     if spinner is not None:
