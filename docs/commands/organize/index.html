@@ -716,6 +716,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#console-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Console output
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Console output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-file-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-file verdict
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbose-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verbose output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kodi-sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kodi sync
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#layouts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1252,6 +1313,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#console-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Console output
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Console output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-file-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-file verdict
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbose-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verbose output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kodi-sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kodi sync
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#layouts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1611,55 +1733,120 @@ are handled differently:</p>
   move, they stay in the original folder.</li>
 </ul>
 <p>The <code>.cratedigger/</code> marker folder is created inside the output library on the first run.</p>
+<h2 id="console-output">Console output</h2>
+<p>When you run <code>organize</code>, CrateDigger shows one line per file describing what happened.</p>
+<h3 id="per-file-verdict">Per-file verdict</h3>
+<p>Each file gets a single result line in this format:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>  &lt;badge&gt;  [i/N] &lt;filename&gt;  -&gt;  &lt;detail&gt;  .  &lt;elapsed&gt;
+</code></pre></div>
+<p>The badge tells you the outcome:</p>
+<table>
+<thead>
+<tr>
+<th>Badge</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>done</code></td>
+<td>File was successfully copied, moved, or renamed</td>
+</tr>
+<tr>
+<td><code>up-to-date</code></td>
+<td>File is already at the correct location; nothing changed</td>
+</tr>
+<tr>
+<td><code>preview</code></td>
+<td>Dry-run preview showing what would happen</td>
+</tr>
+<tr>
+<td><code>skipped</code></td>
+<td>File was skipped (not a recognized media file, or user declined)</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>Something went wrong (permission denied, disk full, etc.)</td>
+</tr>
+</tbody>
+</table>
+<p>The detail field shows only what changed:</p>
+<ul>
+<li><strong>Rename in place (same folder):</strong> the new filename.</li>
+<li><strong>Import (same filename, new folder):</strong> the destination folder.</li>
+<li><strong>Both changed:</strong> the full relative path.</li>
+<li><strong>Dry-run:</strong> prefixed with <code>would copy to</code>, <code>would move to</code>, or <code>would rename to</code>.</li>
+</ul>
+<p>Elapsed time appears only when an operation takes more than half a second.</p>
+<h3 id="verbose-output">Verbose output</h3>
+<p>With <code>--verbose</code>, each verdict is followed by a dim metadata line showing:</p>
+<ul>
+<li>The file's classification (festival set or concert)</li>
+<li>The layout rule applied</li>
+<li>How many sidecar files were moved alongside the video</li>
+</ul>
+<h3 id="summary-panel">Summary panel</h3>
+<p>After all files are processed, a summary panel shows:</p>
+<ul>
+<li><strong>Counts:</strong> how many files were done, up-to-date, previewed, skipped, or errored.</li>
+<li><strong>Destinations:</strong> which folders files ended up in, sorted by count.</li>
+<li><strong>Skipped reasons:</strong> why files were skipped, if any.</li>
+<li><strong>Errors:</strong> which files failed and why, if any.</li>
+<li><strong>Elapsed:</strong> total wall time.</li>
+</ul>
+<h3 id="kodi-sync">Kodi sync</h3>
+<p>When <code>--kodi-sync</code> is active, a separate Kodi sync section appears after the summary. It
+shows transient progress while fetching the Kodi library and refreshing items, followed by
+a one-line summary of how many items were refreshed and how many are not yet in the library.</p>
 <h2 id="layouts">Layouts</h2>
 <p>CrateDigger supports four folder layouts, each with separate templates for festival sets
 and concert recordings.</p>
 <h3 id="artist_flat">artist_flat</h3>
 <p>All files for an artist go into a single folder, regardless of festival or year.
 Good for smaller libraries or when you want a simple one-level structure.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Library/
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  Martin Garrix/
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    2024 - Martin Garrix - Tomorrowland.mkv
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    2023 - Martin Garrix - AMF.mkv
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>  Armin van Buuren/
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    2023 - Armin van Buuren - ASOT.mkv
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Library/
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  Martin Garrix/
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    2024 - Martin Garrix - Tomorrowland.mkv
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    2023 - Martin Garrix - AMF.mkv
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  Armin van Buuren/
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    2023 - Armin van Buuren - ASOT.mkv
 </code></pre></div>
 <h3 id="festival_flat">festival_flat</h3>
 <p>Festival sets are grouped by festival name. Concert recordings go into an artist folder.
 Good when you primarily browse by festival.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Library/
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  Tomorrowland/
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    2024 - Martin Garrix - Tomorrowland.mkv
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  AMF/
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    2023 - Martin Garrix - AMF.mkv
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>  Armin van Buuren/
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    2023 - Armin van Buuren - Untold.mkv
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Library/
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  Tomorrowland/
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    2024 - Martin Garrix - Tomorrowland.mkv
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>  AMF/
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    2023 - Martin Garrix - AMF.mkv
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>  Armin van Buuren/
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    2023 - Armin van Buuren - Untold.mkv
 </code></pre></div>
 <h3 id="artist_nested">artist_nested</h3>
 <p>Deep hierarchy: artist, then festival, then year. Good for large libraries where you
 browse by artist and want sets organized by event and year within each artist folder.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Library/
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  Martin Garrix/
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    Tomorrowland/
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>      2024/
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>        2024 - Martin Garrix - Tomorrowland.mkv
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>  Coldplay/
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    Live at Wembley/
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>      2023/
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>        Coldplay - Live at Wembley (2023).mkv
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Library/
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  Martin Garrix/
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    Tomorrowland/
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>      2024/
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>        2024 - Martin Garrix - Tomorrowland.mkv
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>  Coldplay/
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    Live at Wembley/
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>      2023/
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>        Coldplay - Live at Wembley (2023).mkv
 </code></pre></div>
 <h3 id="festival_nested">festival_nested</h3>
 <p>Deep hierarchy: festival, then year, then artist. Good for large libraries where you
 browse by event and want all artists at a given festival in one place.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Library/
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  Tomorrowland/
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    2024/
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>      Martin Garrix/
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>        2024 - Martin Garrix - Tomorrowland.mkv
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>  Untold/
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    2023/
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>      Armin van Buuren/
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>        2023 - Armin van Buuren - Untold.mkv
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Library/
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  Tomorrowland/
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    2024/
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>      Martin Garrix/
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>        2024 - Martin Garrix - Tomorrowland.mkv
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>  Untold/
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    2023/
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>      Armin van Buuren/
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>        2023 - Armin van Buuren - Untold.mkv
 </code></pre></div>
 <h2 id="classification">Classification</h2>
 <p>CrateDigger automatically classifies each file as either a <strong>festival set</strong> or a
@@ -1673,29 +1860,29 @@ glob patterns in the <code>content_type_rules</code> section of your
 an in-place rename. Before doing this, CrateDigger asks for confirmation, since it
 will rename folders and files that are already in place.</p>
 <p>Use <code>--yes</code> to skip the confirmation prompt:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Music/Library/<span class="w"> </span>--yes
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Music/Library/<span class="w"> </span>--yes
 </code></pre></div>
 <p>Re-organizing is useful when you change your layout or filename template in the config
 and want to apply the new naming to files already in the library.</p>
 <h2 id="common-examples">Common examples</h2>
 <p><strong>Import recordings into a library (safe default, copies files):</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
 </code></pre></div>
 <p>Source files are preserved. Good for a first import where you want to verify the result.</p>
 <p><strong>Import and delete the originals after:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--move
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--move
 </code></pre></div>
 <p><strong>Preview what would happen before committing:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--dry-run
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--dry-run
 </code></pre></div>
 <p><strong>Import with a specific layout:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--layout<span class="w"> </span>festival_nested
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--layout<span class="w"> </span>festival_nested
 </code></pre></div>
 <p><strong>Organize and enrich in one pass:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
 </code></pre></div>
 <p><strong>Re-organize an existing library after changing your layout config:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Music/Library/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Music/Library/
 </code></pre></div>
 <p>CrateDigger detects that source and output are the same library and renames in place.</p>
 <h2 id="common-problems">Common problems</h2>
@@ -1721,9 +1908,9 @@ used (e.g., "Unknown Artist").</p>
 <p><strong>Optional decorated fields</strong> (<code>{ field}</code>, <code>{ - field}</code>, <code>{ [field]}</code>): the punctuation
 inside the braces is included only when the field has a value. If the field is empty, the
 entire token is removed.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>{festival}{ edition}         -&gt; &quot;Tomorrowland Winter&quot;  or  &quot;Tomorrowland&quot;
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>{artist}{ - set_title}       -&gt; &quot;Tiesto - Closing Set&quot; or  &quot;Tiesto&quot;
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>{year} - {artist}{ [stage]}  -&gt; &quot;2024 - Tiesto [Mainstage]&quot; or &quot;2024 - Tiesto&quot;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>{festival}{ edition}         -&gt; &quot;Tomorrowland Winter&quot;  or  &quot;Tomorrowland&quot;
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>{artist}{ - set_title}       -&gt; &quot;Tiesto - Closing Set&quot; or  &quot;Tiesto&quot;
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>{year} - {artist}{ [stage]}  -&gt; &quot;2024 - Tiesto [Mainstage]&quot; or &quot;2024 - Tiesto&quot;
 </code></pre></div>
 <h3 id="available-fields">Available fields</h3>
 <table>
