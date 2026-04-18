@@ -821,6 +821,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#console-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Console output
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#common-problems" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1284,6 +1295,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#console-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Console output
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#common-problems" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1589,6 +1611,22 @@ directly into the MKV file's metadata section. The video and audio streams are n
 <p><strong>Enrich and notify Kodi when done:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--kodi-sync
 </code></pre></div>
+<h2 id="console-output">Console output</h2>
+<p>Each file gets a two-line verdict block showing what happened:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>done  [3/12] Afrojack - Ultra Miami 2024.mkv  .  4.2s
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>             nfo, art, posters
+</code></pre></div>
+<p>The second line lists the operations that ran. If everything was already
+up to date, it shows <code>all up to date</code> instead. Errors are called out
+inline:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>error  [5/12] Eric Prydz - Creamfields 2023.mkv  .  1.1s
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>              nfo; posters error: no thumbnail found
+</code></pre></div>
+<p>Use <code>--verbose</code> to see a per-operation breakdown under each verdict,
+showing which operations ran, were skipped, or failed and why.</p>
+<p>After all files are processed, a summary panel shows total file counts
+(done, up to date, errors), a per-operation breakdown, any errors
+encountered, and total elapsed time.</p>
 <h2 id="common-problems">Common problems</h2>
 <p><strong>"not a CrateDigger library"</strong></p>
 <p>The folder you pointed <code>enrich</code> at has no <code>.cratedigger/</code> marker. Run
@@ -1603,7 +1641,7 @@ first, then rerun the full enrich. See the <a href="../../faq/">FAQ</a> for more
 <p>If you re-run <a href="../identify/"><code>identify</code></a> on your library to pick up updated tracklist data
 from the 1001Tracklists community, run <code>enrich</code> again afterward to apply the new metadata
 to your NFO files, MKV tags, and posters:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--regenerate
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--regenerate
 </code></pre></div>
 <p>Updated artist names, genres, stage information, and other tracklist fields are picked up
 from the newly embedded tags.</p>
@@ -1611,7 +1649,7 @@ from the newly embedded tags.</p>
 <p>Festival folder posters use a curated logo if one is available, and fall back to a color
 gradient if not. Adding a logo for a festival upgrades its folder poster from a plain
 gradient to a logo-based design. You can add logos at any time and then re-run to rebuild:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
 </code></pre></div>
 <p>Use <a href="../audit-logos/"><code>audit-logos</code></a> to see which festivals in your library have logos
 and which are missing them.</p>
