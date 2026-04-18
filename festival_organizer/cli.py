@@ -32,7 +32,7 @@ from festival_organizer.operations import (
     AlbumArtistMbidsOperation,
     ChapterArtistMbidsOperation,
 )
-from festival_organizer.progress import ProgressPrinter
+from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress
 from festival_organizer.runner import run_pipeline
 from festival_organizer.scanner import scan_folder
 from festival_organizer.templates import render_folder, render_filename
@@ -394,6 +394,17 @@ def _run_command(args: types.SimpleNamespace) -> int:
     else:
         action = ""
 
+    # Compute the human-readable action for the header. For dry-run, this is
+    # what would happen if the user ran without --dry-run.
+    if args.command == "organize":
+        dry_run = getattr(args, "dry_run", False)
+        header_action = action if not dry_run else (
+            "move" if getattr(args, "move", False) else
+            "rename" if source_inside_or_equals_output(root, output) else "copy"
+        )
+    else:
+        header_action = ""
+
     # Organize safety: confirm when source is inside existing library
     if args.command == "organize" and not getattr(args, "dry_run", False) and library_root and not explicit_output:
         try:
@@ -427,7 +438,17 @@ def _run_command(args: types.SimpleNamespace) -> int:
     quiet = args.quiet
 
     # Scan
-    progress = ProgressPrinter(total=0, console=console, quiet=quiet, verbose=verbose)
+    use_contract = (args.command == "organize" and not getattr(args, "enrich", False))
+    if use_contract:
+        progress = OrganizeContractProgress(
+            total=0, console=console, quiet=quiet, verbose=verbose,
+            output_root=output,
+            dry_run=getattr(args, "dry_run", False),
+            action=header_action,
+            layout=config.default_layout,
+        )
+    else:
+        progress = ProgressPrinter(total=0, console=console, quiet=quiet, verbose=verbose)
     all_tools = {
         "mediainfo": metadata.MEDIAINFO_PATH,
         "ffprobe": metadata.FFPROBE_PATH,
@@ -456,10 +477,6 @@ def _run_command(args: types.SimpleNamespace) -> int:
             header_rows["Regenerate"] = "yes"
     else:
         dry_run = getattr(args, "dry_run", False)
-        header_action = action if not dry_run else (
-            "move" if getattr(args, "move", False) else
-            "rename" if source_inside_or_equals_output(root, output) else "copy"
-        )
         command_label = f"Organize (dry run, {header_action})" if dry_run else "Organize"
         header_rows = {
             "Source": str(root),
@@ -547,12 +564,14 @@ def _run_command(args: types.SimpleNamespace) -> int:
         ops: list = []
 
         if getattr(args, "dry_run", False):
-            # Dry run: no operations, just show plan
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
-            progress.file_start(fp, target_folder + "/" + target_name)
-            progress.file_done([])
+            if use_contract:
+                progress.file_preview(source=fp, media_file=mf, target=target)
+            else:
+                progress.file_start(fp, target_folder + "/" + target_name)
+                progress.file_done([])
             continue
 
         if args.command == "organize":
@@ -594,17 +613,21 @@ def _run_command(args: types.SimpleNamespace) -> int:
         pipeline_files.append((fp, mf, ops))
 
     if getattr(args, "dry_run", False):
-        from festival_organizer.console import classification_summary_panel
-        festival_count = sum(1 for _, mf in media_files if mf.content_type == "festival_set")
-        concert_count = sum(1 for _, mf in media_files if mf.content_type == "concert_film")
-        unrecognized = [fp.name for fp, mf in media_files if mf.content_type in ("unknown", "")]
-        console.print()
-        console.print(classification_summary_panel(
-            total=len(media_files),
-            festival_sets=festival_count,
-            concerts=concert_count,
-            unrecognized=unrecognized,
-        ))
+        if use_contract:
+            elapsed = time.monotonic() - start_time
+            progress.print_summary(elapsed_s=elapsed)
+        else:
+            from festival_organizer.console import classification_summary_panel
+            festival_count = sum(1 for _, mf in media_files if mf.content_type == "festival_set")
+            concert_count = sum(1 for _, mf in media_files if mf.content_type == "concert_film")
+            unrecognized = [fp.name for fp, mf in media_files if mf.content_type in ("unknown", "")]
+            console.print()
+            console.print(classification_summary_panel(
+                total=len(media_files),
+                festival_sets=festival_count,
+                concerts=concert_count,
+                unrecognized=unrecognized,
+            ))
         return 0
 
     # Run pipeline
@@ -638,7 +661,11 @@ def _run_command(args: types.SimpleNamespace) -> int:
             elif root.resolve() != output.resolve():
                 cleanup_empty_dirs(root)
 
-    progress.print_summary()
+    if use_contract:
+        elapsed = time.monotonic() - start_time
+        progress.print_summary(elapsed_s=elapsed)
+    else:
+        progress.print_summary()
 
     # Print curated logo summary if album posters were generated
     if album_poster_op:
@@ -654,7 +681,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
         _run_kodi_sync(all_results, pipeline_files, config, console, quiet)
 
     # Completion signal
-    if not quiet:
+    if not quiet and not use_contract:
         elapsed = time.monotonic() - start_time
         console.print(f"[dim]Completed in {elapsed:.1f}s[/dim]")
 

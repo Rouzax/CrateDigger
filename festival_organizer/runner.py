@@ -1,32 +1,24 @@
 """Pipeline runner: executes operations per file with live progress."""
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import Operation, OperationResult
-from festival_organizer.progress import ProgressPrinter
+from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress
 
 
 def run_pipeline(
     files: list[tuple[Path, MediaFile, list[Operation]]],
-    progress: ProgressPrinter,
+    progress,
 ) -> list[list[OperationResult]]:
-    """Run operations for each file, emitting live progress.
-
-    Args:
-        files: List of (file_path, media_file, operations) tuples.
-            file_path is the current location of the file.
-            Operations are executed in order.
-        progress: ProgressPrinter for live output.
-
-    Returns:
-        List of result lists, one per file.
-    """
+    """Run operations for each file, emitting live progress."""
     all_results = []
+    is_contract = isinstance(progress, OrganizeContractProgress)
 
     for file_path, media_file, operations in files:
-        # Determine target folder for display
+        # Determine target folder for display (legacy progress)
         target_folder = ""
         for op in operations:
             if op.name == "organize" and hasattr(op, "target"):
@@ -37,6 +29,7 @@ def run_pipeline(
 
         file_results = []
         current_path = file_path
+        file_start_time = time.perf_counter()
 
         for op in operations:
             op_display = getattr(op, "display_name", "") or ""
@@ -49,14 +42,32 @@ def run_pipeline(
             if needed:
                 result = op.execute(current_path, media_file)
                 result.display_name = op_display
-                # If organize succeeded, update path for downstream ops
                 if op.name == "organize" and result.status == "done":
                     current_path = op.target
             else:
                 result = OperationResult(op.name, "skipped", "exists", display_name=op_display)
             file_results.append(result)
 
-        progress.file_done(file_results)
+        elapsed = time.perf_counter() - file_start_time
+
+        if is_contract:
+            # Find the organize operation and its result
+            organize_op = None
+            organize_result = None
+            for op, r in zip(operations, file_results):
+                if op.name == "organize":
+                    organize_op = op
+                    organize_result = r
+                    break
+            if organize_op and organize_result:
+                progress.file_done(
+                    source=file_path, media_file=media_file,
+                    op=organize_op, result=organize_result,
+                    elapsed_s=elapsed,
+                )
+        else:
+            progress.file_done(file_results)
+
         progress.record_results(file_results)
         all_results.append(file_results)
 
