@@ -217,7 +217,7 @@ class TestSyncLibrary:
         client = self._make_client({smb_path: 42})
         console = MagicMock()
 
-        sync_library(client, [video], console)
+        sync_library(client, [video], console, suppressed=True)
 
         client.refresh_music_video.assert_called_once_with(42)
 
@@ -237,7 +237,7 @@ class TestSyncLibrary:
         client = self._make_client(kodi_files)
         console = MagicMock()
 
-        sync_library(client, [video1, video2], console)
+        sync_library(client, [video1, video2], console, suppressed=True)
 
         assert client.refresh_music_video.call_count == 2
 
@@ -254,6 +254,7 @@ class TestSyncLibrary:
         sync_library(
             client, [video], console,
             path_mapping={"local": str(tmp_path), "kodi": "smb://HOST/share"},
+            suppressed=True,
         )
 
         client.refresh_music_video.assert_called_once_with(7)
@@ -267,7 +268,7 @@ class TestSyncLibrary:
         client = self._make_client({smb_path: 10})
         console = MagicMock()
 
-        sync_library(client, [video], console)
+        sync_library(client, [video], console, suppressed=True)
 
         client.refresh_music_video.assert_called_once_with(10)
 
@@ -280,7 +281,7 @@ class TestSyncLibrary:
 
         import logging
         with caplog.at_level(logging.WARNING, logger="festival_organizer.kodi"):
-            sync_library(client, [video], console)
+            sync_library(client, [video], console, suppressed=True)
 
         client.refresh_music_video.assert_not_called()
         assert "Not in Kodi library" in caplog.text
@@ -289,7 +290,7 @@ class TestSyncLibrary:
         client = MagicMock(spec=KodiClient)
         console = MagicMock()
 
-        sync_library(client, [], console)
+        sync_library(client, [], console, suppressed=True)
 
         client.scan.assert_not_called()
         client.get_music_videos.assert_not_called()
@@ -306,7 +307,7 @@ class TestSyncLibrary:
         client.scan.side_effect = lambda *a: call_order.append("scan")
         client.clean.side_effect = lambda: call_order.append("clean")
 
-        sync_library(client, [video], console)
+        sync_library(client, [video], console, suppressed=True)
 
         assert call_order == ["refresh", "scan", "clean"]
 
@@ -318,7 +319,7 @@ class TestSyncLibrary:
         client = self._make_client({"smb://HOST/video.mkv": 1})
         console = MagicMock()
 
-        sync_library(client, [video, video, video], console)
+        sync_library(client, [video, video, video], console, suppressed=True)
 
         client.refresh_music_video.assert_called_once_with(1)
 
@@ -329,6 +330,6 @@ class TestSyncLibrary:
         client = self._make_client({"smb://HOST/video.mkv": 1})
         console = MagicMock()
 
-        sync_library(client, [video], console, quiet=True)
+        sync_library(client, [video], console, quiet=True, suppressed=True)
 
         console.print.assert_not_called()

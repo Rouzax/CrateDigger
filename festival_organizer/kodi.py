@@ -192,116 +192,103 @@ def sync_library(
     console: Console,
     quiet: bool = False,
     path_mapping: dict | None = None,
+    suppressed: bool = False,
 ) -> None:
-    """Sync changed files with Kodi: refresh existing, scan for new, clean stale.
-
-    Order: refresh existing items first, then scan for new files, then clean
-    stale entries. This avoids the race condition of scanning before the
-    library index is fetched.
-
-    Path matching strategy (in order):
-    1. Prefix mapping with case-insensitive lookup (explicit config or auto-detected)
-    2. Exact path match (same filesystem)
-    3. Filename-only fallback (case-insensitive)
-
-    Args:
-        path_mapping: Optional dict with "local" and "kodi" keys for path
-            translation. If not provided, the mapping is auto-detected.
-    """
+    """Sync changed files with Kodi: refresh existing, scan for new, clean stale."""
     if not changed_paths:
         return
 
+    import time
+    from festival_organizer.console import (
+        StepProgress, library_sync_summary_line,
+    )
+
     logger.info("Syncing %d updated items with Kodi", len(changed_paths))
+    phase_start = time.perf_counter()
 
     if not quiet:
         console.print()
-        console.print("[bold]Kodi sync[/bold]")
+        console.rule("Kodi sync", style="dim")
 
-    # Build path-to-ID mapping from Kodi's library
-    if not quiet:
-        with console.status("Fetching Kodi library..."):
-            kodi_videos = client.get_music_videos()
-    else:
+    with StepProgress(console, enabled=not suppressed and not quiet) as sp:
+        sp.update("Fetching Kodi library...")
         kodi_videos = client.get_music_videos()
 
-    # Case-insensitive lookup: lowered path -> original Kodi path
-    kodi_lower: dict[str, str] = {p.lower(): p for p in kodi_videos}
+        # Case-insensitive lookup: lowered path -> original Kodi path
+        kodi_lower: dict[str, str] = {p.lower(): p for p in kodi_videos}
 
-    # Determine path mapping: explicit config or auto-detect
-    local_prefix = ""
-    kodi_prefix = ""
-    if path_mapping:
-        local_prefix = path_mapping.get("local", "")
-        kodi_prefix = path_mapping.get("kodi", "")
-        if local_prefix and kodi_prefix:
-            local_prefix = str(Path(local_prefix).resolve())
-            logger.info("Path mapping (config): %s -> %s", local_prefix, kodi_prefix)
+        # Determine path mapping: explicit config or auto-detect
+        local_prefix = ""
+        kodi_prefix = ""
+        if path_mapping:
+            local_prefix = path_mapping.get("local", "")
+            kodi_prefix = path_mapping.get("kodi", "")
+            if local_prefix and kodi_prefix:
+                local_prefix = str(Path(local_prefix).resolve())
+                logger.info("Path mapping (config): %s -> %s", local_prefix, kodi_prefix)
 
-    if not (local_prefix and kodi_prefix):
-        inferred = _infer_path_mapping(changed_paths, kodi_videos)
-        if inferred:
-            local_prefix, kodi_prefix = inferred
+        if not (local_prefix and kodi_prefix):
+            inferred = _infer_path_mapping(changed_paths, kodi_videos)
+            if inferred:
+                local_prefix, kodi_prefix = inferred
 
-    # Build a filename-to-ID index as last-resort fallback (case-insensitive)
-    filename_index: dict[str, int] = {}
-    for kodi_path, mv_id in kodi_videos.items():
-        name = kodi_path.rsplit("/", 1)[-1] if "/" in kodi_path else kodi_path
-        filename_index[name.lower()] = mv_id
+        # Build a filename-to-ID index as last-resort fallback (case-insensitive)
+        filename_index: dict[str, int] = {}
+        for kodi_path, mv_id in kodi_videos.items():
+            name = kodi_path.rsplit("/", 1)[-1] if "/" in kodi_path else kodi_path
+            filename_index[name.lower()] = mv_id
 
-    # Deduplicate paths (album_poster expansion may add duplicates)
-    unique_paths = list(dict.fromkeys(changed_paths))
+        # Deduplicate paths (album_poster expansion may add duplicates)
+        unique_paths = list(dict.fromkeys(changed_paths))
 
-    refreshed = 0
-    not_found = 0
+        refreshed = 0
+        not_found = 0
 
-    for path in unique_paths:
-        mv_id = None
-
-        # Strategy 1: prefix mapping (case-insensitive)
-        if local_prefix and kodi_prefix:
-            kodi_path = _translate_path(path, local_prefix, kodi_prefix, kodi_lower)
-            if kodi_path:
-                mv_id = kodi_videos.get(kodi_path)
-
-        # Strategy 2: exact path match (same filesystem)
-        if mv_id is None:
-            mv_id = kodi_videos.get(str(path.resolve()))
-
-        # Strategy 3: filename match (case-insensitive fallback)
-        if mv_id is None:
-            mv_id = filename_index.get(path.name.lower())
-            if mv_id is not None:
-                logger.debug("Matched by filename: %s", path.name)
-
-        if mv_id is not None:
-            client.refresh_music_video(mv_id)
-            logger.info("Refreshed in Kodi: %s", path.name)
-            refreshed += 1
-        else:
-            logger.warning(
-                "Not in Kodi library (will be picked up by scan): %s",
-                path.name,
+        for i, path in enumerate(unique_paths):
+            sp.update(
+                f"Refreshing {i + 1}/{len(unique_paths)}",
+                filename=path.name,
             )
-            not_found += 1
 
-    # Per-item results
-    if not quiet:
-        from rich.text import Text
-        text = Text("        ")
-        text.append("\u2714  ", style="green")
-        text.append(f"refreshed {refreshed}")
-        if not_found:
-            text.append("  ")
-            text.append("\u25cb  ", style="dim")
-            text.append(f"{not_found} not yet in library", style="dim")
-        console.print(text)
+            mv_id = None
 
-    # Scan for new files, then clean stale entries
-    if not quiet:
-        with console.status("Scanning for new files..."):
-            client.scan()
-        with console.status("Cleaning stale entries..."):
-            client.clean()
-    else:
+            # Strategy 1: prefix mapping (case-insensitive)
+            if local_prefix and kodi_prefix:
+                kodi_path = _translate_path(path, local_prefix, kodi_prefix, kodi_lower)
+                if kodi_path:
+                    mv_id = kodi_videos.get(kodi_path)
+
+            # Strategy 2: exact path match (same filesystem)
+            if mv_id is None:
+                mv_id = kodi_videos.get(str(path.resolve()))
+
+            # Strategy 3: filename match (case-insensitive fallback)
+            if mv_id is None:
+                mv_id = filename_index.get(path.name.lower())
+                if mv_id is not None:
+                    logger.debug("Matched by filename: %s", path.name)
+
+            if mv_id is not None:
+                client.refresh_music_video(mv_id)
+                logger.info("Refreshed in Kodi: %s", path.name)
+                refreshed += 1
+            else:
+                logger.warning(
+                    "Not in Kodi library (will be picked up by scan): %s",
+                    path.name,
+                )
+                not_found += 1
+
+        sp.update("Scanning for new files...")
         client.scan()
+
+        sp.update("Cleaning stale entries...")
         client.clean()
+
+    elapsed = time.perf_counter() - phase_start
+
+    if not quiet:
+        stats: dict[str, int] = {"refreshed": refreshed}
+        if not_found:
+            stats["not yet in library"] = not_found
+        console.print(library_sync_summary_line("Kodi", stats, elapsed))

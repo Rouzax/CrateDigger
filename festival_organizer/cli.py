@@ -678,7 +678,8 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # Post-pipeline: Kodi sync
     kodi_sync = getattr(args, "kodi_sync", False) or config.kodi_enabled
     if kodi_sync and args.command in ("enrich", "organize"):
-        _run_kodi_sync(all_results, pipeline_files, config, console, quiet)
+        _run_kodi_sync(all_results, pipeline_files, config, console, quiet,
+                       verbose=verbose, debug=debug)
 
     # Completion signal
     if not quiet and not use_contract:
@@ -694,6 +695,8 @@ def _run_kodi_sync(
     config: Config,
     console: "Console",
     quiet: bool,
+    verbose: bool = False,
+    debug: bool = False,
 ) -> None:
     """Notify Kodi to refresh items that had changes affecting Kodi display."""
     from festival_organizer.kodi import KodiClient, sync_library
@@ -741,8 +744,10 @@ def _run_kodi_sync(
             password=config.kodi_password,
         )
         path_mapping = config.kodi_settings.get("path_mapping")
+        from festival_organizer.console import suppression_enabled
+        suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
         sync_library(client, changed_paths, console, quiet,
-                     path_mapping=path_mapping)
+                     path_mapping=path_mapping, suppressed=suppressed)
     except Exception as e:
         logging.getLogger("festival_organizer.kodi").warning(
             "Kodi sync failed: %s", e
