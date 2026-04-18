@@ -11,6 +11,46 @@ from festival_organizer.console import escape, header_panel, make_console, statu
 from festival_organizer.operations import OperationResult
 
 
+def _organize_detail(
+    *,
+    source: Path,
+    target: Path,
+    output_root: Path,
+    action: str,
+    dry_run: bool,
+) -> str:
+    """Build the context-aware detail string for an organize verdict.
+
+    Shows only what changed: new filename, new folder, or both.
+    """
+    if str(source) == str(target):
+        return "already at target"
+
+    folder_changed = str(source.parent) != str(target.parent)
+    name_changed = source.name != target.name
+
+    if folder_changed and name_changed:
+        try:
+            rel = target.relative_to(output_root)
+        except ValueError:
+            rel = target
+        base = str(rel)
+    elif folder_changed:
+        try:
+            rel = target.parent.relative_to(output_root)
+        except ValueError:
+            rel = target.parent
+        base = str(rel) + "/"
+    elif name_changed:
+        base = target.name
+    else:
+        return "already at target"
+
+    if dry_run:
+        return f"would {action} to {base}"
+    return base
+
+
 class ProgressPrinter:
     """Formats and prints live progress during pipeline execution."""
 
