@@ -477,3 +477,69 @@ def identify_summary_panel(
         body.append(_format_elapsed(elapsed_s), style="dim")
 
     return Panel(body, title="Summary", expand=True)
+
+
+def organize_summary_panel(
+    stats: dict[str, int],
+    destinations: dict[str, int] | None = None,
+    skipped_reasons: dict[str, int] | None = None,
+    errors: list[tuple[str, str]] | None = None,
+    elapsed_s: float | None = None,
+) -> Panel:
+    """Summary panel for the organize command."""
+    _stat_styles = {
+        "done": "green",
+        "up_to_date": "dim green",
+        "preview": "cyan",
+        "skipped": "yellow",
+        "error": "red",
+    }
+
+    body = Text()
+
+    # Stats row
+    first = True
+    for key, value in stats.items():
+        if not first:
+            body.append("  ")
+        first = False
+        body.append(f"{key}: ", style="bold")
+        body.append(str(value), style=_stat_styles.get(key, "dim"))
+
+    # Destinations breakdown
+    if destinations:
+        body.append("\n\n")
+        body.append("Destinations:", style="bold")
+        sorted_dests = sorted(destinations.items(), key=lambda x: -x[1])
+        for folder, count in sorted_dests[:10]:
+            body.append(f"\n  {folder}: ")
+            body.append(str(count), style="green")
+        remaining = len(sorted_dests) - 10
+        if remaining > 0:
+            body.append(f"\n  ... +{remaining} more", style="dim")
+
+    # Skipped reasons
+    if skipped_reasons:
+        body.append("\n\n")
+        body.append("Skipped:", style="bold")
+        for reason, count in skipped_reasons.items():
+            body.append(f"\n  {reason}: ")
+            body.append(str(count), style="yellow")
+
+    # Errors list
+    if errors:
+        body.append("\n\n")
+        body.append("Errors:", style="bold")
+        for filename, detail in errors[:10]:
+            body.append(f"\n  {filename} -> {detail}", style="red")
+        remaining = len(errors) - 10
+        if remaining > 0:
+            body.append(f"\n  ... +{remaining} more", style="dim")
+
+    # Elapsed
+    if elapsed_s is not None:
+        body.append("\n\n")
+        body.append("Elapsed: ", style="bold")
+        body.append(_format_elapsed(elapsed_s), style="dim")
+
+    return Panel(body, title="Summary", expand=True)
