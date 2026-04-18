@@ -29,6 +29,8 @@ from typing import Callable
 
 import requests
 
+unresolved_artist_names: set[str] = set()
+
 from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 from festival_organizer.normalization import strip_diacritics
 
@@ -534,10 +536,11 @@ def resolve_mbids_aligned(
 
     for name, mbid in unique.items():
         if mbid is None:
-            logger.warning(
+            logger.info(
                 "No MBID resolved for artist: %r (add to ~/.cratedigger/artist_mbids.json)",
                 name,
             )
+            unresolved_artist_names.add(name)
 
     return ["" if (m := unique.get(name)) is None else m for name in names]
 

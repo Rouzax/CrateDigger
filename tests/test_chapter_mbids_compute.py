@@ -62,7 +62,7 @@ def test_unique_names_looked_up_once_across_chapters():
 
 
 def test_unresolved_logged_once_per_name(caplog):
-    caplog.set_level(logging.WARNING, logger="festival_organizer.fanart")
+    caplog.set_level(logging.INFO, logger="festival_organizer.fanart")
     chapter_tags = {
         111: {"CRATEDIGGER_TRACK_PERFORMER_NAMES": "Mystery DJ|Mystery DJ"},
         222: {"CRATEDIGGER_TRACK_PERFORMER_NAMES": "Mystery DJ"},
@@ -128,7 +128,7 @@ def test_resolve_mbids_aligned_dedupes_resolver_calls():
 
 
 def test_resolve_mbids_aligned_warns_once_per_miss(caplog):
-    caplog.set_level(logging.WARNING, logger="festival_organizer.fanart")
+    caplog.set_level(logging.INFO, logger="festival_organizer.fanart")
     resolve_mbids_aligned(["Mystery", "Mystery", "Mystery"], lambda n: None)
     mystery_warnings = [r for r in caplog.records if "Mystery" in r.message]
     assert len(mystery_warnings) == 1

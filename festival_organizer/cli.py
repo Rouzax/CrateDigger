@@ -687,6 +687,14 @@ def _run_command(args: types.SimpleNamespace) -> int:
             elif root.resolve() != output.resolve():
                 cleanup_empty_dirs(root)
 
+    # Pass unresolved artist names to enrich progress for summary
+    if isinstance(progress, EnrichContractProgress):
+        from festival_organizer.fanart import unresolved_artist_names
+        progress._unresolved_artists = unresolved_artist_names
+    elif isinstance(progress, OrganizeEnrichProgress):
+        from festival_organizer.fanart import unresolved_artist_names
+        progress.enrich._unresolved_artists = unresolved_artist_names
+
     if isinstance(progress, OrganizeEnrichProgress):
         elapsed = time.monotonic() - start_time
         progress.organize.print_summary(elapsed_s=elapsed)
