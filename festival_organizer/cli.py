@@ -32,7 +32,7 @@ from festival_organizer.operations import (
     AlbumArtistMbidsOperation,
     ChapterArtistMbidsOperation,
 )
-from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress
+from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress, EnrichContractProgress
 from festival_organizer.runner import run_pipeline
 from festival_organizer.scanner import scan_folder
 from festival_organizer.templates import render_folder, render_filename
@@ -438,8 +438,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     quiet = args.quiet
 
     # Scan
-    use_contract = (args.command == "organize" and not getattr(args, "enrich", False))
-    if use_contract:
+    if args.command == "organize" and not getattr(args, "enrich", False):
         progress = OrganizeContractProgress(
             total=0, console=console, quiet=quiet, verbose=verbose,
             output_root=output,
@@ -447,8 +446,13 @@ def _run_command(args: types.SimpleNamespace) -> int:
             action=header_action,
             layout=config.default_layout,
         )
+    elif args.command == "enrich":
+        progress = EnrichContractProgress(
+            total=0, console=console, quiet=quiet, verbose=verbose,
+        )
     else:
         progress = ProgressPrinter(total=0, console=console, quiet=quiet, verbose=verbose)
+    use_contract = isinstance(progress, (OrganizeContractProgress, EnrichContractProgress))
     all_tools = {
         "mediainfo": metadata.MEDIAINFO_PATH,
         "ffprobe": metadata.FFPROBE_PATH,
@@ -631,7 +635,14 @@ def _run_command(args: types.SimpleNamespace) -> int:
         return 0
 
     # Run pipeline
-    all_results = run_pipeline(pipeline_files, progress)
+    if isinstance(progress, EnrichContractProgress):
+        from festival_organizer.console import StepProgress, suppression_enabled
+        suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
+        step = StepProgress(console, enabled=not suppressed)
+        with step:
+            all_results = run_pipeline(pipeline_files, progress, step_progress=step)
+    else:
+        all_results = run_pipeline(pipeline_files, progress)
 
     # Post-pipeline: folder-level integrity after organize.
     #   - "move" across libraries: remove emptied source folders (historical).

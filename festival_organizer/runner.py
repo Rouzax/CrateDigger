@@ -6,16 +6,18 @@ from pathlib import Path
 
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import Operation, OperationResult
-from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress
+from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress, EnrichContractProgress
 
 
 def run_pipeline(
     files: list[tuple[Path, MediaFile, list[Operation]]],
     progress,
+    step_progress=None,
 ) -> list[list[OperationResult]]:
     """Run operations for each file, emitting live progress."""
     all_results = []
-    is_contract = isinstance(progress, OrganizeContractProgress)
+    is_organize_contract = isinstance(progress, OrganizeContractProgress)
+    is_enrich_contract = isinstance(progress, EnrichContractProgress)
 
     for file_path, media_file, operations in files:
         # Determine target folder for display (legacy progress)
@@ -33,6 +35,11 @@ def run_pipeline(
 
         for op in operations:
             op_display = getattr(op, "display_name", "") or ""
+            if step_progress is not None:
+                step_progress.update(
+                    op_display or op.name,
+                    filename=file_path.name,
+                )
             try:
                 needed = op.is_needed(current_path, media_file)
             except Exception as e:
@@ -50,7 +57,7 @@ def run_pipeline(
 
         elapsed = time.perf_counter() - file_start_time
 
-        if is_contract:
+        if is_organize_contract:
             # Find the organize operation and its result
             organize_op = None
             organize_result = None
@@ -65,6 +72,16 @@ def run_pipeline(
                     op=organize_op, result=organize_result,
                     elapsed_s=elapsed,
                 )
+        elif is_enrich_contract:
+            if step_progress is not None:
+                step_progress.stop()
+            progress.file_done(
+                source=file_path,
+                results=file_results,
+                elapsed_s=elapsed,
+            )
+            if step_progress is not None:
+                step_progress.start()
         else:
             progress.file_done(file_results)
 

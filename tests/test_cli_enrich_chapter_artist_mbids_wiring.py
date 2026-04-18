@@ -32,7 +32,7 @@ def _run_enrich_and_capture_ops(tmp_path, extra_args=None):
 
     captured = {}
 
-    def fake_run_pipeline(pipeline_files, progress):
+    def fake_run_pipeline(pipeline_files, progress, **kwargs):
         captured["pipeline_files"] = pipeline_files
         return []
 
