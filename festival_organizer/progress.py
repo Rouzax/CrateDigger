@@ -19,6 +19,59 @@ from festival_organizer.console import (
 from festival_organizer.operations import OperationResult
 
 
+_TRIVIAL_SKIP_REASONS = frozenset({"exists", ""})
+
+
+def _enrich_badge(results: list[OperationResult]) -> str:
+    """Compute a verdict badge from a list of enrich operation results.
+
+    Worst-wins: error > done > up-to-date.
+    """
+    statuses = {r.status for r in results}
+    if "error" in statuses:
+        return "error"
+    if "done" in statuses:
+        return "done"
+    return "up-to-date"
+
+
+def _enrich_detail(results: list[OperationResult]) -> str:
+    """Build a human-readable detail line from enrich operation results.
+
+    Groups operations by outcome: done names are comma-joined, errors and
+    non-trivial skips get explicit callouts separated by semicolons.
+    """
+    done_names: list[str] = []
+    error_parts: list[str] = []
+    notable_skips: list[str] = []
+
+    for r in results:
+        if r.status == "done":
+            done_names.append(r.name)
+        elif r.status == "error":
+            error_parts.append(f"{r.name} error: {r.detail}")
+        elif r.status == "skipped" and r.detail not in _TRIVIAL_SKIP_REASONS:
+            notable_skips.append(f"{r.name} skipped: {r.detail}")
+
+    has_callouts = bool(error_parts) or bool(notable_skips)
+
+    if not done_names and not has_callouts:
+        return "all up to date"
+
+    segments: list[str] = []
+
+    if done_names:
+        done_str = ", ".join(done_names)
+        if error_parts:
+            done_str += " done"
+        segments.append(done_str)
+
+    segments.extend(error_parts)
+    segments.extend(notable_skips)
+
+    return "; ".join(segments)
+
+
 def _organize_detail(
     *,
     source: Path,
