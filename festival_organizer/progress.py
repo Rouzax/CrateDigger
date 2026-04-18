@@ -219,7 +219,7 @@ class OrganizeContractProgress:
         console_width = self.console.size.width if self.console.size else 120
         self.console.print(verdict(
             status=vstatus, index=self._file_index, total=self.total,
-            filename=source.name, detail=detail, elapsed_s=elapsed_s,
+            filename=source.name, detail_line=detail, elapsed_s=elapsed_s,
             width=console_width,
         ))
 
@@ -253,7 +253,7 @@ class OrganizeContractProgress:
         console_width = self.console.size.width if self.console.size else 120
         self.console.print(verdict(
             status=vstatus, index=self._file_index, total=self.total,
-            filename=source.name, detail=detail, elapsed_s=0.0,
+            filename=source.name, detail_line=detail, elapsed_s=0.0,
             width=console_width,
         ))
 

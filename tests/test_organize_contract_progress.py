@@ -79,6 +79,27 @@ class TestFileDone:
         assert "error" in out
         assert "Permission denied" in out
 
+    def test_verdict_is_two_lines(self):
+        """file_done emits a two-line verdict block."""
+        con = _console()
+        p = OrganizeContractProgress(
+            total=1, console=con, quiet=False, verbose=False,
+            output_root=Path("/lib"), dry_run=False,
+            action="rename", layout="festival_nested",
+        )
+        op = OrganizeOperation(target=Path("/lib/new.mkv"), action="rename")
+        op.sidecars_moved = 0
+        result = OperationResult("organize", "done")
+        p.file_done(
+            source=Path("/lib/old.mkv"), media_file=_mf(),
+            op=op, result=result, elapsed_s=0.1,
+        )
+        out = _capture(con)
+        lines = [l for l in out.strip().split("\n") if l.strip()]
+        assert len(lines) == 2
+        assert "->" not in lines[0]
+        assert "new.mkv" in lines[1]
+
     def test_quiet_suppresses_output(self):
         con = _console()
         p = OrganizeContractProgress(
