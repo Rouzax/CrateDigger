@@ -103,11 +103,12 @@ def _tag_values_from_root(root: ET.Element) -> dict[int, dict[str, str]]:
     for tag in root.findall("Tag"):
         targets = tag.find("Targets")
         if targets is None:
-            continue
-        if targets.find("TrackUID") is not None:
-            continue
-        ttv_el = targets.find("TargetTypeValue")
-        ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+            ttv = 50
+        else:
+            if targets.find("TrackUID") is not None:
+                continue
+            ttv_el = targets.find("TargetTypeValue")
+            ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
 
         tags: dict[str, str] = {}
         for simple in tag.findall("Simple"):

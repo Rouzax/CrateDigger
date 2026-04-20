@@ -519,3 +519,56 @@ def test_has_album_artist_display_tags_ignores_chapter_scoped_name(monkeypatch):
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
     assert has_album_artist_display_tags(Path("/x.mkv")) is False
+
+
+def test_tag_values_from_root_reads_targetless_block_as_ttv50():
+    """Tag block with no <Targets> element is surfaced at TTV=50 (spec default)."""
+    xml = """<Tags>
+      <Tag>
+        <Simple><Name>ARTIST</Name><String>Marlon Hoffstadt</String></Simple>
+        <Simple><Name>TITLE</Name><String>Marlon Hoffstadt @ AMF</String></Simple>
+      </Tag>
+    </Tags>"""
+    root = ET.fromstring(xml)
+
+    result = _tag_values_from_root(root)
+
+    assert 50 in result
+    assert result[50]["ARTIST"] == "Marlon Hoffstadt"
+    assert result[50]["TITLE"] == "Marlon Hoffstadt @ AMF"
+
+
+def test_tag_values_from_root_still_skips_trackuid_blocks():
+    """Negative control: TrackUID-targeted blocks are track tags, not global. Still skipped."""
+    xml = """<Tags>
+      <Tag>
+        <Targets><TrackUID>12345</TrackUID></Targets>
+        <Simple><Name>BPS</Name><String>14000000</String></Simple>
+      </Tag>
+    </Tags>"""
+    root = ET.fromstring(xml)
+
+    result = _tag_values_from_root(root)
+
+    assert result == {}
+
+
+def test_tag_values_from_root_later_targetless_overrides_earlier():
+    """When duplicate Targets-less blocks exist, later values win at the Name level.
+
+    Acceptable for idempotency: duplicates on real files carry identical values,
+    so the "last wins" semantics are not lossy. Test pins the contract.
+    """
+    xml = """<Tags>
+      <Tag>
+        <Simple><Name>ARTIST</Name><String>Old</String></Simple>
+      </Tag>
+      <Tag>
+        <Simple><Name>ARTIST</Name><String>New</String></Simple>
+      </Tag>
+    </Tags>"""
+    root = ET.fromstring(xml)
+
+    result = _tag_values_from_root(root)
+
+    assert result[50]["ARTIST"] == "New"
