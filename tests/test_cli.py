@@ -331,6 +331,111 @@ def test_check_flag_exists_and_exits_zero(monkeypatch):
     assert result.exit_code == 0
 
 
+# ---------------------------------------------------------------------------
+# _run_check_impl tests
+# ---------------------------------------------------------------------------
+
+import io
+from rich.console import Console as RichConsole
+
+
+def _make_test_console() -> tuple[RichConsole, io.StringIO]:
+    buf = io.StringIO()
+    con = RichConsole(file=buf, highlight=False, markup=True)
+    return con, buf
+
+
+def test_run_check_impl_all_pass(monkeypatch):
+    from festival_organizer import cli as cli_mod, metadata
+
+    # Patch tool paths to non-None values
+    for attr in ("FFPROBE_PATH", "MEDIAINFO_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+        monkeypatch.setattr(metadata, attr, "/usr/bin/fake")
+
+    # Patch subprocess to return a fake version line
+    import subprocess
+    monkeypatch.setattr(
+        subprocess, "run",
+        lambda *a, **kw: type("R", (), {"stdout": "fake 1.0\n", "stderr": "", "returncode": 0})(),
+    )
+
+    # cv2 present
+    monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", True)
+
+    # Config assets and cookie file all exist
+    monkeypatch.setattr(Path, "is_file", lambda self: True)
+
+    # load_config returns a config with credentials set
+    fake_config = type("C", (), {
+        "tracklists_credentials": ("a@b.com", "pass"),
+        "fanart_personal_api_key": "key",
+        "kodi_enabled": False,
+        "kodi_host": "",
+    })()
+    monkeypatch.setattr("festival_organizer.config.load_config", lambda **kw: fake_config)
+
+    # importlib.metadata.version always succeeds
+    monkeypatch.setattr("importlib.metadata.version", lambda pkg: "9.9.9")
+
+    con, buf = _make_test_console()
+    code = cli_mod._run_check_impl(con)
+    assert code == 0
+    output = buf.getvalue()
+    assert "All checks passed" in output
+
+
+def test_run_check_impl_required_tool_missing_exits_one(monkeypatch):
+    from festival_organizer import cli as cli_mod, metadata
+
+    # All tool paths None (missing)
+    for attr in ("FFPROBE_PATH", "MEDIAINFO_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+        monkeypatch.setattr(metadata, attr, None)
+
+    monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", False)
+    monkeypatch.setattr(Path, "is_file", lambda self: False)
+    monkeypatch.setattr(
+        "festival_organizer.config.load_config",
+        lambda **kw: (_ for _ in ()).throw(RuntimeError("no config")),
+    )
+    monkeypatch.setattr("importlib.metadata.version", lambda pkg: "9.9.9")
+
+    con, buf = _make_test_console()
+    code = cli_mod._run_check_impl(con)
+    assert code == 1
+
+
+def test_run_check_impl_shows_all_section_headers(monkeypatch):
+    from festival_organizer import cli as cli_mod, metadata
+
+    for attr in ("FFPROBE_PATH", "MEDIAINFO_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+        monkeypatch.setattr(metadata, attr, "/usr/bin/fake")
+
+    import subprocess
+    monkeypatch.setattr(
+        subprocess, "run",
+        lambda *a, **kw: type("R", (), {"stdout": "fake 1.0\n", "stderr": "", "returncode": 0})(),
+    )
+    monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", True)
+    monkeypatch.setattr(Path, "is_file", lambda self: True)
+
+    fake_config = type("C", (), {
+        "tracklists_credentials": ("a@b.com", "pass"),
+        "fanart_personal_api_key": "key",
+        "kodi_enabled": False,
+        "kodi_host": "",
+    })()
+    monkeypatch.setattr("festival_organizer.config.load_config", lambda **kw: fake_config)
+    monkeypatch.setattr("importlib.metadata.version", lambda pkg: "9.9.9")
+
+    con, buf = _make_test_console()
+    cli_mod._run_check_impl(con)
+    output = buf.getvalue()
+    assert "Tools" in output
+    assert "Config" in output
+    assert "Credentials" in output
+    assert "Python packages" in output
+
+
 def test_run_kodi_sync_album_poster_expands_to_folder_siblings(tmp_path):
     """album_poster display_name should fan out to every video sibling in the folder."""
     cfg = Config(TEST_CONFIG)

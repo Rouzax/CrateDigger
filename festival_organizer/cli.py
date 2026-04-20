@@ -41,6 +41,31 @@ from festival_organizer.templates import render_folder, render_filename
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
+# Constants for _run_check_impl
+# ---------------------------------------------------------------------------
+
+_CD_TOOLS: list[tuple[str, str, bool]] = [
+    # (metadata attr name, display name, required)
+    ("FFPROBE_PATH",     "ffprobe",     True),
+    ("MEDIAINFO_PATH",   "mediainfo",   True),
+    ("MKVEXTRACT_PATH",  "mkvextract",  True),
+    ("MKVPROPEDIT_PATH", "mkvpropedit", True),
+    ("MKVMERGE_PATH",    "mkvmerge",    True),
+]
+
+_CD_PACKAGES: list[str] = [
+    "beautifulsoup4", "Pillow", "ftfy", "numpy", "requests", "rich", "typer",
+]
+
+_CD_ASSETS: list[tuple[str, str]] = [
+    # (filename, description for warning)
+    ("config.json",    "main config"),
+    ("festivals.json", "festival names"),
+    ("artists.json",   "artist overrides"),
+]
+
+
+# ---------------------------------------------------------------------------
 # Shared type aliases (single source of truth for help text)
 # ---------------------------------------------------------------------------
 
@@ -84,8 +109,128 @@ def _version_callback(value: bool) -> None:
         raise typer.Exit()
 
 
+def _run_check_impl(con: "Console") -> int:
+    import subprocess
+    from festival_organizer import metadata
+    from festival_organizer.config import load_config
+    from festival_organizer.metadata import get_install_hint
+    from festival_organizer.frame_sampler import _HAS_CV2
+    from importlib.metadata import version as pkg_version, PackageNotFoundError
+
+    errors = warnings = 0
+
+    # --- Tools ---
+    con.print("\n[bold]Tools[/bold]")
+    for attr, display, required in _CD_TOOLS:
+        path = getattr(metadata, attr, None)
+        if path is None:
+            marker = "[red]\u2717[/red]" if required else "[yellow]![/yellow]"
+            con.print(f"  {marker} {display:<14} not found")
+            hint = get_install_hint(display)
+            if hint:
+                con.print(f"    Install: [cyan]{hint}[/cyan]")
+            if required:
+                errors += 1
+            else:
+                warnings += 1
+        else:
+            # mkvtoolnix tools use --version; others use -version
+            is_mkv = any(t in display for t in ("mkvextract", "mkvpropedit", "mkvmerge"))
+            flag = "--version" if is_mkv else "-version"
+            try:
+                r = subprocess.run(
+                    [path, flag], capture_output=True, text=True, timeout=5, check=False,
+                )
+                first = (r.stdout or r.stderr or "").splitlines()[0].strip()
+                con.print(f"  [green]\u2713[/green] {display:<14} {first}")
+            except (OSError, subprocess.SubprocessError) as exc:
+                marker = "[red]\u2717[/red]" if required else "[yellow]![/yellow]"
+                con.print(f"  {marker} {display:<14} failed to run: {exc}")
+                if required:
+                    errors += 1
+                else:
+                    warnings += 1
+
+    # cv2/numpy uses the already-computed _HAS_CV2 flag
+    if _HAS_CV2:
+        con.print("  [green]\u2713[/green] cv2/numpy")
+    else:
+        con.print("  [yellow]![/yellow] cv2/numpy      not found (optional, vision features)")
+        con.print("    Install: [cyan]pip install opencv-python numpy[/cyan]")
+        warnings += 1
+
+    # --- Config files ---
+    con.print("\n[bold]Config[/bold]")
+    base = Path.home() / ".cratedigger"
+    for filename, desc in _CD_ASSETS:
+        p = base / filename
+        if p.is_file():
+            con.print(f"  [green]\u2713[/green] {p}")
+        else:
+            con.print(f"  [yellow]![/yellow] {p}   not found (optional, {desc})")
+            warnings += 1
+
+    # --- Credentials ---
+    con.print("\n[bold]Credentials[/bold]")
+    try:
+        config = load_config()
+
+        email, password = config.tracklists_credentials
+        if email and password:
+            con.print("  [green]\u2713[/green] 1001TL       email + password configured")
+        else:
+            con.print("  [yellow]![/yellow] 1001TL       email or password missing (optional, tracklist enrichment)")
+            warnings += 1
+
+        cookie_path = Path.home() / ".1001tl-cookies.json"
+        if cookie_path.is_file():
+            con.print(f"  [green]\u2713[/green] 1001TL cookies  {cookie_path}")
+        else:
+            con.print("  [dim]\u007e[/dim] 1001TL cookies  not found, will be created on first login")
+
+        fanart_key = config.fanart_personal_api_key or ""
+        if fanart_key:
+            con.print("  [green]\u2713[/green] fanart.tv    personal API key configured")
+        else:
+            con.print("  [yellow]![/yellow] fanart.tv    personal API key not set (optional, artwork enrichment)")
+            warnings += 1
+
+        if not config.kodi_enabled:
+            con.print("  [dim]\u007e[/dim] Kodi         not configured, skipping")
+        else:
+            con.print(f"  [green]\u2713[/green] Kodi         host: {config.kodi_host}")
+
+    except Exception as exc:
+        con.print(f"  [red]\u2717[/red] Could not load config: {exc}")
+        errors += 1
+
+    # --- Python packages ---
+    con.print("\n[bold]Python packages[/bold]")
+    for pkg in _CD_PACKAGES:
+        try:
+            ver = pkg_version(pkg)
+            con.print(f"  [green]\u2713[/green] {pkg:<20} {ver}")
+        except PackageNotFoundError:
+            con.print(f"  [red]\u2717[/red] {pkg:<20} not found")
+            errors += 1
+
+    # --- Summary ---
+    con.print()
+    if errors == 0 and warnings == 0:
+        con.print("[green]All checks passed.[/green]")
+    else:
+        parts = []
+        if errors:
+            parts.append(f"[red]{errors} error(s)[/red]")
+        if warnings:
+            parts.append(f"[yellow]{warnings} warning(s)[/yellow]")
+        con.print(", ".join(parts) + ".")
+
+    return 1 if errors else 0
+
+
 def _run_check() -> int:
-    return 0
+    return _run_check_impl(make_console())
 
 
 def _check_callback(value: bool) -> None:
