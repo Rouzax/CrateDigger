@@ -651,8 +651,15 @@ class TracklistSession:
         On failure returns empty defaults.
         """
         empty = {"artwork_url": "", "aliases": [], "member_of": []}
+        url = f"{BASE_URL}/dj/{dj_slug}/index.html"
         try:
-            resp = self._request("GET", f"{BASE_URL}/dj/{dj_slug}/index.html", max_retries=2)
+            resp = self._request("GET", url, max_retries=2)
+            self._run_canary(
+                "DJ profile",
+                canary.check_dj_profile(resp.text),
+                url,
+                f"(slug='{dj_slug}')",
+            )
             return _parse_dj_profile(resp.text)
         except TracklistError:
             logger.debug("Failed to fetch DJ page for %s", dj_slug)

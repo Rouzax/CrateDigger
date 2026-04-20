@@ -444,6 +444,22 @@ def test_search_fires_canary_on_missing_skeleton(caplog):
     assert "query='anything'" in msg
 
 
+def test_fetch_dj_profile_fires_canary_on_broken_page(caplog):
+    """When a DJ page has no og:image meta, the canary fires with the URL."""
+    session = TracklistSession()
+    resp = MagicMock(text="<html><body>no og meta at all</body></html>")
+    with patch.object(session, "_request", return_value=resp):
+        with caplog.at_level(logging.WARNING,
+                             logger="festival_organizer.tracklists.api"):
+            session._fetch_dj_profile("someone")
+    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert len(canary_warnings) == 1
+    msg = canary_warnings[0].message
+    assert "DJ profile" in msg
+    assert "og:image meta" in msg
+    assert "someone" in msg
+
+
 def test_search_does_not_fire_canary_on_zero_hits_with_skeleton(caplog):
     """Zero hits for a query is valid; must not emit a canary WARNING."""
     session = TracklistSession()
