@@ -48,6 +48,15 @@ body:
       required: false
 
   - type: textarea
+    id: check-output
+    attributes:
+      label: cratedigger --check output
+      description: Output of running `cratedigger --check`
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
     id: debug-output
     attributes:
       label: Debug output
