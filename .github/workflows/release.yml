@@ -1,0 +1,86 @@
+# Hand-synced with .github/workflows/release.yml in the TrackSplit repo.
+# Keep in sync when editing.
+
+name: release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: "startsWith(github.event.head_commit.message, 'chore: release ')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from commit message
+        id: extract
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          first_line=$(printf '%s\n' "$COMMIT_MSG" | head -1)
+          if [[ ! "$first_line" =~ ^chore:\ release\ ([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error::Commit message does not match '^chore: release X.Y.Z$'"
+            exit 1
+          fi
+          version="${BASH_REMATCH[1]}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Verify pyproject.toml version matches
+        env:
+          WANT: ${{ steps.extract.outputs.version }}
+        run: |
+          got=$(grep -E '^version = "[0-9]+\.[0-9]+\.[0-9]+"' pyproject.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+          if [[ "$WANT" != "$got" ]]; then
+            echo "::error::pyproject.toml version ($got) does not match commit version ($WANT)"
+            exit 1
+          fi
+
+      - name: Verify CHANGELOG has [X.Y.Z] section
+        id: changelog
+        env:
+          VERSION: ${{ steps.extract.outputs.version }}
+        run: |
+          if ! grep -qE "^## \[$VERSION\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md does not contain a ## [$VERSION] section"
+            exit 1
+          fi
+          # Extract section body (between this header and the next "## [" header)
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\["ver"\\]" { found=1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+          if [[ ! -s /tmp/release-notes.md ]]; then
+            echo "::error::[$VERSION] section is empty"
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build wheel and sdist
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+
+      - name: Create tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.extract.outputs.tag }}
+        run: |
+          git tag "$TAG"
+          git push origin "$TAG"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file /tmp/release-notes.md \
+            dist/*.whl dist/*.tar.gz
