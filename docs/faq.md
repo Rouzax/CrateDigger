@@ -30,6 +30,20 @@ If the tools are installed but not on your PATH (for example, a custom install l
 
 See [getting started](getting-started.md#required-tools) for full installation instructions.
 
+### What is the yellow "!" message on startup?
+
+CrateDigger checks GitHub Releases at startup and prints a brief notice when a newer version is available. The yellow `!` line tells you which version is out; the cyan line below it gives you the exact upgrade command to run.
+
+The printed command is already correct for your install method. The three typical variants are:
+
+- pipx: `pipx upgrade cratedigger`
+- uv: `uv tool upgrade cratedigger`
+- pip or other: `pip install --upgrade git+https://github.com/Rouzax/CrateDigger.git`
+
+To suppress the notice, set `CRATEDIGGER_NO_UPDATE_CHECK=1` in your environment. The check is also silent automatically when stdout is not a TTY (pipes, cron jobs, CI systems).
+
+The check is designed to stay out of your way. Results are cached locally at `~/.cache/cratedigger/update-check.json` for 24 hours on success, so it does not hit the network on every run. The network timeout is 2 seconds, and any failure is silently ignored. No usage data is sent; the check is a standard read-only request to the GitHub Releases API.
+
 ### CrateDigger skips some of my files
 
 CrateDigger only processes files with recognized media extensions. The defaults include `.mp4`, `.mkv`, `.webm`, `.avi`, `.mov`, `.m2ts`, `.ts` for video and common audio formats. Add extensions in the `media_extensions` config section if your files use something else.

@@ -56,6 +56,8 @@ Extract cover art from video files, fetch HD ClearLOGOs and artist fanart from f
 
 Trigger library refreshes over JSON-RPC so Kodi picks up new content automatically. Automatic path mapping translates between local and Kodi filesystem paths. NFO files follow Kodi conventions for seamless scraper compatibility.
 
+When a newer GitHub release is available, CrateDigger prints a one-line notice at startup with the exact upgrade command for your install method. The check is silent in non-interactive contexts (pipes, cron, CI). Set `CRATEDIGGER_NO_UPDATE_CHECK=1` to disable it entirely.
+
 ## Quick Start
 
 ### Prerequisites
@@ -67,8 +69,28 @@ Trigger library refreshes over JSON-RPC so Kodi picks up new content automatical
 
 ### Install
 
+**pipx (recommended for end users):** pipx installs CrateDigger into an isolated environment and puts the `cratedigger` command on your PATH automatically.
+
+```bash
+pipx install git+https://github.com/Rouzax/CrateDigger.git
+```
+
+Upgrade later with:
+
+```bash
+pipx upgrade cratedigger
+```
+
+**pip (user site or venv):** If you prefer pip or are working inside a virtual environment:
+
 ```bash
 pip install git+https://github.com/Rouzax/CrateDigger.git
+```
+
+Upgrade later with:
+
+```bash
+pip install --upgrade git+https://github.com/Rouzax/CrateDigger.git
 ```
 
 Optional: install with frame sampling support for higher-quality poster backgrounds (uses OpenCV to score video frames):

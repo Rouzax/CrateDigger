@@ -56,15 +56,43 @@ where to find them. See [Configuration: Tool paths](configuration.md#tool-paths)
 
 ## Install CrateDigger
 
+**pipx (recommended for end users):** pipx installs CrateDigger into an isolated environment and puts the `cratedigger` command on your PATH automatically.
+
+```bash
+pipx install git+https://github.com/Rouzax/CrateDigger.git
+```
+
+Upgrade later with:
+
+```bash
+pipx upgrade cratedigger
+```
+
+**pip (user site or venv):** If you prefer pip or are working inside a virtual environment:
+
 ```bash
 pip install git+https://github.com/Rouzax/CrateDigger.git
 ```
 
-Verify it installed correctly:
+Upgrade later with:
+
+```bash
+pip install --upgrade git+https://github.com/Rouzax/CrateDigger.git
+```
+
+Verify the installation:
+
+```bash
+cratedigger --version
+```
+
+This prints the installed version and exits. For a quick look at all available subcommands, run:
 
 ```bash
 cratedigger --help
 ```
+
+Use `--version` as the fast confirmation that the install worked. Use `--help` when you want to browse the full command tree.
 
 ### Optional: video frame sampling
 
