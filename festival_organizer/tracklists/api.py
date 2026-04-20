@@ -31,6 +31,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 from festival_organizer.tracklists.scoring import SearchResult
+from festival_organizer.tracklists import canary
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0"
 BASE_URL = "https://www.1001tracklists.com"
@@ -271,6 +272,34 @@ class TracklistSession:
             "User-Agent": USER_AGENT,
             "Accept-Language": "en-US,en;q=0.9",
         })
+        # (page_type, frozenset(missing)) pairs already reported at
+        # WARNING this session. See _run_canary.
+        self._canary_seen: set[tuple[str, frozenset[str]]] = set()
+
+    def _run_canary(self, page_type: str, missing: list[str], url: str,
+                    *extras: str) -> None:
+        """Emit a WARNING when a scraped page is structurally broken.
+
+        Dedupes by (page_type, frozenset(missing)) for the lifetime of
+        this session so a bulk run over many pages with the same
+        breakage emits one WARNING, not hundreds. Subsequent identical
+        failures log at DEBUG so --debug still shows the full scope.
+        """
+        if not missing:
+            return
+        key = (page_type, frozenset(missing))
+        if key in self._canary_seen:
+            logger.debug(
+                "Canary: suppressed duplicate %s breakage at %s",
+                page_type, url,
+            )
+            return
+        self._canary_seen.add(key)
+        extras_str = " ".join(extras)
+        logger.warning(
+            "Scraping canary: %s missing selectors %s at %s %s",
+            page_type, missing, url, extras_str,
+        )
 
     def throttle(self) -> None:
         """Sleep only the remaining delay since the last request.

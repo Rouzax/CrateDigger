@@ -422,6 +422,65 @@ def test_parse_h1_structure_returns_empty_when_no_at_sign():
     assert result["sources"] == []
 
 
+# --- _run_canary dedupe helper ---
+
+def test_run_canary_no_op_on_healthy_result(caplog):
+    session = TracklistSession()
+    with caplog.at_level(logging.WARNING, logger="festival_organizer.tracklists.api"):
+        session._run_canary("tracklist page", [], "https://example/t/1/")
+    warnings_emitted = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert warnings_emitted == []
+
+
+def test_run_canary_emits_warning_on_missing_selectors(caplog):
+    session = TracklistSession()
+    with caplog.at_level(logging.WARNING, logger="festival_organizer.tracklists.api"):
+        session._run_canary(
+            "tracklist page", ["tlpItem row"], "https://example/t/1/"
+        )
+    records = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert len(records) == 1
+    msg = records[0].message
+    assert "tracklist page" in msg
+    assert "tlpItem row" in msg
+    assert "https://example/t/1/" in msg
+
+
+def test_run_canary_dedupes_by_page_type_and_missing_set(caplog):
+    """A bulk run with a site-wide break must not spam one WARNING per URL.
+    The helper dedupes on (page_type, frozenset(missing)) for the lifetime
+    of the session. Subsequent identical hits log at DEBUG."""
+    session = TracklistSession()
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.api"):
+        session._run_canary("tracklist page", ["tlpItem row"], "https://example/t/1/")
+        session._run_canary("tracklist page", ["tlpItem row"], "https://example/t/2/")
+        session._run_canary("tracklist page", ["tlpItem row"], "https://example/t/3/")
+
+    warnings_emitted = [
+        r for r in caplog.records
+        if r.levelno == logging.WARNING and "Scraping canary" in r.message
+    ]
+    debugs = [
+        r for r in caplog.records
+        if r.levelno == logging.DEBUG and "suppressed duplicate" in r.message
+    ]
+    assert len(warnings_emitted) == 1
+    assert len(debugs) == 2
+
+
+def test_run_canary_distinct_missing_sets_both_emit(caplog):
+    """Same page type but different missing selectors is not a duplicate."""
+    session = TracklistSession()
+    with caplog.at_level(logging.WARNING, logger="festival_organizer.tracklists.api"):
+        session._run_canary("tracklist page", ["tlpItem row"], "https://example/a/")
+        session._run_canary("tracklist page", ["cue_seconds input"], "https://example/b/")
+    warnings_emitted = [
+        r for r in caplog.records
+        if r.levelno == logging.WARNING and "Scraping canary" in r.message
+    ]
+    assert len(warnings_emitted) == 2
+
+
 # --- fetch_source_info ---
 
 def test_fetch_source_info_extracts_name_type_country():
