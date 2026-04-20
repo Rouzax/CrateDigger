@@ -114,8 +114,11 @@ def top_genres_by_frequency(tracks: list["Track"], n: int = 5) -> list[str]:
     return ordered[:n]
 
 
-def _parse_tracks(html: str) -> list["Track"]:
+def _parse_tracks(html) -> list["Track"]:
     """Extract chapter-aligned per-track rows from a 1001TL tracklist page.
+
+    Accepts raw HTML or an already-parsed BeautifulSoup so export_tracklist
+    can share one parse with the other tracklist-page parsers.
 
     Only rows with class 'tlpTog' and NOT 'con' and NOT 'tlpSubTog' are
     included; the page also contains mashup-component sub-rows that do not
@@ -123,7 +126,7 @@ def _parse_tracks(html: str) -> list["Track"]:
     start_ms taken from the row's cue_seconds input (float seconds * 1000).
     """
     from bs4 import BeautifulSoup
-    soup = BeautifulSoup(html, "html.parser")
+    soup = _to_soup(html)
     tracks: list[Track] = []
     for row in soup.select("div.tlpItem"):
         classes = set(row.get("class", []))
@@ -361,6 +364,9 @@ class TracklistSession:
         page_resp = self._request("GET", page_url)
         actual_url = page_resp.url  # After redirects
 
+        # Parse the page once; all four tracklist-page parsers share this soup.
+        page_soup = _to_soup(page_resp.text)
+
         # Export via AJAX
         resp = self._request("POST", f"{BASE_URL}/ajax/export_data.php", data={
             "object": "tracklist",
@@ -396,12 +402,12 @@ class TracklistSession:
         short_url = f"{BASE_URL}/tracklist/{tracklist_id}/"
 
         # Extract enrichment metadata from page HTML
-        genres = _extract_genres(page_resp.text)
+        genres = _extract_genres(page_soup)
         if genres:
             logger.info("Genres: %s", genres)
 
         # Parse structured h1 for stage, source, and DJ artist metadata
-        h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", page_resp.text, re.DOTALL)
+        h1_el = page_soup.find("h1")
         stage_text = ""
         dj_artists: list[tuple[str, str]] = []
         sources_by_type: dict[str, list[str]] = {}
@@ -409,8 +415,8 @@ class TracklistSession:
         location = ""
         source_type_str = ""
         h1_date = ""
-        if h1_match:
-            h1_info = _parse_h1_structure(h1_match.group(1))
+        if h1_el is not None:
+            h1_info = _parse_h1_structure(h1_el.decode_contents())
             stage_text = h1_info["stage_text"]
             dj_artists = h1_info["dj_artists"]
             if h1_info.get("country"):
@@ -446,7 +452,7 @@ class TracklistSession:
 
         # Fetch DJ profiles and populate cache (skip already-cached DJs)
         dj_artwork_url = ""
-        dj_slugs = [slug for slug, _name in dj_artists] if dj_artists else _extract_dj_slugs(page_resp.text)
+        dj_slugs = [slug for slug, _name in dj_artists] if dj_artists else _extract_dj_slugs(page_soup)
         dj_name_map = {slug: name for slug, name in dj_artists}
         if on_progress:
             on_progress(f"Fetching tracklist ({len(dj_slugs)} DJs)")
@@ -467,7 +473,7 @@ class TracklistSession:
                 dj_artwork_url = profile["artwork_url"]
                 logger.info("DJ artwork: %s", dj_artwork_url)
 
-        tracks = _parse_tracks(page_resp.text)
+        tracks = _parse_tracks(page_soup)
 
         # Suppress the h1-derived location when a linked source already
         # carries authoritative location info (festival, venue, conference,
@@ -836,14 +842,16 @@ def _parse_h1_structure(h1_html: str) -> dict:
     return result
 
 
-def _extract_genres(html: str) -> list[str]:
+def _extract_genres(html) -> list[str]:
     """Extract genres from itemprop="genre" structured data on the page.
+
+    Accepts raw HTML or an already-parsed BeautifulSoup so export_tracklist
+    can share one parse with the other tracklist-page parsers.
 
     1001TL embeds genre metadata as <meta itemprop="genre" content="..."> tags:
     one tracklist-level genre (near numTracks), plus per-track genres.
     """
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(html, "html.parser")
+    soup = _to_soup(html)
     seen: set[str] = set()
     genres: list[str] = []
     for meta in soup.select('meta[itemprop="genre"]'):
@@ -917,10 +925,13 @@ def _parse_dj_profile(html: str) -> dict:
     }
 
 
-def _extract_dj_slugs(html: str) -> list[str]:
-    """Extract DJ slugs from /dj/<slug>/ or /dj/<slug>/index.html links, deduplicated."""
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(html, "html.parser")
+def _extract_dj_slugs(html) -> list[str]:
+    """Extract DJ slugs from /dj/<slug>/ or /dj/<slug>/index.html links, deduplicated.
+
+    Accepts raw HTML or an already-parsed BeautifulSoup so export_tracklist
+    can share one parse with the other tracklist-page parsers.
+    """
+    soup = _to_soup(html)
     slugs: list[str] = []
     seen: set[str] = set()
     for a in soup.select('a[href^="/dj/"]'):
@@ -935,6 +946,20 @@ def _extract_dj_slugs(html: str) -> list[str]:
         seen.add(slug)
         slugs.append(slug)
     return slugs
+
+
+def _to_soup(value):
+    """Return a BeautifulSoup for the given value.
+
+    Accepts a raw HTML string or an already-parsed BeautifulSoup. When
+    called with a soup, returns it unchanged so the tracklist-page
+    parsers can share one parse across export_tracklist without paying
+    the cost of reparsing 200 KB of HTML per parser.
+    """
+    from bs4 import BeautifulSoup
+    if isinstance(value, str):
+        return BeautifulSoup(value, "html.parser")
+    return value
 
 
 def _maximize_artwork_url(url: str) -> str:
