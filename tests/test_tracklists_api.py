@@ -424,6 +424,42 @@ def test_parse_h1_structure_returns_empty_when_no_at_sign():
 
 # --- Canary integration in callers ---
 
+def test_search_fires_canary_on_missing_skeleton(caplog):
+    """When the search response has no main_search input, the canary fires."""
+    session = TracklistSession()
+    resp = MagicMock(
+        text="<html><body>totally unrelated response</body></html>",
+        status_code=200,
+    )
+    with patch.object(session, "_request", return_value=resp):
+        with caplog.at_level(logging.WARNING,
+                             logger="festival_organizer.tracklists.api"):
+            results = session.search("anything")
+    assert results == []
+    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert len(canary_warnings) == 1
+    msg = canary_warnings[0].message
+    assert "search results" in msg
+    assert "search form skeleton" in msg
+    assert "query='anything'" in msg
+
+
+def test_search_does_not_fire_canary_on_zero_hits_with_skeleton(caplog):
+    """Zero hits for a query is valid; must not emit a canary WARNING."""
+    session = TracklistSession()
+    resp = MagicMock(
+        text='<html><body><input name="main_search"></body></html>',
+        status_code=200,
+    )
+    with patch.object(session, "_request", return_value=resp):
+        with caplog.at_level(logging.WARNING,
+                             logger="festival_organizer.tracklists.api"):
+            results = session.search("noresults")
+    assert results == []
+    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert canary_warnings == []
+
+
 def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
     """When the tracklist page is missing must-exist markers, the canary
     fires before the AJAX export path even runs."""

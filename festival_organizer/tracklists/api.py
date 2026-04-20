@@ -366,11 +366,14 @@ class TracklistSession:
 
         logger.debug("Search response: status=%d, length=%d, has_bItm=%s", resp.status_code, len(resp.text), "bItm" in resp.text)
 
+        self._run_canary(
+            "search results",
+            canary.check_search_results(resp.text),
+            f"{BASE_URL}/search/result.php",
+            f"(query='{query}')",
+        )
+
         results = self._parse_search_results(resp.text)
-
-        if not results and resp.text:
-            logger.debug("Search returned HTML (%d chars) but parsed 0 results — site format may have changed", len(resp.text))
-
         return results
 
     def export_tracklist(
