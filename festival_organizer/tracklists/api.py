@@ -396,6 +396,12 @@ class TracklistSession:
         # Parse the page once; all four tracklist-page parsers share this soup.
         page_soup = _to_soup(page_resp.text)
 
+        # Structural canary: flag up-front if 1001TL changed the markup
+        # in ways that would silently drain data from the parsers below.
+        self._run_canary("tracklist page",
+                         canary.check_tracklist_page(page_resp.text),
+                         actual_url)
+
         # Export via AJAX
         resp = self._request("POST", f"{BASE_URL}/ajax/export_data.php", data={
             "object": "tracklist",

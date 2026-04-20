@@ -422,6 +422,39 @@ def test_parse_h1_structure_returns_empty_when_no_at_sign():
     assert result["sources"] == []
 
 
+# --- Canary integration in callers ---
+
+def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
+    """When the tracklist page is missing must-exist markers, the canary
+    fires before the AJAX export path even runs."""
+    session = TracklistSession()
+    broken_html = "<html><body>no tlpItem, no h1, no genre meta</body></html>"
+    page_resp = MagicMock(text=broken_html,
+                           url="https://www.1001tracklists.com/tracklist/xxx/")
+    ajax_resp = MagicMock(text='{"success": true, "data": ""}')
+    ajax_resp.json = lambda: {"success": True, "data": ""}
+
+    def fake_request(method, url, **kwargs):
+        return ajax_resp if "export_data.php" in url else page_resp
+
+    with patch.object(session, "_request", side_effect=fake_request):
+        with patch.object(session, "_fetch_dj_profile",
+                          return_value={"artwork_url": ""}):
+            with caplog.at_level(logging.WARNING,
+                                 logger="festival_organizer.tracklists.api"):
+                try:
+                    session.export_tracklist("xxx")
+                except Exception:
+                    pass
+
+    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert len(canary_warnings) >= 1
+    msg = canary_warnings[0].message
+    assert "tracklist page" in msg
+    assert "tlpItem row" in msg
+    assert "https://www.1001tracklists.com/tracklist/xxx/" in msg
+
+
 # --- _run_canary dedupe helper ---
 
 def test_run_canary_no_op_on_healthy_result(caplog):
