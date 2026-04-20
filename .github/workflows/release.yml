@@ -1,58 +1,71 @@
 # Hand-synced with .github/workflows/release.yml in the TrackSplit repo.
 # Keep in sync when editing.
+#
+# Triggered manually from the GitHub UI, the gh CLI, or the REST API:
+#   gh workflow run release.yml -f version=X.Y.Z
+# The workflow validates pyproject.toml and CHANGELOG.md against the input
+# version, builds artifacts, tags, and publishes a GitHub Release.
 
 name: release
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (X.Y.Z, no v prefix)'
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
   release:
-    if: "startsWith(github.event.head_commit.message, 'chore: release ')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Extract version from commit message
-        id: extract
+      - name: Validate version input
+        id: validate
         env:
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          VERSION: ${{ inputs.version }}
         run: |
-          first_line=$(printf '%s\n' "$COMMIT_MSG" | head -1)
-          if [[ ! "$first_line" =~ ^chore:\ release\ ([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            echo "::error::Commit message does not match '^chore: release X.Y.Z$'"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must match X.Y.Z (got: $VERSION)"
             exit 1
           fi
-          version="${BASH_REMATCH[1]}"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag does not already exist
+        env:
+          TAG: ${{ steps.validate.outputs.tag }}
+        run: |
+          if git rev-parse "$TAG" &>/dev/null; then
+            echo "::error::Tag $TAG already exists"
+            exit 1
+          fi
 
       - name: Verify pyproject.toml version matches
         env:
-          WANT: ${{ steps.extract.outputs.version }}
+          WANT: ${{ steps.validate.outputs.version }}
         run: |
           got=$(grep -E '^version = "[0-9]+\.[0-9]+\.[0-9]+"' pyproject.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
           if [[ "$WANT" != "$got" ]]; then
-            echo "::error::pyproject.toml version ($got) does not match commit version ($WANT)"
+            echo "::error::pyproject.toml version ($got) does not match input version ($WANT)"
             exit 1
           fi
 
       - name: Verify CHANGELOG has [X.Y.Z] section
-        id: changelog
         env:
-          VERSION: ${{ steps.extract.outputs.version }}
+          VERSION: ${{ steps.validate.outputs.version }}
         run: |
           if ! grep -qE "^## \[$VERSION\]" CHANGELOG.md; then
             echo "::error::CHANGELOG.md does not contain a ## [$VERSION] section"
             exit 1
           fi
-          # Extract section body (between this header and the next "## [" header)
           awk -v ver="$VERSION" '
             $0 ~ "^## \\["ver"\\]" { found=1; next }
             found && /^## \[/ { exit }
@@ -76,7 +89,7 @@ jobs:
       - name: Create tag and GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.extract.outputs.tag }}
+          TAG: ${{ steps.validate.outputs.tag }}
         run: |
           git tag "$TAG"
           git push origin "$TAG"
