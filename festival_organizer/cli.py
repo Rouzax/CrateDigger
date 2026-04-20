@@ -128,7 +128,7 @@ def _run_check_impl(con: "Console") -> int:
             con.print(f"  {marker} {display:<14} not found")
             hint = get_install_hint(display)
             if hint:
-                con.print(f"    Install: [cyan]{hint}[/cyan]")
+                con.print(f"    [cyan]{hint}[/cyan]")
             if required:
                 errors += 1
             else:
