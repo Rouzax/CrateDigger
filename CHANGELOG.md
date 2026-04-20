@@ -12,6 +12,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `--version` flag on the CLI.
 - scripts/git-hooks/pre-push hook that gates 'chore: release' commits behind an interactive prompt.
 
+## [0.13.0] - 2026-04-19
+
+### Added
+
+- `organize` and `enrich` now emit a two-line verdict block per file: a badge line (`moved`, `copied`, `renamed`, `preview`, `done`, `updated`, `skipped`, `error`) followed by a context detail line showing what changed (destination path, operations applied, elapsed time). The single summary panel at the end breaks down counts by outcome and lists any errored files. This brings `organize` and `enrich` in line with the verdict shape introduced for `identify` in 0.12.7.
+- Running `organize --enrich` now emits two verdict blocks per file: one for the file-move or rename, and a second for the enrichment operations. Both summaries are printed side by side at the end so you can see organize and enrich outcomes separately in one run.
+- Dry-run mode (`--dry-run`) for `organize` now uses a distinct `preview` badge, making it unambiguous that no files were modified.
+- A transient spinner is now shown during `organize` and `enrich` operations in a live terminal. It disables automatically when stdout is piped, or when `--quiet`, `--verbose`, or `--debug` is active.
+- New MKV tag `CRATEDIGGER_1001TL_LOCATION` is written by `identify` when the 1001Tracklists page heading carries a plain-text location (for example, "Alexandra Palace London") and no linked festival, venue, or conference source is present. The tag is cleared automatically on re-identify when a more authoritative linked source later appears. `MediaFile.location` exposes the value to downstream commands.
+- The `CRATEDIGGER_1001TL_LOCATION` value is now used as a lowest-priority fallback in the embedded MKV `DESCRIPTION` synopsis line, after festival name and venue. Files with no structured venue still receive a readable location line.
+- 1001Tracklists "Club" source type is now recognized as a venue. Previously, club entries did not write `CRATEDIGGER_1001TL_VENUE`, did not contribute to country derivation, and left `SOURCE_TYPE` unset. They are now treated consistently with Event Location entries.
+- Set posters for concert files (no linked festival) now use the venue or freeform location as the large accent headline instead of the full file title. This avoids redundant or over-long headlines such as "FRED AGAIN.. @ USB002" when the artist name is already shown above. File title remains as a last-resort fallback when no location data is available.
+
+### Changed
+
+- `enrich` summary panel now breaks down the operations applied across all files (poster rebuild, NFO write, tag embed, and so on) in addition to the per-file outcome counts. Operation labels use their display names throughout.
+- Kodi sync output now uses `StepProgress` for individual steps and a `library_sync_summary_line` for the final result, matching the consistent progress style used by other commands.
+- `CRATEDIGGER_1001TL_COUNTRY` is now populated whenever the page heading carries a recognised country name, including pages with no linked source. Previously the country was only written when no linked source was present.
+
+### Fixed
+
+- Set poster accent headline no longer shows a duplicate venue name in the subline when the venue filled the festival slot via the fallback chain. The subline is suppressed in that case so the venue name appears only once.
+- Venue and location values that fill the festival slot are now passed through the festival alias resolver, so user-configured aliases (for example, "Red Rocks Amphitheatre" mapped to "Red Rocks") apply consistently regardless of which tag the value originated from.
+- `fanart.tv` MBID lookup warnings are no longer emitted per-file. They are demoted to info level and aggregated into a single count in the summary panel, reducing noise when many files share the same unresolved MBID.
+
 ## [0.12.7] - 2026-04-15
 
 ### Changed
