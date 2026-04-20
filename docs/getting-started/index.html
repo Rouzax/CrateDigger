@@ -572,6 +572,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#verify-your-environment-with-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verify your environment with --check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#optional-video-frame-sampling" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1155,6 +1166,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#verify-your-environment-with-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verify your environment with --check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#optional-video-frame-sampling" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1391,6 +1413,21 @@ where to find them. See <a href="../configuration/#tool-paths">Configuration: To
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cratedigger<span class="w"> </span>--help
 </code></pre></div>
 <p>Use <code>--version</code> as the fast confirmation that the install worked. Use <code>--help</code> when you want to browse the full command tree.</p>
+<h3 id="verify-your-environment-with-check">Verify your environment with <code>--check</code></h3>
+<p>After installing CrateDigger, run <code>--check</code> to confirm that all required external tools, config files, credentials, and Python packages are present and reachable:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>--check
+</code></pre></div>
+<p>CrateDigger prints a grouped report with a status marker for each item:</p>
+<ul>
+<li><code>✓</code> the item is present and working</li>
+<li><code>!</code> the item is missing or unconfigured, but optional</li>
+<li><code>✗</code> the item is missing and required</li>
+<li><code>~</code> informational (using built-in defaults or skipped because it is not configured)</li>
+</ul>
+<p>A summary line at the end reports <code>All checks passed.</code> when nothing is wrong, or counts the errors and warnings otherwise.</p>
+<p>The command exits with code 0 if all required checks pass. Warnings (optional items missing) do not affect the exit code. The command exits with code 1 if any required tool or Python package is absent.</p>
+<p>Nothing is processed: <code>--check</code> reads your environment and exits without touching any media files or your library.</p>
+<p>Use it after a fresh install to confirm the setup is complete, after updating a <a href="../configuration/">config file</a> to verify the new paths are valid, or in CI to validate the environment before a scheduled run.</p>
 <h3 id="optional-video-frame-sampling">Optional: video frame sampling</h3>
 <p>By default, CrateDigger reads artwork that is already embedded in your video files. Files
 without embedded artwork get no thumbnail, and their posters and NFO images are lower
@@ -1401,10 +1438,10 @@ opt-in feature, not the default behaviour.</p>
 <p>To include it at install time, use whichever command matches the install path you chose
 in the "Install CrateDigger" section above:</p>
 <p><strong>pipx</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
 </code></pre></div></p>
 <p><strong>pip</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
 </code></pre></div></p>
 <p>The extra pulls in OpenCV, which is the library that scores and selects the frame.</p>
 <h2 id="set-up-your-config-files">Set up your config files</h2>
@@ -1433,22 +1470,22 @@ everything. Create it only if you want to customize behavior.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Linux / macOS</label><label for="__tabbed_2_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/.cratedigger
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/.cratedigger/config.json<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/.cratedigger
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/.cratedigger/config.json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.json
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nb">New-Item</span> <span class="n">-ItemType</span> <span class="n">Directory</span> <span class="n">-Force</span> <span class="s2">&quot;$env:USERPROFILE\.cratedigger&quot;</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.json&quot;</span> <span class="p">`</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\.cratedigger\config.json&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">New-Item</span> <span class="n">-ItemType</span> <span class="n">Directory</span> <span class="n">-Force</span> <span class="s2">&quot;$env:USERPROFILE\.cratedigger&quot;</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.json&quot;</span> <span class="p">`</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\.cratedigger\config.json&quot;</span>
 </code></pre></div>
 </div>
 </div>
 </div>
 <p>Or, if you have cloned the repository locally, copy from the repo root:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cp<span class="w"> </span>config.example.json<span class="w"> </span>~/.cratedigger/config.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cp<span class="w"> </span>config.example.json<span class="w"> </span>~/.cratedigger/config.json
 </code></pre></div>
 <p>The settings most users change first:</p>
 <ul>
@@ -1467,20 +1504,20 @@ festivals or customize aliases, copy the example festivals file:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Linux / macOS</label><label for="__tabbed_3_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/.cratedigger/festivals.json<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/.cratedigger/festivals.json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json&quot;</span> <span class="p">`</span>
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\.cratedigger\festivals.json&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json&quot;</span> <span class="p">`</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\.cratedigger\festivals.json&quot;</span>
 </code></pre></div>
 </div>
 </div>
 </div>
 <p>Or from a cloned repo:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>cp<span class="w"> </span>festivals.example.json<span class="w"> </span>~/.cratedigger/festivals.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>cp<span class="w"> </span>festivals.example.json<span class="w"> </span>~/.cratedigger/festivals.json
 </code></pre></div>
 <p>See <a href="../festivals/">Festivals</a> for how to add entries and what the file format looks like.</p>
 <h2 id="preparing-your-recordings">Preparing your recordings</h2>
@@ -1490,15 +1527,15 @@ format:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Windows (PowerShell)</label><label for="__tabbed_4_2">Linux / macOS</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">yt-dlp</span><span class="p">.</span><span class="n">exe</span> <span class="n">-U</span> <span class="p">-</span><span class="n">-merge-output-format</span> <span class="n">mkv</span> <span class="p">-</span><span class="n">-no-post-overwrites</span> <span class="p">-</span><span class="n">-embed-thumbnail</span> <span class="p">`</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>  <span class="p">-</span><span class="n">-convert-thumbnails</span> <span class="n">png</span> <span class="p">-</span><span class="n">-windows-filenames</span> <span class="p">-</span><span class="n">-embed-chapters</span> <span class="p">`</span>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>  <span class="p">-</span><span class="n">-sponsorblock-mark</span> <span class="n">all</span> <span class="n">-P</span> <span class="s2">&quot;$env:USERPROFILE\Downloads\sets&quot;</span> <span class="p">&lt;</span><span class="n">YouTube</span> <span class="n">URL</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">yt-dlp</span><span class="p">.</span><span class="n">exe</span> <span class="n">-U</span> <span class="p">-</span><span class="n">-merge-output-format</span> <span class="n">mkv</span> <span class="p">-</span><span class="n">-no-post-overwrites</span> <span class="p">-</span><span class="n">-embed-thumbnail</span> <span class="p">`</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>  <span class="p">-</span><span class="n">-convert-thumbnails</span> <span class="n">png</span> <span class="p">-</span><span class="n">-windows-filenames</span> <span class="p">-</span><span class="n">-embed-chapters</span> <span class="p">`</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>  <span class="p">-</span><span class="n">-sponsorblock-mark</span> <span class="n">all</span> <span class="n">-P</span> <span class="s2">&quot;$env:USERPROFILE\Downloads\sets&quot;</span> <span class="p">&lt;</span><span class="n">YouTube</span> <span class="n">URL</span><span class="p">&gt;</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>yt-dlp<span class="w"> </span>-U<span class="w"> </span>--merge-output-format<span class="w"> </span>mkv<span class="w"> </span>--no-post-overwrites<span class="w"> </span>--embed-thumbnail<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">  </span>--convert-thumbnails<span class="w"> </span>png<span class="w"> </span>--embed-chapters<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span>--sponsorblock-mark<span class="w"> </span>all<span class="w"> </span>-P<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>&lt;YouTube<span class="w"> </span>URL&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>yt-dlp<span class="w"> </span>-U<span class="w"> </span>--merge-output-format<span class="w"> </span>mkv<span class="w"> </span>--no-post-overwrites<span class="w"> </span>--embed-thumbnail<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span>--convert-thumbnails<span class="w"> </span>png<span class="w"> </span>--embed-chapters<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span>--sponsorblock-mark<span class="w"> </span>all<span class="w"> </span>-P<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>&lt;YouTube<span class="w"> </span>URL&gt;
 </code></pre></div>
 </div>
 </div>
@@ -1541,7 +1578,7 @@ from the search query so it does not interfere with matching on 1001Tracklists.<
 <p>CrateDigger is designed around three commands you run in order.</p>
 <h3 id="step-1-identify">Step 1: Identify</h3>
 <p>Match your recordings against 1001Tracklists, embed chapter markers, and store tracklist metadata:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
 </code></pre></div>
 <p><strong>What this does:</strong> CrateDigger scans every MKV and WEBM file in the folder. For each file,
 it searches <a href="https://www.1001tracklists.com">1001Tracklists</a> (a website that logs the tracks
@@ -1550,13 +1587,13 @@ confirm, CrateDigger embeds chapter markers directly into the file, one chapter 
 along with track names, artist names, genres, and tracklist source details.</p>
 <p><strong>For batch processing without prompts:</strong> Add <code>--auto</code> to let CrateDigger pick the best
 match automatically when it is confident enough:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--auto
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--auto
 </code></pre></div>
 <p>See the <a href="../commands/identify/">identify command</a> for all options including how to provide
 a tracklist URL directly.</p>
 <h3 id="step-2-organize">Step 2: Organize</h3>
 <p>Move files into a structured library with consistent folder names and filenames:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
 </code></pre></div>
 <p><strong>What this does:</strong> CrateDigger reads each file's metadata (from <code>identify</code>, or from the
 filename if <code>identify</code> was skipped), classifies it as a festival set or concert recording,
@@ -1567,7 +1604,7 @@ This marker is required before you can run <code>enrich</code>.</p>
 <p>See the <a href="../commands/organize/">organize command</a> for layout options, move vs. copy, and dry-run.</p>
 <h3 id="step-3-enrich">Step 3: Enrich</h3>
 <p>Add artwork, posters, sidecar files, and metadata tags to your library:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
 </code></pre></div>
 <p><strong>What this does:</strong> For each file in your library, CrateDigger:</p>
 <ul>
@@ -1587,12 +1624,12 @@ This marker is required before you can run <code>enrich</code>.</p>
 only specific parts.</p>
 <h3 id="one-step-organize-enrich">One-step organize + enrich</h3>
 <p>You can organize and enrich in a single command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
 </code></pre></div>
 <h2 id="without-a-1001tracklists-account">Without a 1001Tracklists account</h2>
 <p>You do not need a 1001Tracklists account to use CrateDigger. Skip the <code>identify</code> step and
 run organize and enrich directly:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
 </code></pre></div>
 <p>CrateDigger will build your library using metadata from your filenames and any tags already
 embedded in your video files. Your <a href="../festivals/">festivals.json</a> aliases help it recognize
