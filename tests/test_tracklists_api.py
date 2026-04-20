@@ -337,6 +337,28 @@ def test_extract_dj_slugs_empty():
     assert _extract_dj_slugs("<html>no djs</html>") == []
 
 
+def test_extract_dj_slugs_survives_single_quoted_href():
+    """BS4 migration: real 1001TL markup uses double quotes but nothing
+    stops a future template engine from switching to single quotes.
+    The old regex required exact double-quote delimiters."""
+    html = "<a href='/dj/carl-cox/index.html'>Carl Cox</a>"
+    slugs = _extract_dj_slugs(html)
+    assert slugs == ["carl-cox"]
+
+
+def test_extract_dj_slugs_ignores_unrelated_links_with_dj_in_path():
+    """The regex matches any 'href=\"/dj/...' substring and rejects longer
+    paths only by the closing quote. A more forgiving match would risk
+    false positives. Confirm BS4 still picks up clean /dj/<slug>/ anchors
+    and ignores /dj/<slug>/something/else/ paths."""
+    html = '''
+    <a href="/dj/tiesto/index.html">Tiesto</a>
+    <a href="/dj/tiesto/tracklists/2025/">Tiesto 2025 tracklists</a>
+    '''
+    slugs = _extract_dj_slugs(html)
+    assert slugs == ["tiesto"]
+
+
 # --- fetch_source_info ---
 
 def test_fetch_source_info_extracts_name_type_country():

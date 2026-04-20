@@ -916,13 +916,21 @@ def _parse_dj_profile(html: str) -> dict:
 
 def _extract_dj_slugs(html: str) -> list[str]:
     """Extract DJ slugs from /dj/<slug>/ or /dj/<slug>/index.html links, deduplicated."""
-    matches = re.findall(r'href="/dj/([^/"]+)/(?:index\.html)?"', html)
-    seen = set()
-    slugs = []
-    for slug in matches:
-        if slug not in seen:
-            seen.add(slug)
-            slugs.append(slug)
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+    slugs: list[str] = []
+    seen: set[str] = set()
+    for a in soup.select('a[href^="/dj/"]'):
+        href_raw = a.get("href", "")
+        href = href_raw if isinstance(href_raw, str) else ""
+        m = re.match(r"/dj/([^/]+)/(?:index\.html)?$", href)
+        if not m:
+            continue
+        slug = m.group(1)
+        if slug in seen:
+            continue
+        seen.add(slug)
+        slugs.append(slug)
     return slugs
 
 
