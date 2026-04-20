@@ -20,6 +20,7 @@ from festival_organizer.tracklists.api import (
     _extract_genres,
     _extract_dj_slugs,
     _maximize_artwork_url,
+    _parse_dj_profile,
 )
 
 
@@ -465,6 +466,42 @@ def test_maximize_artwork_url_unknown_cdn_passthrough():
 def test_maximize_artwork_url_empty_string():
     """Empty string returns empty string."""
     assert _maximize_artwork_url("") == ""
+
+
+def test_parse_dj_profile_extracts_aliases_and_member_of():
+    """Baseline: the section walker finds aliases and group memberships."""
+    html = '''
+    <meta property="og:image" content="https://cdn.1001tracklists.com/dj.jpg">
+    <div class="h">Aliases</div>
+    <div class="c ptb5">
+      <a href="/dj/alt-name/index.html">Alt Name</a>
+    </div>
+    <div class="h">Member Of</div>
+    <div class="c ptb5">
+      <a href="/dj/some-group/index.html">Some Group</a>
+    </div>
+    '''
+    result = _parse_dj_profile(html)
+    assert result["aliases"] == [{"slug": "alt-name", "name": "Alt Name"}]
+    assert result["member_of"] == [{"slug": "some-group", "name": "Some Group"}]
+
+
+def test_parse_dj_profile_finds_og_image_with_reordered_attrs():
+    """BS4 migration: og:image meta may emit attributes in either order."""
+    html = '<meta content="https://cdn.1001tracklists.com/images/dj/photo.jpg" property="og:image">'
+    result = _parse_dj_profile(html)
+    assert result["artwork_url"] == "https://cdn.1001tracklists.com/images/dj/photo.jpg"
+
+
+def test_parse_dj_profile_survives_single_quoted_og_image():
+    html = "<meta property='og:image' content='https://cdn.1001tracklists.com/images/dj/photo.jpg'>"
+    result = _parse_dj_profile(html)
+    assert result["artwork_url"] == "https://cdn.1001tracklists.com/images/dj/photo.jpg"
+
+
+def test_parse_dj_profile_empty_when_no_markers():
+    result = _parse_dj_profile("<html>nothing</html>")
+    assert result == {"artwork_url": "", "aliases": [], "member_of": []}
 
 
 def test_fetch_dj_profile_maximizes_squarespace_url():

@@ -864,42 +864,54 @@ def _parse_dj_profile(html: str) -> dict:
         aliases: list of {"slug": str, "name": str}
         member_of: list of {"slug": str, "name": str}
     """
-    # Extract artwork from og:image
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+
     artwork_url = ""
-    og_match = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', html)
-    if og_match:
-        url = og_match.group(1)
-        if "/images/static/" not in url and "logo" not in url.lower() and "default" not in url:
+    og = soup.select_one('meta[property="og:image"]')
+    if og is not None:
+        content = og.get("content", "")
+        url = content if isinstance(content, str) else ""
+        if url and "/images/static/" not in url and "logo" not in url.lower() and "default" not in url:
             artwork_url = _maximize_artwork_url(url)
 
     def _extract_section(section_header: str) -> list[dict]:
-        """Extract /dj/ links from c ptb5 blocks following a section header."""
-        # Find the header div, then collect links until the next header
-        pattern = re.compile(
-            r'<div\s+class="h">\s*' + re.escape(section_header) + r'\s*</div>'
-            r'(.*?)'
-            r'(?:<div\s+class="h">|$)',
-            re.DOTALL,
-        )
-        match = pattern.search(html)
-        if not match:
+        """Collect /dj/ links from the siblings between this section's
+        <div class="h">HEADER</div> and the next <div class="h">, which
+        frames every section on the profile page."""
+        header = None
+        for h in soup.select("div.h"):
+            if h.get_text(strip=True) == section_header:
+                header = h
+                break
+        if header is None:
             return []
-        block = match.group(1)
-        link_pattern = re.compile(
-            r'<a\s+href="/dj/([^/"]+)/index\.html"[^>]*>([^<]+)</a>'
-        )
-        entries = []
-        for lm in link_pattern.finditer(block):
-            entries.append({
-                "slug": lm.group(1),
-                "name": _html_decode(lm.group(2).strip()),
-            })
+        entries: list[dict] = []
+        seen: set[str] = set()
+        for sib in header.find_next_siblings():
+            if getattr(sib, "name", None) == "div" and "h" in (sib.get("class") or []):
+                break
+            for a in sib.select('a[href^="/dj/"]'):
+                href_raw = a.get("href", "")
+                href = href_raw if isinstance(href_raw, str) else ""
+                m = re.match(r"/dj/([^/]+)/index\.html", href)
+                if not m:
+                    continue
+                slug = m.group(1)
+                if slug in seen:
+                    continue
+                seen.add(slug)
+                entries.append({
+                    "slug": slug,
+                    "name": _html_decode(a.get_text(strip=True)),
+                })
         return entries
 
-    aliases = _extract_section("Aliases")
-    member_of = _extract_section("Member Of")
-
-    return {"artwork_url": artwork_url, "aliases": aliases, "member_of": member_of}
+    return {
+        "artwork_url": artwork_url,
+        "aliases": _extract_section("Aliases"),
+        "member_of": _extract_section("Member Of"),
+    }
 
 
 def _extract_dj_slugs(html: str) -> list[str]:
