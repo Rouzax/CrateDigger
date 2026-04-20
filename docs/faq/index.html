@@ -1801,23 +1801,27 @@
 <li>A generated gradient image (always available as a last resort)</li>
 </ol>
 <p>If you are getting gradient thumbnails and want actual artwork, either embed a thumbnail when downloading (see <a href="../getting-started/#preparing-your-recordings">getting started: preparing your recordings</a>) or install the <code>vision</code> extra:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
-</code></pre></div>
+<p><strong>pipx</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
+</code></pre></div></p>
+<p><strong>pip</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
+</code></pre></div></p>
 <h3 id="posters-are-not-generated-for-some-files">Posters are not generated for some files</h3>
 <p>The per-video poster (<code>{stem}-poster.jpg</code>) requires <code>{stem}-thumb.jpg</code> to exist first. If you ran <code>--only posters</code> without running <code>art</code> first, no thumb exists yet. Either run the full enrich (without <code>--only</code>) so <code>art</code> runs before <code>posters</code>, or run them in sequence:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>art
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>art
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters
 </code></pre></div>
 <h3 id="artist-artwork-from-fanarttv-is-not-downloading">Artist artwork from fanart.tv is not downloading</h3>
 <p>Fanart.tv artwork requires a MusicBrainz ID to be resolved for the artist. If <code>fanart</code> runs before <code>chapter_artist_mbids</code>, or if the artist's MBID has not been resolved yet, the lookup is skipped.</p>
 <p>Run <code>chapter_artist_mbids</code> first to resolve MBIDs, then rerun enrich:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
 </code></pre></div>
 <p>If the artist still has no MBID after that, they may not be in the MusicBrainz database or the search may be returning the wrong result. Add the correct MBID to <code>~/.cratedigger/artist_mbids.json</code> manually:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">{</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="nt">&quot;Artist Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&quot;</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">{</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="nt">&quot;Artist Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&quot;</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">}</span>
 </code></pre></div>
 <p>Find the correct MBID at <a href="https://musicbrainz.org">musicbrainz.org</a>.</p>
 <h3 id="musicbrainz-ids-are-not-resolving-for-some-artists">MusicBrainz IDs are not resolving for some artists</h3>
@@ -1826,14 +1830,14 @@
 <li>Check if the search is returning the wrong artist (a name collision). Run with <code>--verbose</code> to see what MusicBrainz returns.</li>
 <li>Look up the correct MBID at <a href="https://musicbrainz.org">musicbrainz.org</a> and add it to your override file:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">{</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">}</span>
 </code></pre></div>
 <ol>
 <li>Rerun (no <code>--regenerate</code> needed):</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids,album_artist_mbids
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids,album_artist_mbids
 </code></pre></div>
 <p>CrateDigger detects that the resolved ID has changed and writes the update automatically.</p>
 <p>See <a href="../configuration/#artist-mbid-override-file">Configuration: artist MBID override file</a> for details.</p>
@@ -1844,7 +1848,7 @@
 <li>Place a logo file at the path the command suggests (for example, <code>~/.cratedigger/festivals/Tomorrowland/logo.png</code>)</li>
 <li>Regenerate the folder posters:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
 </code></pre></div>
 <p>See <a href="../commands/audit-logos/">audit-logos</a> and <a href="../library-layout/#festival-logos">library layout: festival logos</a> for supported formats and placement paths.</p>
 <hr />
@@ -1859,8 +1863,8 @@
 <p>Run with <code>--verbose</code> to see the lookup process and any errors.</p>
 <h3 id="fanart-images-are-stale-or-outdated">Fanart images are stale or outdated</h3>
 <p>The fanart cache expires after the number of days configured in <code>cache_ttl.images_days</code> (default: 90 days, with ±20% jitter per entry). To force a fresh download for all artists, delete the artist cache folder and rerun:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.cratedigger/artists/
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.cratedigger/artists/
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
 </code></pre></div>
 <hr />
 <h2 id="kodi">Kodi</h2>
@@ -1870,14 +1874,14 @@
 <p>The username or password does not match Kodi's web server credentials. Check the <code>kodi.username</code> and <code>kodi.password</code> values in your config against the Kodi settings.</p>
 <h3 id="items-are-not-updating-in-kodi-after-a-sync">Items are not updating in Kodi after a sync</h3>
 <p>The library path that Kodi uses may not match the path CrateDigger is using. If they differ (for example, Kodi accesses the library over a network share while CrateDigger uses a local path), configure path mapping in your <code>kodi</code> config:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="p">{</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">    </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">        </span><span class="nt">&quot;path_mapping&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">            </span><span class="nt">&quot;local&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/home/user/Music/Library/&quot;</span><span class="p">,</span>
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">            </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;smb://server/music/Library/&quot;</span>
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">        </span><span class="p">}</span>
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="p">{</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">    </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">        </span><span class="nt">&quot;path_mapping&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">            </span><span class="nt">&quot;local&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/home/user/Music/Library/&quot;</span><span class="p">,</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">            </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;smb://server/music/Library/&quot;</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="p">}</span>
 </code></pre></div>
 <p>See <a href="../kodi-integration/#path-mapping">Kodi integration: path mapping</a> for details.</p>
 <h3 id="sync-runs-but-nothing-changes-in-kodi">Sync runs but nothing changes in Kodi</h3>
