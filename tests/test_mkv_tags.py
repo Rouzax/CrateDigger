@@ -633,12 +633,18 @@ def test_merge_tags_consolidates_mixed_targeted_and_targetless_at_ttv50():
     result = merge_tags(existing, {})
     root = _parse_merged(result)
 
-    global_blocks = [
-        tag for tag in root.findall("Tag")
-        if (tag.find("Targets") is None
-            or (tag.find("Targets").find("TrackUID") is None
-                and tag.find("Targets").find("ChapterUID") is None))
-    ]
+    global_blocks = []
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            global_blocks.append(tag)
+            continue
+        if targets.find("TrackUID") is not None:
+            continue
+        if targets.find("ChapterUID") is not None:
+            continue
+        global_blocks.append(tag)
+
     assert len(global_blocks) == 1
     keeper = global_blocks[0]
     assert _get_simple_value(keeper, "ARTIST") == "Old"
