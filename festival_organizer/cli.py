@@ -135,7 +135,7 @@ def _run_check_impl(con: "Console") -> int:
                 warnings += 1
         else:
             # mkvtoolnix tools use --version; others use -version
-            is_mkv = any(t in display for t in ("mkvextract", "mkvpropedit", "mkvmerge"))
+            is_mkv = display in {"mkvextract", "mkvpropedit", "mkvmerge"}
             flag = "--version" if is_mkv else "-version"
             try:
                 r = subprocess.run(

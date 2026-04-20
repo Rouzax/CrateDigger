@@ -345,7 +345,7 @@ def _make_test_console() -> tuple[RichConsole, io.StringIO]:
     return con, buf
 
 
-def test_run_check_impl_all_pass(monkeypatch):
+def test_run_check_impl_all_pass(monkeypatch, tmp_path):
     from festival_organizer import cli as cli_mod, metadata
 
     # Patch tool paths to non-None values
@@ -362,8 +362,15 @@ def test_run_check_impl_all_pass(monkeypatch):
     # cv2 present
     monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", True)
 
-    # Config assets and cookie file all exist
-    monkeypatch.setattr(Path, "is_file", lambda self: True)
+    # Create real files under tmp_path so is_file() works correctly
+    home = tmp_path
+    cratedigger_dir = home / ".cratedigger"
+    cratedigger_dir.mkdir()
+    (cratedigger_dir / "config.json").write_text("{}")
+    (cratedigger_dir / "festivals.json").write_text("{}")
+    (cratedigger_dir / "artists.json").write_text("{}")
+    (home / ".1001tl-cookies.json").write_text("[]")
+    monkeypatch.setattr(Path, "home", lambda: home)
 
     # load_config returns a config with credentials set
     fake_config = type("C", (), {
@@ -372,7 +379,7 @@ def test_run_check_impl_all_pass(monkeypatch):
         "kodi_enabled": False,
         "kodi_host": "",
     })()
-    monkeypatch.setattr("festival_organizer.config.load_config", lambda **kw: fake_config)
+    monkeypatch.setattr("festival_organizer.config.load_config", lambda: fake_config)
 
     # importlib.metadata.version always succeeds
     monkeypatch.setattr("importlib.metadata.version", lambda pkg: "9.9.9")
@@ -384,7 +391,7 @@ def test_run_check_impl_all_pass(monkeypatch):
     assert "All checks passed" in output
 
 
-def test_run_check_impl_required_tool_missing_exits_one(monkeypatch):
+def test_run_check_impl_required_tool_missing_exits_one(monkeypatch, tmp_path):
     from festival_organizer import cli as cli_mod, metadata
 
     # All tool paths None (missing)
@@ -392,19 +399,22 @@ def test_run_check_impl_required_tool_missing_exits_one(monkeypatch):
         monkeypatch.setattr(metadata, attr, None)
 
     monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", False)
-    monkeypatch.setattr(Path, "is_file", lambda self: False)
-    monkeypatch.setattr(
-        "festival_organizer.config.load_config",
-        lambda **kw: (_ for _ in ()).throw(RuntimeError("no config")),
-    )
+    # tmp_path exists but has no .cratedigger/ subdirectory, so all is_file() calls return False
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+    def _raise():
+        raise RuntimeError("no config")
+
+    monkeypatch.setattr("festival_organizer.config.load_config", _raise)
     monkeypatch.setattr("importlib.metadata.version", lambda pkg: "9.9.9")
 
     con, buf = _make_test_console()
     code = cli_mod._run_check_impl(con)  # type: ignore[reportAttributeAccessIssue]
     assert code == 1
+    assert "error" in buf.getvalue().lower()
 
 
-def test_run_check_impl_shows_all_section_headers(monkeypatch):
+def test_run_check_impl_shows_all_section_headers(monkeypatch, tmp_path):
     from festival_organizer import cli as cli_mod, metadata
 
     for attr in ("FFPROBE_PATH", "MEDIAINFO_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
@@ -416,7 +426,16 @@ def test_run_check_impl_shows_all_section_headers(monkeypatch):
         lambda *a, **kw: type("R", (), {"stdout": "fake 1.0\n", "stderr": "", "returncode": 0})(),
     )
     monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", True)
-    monkeypatch.setattr(Path, "is_file", lambda self: True)
+
+    # Create real files under tmp_path so is_file() works correctly
+    home = tmp_path
+    cratedigger_dir = home / ".cratedigger"
+    cratedigger_dir.mkdir()
+    (cratedigger_dir / "config.json").write_text("{}")
+    (cratedigger_dir / "festivals.json").write_text("{}")
+    (cratedigger_dir / "artists.json").write_text("{}")
+    (home / ".1001tl-cookies.json").write_text("[]")
+    monkeypatch.setattr(Path, "home", lambda: home)
 
     fake_config = type("C", (), {
         "tracklists_credentials": ("a@b.com", "pass"),
@@ -424,7 +443,7 @@ def test_run_check_impl_shows_all_section_headers(monkeypatch):
         "kodi_enabled": False,
         "kodi_host": "",
     })()
-    monkeypatch.setattr("festival_organizer.config.load_config", lambda **kw: fake_config)
+    monkeypatch.setattr("festival_organizer.config.load_config", lambda: fake_config)
     monkeypatch.setattr("importlib.metadata.version", lambda pkg: "9.9.9")
 
     con, buf = _make_test_console()
