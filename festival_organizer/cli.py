@@ -109,6 +109,20 @@ def _version_callback(value: bool) -> None:
         raise typer.Exit()
 
 
+def _pick_version_line(output: str) -> str:
+    """Return the most informative line from a tool's --version output.
+
+    Prefers the first line that contains a digit (a version number). Falls back
+    to the first non-empty line. Needed because some tools (mediainfo) print
+    a banner on line 1 and the version on line 2.
+    """
+    lines = [ln.strip() for ln in output.splitlines() if ln.strip()]
+    for ln in lines:
+        if any(ch.isdigit() for ch in ln):
+            return ln
+    return lines[0] if lines else ""
+
+
 def _run_check_impl(con: "Console") -> int:
     import subprocess
     from festival_organizer import metadata
@@ -138,10 +152,9 @@ def _run_check_impl(con: "Console") -> int:
                 r = subprocess.run(
                     [path, "--version"], capture_output=True, text=True, timeout=5, check=False,
                 )
-                first = (r.stdout or r.stderr or "").splitlines()
-                first_line = first[0].strip() if first else ""
-                if first_line:
-                    con.print(f"  [green]\u2713[/green] {display:<14} {first_line}")
+                version_line = _pick_version_line(r.stdout or r.stderr or "")
+                if version_line:
+                    con.print(f"  [green]\u2713[/green] {display:<14} {version_line}")
                 else:
                     marker = "[red]\u2717[/red]" if required else "[yellow]![/yellow]"
                     con.print(f"  {marker} {display:<14} version probe returned no output")
