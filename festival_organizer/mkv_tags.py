@@ -200,6 +200,30 @@ def has_album_artist_display_tags(filepath: Path) -> bool:
     return False
 
 
+def has_duplicate_global_blocks(root: ET.Element) -> bool:
+    """Return True when the root carries more than one global Tag block at any TTV.
+
+    Global blocks are those without TrackUID or ChapterUID targeting. Used by
+    embed_tags as a heal trigger: if mkvpropedit normalised away <Targets> on
+    prior writes and the parser-skip bug left duplicates behind, the next
+    touch folds them. See docs/plans/2026-04-20-mkv-tags-ttv50-normalization-design.md.
+    """
+    counts: dict[int, int] = {}
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            ttv = 50
+        else:
+            if targets.find("TrackUID") is not None:
+                continue
+            if targets.find("ChapterUID") is not None:
+                continue
+            ttv_el = targets.find("TargetTypeValue")
+            ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+        counts[ttv] = counts.get(ttv, 0) + 1
+    return any(c > 1 for c in counts.values())
+
+
 def merge_tags(
     existing: ET.Element | None,
     new_tags: dict[int, dict[str, str]],

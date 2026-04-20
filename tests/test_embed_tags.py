@@ -453,3 +453,100 @@ def test_embed_tags_synopsis_uses_festival_full(tmp_path):
     desc = tags_dict[50]["SYNOPSIS"]
     assert "Amsterdam Music Festival" in desc
     assert "AMF" not in desc
+
+
+# --- Duplicate global block detection (heal trigger) ---
+
+
+def test_has_duplicate_global_blocks_detects_multiple_targetless():
+    """Two Targets-less global blocks trip the heal trigger."""
+    from festival_organizer.mkv_tags import has_duplicate_global_blocks
+
+    xml = """<Tags>
+      <Tag><Simple><Name>ARTIST</Name><String>X</String></Simple></Tag>
+      <Tag><Simple><Name>ARTIST</Name><String>X</String></Simple></Tag>
+    </Tags>"""
+    root = ET.fromstring(xml)
+
+    assert has_duplicate_global_blocks(root) is True
+
+
+def test_has_duplicate_global_blocks_single_block_is_fine():
+    """One Targets-less block is not a duplicate."""
+    from festival_organizer.mkv_tags import has_duplicate_global_blocks
+
+    xml = """<Tags>
+      <Tag><Simple><Name>ARTIST</Name><String>X</String></Simple></Tag>
+    </Tags>"""
+    root = ET.fromstring(xml)
+
+    assert has_duplicate_global_blocks(root) is False
+
+
+def test_has_duplicate_global_blocks_ignores_trackuid_and_chapteruid():
+    """Per-track and per-chapter blocks are separate contracts, never 'duplicates'."""
+    from festival_organizer.mkv_tags import has_duplicate_global_blocks
+
+    xml = """<Tags>
+      <Tag><Targets><TrackUID>1</TrackUID></Targets><Simple><Name>BPS</Name><String>1</String></Simple></Tag>
+      <Tag><Targets><TrackUID>2</TrackUID></Targets><Simple><Name>BPS</Name><String>2</String></Simple></Tag>
+      <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>10</ChapterUID></Targets><Simple><Name>T</Name><String>A</String></Simple></Tag>
+      <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>20</ChapterUID></Targets><Simple><Name>T</Name><String>B</String></Simple></Tag>
+      <Tag><Simple><Name>ARTIST</Name><String>X</String></Simple></Tag>
+    </Tags>"""
+    root = ET.fromstring(xml)
+
+    assert has_duplicate_global_blocks(root) is False
+
+
+def test_has_duplicate_global_blocks_detects_two_ttv70_blocks():
+    """Two explicit TTV=70 blocks are a duplicate. Should not happen in practice but pin the contract."""
+    from festival_organizer.mkv_tags import has_duplicate_global_blocks
+
+    xml = """<Tags>
+      <Tag><Targets><TargetTypeValue>70</TargetTypeValue></Targets><Simple><Name>A</Name><String>1</String></Simple></Tag>
+      <Tag><Targets><TargetTypeValue>70</TargetTypeValue></Targets><Simple><Name>B</Name><String>2</String></Simple></Tag>
+    </Tags>"""
+    root = ET.fromstring(xml)
+
+    assert has_duplicate_global_blocks(root) is True
+
+
+def test_embed_tags_returns_done_when_duplicates_present_even_if_values_match(tmp_path):
+    """File with duplicate Targets-less blocks triggers a heal write even when values match.
+
+    needs_write's value-diff comparison would return False (duplicates carry
+    identical values), but has_duplicate_global_blocks flips needs_write to
+    True so the Task 2 consolidation runs on the next write.
+    """
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf(artist="Tiesto", festival="TML", year="2024")
+
+    existing_xml = """<Tags>
+  <Tag>
+    <Simple><Name>ARTIST</Name><String>Tiesto</String></Simple>
+    <Simple><Name>TITLE</Name><String>Tiesto @ TML</String></Simple>
+    <Simple><Name>DATE_RELEASED</Name><String>2024</String></Simple>
+    <Simple><Name>SYNOPSIS</Name><String>Tiesto
+TML</String></Simple>
+    <Simple><Name>DESCRIPTION</Name><String></String></Simple>
+  </Tag>
+  <Tag>
+    <Simple><Name>ARTIST</Name><String>Tiesto</String></Simple>
+    <Simple><Name>TITLE</Name><String>Tiesto @ TML</String></Simple>
+    <Simple><Name>DATE_RELEASED</Name><String>2024</String></Simple>
+    <Simple><Name>SYNOPSIS</Name><String>Tiesto
+TML</String></Simple>
+    <Simple><Name>DESCRIPTION</Name><String></String></Simple>
+  </Tag>
+</Tags>"""
+    existing_root = ET.fromstring(existing_xml)
+
+    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+        with patch("festival_organizer.embed_tags.extract_all_tags", return_value=existing_root):
+            with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+                result = embed_tags(mf, video)
+
+    assert result == "done"
+    mock_wmt.assert_called_once()

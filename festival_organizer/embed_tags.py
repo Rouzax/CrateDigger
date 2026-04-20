@@ -19,6 +19,7 @@ from festival_organizer.mkv_tags import (
     MATROSKA_EXTS,
     _tag_values_from_root,
     extract_all_tags,
+    has_duplicate_global_blocks,
     write_merged_tags,
 )
 from festival_organizer.models import MediaFile, build_display_title
@@ -127,11 +128,13 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
         """Compare value, treating CLEAR_TAG as empty string."""
         return "" if v is CLEAR_TAG else v
 
-    needs_write = any(
+    values_differ = any(
         _cmp(v) != existing_50.get(k, "") for k, v in tags.items()
     ) or any(
         _cmp(v) != existing_70.get(k, "") for k, v in tags_70.items()
     )
+    needs_heal = root is not None and has_duplicate_global_blocks(root)
+    needs_write = values_differ or needs_heal
 
     if not needs_write:
         return "skipped"  # Already up to date
