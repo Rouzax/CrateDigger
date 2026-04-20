@@ -99,6 +99,8 @@ def main(
     if ctx.invoked_subcommand is None:
         typer.echo(ctx.get_help())
         raise SystemExit(1)
+    from festival_organizer.update_check import print_cached_update_notice
+    print_cached_update_notice(make_console())
 
 
 # ---------------------------------------------------------------------------
@@ -257,6 +259,11 @@ def run(argv: list[str] | None = None) -> int:
         return 1
     finally:
         _cleanup_console()
+        try:
+            from festival_organizer.update_check import refresh_update_cache
+            refresh_update_cache()
+        except BaseException:
+            pass
 
 
 def resolve_action(
