@@ -107,9 +107,9 @@ CrateDigger prints a grouped report with a status marker for each item:
 - `✓` the item is present and working
 - `!` the item is missing or unconfigured, but optional
 - `✗` the item is missing and required
-- `~` the item could not be verified
+- `~` informational (using built-in defaults or skipped because it is not configured)
 
-A summary line at the end shows how many checks passed, how many produced warnings, and how many failed.
+A summary line at the end reports `All checks passed.` when nothing is wrong, or counts the errors and warnings otherwise.
 
 The command exits with code 0 if all required checks pass. Warnings (optional items missing) do not affect the exit code. The command exits with code 1 if any required tool or Python package is absent.
 
