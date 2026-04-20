@@ -184,7 +184,13 @@ def test_merge_tags_multiple_ttvs_at_once():
 
 
 def test_merge_tags_no_targets_preserved():
-    """Tag blocks with no Targets element are preserved unchanged."""
+    """Simples from a Targets-less block fold into the single global TTV=50 block.
+
+    Per Matroska spec a Tag block with no Targets element is implicitly TTV=50,
+    so an unrelated Simple like ENCODER in that block and an explicit TTV=50
+    block collapse into one on merge. The ENCODER value is preserved, ARTIST
+    is updated in place.
+    """
     existing_xml = """<Tags>
   <Tag>
     <Simple><Name>ENCODER</Name><String>ffmpeg</String></Simple>
@@ -199,18 +205,22 @@ def test_merge_tags_no_targets_preserved():
     result = merge_tags(existing, {50: {"ARTIST": "New"}})
     root = _parse_merged(result)
 
-    # The no-targets block should still be there
-    no_target_tags = [
-        tag for tag in root.findall("Tag")
-        if tag.find("Targets") is None
-    ]
-    assert len(no_target_tags) == 1
-    assert _get_simple_value(no_target_tags[0], "ENCODER") == "ffmpeg"
+    global_blocks = []
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            global_blocks.append(tag)
+            continue
+        if targets.find("TrackUID") is not None:
+            continue
+        if targets.find("ChapterUID") is not None:
+            continue
+        global_blocks.append(tag)
 
-    # TTV=50 updated
-    tag50 = _get_tag_block(root, 50)
-    assert tag50 is not None
-    assert _get_simple_value(tag50, "ARTIST") == "New"
+    assert len(global_blocks) == 1
+    keeper = global_blocks[0]
+    assert _get_simple_value(keeper, "ENCODER") == "ffmpeg"
+    assert _get_simple_value(keeper, "ARTIST") == "New"
 
 
 def test_merge_tags_strips_track_uid_blocks():
@@ -649,3 +659,37 @@ def test_merge_tags_consolidates_mixed_targeted_and_targetless_at_ttv50():
     keeper = global_blocks[0]
     assert _get_simple_value(keeper, "ARTIST") == "Old"
     assert _get_simple_value(keeper, "TITLE") == "Set Title"
+
+
+def test_merge_tags_updates_targetless_block_in_place():
+    """Writing new TTV=50 values updates the Targets-less block rather than appending."""
+    existing_xml = """<Tags>
+      <Tag>
+        <Simple><Name>ARTIST</Name><String>Old Artist</String></Simple>
+        <Simple><Name>TITLE</Name><String>Old Title</String></Simple>
+      </Tag>
+    </Tags>"""
+    existing = ET.fromstring(existing_xml)
+
+    result = merge_tags(existing, {50: {"ARTIST": "New Artist", "TITLE": "New Title"}})
+    root = _parse_merged(result)
+
+    global_blocks = []
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            global_blocks.append(tag)
+            continue
+        if targets.find("TrackUID") is not None:
+            continue
+        if targets.find("ChapterUID") is not None:
+            continue
+        global_blocks.append(tag)
+
+    assert len(global_blocks) == 1, (
+        f"Expected one global block, got {len(global_blocks)} "
+        f"(indicates a new Targets-wrapped block was appended instead of updating in place)"
+    )
+    keeper = global_blocks[0]
+    assert _get_simple_value(keeper, "ARTIST") == "New Artist"
+    assert _get_simple_value(keeper, "TITLE") == "New Title"

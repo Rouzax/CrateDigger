@@ -300,10 +300,14 @@ def merge_tags(
     ttv_to_tag: dict[int | None, ET.Element] = {}
     for tag in root.findall("Tag"):
         targets = tag.find("Targets")
-        if targets is not None:
-            ttv_el = targets.find("TargetTypeValue")
-            ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
-            ttv_to_tag[ttv] = tag
+        if targets is None:
+            ttv_to_tag.setdefault(50, tag)
+            continue
+        if targets.find("ChapterUID") is not None:
+            continue
+        ttv_el = targets.find("TargetTypeValue")
+        ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+        ttv_to_tag[ttv] = tag
 
     # Merge each TTV scope
     for ttv, tag_dict in new_tags.items():
