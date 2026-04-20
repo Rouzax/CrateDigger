@@ -602,7 +602,7 @@ def test_merge_tags_consolidates_targetless_duplicates():
     </Tags>"""
     existing = ET.fromstring(existing_xml)
 
-    # Merge with no new TTY=50 tags, should still consolidate
+    # Merge with no new TTV=50 tags, should still consolidate
     result = merge_tags(existing, {})
     root = _parse_merged(result)
 
