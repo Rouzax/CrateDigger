@@ -752,22 +752,39 @@ def _parse_h1_structure(h1_html: str) -> dict:
 
     before_at, after_at = h1_html.split("@", 1)
 
-    # Extract /dj/ links from the before-@ part
-    dj_pattern = re.compile(
-        r'<a[^>]*href="/dj/([^/"]+)/[^"]*"[^>]*>([^<]+)</a>'
-    )
-    result["dj_artists"] = [
-        (m.group(1), _html_decode(m.group(2).strip()))
-        for m in dj_pattern.finditer(before_at)
-    ]
+    from bs4 import BeautifulSoup
 
-    source_pattern = re.compile(
-        r'<a[^>]*href="/source/([^/]+)/([^/]+)/[^"]*"[^>]*>([^<]+)</a>'
-    )
-    source_matches = list(source_pattern.finditer(after_at))
-    sources = [(m.group(1), m.group(2), _html_decode(m.group(3).strip()))
-               for m in source_matches]
+    # DJ anchors in the before-@ fragment
+    before_soup = BeautifulSoup(before_at, "html.parser")
+    for a in before_soup.select('a[href^="/dj/"]'):
+        href_raw = a.get("href", "")
+        href = href_raw if isinstance(href_raw, str) else ""
+        m = re.match(r"/dj/([^/]+)/", href)
+        if not m:
+            continue
+        result["dj_artists"].append(
+            (m.group(1), _html_decode(a.get_text(strip=True)))
+        )
+
+    # Source anchors in the after-@ fragment. BS4 gives us the data; a
+    # lenient quote-style-agnostic regex over the raw after_at string
+    # gives us the character offsets the tail/stage algorithm needs.
+    after_soup = BeautifulSoup(after_at, "html.parser")
+    sources: list[tuple[str, str, str]] = []
+    for a in after_soup.select('a[href^="/source/"]'):
+        href_raw = a.get("href", "")
+        href = href_raw if isinstance(href_raw, str) else ""
+        m = re.match(r"/source/([^/]+)/([^/]+)/", href)
+        if not m:
+            continue
+        sources.append((m.group(1), m.group(2),
+                        _html_decode(a.get_text(strip=True))))
     result["sources"] = sources
+
+    source_matches = list(re.finditer(
+        r'<a[^>]*href=["\']/source/[^/"\']+/[^/"\']+/[^"\']*["\'][^>]*>[^<]+</a>',
+        after_at,
+    ))
 
     first_source = source_matches[0] if source_matches else None
     if first_source:
@@ -786,10 +803,7 @@ def _parse_h1_structure(h1_html: str) -> dict:
         # link is part of a compound stage name.
         all_text = re.sub(r"<[^>]+>", "", after_at).strip()
         first_segment = all_text.split(",")[0].strip()
-        source_names = {
-            _html_decode(m.group(3).strip())
-            for m in source_pattern.finditer(after_at)
-        }
+        source_names = {s[2] for s in sources}
         if first_segment and first_segment not in source_names:
             plain = first_segment
 

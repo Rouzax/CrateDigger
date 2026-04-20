@@ -21,6 +21,7 @@ from festival_organizer.tracklists.api import (
     _extract_dj_slugs,
     _maximize_artwork_url,
     _parse_dj_profile,
+    _parse_h1_structure,
 )
 
 
@@ -357,6 +358,40 @@ def test_extract_dj_slugs_ignores_unrelated_links_with_dj_in_path():
     '''
     slugs = _extract_dj_slugs(html)
     assert slugs == ["tiesto"]
+
+
+# --- _parse_h1_structure ---
+
+def test_parse_h1_structure_basic_dj_at_source():
+    """Baseline: DJ @ source with country tail."""
+    h1 = (
+        '<a href="/dj/afrojack/index.html">AFROJACK</a>'
+        ' @ Mainstage, <a href="/source/abc/ultra-miami/index.html">Ultra Miami</a>'
+        ', United States 2026-03-29'
+    )
+    result = _parse_h1_structure(h1)
+    assert result["dj_artists"] == [("afrojack", "AFROJACK")]
+    assert result["sources"] == [("abc", "ultra-miami", "Ultra Miami")]
+    assert result["date"] == "2026-03-29"
+    assert result["country"] == "United States"
+
+
+def test_parse_h1_structure_handles_single_quoted_anchors():
+    """BS4 migration: anchor tags may use single-quoted hrefs."""
+    h1 = (
+        "<a href='/dj/adam-beyer/index.html'>Adam Beyer</a>"
+        " @ <a href='/source/99/awakenings/index.html'>Awakenings</a>"
+    )
+    result = _parse_h1_structure(h1)
+    assert ("adam-beyer", "Adam Beyer") in result["dj_artists"]
+    assert any(s[0] == "99" for s in result["sources"])
+
+
+def test_parse_h1_structure_returns_empty_when_no_at_sign():
+    """Documented guard: h1 without '@' returns all-empty dict."""
+    result = _parse_h1_structure("<a href='/dj/someone/'>Some DJ</a>")
+    assert result["dj_artists"] == []
+    assert result["sources"] == []
 
 
 # --- fetch_source_info ---
