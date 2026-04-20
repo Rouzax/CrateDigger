@@ -94,6 +94,29 @@ cratedigger --help
 
 Use `--version` as the fast confirmation that the install worked. Use `--help` when you want to browse the full command tree.
 
+### Verify your environment with `--check`
+
+After installing CrateDigger, run `--check` to confirm that all required external tools, config files, credentials, and Python packages are present and reachable:
+
+```bash
+cratedigger --check
+```
+
+CrateDigger prints a grouped report with a status marker for each item:
+
+- `✓` the item is present and working
+- `!` the item is missing or unconfigured, but optional
+- `✗` the item is missing and required
+- `~` the item could not be verified
+
+A summary line at the end shows how many checks passed, how many produced warnings, and how many failed.
+
+The command exits with code 0 if all required checks pass. Warnings (optional items missing) do not affect the exit code. The command exits with code 1 if any required tool or Python package is absent.
+
+Nothing is processed: `--check` reads your environment and exits without touching any media files or your library.
+
+Use it after a fresh install to confirm the setup is complete, after updating a [config file](configuration.md) to verify the new paths are valid, or in CI to validate the environment before a scheduled run.
+
 ### Optional: video frame sampling
 
 By default, CrateDigger reads artwork that is already embedded in your video files. Files
