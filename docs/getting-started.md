@@ -96,19 +96,28 @@ Use `--version` as the fast confirmation that the install worked. Use `--help` w
 
 ### Optional: video frame sampling
 
-By default, CrateDigger uses artwork that is already embedded inside your video files.
-If a file has no embedded artwork, CrateDigger can extract a still frame from the video
-to use as cover art instead. This also improves poster and NFO image quality for files
-without embedded covers.
+By default, CrateDigger reads artwork that is already embedded in your video files. Files
+without embedded artwork get no thumbnail, and their posters and NFO images are lower
+quality or missing as a result.
 
-To enable this fallback, install the `vision` extra:
+The `vision` extra adds a fallback: when a file has no embedded artwork, CrateDigger
+extracts a still frame from the video and uses that as cover art instead. This is an
+opt-in feature, not the default behaviour.
 
+To include it at install time, use whichever command matches the install path you chose
+in the "Install CrateDigger" section above:
+
+**pipx**
+```bash
+pipx install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"
+```
+
+**pip**
 ```bash
 pip install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"
 ```
 
-This adds OpenCV, which does the frame extraction. Without it, files with no embedded
-artwork simply won't have a thumbnail, and their posters may be lower quality or missing.
+The extra pulls in OpenCV, which is the library that scores and selects the frame.
 
 ## Set up your config files
 

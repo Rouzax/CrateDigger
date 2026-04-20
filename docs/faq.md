@@ -177,6 +177,12 @@ CrateDigger tries three sources for cover art, in order:
 
 If you are getting gradient thumbnails and want actual artwork, either embed a thumbnail when downloading (see [getting started: preparing your recordings](getting-started.md#preparing-your-recordings)) or install the `vision` extra:
 
+**pipx**
+```bash
+pipx install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"
+```
+
+**pip**
 ```bash
 pip install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"
 ```

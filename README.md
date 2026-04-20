@@ -95,6 +95,12 @@ pip install --upgrade git+https://github.com/Rouzax/CrateDigger.git
 
 Optional: install with frame sampling support for higher-quality poster backgrounds (uses OpenCV to score video frames):
 
+**pipx**
+```bash
+pipx install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"
+```
+
+**pip**
 ```bash
 pip install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"
 ```
