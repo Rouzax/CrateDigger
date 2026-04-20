@@ -58,3 +58,32 @@ def test_canary_tracklist_page_flags_missing_genre_meta():
     html = re.sub(r'<meta\s+itemprop="genre"[^>]*>', "", html)
     missing = canary.check_tracklist_page(html)
     assert "itemprop=genre meta" in missing
+
+
+# --- check_search_results ---
+
+def test_canary_search_results_healthy_on_zero_result_page():
+    """Zero results for a query is a valid outcome. The probe must only
+    fire when the search-page skeleton itself is missing, not when hits
+    are simply absent, otherwise every no-match query would false-alarm."""
+    from festival_organizer.tracklists import canary
+    html = '<html><body><input name="main_search" type="text"></body></html>'
+    assert canary.check_search_results(html) == []
+
+
+def test_canary_search_results_healthy_with_hits():
+    from festival_organizer.tracklists import canary
+    html = '''
+    <html><body>
+      <input name="main_search" type="text">
+      <div class="bItm"><a href="/tracklist/abc/x.html">A set</a></div>
+    </body></html>
+    '''
+    assert canary.check_search_results(html) == []
+
+
+def test_canary_search_results_flags_missing_skeleton():
+    from festival_organizer.tracklists import canary
+    html = "<html><body>totally unrelated page, no search input</body></html>"
+    missing = canary.check_search_results(html)
+    assert "search form skeleton" in missing

@@ -44,3 +44,18 @@ def check_tracklist_page(html: str) -> list[str]:
         missing.append("itemprop=genre meta")
 
     return missing
+
+
+def check_search_results(html: str) -> list[str]:
+    """Check a POST /search/result.php response for the page skeleton.
+
+    Zero hits for a query is a valid outcome and must not trigger the
+    canary, so this probe does not check for result cards (.bItm).
+    It checks only the main_search input that frames every search
+    page, hits or no hits.
+    """
+    soup = _soup(html)
+    missing: list[str] = []
+    if soup.select_one('input[name="main_search"]') is None:
+        missing.append("search form skeleton")
+    return missing
