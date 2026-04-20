@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-04-20
+
+### Fixed
+
+- `enrich` no longer rewrites global tags on every run when no values have changed. `mkvpropedit` strips the `<Targets>` element when writing a `TargetTypeValue=50` block, and a parser bug then treated the resulting Targets-less block as empty, causing `embed_tags` to rewrite the same values on every run.
+- `enrich` now folds accumulated duplicate global Tag blocks into one on the next touch. Files affected by the prior re-write loop could carry many copies of `ARTIST`, `TITLE`, `DATE_RELEASED`, and `SYNOPSIS`; these self-heal on the next `enrich` run.
+
 ## [0.13.1] - 2026-04-20
 
 ### Added
