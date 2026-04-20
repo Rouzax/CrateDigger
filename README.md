@@ -12,7 +12,7 @@
 
 CrateDigger is a Python CLI tool for managing festival set and concert recording libraries. It follows a three-command workflow: **identify** matches recordings against 1001Tracklists and embeds chapter markers, **organize** moves files into your library with smart folder layouts, and **enrich** generates posters, artwork, NFO files, and embeds tags. CrateDigger integrates with Kodi for a polished media center experience, complete with artwork, metadata, and library sync.
 
-> **Pair it with [TrackSplit](https://rouzax.github.io/TrackSplit/)** — a sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for Jellyfin, Lyrion, and other music servers. TrackSplit reads CrateDigger's festival and artist config, so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries.
+> **Pair it with [TrackSplit](https://rouzax.github.io/TrackSplit/):** a sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for Jellyfin, Lyrion, and other music servers. TrackSplit reads CrateDigger's festival and artist config, so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries.
 > [Landing page](https://rouzax.github.io/TrackSplit/) · [Documentation](https://rouzax.github.io/TrackSplit/docs/) · [GitHub](https://github.com/Rouzax/TrackSplit)
 
 ## Poster Gallery
