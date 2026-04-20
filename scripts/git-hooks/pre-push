@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Hand-synced with scripts/git-hooks/pre-push in the sibling repo.
+# Keep in sync when editing.
+#
+# Runs on `git push`. Inspects outgoing commits for `chore: release X.Y.Z`
+# messages. If one is found, validates pyproject.toml and CHANGELOG.md locally,
+# then prompts for interactive confirmation before allowing the push.
+# Other pushes pass silently.
+
+set -euo pipefail
+
+release_regex='^chore: release ([0-9]+\.[0-9]+\.[0-9]+)$'
+
+# Read refs from stdin (Git's pre-push protocol)
+release_commits=()
+release_versions=()
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [[ -z "$local_sha" || "$local_sha" == "0000000000000000000000000000000000000000" ]] && continue
+
+    if [[ "$remote_sha" == "0000000000000000000000000000000000000000" ]]; then
+        range="$local_sha"
+    else
+        range="$remote_sha..$local_sha"
+    fi
+
+    while read -r sha; do
+        [[ -z "$sha" ]] && continue
+        subject=$(git log -1 --pretty=%s "$sha")
+        if [[ "$subject" =~ $release_regex ]]; then
+            release_commits+=("$sha")
+            release_versions+=("${BASH_REMATCH[1]}")
+        fi
+    done < <(git rev-list "$range" 2>/dev/null || true)
+done
+
+[[ ${#release_commits[@]} -eq 0 ]] && exit 0
+
+repo_root=$(git rev-parse --show-toplevel)
+
+for i in "${!release_commits[@]}"; do
+    sha="${release_commits[$i]}"
+    want="${release_versions[$i]}"
+
+    pyproject="$repo_root/pyproject.toml"
+    got=$(grep -E '^version = "[0-9]+\.[0-9]+\.[0-9]+"' "$pyproject" | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+    if [[ "$want" != "$got" ]]; then
+        echo "ERROR: commit ${sha:0:8} says release $want but pyproject.toml is $got" >&2
+        echo "Aborting push." >&2
+        exit 1
+    fi
+
+    changelog="$repo_root/CHANGELOG.md"
+    if ! grep -qE "^## \[$want\]" "$changelog"; then
+        echo "ERROR: CHANGELOG.md has no ## [$want] section" >&2
+        echo "Did you forget to rename [Unreleased]? Aborting push." >&2
+        exit 1
+    fi
+done
+
+echo
+echo "You are about to push a stable release:"
+echo
+for i in "${!release_commits[@]}"; do
+    sha="${release_commits[$i]}"
+    short=${sha:0:8}
+    subject=$(git log -1 --pretty=%s "$sha")
+    echo "  $short  $subject"
+done
+echo
+echo "This will trigger the release workflow and publish a GitHub Release."
+echo
+
+exec < /dev/tty
+read -r -p "Proceed? [y/N] " reply
+case "$reply" in
+    y|Y|yes|YES) ;;
+    *) echo "Aborted."; exit 1 ;;
+esac

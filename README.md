@@ -77,6 +77,8 @@ Optional: install with frame sampling support for higher-quality poster backgrou
 pip install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"
 ```
 
+Optional: run `./scripts/setup-hooks.sh` to install the pre-push hook that gates accidental release commits.
+
 ### Usage
 
 ```bash

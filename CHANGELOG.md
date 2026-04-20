@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `--version` flag on the CLI.
+- scripts/git-hooks/pre-push hook that gates 'chore: release' commits behind an interactive prompt.
 
 ## [0.12.7] - 2026-04-15
 
