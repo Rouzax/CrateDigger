@@ -572,3 +572,74 @@ def test_tag_values_from_root_later_targetless_overrides_earlier():
     result = _tag_values_from_root(root)
 
     assert result[50]["ARTIST"] == "New"
+
+
+def test_merge_tags_consolidates_targetless_duplicates():
+    """Multiple Targets-less Tag blocks fold into one TTV=50 block on merge."""
+    existing_xml = """<Tags>
+      <Tag>
+        <Simple><Name>ARTIST</Name><String>Marlon Hoffstadt</String></Simple>
+        <Simple><Name>TITLE</Name><String>Marlon Hoffstadt @ AMF</String></Simple>
+      </Tag>
+      <Tag>
+        <Simple><Name>ARTIST</Name><String>Marlon Hoffstadt</String></Simple>
+        <Simple><Name>TITLE</Name><String>Marlon Hoffstadt @ AMF</String></Simple>
+      </Tag>
+      <Tag>
+        <Simple><Name>ARTIST</Name><String>Marlon Hoffstadt</String></Simple>
+        <Simple><Name>TITLE</Name><String>Marlon Hoffstadt @ AMF</String></Simple>
+      </Tag>
+    </Tags>"""
+    existing = ET.fromstring(existing_xml)
+
+    # Merge with no new TTY=50 tags, should still consolidate
+    result = merge_tags(existing, {})
+    root = _parse_merged(result)
+
+    # Count global (non-TrackUID, non-ChapterUID) Tag blocks
+    global_blocks = []
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            global_blocks.append(tag)
+            continue
+        if targets.find("TrackUID") is not None:
+            continue
+        if targets.find("ChapterUID") is not None:
+            continue
+        global_blocks.append(tag)
+
+    assert len(global_blocks) == 1, (
+        f"Expected one global block after consolidation, got {len(global_blocks)}"
+    )
+    keeper = global_blocks[0]
+    assert _get_simple_value(keeper, "ARTIST") == "Marlon Hoffstadt"
+    assert _get_simple_value(keeper, "TITLE") == "Marlon Hoffstadt @ AMF"
+
+
+def test_merge_tags_consolidates_mixed_targeted_and_targetless_at_ttv50():
+    """A Targets-less block and an explicit TTV=50 block fold together."""
+    existing_xml = """<Tags>
+      <Tag>
+        <Simple><Name>ARTIST</Name><String>Old</String></Simple>
+      </Tag>
+      <Tag>
+        <Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+        <Simple><Name>TITLE</Name><String>Set Title</String></Simple>
+      </Tag>
+    </Tags>"""
+    existing = ET.fromstring(existing_xml)
+
+    result = merge_tags(existing, {})
+    root = _parse_merged(result)
+
+    global_blocks = [
+        tag for tag in root.findall("Tag")
+        if (tag.find("Targets") is None
+            or (tag.find("Targets").find("TrackUID") is None
+                and tag.find("Targets").find("ChapterUID") is None))
+    ]
+    assert len(global_blocks) == 1
+    keeper = global_blocks[0]
+    assert _get_simple_value(keeper, "ARTIST") == "Old"
+    assert _get_simple_value(keeper, "TITLE") == "Set Title"

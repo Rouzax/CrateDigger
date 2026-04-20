@@ -264,6 +264,7 @@ def merge_tags(
     for tag in root.findall("Tag"):
         targets = tag.find("Targets")
         if targets is None:
+            by_ttv.setdefault(50, []).append(tag)
             continue
         if targets.find("ChapterUID") is not None:
             continue
