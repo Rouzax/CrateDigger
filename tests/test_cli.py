@@ -378,7 +378,7 @@ def test_run_check_impl_all_pass(monkeypatch):
     monkeypatch.setattr("importlib.metadata.version", lambda pkg: "9.9.9")
 
     con, buf = _make_test_console()
-    code = cli_mod._run_check_impl(con)
+    code = cli_mod._run_check_impl(con)  # type: ignore[reportAttributeAccessIssue]
     assert code == 0
     output = buf.getvalue()
     assert "All checks passed" in output
@@ -400,7 +400,7 @@ def test_run_check_impl_required_tool_missing_exits_one(monkeypatch):
     monkeypatch.setattr("importlib.metadata.version", lambda pkg: "9.9.9")
 
     con, buf = _make_test_console()
-    code = cli_mod._run_check_impl(con)
+    code = cli_mod._run_check_impl(con)  # type: ignore[reportAttributeAccessIssue]
     assert code == 1
 
 
@@ -428,7 +428,7 @@ def test_run_check_impl_shows_all_section_headers(monkeypatch):
     monkeypatch.setattr("importlib.metadata.version", lambda pkg: "9.9.9")
 
     con, buf = _make_test_console()
-    cli_mod._run_check_impl(con)
+    cli_mod._run_check_impl(con)  # type: ignore[reportAttributeAccessIssue]
     output = buf.getvalue()
     assert "Tools" in output
     assert "Config" in output
