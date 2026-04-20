@@ -592,21 +592,22 @@ class TracklistSession:
 
     def fetch_source_info(self, source_id: str, slug: str) -> dict:
         """Fetch metadata from a /source/ page. Returns {name, slug, type, country}."""
+        from bs4 import BeautifulSoup
         url = f"{BASE_URL}/source/{source_id}/{slug}/index.html"
         resp = self._request("GET", url, max_retries=2)
+        soup = BeautifulSoup(resp.text, "html.parser")
 
-        type_match = re.search(
-            r'<div class="cRow">\s*<div class="mtb5">([^<]+)</div>', resp.text
-        )
-        source_type = type_match.group(1).strip() if type_match else ""
+        type_el = soup.select_one("div.cRow > div.mtb5")
+        source_type = type_el.get_text(strip=True) if type_el else ""
 
-        flag_match = re.search(
-            r'<img[^>]*flags/[^.]+\.png[^>]*alt="([^"]+)"', resp.text
-        )
-        country = flag_match.group(1).strip() if flag_match else ""
+        flag_img = soup.select_one('img[src*="flags/"]')
+        country = ""
+        if flag_img is not None:
+            alt = flag_img.get("alt", "")
+            country = (alt if isinstance(alt, str) else "").strip()
 
-        name_match = re.search(r'<div class="h">\s*([^<]+)', resp.text)
-        name = name_match.group(1).strip() if name_match else slug.replace("-", " ").title()
+        name_el = soup.select_one("div.h")
+        name = name_el.get_text(strip=True) if name_el else slug.replace("-", " ").title()
 
         return {"name": name, "slug": slug, "type": source_type, "country": country}
 

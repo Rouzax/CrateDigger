@@ -336,6 +336,52 @@ def test_extract_dj_slugs_empty():
     assert _extract_dj_slugs("<html>no djs</html>") == []
 
 
+# --- fetch_source_info ---
+
+def test_fetch_source_info_extracts_name_type_country():
+    """Baseline: the three fields extracted from a /source/ page."""
+    html = '''
+    <div class="h">Tomorrowland 2026</div>
+    <div class="cRow"><div class="mtb5">Festival</div></div>
+    <img src="/flags/be.png" alt="Belgium" class="flag">
+    '''
+    session = TracklistSession.__new__(TracklistSession)
+    resp = MagicMock(text=html)
+    with patch.object(session, "_request", return_value=resp):
+        info = session.fetch_source_info("123", "tomorrowland-2026")
+    assert info["name"] == "Tomorrowland 2026"
+    assert info["type"] == "Festival"
+    assert info["country"] == "Belgium"
+    assert info["slug"] == "tomorrowland-2026"
+
+
+def test_fetch_source_info_parses_reordered_flag_attrs():
+    """BS4 migration: the alt attribute may come before src in real
+    markup. The pre-migration regex required src first."""
+    html = '''
+    <div class="h">Ultra Miami</div>
+    <div class="cRow"><div class="mtb5">Open Air / Festival</div></div>
+    <img alt="United States" class="flag" src="/flags/us.png">
+    '''
+    session = TracklistSession.__new__(TracklistSession)
+    resp = MagicMock(text=html)
+    with patch.object(session, "_request", return_value=resp):
+        info = session.fetch_source_info("1", "ultra-miami")
+    assert info["country"] == "United States"
+    assert info["type"] == "Open Air / Festival"
+
+
+def test_fetch_source_info_falls_back_to_slug_when_name_missing():
+    html = '<div class="cRow"><div class="mtb5">Club</div></div>'
+    session = TracklistSession.__new__(TracklistSession)
+    resp = MagicMock(text=html)
+    with patch.object(session, "_request", return_value=resp):
+        info = session.fetch_source_info("99", "warehouse-project")
+    assert info["name"] == "Warehouse Project"
+    assert info["type"] == "Club"
+    assert info["country"] == ""
+
+
 def test_fetch_dj_profile_rejects_logo_url():
     """DJ profile filter rejects URLs containing 'logo' (case-insensitive)."""
     session = TracklistSession()
