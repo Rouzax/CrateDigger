@@ -175,7 +175,7 @@ def _run_check_impl(con: "Console") -> int:
         con.print("  [green]\u2713[/green] cv2/numpy")
     else:
         con.print("  [yellow]![/yellow] cv2/numpy      not found (optional, vision features)")
-        con.print("    Install: [cyan]pip install opencv-python numpy[/cyan]")
+        con.print("    [cyan]Install with: pip install opencv-python numpy[/cyan]")
         warnings += 1
 
     # --- Config files ---
@@ -239,9 +239,9 @@ def _run_check_impl(con: "Console") -> int:
     else:
         parts = []
         if errors:
-            parts.append(f"[red]{errors} error(s)[/red]")
+            parts.append(f"[red]{errors} {'error' if errors == 1 else 'errors'}[/red]")
         if warnings:
-            parts.append(f"[yellow]{warnings} warning(s)[/yellow]")
+            parts.append(f"[yellow]{warnings} {'warning' if warnings == 1 else 'warnings'}[/yellow]")
         con.print(", ".join(parts) + ".")
 
     return 1 if errors else 0
