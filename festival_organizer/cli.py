@@ -41,6 +41,31 @@ from festival_organizer.templates import render_folder, render_filename
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
+# Constants for _run_check_impl
+# ---------------------------------------------------------------------------
+
+_CD_TOOLS: list[tuple[str, str, bool]] = [
+    # (metadata attr name, display name, required)
+    ("FFPROBE_PATH",     "ffprobe",     True),
+    ("MEDIAINFO_PATH",   "mediainfo",   True),
+    ("MKVEXTRACT_PATH",  "mkvextract",  True),
+    ("MKVPROPEDIT_PATH", "mkvpropedit", True),
+    ("MKVMERGE_PATH",    "mkvmerge",    True),
+]
+
+_CD_PACKAGES: list[str] = [
+    "beautifulsoup4", "Pillow", "ftfy", "numpy", "requests", "rich", "typer",
+]
+
+_CD_ASSETS: list[tuple[str, str]] = [
+    # (filename, description for warning)
+    ("config.json",    "main config"),
+    ("festivals.json", "festival names"),
+    ("artists.json",   "artist overrides"),
+]
+
+
+# ---------------------------------------------------------------------------
 # Shared type aliases (single source of truth for help text)
 # ---------------------------------------------------------------------------
 
@@ -84,6 +109,153 @@ def _version_callback(value: bool) -> None:
         raise typer.Exit()
 
 
+def _pick_version_line(output: str) -> str:
+    """Return the most informative line from a tool's --version output.
+
+    Prefers the first line that contains a digit (a version number). Falls back
+    to the first non-empty line. Needed because some tools (mediainfo) print
+    a banner on line 1 and the version on line 2.
+    """
+    lines = [ln.strip() for ln in output.splitlines() if ln.strip()]
+    for ln in lines:
+        if any(ch.isdigit() for ch in ln):
+            return ln
+    return lines[0] if lines else ""
+
+
+def _run_check_impl(con: "Console") -> int:
+    import subprocess
+    from festival_organizer import metadata
+    from festival_organizer.config import load_config
+    from festival_organizer.metadata import get_install_hint
+    from festival_organizer.frame_sampler import _HAS_CV2
+    from importlib.metadata import version as pkg_version, PackageNotFoundError
+
+    errors = warnings = 0
+
+    # --- Tools ---
+    con.print("\n[bold]Tools[/bold]")
+    for attr, display, required in _CD_TOOLS:
+        path = getattr(metadata, attr, None)
+        if path is None:
+            marker = "[red]\u2717[/red]" if required else "[yellow]![/yellow]"
+            con.print(f"  {marker} {display:<14} not found")
+            hint = get_install_hint(display)
+            if hint:
+                con.print(f"    [cyan]{hint}[/cyan]")
+            if required:
+                errors += 1
+            else:
+                warnings += 1
+        else:
+            try:
+                r = subprocess.run(
+                    [path, "--version"], capture_output=True, text=True, timeout=5, check=False,
+                )
+                version_line = _pick_version_line(r.stdout or r.stderr or "")
+                if version_line:
+                    con.print(f"  [green]\u2713[/green] {display:<14} {version_line}")
+                else:
+                    marker = "[red]\u2717[/red]" if required else "[yellow]![/yellow]"
+                    con.print(f"  {marker} {display:<14} version probe returned no output")
+                    if required:
+                        errors += 1
+                    else:
+                        warnings += 1
+            except (OSError, subprocess.SubprocessError) as exc:
+                marker = "[red]\u2717[/red]" if required else "[yellow]![/yellow]"
+                con.print(f"  {marker} {display:<14} failed to run: {exc}")
+                if required:
+                    errors += 1
+                else:
+                    warnings += 1
+
+    # cv2/numpy uses the already-computed _HAS_CV2 flag
+    if _HAS_CV2:
+        con.print("  [green]\u2713[/green] cv2/numpy")
+    else:
+        con.print("  [yellow]![/yellow] cv2/numpy      not found (optional, vision features)")
+        con.print("    [cyan]Install with: pip install opencv-python numpy[/cyan]")
+        warnings += 1
+
+    # --- Config files ---
+    con.print("\n[bold]Config[/bold]")
+    base = Path.home() / ".cratedigger"
+    for filename, desc in _CD_ASSETS:
+        p = base / filename
+        if p.is_file():
+            con.print(f"  [green]\u2713[/green] {p}")
+        else:
+            con.print(f"  [yellow]![/yellow] {p}   not found (optional, {desc})")
+            warnings += 1
+
+    # --- Credentials ---
+    con.print("\n[bold]Credentials[/bold]")
+    try:
+        config = load_config()
+
+        email, password = config.tracklists_credentials
+        if email and password:
+            con.print("  [green]\u2713[/green] 1001TL       email + password configured")
+        else:
+            con.print("  [yellow]![/yellow] 1001TL       email or password missing (optional, tracklist enrichment)")
+            warnings += 1
+
+        cookie_path = Path.home() / ".1001tl-cookies.json"
+        if cookie_path.is_file():
+            con.print(f"  [green]\u2713[/green] 1001TL cookies  {cookie_path}")
+        else:
+            con.print("  [dim]\u007e[/dim] 1001TL cookies  not found, will be created on first login")
+
+        fanart_key = config.fanart_personal_api_key or ""
+        if fanart_key:
+            con.print("  [green]\u2713[/green] fanart.tv    project + personal API key configured")
+        else:
+            con.print("  [dim]\u007e[/dim] fanart.tv    using built-in project API key (personal key not set)")
+
+        if not config.kodi_enabled:
+            con.print("  [dim]\u007e[/dim] Kodi         not configured, skipping")
+        else:
+            con.print(f"  [green]\u2713[/green] Kodi         host: {config.kodi_host}")
+
+    except Exception as exc:
+        con.print(f"  [red]\u2717[/red] Could not load config: {exc}")
+        errors += 1
+
+    # --- Python packages ---
+    con.print("\n[bold]Python packages[/bold]")
+    for pkg in _CD_PACKAGES:
+        try:
+            ver = pkg_version(pkg)
+            con.print(f"  [green]\u2713[/green] {pkg:<20} {ver}")
+        except PackageNotFoundError:
+            con.print(f"  [red]\u2717[/red] {pkg:<20} not found")
+            errors += 1
+
+    # --- Summary ---
+    con.print()
+    if errors == 0 and warnings == 0:
+        con.print("[green]All checks passed.[/green]")
+    else:
+        parts = []
+        if errors:
+            parts.append(f"[red]{errors} {'error' if errors == 1 else 'errors'}[/red]")
+        if warnings:
+            parts.append(f"[yellow]{warnings} {'warning' if warnings == 1 else 'warnings'}[/yellow]")
+        con.print(", ".join(parts) + ".")
+
+    return 1 if errors else 0
+
+
+def _run_check() -> int:
+    return _run_check_impl(make_console())
+
+
+def _check_callback(value: bool) -> None:
+    if value:
+        raise typer.Exit(code=_run_check())
+
+
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
@@ -93,6 +265,13 @@ def main(
         callback=_version_callback,
         is_eager=True,
         help="Show version and exit.",
+    ),
+    check_flag: bool = typer.Option(
+        False,
+        "--check",
+        callback=_check_callback,
+        is_eager=True,
+        help="Verify tools, config, credentials, and Python packages, then exit.",
     ),
 ):
     """CrateDigger: Festival set & concert library manager."""
