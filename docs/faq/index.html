@@ -902,6 +902,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#what-is-the-yellow-message-on-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is the yellow "!" message on startup?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cratedigger-skips-some-of-my-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1284,6 +1295,17 @@
     <span class="md-ellipsis">
       
         A required tool is not found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-the-yellow-message-on-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is the yellow "!" message on startup?
       
     </span>
   </a>
@@ -1681,6 +1703,16 @@
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
 </code></pre></div>
 <p>See <a href="../getting-started/#required-tools">getting started</a> for full installation instructions.</p>
+<h3 id="what-is-the-yellow-message-on-startup">What is the yellow "!" message on startup?</h3>
+<p>CrateDigger checks GitHub Releases at startup and prints a brief notice when a newer version is available. The yellow <code>!</code> line tells you which version is out; the cyan line below it gives you the exact upgrade command to run.</p>
+<p>The printed command is already correct for your install method. The three typical variants are:</p>
+<ul>
+<li>pipx: <code>pipx upgrade cratedigger</code></li>
+<li>uv: <code>uv tool upgrade cratedigger</code></li>
+<li>pip or other: <code>pip install --upgrade git+https://github.com/Rouzax/CrateDigger.git</code></li>
+</ul>
+<p>To suppress the notice, set <code>CRATEDIGGER_NO_UPDATE_CHECK=1</code> in your environment. The check is also silent automatically when stdout is not a TTY (pipes, cron jobs, CI systems).</p>
+<p>The check is designed to stay out of your way. Results are cached locally at <code>~/.cache/cratedigger/update-check.json</code> for 24 hours on success, so it does not hit the network on every run. The network timeout is 2 seconds, and any failure is silently ignored. No usage data is sent; the check is a standard read-only request to the GitHub Releases API.</p>
 <h3 id="cratedigger-skips-some-of-my-files">CrateDigger skips some of my files</h3>
 <p>CrateDigger only processes files with recognized media extensions. The defaults include <code>.mp4</code>, <code>.mkv</code>, <code>.webm</code>, <code>.avi</code>, <code>.mov</code>, <code>.m2ts</code>, <code>.ts</code> for video and common audio formats. Add extensions in the <code>media_extensions</code> config section if your files use something else.</p>
 <p>Also check <code>skip_patterns</code> in your config. Files matching any skip pattern are excluded. The defaults skip <code>*/BDMV/*</code> (Blu-ray disc structures) and <code>Dolby*</code> (demo content).</p>
