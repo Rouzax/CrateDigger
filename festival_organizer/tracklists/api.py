@@ -534,56 +534,45 @@ class TracklistSession:
 
     def _parse_search_results(self, html: str) -> list[SearchResult]:
         """Parse search result HTML into SearchResult objects."""
-        results = []
-        seen_ids = set()
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, "html.parser")
+        results: list[SearchResult] = []
+        seen_ids: set[str] = set()
 
-        # Split by result items (class may include extra names like "bItm action oItm")
-        items = re.split(r'class="bItm\b(?!H)', html)
-
-        for item in items[1:]:  # Skip content before first item
-            # Extract title and URL
-            link_match = re.search(
-                r'<a\s+href="(/tracklist/([^/]+)/[^"]*)"[^>]*>([^<]+)</a>',
-                item
-            )
-            if not link_match:
+        for card in soup.select(".bItm:not(.bItmH)"):
+            link = card.select_one('a[href^="/tracklist/"]')
+            if link is None:
                 continue
+            href_raw = link.get("href", "")
+            href = href_raw if isinstance(href_raw, str) else ""
+            m = re.match(r"/tracklist/([^/]+)/", href)
+            if not m:
+                continue
+            tl_id = m.group(1)
+            title = _html_decode(link.get_text(strip=True))
 
-            url_path = link_match.group(1)
-            tl_id = link_match.group(2)
-            title = _html_decode(link_match.group(3).strip())
-
-            # Skip duplicates and pagination
             if tl_id in seen_ids:
                 continue
             if title in ("Previous", "Next", "First", "Last"):
                 continue
             seen_ids.add(tl_id)
 
-            # Extract duration
             duration_mins = None
-            dur_match = re.search(
-                r'title="play time"[^>]*>.*?</i>((?:\d+h\s*)?(?:\d+m)?)\s*</div>',
-                item, re.DOTALL
-            )
-            if dur_match:
-                duration_mins = _parse_duration_string(dur_match.group(1))
+            dur_el = card.select_one('[title="play time"]')
+            if dur_el is not None:
+                dur_text = dur_el.get_text(" ", strip=True)
+                duration_mins = _parse_duration_string(dur_text)
 
-            # Extract date
             date = None
-            date_match = re.search(
-                r'title="tracklist date"[^>]*>.*?</i>([^<]+)</div>',
-                item, re.DOTALL
-            )
-            if date_match:
-                date_str = date_match.group(1).strip()
-                # Try to normalize to YYYY-MM-DD
+            date_el = card.select_one('[title="tracklist date"]')
+            if date_el is not None:
+                date_str = date_el.get_text(" ", strip=True)
                 date = _normalize_date(date_str)
 
             results.append(SearchResult(
                 id=tl_id,
                 title=title,
-                url=f"{BASE_URL}{url_path}",
+                url=f"{BASE_URL}{href}",
                 duration_mins=duration_mins,
                 date=date,
             ))

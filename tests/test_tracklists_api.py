@@ -199,6 +199,34 @@ def test_parse_search_results_skips_header():
     assert len(results) == 1
 
 
+def test_parse_search_results_survives_class_before_href():
+    """BS4 migration: the title-link regex requires href to be the first
+    attribute after <a>. Real markup often has class or data-* attributes
+    before href; BS4 finds the anchor regardless."""
+    html = '''
+    <div class="bItm action">
+      <a class="tLink bigBtn" href="/tracklist/abc123/real-set.html">Real Set</a>
+    </div>
+    '''
+    session = TracklistSession()
+    results = session._parse_search_results(html)
+    assert len(results) == 1
+    assert results[0].id == "abc123"
+    assert results[0].title == "Real Set"
+
+
+def test_parse_search_results_survives_single_quoted_href():
+    html = '''
+    <div class="bItm">
+      <a href='/tracklist/abc123/real-set.html'>Real Set</a>
+    </div>
+    '''
+    session = TracklistSession()
+    results = session._parse_search_results(html)
+    assert len(results) == 1
+    assert results[0].id == "abc123"
+
+
 def test_parse_search_results_empty():
     session = TracklistSession()
     results = session._parse_search_results("<div>No results</div>")
