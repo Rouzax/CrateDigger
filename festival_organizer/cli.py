@@ -84,6 +84,15 @@ def _version_callback(value: bool) -> None:
         raise typer.Exit()
 
 
+def _run_check() -> int:
+    return 0
+
+
+def _check_callback(value: bool) -> None:
+    if value:
+        raise typer.Exit(code=_run_check())
+
+
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
@@ -93,6 +102,13 @@ def main(
         callback=_version_callback,
         is_eager=True,
         help="Show version and exit.",
+    ),
+    check_flag: bool = typer.Option(
+        False,
+        "--check",
+        callback=_check_callback,
+        is_eager=True,
+        help="Verify tools, config, credentials, and Python packages, then exit.",
     ),
 ):
     """CrateDigger: Festival set & concert library manager."""

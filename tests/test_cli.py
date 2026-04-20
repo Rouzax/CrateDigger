@@ -322,6 +322,15 @@ def test_run_kodi_sync_empty_logs_debug_and_skips_sync(tmp_path, caplog):
     )
 
 
+def test_check_flag_exists_and_exits_zero(monkeypatch):
+    import festival_organizer.cli as cli_mod
+    monkeypatch.setattr(cli_mod, "_run_check", lambda: 0)
+    from typer.testing import CliRunner
+    runner = CliRunner()
+    result = runner.invoke(cli_mod.app, ["--check"])
+    assert result.exit_code == 0
+
+
 def test_run_kodi_sync_album_poster_expands_to_folder_siblings(tmp_path):
     """album_poster display_name should fan out to every video sibling in the folder."""
     cfg = Config(TEST_CONFIG)
