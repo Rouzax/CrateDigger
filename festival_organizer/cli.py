@@ -209,10 +209,9 @@ def _run_check_impl(con: "Console") -> int:
 
         fanart_key = config.fanart_personal_api_key or ""
         if fanart_key:
-            con.print("  [green]\u2713[/green] fanart.tv    personal API key configured")
+            con.print("  [green]\u2713[/green] fanart.tv    project + personal API key configured")
         else:
-            con.print("  [yellow]![/yellow] fanart.tv    personal API key not set (optional, artwork enrichment)")
-            warnings += 1
+            con.print("  [dim]\u007e[/dim] fanart.tv    using built-in project API key (personal key not set)")
 
         if not config.kodi_enabled:
             con.print("  [dim]\u007e[/dim] Kodi         not configured, skipping")
