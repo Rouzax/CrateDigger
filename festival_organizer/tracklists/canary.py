@@ -69,3 +69,20 @@ def check_dj_profile(html: str) -> list[str]:
     if soup.select_one('meta[property="og:image"]') is None:
         missing.append("og:image meta")
     return missing
+
+
+def check_source_info(html: str) -> list[str]:
+    """Check a /source/{id}/{slug}/ page for the markers fetch_source_info reads.
+
+    The cRow > mtb5 div carries the source type (Festival, Club, etc.)
+    and the flags/*.png img carries the country alt text. Both are the
+    defining data for festival-organizer's source routing, so either
+    being absent is worth surfacing.
+    """
+    soup = _soup(html)
+    missing: list[str] = []
+    if soup.select_one("div.cRow > div.mtb5") is None:
+        missing.append("source type mtb5 div")
+    if soup.select_one('img[src*="flags/"]') is None:
+        missing.append("country flag img")
+    return missing

@@ -102,3 +102,35 @@ def test_canary_dj_profile_flags_missing_og_image():
     html = "<html><body>no og meta tag</body></html>"
     missing = canary.check_dj_profile(html)
     assert "og:image meta" in missing
+
+
+# --- check_source_info ---
+
+def test_canary_source_info_healthy():
+    from festival_organizer.tracklists import canary
+    html = '''
+    <div class="h">Tomorrowland 2026</div>
+    <div class="cRow"><div class="mtb5">Open Air / Festival</div></div>
+    <img src="/flags/be.png" alt="Belgium">
+    '''
+    assert canary.check_source_info(html) == []
+
+
+def test_canary_source_info_flags_missing_type_div():
+    from festival_organizer.tracklists import canary
+    html = '''
+    <div class="h">Some Festival</div>
+    <img src="/flags/nl.png" alt="Netherlands">
+    '''
+    missing = canary.check_source_info(html)
+    assert "source type mtb5 div" in missing
+
+
+def test_canary_source_info_flags_missing_country_flag():
+    from festival_organizer.tracklists import canary
+    html = '''
+    <div class="h">Some Festival</div>
+    <div class="cRow"><div class="mtb5">Festival</div></div>
+    '''
+    missing = canary.check_source_info(html)
+    assert "country flag img" in missing
