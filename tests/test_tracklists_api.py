@@ -277,6 +277,24 @@ def test_extract_genres_empty():
     assert _extract_genres("<html>no genres</html>") == []
 
 
+def test_extract_genres_survives_attribute_reorder():
+    """BS4 migration: HTML authors may emit attributes in either order.
+    The pre-migration regex required itemprop before content and silently
+    returned []."""
+    html = '<meta content="House" itemprop="genre">'
+    assert _extract_genres(html) == ["House"]
+
+
+def test_extract_genres_survives_single_quotes():
+    html = "<meta itemprop='genre' content='Techno'>"
+    assert _extract_genres(html) == ["Techno"]
+
+
+def test_extract_genres_survives_intervening_attribute():
+    html = '<meta itemprop="genre" class="dark" content="Trance">'
+    assert _extract_genres(html) == ["Trance"]
+
+
 # --- DJ slug extraction ---
 
 def test_extract_dj_slugs():

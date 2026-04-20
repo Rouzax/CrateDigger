@@ -836,14 +836,17 @@ def _extract_genres(html: str) -> list[str]:
     """Extract genres from itemprop="genre" structured data on the page.
 
     1001TL embeds genre metadata as <meta itemprop="genre" content="..."> tags:
-    - One tracklist-level genre (near numTracks)
-    - Per-track genres for each track in the tracklist
+    one tracklist-level genre (near numTracks), plus per-track genres.
     """
-    matches = re.findall(r'<meta\s+itemprop="genre"\s+content="([^"]+)"', html)
-    seen = set()
-    genres = []
-    for genre in matches:
-        genre = _html_decode(genre)
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+    seen: set[str] = set()
+    genres: list[str] = []
+    for meta in soup.select('meta[itemprop="genre"]'):
+        content = meta.get("content", "")
+        if not content:
+            continue
+        genre = _html_decode(content)
         lower = genre.lower()
         if lower in seen or lower == "tracklist":
             continue
