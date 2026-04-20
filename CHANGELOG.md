@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - `identify` now writes `CRATEDIGGER_1001TL_DATE` in more cases. The event date embedded in the h1 of a 1001Tracklists page (for example, the trailing `2025-10-24` in `Martin Garrix & Alesso @ Red Rocks Amphitheatre, United States 2025-10-24`) was being stripped out during parsing but never captured, so files whose search result lacked a "tracklist date" field ended up with no event-date tag. The h1 date now surfaces as a fallback, so downstream commands stop treating the YouTube publish date as the event date. Affected files self-heal on the next `identify` run.
+- `identify` summary "Metadata tagged" count now reflects all successfully tagged files, not only those linked to a festival. Previously, standalone club sets, concerts, and other non-festival events were processed and tagged but excluded from the count, so the top-line number was smaller than the total processed even when every file had tracklist metadata embedded. The festival breakdown still only lists festival-linked files.
 
 ## [0.13.2] - 2026-04-20
 

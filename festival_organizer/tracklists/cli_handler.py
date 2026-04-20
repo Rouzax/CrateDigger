@@ -251,11 +251,11 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
             stats[stat_key] = stats.get(stat_key, 0) + 1
 
             if stat_key in ("added", "updated", "up_to_date", "previewed"):
+                tagged_count += 1
                 stored = extract_stored_tracklist_info(filepath)
                 fest = stored.get("festival", "") if stored else ""
                 if fest:
                     tagged_festivals[fest] = tagged_festivals.get(fest, 0) + 1
-                    tagged_count += 1
             elif stat_key == "skipped":
                 stored = extract_stored_tracklist_info(filepath)
                 if not stored or not stored.get("url"):
