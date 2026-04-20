@@ -12,6 +12,20 @@ from festival_organizer.operations import OperationResult
 from tests.conftest import TEST_CONFIG
 
 
+def test_version_flag_prints_version_and_exits():
+    """--version should print the installed version and exit 0."""
+    from typer.testing import CliRunner
+
+    from festival_organizer.cli import app
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0
+    from importlib.metadata import version
+
+    assert version("cratedigger") in result.stdout
+
+
 def test_run_no_command():
     """No command prints help and returns 1."""
     assert run([]) == 1

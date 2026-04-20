@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `--version` flag on the CLI.
+
 ## [0.12.7] - 2026-04-15
 
 ### Changed
