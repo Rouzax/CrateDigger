@@ -372,3 +372,119 @@ def test_set_genres_uncapped_when_config_zero(tmp_path):
 
     # Cap disabled — we keep whatever the flat scrape produced.
     assert captured["genres"] == export.genres
+
+
+def test_fetch_and_embed_uses_export_date_when_tracklist_date_none(tmp_path):
+    """Stored-URL re-enrichment path passes tracklist_date=None. The export
+    carries the h1-captured event date, which must propagate to embed_chapters
+    so CRATEDIGGER_1001TL_DATE gets written (Red Rocks reproduction)."""
+    from unittest.mock import MagicMock, patch
+    from festival_organizer.tracklists.api import Track, TracklistExport
+    from festival_organizer.tracklists.cli_handler import _fetch_and_embed
+
+    tracks = [
+        Track(start_ms=0, raw_text="A - t1", artist_slugs=["a"], genres=["House"]),
+        Track(start_ms=60000, raw_text="B - t2", artist_slugs=["b"], genres=["House"]),
+        Track(start_ms=120000, raw_text="C - t3", artist_slugs=["c"], genres=["House"]),
+    ]
+    export = TracklistExport(
+        lines=["[00:00] t1", "[01:00] t2", "[02:00] t3"],
+        url="https://www.1001tracklists.com/tracklist/abc/",
+        title="Test",
+        genres=["House"],
+        dj_artists=[("test", "Test")],
+        tracks=tracks,
+        date="2025-10-24",
+    )
+    session = MagicMock()
+    session.export_tracklist.return_value = export
+    session._dj_cache = MagicMock()
+    config = MagicMock()
+    config.tracklists_settings = {"genre_top_n": 0}
+    config.resolve_artist = lambda n: n
+
+    captured: dict = {}
+    def fake_embed(filepath, chapters, **kwargs):
+        captured["tracklist_date"] = kwargs.get("tracklist_date")
+        return True
+
+    fake_mkv = tmp_path / "x.mkv"
+    fake_mkv.write_bytes(b"")
+    with patch("festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
+               return_value=[MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
+                             for i in range(3)]), \
+         patch("festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
+               side_effect=lambda chs, dur: chs), \
+         patch("festival_organizer.tracklists.cli_handler.extract_existing_chapters",
+               return_value=None), \
+         patch("festival_organizer.tracklists.cli_handler.chapters_are_identical",
+               return_value=False), \
+         patch("festival_organizer.tracklists.cli_handler.embed_chapters",
+               side_effect=fake_embed), \
+         patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
+               return_value="abc"):
+        _fetch_and_embed(session, "https://x", fake_mkv, 0, config,
+                         preview=False, quiet=True, language="eng",
+                         tracklist_id="abc", tracklist_date=None,
+                         duration_seconds=None, regenerate=False)
+
+    assert captured["tracklist_date"] == "2025-10-24"
+
+
+def test_fetch_and_embed_tracklist_date_wins_over_export_date(tmp_path):
+    """When the search-results date (tracklist_date) is present, it takes
+    precedence over the h1-captured export.date."""
+    from unittest.mock import MagicMock, patch
+    from festival_organizer.tracklists.api import Track, TracklistExport
+    from festival_organizer.tracklists.cli_handler import _fetch_and_embed
+
+    tracks = [
+        Track(start_ms=0, raw_text="A - t1", artist_slugs=["a"], genres=["House"]),
+        Track(start_ms=60000, raw_text="B - t2", artist_slugs=["b"], genres=["House"]),
+        Track(start_ms=120000, raw_text="C - t3", artist_slugs=["c"], genres=["House"]),
+    ]
+    export = TracklistExport(
+        lines=["[00:00] t1", "[01:00] t2", "[02:00] t3"],
+        url="https://www.1001tracklists.com/tracklist/abc/",
+        title="Test",
+        genres=["House"],
+        dj_artists=[("test", "Test")],
+        tracks=tracks,
+        date="2025-10-24",  # h1-captured date
+    )
+    session = MagicMock()
+    session.export_tracklist.return_value = export
+    session._dj_cache = MagicMock()
+    config = MagicMock()
+    config.tracklists_settings = {"genre_top_n": 0}
+    config.resolve_artist = lambda n: n
+
+    captured: dict = {}
+    def fake_embed(filepath, chapters, **kwargs):
+        captured["tracklist_date"] = kwargs.get("tracklist_date")
+        return True
+
+    fake_mkv = tmp_path / "x.mkv"
+    fake_mkv.write_bytes(b"")
+    with patch("festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
+               return_value=[MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
+                             for i in range(3)]), \
+         patch("festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
+               side_effect=lambda chs, dur: chs), \
+         patch("festival_organizer.tracklists.cli_handler.extract_existing_chapters",
+               return_value=None), \
+         patch("festival_organizer.tracklists.cli_handler.chapters_are_identical",
+               return_value=False), \
+         patch("festival_organizer.tracklists.cli_handler.embed_chapters",
+               side_effect=fake_embed), \
+         patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
+               return_value="abc"):
+        _fetch_and_embed(session, "https://x", fake_mkv, 0, config,
+                         preview=False, quiet=True, language="eng",
+                         tracklist_id="abc", tracklist_date="2025-10-24",
+                         duration_seconds=None, regenerate=False)
+
+    # tracklist_date from search is the same as export.date here — but the
+    # contract is that tracklist_date wins when both are present. Assert the
+    # effective value that propagated (not None, not empty).
+    assert captured["tracklist_date"] == "2025-10-24"

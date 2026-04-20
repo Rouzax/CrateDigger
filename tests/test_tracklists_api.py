@@ -668,3 +668,49 @@ def test_export_tracklist_suppresses_location_when_event_location_source_present
             export = session.export_tracklist("abc123")
 
     assert export.location == ""
+
+
+def test_export_tracklist_captures_h1_event_date():
+    """The trailing ISO date in the h1 tail is surfaced on export.date so
+    downstream callers can write CRATEDIGGER_1001TL_DATE even when the search
+    result date was missing (Red Rocks reproduction)."""
+    h1_inner = (
+        '<a href="/dj/martingarrix/index.html" class="notranslate ">Martin Garrix</a>'
+        " &amp; "
+        '<a href="/dj/alesso/index.html" class="notranslate ">Alesso</a>'
+        ' @ <a href="/source/venue/red-rocks/index.html">Red Rocks Amphitheatre</a>,'
+        " United States 2025-10-24"
+    )
+    page_html = _build_minimal_page_html(h1_inner)
+
+    cache = _StubSourceCache({
+        "venue": {"name": "Red Rocks Amphitheatre", "type": "Event Location",
+                  "country": "United States"},
+    })
+    session = TracklistSession(source_cache=cache)
+
+    with patch.object(session, "_request",
+                      side_effect=_build_export_mock_responses(page_html)):
+        with patch.object(session, "_fetch_dj_profile",
+                          return_value={"artwork_url": ""}):
+            export = session.export_tracklist("abc123")
+
+    assert export.date == "2025-10-24"
+
+
+def test_export_tracklist_date_empty_when_h1_has_no_date():
+    """When the h1 has no trailing ISO date, export.date stays empty."""
+    h1_inner = (
+        '<a href="/dj/tiesto/index.html" class="notranslate ">Tiesto</a>'
+        ' @ Mainstage, <a href="/source/fgcfkm/tomorrowland/index.html">Tomorrowland</a>'
+    )
+    page_html = _build_minimal_page_html(h1_inner)
+    session = TracklistSession()
+
+    with patch.object(session, "_request",
+                      side_effect=_build_export_mock_responses(page_html)):
+        with patch.object(session, "_fetch_dj_profile",
+                          return_value={"artwork_url": ""}):
+            export = session.export_tracklist("abc123")
+
+    assert export.date == ""

@@ -7,6 +7,7 @@ def test_simple_stage():
     result = _parse_h1_structure(h1)
     assert result["stage_text"] == "kineticFIELD"
     assert ("unkguv", "edc-las-vegas", "EDC Las Vegas") in result["sources"]
+    assert result["date"] == "2025-05-17"
 
 
 def test_set_name_and_stage():
@@ -34,6 +35,7 @@ def test_complex_set_and_venue():
     ids = [s[0] for s in result["sources"]]
     assert "rch80m" in ids
     assert "tslp1m" in ids
+    assert result["date"] == "2026-02-27"
 
 
 def test_no_at_sign():
@@ -229,3 +231,60 @@ def test_bare_promoter_source_is_not_stage():
     result = _parse_h1_structure(h1)
     assert result["stage_text"] == ""
     assert len(result["sources"]) == 2
+
+
+def test_parse_h1_captures_event_date_red_rocks_case():
+    """Martin Garrix & Alesso @ Red Rocks Amphitheatre, United States 2025-10-24.
+
+    The trailing ISO date is the event date. It must be captured into
+    result["date"] so downstream code can write CRATEDIGGER_1001TL_DATE
+    instead of falling back to the YouTube publish date.
+    """
+    h1 = (
+        '<a href="/dj/martingarrix/index.html" class="notranslate ">Martin Garrix</a>'
+        " &amp; "
+        '<a href="/dj/alesso/index.html" class="notranslate ">Alesso</a>'
+        ' @ <a href="/source/abc/red-rocks-amphitheatre/index.html">'
+        "Red Rocks Amphitheatre</a>, United States 2025-10-24"
+    )
+    result = _parse_h1_structure(h1)
+    assert result["date"] == "2025-10-24"
+
+
+def test_parse_h1_captures_date_when_no_source_links():
+    """FISHER @ Bay Oval Park, New Zealand 2026-01-31 (no source links).
+
+    The date must still be captured when the h1 tail has no /source/ link."""
+    h1 = (
+        '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
+        ' @ Bay Oval Park, New Zealand 2026-01-31'
+    )
+    result = _parse_h1_structure(h1)
+    assert result["date"] == "2026-01-31"
+
+
+def test_parse_h1_captures_date_when_only_date_in_tail():
+    """No country, only a trailing date — still captured."""
+    h1 = (
+        '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
+        ' @ Bay Oval Park 2026-01-31'
+    )
+    result = _parse_h1_structure(h1)
+    assert result["date"] == "2026-01-31"
+
+
+def test_parse_h1_date_empty_when_no_trailing_date():
+    """When the h1 has no trailing ISO date, result["date"] is empty."""
+    h1 = (
+        '<a href="/dj/tiesto/index.html" class="notranslate ">Ti&euml;sto</a>'
+        ' @ Mainstage, <a href="/source/fgcfkm/tomorrowland/index.html">Tomorrowland</a>'
+    )
+    result = _parse_h1_structure(h1)
+    assert result["date"] == ""
+
+
+def test_parse_h1_date_empty_when_no_at_sign():
+    """Aftermovie-style h1 with no @ returns early — date is empty."""
+    h1 = 'Mysteryland - Aftermovie 2025-09-15'
+    result = _parse_h1_structure(h1)
+    assert result["date"] == ""

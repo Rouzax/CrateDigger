@@ -488,6 +488,12 @@ def _fetch_and_embed(
     else:
         export = session.export_tracklist(tracklist_id, full_url=url)
 
+    # When the search-results date is absent (or this is a stored-URL
+    # re-enrichment that never carried one), fall back to the event date
+    # captured from the h1 tail so CRATEDIGGER_1001TL_DATE still gets written
+    # instead of ceding to the YouTube DATE tag at display time.
+    effective_date = tracklist_date or export.date or None
+
     # Cap the set-level GENRES tag per config. top_genres_by_frequency counts
     # per-track genre occurrences and keeps the top-N with deterministic
     # first-appearance tie-breaking. Fall back to the flat HTML scrape when
@@ -506,7 +512,7 @@ def _fetch_and_embed(
     except ValueError:
         if not preview:
             # Tag file with URL for future pickup
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=effective_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
         return ("skipped", "skipped", "no chapters parsed")
 
     if not chapters:
@@ -514,7 +520,7 @@ def _fetch_and_embed(
 
     if len(chapters) < 2:
         if not preview:
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
+            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=effective_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
         return ("skipped", "skipped", "only 1 chapter")
 
     # Check for duplicates
@@ -527,7 +533,7 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_URL": export.url,
                 "CRATEDIGGER_1001TL_TITLE": export.title,
                 "CRATEDIGGER_1001TL_ID": tracklist_id or "",
-                "CRATEDIGGER_1001TL_DATE": tracklist_date or "",
+                "CRATEDIGGER_1001TL_DATE": effective_date or "",
                 "CRATEDIGGER_1001TL_GENRES": "|".join(set_genres) if set_genres else "",
                 "CRATEDIGGER_1001TL_DJ_ARTWORK": export.dj_artwork_url,
             }
@@ -612,7 +618,7 @@ def _fetch_and_embed(
             success = embed_chapters(
                 filepath, chapters,
                 tracklist_url=export.url, tracklist_title=export.title,
-                tracklist_id=tracklist_id, tracklist_date=tracklist_date,
+                tracklist_id=tracklist_id, tracklist_date=effective_date,
                 genres=set_genres, dj_artwork_url=export.dj_artwork_url,
                 stage_text=export.stage_text,
                 sources_by_type=export.sources_by_type,
@@ -641,7 +647,7 @@ def _fetch_and_embed(
             f"[{index}/{total}] Embedding {len(chapters)} chapters",
             filename=filepath.name,
         )
-    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=tracklist_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
+    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=effective_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
     if success:
         return ("added", "done", f"{export.title} . {len(chapters)} chapters")
     return ("error", "error", "mkvpropedit failed")

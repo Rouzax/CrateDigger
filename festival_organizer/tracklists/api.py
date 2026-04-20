@@ -89,6 +89,7 @@ class TracklistExport:
     location: str = ""
     source_type: str = ""
     tracks: list[Track] = field(default_factory=list)
+    date: str = ""
 
 
 def top_genres_by_frequency(tracks: list["Track"], n: int = 5) -> list[str]:
@@ -407,6 +408,7 @@ class TracklistSession:
         country = ""
         location = ""
         source_type_str = ""
+        h1_date = ""
         if h1_match:
             h1_info = _parse_h1_structure(h1_match.group(1))
             stage_text = h1_info["stage_text"]
@@ -415,6 +417,8 @@ class TracklistSession:
                 country = h1_info["country"]
             if h1_info.get("location"):
                 location = h1_info["location"]
+            if h1_info.get("date"):
+                h1_date = h1_info["date"]
 
             if h1_info["sources"] and self._source_cache:
                 for sid, slug, display_name in h1_info["sources"]:
@@ -479,6 +483,7 @@ class TracklistSession:
             country=country, location=location,
             source_type=source_type_str,
             tracks=tracks,
+            date=h1_date,
         )
 
     def _request(self, method: str, url: str, data: dict | None = None,
@@ -733,9 +738,13 @@ def _parse_h1_structure(h1_html: str) -> dict:
         location: str, the remaining middle text from the tail after
             country and trailing ISO date are stripped. Empty when the tail
             carries nothing other than country + date.
+        date: str, ISO date (YYYY-MM-DD) captured from the trailing tail of
+            the h1. Empty when the tail carries no date. Used as a fallback
+            event-date source when the search-results "tracklist date" field
+            is missing.
     """
     result: dict = {"stage_text": "", "sources": [], "dj_artists": [],
-                    "country": "", "location": ""}
+                    "country": "", "location": "", "date": ""}
 
     if "@" not in h1_html:
         return result
@@ -795,6 +804,9 @@ def _parse_h1_structure(h1_html: str) -> dict:
 
     tail = re.sub(r"<[^>]+>", "", tail_raw)
     tail = tail.lstrip().lstrip(",").strip()
+    date_match = re.search(r"(\d{4}-\d{2}-\d{2})\s*$", tail)
+    if date_match:
+        result["date"] = date_match.group(1)
     tail = re.sub(r"[,\s]*\d{4}-\d{2}-\d{2}\s*$", "", tail).strip()
 
     if "," in tail:

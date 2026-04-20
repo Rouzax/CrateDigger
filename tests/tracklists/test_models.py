@@ -19,3 +19,15 @@ def test_tracklist_export_tracks_defaults_to_empty():
     # tracks field should have a default_factory so existing call sites keep working
     te = TracklistExport(lines=[], url="", title="")
     assert te.tracks == []
+
+
+def test_tracklist_export_date_defaults_to_empty_string():
+    """The date field defaults to empty so existing call sites keep working."""
+    te = TracklistExport(lines=[], url="", title="")
+    assert te.date == ""
+
+
+def test_tracklist_export_date_accepts_iso_date():
+    """The date field carries the event date captured from the h1 tail."""
+    te = TracklistExport(lines=[], url="", title="", date="2025-10-24")
+    assert te.date == "2025-10-24"
