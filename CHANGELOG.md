@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [0.13.4] - 2026-04-20
+## [0.13.3] - 2026-04-20
+
+### Added
+
+- `--check` flag on the CLI. Verifies that required external tools (mediainfo, ffprobe, mkvextract, mkvpropedit, mkvmerge), config files, API credentials, and Python packages are present and reachable. Prints a grouped report with per-item status markers and a summary line. Exits non-zero if any required check fails; warnings for optional items do not affect the exit code. Use after a fresh install, after updating configuration, or in CI to validate the environment before a scheduled run.
+- `scripts/release.sh` cuts releases by validating `pyproject.toml` and `CHANGELOG.md`, then creating and pushing the `chore: release X.Y.Z` commit that triggers the release workflow. Use this instead of hand-writing release commits; the workflow matches the commit subject against a strict regex and silently skips near-misses.
 
 ### Fixed
 
