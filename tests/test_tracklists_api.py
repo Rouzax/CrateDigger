@@ -444,6 +444,24 @@ def test_search_fires_canary_on_missing_skeleton(caplog):
     assert "query='anything'" in msg
 
 
+def test_fetch_source_info_fires_canary_on_broken_page(caplog):
+    """When a source page lacks both the mtb5 type div and the flag img,
+    the canary names both missing selectors."""
+    session = TracklistSession()
+    resp = MagicMock(text="<html><body>no mtb5, no flag</body></html>")
+    with patch.object(session, "_request", return_value=resp):
+        with caplog.at_level(logging.WARNING,
+                             logger="festival_organizer.tracklists.api"):
+            session.fetch_source_info("123", "some-venue")
+    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert len(canary_warnings) == 1
+    msg = canary_warnings[0].message
+    assert "source info" in msg
+    assert "source type mtb5 div" in msg
+    assert "country flag img" in msg
+    assert "123/some-venue" in msg
+
+
 def test_fetch_dj_profile_fires_canary_on_broken_page(caplog):
     """When a DJ page has no og:image meta, the canary fires with the URL."""
     session = TracklistSession()
@@ -575,7 +593,7 @@ def test_fetch_source_info_extracts_name_type_country():
     <div class="cRow"><div class="mtb5">Festival</div></div>
     <img src="/flags/be.png" alt="Belgium" class="flag">
     '''
-    session = TracklistSession.__new__(TracklistSession)
+    session = TracklistSession()
     resp = MagicMock(text=html)
     with patch.object(session, "_request", return_value=resp):
         info = session.fetch_source_info("123", "tomorrowland-2026")
@@ -593,7 +611,7 @@ def test_fetch_source_info_parses_reordered_flag_attrs():
     <div class="cRow"><div class="mtb5">Open Air / Festival</div></div>
     <img alt="United States" class="flag" src="/flags/us.png">
     '''
-    session = TracklistSession.__new__(TracklistSession)
+    session = TracklistSession()
     resp = MagicMock(text=html)
     with patch.object(session, "_request", return_value=resp):
         info = session.fetch_source_info("1", "ultra-miami")
@@ -603,7 +621,7 @@ def test_fetch_source_info_parses_reordered_flag_attrs():
 
 def test_fetch_source_info_falls_back_to_slug_when_name_missing():
     html = '<div class="cRow"><div class="mtb5">Club</div></div>'
-    session = TracklistSession.__new__(TracklistSession)
+    session = TracklistSession()
     resp = MagicMock(text=html)
     with patch.object(session, "_request", return_value=resp):
         info = session.fetch_source_info("99", "warehouse-project")

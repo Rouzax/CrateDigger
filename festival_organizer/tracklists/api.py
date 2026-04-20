@@ -628,6 +628,12 @@ class TracklistSession:
         from bs4 import BeautifulSoup
         url = f"{BASE_URL}/source/{source_id}/{slug}/index.html"
         resp = self._request("GET", url, max_retries=2)
+        self._run_canary(
+            "source info",
+            canary.check_source_info(resp.text),
+            url,
+            f"(source='{source_id}/{slug}')",
+        )
         soup = BeautifulSoup(resp.text, "html.parser")
 
         type_el = soup.select_one("div.cRow > div.mtb5")
