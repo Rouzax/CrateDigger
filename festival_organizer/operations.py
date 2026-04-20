@@ -497,9 +497,15 @@ class AlbumPosterOperation(Operation):
                 return None
 
             from festival_organizer.tracklists.api import TracklistSession, _extract_dj_slugs
+            from festival_organizer.tracklists import canary
             api = TracklistSession()
             api.login(email, password)
             resp = api._request("GET", tracklist_url)
+            api._run_canary(
+                "tracklist page",
+                canary.check_tracklist_page(resp.text),
+                tracklist_url,
+            )
             slugs = _extract_dj_slugs(resp.text)
             if not slugs:
                 logger.debug("No DJ slugs found on tracklist page")
