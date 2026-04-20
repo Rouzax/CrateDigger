@@ -134,15 +134,21 @@ def _run_check_impl(con: "Console") -> int:
             else:
                 warnings += 1
         else:
-            # mkvtoolnix tools use --version; others use -version
-            is_mkv = display in {"mkvextract", "mkvpropedit", "mkvmerge"}
-            flag = "--version" if is_mkv else "-version"
             try:
                 r = subprocess.run(
-                    [path, flag], capture_output=True, text=True, timeout=5, check=False,
+                    [path, "--version"], capture_output=True, text=True, timeout=5, check=False,
                 )
-                first = (r.stdout or r.stderr or "").splitlines()[0].strip()
-                con.print(f"  [green]\u2713[/green] {display:<14} {first}")
+                first = (r.stdout or r.stderr or "").splitlines()
+                first_line = first[0].strip() if first else ""
+                if first_line:
+                    con.print(f"  [green]\u2713[/green] {display:<14} {first_line}")
+                else:
+                    marker = "[red]\u2717[/red]" if required else "[yellow]![/yellow]"
+                    con.print(f"  {marker} {display:<14} version probe returned no output")
+                    if required:
+                        errors += 1
+                    else:
+                        warnings += 1
             except (OSError, subprocess.SubprocessError) as exc:
                 marker = "[red]\u2717[/red]" if required else "[yellow]![/yellow]"
                 con.print(f"  {marker} {display:<14} failed to run: {exc}")
