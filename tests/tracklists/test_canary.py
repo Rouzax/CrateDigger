@@ -87,3 +87,18 @@ def test_canary_search_results_flags_missing_skeleton():
     html = "<html><body>totally unrelated page, no search input</body></html>"
     missing = canary.check_search_results(html)
     assert "search form skeleton" in missing
+
+
+# --- check_dj_profile ---
+
+def test_canary_dj_profile_healthy():
+    from festival_organizer.tracklists import canary
+    html = '<meta property="og:image" content="https://cdn.1001tracklists.com/dj.jpg">'
+    assert canary.check_dj_profile(html) == []
+
+
+def test_canary_dj_profile_flags_missing_og_image():
+    from festival_organizer.tracklists import canary
+    html = "<html><body>no og meta tag</body></html>"
+    missing = canary.check_dj_profile(html)
+    assert "og:image meta" in missing

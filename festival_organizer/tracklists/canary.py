@@ -59,3 +59,13 @@ def check_search_results(html: str) -> list[str]:
     if soup.select_one('input[name="main_search"]') is None:
         missing.append("search form skeleton")
     return missing
+
+
+def check_dj_profile(html: str) -> list[str]:
+    """Check a /dj/{slug}/ page for the og:image meta that _parse_dj_profile
+    reads as the primary artwork source."""
+    soup = _soup(html)
+    missing: list[str] = []
+    if soup.select_one('meta[property="og:image"]') is None:
+        missing.append("og:image meta")
+    return missing
