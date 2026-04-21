@@ -19,6 +19,7 @@ from pathlib import Path
 
 import requests
 
+from festival_organizer import paths
 from festival_organizer.cache_ttl import hashed_jitter_factor
 from festival_organizer.config import Config
 from festival_organizer.fanart import lookup_mbid
@@ -247,12 +248,6 @@ class PosterOperation(Operation):
             return OperationResult(self.name, "error", str(e))
 
 
-def _safe_artist_dir(artist: str) -> Path:
-    """Resolve per-artist cache directory under ~/.cratedigger/artists/."""
-    safe = "".join(c if c.isalnum() or c in " ._-()&" else "_" for c in artist).strip()
-    return Path.home() / ".cratedigger" / "artists" / safe
-
-
 class AlbumPosterOperation(Operation):
     name = "posters"
     display_name = "album_poster"
@@ -340,7 +335,7 @@ class AlbumPosterOperation(Operation):
                     return None  # Multi-artist folder, skip fanart background
 
         # Single artist (or couldn't determine); look for their fanart
-        candidate = _safe_artist_dir(artist) / "fanart.jpg"
+        candidate = paths.artist_cache_dir(artist) / "fanart.jpg"
         result = candidate if candidate.exists() else None
         logger.info("Album poster: 1 artist in folder -> %s",
                     "artist style" if result else "festival style (no fanart)")
@@ -354,8 +349,8 @@ class AlbumPosterOperation(Operation):
         ext = url.rsplit(".", 1)[-1].split("?")[0][:4]
         if ext not in ("jpg", "jpeg", "png", "webp"):
             ext = "jpg"
-        cache_dir = Path.home() / ".cratedigger" / cache_subdir
-        cached = cache_dir / f"{h}.{ext}"
+        artwork_cache_dir = paths.cache_dir() / cache_subdir
+        cached = artwork_cache_dir / f"{h}.{ext}"
         if cached.exists():
             age_days = (time.time() - cached.stat().st_mtime) / 86400
             effective_ttl = self._ttl_days * hashed_jitter_factor(cached.name)
@@ -367,7 +362,7 @@ class AlbumPosterOperation(Operation):
         try:
             resp = requests.get(url, timeout=15)
             resp.raise_for_status()
-            cache_dir.mkdir(parents=True, exist_ok=True)
+            paths.ensure_parent(cached)
             cached.write_bytes(resp.content)
             if max_width:
                 from PIL import Image
@@ -387,7 +382,7 @@ class AlbumPosterOperation(Operation):
         """Download DJ artwork, convert to JPEG, crop/resize, save to artist dir."""
         if not url or not artist:
             return None
-        artist_dir = _safe_artist_dir(artist)
+        artist_dir = paths.artist_cache_dir(artist)
         cached = artist_dir / "dj-artwork.jpg"
         if cached.exists():
             age_days = (time.time() - cached.stat().st_mtime) / 86400
@@ -703,7 +698,7 @@ class FanartOperation(Operation):
 
     def _artist_dir(self, artist: str) -> Path:
         """Resolve per-artist directory."""
-        return _safe_artist_dir(artist)
+        return paths.artist_cache_dir(artist)
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         if not self.config.fanart_enabled or not self.config.fanart_project_api_key:
