@@ -33,15 +33,12 @@ You need a free account at [1001Tracklists](https://www.1001tracklists.com/). Co
 
 ### Config file
 
-Add your email and password under the `tracklists` section in `~/.cratedigger/config.json`:
+Add your email and password under the `[tracklists]` section in your `config.toml` (`~/CrateDigger/config.toml` on Linux, `Documents\CrateDigger\config.toml` on Windows):
 
-```json
-{
-    "tracklists": {
-        "email": "your@email.com",
-        "password": "your-password"
-    }
-}
+```toml
+[tracklists]
+email = "your@email.com"
+password = "your-password"
 ```
 
 ### Environment variables
