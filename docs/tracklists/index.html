@@ -856,6 +856,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-scraping-canary-warning-appears-in-the-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A "Scraping canary" WARNING appears in the output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1092,6 +1120,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-scraping-canary-warning-appears-in-the-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A "Scraping canary" WARNING appears in the output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1256,6 +1312,18 @@
 <li><strong>Source cache:</strong> festival, venue, radio, and conference names. Used to classify tracklists by source type.</li>
 </ul>
 <p>Each cache entry's actual lifetime jitters by ±20% around the configured base (see <a href="../configuration/#cache-ttl">Configuration: cache TTL</a>), so a bulk first-run fill does not cause all entries to expire at the same time.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="a-scraping-canary-warning-appears-in-the-output">A "Scraping canary" WARNING appears in the output</h3>
+<p>You may see a line like this:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>WARNING  Scraping canary: tracklist page missing selectors [&#39;tlpItem row&#39;, &#39;cue_seconds input&#39;] at https://www.1001tracklists.com/tracklist/abc123/some-set/
+</code></pre></div>
+<p>This means 1001tracklists.com has changed its page structure in a way that the parser no longer finds the expected data. Enrichment for that page type is likely to be incomplete until CrateDigger is updated to match the new layout. Affected fields may include genres, event date, stage name, or DJ artwork, depending on which selectors are missing.</p>
+<p><strong>What to do:</strong></p>
+<ol>
+<li>Report the issue at <a href="https://github.com/Rouzax/CrateDigger/issues">github.com/Rouzax/CrateDigger/issues</a>. Paste the full WARNING line so the selector names and URL are visible.</li>
+<li>Expect that files processed after this point may be missing some enrichment fields until a patched version is released.</li>
+</ol>
+<p><strong>What you do not need to worry about:</strong> the scraper still tries to extract whatever it can, so chapter markers and core tracklist data may still be present even when the canary fires. One WARNING is emitted per unique breakage per run, regardless of how many files are processed, so a single warning does not mean every file in the batch is broken.</p>
 <h2 id="see-also">See also</h2>
 <ul>
 <li><a href="../commands/identify/">identify command</a>: command reference, flags, interactive and auto selection, examples</li>
