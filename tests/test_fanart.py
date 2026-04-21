@@ -118,6 +118,16 @@ def test_mbid_cache_uses_platformdirs_cache_dir(tmp_path):
     assert (tmp_path / "mbid_cache.json").is_file()
 
 
+def test_artist_mbid_overrides_uses_data_dir(tmp_path):
+    from festival_organizer.fanart import ArtistMbidOverrides
+    override_file = tmp_path / "artist_mbids.json"
+    override_file.write_text('{"Tiesto": "tiesto-mbid"}')
+    with patch("festival_organizer.fanart.paths") as mock_paths:
+        mock_paths.artist_mbids_file.return_value = override_file
+        overrides = ArtistMbidOverrides()
+    assert overrides.get("Tiesto") == "tiesto-mbid"
+
+
 # --- Image selection tests ---
 
 def test_pick_best_logo_prefers_english():

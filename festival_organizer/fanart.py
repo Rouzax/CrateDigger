@@ -133,7 +133,10 @@ class ArtistMbidOverrides:
     _FILENAME = "artist_mbids.json"
 
     def __init__(self, overrides_dir: Path | None = None):
-        self._path = (overrides_dir or (Path.home() / ".cratedigger")) / self._FILENAME
+        if overrides_dir is not None:
+            self._path = overrides_dir / self._FILENAME
+        else:
+            self._path = paths.artist_mbids_file()
         self._data: dict[str, str] = {}
         self._load()
 
