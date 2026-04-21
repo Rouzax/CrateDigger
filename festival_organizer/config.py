@@ -14,10 +14,12 @@ import json
 import logging
 import re
 import sys
+import tomllib
 from copy import deepcopy
 from fnmatch import fnmatch
 from pathlib import Path
 
+from festival_organizer import paths
 from festival_organizer.normalization import strip_diacritics
 
 logger = logging.getLogger(__name__)
@@ -167,14 +169,25 @@ class Config:
         self._ext_cache: dict[str, dict] = {}
 
     def _load_external_config(self, filename: str, defaults: dict) -> dict:
-        """Load config from external JSON file, with caching."""
+        """Load a curated JSON data file from library override or user data dir.
+
+        Search order:
+          1. ``self._config_dir / filename`` (typically the library-local
+             ``.cratedigger/`` dir).
+          2. ``paths.data_dir() / filename`` (the visible user data dir, e.g.
+             ``Documents/CrateDigger/`` on Windows or ``~/CrateDigger/`` on
+             Linux).
+
+        Curated data files (festivals.json, artists.json, artist_mbids.json)
+        stay JSON on purpose; only ``config.toml`` switched to TOML.
+        """
         if filename in self._ext_cache:
             return self._ext_cache[filename]
 
         candidates: list[Path] = []
         if self._config_dir:
             candidates.append(self._config_dir / filename)
-        candidates.append(Path.home() / ".cratedigger" / filename)
+        candidates.append(paths.data_dir() / filename)
 
         for path in candidates:
             if path.exists():
@@ -529,51 +542,46 @@ class Config:
 
 def load_config(
     config_path: Path | None = None,
-    user_config_dir: Path | None = None,
+    user_config_file: Path | None = None,
     library_config_dir: Path | None = None,
 ) -> Config:
-    """Load config with three-layer merge: built-in < user < library.
+    """Load config with two-layer merge: built-in defaults < user TOML < library TOML.
 
-    If config_path is provided (legacy), loads from that file as user layer.
-    Otherwise:
-      - user_config_dir defaults to ~/.cratedigger/
-      - library_config_dir is typically .cratedigger/ at library root
+    - ``user_config_file`` defaults to ``paths.config_file()`` (the visible
+      ``config.toml`` in the user data dir, e.g.
+      ``Documents/CrateDigger/config.toml`` on Windows or
+      ``~/CrateDigger/config.toml`` on Linux).
+    - ``library_config_dir`` is typically ``{library}/.cratedigger/``; its
+      ``config.toml`` overrides user values.
+    - ``config_path`` is retained for explicit-file callers (tests,
+      ``--config`` CLI flag) and, when set, overrides the user/library
+      lookup entirely: only that file is merged on top of defaults.
     """
     data = deepcopy(DEFAULT_CONFIG)
 
-    # Legacy path support
-    if config_path and config_path.exists():
+    def _merge_toml(path: Path) -> None:
+        if not path.is_file():
+            return
         try:
-            with open(config_path, "r", encoding="utf-8") as f:
-                _deep_merge(data, json.load(f))
-        except (json.JSONDecodeError, OSError) as e:
-            print(f"Warning: could not read {config_path}: {e}", file=sys.stderr)
+            with open(path, "rb") as f:
+                layer = tomllib.load(f)
+            _deep_merge(data, layer)
+        except (tomllib.TOMLDecodeError, OSError) as e:
+            print(f"Warning: could not read {path}: {e}", file=sys.stderr)
+
+    if config_path is not None:
+        _merge_toml(config_path)
         _migrate_layout_names(data)
         return Config(data, config_dir=config_path.parent)
 
-    # Layer 2: User config
-    if user_config_dir is None:
-        user_config_dir = Path.home() / ".cratedigger"
-    user_file = user_config_dir / "config.json"
-    if user_file.exists():
-        try:
-            with open(user_file, "r", encoding="utf-8") as f:
-                _deep_merge(data, json.load(f))
-        except (json.JSONDecodeError, OSError) as e:
-            print(f"Warning: could not read {user_file}: {e}", file=sys.stderr)
+    user_file = user_config_file if user_config_file is not None else paths.config_file()
+    _merge_toml(user_file)
 
-    # Layer 3: Library config
     if library_config_dir is not None:
-        lib_file = library_config_dir / "config.json"
-        if lib_file.exists():
-            try:
-                with open(lib_file, "r", encoding="utf-8") as f:
-                    _deep_merge(data, json.load(f))
-            except (json.JSONDecodeError, OSError) as e:
-                print(f"Warning: could not read {lib_file}: {e}", file=sys.stderr)
+        _merge_toml(library_config_dir / "config.toml")
 
     _migrate_layout_names(data)
-    return Config(data, config_dir=library_config_dir or user_config_dir)
+    return Config(data, config_dir=library_config_dir or user_file.parent)
 
 
 def _migrate_layout_names(data: dict) -> None:

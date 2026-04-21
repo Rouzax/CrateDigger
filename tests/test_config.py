@@ -1,7 +1,8 @@
-import json
 import tempfile
 from pathlib import Path
-from festival_organizer.config import Config, load_config, DEFAULT_CONFIG
+from unittest.mock import patch
+
+from festival_organizer.config import Config, DEFAULT_CONFIG, load_config
 from tests.conftest import TEST_CONFIG
 
 
@@ -125,16 +126,19 @@ def test_config_force_concert_patterns():
     assert not cfg.is_forced_concert("AMF/2024/file.mkv")
 
 
-def test_load_config_from_file():
-    data = {
-        "default_layout": "festival_first",
-        "festival_aliases": {"Tomorrowland": ["TML"]},
-    }
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-        json.dump(data, f)
+def test_load_config_from_toml_file():
+    """load_config(config_path=...) merges a TOML file over built-in defaults."""
+    toml_text = (
+        'default_layout = "festival_first"\n'
+        '\n'
+        '[festival_aliases]\n'
+        'Tomorrowland = ["TML"]\n'
+    )
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+        f.write(toml_text)
         f.flush()
         cfg = load_config(Path(f.name))
-    # Custom value overrides default
+    # Custom value overrides default (and triggers legacy rename)
     assert cfg.default_layout == "festival_nested"
     # Custom alias merged
     assert cfg.resolve_festival_alias("TML") == "Tomorrowland"
@@ -158,9 +162,13 @@ def test_config_known_festivals():
     assert "EDC" in festivals
 
 
-def test_load_config_builtin_defaults():
+def test_load_config_builtin_defaults(tmp_path):
     """Built-in defaults load when no files exist."""
-    config = load_config()
+    # Point paths.config_file() at a non-existent file so nothing from the
+    # developer's real ~/CrateDigger/config.toml leaks in.
+    with patch("festival_organizer.config.paths") as mock_paths:
+        mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
+        config = load_config()
     assert config.default_layout == "artist_flat"
     assert "artist_flat" in config.layouts
     assert "festival_flat" in config.layouts
@@ -169,15 +177,19 @@ def test_load_config_builtin_defaults():
 
 
 def test_load_config_user_layer(tmp_path):
-    """User config at ~/.cratedigger/config.json merges over built-in."""
-    user_dir = tmp_path / ".cratedigger"
+    """User TOML at paths.config_file() merges over built-in."""
+    user_dir = tmp_path / "user"
     user_dir.mkdir()
-    user_config = user_dir / "config.json"
-    user_config.write_text(json.dumps({
-        "festival_aliases": {"My Festival": ["My Fest"]},
-        "tracklists": {"email": "me@example.com", "password": "secret"},
-    }))
-    config = load_config(user_config_dir=user_dir)
+    user_config = user_dir / "config.toml"
+    user_config.write_text(
+        '[festival_aliases]\n'
+        '"My Festival" = ["My Fest"]\n'
+        '\n'
+        '[tracklists]\n'
+        'email = "me@example.com"\n'
+        'password = "secret"\n'
+    )
+    config = load_config(user_config_file=user_config)
     # User alias merged in
     assert config.resolve_festival_alias("My Fest") == "My Festival"
     # Built-in aliases still present
@@ -187,34 +199,36 @@ def test_load_config_user_layer(tmp_path):
 
 
 def test_load_config_library_layer(tmp_path):
-    """Library config merges over user config."""
+    """Library config.toml merges over user config."""
     lib_dir = tmp_path / ".cratedigger"
     lib_dir.mkdir()
-    lib_config = lib_dir / "config.json"
-    lib_config.write_text(json.dumps({"default_layout": "festival_flat"}))
-    config = load_config(library_config_dir=lib_dir)
+    lib_config = lib_dir / "config.toml"
+    lib_config.write_text('default_layout = "festival_flat"\n')
+    # Point the user layer at a non-existent file.
+    with patch("festival_organizer.config.paths") as mock_paths:
+        mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
+        config = load_config(library_config_dir=lib_dir)
     assert config.default_layout == "festival_flat"
 
 
 def test_load_config_merge_order(tmp_path):
     """Library overrides user overrides built-in."""
-    user_dir = tmp_path / "user" / ".cratedigger"
+    user_dir = tmp_path / "user"
     user_dir.mkdir(parents=True)
-    (user_dir / "config.json").write_text(json.dumps({
-        "default_layout": "artist_nested",
-    }))
+    user_file = user_dir / "config.toml"
+    user_file.write_text('default_layout = "artist_nested"\n')
     lib_dir = tmp_path / "lib" / ".cratedigger"
     lib_dir.mkdir(parents=True)
-    (lib_dir / "config.json").write_text(json.dumps({
-        "default_layout": "festival_nested",
-    }))
-    config = load_config(user_config_dir=user_dir, library_config_dir=lib_dir)
+    (lib_dir / "config.toml").write_text('default_layout = "festival_nested"\n')
+    config = load_config(user_config_file=user_file, library_config_dir=lib_dir)
     assert config.default_layout == "festival_nested"
 
 
-def test_new_flat_layouts():
+def test_new_flat_layouts(tmp_path):
     """Built-in defaults include flat layout templates."""
-    config = load_config()
+    with patch("festival_organizer.config.paths") as mock_paths:
+        mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
+        config = load_config()
     # artist_flat
     tpl = config.get_layout_template("festival_set", "artist_flat")
     assert tpl == "{artist}"
@@ -228,9 +242,11 @@ def test_new_flat_layouts():
     assert tpl == "{artist}"
 
 
-def test_renamed_nested_layouts():
+def test_renamed_nested_layouts(tmp_path):
     """Old layout names renamed: artist_first -> artist_nested, etc."""
-    config = load_config()
+    with patch("festival_organizer.config.paths") as mock_paths:
+        mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
+        config = load_config()
     tpl = config.get_layout_template("festival_set", "artist_nested")
     assert tpl == "{artist}/{festival}{ edition}/{year}"
     tpl = config.get_layout_template("festival_set", "festival_nested")
@@ -255,29 +271,31 @@ def test_tracklists_credentials_env_override(monkeypatch):
     assert config.tracklists_credentials == ("env@b.com", "envpw")
 
 
-def test_load_config_malformed_json(tmp_path, capsys):
-    """Malformed user config prints warning and falls back to defaults."""
-    user_dir = tmp_path / ".cratedigger"
+def test_load_config_malformed_toml(tmp_path, capsys):
+    """Malformed user TOML prints warning and falls back to defaults."""
+    user_dir = tmp_path / "user"
     user_dir.mkdir()
-    (user_dir / "config.json").write_text("{bad json!!!")
-    config = load_config(user_config_dir=user_dir)
+    user_file = user_dir / "config.toml"
+    user_file.write_text("this is not [valid toml")
+    config = load_config(user_config_file=user_file)
     assert config.default_layout == "artist_flat"  # fell back to default
     captured = capsys.readouterr()
-    assert "config.json" in captured.err
+    assert "config.toml" in captured.err
 
 
-def test_load_config_malformed_library_json(tmp_path, capsys):
-    """Malformed library config prints warning, user config still applies."""
-    user_dir = tmp_path / "user" / ".cratedigger"
+def test_load_config_malformed_library_toml(tmp_path, capsys):
+    """Malformed library TOML prints warning, user config still applies."""
+    user_dir = tmp_path / "user"
     user_dir.mkdir(parents=True)
-    (user_dir / "config.json").write_text('{"default_layout": "festival_flat"}')
+    user_file = user_dir / "config.toml"
+    user_file.write_text('default_layout = "festival_flat"\n')
     lib_dir = tmp_path / "lib" / ".cratedigger"
     lib_dir.mkdir(parents=True)
-    (lib_dir / "config.json").write_text("not json")
-    config = load_config(user_config_dir=user_dir, library_config_dir=lib_dir)
+    (lib_dir / "config.toml").write_text("not = valid = toml = syntax")
+    config = load_config(user_config_file=user_file, library_config_dir=lib_dir)
     assert config.default_layout == "festival_flat"  # user layer applied
     captured = capsys.readouterr()
-    assert "config.json" in captured.err
+    assert "config.toml" in captured.err
 
 
 def test_resolve_artist_alias():
@@ -396,15 +414,72 @@ def test_invert_alias_map_circular_flat_warns(caplog):
 def test_load_config_unreadable_file(tmp_path, capsys):
     """Unreadable config prints warning and falls back to defaults."""
     import os
-    user_dir = tmp_path / ".cratedigger"
+    user_dir = tmp_path / "user"
     user_dir.mkdir()
-    cfg_file = user_dir / "config.json"
-    cfg_file.write_text('{"default_layout": "festival_flat"}')
+    cfg_file = user_dir / "config.toml"
+    cfg_file.write_text('default_layout = "festival_flat"\n')
     os.chmod(cfg_file, 0o000)
     try:
-        config = load_config(user_config_dir=user_dir)
+        config = load_config(user_config_file=cfg_file)
         assert config.default_layout == "artist_flat"  # fell back to default
         captured = capsys.readouterr()
-        assert "config.json" in captured.err
+        assert "config.toml" in captured.err
     finally:
         os.chmod(cfg_file, 0o644)
+
+
+class TestTomlConfigLoading:
+    """Focused tests for the TOML loader contract (uses paths module)."""
+
+    def test_loads_toml_config_from_user_dir(self, tmp_path):
+        user_dir = tmp_path / "user"
+        user_dir.mkdir()
+        (user_dir / "config.toml").write_text(
+            'default_layout = "festival_nested"\n'
+            '\n'
+            '[kodi]\n'
+            'enabled = true\n'
+            'host = "192.168.1.10"\n'
+        )
+        with patch("festival_organizer.config.paths") as mock_paths:
+            mock_paths.config_file.return_value = user_dir / "config.toml"
+            cfg = load_config()
+        assert cfg.default_layout == "festival_nested"
+        assert cfg._data["kodi"]["enabled"] is True
+        assert cfg._data["kodi"]["host"] == "192.168.1.10"
+
+    def test_library_overrides_user(self, tmp_path):
+        user_dir = tmp_path / "user"
+        user_dir.mkdir()
+        (user_dir / "config.toml").write_text(
+            'default_layout = "artist_nested"\n[kodi]\nenabled = false\n'
+        )
+        library_dir = tmp_path / "library" / ".cratedigger"
+        library_dir.mkdir(parents=True)
+        (library_dir / "config.toml").write_text(
+            '[kodi]\nenabled = true\nhost = "library.local"\n'
+        )
+        with patch("festival_organizer.config.paths") as mock_paths:
+            mock_paths.config_file.return_value = user_dir / "config.toml"
+            cfg = load_config(library_config_dir=library_dir)
+        assert cfg.default_layout == "artist_nested"
+        assert cfg._data["kodi"]["enabled"] is True
+        assert cfg._data["kodi"]["host"] == "library.local"
+
+    def test_missing_config_uses_defaults(self, tmp_path):
+        with patch("festival_organizer.config.paths") as mock_paths:
+            mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
+            cfg = load_config()
+        assert cfg is not None
+        assert cfg.default_layout
+
+    def test_malformed_toml_logs_warning_and_uses_defaults(self, tmp_path, capsys):
+        user_dir = tmp_path / "user"
+        user_dir.mkdir()
+        (user_dir / "config.toml").write_text("this is not [valid toml")
+        with patch("festival_organizer.config.paths") as mock_paths:
+            mock_paths.config_file.return_value = user_dir / "config.toml"
+            cfg = load_config()
+        captured = capsys.readouterr()
+        assert "Warning" in captured.err or "could not" in captured.err.lower()
+        assert cfg is not None
