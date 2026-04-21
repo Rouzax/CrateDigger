@@ -11,11 +11,10 @@ import logging
 import time
 from pathlib import Path
 
+from festival_organizer import paths
 from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_PATH = Path.home() / ".cratedigger" / "dj_cache.json"
 
 
 class DjCache:
@@ -23,11 +22,11 @@ class DjCache:
 
     Keyed by DJ slug (e.g. "tiesto", "arminvanbuuren"). Each entry stores
     name, artwork_url, aliases, and member_of groups.
-    Persists to ~/.cratedigger/dj_cache.json.
+    Persists under `paths.cache_dir()` (see `festival_organizer.paths`).
     """
 
     def __init__(self, cache_path: Path | None = None, ttl_days: int = 90):
-        self._path = cache_path or DEFAULT_PATH
+        self._path = cache_path if cache_path is not None else paths.cache_dir() / "dj_cache.json"
         self._ttl_days = ttl_days
         self._ttl_seconds = ttl_days * 86400
         self._data: dict[str, dict] = {}
@@ -42,7 +41,7 @@ class DjCache:
                 self._data = {}
 
     def _save(self) -> None:
-        self._path.parent.mkdir(parents=True, exist_ok=True)
+        paths.ensure_parent(self._path)
         self._path.write_text(
             json.dumps(self._data, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",

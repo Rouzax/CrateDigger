@@ -1,6 +1,7 @@
 """Tests for DjCache TTL behaviour."""
 import json
 import time
+from unittest.mock import patch
 
 from festival_organizer.tracklists.dj_cache import DjCache
 
@@ -52,6 +53,18 @@ def test_canonical_name_falls_back_to_slug(tmp_path):
 def test_canonical_name_fallback_value(tmp_path):
     cache = DjCache(cache_path=tmp_path / "c.json", ttl_days=90)
     assert cache.canonical_name("unknown", fallback="X") == "X"
+
+
+def test_dj_cache_uses_cache_dir(tmp_path):
+    with patch("festival_organizer.tracklists.dj_cache.paths") as mock_paths:
+        mock_paths.cache_dir.return_value = tmp_path
+        mock_paths.ensure_parent.side_effect = lambda p: (
+            p.parent.mkdir(parents=True, exist_ok=True),
+            p,
+        )[1]
+        cache = DjCache()
+        cache.put("tiesto", {"name": "Tiesto"})
+    assert (tmp_path / "dj_cache.json").is_file()
 
 
 def test_canonical_name_heals_mojibake_on_read(tmp_path):
