@@ -9,11 +9,14 @@ Logging:
 from __future__ import annotations
 
 import logging
+import logging.handlers
 import sys
 
 from rich.console import Console
 from rich.highlighter import NullHighlighter
 from rich.logging import RichHandler
+
+from festival_organizer import paths
 
 
 def setup_logging(
@@ -59,3 +62,17 @@ def setup_logging(
 
     handler.setFormatter(fmt)
     logger.addHandler(handler)
+
+    # Rotating file handler: always active, 5 MB x 5 rotations
+    log_path = paths.ensure_parent(paths.log_file())
+    file_handler = logging.handlers.RotatingFileHandler(
+        log_path,
+        maxBytes=5 * 1024 * 1024,
+        backupCount=5,
+        encoding="utf-8",
+    )
+    file_handler.setLevel(level)
+    file_handler.setFormatter(logging.Formatter(
+        "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    ))
+    logger.addHandler(file_handler)
