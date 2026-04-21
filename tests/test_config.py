@@ -483,3 +483,41 @@ class TestTomlConfigLoading:
         captured = capsys.readouterr()
         assert "Warning" in captured.err or "could not" in captured.err.lower()
         assert cfg is not None
+
+
+def test_legacy_library_config_json_logs_warning(tmp_path, caplog):
+    """A legacy config.json in the library marker dir emits a single WARNING."""
+    from festival_organizer.config import load_config
+
+    library_dir = tmp_path / "library" / ".cratedigger"
+    library_dir.mkdir(parents=True)
+    (library_dir / "config.json").write_text(
+        '{"default_layout": "festival_nested"}', encoding="utf-8"
+    )
+
+    with patch("festival_organizer.config.paths") as mock_paths:
+        mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
+        with caplog.at_level("WARNING", logger="festival_organizer.config"):
+            load_config(library_config_dir=library_dir)
+
+    messages = [r.getMessage() for r in caplog.records
+                if r.name == "festival_organizer.config"]
+    assert any("config.json" in m and "config.toml" in m for m in messages), (
+        f"expected a WARNING mentioning both config.json and config.toml, got: {messages}"
+    )
+
+
+def test_legacy_library_config_json_silent_when_toml_absent_too(tmp_path, caplog):
+    """No warning when the marker dir contains neither legacy nor new config."""
+    from festival_organizer.config import load_config
+
+    library_dir = tmp_path / "library" / ".cratedigger"
+    library_dir.mkdir(parents=True)
+
+    with patch("festival_organizer.config.paths") as mock_paths:
+        mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
+        with caplog.at_level("WARNING", logger="festival_organizer.config"):
+            load_config(library_config_dir=library_dir)
+
+    ours = [r for r in caplog.records if r.name == "festival_organizer.config"]
+    assert not ours, f"expected no warnings, got: {[r.getMessage() for r in ours]}"

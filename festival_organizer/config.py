@@ -578,6 +578,15 @@ def load_config(
     _merge_toml(user_file)
 
     if library_config_dir is not None:
+        legacy_json = library_config_dir / "config.json"
+        if legacy_json.is_file():
+            logger.warning(
+                "Legacy library config detected at %s. "
+                "This file is no longer read. Copy its default_layout value "
+                "into %s (same directory) or delete it.",
+                legacy_json,
+                library_config_dir / "config.toml",
+            )
         _merge_toml(library_config_dir / "config.toml")
 
     _migrate_layout_names(data)
