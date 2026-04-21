@@ -47,7 +47,7 @@ class AuthenticationError(TracklistError):
 
 
 class RateLimitError(TracklistError):
-    """Too many requests — captcha required."""
+    """Too many requests, captcha required."""
 
 
 class ExportError(TracklistError):
@@ -546,7 +546,7 @@ class TracklistSession:
                         wait = 30
                         time.sleep(wait)
                         continue
-                    raise RateLimitError("Rate limited — solve captcha at 1001tracklists.com in your browser")
+                    raise RateLimitError("Rate limited: solve captcha at 1001tracklists.com in your browser")
 
                 # Transient errors
                 if resp.status_code in (502, 503, 504):

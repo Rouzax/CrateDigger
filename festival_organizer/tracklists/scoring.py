@@ -1,4 +1,4 @@
-"""Search result scoring for 1001Tracklists — multiplicative model.
+"""Search result scoring for 1001Tracklists: multiplicative model.
 
 Scores search results by combining content relevance with duration matching.
 Ported from Add-TracklistChapters PowerShell Get-RelevanceScore.
@@ -108,7 +108,7 @@ def parse_query(query: str, aliases: dict[str, str]) -> QueryParts:
                 remaining.append(word)
                 continue
             else:
-                # Mixed-case query: existing behavior — all uppercase words are abbreviations
+                # Mixed-case query: existing behavior, all uppercase words are abbreviations
                 parts.abbreviations.append(word)
                 if is_known_alias:
                     parts.resolved_aliases.append({"alias": word, "target": aliases[lower]})
