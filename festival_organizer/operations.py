@@ -440,7 +440,7 @@ class AlbumPosterOperation(Operation):
             search_dirs: list[Path] = []
             if self.library_root:
                 search_dirs.append(self.library_root / ".cratedigger" / "festivals" / name)
-            search_dirs.append(Path.home() / ".cratedigger" / "festivals" / name)
+            search_dirs.append(paths.festivals_logo_dir() / name)
             for d in search_dirs:
                 for ext in ("jpg", "jpeg", "png", "webp"):
                     candidate = d / f"logo.{ext}"

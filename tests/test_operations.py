@@ -872,6 +872,47 @@ def test_find_curated_logo_missing(tmp_path):
     assert op._find_curated_logo("Nonexistent") is None
 
 
+def test_find_curated_logo_user_global(tmp_path, monkeypatch):
+    """Curated logo resolved from user-global paths.festivals_logo_dir()."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    user_global_dir = tmp_path / "user_festivals"
+    (user_global_dir / "Tomorrowland").mkdir(parents=True)
+    logo_file = user_global_dir / "Tomorrowland" / "logo.png"
+    logo_file.write_bytes(b"\x89PNG")
+    monkeypatch.setattr(
+        "festival_organizer.operations.paths.festivals_logo_dir",
+        lambda: user_global_dir,
+    )
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    assert op._find_curated_logo("Tomorrowland") == logo_file
+
+
+def test_find_curated_logo_library_wins_over_user_global(tmp_path, monkeypatch):
+    """Library-local logo wins when both library and user-global contain a logo."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    lib = tmp_path / "lib"
+    lib_logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
+    lib_logo_dir.mkdir(parents=True)
+    lib_logo = lib_logo_dir / "logo.png"
+    lib_logo.write_bytes(b"\x89PNG")
+
+    user_global_dir = tmp_path / "user_festivals"
+    (user_global_dir / "Tomorrowland").mkdir(parents=True)
+    (user_global_dir / "Tomorrowland" / "logo.png").write_bytes(b"\x89PNG")
+    monkeypatch.setattr(
+        "festival_organizer.operations.paths.festivals_logo_dir",
+        lambda: user_global_dir,
+    )
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    assert op._find_curated_logo("Tomorrowland") == lib_logo
+
+
 def test_find_curated_logo_empty_festival(tmp_path):
     """Returns None for empty festival name."""
     config = Config(DEFAULT_CONFIG)

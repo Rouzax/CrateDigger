@@ -1030,7 +1030,7 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
     # Check logo availability for each festival
     logo_dirs = [
         library_root / ".cratedigger" / "festivals",
-        Path.home() / ".cratedigger" / "festivals",
+        paths.festivals_logo_dir(),
     ]
 
     def find_logo(festival: str) -> Path | None:
@@ -1063,7 +1063,7 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
         console.print()
 
     if missing_logo:
-        user_festivals = Path.home() / ".cratedigger" / "festivals"
+        user_festivals = paths.festivals_logo_dir()
         console.print(f"[yellow]Missing curated logo ({len(missing_logo)}):[/yellow]")
         for fest in missing_logo:
             lib_path = library_root / ".cratedigger" / "festivals" / fest
