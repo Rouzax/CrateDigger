@@ -1,5 +1,6 @@
 import json
 import time
+from unittest.mock import patch
 
 from festival_organizer.tracklists.source_cache import SourceCache
 
@@ -37,6 +38,18 @@ def test_club_source_type_maps_to_venue_tag():
     on the file, not fall through silently."""
     from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
     assert SOURCE_TYPE_TO_TAG["Club"] == "CRATEDIGGER_1001TL_VENUE"
+
+
+def test_source_cache_uses_cache_dir(tmp_path):
+    with patch("festival_organizer.tracklists.source_cache.paths") as mock_paths:
+        mock_paths.cache_dir.return_value = tmp_path
+        mock_paths.ensure_parent.side_effect = lambda p: (
+            p.parent.mkdir(parents=True, exist_ok=True),
+            p,
+        )[1]
+        cache = SourceCache()
+        cache.put("abc123", {"name": "EDC Las Vegas", "type": "Open Air / Festival"})
+    assert (tmp_path / "source_cache.json").is_file()
 
 
 def test_club_group_by_type_is_not_promoted_to_festival(tmp_path):

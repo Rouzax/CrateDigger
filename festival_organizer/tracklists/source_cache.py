@@ -11,11 +11,10 @@ import logging
 import time
 from pathlib import Path
 
+from festival_organizer import paths
 from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_PATH = Path.home() / ".cratedigger" / "source_cache.json"
 
 # Maps 1001TL source types to MKV tag names. Club is treated as a venue,
 # since 1001TL uses it for physical venues like Alexandra Palace London that
@@ -33,11 +32,11 @@ class SourceCache:
     """Read-through cache for 1001TL source page metadata.
 
     Keyed by source ID (e.g. "5tb5n3"). Each entry stores name, slug, type, country.
-    Persists to ~/.cratedigger/source_cache.json.
+    Persists under `paths.cache_dir()` (see `festival_organizer.paths`).
     """
 
     def __init__(self, cache_path: Path | None = None, ttl_days: int = 365):
-        self._path = cache_path or DEFAULT_PATH
+        self._path = cache_path if cache_path is not None else paths.cache_dir() / "source_cache.json"
         self._ttl_days = ttl_days
         self._ttl_seconds = ttl_days * 86400
         self._data: dict[str, dict] = {}
@@ -52,7 +51,7 @@ class SourceCache:
                 self._data = {}
 
     def _save(self) -> None:
-        self._path.parent.mkdir(parents=True, exist_ok=True)
+        paths.ensure_parent(self._path)
         self._path.write_text(
             json.dumps(self._data, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
