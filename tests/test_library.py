@@ -1,7 +1,8 @@
-import json
+import tomllib
 import logging
 import os
 from pathlib import Path
+from unittest.mock import patch
 from festival_organizer.library import (
     find_library_root, init_library, cleanup_empty_dirs,
     migrate_folder_artefacts,
@@ -44,24 +45,36 @@ def test_init_library_creates_marker(tmp_path):
 
 
 def test_init_library_creates_config(tmp_path):
-    """init_library creates config.json with layout."""
+    """init_library creates config.toml with layout."""
     init_library(tmp_path, layout="festival_flat")
-    cfg = json.loads((tmp_path / ".cratedigger" / "config.json").read_text())
+    cfg = tomllib.loads((tmp_path / ".cratedigger" / "config.toml").read_text())
     assert cfg["default_layout"] == "festival_flat"
 
 
-def test_init_library_idempotent(tmp_path):
-    """Running init_library twice doesn't overwrite existing config."""
+def test_init_library_leaves_existing_config_alone(tmp_path):
+    """Running init_library twice does not overwrite existing config."""
     init_library(tmp_path, layout="festival_flat")
-    # Manually add a custom setting
-    cfg_path = tmp_path / ".cratedigger" / "config.json"
-    cfg = json.loads(cfg_path.read_text())
-    cfg["custom_key"] = "custom_value"
-    cfg_path.write_text(json.dumps(cfg))
+    cfg_path = tmp_path / ".cratedigger" / "config.toml"
+    user_content = 'default_layout = "festival_flat"\ncustom_key = "custom_value"\n'
+    cfg_path.write_text(user_content, encoding="utf-8")
     # Re-init should not clobber
     init_library(tmp_path, layout="artist_flat")
-    cfg = json.loads(cfg_path.read_text())
-    assert cfg["custom_key"] == "custom_value"
+    assert cfg_path.read_text(encoding="utf-8") == user_content
+
+
+def test_init_library_roundtrips_layout_via_load_config(tmp_path):
+    """init_library writes a file load_config can read back (regression: PR #14 audit)."""
+    from festival_organizer.config import load_config
+
+    init_library(tmp_path, layout="festival_nested")
+    marker = tmp_path / ".cratedigger"
+
+    # Point the user-config layer at a non-existent file so only the library layer applies.
+    with patch("festival_organizer.config.paths") as mock_paths:
+        mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
+        config = load_config(library_config_dir=marker)
+
+    assert config.default_layout == "festival_nested"
 
 
 def test_find_library_root_config_dir(tmp_path):
@@ -152,7 +165,7 @@ class TestCleanupEmptyDirs:
         """.cratedigger directory is always preserved."""
         marker = tmp_path / ".cratedigger"
         marker.mkdir()
-        (marker / "config.json").write_text("{}")
+        (marker / "config.toml").write_text("")
         cleanup_empty_dirs(tmp_path)
         assert marker.exists()
 
