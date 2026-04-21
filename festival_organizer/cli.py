@@ -58,11 +58,15 @@ _CD_PACKAGES: list[str] = [
     "beautifulsoup4", "Pillow", "ftfy", "numpy", "requests", "rich", "typer",
 ]
 
-_CD_ASSETS: list[tuple[str, str]] = [
-    # (filename, description for warning)
-    ("config.json",    "main config"),
-    ("festivals.json", "festival names"),
-    ("artists.json",   "artist overrides"),
+# Asset probe for `--check`. Each entry is (label, resolver, description).
+# The resolver is called at check time so tests can monkeypatch the paths
+# module without needing to reload this list. Routed through
+# ``festival_organizer.paths`` so the probe follows platformdirs layout.
+_CD_ASSETS: list[tuple[str, Callable[[], Path], str]] = [
+    ("config.toml",       lambda: paths.config_file(),       "user config"),
+    ("festivals.json",    lambda: paths.festivals_file(),    "curated festival aliases"),
+    ("artists.json",      lambda: paths.artists_file(),      "curated artist aliases"),
+    ("artist_mbids.json", lambda: paths.artist_mbids_file(), "curated MBID overrides"),
 ]
 
 
@@ -181,9 +185,8 @@ def _run_check_impl(con: "Console") -> int:
 
     # --- Config files ---
     con.print("\n[bold]Config[/bold]")
-    base = Path.home() / ".cratedigger"
-    for filename, desc in _CD_ASSETS:
-        p = base / filename
+    for _label, resolve, desc in _CD_ASSETS:
+        p = resolve()
         if p.is_file():
             con.print(f"  [green]\u2713[/green] {p}")
         else:

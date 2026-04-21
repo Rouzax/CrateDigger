@@ -541,8 +541,9 @@ def resolve_mbids_aligned(
     for name, mbid in unique.items():
         if mbid is None:
             logger.info(
-                "No MBID resolved for artist: %r (add to ~/.cratedigger/artist_mbids.json)",
+                "No MBID resolved for artist: %r (add to %s)",
                 name,
+                paths.artist_mbids_file(),
             )
             unresolved_artist_names.add(name)
 

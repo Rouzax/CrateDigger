@@ -1,4 +1,4 @@
-"""User-curated artist MBID overrides (~/.cratedigger/artist_mbids.json)."""
+"""User-curated artist MBID overrides (paths.artist_mbids_file())."""
 import json
 
 from festival_organizer.fanart import ArtistMbidOverrides

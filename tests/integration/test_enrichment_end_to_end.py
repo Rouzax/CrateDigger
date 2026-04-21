@@ -3,16 +3,18 @@
 This test is opt-in and machine-local. It requires three things on the
 machine running it, none of which are committed to the repo:
 
-- ``CRATEDIGGER_TEST_CONFIG``: path to a ``config.json`` with 1001TL credentials.
+- ``CRATEDIGGER_TEST_CONFIG``: path to a ``config.toml`` with 1001TL credentials.
 - ``CRATEDIGGER_TEST_COOKIES``: path to the 1001TL cookies jar used by the
   ``TracklistSession`` login flow.
 - ``CRATEDIGGER_TEST_MKV_DIR``: directory containing the MKVs listed in
   the ``FIXTURES`` dict. Per-fixture skip when an individual MKV is missing.
 
-Tests auto-skip when any of these are absent. Use with:
+Tests auto-skip when any of these are absent. The paths below point at the
+platformdirs locations (see ``festival_organizer.paths``); adjust for your
+platform if needed. Use with:
 
-    CRATEDIGGER_TEST_CONFIG=~/.cratedigger/config.json \\
-    CRATEDIGGER_TEST_COOKIES=~/.1001tl-cookies.json \\
+    CRATEDIGGER_TEST_CONFIG=~/CrateDigger/config.toml \\
+    CRATEDIGGER_TEST_COOKIES=~/.local/state/CrateDigger/1001tl-cookies.json \\
     CRATEDIGGER_TEST_MKV_DIR=~/mkvs \\
     pytest tests/integration/ -m integration
 
@@ -752,7 +754,8 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
     pinned_mbid = "deadbeef-1234-5678-9abc-def012345678"
 
     # Step 2: isolate overrides + cache to a tmp dir so the real
-    # ~/.cratedigger is never touched.
+    # user data / cache dirs (paths.data_dir(), paths.cache_dir()) are
+    # never touched.
     home = tmp_path / "cratedigger_home"
     home.mkdir()
     (home / "artist_mbids.json").write_text(
@@ -830,9 +833,10 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
             f"override leaked into mbid_cache.json under key {pinned_artist.lower()!r}"
         )
 
-    # Hermeticity: no mbid_cache.json or artist_mbids.json in real ~/.cratedigger
-    # was consulted or written. We assert the isolated files are the only
-    # ones the test touched by checking our tmp home for the expected shape.
+    # Hermeticity: no mbid_cache.json or artist_mbids.json in the real
+    # paths.data_dir() / paths.cache_dir() was consulted or written. We
+    # assert the isolated files are the only ones the test touched by
+    # checking our tmp home for the expected shape.
     assert (home / "artist_mbids.json").exists()
 
     # (d) any unresolved artists are logged at WARNING. When every artist
@@ -1191,14 +1195,17 @@ def test_identify_console_contract(tmp_path):
     for src in fixtures:
         shutil.copy2(src, scratch / src.name)
 
-    # Isolate ~/.cratedigger so the test doesn't mutate the developer's
-    # real DJ / source / mbid caches and warm-cache between runs doesn't
-    # mask contract regressions. Copy cookies into the scratch home so
-    # login still works. Preserve PYTHONUSERBASE so editable installs in
-    # the real ~/.local/ still resolve under the faked HOME.
+    # Isolate the user data / cache dirs (paths.data_dir(), paths.cache_dir())
+    # so the test doesn't mutate the developer's real DJ / source / mbid
+    # caches and warm-cache between runs doesn't mask contract regressions.
+    # Copy cookies into the scratch state dir so login still works. Preserve
+    # PYTHONUSERBASE so editable installs in the real ~/.local/ still resolve
+    # under the faked HOME.
     fake_home = tmp_path / "home"
-    (fake_home / ".cratedigger").mkdir(parents=True)
-    shutil.copy2(COOKIES, fake_home / COOKIES.name)
+    (fake_home / "CrateDigger").mkdir(parents=True)
+    state_dir = fake_home / ".local" / "state" / "CrateDigger"
+    state_dir.mkdir(parents=True)
+    shutil.copy2(COOKIES, state_dir / "1001tl-cookies.json")
     env = {
         **os.environ,
         "HOME": str(fake_home),
