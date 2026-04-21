@@ -105,6 +105,19 @@ def test_mbid_cache_persistence():
         assert cache2.get("ALOK") == "def-456"
 
 
+def test_mbid_cache_uses_platformdirs_cache_dir(tmp_path):
+    from festival_organizer.fanart import MBIDCache
+    with patch("festival_organizer.fanart.paths") as mock_paths:
+        mock_paths.cache_dir.return_value = tmp_path
+        mock_paths.ensure_parent.side_effect = lambda p: (
+            p.parent.mkdir(parents=True, exist_ok=True),
+            p,
+        )[1]
+        cache = MBIDCache()
+        cache.put("Tiesto", "abc-123")
+    assert (tmp_path / "mbid_cache.json").is_file()
+
+
 # --- Image selection tests ---
 
 def test_pick_best_logo_prefers_english():

@@ -31,6 +31,7 @@ import requests
 
 unresolved_artist_names: set[str] = set()
 
+from festival_organizer import paths
 from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 from festival_organizer.normalization import strip_diacritics
 
@@ -65,7 +66,7 @@ class MBIDCache:
     """
 
     def __init__(self, cache_dir: Path | None = None, ttl_days: int = 90):
-        self._dir = cache_dir or (Path.home() / ".cratedigger")
+        self._dir = cache_dir if cache_dir is not None else paths.cache_dir()
         self._path = self._dir / "mbid_cache.json"
         self._ttl_days = ttl_days
         self._ttl_seconds = ttl_days * 86400
@@ -87,7 +88,7 @@ class MBIDCache:
                     self._data[key] = {"mbid": value, "ts": 0}
 
     def _save(self) -> None:
-        self._dir.mkdir(parents=True, exist_ok=True)
+        paths.ensure_parent(self._path)
         self._path.write_text(
             json.dumps(self._data, indent=2, ensure_ascii=False),
             encoding="utf-8",
