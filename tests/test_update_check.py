@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import time
+from unittest.mock import patch
 
 import pytest
 
@@ -15,6 +16,18 @@ from festival_organizer.update_check import (
     _read_cache,
     _write_cache,
 )
+
+
+@pytest.fixture
+def mock_paths(tmp_path):
+    """Patch festival_organizer.update_check.paths so cache_dir resolves to tmp_path."""
+    with patch("festival_organizer.update_check.paths") as m:
+        m.cache_dir.return_value = tmp_path
+        m.ensure_parent.side_effect = lambda p: (
+            p.parent.mkdir(parents=True, exist_ok=True),
+            p,
+        )[1]
+        yield m
 
 
 def test_module_imports():
@@ -60,29 +73,12 @@ class TestIsPrereleaseString:
 
 
 class TestCachePath:
-    def test_linux_uses_xdg(self, monkeypatch, tmp_path):
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        p = _cache_path()
-        assert p == tmp_path / "cratedigger" / "update-check.json"
-
-    def test_linux_fallback_home_cache(self, monkeypatch, tmp_path):
-        monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
-        monkeypatch.setenv("HOME", str(tmp_path))
-        p = _cache_path()
-        assert p == tmp_path / ".cache" / "cratedigger" / "update-check.json"
-
-    def test_windows_uses_localappdata(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
-        p = _cache_path()
-        assert p == tmp_path / "cratedigger" / "update-check.json"
+    def test_returns_cache_dir_joined_with_filename(self, tmp_path, mock_paths):
+        assert _cache_path() == tmp_path / "update-check.json"
 
 
 class TestReadWriteCache:
-    def test_write_then_read(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
+    def test_write_then_read(self, tmp_path, mock_paths):
         _write_cache(latest_version="0.7.0", ttl_seconds=86400)
         entry = _read_cache()
         assert entry is not None
@@ -91,32 +87,24 @@ class TestReadWriteCache:
         assert entry["schema"] == SCHEMA_VERSION
         assert "checked_at" in entry
 
-    def test_read_missing_returns_none(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
+    def test_read_missing_returns_none(self, tmp_path, mock_paths):
         assert _read_cache() is None
 
-    def test_read_corrupt_returns_none(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
+    def test_read_corrupt_returns_none(self, tmp_path, mock_paths):
         p = _cache_path()
-        p.parent.mkdir(parents=True)
+        p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text("not json {{{")
         assert _read_cache() is None
 
-    def test_read_unknown_schema_returns_none(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
+    def test_read_unknown_schema_returns_none(self, tmp_path, mock_paths):
         p = _cache_path()
-        p.parent.mkdir(parents=True)
+        p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps({"schema": 999, "latest_version": "0.7.0"}))
         assert _read_cache() is None
 
-    def test_write_is_atomic(self, tmp_path, monkeypatch):
+    def test_write_is_atomic(self, tmp_path, mock_paths):
         """_write_cache must write to a temp file and rename; a crash mid-write
         must never leave the final file in a corrupted state."""
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         _write_cache(latest_version="0.7.0", ttl_seconds=86400)
         p = _cache_path()
         assert p.exists()
@@ -288,10 +276,8 @@ class TestPrintCachedUpdateNotice:
         buf = StringIO()
         return Console(file=buf, force_terminal=False, width=120), buf
 
-    def test_newer_version_prints(self, tmp_path, monkeypatch):
+    def test_newer_version_prints(self, tmp_path, mock_paths, monkeypatch):
         from festival_organizer.update_check import print_cached_update_notice
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
         monkeypatch.setattr("sys.stdout.isatty", lambda: True)
         monkeypatch.setattr(
@@ -306,10 +292,8 @@ class TestPrintCachedUpdateNotice:
         assert "0.7.0" in out
         assert "cratedigger" in out
 
-    def test_same_version_silent(self, tmp_path, monkeypatch):
+    def test_same_version_silent(self, tmp_path, mock_paths, monkeypatch):
         from festival_organizer.update_check import print_cached_update_notice
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
         monkeypatch.setattr("sys.stdout.isatty", lambda: True)
         monkeypatch.setattr(
@@ -321,10 +305,8 @@ class TestPrintCachedUpdateNotice:
         print_cached_update_notice(console)
         assert buf.getvalue() == ""
 
-    def test_null_latest_silent(self, tmp_path, monkeypatch):
+    def test_null_latest_silent(self, tmp_path, mock_paths, monkeypatch):
         from festival_organizer.update_check import print_cached_update_notice
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
         monkeypatch.setattr("sys.stdout.isatty", lambda: True)
         _write_cache(latest_version=None, ttl_seconds=3600)
@@ -332,20 +314,16 @@ class TestPrintCachedUpdateNotice:
         print_cached_update_notice(console)
         assert buf.getvalue() == ""
 
-    def test_no_cache_silent(self, tmp_path, monkeypatch):
+    def test_no_cache_silent(self, tmp_path, mock_paths, monkeypatch):
         from festival_organizer.update_check import print_cached_update_notice
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
         monkeypatch.setattr("sys.stdout.isatty", lambda: True)
         console, buf = self._make_console()
         print_cached_update_notice(console)
         assert buf.getvalue() == ""
 
-    def test_suppressed_silent(self, tmp_path, monkeypatch):
+    def test_suppressed_silent(self, tmp_path, mock_paths, monkeypatch):
         from festival_organizer.update_check import print_cached_update_notice
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
         _write_cache(latest_version="99.0.0", ttl_seconds=86400)
         console, buf = self._make_console()
@@ -354,12 +332,10 @@ class TestPrintCachedUpdateNotice:
 
 
 class TestRefreshUpdateCache:
-    def test_stale_triggers_fetch_and_writes(self, tmp_path, monkeypatch):
+    def test_stale_triggers_fetch_and_writes(self, tmp_path, mock_paths, monkeypatch):
         from unittest.mock import patch
 
         from festival_organizer.update_check import refresh_update_cache
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
         monkeypatch.setattr("sys.stdout.isatty", lambda: True)
         old_entry = {
@@ -369,7 +345,7 @@ class TestRefreshUpdateCache:
             "latest_version": "0.6.0",
         }
         p = _cache_path()
-        p.parent.mkdir(parents=True)
+        p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps(old_entry))
 
         with patch("festival_organizer.update_check._fetch_latest_release", return_value="0.7.0"):
@@ -381,12 +357,10 @@ class TestRefreshUpdateCache:
         assert entry["ttl_seconds"] == 86400
         assert entry["checked_at"] > 0
 
-    def test_fresh_skips_fetch(self, tmp_path, monkeypatch):
+    def test_fresh_skips_fetch(self, tmp_path, mock_paths, monkeypatch):
         from unittest.mock import patch
 
         from festival_organizer.update_check import refresh_update_cache
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
         monkeypatch.setattr("sys.stdout.isatty", lambda: True)
         fresh_entry = {
@@ -396,19 +370,17 @@ class TestRefreshUpdateCache:
             "latest_version": "0.7.0",
         }
         p = _cache_path()
-        p.parent.mkdir(parents=True)
+        p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps(fresh_entry))
 
         with patch("festival_organizer.update_check._fetch_latest_release") as m:
             refresh_update_cache()
             m.assert_not_called()
 
-    def test_missing_cache_triggers_fetch(self, tmp_path, monkeypatch):
+    def test_missing_cache_triggers_fetch(self, tmp_path, mock_paths, monkeypatch):
         from unittest.mock import patch
 
         from festival_organizer.update_check import refresh_update_cache
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
         monkeypatch.setattr("sys.stdout.isatty", lambda: True)
 
@@ -419,12 +391,10 @@ class TestRefreshUpdateCache:
         assert entry is not None
         assert entry["latest_version"] == "0.7.0"
 
-    def test_fetch_failure_writes_short_ttl(self, tmp_path, monkeypatch):
+    def test_fetch_failure_writes_short_ttl(self, tmp_path, mock_paths, monkeypatch):
         from unittest.mock import patch
 
         from festival_organizer.update_check import refresh_update_cache
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
         monkeypatch.setattr("sys.stdout.isatty", lambda: True)
 
@@ -436,12 +406,10 @@ class TestRefreshUpdateCache:
         assert entry["latest_version"] is None
         assert entry["ttl_seconds"] == 3600
 
-    def test_suppressed_no_op(self, tmp_path, monkeypatch):
+    def test_suppressed_no_op(self, tmp_path, mock_paths, monkeypatch):
         from unittest.mock import patch
 
         from festival_organizer.update_check import refresh_update_cache
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("LOCALAPPDATA", raising=False)
         monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
 
         with patch("festival_organizer.update_check._fetch_latest_release") as m:
