@@ -144,40 +144,48 @@ The extra pulls in OpenCV, which is the library that scores and selects the fram
 
 ## Set up your config files
 
-CrateDigger looks for your settings in a folder called `.cratedigger` inside your home directory:
+CrateDigger stores your settings in a `CrateDigger` folder. Where that folder lives depends on your platform:
 
-| Platform | Path |
-|----------|------|
-| Linux / macOS | `~/.cratedigger/` |
-| Windows | `C:\Users\YourName\.cratedigger\` |
+| Platform | Config location |
+|----------|----------------|
+| Linux | `~/CrateDigger/config.toml` |
+| Windows | `Documents\CrateDigger\config.toml` (your Documents folder) |
 
 You do not need to create a config file. CrateDigger has sensible built-in defaults for
 everything. Create it only if you want to customize behavior.
 
 To get a ready-to-edit starting point, download the example config:
 
-=== "Linux / macOS"
+=== "Linux"
 
     ```bash
-    mkdir -p ~/.cratedigger
-    curl -o ~/.cratedigger/config.json \
-      https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.json
+    mkdir -p ~/CrateDigger
+    curl -o ~/CrateDigger/config.toml \
+      https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
-    New-Item -ItemType Directory -Force "$env:USERPROFILE\.cratedigger"
+    New-Item -ItemType Directory -Force "$env:USERPROFILE\Documents\CrateDigger"
     Invoke-WebRequest `
-      -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.json" `
-      -OutFile "$env:USERPROFILE\.cratedigger\config.json"
+      -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml" `
+      -OutFile "$env:USERPROFILE\Documents\CrateDigger\config.toml"
     ```
 
 Or, if you have cloned the repository locally, copy from the repo root:
 
-```bash
-cp config.example.json ~/.cratedigger/config.json
-```
+=== "Linux"
+
+    ```bash
+    cp config.example.toml ~/CrateDigger/config.toml
+    ```
+
+=== "Windows (PowerShell)"
+
+    ```powershell
+    Copy-Item config.example.toml "$env:USERPROFILE\Documents\CrateDigger\config.toml"
+    ```
 
 The settings most users change first:
 
@@ -194,12 +202,13 @@ See [Configuration](configuration.md) for all options.
 ### Festival definitions
 
 CrateDigger includes built-in knowledge of common festival names. To add your own
-festivals or customize aliases, copy the example festivals file:
+festivals or customize aliases, copy the example festivals file to the same folder as
+your config:
 
-=== "Linux / macOS"
+=== "Linux"
 
     ```bash
-    curl -o ~/.cratedigger/festivals.json \
+    curl -o ~/CrateDigger/festivals.json \
       https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json
     ```
 
@@ -208,14 +217,22 @@ festivals or customize aliases, copy the example festivals file:
     ```powershell
     Invoke-WebRequest `
       -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json" `
-      -OutFile "$env:USERPROFILE\.cratedigger\festivals.json"
+      -OutFile "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
     ```
 
 Or from a cloned repo:
 
-```bash
-cp festivals.example.json ~/.cratedigger/festivals.json
-```
+=== "Linux"
+
+    ```bash
+    cp festivals.example.json ~/CrateDigger/festivals.json
+    ```
+
+=== "Windows (PowerShell)"
+
+    ```powershell
+    Copy-Item festivals.example.json "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
+    ```
 
 See [Festivals](festivals.md) for how to add entries and what the file format looks like.
 

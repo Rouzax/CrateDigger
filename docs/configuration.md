@@ -7,8 +7,8 @@ CrateDigger works without a config file. Built-in defaults cover everything. Cre
 CrateDigger merges configuration from three layers in this order, with later layers overriding earlier ones:
 
 1. **Built-in defaults:** always present, covers all settings
-2. **User config:** `~/.cratedigger/config.json` (Linux/macOS) or `$env:USERPROFILE\.cratedigger\config.json` (Windows)
-3. **Library config:** `{library}/.cratedigger/config.json`
+2. **User config:** `~/CrateDigger/config.toml` (Linux) or `Documents\CrateDigger\config.toml` (Windows)
+3. **Library config:** `{library}/.cratedigger/config.toml`
 
 Only include the settings you want to change. Everything else falls back to built-in defaults.
 
@@ -16,30 +16,38 @@ You can also pass an explicit path with `--config <path>` on any command. This a
 
 ## Getting a starter config
 
-The example config contains all available settings with comments:
+The example config contains all available settings with comments. Copy it to your user config location:
 
-=== "Linux / macOS"
+=== "Linux"
 
     ```bash
-    mkdir -p ~/.cratedigger
-    curl -o ~/.cratedigger/config.json \
-      https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.json
+    mkdir -p ~/CrateDigger
+    curl -o ~/CrateDigger/config.toml \
+      https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
-    New-Item -ItemType Directory -Force "$env:USERPROFILE\.cratedigger"
+    New-Item -ItemType Directory -Force "$env:USERPROFILE\Documents\CrateDigger"
     Invoke-WebRequest `
-      -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.json" `
-      -OutFile "$env:USERPROFILE\.cratedigger\config.json"
+      -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml" `
+      -OutFile "$env:USERPROFILE\Documents\CrateDigger\config.toml"
     ```
 
 Or, if you have cloned the repository:
 
-```bash
-cp config.example.json ~/.cratedigger/config.json
-```
+=== "Linux"
+
+    ```bash
+    cp config.example.toml ~/CrateDigger/config.toml
+    ```
+
+=== "Windows (PowerShell)"
+
+    ```powershell
+    Copy-Item config.example.toml "$env:USERPROFILE\Documents\CrateDigger\config.toml"
+    ```
 
 ## Config sections
 
@@ -300,17 +308,22 @@ Each entry's actual lifetime jitters by ±20% around the base value (for example
 
 ## External config files
 
-Two external JSON files can live alongside your `config.json` and control name resolution.
+Three JSON files can live alongside your `config.toml` and control name resolution. They use the same location as your config file:
+
+| Platform | Folder |
+|----------|--------|
+| Linux | `~/CrateDigger/` |
+| Windows | `Documents\CrateDigger\` |
 
 ### festivals.json
 
-Controls festival name recognition, aliases, and editions. CrateDigger includes built-in festival knowledge. To add your own festivals or customize aliases, place a `festivals.json` in `~/.cratedigger/`. See [Festivals](festivals.md) for the file format and how to add entries.
+Controls festival name recognition, aliases, and editions. CrateDigger includes built-in festival knowledge. To add your own festivals or customize aliases, place a `festivals.json` in the folder above. See [Festivals](festivals.md) for the file format and how to add entries.
 
 ### artists.json {#artist-aliases}
 
 Controls artist name aliases and B2B group definitions.
 
-Place it at `~/.cratedigger/artists.json`. Example:
+Place it in the folder above (`~/CrateDigger/artists.json` on Linux, `Documents\CrateDigger\artists.json` on Windows). Example:
 
 ```json
 {
@@ -335,7 +348,14 @@ Note: CrateDigger automatically discovers artist aliases and group memberships f
 
 ## Artist MBID override file
 
-`~/.cratedigger/artist_mbids.json` is a flat JSON map from artist display name to MusicBrainz artist ID. It is checked first by both the `chapter_artist_mbids` and `album_artist_mbids` enrich operations, before the auto cache and any live MusicBrainz search.
+`artist_mbids.json` is a flat JSON map from artist display name to MusicBrainz artist ID. It lives in the same folder as your config file:
+
+| Platform | Path |
+|----------|------|
+| Linux | `~/CrateDigger/artist_mbids.json` |
+| Windows | `Documents\CrateDigger\artist_mbids.json` |
+
+It is checked first by both the `chapter_artist_mbids` and `album_artist_mbids` enrich operations, before the auto cache and any live MusicBrainz search.
 
 ```json
 {
@@ -346,14 +366,13 @@ Note: CrateDigger automatically discovers artist aliases and group memberships f
 
 | Property | Value |
 |----------|-------|
-| Path | `~/.cratedigger/artist_mbids.json` |
 | Format | Flat JSON object: `{"Artist Name": "mbid-uuid"}` |
 | Matching | Case-insensitive on the artist name |
-| Precedence | Checked before `mbid_cache.json` and before any live MusicBrainz search |
+| Precedence | Checked before the auto MBID cache and before any live MusicBrainz search |
 | Expiry | Never expires |
 | Written by CrateDigger | No; this file is only edited by you |
 
-**Distinction from `mbid_cache.json`:** `mbid_cache.json` is populated automatically from MusicBrainz search results and expires after `cache_ttl.mbid_days`. It can be deleted and will refill. `artist_mbids.json` is your curated override list for artists that MusicBrainz searches misidentify or fail to find.
+**Distinction from the auto MBID cache:** the auto cache is populated from MusicBrainz search results and expires after `cache_ttl.mbid_days`. It can be deleted and will refill. `artist_mbids.json` is your curated override list for artists that MusicBrainz searches misidentify or fail to find.
 
 See [enrich: chapter_artist_mbids](commands/enrich.md#chapter_artist_mbids-per-track-artist-ids) for the fix workflow.
 
