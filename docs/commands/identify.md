@@ -49,7 +49,7 @@ cratedigger identify <folder_or_file> [options]
 | `--preview` | | off | Show the matched chapter list without embedding anything. Read-only. |
 | `--regenerate` / `--fresh` | | off | Ignore stored results and re-identify the file, even if chapters are already embedded |
 | `--delay <seconds>` | | 5 | Pause between files to avoid rate-limiting |
-| `--config <path>` | | (none) | Path to a config.json file |
+| `--config <path>` | | (none) | Path to a config.toml file |
 | `--quiet` | `-q` | off | Suppress per-file progress output |
 | `--verbose` | `-v` | off | Show detailed progress and decisions |
 | `--debug` | | off | Show cache hits, retries, and internal mechanics |
@@ -341,9 +341,9 @@ cratedigger identify ~/Downloads/sets/ --regenerate
 
 **"Error: credentials required"**
 
-Your 1001Tracklists email and password are not configured. Set them in
-`~/.cratedigger/config.json` under `tracklists.email` and `tracklists.password`, or via the
-environment variables `TRACKLISTS_EMAIL` and `TRACKLISTS_PASSWORD`. See
+Your 1001Tracklists email and password are not configured. Set them in your `config.toml`
+under `[tracklists]` (`email` and `password`), or via the environment variables
+`TRACKLISTS_EMAIL` and `TRACKLISTS_PASSWORD`. See
 [Tracklists: account setup](../tracklists.md#account-setup).
 
 **No results found for a file**
