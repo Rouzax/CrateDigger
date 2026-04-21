@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.13.4] - 2026-04-21
+
+### Added
+
+- Scraping canary: a structural health check that runs after every 1001Tracklists page fetch and logs a `WARNING` naming the missing selectors when the page is shaped in a way our parsers would silently fail on. Covers the four page types the scraper reads (tracklist detail, search results, DJ profile, source info). Previously, a site HTML change would cause parsers to return empty lists or dicts with no user-visible signal, leading to missing genres, missing event dates, wrong or absent DJ artwork, and empty NFOs; the canary surfaces this the first time it happens so the problem is visible while it is still fresh. One WARNING per unique (page type, missing selector set) pair is emitted per run, so a bulk operation that hits the same breakage across many files does not spam the log; subsequent identical failures log at `DEBUG` instead.
+
+### Changed
+
+- The 1001Tracklists scraping code has been migrated from regex parsing to BeautifulSoup across the board (`_extract_genres`, `_extract_dj_slugs`, `_parse_h1_structure` anchor extraction, `_parse_dj_profile`, `_parse_search_results`, and the inline parser in `fetch_source_info`). This makes parsing robust to cosmetic HTML changes on 1001tracklists.com that the old regex approach was silently fragile to: attribute reordering (`<meta content="X" itemprop="genre">` vs the other order), quote-style variations (single vs double-quoted hrefs), intervening attributes on tags, and false-positive matches against strings embedded in script blocks. No user-visible behavior change in the happy path; existing tags, chapters, artwork, and NFOs still populate from the same fields.
+- The tracklist detail page is now parsed into BeautifulSoup once per fetch and the soup is shared across all four downstream parsers (`_parse_tracks`, `_parse_h1_structure`, `_extract_genres`, `_extract_dj_slugs`), replacing three redundant full-page parses per export.
+
+### Removed
+
+- The DEBUG-only `site format may have changed` heuristic in `search()` has been removed. The canary replaces it with a `WARNING` that names the exact missing selector and is visible without `--verbose`.
+
 ## [0.13.3] - 2026-04-20
 
 ### Added

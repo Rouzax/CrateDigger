@@ -89,6 +89,25 @@ Two local caches make subsequent runs faster:
 
 Each cache entry's actual lifetime jitters by ±20% around the configured base (see [Configuration: cache TTL](configuration.md#cache-ttl)), so a bulk first-run fill does not cause all entries to expire at the same time.
 
+## Troubleshooting
+
+### A "Scraping canary" WARNING appears in the output
+
+You may see a line like this:
+
+```
+WARNING  Scraping canary: tracklist page missing selectors ['tlpItem row', 'cue_seconds input'] at https://www.1001tracklists.com/tracklist/abc123/some-set/
+```
+
+This means 1001tracklists.com has changed its page structure in a way that the parser no longer finds the expected data. Enrichment for that page type is likely to be incomplete until CrateDigger is updated to match the new layout. Affected fields may include genres, event date, stage name, or DJ artwork, depending on which selectors are missing.
+
+**What to do:**
+
+1. Report the issue at [github.com/Rouzax/CrateDigger/issues](https://github.com/Rouzax/CrateDigger/issues). Paste the full WARNING line so the selector names and URL are visible.
+2. Expect that files processed after this point may be missing some enrichment fields until a patched version is released.
+
+**What you do not need to worry about:** the scraper still tries to extract whatever it can, so chapter markers and core tracklist data may still be present even when the canary fires. One WARNING is emitted per unique breakage per run, regardless of how many files are processed, so a single warning does not mean every file in the batch is broken.
+
 ## See also
 
 - [identify command](commands/identify.md): command reference, flags, interactive and auto selection, examples
