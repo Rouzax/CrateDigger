@@ -161,7 +161,7 @@ CRATEDIGGER_ENRICHED_AT=2026-04-14T10:15:30+00:00
 #   MUSICBRAINZ_ARTISTIDS (aligned with CRATEDIGGER_TRACK_PERFORMER_NAMES)
 ```
 
-If KIKI's MBID is not yet in the cache, her slot in `CRATEDIGGER_ALBUMARTIST_MBIDS` and the per-chapter `MUSICBRAINZ_ARTISTIDS` will be an empty string. Add her to `~/.cratedigger/artist_mbids.json` and re-run:
+If KIKI's MBID is not yet in the cache, her slot in `CRATEDIGGER_ALBUMARTIST_MBIDS` and the per-chapter `MUSICBRAINZ_ARTISTIDS` will be an empty string. Add her to your `artist_mbids.json` (`~/CrateDigger/artist_mbids.json` on Linux, `Documents\CrateDigger\artist_mbids.json` on Windows) and re-run:
 
 ```bash
 cratedigger enrich ~/Music/Library/ --only chapter_artist_mbids,album_artist_mbids
