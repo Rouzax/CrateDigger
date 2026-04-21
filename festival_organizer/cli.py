@@ -556,6 +556,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     debug = getattr(args, "debug", False)
     console = make_console()
     setup_logging(verbose=verbose, debug=debug, console=console)
+    paths.warn_if_legacy_paths_exist()
 
     # Layout override
     if getattr(args, "layout", None):
