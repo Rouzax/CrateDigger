@@ -30,12 +30,12 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+from festival_organizer import paths
 from festival_organizer.tracklists.scoring import SearchResult
 from festival_organizer.tracklists import canary
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0"
 BASE_URL = "https://www.1001tracklists.com"
-DEFAULT_COOKIE_PATH = Path.home() / ".1001tl-cookies.json"
 
 
 class TracklistError(Exception):
@@ -262,7 +262,9 @@ class TracklistSession:
 
     def __init__(self, cookie_cache_path: Path | None = None,
                  source_cache=None, dj_cache=None, delay: float = 5):
-        self._cookie_path = cookie_cache_path or DEFAULT_COOKIE_PATH
+        self._cookie_path = (
+            cookie_cache_path if cookie_cache_path is not None else paths.cookies_file()
+        )
         self._source_cache = source_cache
         self._dj_cache = dj_cache
         self._delay = delay
@@ -709,6 +711,7 @@ class TracklistSession:
                 "Cookies": cookies_list,
             }
 
+            paths.ensure_parent(self._cookie_path)
             self._cookie_path.write_text(json.dumps(cache, indent=2), encoding="utf-8")
         except (OSError, TypeError) as e:
             logger.debug("Cookie save failed: %s", e)

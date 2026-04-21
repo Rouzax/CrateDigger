@@ -112,6 +112,27 @@ def test_cookie_restore_no_file():
         assert session._restore_cookies("test@example.com") is False
 
 
+def test_default_cookie_path_uses_paths_cookies_file(tmp_path, monkeypatch):
+    """Without an explicit cookie_cache_path, the session uses paths.cookies_file()."""
+    expected = tmp_path / "state" / "1001tl-cookies.json"
+    monkeypatch.setattr(
+        "festival_organizer.tracklists.api.paths.cookies_file", lambda: expected
+    )
+    session = TracklistSession()
+    assert session._cookie_path == expected
+
+
+def test_save_cookies_creates_parent_dir(tmp_path):
+    """_save_cookies creates the parent directory on first save."""
+    cookie_path = tmp_path / "freshly" / "nested" / "1001tl-cookies.json"
+    session = TracklistSession(cookie_cache_path=cookie_path)
+    session._session.cookies.set("sid", "s", domain="www.1001tracklists.com")
+    session._session.cookies.set("uid", "u", domain="www.1001tracklists.com")
+    session._save_cookies("user@example.com")
+    assert cookie_path.exists()
+    assert cookie_path.parent.is_dir()
+
+
 # --- Search result parsing ---
 
 def test_parse_search_results():
@@ -256,8 +277,10 @@ def test_login_success():
 
 def test_cookie_save_failure_logged(tmp_path, caplog):
     """Cookie save failure is logged at debug level."""
-    # Point cookie path to a non-existent subdirectory so write fails with OSError
-    session = TracklistSession(cookie_cache_path=tmp_path / "nonexistent_subdir" / "cookies.json")
+    # Point cookie "parent" at an existing regular file so mkdir fails with OSError.
+    blocker = tmp_path / "not_a_dir"
+    blocker.write_text("x")
+    session = TracklistSession(cookie_cache_path=blocker / "cookies.json")
 
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.api"):
         session._save_cookies("test@example.com")

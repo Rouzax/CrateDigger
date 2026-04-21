@@ -369,8 +369,13 @@ def test_run_check_impl_all_pass(monkeypatch, tmp_path):
     (cratedigger_dir / "config.json").write_text("{}")
     (cratedigger_dir / "festivals.json").write_text("{}")
     (cratedigger_dir / "artists.json").write_text("{}")
-    (home / ".1001tl-cookies.json").write_text("[]")
+    cookie_path = tmp_path / "state" / "1001tl-cookies.json"
+    cookie_path.parent.mkdir(parents=True, exist_ok=True)
+    cookie_path.write_text("[]")
     monkeypatch.setattr(Path, "home", lambda: home)
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.cookies_file", lambda: cookie_path
+    )
 
     # load_config returns a config with credentials set
     fake_config = type("C", (), {
@@ -434,8 +439,13 @@ def test_run_check_impl_shows_all_section_headers(monkeypatch, tmp_path):
     (cratedigger_dir / "config.json").write_text("{}")
     (cratedigger_dir / "festivals.json").write_text("{}")
     (cratedigger_dir / "artists.json").write_text("{}")
-    (home / ".1001tl-cookies.json").write_text("[]")
+    cookie_path = tmp_path / "state" / "1001tl-cookies.json"
+    cookie_path.parent.mkdir(parents=True, exist_ok=True)
+    cookie_path.write_text("[]")
     monkeypatch.setattr(Path, "home", lambda: home)
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.cookies_file", lambda: cookie_path
+    )
 
     fake_config = type("C", (), {
         "tracklists_credentials": ("a@b.com", "pass"),

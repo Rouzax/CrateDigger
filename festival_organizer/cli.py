@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 import typer
 
+from festival_organizer import paths
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import load_config
@@ -201,7 +202,7 @@ def _run_check_impl(con: "Console") -> int:
             con.print("  [yellow]![/yellow] 1001TL       email or password missing (optional, tracklist enrichment)")
             warnings += 1
 
-        cookie_path = Path.home() / ".1001tl-cookies.json"
+        cookie_path = paths.cookies_file()
         if cookie_path.is_file():
             con.print(f"  [green]\u2713[/green] 1001TL cookies  {cookie_path}")
         else:
