@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-04-21
+
+### Added
+
+- Rotating log file written on every startup: `~/.local/state/CrateDigger/log/cratedigger.log` on Linux, `%LOCALAPPDATA%\CrateDigger\Logs\cratedigger.log` on Windows. Five rotating files, 5 MB each. Console output is unchanged.
+- One-time startup WARNING when legacy paths remain from before 0.14.0 (`~/.cratedigger/` or `~/.1001tl-cookies.json`). CrateDigger does not migrate files automatically; the warning tells you to move or delete them.
+
+### Changed
+
+- Config file is now TOML (`config.toml`) instead of JSON (`config.json`).
+- Config and curated data files (`festivals.json`, `artists.json`, `artist_mbids.json`) now live in a visible user folder: `~/CrateDigger/` on Linux, `Documents\CrateDigger\` on Windows. Previously everything was mixed into `~/.cratedigger/`.
+- User-global festival logos moved from `~/.cratedigger/festivals/` to `~/CrateDigger/festivals/` (Linux) or `Documents\CrateDigger\festivals\` (Windows). Library-local `{library}/.cratedigger/festivals/` is unchanged.
+- Caches (`mbid_cache.json`, `dj_cache.json`, `source_cache.json`, `update-check.json`, artist artwork) moved to the platform cache directory: `~/.cache/CrateDigger/` on Linux, `%LOCALAPPDATA%\CrateDigger\Cache\` on Windows.
+- 1001TL session cookies moved from the rogue `~/.1001tl-cookies.json` in `$HOME` to `~/.local/state/CrateDigger/1001tl-cookies.json` on Linux, `%LOCALAPPDATA%\CrateDigger\State\1001tl-cookies.json` on Windows.
+- `--check` output updated to show new file locations.
+
+### Removed
+
+- `~/.cratedigger/` user-global grab-bag folder. The library-local `{library}/.cratedigger/` marker directory created by `organize` is unchanged.
+- JSON config loading path. Only TOML is supported from 0.14.0 onward.
+
 ## [0.13.4] - 2026-04-21
 
 ### Added
@@ -141,7 +162,7 @@ First public release.
 - MKV tag embedding with safe extract-merge-write workflow
 - Festival database with 30+ pre-configured festivals, edition support, and color branding
 - Artist database with alias resolution and group definitions
-- Configurable at user level (~/.cratedigger/config.json) and library level
+- Configurable at user level (config.toml) and library level
 - TTL-based caching for API lookups (MusicBrainz, fanart.tv, 1001Tracklists)
 - Rich terminal UI with progress reporting, colored status indicators, and spinners
 - Audit command for checking festival logo coverage
