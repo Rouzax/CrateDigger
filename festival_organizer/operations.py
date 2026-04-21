@@ -85,7 +85,7 @@ class OrganizeOperation(Operation):
             else:
                 shutil.move(str(file_path), str(target))
             # Update target so downstream operations (nfo, art, etc.) use the
-            # resolved path. This mutation is read by run_pipeline() — requires
+            # resolved path. This mutation is read by run_pipeline(); requires
             # serial execution; do not reuse operation instances across files.
             self.target = target
 
@@ -319,7 +319,7 @@ class AlbumPosterOperation(Operation):
     def _find_fanart_background(self, folder: Path, artist: str) -> Path | None:
         """Find a fanart.tv background for an artist folder.
 
-        Only returns a background if the folder contains a single artist —
+        Only returns a background if the folder contains a single artist;
         multi-artist folders (festival folders) use gradient backgrounds instead.
         """
         if not artist:
@@ -339,7 +339,7 @@ class AlbumPosterOperation(Operation):
                                 len(artists_in_folder))
                     return None  # Multi-artist folder, skip fanart background
 
-        # Single artist (or couldn't determine) — look for their fanart
+        # Single artist (or couldn't determine); look for their fanart
         candidate = _safe_artist_dir(artist) / "fanart.jpg"
         result = candidate if candidate.exists() else None
         logger.info("Album poster: 1 artist in folder -> %s",
@@ -497,9 +497,15 @@ class AlbumPosterOperation(Operation):
                 return None
 
             from festival_organizer.tracklists.api import TracklistSession, _extract_dj_slugs
+            from festival_organizer.tracklists import canary
             api = TracklistSession()
             api.login(email, password)
             resp = api._request("GET", tracklist_url)
+            api._run_canary(
+                "tracklist page",
+                canary.check_tracklist_page(resp.text),
+                tracklist_url,
+            )
             slugs = _extract_dj_slugs(resp.text)
             if not slugs:
                 logger.debug("No DJ slugs found on tracklist page")

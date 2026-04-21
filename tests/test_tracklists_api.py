@@ -20,6 +20,8 @@ from festival_organizer.tracklists.api import (
     _extract_genres,
     _extract_dj_slugs,
     _maximize_artwork_url,
+    _parse_dj_profile,
+    _parse_h1_structure,
 )
 
 
@@ -197,6 +199,34 @@ def test_parse_search_results_skips_header():
     assert len(results) == 1
 
 
+def test_parse_search_results_survives_class_before_href():
+    """BS4 migration: the title-link regex requires href to be the first
+    attribute after <a>. Real markup often has class or data-* attributes
+    before href; BS4 finds the anchor regardless."""
+    html = '''
+    <div class="bItm action">
+      <a class="tLink bigBtn" href="/tracklist/abc123/real-set.html">Real Set</a>
+    </div>
+    '''
+    session = TracklistSession()
+    results = session._parse_search_results(html)
+    assert len(results) == 1
+    assert results[0].id == "abc123"
+    assert results[0].title == "Real Set"
+
+
+def test_parse_search_results_survives_single_quoted_href():
+    html = '''
+    <div class="bItm">
+      <a href='/tracklist/abc123/real-set.html'>Real Set</a>
+    </div>
+    '''
+    session = TracklistSession()
+    results = session._parse_search_results(html)
+    assert len(results) == 1
+    assert results[0].id == "abc123"
+
+
 def test_parse_search_results_empty():
     session = TracklistSession()
     results = session._parse_search_results("<div>No results</div>")
@@ -277,6 +307,24 @@ def test_extract_genres_empty():
     assert _extract_genres("<html>no genres</html>") == []
 
 
+def test_extract_genres_survives_attribute_reorder():
+    """BS4 migration: HTML authors may emit attributes in either order.
+    The pre-migration regex required itemprop before content and silently
+    returned []."""
+    html = '<meta content="House" itemprop="genre">'
+    assert _extract_genres(html) == ["House"]
+
+
+def test_extract_genres_survives_single_quotes():
+    html = "<meta itemprop='genre' content='Techno'>"
+    assert _extract_genres(html) == ["Techno"]
+
+
+def test_extract_genres_survives_intervening_attribute():
+    html = '<meta itemprop="genre" class="dark" content="Trance">'
+    assert _extract_genres(html) == ["Trance"]
+
+
 # --- DJ slug extraction ---
 
 def test_extract_dj_slugs():
@@ -316,6 +364,270 @@ def test_extract_dj_slugs_mixed_formats():
 
 def test_extract_dj_slugs_empty():
     assert _extract_dj_slugs("<html>no djs</html>") == []
+
+
+def test_extract_dj_slugs_survives_single_quoted_href():
+    """BS4 migration: real 1001TL markup uses double quotes but nothing
+    stops a future template engine from switching to single quotes.
+    The old regex required exact double-quote delimiters."""
+    html = "<a href='/dj/carl-cox/index.html'>Carl Cox</a>"
+    slugs = _extract_dj_slugs(html)
+    assert slugs == ["carl-cox"]
+
+
+def test_extract_dj_slugs_ignores_unrelated_links_with_dj_in_path():
+    """The regex matches any 'href=\"/dj/...' substring and rejects longer
+    paths only by the closing quote. A more forgiving match would risk
+    false positives. Confirm BS4 still picks up clean /dj/<slug>/ anchors
+    and ignores /dj/<slug>/something/else/ paths."""
+    html = '''
+    <a href="/dj/tiesto/index.html">Tiesto</a>
+    <a href="/dj/tiesto/tracklists/2025/">Tiesto 2025 tracklists</a>
+    '''
+    slugs = _extract_dj_slugs(html)
+    assert slugs == ["tiesto"]
+
+
+# --- _parse_h1_structure ---
+
+def test_parse_h1_structure_basic_dj_at_source():
+    """Baseline: DJ @ source with country tail."""
+    h1 = (
+        '<a href="/dj/afrojack/index.html">AFROJACK</a>'
+        ' @ Mainstage, <a href="/source/abc/ultra-miami/index.html">Ultra Miami</a>'
+        ', United States 2026-03-29'
+    )
+    result = _parse_h1_structure(h1)
+    assert result["dj_artists"] == [("afrojack", "AFROJACK")]
+    assert result["sources"] == [("abc", "ultra-miami", "Ultra Miami")]
+    assert result["date"] == "2026-03-29"
+    assert result["country"] == "United States"
+
+
+def test_parse_h1_structure_handles_single_quoted_anchors():
+    """BS4 migration: anchor tags may use single-quoted hrefs."""
+    h1 = (
+        "<a href='/dj/adam-beyer/index.html'>Adam Beyer</a>"
+        " @ <a href='/source/99/awakenings/index.html'>Awakenings</a>"
+    )
+    result = _parse_h1_structure(h1)
+    assert ("adam-beyer", "Adam Beyer") in result["dj_artists"]
+    assert any(s[0] == "99" for s in result["sources"])
+
+
+def test_parse_h1_structure_returns_empty_when_no_at_sign():
+    """Documented guard: h1 without '@' returns all-empty dict."""
+    result = _parse_h1_structure("<a href='/dj/someone/'>Some DJ</a>")
+    assert result["dj_artists"] == []
+    assert result["sources"] == []
+
+
+# --- Canary integration in callers ---
+
+def test_search_fires_canary_on_missing_skeleton(caplog):
+    """When the search response has no main_search input, the canary fires."""
+    session = TracklistSession()
+    resp = MagicMock(
+        text="<html><body>totally unrelated response</body></html>",
+        status_code=200,
+    )
+    with patch.object(session, "_request", return_value=resp):
+        with caplog.at_level(logging.WARNING,
+                             logger="festival_organizer.tracklists.api"):
+            results = session.search("anything")
+    assert results == []
+    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert len(canary_warnings) == 1
+    msg = canary_warnings[0].message
+    assert "search results" in msg
+    assert "search form skeleton" in msg
+    assert "query='anything'" in msg
+
+
+def test_fetch_source_info_fires_canary_on_broken_page(caplog):
+    """When a source page lacks both the mtb5 type div and the flag img,
+    the canary names both missing selectors."""
+    session = TracklistSession()
+    resp = MagicMock(text="<html><body>no mtb5, no flag</body></html>")
+    with patch.object(session, "_request", return_value=resp):
+        with caplog.at_level(logging.WARNING,
+                             logger="festival_organizer.tracklists.api"):
+            session.fetch_source_info("123", "some-venue")
+    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert len(canary_warnings) == 1
+    msg = canary_warnings[0].message
+    assert "source info" in msg
+    assert "source type mtb5 div" in msg
+    assert "country flag img" in msg
+    assert "123/some-venue" in msg
+
+
+def test_fetch_dj_profile_fires_canary_on_broken_page(caplog):
+    """When a DJ page has no og:image meta, the canary fires with the URL."""
+    session = TracklistSession()
+    resp = MagicMock(text="<html><body>no og meta at all</body></html>")
+    with patch.object(session, "_request", return_value=resp):
+        with caplog.at_level(logging.WARNING,
+                             logger="festival_organizer.tracklists.api"):
+            session._fetch_dj_profile("someone")
+    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert len(canary_warnings) == 1
+    msg = canary_warnings[0].message
+    assert "DJ profile" in msg
+    assert "og:image meta" in msg
+    assert "someone" in msg
+
+
+def test_search_does_not_fire_canary_on_zero_hits_with_skeleton(caplog):
+    """Zero hits for a query is valid; must not emit a canary WARNING."""
+    session = TracklistSession()
+    resp = MagicMock(
+        text='<html><body><input name="main_search"></body></html>',
+        status_code=200,
+    )
+    with patch.object(session, "_request", return_value=resp):
+        with caplog.at_level(logging.WARNING,
+                             logger="festival_organizer.tracklists.api"):
+            results = session.search("noresults")
+    assert results == []
+    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert canary_warnings == []
+
+
+def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
+    """When the tracklist page is missing must-exist markers, the canary
+    fires before the AJAX export path even runs."""
+    session = TracklistSession()
+    broken_html = "<html><body>no tlpItem, no h1, no genre meta</body></html>"
+    page_resp = MagicMock(text=broken_html,
+                           url="https://www.1001tracklists.com/tracklist/xxx/")
+    ajax_resp = MagicMock(text='{"success": true, "data": ""}')
+    ajax_resp.json = lambda: {"success": True, "data": ""}
+
+    def fake_request(method, url, **kwargs):
+        return ajax_resp if "export_data.php" in url else page_resp
+
+    with patch.object(session, "_request", side_effect=fake_request):
+        with patch.object(session, "_fetch_dj_profile",
+                          return_value={"artwork_url": ""}):
+            with caplog.at_level(logging.WARNING,
+                                 logger="festival_organizer.tracklists.api"):
+                try:
+                    session.export_tracklist("xxx")
+                except Exception:
+                    pass
+
+    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert len(canary_warnings) >= 1
+    msg = canary_warnings[0].message
+    assert "tracklist page" in msg
+    assert "tlpItem row" in msg
+    assert "https://www.1001tracklists.com/tracklist/xxx/" in msg
+
+
+# --- _run_canary dedupe helper ---
+
+def test_run_canary_no_op_on_healthy_result(caplog):
+    session = TracklistSession()
+    with caplog.at_level(logging.WARNING, logger="festival_organizer.tracklists.api"):
+        session._run_canary("tracklist page", [], "https://example/t/1/")
+    warnings_emitted = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert warnings_emitted == []
+
+
+def test_run_canary_emits_warning_on_missing_selectors(caplog):
+    session = TracklistSession()
+    with caplog.at_level(logging.WARNING, logger="festival_organizer.tracklists.api"):
+        session._run_canary(
+            "tracklist page", ["tlpItem row"], "https://example/t/1/"
+        )
+    records = [r for r in caplog.records if "Scraping canary" in r.message]
+    assert len(records) == 1
+    msg = records[0].message
+    assert "tracklist page" in msg
+    assert "tlpItem row" in msg
+    assert "https://example/t/1/" in msg
+
+
+def test_run_canary_dedupes_by_page_type_and_missing_set(caplog):
+    """A bulk run with a site-wide break must not spam one WARNING per URL.
+    The helper dedupes on (page_type, frozenset(missing)) for the lifetime
+    of the session. Subsequent identical hits log at DEBUG."""
+    session = TracklistSession()
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.api"):
+        session._run_canary("tracklist page", ["tlpItem row"], "https://example/t/1/")
+        session._run_canary("tracklist page", ["tlpItem row"], "https://example/t/2/")
+        session._run_canary("tracklist page", ["tlpItem row"], "https://example/t/3/")
+
+    warnings_emitted = [
+        r for r in caplog.records
+        if r.levelno == logging.WARNING and "Scraping canary" in r.message
+    ]
+    debugs = [
+        r for r in caplog.records
+        if r.levelno == logging.DEBUG and "suppressed duplicate" in r.message
+    ]
+    assert len(warnings_emitted) == 1
+    assert len(debugs) == 2
+
+
+def test_run_canary_distinct_missing_sets_both_emit(caplog):
+    """Same page type but different missing selectors is not a duplicate."""
+    session = TracklistSession()
+    with caplog.at_level(logging.WARNING, logger="festival_organizer.tracklists.api"):
+        session._run_canary("tracklist page", ["tlpItem row"], "https://example/a/")
+        session._run_canary("tracklist page", ["cue_seconds input"], "https://example/b/")
+    warnings_emitted = [
+        r for r in caplog.records
+        if r.levelno == logging.WARNING and "Scraping canary" in r.message
+    ]
+    assert len(warnings_emitted) == 2
+
+
+# --- fetch_source_info ---
+
+def test_fetch_source_info_extracts_name_type_country():
+    """Baseline: the three fields extracted from a /source/ page."""
+    html = '''
+    <div class="h">Tomorrowland 2026</div>
+    <div class="cRow"><div class="mtb5">Festival</div></div>
+    <img src="/flags/be.png" alt="Belgium" class="flag">
+    '''
+    session = TracklistSession()
+    resp = MagicMock(text=html)
+    with patch.object(session, "_request", return_value=resp):
+        info = session.fetch_source_info("123", "tomorrowland-2026")
+    assert info["name"] == "Tomorrowland 2026"
+    assert info["type"] == "Festival"
+    assert info["country"] == "Belgium"
+    assert info["slug"] == "tomorrowland-2026"
+
+
+def test_fetch_source_info_parses_reordered_flag_attrs():
+    """BS4 migration: the alt attribute may come before src in real
+    markup. The pre-migration regex required src first."""
+    html = '''
+    <div class="h">Ultra Miami</div>
+    <div class="cRow"><div class="mtb5">Open Air / Festival</div></div>
+    <img alt="United States" class="flag" src="/flags/us.png">
+    '''
+    session = TracklistSession()
+    resp = MagicMock(text=html)
+    with patch.object(session, "_request", return_value=resp):
+        info = session.fetch_source_info("1", "ultra-miami")
+    assert info["country"] == "United States"
+    assert info["type"] == "Open Air / Festival"
+
+
+def test_fetch_source_info_falls_back_to_slug_when_name_missing():
+    html = '<div class="cRow"><div class="mtb5">Club</div></div>'
+    session = TracklistSession()
+    resp = MagicMock(text=html)
+    with patch.object(session, "_request", return_value=resp):
+        info = session.fetch_source_info("99", "warehouse-project")
+    assert info["name"] == "Warehouse Project"
+    assert info["type"] == "Club"
+    assert info["country"] == ""
 
 
 def test_fetch_dj_profile_rejects_logo_url():
@@ -401,6 +713,42 @@ def test_maximize_artwork_url_unknown_cdn_passthrough():
 def test_maximize_artwork_url_empty_string():
     """Empty string returns empty string."""
     assert _maximize_artwork_url("") == ""
+
+
+def test_parse_dj_profile_extracts_aliases_and_member_of():
+    """Baseline: the section walker finds aliases and group memberships."""
+    html = '''
+    <meta property="og:image" content="https://cdn.1001tracklists.com/dj.jpg">
+    <div class="h">Aliases</div>
+    <div class="c ptb5">
+      <a href="/dj/alt-name/index.html">Alt Name</a>
+    </div>
+    <div class="h">Member Of</div>
+    <div class="c ptb5">
+      <a href="/dj/some-group/index.html">Some Group</a>
+    </div>
+    '''
+    result = _parse_dj_profile(html)
+    assert result["aliases"] == [{"slug": "alt-name", "name": "Alt Name"}]
+    assert result["member_of"] == [{"slug": "some-group", "name": "Some Group"}]
+
+
+def test_parse_dj_profile_finds_og_image_with_reordered_attrs():
+    """BS4 migration: og:image meta may emit attributes in either order."""
+    html = '<meta content="https://cdn.1001tracklists.com/images/dj/photo.jpg" property="og:image">'
+    result = _parse_dj_profile(html)
+    assert result["artwork_url"] == "https://cdn.1001tracklists.com/images/dj/photo.jpg"
+
+
+def test_parse_dj_profile_survives_single_quoted_og_image():
+    html = "<meta property='og:image' content='https://cdn.1001tracklists.com/images/dj/photo.jpg'>"
+    result = _parse_dj_profile(html)
+    assert result["artwork_url"] == "https://cdn.1001tracklists.com/images/dj/photo.jpg"
+
+
+def test_parse_dj_profile_empty_when_no_markers():
+    result = _parse_dj_profile("<html>nothing</html>")
+    assert result == {"artwork_url": "", "aliases": [], "member_of": []}
 
 
 def test_fetch_dj_profile_maximizes_squarespace_url():

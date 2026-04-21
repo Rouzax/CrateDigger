@@ -31,6 +31,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 from festival_organizer.tracklists.scoring import SearchResult
+from festival_organizer.tracklists import canary
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0"
 BASE_URL = "https://www.1001tracklists.com"
@@ -46,7 +47,7 @@ class AuthenticationError(TracklistError):
 
 
 class RateLimitError(TracklistError):
-    """Too many requests — captcha required."""
+    """Too many requests, captcha required."""
 
 
 class ExportError(TracklistError):
@@ -114,8 +115,11 @@ def top_genres_by_frequency(tracks: list["Track"], n: int = 5) -> list[str]:
     return ordered[:n]
 
 
-def _parse_tracks(html: str) -> list["Track"]:
+def _parse_tracks(html) -> list["Track"]:
     """Extract chapter-aligned per-track rows from a 1001TL tracklist page.
+
+    Accepts raw HTML or an already-parsed BeautifulSoup so export_tracklist
+    can share one parse with the other tracklist-page parsers.
 
     Only rows with class 'tlpTog' and NOT 'con' and NOT 'tlpSubTog' are
     included; the page also contains mashup-component sub-rows that do not
@@ -123,7 +127,7 @@ def _parse_tracks(html: str) -> list["Track"]:
     start_ms taken from the row's cue_seconds input (float seconds * 1000).
     """
     from bs4 import BeautifulSoup
-    soup = BeautifulSoup(html, "html.parser")
+    soup = _to_soup(html)
     tracks: list[Track] = []
     for row in soup.select("div.tlpItem"):
         classes = set(row.get("class", []))
@@ -268,6 +272,34 @@ class TracklistSession:
             "User-Agent": USER_AGENT,
             "Accept-Language": "en-US,en;q=0.9",
         })
+        # (page_type, frozenset(missing)) pairs already reported at
+        # WARNING this session. See _run_canary.
+        self._canary_seen: set[tuple[str, frozenset[str]]] = set()
+
+    def _run_canary(self, page_type: str, missing: list[str], url: str,
+                    *extras: str) -> None:
+        """Emit a WARNING when a scraped page is structurally broken.
+
+        Dedupes by (page_type, frozenset(missing)) for the lifetime of
+        this session so a bulk run over many pages with the same
+        breakage emits one WARNING, not hundreds. Subsequent identical
+        failures log at DEBUG so --debug still shows the full scope.
+        """
+        if not missing:
+            return
+        key = (page_type, frozenset(missing))
+        if key in self._canary_seen:
+            logger.debug(
+                "Canary: suppressed duplicate %s breakage at %s",
+                page_type, url,
+            )
+            return
+        self._canary_seen.add(key)
+        extras_str = " ".join(extras)
+        logger.warning(
+            "Scraping canary: %s missing selectors %s at %s %s",
+            page_type, missing, url, extras_str,
+        )
 
     def throttle(self) -> None:
         """Sleep only the remaining delay since the last request.
@@ -334,11 +366,14 @@ class TracklistSession:
 
         logger.debug("Search response: status=%d, length=%d, has_bItm=%s", resp.status_code, len(resp.text), "bItm" in resp.text)
 
+        self._run_canary(
+            "search results",
+            canary.check_search_results(resp.text),
+            f"{BASE_URL}/search/result.php",
+            f"(query='{query}')",
+        )
+
         results = self._parse_search_results(resp.text)
-
-        if not results and resp.text:
-            logger.debug("Search returned HTML (%d chars) but parsed 0 results — site format may have changed", len(resp.text))
-
         return results
 
     def export_tracklist(
@@ -360,6 +395,15 @@ class TracklistSession:
         page_url = full_url or f"{BASE_URL}/tracklist/{tracklist_id}/"
         page_resp = self._request("GET", page_url)
         actual_url = page_resp.url  # After redirects
+
+        # Parse the page once; all four tracklist-page parsers share this soup.
+        page_soup = _to_soup(page_resp.text)
+
+        # Structural canary: flag up-front if 1001TL changed the markup
+        # in ways that would silently drain data from the parsers below.
+        self._run_canary("tracklist page",
+                         canary.check_tracklist_page(page_resp.text),
+                         actual_url)
 
         # Export via AJAX
         resp = self._request("POST", f"{BASE_URL}/ajax/export_data.php", data={
@@ -396,12 +440,12 @@ class TracklistSession:
         short_url = f"{BASE_URL}/tracklist/{tracklist_id}/"
 
         # Extract enrichment metadata from page HTML
-        genres = _extract_genres(page_resp.text)
+        genres = _extract_genres(page_soup)
         if genres:
             logger.info("Genres: %s", genres)
 
         # Parse structured h1 for stage, source, and DJ artist metadata
-        h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", page_resp.text, re.DOTALL)
+        h1_el = page_soup.find("h1")
         stage_text = ""
         dj_artists: list[tuple[str, str]] = []
         sources_by_type: dict[str, list[str]] = {}
@@ -409,8 +453,8 @@ class TracklistSession:
         location = ""
         source_type_str = ""
         h1_date = ""
-        if h1_match:
-            h1_info = _parse_h1_structure(h1_match.group(1))
+        if h1_el is not None:
+            h1_info = _parse_h1_structure(h1_el.decode_contents())
             stage_text = h1_info["stage_text"]
             dj_artists = h1_info["dj_artists"]
             if h1_info.get("country"):
@@ -446,7 +490,7 @@ class TracklistSession:
 
         # Fetch DJ profiles and populate cache (skip already-cached DJs)
         dj_artwork_url = ""
-        dj_slugs = [slug for slug, _name in dj_artists] if dj_artists else _extract_dj_slugs(page_resp.text)
+        dj_slugs = [slug for slug, _name in dj_artists] if dj_artists else _extract_dj_slugs(page_soup)
         dj_name_map = {slug: name for slug, name in dj_artists}
         if on_progress:
             on_progress(f"Fetching tracklist ({len(dj_slugs)} DJs)")
@@ -467,7 +511,7 @@ class TracklistSession:
                 dj_artwork_url = profile["artwork_url"]
                 logger.info("DJ artwork: %s", dj_artwork_url)
 
-        tracks = _parse_tracks(page_resp.text)
+        tracks = _parse_tracks(page_soup)
 
         # Suppress the h1-derived location when a linked source already
         # carries authoritative location info (festival, venue, conference,
@@ -502,7 +546,7 @@ class TracklistSession:
                         wait = 30
                         time.sleep(wait)
                         continue
-                    raise RateLimitError("Rate limited — solve captcha at 1001tracklists.com in your browser")
+                    raise RateLimitError("Rate limited: solve captcha at 1001tracklists.com in your browser")
 
                 # Transient errors
                 if resp.status_code in (502, 503, 504):
@@ -534,56 +578,45 @@ class TracklistSession:
 
     def _parse_search_results(self, html: str) -> list[SearchResult]:
         """Parse search result HTML into SearchResult objects."""
-        results = []
-        seen_ids = set()
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, "html.parser")
+        results: list[SearchResult] = []
+        seen_ids: set[str] = set()
 
-        # Split by result items (class may include extra names like "bItm action oItm")
-        items = re.split(r'class="bItm\b(?!H)', html)
-
-        for item in items[1:]:  # Skip content before first item
-            # Extract title and URL
-            link_match = re.search(
-                r'<a\s+href="(/tracklist/([^/]+)/[^"]*)"[^>]*>([^<]+)</a>',
-                item
-            )
-            if not link_match:
+        for card in soup.select(".bItm:not(.bItmH)"):
+            link = card.select_one('a[href^="/tracklist/"]')
+            if link is None:
                 continue
+            href_raw = link.get("href", "")
+            href = href_raw if isinstance(href_raw, str) else ""
+            m = re.match(r"/tracklist/([^/]+)/", href)
+            if not m:
+                continue
+            tl_id = m.group(1)
+            title = _html_decode(link.get_text(strip=True))
 
-            url_path = link_match.group(1)
-            tl_id = link_match.group(2)
-            title = _html_decode(link_match.group(3).strip())
-
-            # Skip duplicates and pagination
             if tl_id in seen_ids:
                 continue
             if title in ("Previous", "Next", "First", "Last"):
                 continue
             seen_ids.add(tl_id)
 
-            # Extract duration
             duration_mins = None
-            dur_match = re.search(
-                r'title="play time"[^>]*>.*?</i>((?:\d+h\s*)?(?:\d+m)?)\s*</div>',
-                item, re.DOTALL
-            )
-            if dur_match:
-                duration_mins = _parse_duration_string(dur_match.group(1))
+            dur_el = card.select_one('[title="play time"]')
+            if dur_el is not None:
+                dur_text = dur_el.get_text(" ", strip=True)
+                duration_mins = _parse_duration_string(dur_text)
 
-            # Extract date
             date = None
-            date_match = re.search(
-                r'title="tracklist date"[^>]*>.*?</i>([^<]+)</div>',
-                item, re.DOTALL
-            )
-            if date_match:
-                date_str = date_match.group(1).strip()
-                # Try to normalize to YYYY-MM-DD
+            date_el = card.select_one('[title="tracklist date"]')
+            if date_el is not None:
+                date_str = date_el.get_text(" ", strip=True)
                 date = _normalize_date(date_str)
 
             results.append(SearchResult(
                 id=tl_id,
                 title=title,
-                url=f"{BASE_URL}{url_path}",
+                url=f"{BASE_URL}{href}",
                 duration_mins=duration_mins,
                 date=date,
             ))
@@ -592,21 +625,28 @@ class TracklistSession:
 
     def fetch_source_info(self, source_id: str, slug: str) -> dict:
         """Fetch metadata from a /source/ page. Returns {name, slug, type, country}."""
+        from bs4 import BeautifulSoup
         url = f"{BASE_URL}/source/{source_id}/{slug}/index.html"
         resp = self._request("GET", url, max_retries=2)
-
-        type_match = re.search(
-            r'<div class="cRow">\s*<div class="mtb5">([^<]+)</div>', resp.text
+        self._run_canary(
+            "source info",
+            canary.check_source_info(resp.text),
+            url,
+            f"(source='{source_id}/{slug}')",
         )
-        source_type = type_match.group(1).strip() if type_match else ""
+        soup = BeautifulSoup(resp.text, "html.parser")
 
-        flag_match = re.search(
-            r'<img[^>]*flags/[^.]+\.png[^>]*alt="([^"]+)"', resp.text
-        )
-        country = flag_match.group(1).strip() if flag_match else ""
+        type_el = soup.select_one("div.cRow > div.mtb5")
+        source_type = type_el.get_text(strip=True) if type_el else ""
 
-        name_match = re.search(r'<div class="h">\s*([^<]+)', resp.text)
-        name = name_match.group(1).strip() if name_match else slug.replace("-", " ").title()
+        flag_img = soup.select_one('img[src*="flags/"]')
+        country = ""
+        if flag_img is not None:
+            alt = flag_img.get("alt", "")
+            country = (alt if isinstance(alt, str) else "").strip()
+
+        name_el = soup.select_one("div.h")
+        name = name_el.get_text(strip=True) if name_el else slug.replace("-", " ").title()
 
         return {"name": name, "slug": slug, "type": source_type, "country": country}
 
@@ -617,8 +657,15 @@ class TracklistSession:
         On failure returns empty defaults.
         """
         empty = {"artwork_url": "", "aliases": [], "member_of": []}
+        url = f"{BASE_URL}/dj/{dj_slug}/index.html"
         try:
-            resp = self._request("GET", f"{BASE_URL}/dj/{dj_slug}/index.html", max_retries=2)
+            resp = self._request("GET", url, max_retries=2)
+            self._run_canary(
+                "DJ profile",
+                canary.check_dj_profile(resp.text),
+                url,
+                f"(slug='{dj_slug}')",
+            )
             return _parse_dj_profile(resp.text)
         except TracklistError:
             logger.debug("Failed to fetch DJ page for %s", dj_slug)
@@ -751,22 +798,39 @@ def _parse_h1_structure(h1_html: str) -> dict:
 
     before_at, after_at = h1_html.split("@", 1)
 
-    # Extract /dj/ links from the before-@ part
-    dj_pattern = re.compile(
-        r'<a[^>]*href="/dj/([^/"]+)/[^"]*"[^>]*>([^<]+)</a>'
-    )
-    result["dj_artists"] = [
-        (m.group(1), _html_decode(m.group(2).strip()))
-        for m in dj_pattern.finditer(before_at)
-    ]
+    from bs4 import BeautifulSoup
 
-    source_pattern = re.compile(
-        r'<a[^>]*href="/source/([^/]+)/([^/]+)/[^"]*"[^>]*>([^<]+)</a>'
-    )
-    source_matches = list(source_pattern.finditer(after_at))
-    sources = [(m.group(1), m.group(2), _html_decode(m.group(3).strip()))
-               for m in source_matches]
+    # DJ anchors in the before-@ fragment
+    before_soup = BeautifulSoup(before_at, "html.parser")
+    for a in before_soup.select('a[href^="/dj/"]'):
+        href_raw = a.get("href", "")
+        href = href_raw if isinstance(href_raw, str) else ""
+        m = re.match(r"/dj/([^/]+)/", href)
+        if not m:
+            continue
+        result["dj_artists"].append(
+            (m.group(1), _html_decode(a.get_text(strip=True)))
+        )
+
+    # Source anchors in the after-@ fragment. BS4 gives us the data; a
+    # lenient quote-style-agnostic regex over the raw after_at string
+    # gives us the character offsets the tail/stage algorithm needs.
+    after_soup = BeautifulSoup(after_at, "html.parser")
+    sources: list[tuple[str, str, str]] = []
+    for a in after_soup.select('a[href^="/source/"]'):
+        href_raw = a.get("href", "")
+        href = href_raw if isinstance(href_raw, str) else ""
+        m = re.match(r"/source/([^/]+)/([^/]+)/", href)
+        if not m:
+            continue
+        sources.append((m.group(1), m.group(2),
+                        _html_decode(a.get_text(strip=True))))
     result["sources"] = sources
+
+    source_matches = list(re.finditer(
+        r'<a[^>]*href=["\']/source/[^/"\']+/[^/"\']+/[^"\']*["\'][^>]*>[^<]+</a>',
+        after_at,
+    ))
 
     first_source = source_matches[0] if source_matches else None
     if first_source:
@@ -785,10 +849,7 @@ def _parse_h1_structure(h1_html: str) -> dict:
         # link is part of a compound stage name.
         all_text = re.sub(r"<[^>]+>", "", after_at).strip()
         first_segment = all_text.split(",")[0].strip()
-        source_names = {
-            _html_decode(m.group(3).strip())
-            for m in source_pattern.finditer(after_at)
-        }
+        source_names = {s[2] for s in sources}
         if first_segment and first_segment not in source_names:
             plain = first_segment
 
@@ -832,18 +893,23 @@ def _parse_h1_structure(h1_html: str) -> dict:
     return result
 
 
-def _extract_genres(html: str) -> list[str]:
+def _extract_genres(html) -> list[str]:
     """Extract genres from itemprop="genre" structured data on the page.
 
+    Accepts raw HTML or an already-parsed BeautifulSoup so export_tracklist
+    can share one parse with the other tracklist-page parsers.
+
     1001TL embeds genre metadata as <meta itemprop="genre" content="..."> tags:
-    - One tracklist-level genre (near numTracks)
-    - Per-track genres for each track in the tracklist
+    one tracklist-level genre (near numTracks), plus per-track genres.
     """
-    matches = re.findall(r'<meta\s+itemprop="genre"\s+content="([^"]+)"', html)
-    seen = set()
-    genres = []
-    for genre in matches:
-        genre = _html_decode(genre)
+    soup = _to_soup(html)
+    seen: set[str] = set()
+    genres: list[str] = []
+    for meta in soup.select('meta[itemprop="genre"]'):
+        content = meta.get("content", "")
+        if not content:
+            continue
+        genre = _html_decode(content)
         lower = genre.lower()
         if lower in seen or lower == "tracklist":
             continue
@@ -860,54 +926,91 @@ def _parse_dj_profile(html: str) -> dict:
         aliases: list of {"slug": str, "name": str}
         member_of: list of {"slug": str, "name": str}
     """
-    # Extract artwork from og:image
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+
     artwork_url = ""
-    og_match = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', html)
-    if og_match:
-        url = og_match.group(1)
-        if "/images/static/" not in url and "logo" not in url.lower() and "default" not in url:
+    og = soup.select_one('meta[property="og:image"]')
+    if og is not None:
+        content = og.get("content", "")
+        url = content if isinstance(content, str) else ""
+        if url and "/images/static/" not in url and "logo" not in url.lower() and "default" not in url:
             artwork_url = _maximize_artwork_url(url)
 
     def _extract_section(section_header: str) -> list[dict]:
-        """Extract /dj/ links from c ptb5 blocks following a section header."""
-        # Find the header div, then collect links until the next header
-        pattern = re.compile(
-            r'<div\s+class="h">\s*' + re.escape(section_header) + r'\s*</div>'
-            r'(.*?)'
-            r'(?:<div\s+class="h">|$)',
-            re.DOTALL,
-        )
-        match = pattern.search(html)
-        if not match:
+        """Collect /dj/ links from the siblings between this section's
+        <div class="h">HEADER</div> and the next <div class="h">, which
+        frames every section on the profile page."""
+        header = None
+        for h in soup.select("div.h"):
+            if h.get_text(strip=True) == section_header:
+                header = h
+                break
+        if header is None:
             return []
-        block = match.group(1)
-        link_pattern = re.compile(
-            r'<a\s+href="/dj/([^/"]+)/index\.html"[^>]*>([^<]+)</a>'
-        )
-        entries = []
-        for lm in link_pattern.finditer(block):
-            entries.append({
-                "slug": lm.group(1),
-                "name": _html_decode(lm.group(2).strip()),
-            })
+        entries: list[dict] = []
+        seen: set[str] = set()
+        for sib in header.find_next_siblings():
+            if getattr(sib, "name", None) == "div" and "h" in (sib.get("class") or []):
+                break
+            for a in sib.select('a[href^="/dj/"]'):
+                href_raw = a.get("href", "")
+                href = href_raw if isinstance(href_raw, str) else ""
+                m = re.match(r"/dj/([^/]+)/index\.html", href)
+                if not m:
+                    continue
+                slug = m.group(1)
+                if slug in seen:
+                    continue
+                seen.add(slug)
+                entries.append({
+                    "slug": slug,
+                    "name": _html_decode(a.get_text(strip=True)),
+                })
         return entries
 
-    aliases = _extract_section("Aliases")
-    member_of = _extract_section("Member Of")
+    return {
+        "artwork_url": artwork_url,
+        "aliases": _extract_section("Aliases"),
+        "member_of": _extract_section("Member Of"),
+    }
 
-    return {"artwork_url": artwork_url, "aliases": aliases, "member_of": member_of}
 
+def _extract_dj_slugs(html) -> list[str]:
+    """Extract DJ slugs from /dj/<slug>/ or /dj/<slug>/index.html links, deduplicated.
 
-def _extract_dj_slugs(html: str) -> list[str]:
-    """Extract DJ slugs from /dj/<slug>/ or /dj/<slug>/index.html links, deduplicated."""
-    matches = re.findall(r'href="/dj/([^/"]+)/(?:index\.html)?"', html)
-    seen = set()
-    slugs = []
-    for slug in matches:
-        if slug not in seen:
-            seen.add(slug)
-            slugs.append(slug)
+    Accepts raw HTML or an already-parsed BeautifulSoup so export_tracklist
+    can share one parse with the other tracklist-page parsers.
+    """
+    soup = _to_soup(html)
+    slugs: list[str] = []
+    seen: set[str] = set()
+    for a in soup.select('a[href^="/dj/"]'):
+        href_raw = a.get("href", "")
+        href = href_raw if isinstance(href_raw, str) else ""
+        m = re.match(r"/dj/([^/]+)/(?:index\.html)?$", href)
+        if not m:
+            continue
+        slug = m.group(1)
+        if slug in seen:
+            continue
+        seen.add(slug)
+        slugs.append(slug)
     return slugs
+
+
+def _to_soup(value):
+    """Return a BeautifulSoup for the given value.
+
+    Accepts a raw HTML string or an already-parsed BeautifulSoup. When
+    called with a soup, returns it unchanged so the tracklist-page
+    parsers can share one parse across export_tracklist without paying
+    the cost of reparsing 200 KB of HTML per parser.
+    """
+    from bs4 import BeautifulSoup
+    if isinstance(value, str):
+        return BeautifulSoup(value, "html.parser")
+    return value
 
 
 def _maximize_artwork_url(url: str) -> str:
