@@ -6,6 +6,11 @@
 # Folder structure. Available layouts: artist_flat, festival_flat, artist_nested, festival_nested.
 default_layout = "artist_flat"
 
+# Glob patterns for paths to skip during scanning. Must stay above every
+# [section] header; otherwise TOML absorbs it into the preceding section and
+# the loader silently ignores it.
+skip_patterns = ["*/BDMV/*", "Dolby*"]
+
 # Folder templates per layout type. Tokens: {artist}, {festival}, {edition}, {year}, {title}.
 [layouts.artist_flat]
 festival_set = "{artist}"
@@ -33,9 +38,6 @@ concert_film = "{artist} - {title}{ (year)}"
 force_concert = ["Adele/*", "Coldplay/*", "U2/*"]
 force_festival = []
 
-# Glob patterns for paths to skip during scanning.
-skip_patterns = ["*/BDMV/*", "Dolby*"]
-
 # Recognized media file extensions, grouped by type.
 [media_extensions]
 video = [".mp4", ".mkv", ".webm", ".avi", ".mov", ".m2ts", ".ts"]
@@ -61,6 +63,8 @@ password = ""
 delay_seconds = 5
 chapter_language = "eng"
 auto_select = false
+# Cap on per-track genres collected into the album-level tag. 0 disables the cap.
+genre_top_n = 5
 
 # fanart.tv settings. The project API key is built in.
 # Add your personal key for faster cache updates (get one at https://fanart.tv/get-an-api-key/).
@@ -91,3 +95,12 @@ genre_concert = "Live"
 # mkvextract = ""
 # mkvpropedit = ""
 # mkvmerge = ""
+
+# Base lifetimes for CrateDigger's caches, in days. Each entry's actual
+# lifetime jitters by +/- 20% around these values so a bulk first-run fill
+# does not cause all entries to expire at the same time.
+[cache_ttl]
+mbid_days = 90
+dj_days = 90
+source_days = 365
+images_days = 90
