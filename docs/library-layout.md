@@ -49,7 +49,7 @@ These files represent the whole folder and are shared by all videos in it:
 | `folder.jpg` | enrich `posters` | Album poster for the folder; layout depends on folder type (see [Poster layouts](#poster-layouts) below) |
 | `fanart.jpg` | User-placed only | CrateDigger recognizes this file for sidecar migration during `organize`, but does not generate it |
 
-Artist artwork downloaded from fanart.tv is stored in the cache folder (`~/.cache/CrateDigger/artists/{Artist}/` on Linux, `%LOCALAPPDATA%\CrateDigger\Cache\artists\{Artist}\` on Windows) and used by the poster pipeline. It is not copied into the library tree itself.
+Artist artwork downloaded from fanart.tv is stored in the cache folder (`~/.cache/CrateDigger/artists/{Artist}/` on Linux, `~/Library/Caches/CrateDigger/artists/{Artist}/` on macOS, `%LOCALAPPDATA%\CrateDigger\Cache\artists\{Artist}\` on Windows) and used by the poster pipeline. It is not copied into the library tree itself.
 
 ---
 
@@ -165,6 +165,7 @@ CrateDigger searches two locations, library-local first:
 | Platform | Path |
 |----------|------|
 | Linux | `~/CrateDigger/festivals/{FestivalName}/logo.<ext>` |
+| macOS | `~/CrateDigger/festivals/{FestivalName}/logo.<ext>` |
 | Windows | `Documents\CrateDigger\festivals\{FestivalName}\logo.<ext>` |
 
 ### Checking coverage

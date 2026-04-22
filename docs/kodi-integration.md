@@ -8,7 +8,7 @@ This page covers the Kodi-specific parts: enabling the JSON-RPC sync that refres
 
 ### Always on (config)
 
-Set `enabled` to `true` in the `[kodi]` section of your `config.toml` (`~/CrateDigger/config.toml` on Linux, `Documents\CrateDigger\config.toml` on Windows):
+Set `enabled` to `true` in the `[kodi]` section of your `config.toml` (`~/CrateDigger/config.toml` on Linux and macOS, `Documents\CrateDigger\config.toml` on Windows):
 
 ```toml
 [kodi]

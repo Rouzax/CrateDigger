@@ -33,7 +33,7 @@ You need a free account at [1001Tracklists](https://www.1001tracklists.com/). Co
 
 ### Config file
 
-Add your email and password under the `[tracklists]` section in your `config.toml` (`~/CrateDigger/config.toml` on Linux, `Documents\CrateDigger\config.toml` on Windows):
+Add your email and password under the `[tracklists]` section in your `config.toml` (`~/CrateDigger/config.toml` on Linux and macOS, `Documents\CrateDigger\config.toml` on Windows):
 
 ```toml
 [tracklists]

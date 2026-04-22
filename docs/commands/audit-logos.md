@@ -44,7 +44,7 @@ Logo files go in a folder named after the festival, inside one of two locations:
 
 | Location | Path | Scope |
 |----------|------|-------|
-| User-level (Linux) | `~/CrateDigger/festivals/{Festival Name}/logo.{ext}` | All libraries |
+| User-level (Linux / macOS) | `~/CrateDigger/festivals/{Festival Name}/logo.{ext}` | All libraries |
 | User-level (Windows) | `Documents\CrateDigger\festivals\{Festival Name}\logo.{ext}` | All libraries |
 | Library-local | `{library}/.cratedigger/festivals/{Festival Name}/logo.{ext}` | This library only |
 
