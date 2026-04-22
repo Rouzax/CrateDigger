@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Rotating log file written on every startup: `~/.local/state/CrateDigger/log/cratedigger.log` on Linux, `~/Library/Logs/CrateDigger/cratedigger.log` on macOS, `%LOCALAPPDATA%\CrateDigger\Logs\cratedigger.log` on Windows. Five rotating files, 5 MB each. Console output is unchanged.
+- Rotating log file written on every startup: `~/.local/state/CrateDigger/log/cratedigger.log` on Linux, `~/Library/Logs/CrateDigger/cratedigger.log` on macOS, `$env:LOCALAPPDATA\CrateDigger\Logs\cratedigger.log` on Windows. Five rotating files, 5 MB each. Console output is unchanged.
 - One-time startup WARNING when legacy paths remain from before 0.14.0 (`~/.cratedigger/` or `~/.1001tl-cookies.json`). CrateDigger does not migrate files automatically; the warning tells you to move or delete them.
 - One-time startup WARNING when a library still contains a pre-0.14.0 `{library}/.cratedigger/config.json`. The file is no longer read; copy its `default_layout` value into `config.toml` (same directory) or delete it.
 
@@ -21,8 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Library-local override at `{library}/.cratedigger/config.toml` is now TOML too. `organize` writes `config.toml` into the library marker folder (previously `config.json`).
 - Config and curated data files (`festivals.json`, `artists.json`, `artist_mbids.json`) now live in a visible user folder: `~/CrateDigger/` on Linux and macOS, `Documents\CrateDigger\` on Windows. Previously everything was mixed into `~/.cratedigger/`.
 - User-global festival logos moved from `~/.cratedigger/festivals/` to `~/CrateDigger/festivals/` (Linux) or `Documents\CrateDigger\festivals\` (Windows). Library-local `{library}/.cratedigger/festivals/` is unchanged.
-- Caches (`mbid_cache.json`, `dj_cache.json`, `source_cache.json`, `update-check.json`, artist artwork) moved to the platform cache directory: `~/.cache/CrateDigger/` on Linux, `~/Library/Caches/CrateDigger/` on macOS, `%LOCALAPPDATA%\CrateDigger\Cache\` on Windows.
-- 1001TL session cookies moved from the rogue `~/.1001tl-cookies.json` in `$HOME` to `~/.local/state/CrateDigger/1001tl-cookies.json` on Linux, `~/Library/Application Support/CrateDigger/1001tl-cookies.json` on macOS, `%LOCALAPPDATA%\CrateDigger\State\1001tl-cookies.json` on Windows.
+- Caches (`mbid_cache.json`, `dj_cache.json`, `source_cache.json`, `update-check.json`, artist artwork) moved to the platform cache directory: `~/.cache/CrateDigger/` on Linux, `~/Library/Caches/CrateDigger/` on macOS, `$env:LOCALAPPDATA\CrateDigger\Cache\` on Windows.
+- 1001TL session cookies moved from the rogue `~/.1001tl-cookies.json` in `$HOME` to `~/.local/state/CrateDigger/1001tl-cookies.json` on Linux, `~/Library/Application Support/CrateDigger/1001tl-cookies.json` on macOS, `$env:LOCALAPPDATA\CrateDigger\State\1001tl-cookies.json` on Windows.
 - `--check` output updated to show new file locations.
 
 ### Removed

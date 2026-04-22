@@ -64,7 +64,7 @@ how to install the `vision` extra.
 
 Downloads high-quality artist images from [fanart.tv](https://fanart.tv) (a community
 site with artist logos, backgrounds, and thumbnails). These are saved to a shared cache
-folder (`~/.cache/CrateDigger/artists/{artist}/` on Linux, `~/Library/Caches/CrateDigger/artists/{artist}/` on macOS, `%LOCALAPPDATA%\CrateDigger\Cache\artists\{artist}\` on Windows) and used as backgrounds in poster generation.
+folder (`~/.cache/CrateDigger/artists/{artist}/` on Linux, `~/Library/Caches/CrateDigger/artists/{artist}/` on macOS, `$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\` on Windows) and used as backgrounds in poster generation.
 
 To find an artist's images on fanart.tv, CrateDigger first resolves their MusicBrainz ID.
 It uses the same lookup chain as the MBID operations: your override file first, then the
@@ -144,7 +144,7 @@ is what embeds the per-chapter performer names.
 
 1. Your override file (`~/CrateDigger/artist_mbids.json` on Linux and macOS, `Documents\CrateDigger\artist_mbids.json` on Windows): manually curated, never
    expires, never auto-written by CrateDigger
-2. Auto cache (in `~/.cache/CrateDigger/` on Linux, `~/Library/Caches/CrateDigger/` on macOS, `%LOCALAPPDATA%\CrateDigger\Cache\` on Windows): populated automatically by MusicBrainz
+2. Auto cache (in `~/.cache/CrateDigger/` on Linux, `~/Library/Caches/CrateDigger/` on macOS, `$env:LOCALAPPDATA\CrateDigger\Cache\` on Windows): populated automatically by MusicBrainz
    searches, expires after 90 days by default
 3. Live MusicBrainz search: result is saved to the auto cache
 
@@ -190,7 +190,7 @@ For each video, `enrich` may create or update:
 | `{name}.nfo` | `nfo` |
 | `folder.jpg` | `posters` (one per folder; generated even without a thumbnail, using gradient fallback) |
 
-Artist artwork is cached to `~/.cache/CrateDigger/artists/{artist}/` (Linux), `~/Library/Caches/CrateDigger/artists/{artist}/` (macOS), or `%LOCALAPPDATA%\CrateDigger\Cache\artists\{artist}\` (Windows) and reused across runs.
+Artist artwork is cached to `~/.cache/CrateDigger/artists/{artist}/` (Linux), `~/Library/Caches/CrateDigger/artists/{artist}/` (macOS), or `$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\` (Windows) and reused across runs.
 MKV tag changes (`tags`, `chapter_artist_mbids`, `album_artist_mbids`) are written
 directly into the MKV file's metadata section. The video and audio streams are not touched.
 

@@ -39,7 +39,7 @@ The printed command is already correct for your install method. The three typica
 
 To suppress the notice, set `CRATEDIGGER_NO_UPDATE_CHECK=1` in your environment. The check is also silent automatically when stdout is not a TTY (pipes, cron jobs, CI systems).
 
-The check is designed to stay out of your way. Results are cached locally at `~/.cache/CrateDigger/update-check.json` (Linux), `~/Library/Caches/CrateDigger/update-check.json` (macOS), or `%LOCALAPPDATA%\CrateDigger\Cache\update-check.json` (Windows) for 24 hours on success, so it does not hit the network on every run. The network timeout is 2 seconds, and any failure is silently ignored. No usage data is sent; the check is a standard read-only request to the GitHub Releases API.
+The check is designed to stay out of your way. Results are cached locally at `~/.cache/CrateDigger/update-check.json` (Linux), `~/Library/Caches/CrateDigger/update-check.json` (macOS), or `$env:LOCALAPPDATA\CrateDigger\Cache\update-check.json` (Windows) for 24 hours on success, so it does not hit the network on every run. The network timeout is 2 seconds, and any failure is silently ignored. No usage data is sent; the check is a standard read-only request to the GitHub Releases API.
 
 ### CrateDigger skips some of my files
 
@@ -67,7 +67,7 @@ CrateDigger writes a rotating log to a fixed location on each platform:
 |----------|------|
 | Linux | `~/.local/state/CrateDigger/log/cratedigger.log` |
 | macOS | `~/Library/Logs/CrateDigger/cratedigger.log` |
-| Windows | `%LOCALAPPDATA%\CrateDigger\Logs\cratedigger.log` |
+| Windows | `$env:LOCALAPPDATA\CrateDigger\Logs\cratedigger.log` |
 
 The log always captures DEBUG-level detail regardless of whether you pass `--verbose` or `--debug` on the command line. Up to five rotated files are kept, each capped at 5 MB, so the total on-disk footprint stays under 30 MB.
 
