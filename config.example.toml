@@ -30,7 +30,7 @@ concert_film = "{artist}/{year} - {title}"
 
 # File naming templates. Use Sonarr-style collapsing syntax for optional fields.
 [filename_templates]
-festival_set = "{year} - {artist} - {festival}{ edition}{ [stage]}{ - set_title}"
+festival_set = "{year} - {artist}{ - festival}{ edition}{ [stage]}{ - set_title}"
 concert_film = "{artist} - {title}{ (year)}"
 
 # Glob patterns to force classification. Paths are relative to library root.

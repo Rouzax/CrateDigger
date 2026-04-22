@@ -1,9 +1,7 @@
 """Tests for legacy-path warning on CLI startup."""
 from __future__ import annotations
 
-import logging
 from pathlib import Path
-from unittest.mock import patch
 
 from festival_organizer import paths
 

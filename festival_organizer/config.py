@@ -13,7 +13,6 @@ Logging:
 import json
 import logging
 import re
-import sys
 import tomllib
 from copy import deepcopy
 from fnmatch import fnmatch
@@ -567,7 +566,7 @@ def load_config(
                 layer = tomllib.load(f)
             _deep_merge(data, layer)
         except (tomllib.TOMLDecodeError, OSError) as e:
-            print(f"Warning: could not read {path}: {e}", file=sys.stderr)
+            logger.warning("Could not read %s: %s", path, e)
 
     if config_path is not None:
         _merge_toml(config_path)

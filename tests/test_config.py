@@ -271,20 +271,20 @@ def test_tracklists_credentials_env_override(monkeypatch):
     assert config.tracklists_credentials == ("env@b.com", "envpw")
 
 
-def test_load_config_malformed_toml(tmp_path, capsys):
-    """Malformed user TOML prints warning and falls back to defaults."""
+def test_load_config_malformed_toml(tmp_path, caplog):
+    """Malformed user TOML logs warning and falls back to defaults."""
     user_dir = tmp_path / "user"
     user_dir.mkdir()
     user_file = user_dir / "config.toml"
     user_file.write_text("this is not [valid toml")
-    config = load_config(user_config_file=user_file)
+    with caplog.at_level("WARNING", logger="festival_organizer.config"):
+        config = load_config(user_config_file=user_file)
     assert config.default_layout == "artist_flat"  # fell back to default
-    captured = capsys.readouterr()
-    assert "config.toml" in captured.err
+    assert any("config.toml" in r.getMessage() for r in caplog.records)
 
 
-def test_load_config_malformed_library_toml(tmp_path, capsys):
-    """Malformed library TOML prints warning, user config still applies."""
+def test_load_config_malformed_library_toml(tmp_path, caplog):
+    """Malformed library TOML logs warning, user config still applies."""
     user_dir = tmp_path / "user"
     user_dir.mkdir(parents=True)
     user_file = user_dir / "config.toml"
@@ -292,10 +292,10 @@ def test_load_config_malformed_library_toml(tmp_path, capsys):
     lib_dir = tmp_path / "lib" / ".cratedigger"
     lib_dir.mkdir(parents=True)
     (lib_dir / "config.toml").write_text("not = valid = toml = syntax")
-    config = load_config(user_config_file=user_file, library_config_dir=lib_dir)
+    with caplog.at_level("WARNING", logger="festival_organizer.config"):
+        config = load_config(user_config_file=user_file, library_config_dir=lib_dir)
     assert config.default_layout == "festival_flat"  # user layer applied
-    captured = capsys.readouterr()
-    assert "config.toml" in captured.err
+    assert any("config.toml" in r.getMessage() for r in caplog.records)
 
 
 def test_resolve_artist_alias():
@@ -411,8 +411,8 @@ def test_invert_alias_map_circular_flat_warns(caplog):
     assert any("ircular" in msg for msg in caplog.messages)
 
 
-def test_load_config_unreadable_file(tmp_path, capsys):
-    """Unreadable config prints warning and falls back to defaults."""
+def test_load_config_unreadable_file(tmp_path, caplog):
+    """Unreadable config logs warning and falls back to defaults."""
     import os
     user_dir = tmp_path / "user"
     user_dir.mkdir()
@@ -420,10 +420,10 @@ def test_load_config_unreadable_file(tmp_path, capsys):
     cfg_file.write_text('default_layout = "festival_flat"\n')
     os.chmod(cfg_file, 0o000)
     try:
-        config = load_config(user_config_file=cfg_file)
+        with caplog.at_level("WARNING", logger="festival_organizer.config"):
+            config = load_config(user_config_file=cfg_file)
         assert config.default_layout == "artist_flat"  # fell back to default
-        captured = capsys.readouterr()
-        assert "config.toml" in captured.err
+        assert any("config.toml" in r.getMessage() for r in caplog.records)
     finally:
         os.chmod(cfg_file, 0o644)
 
@@ -473,15 +473,15 @@ class TestTomlConfigLoading:
         assert cfg is not None
         assert cfg.default_layout
 
-    def test_malformed_toml_logs_warning_and_uses_defaults(self, tmp_path, capsys):
+    def test_malformed_toml_logs_warning_and_uses_defaults(self, tmp_path, caplog):
         user_dir = tmp_path / "user"
         user_dir.mkdir()
         (user_dir / "config.toml").write_text("this is not [valid toml")
         with patch("festival_organizer.config.paths") as mock_paths:
             mock_paths.config_file.return_value = user_dir / "config.toml"
-            cfg = load_config()
-        captured = capsys.readouterr()
-        assert "Warning" in captured.err or "could not" in captured.err.lower()
+            with caplog.at_level("WARNING", logger="festival_organizer.config"):
+                cfg = load_config()
+        assert any("could not read" in r.getMessage().lower() for r in caplog.records)
         assert cfg is not None
 
 

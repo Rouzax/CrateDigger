@@ -29,13 +29,13 @@ from typing import Callable
 
 import requests
 
-unresolved_artist_names: set[str] = set()
-
 from festival_organizer import paths
 from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 from festival_organizer.normalization import strip_diacritics
 
 logger = logging.getLogger(__name__)
+
+unresolved_artist_names: set[str] = set()
 
 FANART_BASE_URL = "https://webservice.fanart.tv/v3.2"
 MB_BASE_URL = "https://musicbrainz.org/ws/2"

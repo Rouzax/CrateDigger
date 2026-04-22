@@ -112,3 +112,41 @@ def test_all_default_config_keys_are_in_example(parsed_example):
         f"INTENTIONALLY_COMMENTED_OUT in this test if the example "
         f"shows them as a commented-out block."
     )
+
+
+def test_filename_templates_match_default_config(parsed_example):
+    """Filename template values in the example must match DEFAULT_CONFIG exactly.
+
+    The collapsible-block syntax (e.g. '{ - festival}' vs ' - {festival}')
+    changes runtime behaviour, so even small punctuation drift is a real bug.
+    """
+    example_tpl = parsed_example.get("filename_templates", {})
+    default_tpl = DEFAULT_CONFIG["filename_templates"]
+    for key in ("festival_set", "concert_film"):
+        assert key in example_tpl, (
+            f"config.example.toml [filename_templates] missing key {key!r}"
+        )
+        assert example_tpl[key] == default_tpl[key], (
+            f"[filename_templates].{key} drift: "
+            f"example={example_tpl[key]!r}, "
+            f"DEFAULT_CONFIG={default_tpl[key]!r}"
+        )
+
+
+def test_layout_templates_match_default_config(parsed_example):
+    """Layout template values in the example must match DEFAULT_CONFIG.
+
+    Catches path-separator or token drift in folder layout templates.
+    """
+    default_layouts = DEFAULT_CONFIG["layouts"]
+    example_layouts = parsed_example.get("layouts", {})
+    for layout_name, default_entries in default_layouts.items():
+        assert layout_name in example_layouts, (
+            f"config.example.toml [layouts] missing layout {layout_name!r}"
+        )
+        for key, default_val in default_entries.items():
+            example_val = example_layouts[layout_name].get(key)
+            assert example_val == default_val, (
+                f"[layouts.{layout_name}].{key} drift: "
+                f"example={example_val!r}, DEFAULT_CONFIG={default_val!r}"
+            )
