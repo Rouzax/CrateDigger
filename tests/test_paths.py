@@ -163,3 +163,39 @@ class TestWarnIfLegacyPathsExist:
             paths.warn_if_legacy_paths_exist(home=tmp_path)
         ours = [r for r in caplog.records if r.name == "festival_organizer.paths"]
         assert ours == []
+
+
+class TestDataDirEnvOverride:
+    def test_env_var_wins_when_dir_exists(self, tmp_path: Path, monkeypatch):
+        custom = tmp_path / "custom"
+        custom.mkdir()
+        monkeypatch.setenv("CRATEDIGGER_DATA_DIR", str(custom))
+        assert paths.data_dir() == custom
+
+    def test_env_var_ignored_when_dir_missing(self, tmp_path: Path, monkeypatch):
+        """If the env var points at a non-existent path, fall back to the
+        platform default. Matches TrackSplit's behaviour so both tools agree."""
+        ghost = tmp_path / "does_not_exist"
+        monkeypatch.setenv("CRATEDIGGER_DATA_DIR", str(ghost))
+        with patch("festival_organizer.paths.sys") as mock_sys, \
+             patch.object(Path, "home", return_value=tmp_path):
+            mock_sys.platform = "linux"
+            assert paths.data_dir() == tmp_path / "CrateDigger"
+
+    def test_env_var_ignored_when_dir_is_file(self, tmp_path: Path, monkeypatch):
+        """Symmetric to TrackSplit: a file at the env var path is not a valid
+        data dir, so fall back to the default."""
+        blocker = tmp_path / "blocker"
+        blocker.write_text("")
+        monkeypatch.setenv("CRATEDIGGER_DATA_DIR", str(blocker))
+        with patch("festival_organizer.paths.sys") as mock_sys, \
+             patch.object(Path, "home", return_value=tmp_path):
+            mock_sys.platform = "linux"
+            assert paths.data_dir() == tmp_path / "CrateDigger"
+
+    def test_empty_env_var_ignored(self, tmp_path: Path, monkeypatch):
+        monkeypatch.setenv("CRATEDIGGER_DATA_DIR", "")
+        with patch("festival_organizer.paths.sys") as mock_sys, \
+             patch.object(Path, "home", return_value=tmp_path):
+            mock_sys.platform = "linux"
+            assert paths.data_dir() == tmp_path / "CrateDigger"

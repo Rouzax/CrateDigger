@@ -27,6 +27,7 @@ intentionally stay local.
 from __future__ import annotations
 
 import logging
+import os
 import re
 import sys
 from pathlib import Path
@@ -44,9 +45,19 @@ def data_dir() -> Path:
     Holds config.toml, festivals.json, artists.json, artist_mbids.json, and
     the user-global festivals/{Name}/logo.* subfolders.
 
-    Windows: ``<Documents>\\CrateDigger`` (discoverable via Explorer).
-    Linux/other: ``$HOME/CrateDigger`` (visible at the top of the home dir).
+    Honors ``$CRATEDIGGER_DATA_DIR`` when set and pointing at an existing
+    directory, so CrateDigger and TrackSplit agree on where shared curated
+    data lives. When the env var is unset, empty, or points somewhere that
+    is not a directory, falls back to the platform default:
+
+    - Windows: ``<Documents>\\CrateDigger`` (discoverable via Explorer).
+    - Linux/other: ``$HOME/CrateDigger`` (visible at the top of the home dir).
     """
+    env = os.environ.get("CRATEDIGGER_DATA_DIR")
+    if env:
+        env_path = Path(env)
+        if env_path.is_dir():
+            return env_path
     if sys.platform == "win32":
         return Path(platformdirs.user_documents_dir()) / APP_NAME
     return Path.home() / APP_NAME
