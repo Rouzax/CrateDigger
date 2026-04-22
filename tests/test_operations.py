@@ -2,7 +2,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
-    NfoOperation, ArtOperation, PosterOperation, TagsOperation,
+    NfoOperation, ArtOperation, PosterOperation,
     OrganizeOperation, AlbumPosterOperation, FanartOperation,
 )
 from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
@@ -728,7 +728,7 @@ def test_fanart_op_stores_urls_on_mediafile(tmp_path):
                 }
                 op = FanartOperation(config, lib)
                 op._cache = mock_cache
-                result = op.execute(video, mf)
+                op.execute(video, mf)
 
     assert mf.fanart_url == "https://fanart.tv/bg.jpg"
     assert mf.clearlogo_url == "https://fanart.tv/logo.png"
@@ -1098,7 +1098,6 @@ def test_download_dj_artwork_crops_and_resizes(tmp_path):
 def test_download_dj_artwork_returns_cached(tmp_path):
     """DJ artwork returns cached file if fresh."""
     from PIL import Image
-    import io
 
     cache_root = tmp_path / "cache"
     cache_root.mkdir()

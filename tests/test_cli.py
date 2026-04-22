@@ -1,3 +1,4 @@
+import io
 import logging
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -139,7 +140,6 @@ def test_resolve_action_import_with_move(tmp_path):
 
 def test_organize_inside_library_requires_confirmation(tmp_path, capsys):
     """Organize inside existing library without --yes aborts in non-interactive."""
-    from pathlib import Path
     lib = tmp_path / "concerts"
     (lib / ".cratedigger").mkdir(parents=True)
 
@@ -256,7 +256,7 @@ def test_enrich_uses_parallel_analysis(tmp_path):
                 mock_mf.source_path = fake_file
                 mock_parallel.return_value = [(fake_file, mock_mf)]
                 with patch("festival_organizer.cli.run_pipeline", return_value=[]):
-                    result = run(["enrich", str(lib), "--verbose"])
+                    run(["enrich", str(lib), "--verbose"])
 
     mock_parallel.assert_called_once()
     call_args = mock_parallel.call_args
@@ -343,13 +343,9 @@ def test_check_flag_exists_and_exits_zero(monkeypatch):
 # _run_check_impl tests
 # ---------------------------------------------------------------------------
 
-import io
-from rich.console import Console as RichConsole
-
-
-def _make_test_console() -> tuple[RichConsole, io.StringIO]:
+def _make_test_console() -> tuple[Console, io.StringIO]:
     buf = io.StringIO()
-    con = RichConsole(file=buf, highlight=False, markup=True)
+    con = Console(file=buf, highlight=False, markup=True)
     return con, buf
 
 

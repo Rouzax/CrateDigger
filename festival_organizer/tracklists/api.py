@@ -30,11 +30,11 @@ from typing import Callable
 
 import requests
 
-logger = logging.getLogger(__name__)
-
 from festival_organizer import paths
 from festival_organizer.tracklists.scoring import SearchResult
 from festival_organizer.tracklists import canary
+
+logger = logging.getLogger(__name__)
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0"
 BASE_URL = "https://www.1001tracklists.com"
@@ -424,7 +424,7 @@ class TracklistSession:
         try:
             result = resp.json()
         except (json.JSONDecodeError, ValueError):
-            raise ExportError(f"Invalid JSON response from export API")
+            raise ExportError("Invalid JSON response from export API")
 
         if not result.get("success"):
             raise ExportError(result.get("message", "Export failed"))

@@ -87,8 +87,6 @@ def test_parse_tracks_extracts_label():
 
 def test_parse_tracks_title_handles_no_separator():
     """If the raw text has no ' - ' separator, title falls back to full text."""
-    import re
-    from festival_organizer.tracklists.api import Track
     # Build a minimal HTML row with a name meta containing no ' - '
     # This path is defensive; most tracks have artist-title format.
     html = """<div class="tlpItem tlpTog trRow1">
@@ -116,8 +114,7 @@ def test_parse_tracks_b2b_multi_artist_rows():
     for t in multi:
         assert len(t.artist_names) == len(t.artist_slugs)
         # Display names should not look like title-cased slugs
-        for slug, name in zip(t.artist_slugs, t.artist_names):
-            slug_titled = slug.replace("-", " ").title()
+        for _slug, name in zip(t.artist_slugs, t.artist_names):
             # Either the name differs from the title-cased slug (preserved
             # original casing), or they happen to match because the display
             # form IS title case for that artist. Both are legitimate.

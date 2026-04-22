@@ -1,7 +1,7 @@
 from pathlib import Path
 from festival_organizer.planner import plan_actions
 from festival_organizer.config import Config, DEFAULT_CONFIG
-from festival_organizer.models import MediaFile, FileAction
+from festival_organizer.models import MediaFile
 
 CFG = Config(DEFAULT_CONFIG)
 OUTPUT = Path("/tmp/test/Output")

@@ -1,4 +1,3 @@
-import logging
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path

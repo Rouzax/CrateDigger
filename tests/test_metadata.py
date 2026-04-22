@@ -1,6 +1,5 @@
 import json
 import logging
-import platform
 import subprocess as subprocess_mod
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -8,7 +7,6 @@ from festival_organizer.metadata import (
     find_tool,
     get_install_hint,
     parse_mediainfo_json,
-    extract_metadata,
 )
 
 
@@ -62,7 +60,7 @@ def test_parse_mediainfo_json_full():
     assert meta["height"] == 2160
     assert meta["video_format"] == "VP9"
     assert meta["audio_format"] == "Opus"
-    assert meta["has_cover"] == True
+    assert meta["has_cover"] is True
 
 
 def test_parse_mediainfo_json_minimal():
@@ -81,7 +79,7 @@ def test_parse_mediainfo_json_minimal():
     meta = parse_mediainfo_json(raw)
     assert meta["title"] == ""
     assert meta["tracklists_title"] == ""
-    assert meta["has_cover"] == False
+    assert meta["has_cover"] is False
     assert meta["duration_seconds"] == 3600.0
 
 

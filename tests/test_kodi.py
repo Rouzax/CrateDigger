@@ -1,5 +1,4 @@
 """Tests for Kodi JSON-RPC client and library sync."""
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest

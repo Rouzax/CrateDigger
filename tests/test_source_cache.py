@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 from festival_organizer.tracklists.source_cache import SourceCache
 
 

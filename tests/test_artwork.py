@@ -1,8 +1,7 @@
 import logging
 import subprocess as subprocess_mod
-import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock
 from festival_organizer.artwork import extract_cover
 from festival_organizer.metadata import find_tool
 

@@ -1,5 +1,4 @@
 """Tests for 1001Tracklists API layer (all mocked, no real network calls)."""
-import json
 import logging
 import tempfile
 from pathlib import Path
@@ -11,8 +10,6 @@ from festival_organizer.tracklists.api import (
     TracklistSession,
     TracklistError,
     AuthenticationError,
-    RateLimitError,
-    ExportError,
     _parse_duration_string,
     _html_decode,
     _normalize_date,

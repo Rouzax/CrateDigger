@@ -1,5 +1,4 @@
 """Tests for fanart.tv integration (all mocked, no real network calls)."""
-import json
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -13,10 +12,6 @@ from festival_organizer.fanart import (
     pick_best_background,
     lookup_mbid,
     fetch_artist_images,
-    download_artist_images,
-    FanartError,
-    MusicBrainzError,
-    FanartAPIError,
 )
 
 

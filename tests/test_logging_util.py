@@ -1,5 +1,4 @@
 import csv
-import io
 import tempfile
 from pathlib import Path
 from festival_organizer.logging_util import ActionLogger

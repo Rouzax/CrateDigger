@@ -95,7 +95,7 @@ class TestFileDone:
             op=op, result=result, elapsed_s=0.1,
         )
         out = _capture(con)
-        lines = [l for l in out.strip().split("\n") if l.strip()]
+        lines = [entry for entry in out.strip().split("\n") if entry.strip()]
         assert len(lines) == 2
         assert "->" not in lines[0]
         assert "new.mkv" in lines[1]

@@ -2,7 +2,6 @@
 import logging
 import subprocess as subprocess_mod
 import xml.etree.ElementTree as ET
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from festival_organizer.tracklists.chapters import (

@@ -1,11 +1,11 @@
 import tomllib
 import logging
 import os
-from pathlib import Path
 from unittest.mock import patch
 from festival_organizer.library import (
     find_library_root, init_library, cleanup_empty_dirs,
     migrate_folder_artefacts,
+    resolve_library_root,
 )
 
 
@@ -266,9 +266,6 @@ def test_find_library_root_nonexistent_no_marker(tmp_path):
 
 
 # ── resolve_library_root tests ──────────────────────────────────────────
-
-
-from festival_organizer.library import resolve_library_root
 
 
 def test_resolve_library_root_output_wins_over_source(tmp_path):
