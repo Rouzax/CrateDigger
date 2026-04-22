@@ -112,6 +112,25 @@ def test_cookie_restore_no_file():
         assert session._restore_cookies("test@example.com") is False
 
 
+class TestCookieFilePermissions:
+    def test_save_cookies_writes_0o600_on_posix(self, tmp_path):
+        """Cookie file must not be world-readable. Contains live session tokens."""
+        import stat
+        import sys as sys_mod
+        if sys_mod.platform == "win32":
+            pytest.skip("POSIX-only permission semantics")
+
+        cookie_path = tmp_path / "1001tl-cookies.json"
+        api = TracklistSession(cookie_cache_path=cookie_path)
+        api._session.cookies.set("sid", "fake-sid", domain=".1001tracklists.com")
+        api._session.cookies.set("uid", "fake-uid", domain=".1001tracklists.com")
+        api._save_cookies(email="user@example.com")
+
+        assert cookie_path.is_file()
+        mode = stat.S_IMODE(cookie_path.stat().st_mode)
+        assert mode == 0o600, f"expected 0o600, got {oct(mode)}"
+
+
 def test_default_cookie_path_uses_paths_cookies_file(tmp_path, monkeypatch):
     """Without an explicit cookie_cache_path, the session uses paths.cookies_file()."""
     expected = tmp_path / "state" / "1001tl-cookies.json"

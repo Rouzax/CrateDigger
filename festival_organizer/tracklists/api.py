@@ -19,8 +19,10 @@ Logging:
 import html as html_mod
 import json
 import logging
+import os
 import random
 import re
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -713,6 +715,12 @@ class TracklistSession:
 
             paths.ensure_parent(self._cookie_path)
             self._cookie_path.write_text(json.dumps(cache, indent=2), encoding="utf-8")
+            # Lock cookie file to owner read/write. Contains live 1001TL session tokens.
+            if sys.platform != "win32":
+                try:
+                    os.chmod(self._cookie_path, 0o600)
+                except OSError as exc:
+                    logger.debug("Could not chmod cookie file: %s", exc)
         except (OSError, TypeError) as e:
             logger.debug("Cookie save failed: %s", e)
 
