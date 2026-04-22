@@ -33,16 +33,29 @@ def setup_logging(
     Without a Console, logs go to stderr via plain StreamHandler.
 
     Levels:
-        --debug:   DEBUG (cache hits, retries, internal mechanics)
-        --verbose: INFO  (key decisions, downloads, parse results)
-        default:   WARNING (failures that don't stop the pipeline)
+        --debug:   console at DEBUG (cache hits, retries, internal mechanics)
+        --verbose: console at INFO  (key decisions, downloads, parse results)
+        default:   console at WARNING (failures that don't stop the pipeline)
+
+    The rotating log file always captures DEBUG regardless of CLI
+    verbosity, so the file is a full post-mortem trail for the run.
     """
     logger = logging.getLogger("festival_organizer")
-    # Remove existing handlers to avoid duplicates on repeated calls
+
+    # Close existing handlers before clearing so we do not leak file
+    # descriptors on repeated calls (tests, subcommand loops). The logging
+    # module's logger.handlers.clear() only unlinks the handlers; the
+    # underlying streams stay open until we explicitly close them.
+    for handler in list(logger.handlers):
+        try:
+            handler.close()
+        except Exception:
+            pass
     logger.handlers.clear()
 
-    level = logging.DEBUG if debug else logging.INFO if verbose else logging.WARNING
-    logger.setLevel(level)
+    console_level = logging.DEBUG if debug else logging.INFO if verbose else logging.WARNING
+    # The logger itself must accept the most verbose level any handler wants.
+    logger.setLevel(logging.DEBUG)
 
     if console:
         handler = RichHandler(
@@ -53,25 +66,32 @@ def setup_logging(
             rich_tracebacks=False,
             highlighter=NullHighlighter(),
         )
-        handler.setLevel(level)
+        handler.setLevel(console_level)
         fmt = logging.Formatter("[%(module)s] %(message)s")
     else:
         handler = logging.StreamHandler(sys.stderr)
-        handler.setLevel(level)
+        handler.setLevel(console_level)
         fmt = logging.Formatter("        %(levelname)s [%(module)s] %(message)s")
 
     handler.setFormatter(fmt)
     logger.addHandler(handler)
 
-    # Rotating file handler: always active, 5 MB x 5 rotations
+    # Rotating file handler: always active at DEBUG so the log file is a
+    # full post-mortem trail regardless of the CLI verbosity chosen for
+    # this run. delay=True defers opening the file until the first emit;
+    # this narrows the window during which two concurrent CrateDigger
+    # processes both hold the log file open, and lets runs that never log
+    # anything avoid creating an empty file. Graceful fallback for an
+    # unwritable log dir is handled in a separate task.
     log_path = paths.ensure_parent(paths.log_file())
     file_handler = logging.handlers.RotatingFileHandler(
         log_path,
         maxBytes=5 * 1024 * 1024,
         backupCount=5,
         encoding="utf-8",
+        delay=True,
     )
-    file_handler.setLevel(level)
+    file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(logging.Formatter(
         "%(asctime)s %(levelname)s %(name)s: %(message)s"
     ))

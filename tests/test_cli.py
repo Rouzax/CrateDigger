@@ -45,22 +45,30 @@ def test_run_unexpected_error_returns_1(capsys):
     assert "boom" in captured.err
 
 
+def _console_handler_level():
+    """Return the level of the non-file handler (the user-visible console handler)."""
+    import logging.handlers
+    logger = logging.getLogger("festival_organizer")
+    for h in logger.handlers:
+        if not isinstance(h, logging.handlers.RotatingFileHandler):
+            return h.level
+    raise AssertionError("no console handler found")
+
+
 def test_verbose_flag_enables_info_logging():
-    """The --verbose flag enables INFO logging for the package."""
+    """The --verbose flag sets the console handler to INFO."""
     with patch("festival_organizer.cli.scan_folder", return_value=[]):
         with patch("festival_organizer.cli.resolve_library_root", return_value=None):
             run(["organize", "--dry-run", "/tmp", "--verbose"])
-    logger = logging.getLogger("festival_organizer")
-    assert logger.level == logging.INFO
+    assert _console_handler_level() == logging.INFO
 
 
 def test_debug_flag_enables_debug_logging():
-    """The --debug flag enables DEBUG logging for the package."""
+    """The --debug flag sets the console handler to DEBUG."""
     with patch("festival_organizer.cli.scan_folder", return_value=[]):
         with patch("festival_organizer.cli.resolve_library_root", return_value=None):
             run(["organize", "--dry-run", "/tmp", "--debug"])
-    logger = logging.getLogger("festival_organizer")
-    assert logger.level == logging.DEBUG
+    assert _console_handler_level() == logging.DEBUG
 
 
 def test_organize_dry_run_move_conflict(capsys):
