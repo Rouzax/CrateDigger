@@ -91,7 +91,14 @@ def test_console_handler_still_respects_cli_verbosity(tmp_path, capsys):
 
 
 def test_repeated_setup_closes_previous_file_handlers(tmp_path):
-    """Re-running setup_logging must close the previous file handler to avoid FD leaks."""
+    """Re-running setup_logging must close the previous file handler to avoid FD leaks.
+
+    With delay=True, the RotatingFileHandler stream only opens when the first
+    record is emitted. Emit one record here so the stream is actually open;
+    only then does the stream-is-None assertion after the second setup_logging
+    genuinely prove close() ran, rather than trivially holding because the
+    stream was never opened.
+    """
     log_path = tmp_path / "cratedigger.log"
     with patch("festival_organizer.log.paths") as mock_paths:
         mock_paths.log_file.return_value = log_path
@@ -108,6 +115,13 @@ def test_repeated_setup_closes_previous_file_handlers(tmp_path):
         ]
         assert len(first_file_handlers) == 1
         first = first_file_handlers[0]
+
+        # Force the lazy stream open so the close-on-resetup assertion below
+        # has something to assert against.
+        logging.getLogger("festival_organizer.sample").warning("open-the-stream")
+        assert first.stream is not None, (
+            "RotatingFileHandler stream did not open on emit; test setup is wrong"
+        )
 
         setup_logging(verbose=False, debug=False)
 
