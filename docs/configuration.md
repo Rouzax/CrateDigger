@@ -53,119 +53,91 @@ Or, if you have cloned the repository:
 
 ### Default layout
 
-```json
-{
-    "default_layout": "artist_flat"
-}
+```toml
+default_layout = "artist_flat"
 ```
 
 The folder layout used by `organize` when `--layout` is not specified. Available values: `artist_flat`, `festival_flat`, `artist_nested`, `festival_nested`. See [Organize: layouts](commands/organize.md#layouts) for what each looks like.
 
 ### Layouts
 
-```json
-{
-    "layouts": {
-        "artist_flat": {
-            "festival_set": "{artist}",
-            "concert_film": "{artist}"
-        },
-        "festival_flat": {
-            "festival_set": "{festival}{ edition}",
-            "concert_film": "{artist}"
-        },
-        "artist_nested": {
-            "festival_set": "{artist}/{festival}{ edition}/{year}",
-            "concert_film": "{artist}/{year} - {title}"
-        },
-        "festival_nested": {
-            "festival_set": "{festival}{ edition}/{year}/{artist}",
-            "concert_film": "{artist}/{year} - {title}"
-        }
-    }
-}
+```toml
+[layouts.artist_flat]
+festival_set = "{artist}"
+concert_film = "{artist}"
+
+[layouts.festival_flat]
+festival_set = "{festival}{ edition}"
+concert_film = "{artist}"
+
+[layouts.artist_nested]
+festival_set = "{artist}/{festival}{ edition}/{year}"
+concert_film = "{artist}/{year} - {title}"
+
+[layouts.festival_nested]
+festival_set = "{festival}{ edition}/{year}/{artist}"
+concert_film = "{artist}/{year} - {title}"
 ```
 
 Folder path templates for each layout and content type. See [Organize: template syntax](commands/organize.md#filename-template-syntax) for how optional tokens work.
 
 ### Filename templates
 
-```json
-{
-    "filename_templates": {
-        "festival_set": "{year} - {artist} - {festival}{ edition}{ [stage]}{ - set_title}",
-        "concert_film": "{artist} - {title}{ (year)}"
-    }
-}
+```toml
+[filename_templates]
+festival_set = "{year} - {artist} - {festival}{ edition}{ [stage]}{ - set_title}"
+concert_film = "{artist} - {title}{ (year)}"
 ```
 
 Templates for generated filenames. The original file extension is preserved automatically. See [Organize: template syntax](commands/organize.md#filename-template-syntax) for field names and optional token syntax.
 
 ### Content type rules
 
-```json
-{
-    "content_type_rules": {
-        "force_concert": [
-            "Adele/*",
-            "Coldplay/*",
-            "U2/*"
-        ],
-        "force_festival": []
-    }
-}
+```toml
+[content_type_rules]
+force_concert = ["Adele/*", "Coldplay/*", "U2/*"]
+force_festival = []
 ```
 
 Path rules that force a file to be classified as `concert_film` or `festival_set`, bypassing automatic classification. Each rule is a pattern matched against the file's path relative to the source root. Use `*` to match anything within a single folder name, or `/*` after a folder name to match everything inside it. For example, `Coldplay/*` matches any file directly inside a `Coldplay` folder.
 
 ### Skip patterns
 
-```json
-{
-    "skip_patterns": ["*/BDMV/*", "Dolby*"]
-}
+```toml
+skip_patterns = ["*/BDMV/*", "Dolby*"]
 ```
 
 Path patterns for files and folders to skip during scanning. Matched against the relative path. Useful for ignoring Blu-ray disc structures (`*/BDMV/*`) or demo content.
 
 ### Media extensions
 
-```json
-{
-    "media_extensions": {
-        "video": [".mp4", ".mkv", ".webm", ".avi", ".mov", ".m2ts", ".ts"],
-        "audio": [".mp3", ".m4a", ".flac", ".wav", ".aac", ".ogg", ".opus"]
-    }
-}
+```toml
+[media_extensions]
+video = [".mp4", ".mkv", ".webm", ".avi", ".mov", ".m2ts", ".ts"]
+audio = [".mp3", ".m4a", ".flac", ".wav", ".aac", ".ogg", ".opus"]
 ```
 
 File extensions recognized as media files, grouped by type. Add extensions here if CrateDigger is not picking up a file type you use.
 
 ### Fallback values
 
-```json
-{
-    "fallback_values": {
-        "unknown_artist": "Unknown Artist",
-        "unknown_festival": "_Needs Review",
-        "unknown_year": "Unknown Year",
-        "unknown_title": "Unknown Title"
-    }
-}
+```toml
+[fallback_values]
+unknown_artist = "Unknown Artist"
+unknown_festival = "_Needs Review"
+unknown_year = "Unknown Year"
+unknown_title = "Unknown Title"
 ```
 
 Placeholder values used in folder and filename templates when metadata is missing. `_Needs Review` sorts near the top in most file managers, making unclassified files easy to find.
 
 ### Poster settings
 
-```json
-{
-    "poster_settings": {
-        "artist_background_priority": ["dj_artwork", "fanart_tv", "gradient"],
-        "festival_background_priority": ["curated_logo", "gradient"],
-        "year_background_priority": ["gradient"]
-    }
-}
+```toml
+[poster_settings]
+artist_background_priority = ["dj_artwork", "fanart_tv", "gradient"]
+festival_background_priority = ["curated_logo", "gradient"]
+year_background_priority = ["gradient"]
 ```
 
 Priority chains for poster background image selection. CrateDigger tries each source in order and uses the first one available.
@@ -179,17 +151,14 @@ Priority chains for poster background image selection. CrateDigger tries each so
 
 ### Tracklists
 
-```json
-{
-    "tracklists": {
-        "email": "",
-        "password": "",
-        "delay_seconds": 5,
-        "chapter_language": "eng",
-        "auto_select": false,
-        "genre_top_n": 5
-    }
-}
+```toml
+[tracklists]
+email = ""
+password = ""
+delay_seconds = 5
+chapter_language = "eng"
+auto_select = false
+genre_top_n = 5
 ```
 
 Settings for 1001Tracklists integration. See [Tracklists integration](tracklists.md) for account setup details.
@@ -207,13 +176,10 @@ Credentials can also be set via environment variables: `TRACKLISTS_EMAIL` and `T
 
 ### Fanart
 
-```json
-{
-    "fanart": {
-        "personal_api_key": "",
-        "enabled": true
-    }
-}
+```toml
+[fanart]
+personal_api_key = ""
+enabled = true
 ```
 
 Settings for fanart.tv artist artwork lookups. A project API key is built into CrateDigger. Adding your own personal key improves rate limits for large libraries.
@@ -229,16 +195,13 @@ Environment variable overrides: `FANART_PERSONAL_API_KEY`, `FANART_PROJECT_API_K
 
 ### Kodi
 
-```json
-{
-    "kodi": {
-        "enabled": false,
-        "host": "localhost",
-        "port": 8080,
-        "username": "kodi",
-        "password": ""
-    }
-}
+```toml
+[kodi]
+enabled = false
+host = "localhost"
+port = 8080
+username = "kodi"
+password = ""
 ```
 
 Kodi JSON-RPC connection settings for automatic library refresh after `enrich` or `organize`. See [Kodi integration](kodi-integration.md) for setup instructions.
@@ -255,44 +218,35 @@ All Kodi settings can also be set via environment variables: `KODI_HOST`, `KODI_
 
 ### NFO settings
 
-```json
-{
-    "nfo_settings": {
-        "genre_festival": "Electronic",
-        "genre_concert": "Live"
-    }
-}
+```toml
+[nfo_settings]
+genre_festival = "Electronic"
+genre_concert = "Live"
 ```
 
 Genre written into NFO files when no genre is available from 1001Tracklists metadata. `genre_festival` applies to festival sets; `genre_concert` applies to concert recordings.
 
 ### Tool paths
 
-```json
-{
-    "tool_paths": {
-        "mediainfo": null,
-        "ffprobe": null,
-        "mkvextract": null,
-        "mkvpropedit": null,
-        "mkvmerge": null
-    }
-}
+```toml
+# [tool_paths]
+# mediainfo = "C:/Program Files/MediaInfo/MediaInfo.exe"
+# ffprobe = ""
+# mkvextract = ""
+# mkvpropedit = ""
+# mkvmerge = ""
 ```
 
-Explicit paths to external tools. Set these only if the tools are installed somewhere not on your system PATH. Use `null` to let CrateDigger find them automatically.
+Explicit paths to external tools. Set these only if the tools are installed somewhere not on your system PATH. Omit a key (or leave an empty string) to let CrateDigger find them automatically via PATH.
 
 ### Cache TTL
 
-```json
-{
-    "cache_ttl": {
-        "mbid_days": 90,
-        "dj_days": 90,
-        "source_days": 365,
-        "images_days": 90
-    }
-}
+```toml
+[cache_ttl]
+mbid_days = 90
+dj_days = 90
+source_days = 365
+images_days = 90
 ```
 
 Base lifetimes for CrateDigger's caches, in days. When a cache entry expires, CrateDigger refreshes it on the next lookup.
