@@ -78,21 +78,27 @@ def setup_logging(
 
     # Rotating file handler: always active at DEBUG so the log file is a
     # full post-mortem trail regardless of the CLI verbosity chosen for
-    # this run. delay=True defers opening the file until the first emit;
-    # this narrows the window during which two concurrent CrateDigger
-    # processes both hold the log file open, and lets runs that never log
-    # anything avoid creating an empty file. Graceful fallback for an
-    # unwritable log dir is handled in a separate task.
-    log_path = paths.ensure_parent(paths.log_file())
-    file_handler = logging.handlers.RotatingFileHandler(
-        log_path,
-        maxBytes=5 * 1024 * 1024,
-        backupCount=5,
-        encoding="utf-8",
-        delay=True,
-    )
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter(
-        "%(asctime)s %(levelname)s %(name)s: %(message)s"
-    ))
-    logger.addHandler(file_handler)
+    # this run. delay=True defers opening the file until the first emit,
+    # narrowing cross-process contention and avoiding empty log files for
+    # silent runs (see Task 7). If the log directory cannot be created
+    # or opened (read-only mount, permissions, quota), fall back to
+    # console-only and emit a single WARNING.
+    try:
+        log_path = paths.ensure_parent(paths.log_file())
+        file_handler = logging.handlers.RotatingFileHandler(
+            log_path,
+            maxBytes=5 * 1024 * 1024,
+            backupCount=5,
+            encoding="utf-8",
+            delay=True,
+        )
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(logging.Formatter(
+            "%(asctime)s %(levelname)s %(name)s: %(message)s"
+        ))
+        logger.addHandler(file_handler)
+    except OSError as exc:
+        logger.warning(
+            "Rotating log file disabled (%s): %s",
+            paths.log_file(), exc,
+        )

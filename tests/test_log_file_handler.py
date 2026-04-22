@@ -163,3 +163,38 @@ def test_file_handler_opens_lazily(tmp_path):
         assert rot.stream is None, (
             "with delay=True the stream should stay None until first emit"
         )
+
+
+def test_setup_logging_survives_unwritable_log_dir(tmp_path, caplog):
+    """Unwritable log path must not crash setup_logging; console handler still works."""
+    # Point at a path where ensure_parent cannot create the dir (parent is a file).
+    blocker = tmp_path / "blocker"
+    blocker.write_text("")
+    bad_log_path = blocker / "subdir" / "cratedigger.log"
+
+    with patch("festival_organizer.log.paths") as mock_paths:
+        mock_paths.log_file.return_value = bad_log_path
+        # Use real ensure_parent so it actually fails on the blocker-is-a-file path.
+        from festival_organizer import paths as real_paths
+        mock_paths.ensure_parent.side_effect = real_paths.ensure_parent
+
+        _reset_logger()
+        with caplog.at_level("WARNING", logger="festival_organizer"):
+            setup_logging(verbose=False, debug=False)
+
+    # Console handler is still present.
+    root = logging.getLogger("festival_organizer")
+    assert any(
+        not isinstance(h, logging.handlers.RotatingFileHandler)
+        for h in root.handlers
+    )
+    # No RotatingFileHandler was installed because we could not create the path.
+    assert not any(
+        isinstance(h, logging.handlers.RotatingFileHandler)
+        for h in root.handlers
+    )
+    # One WARNING about the disabled log file was emitted.
+    assert any(
+        "log file" in rec.getMessage().lower()
+        for rec in caplog.records
+    )
