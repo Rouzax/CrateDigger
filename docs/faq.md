@@ -51,13 +51,10 @@ Also check `skip_patterns` in your config. Files matching any skip pattern are e
 
 CrateDigger classified a concert as a festival set, or vice versa. Force the correct classification using path rules in `content_type_rules`:
 
-```json
-{
-    "content_type_rules": {
-        "force_concert": ["Coldplay/*", "Pink Floyd/*"],
-        "force_festival": ["*/Ultra Miami/*"]
-    }
-}
+```toml
+[content_type_rules]
+force_concert = ["Coldplay/*", "Pink Floyd/*"]
+force_festival = ["*/Ultra Miami/*"]
 ```
 
 Each rule is matched against the file's path relative to the source root. `Coldplay/*` matches any file directly inside a `Coldplay` folder. See [Configuration: content type rules](configuration.md#content-type-rules) for more examples.
@@ -303,15 +300,10 @@ The username or password does not match Kodi's web server credentials. Check the
 
 The library path that Kodi uses may not match the path CrateDigger is using. If they differ (for example, Kodi accesses the library over a network share while CrateDigger uses a local path), configure path mapping in your `kodi` config:
 
-```json
-{
-    "kodi": {
-        "path_mapping": {
-            "local": "/home/user/Music/Library/",
-            "kodi": "smb://server/music/Library/"
-        }
-    }
-}
+```toml
+[kodi.path_mapping]
+local = "/home/user/Music/Library/"
+kodi = "smb://server/music/Library/"
 ```
 
 See [Kodi integration: path mapping](kodi-integration.md#path-mapping) for details.
