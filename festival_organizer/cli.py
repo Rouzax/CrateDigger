@@ -799,9 +799,14 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 # practice; the explicit check documents the invariant for
                 # type checkers and future refactors.
                 progress.file_preview(source=fp, media_file=mf, target=target)
-            else:
+            elif isinstance(progress, ProgressPrinter):
+                # Fallback for non-contract progress. Unreachable in practice
+                # when args.dry_run=True (organize always installs one of the
+                # contract types above), but kept for defensive completeness.
                 progress.file_start(fp, target_folder + "/" + target_name)
                 progress.file_done([])
+            # EnrichContractProgress is not reachable in this branch: it only
+            # ships with the `enrich` command, which has no --dry-run flag.
             continue
 
         if args.command == "organize":
