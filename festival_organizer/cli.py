@@ -77,7 +77,7 @@ _CD_ASSETS: list[tuple[str, Callable[[], Path], str]] = [
 RootArg = Annotated[str, typer.Argument(help="File or folder to process")]
 LibraryArg = Annotated[str, typer.Argument(help="Library folder to process")]
 OutputOpt = Annotated[Optional[str], typer.Option("--output", "-o", help="Output folder")]
-ConfigOpt = Annotated[Optional[str], typer.Option("--config", help="Path to config.json")]
+ConfigOpt = Annotated[Optional[str], typer.Option("--config", help="Path to config.toml")]
 QuietOpt = Annotated[bool, typer.Option("--quiet", "-q", help="Suppress per-file progress")]
 VerboseOpt = Annotated[bool, typer.Option("--verbose", "-v", help="Show detailed progress and decisions")]
 DebugOpt = Annotated[bool, typer.Option("--debug", help="Show cache hits, retries, and internal mechanics")]

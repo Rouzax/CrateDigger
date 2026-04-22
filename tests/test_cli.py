@@ -529,3 +529,15 @@ def test_run_kodi_sync_album_poster_expands_to_folder_siblings(tmp_path):
     assert video_a in called_paths
     assert video_b in called_paths
     assert not any(p.suffix == ".txt" for p in called_paths)
+
+
+def test_config_option_help_mentions_toml():
+    """The --config flag's help string must reference config.toml, not config.json."""
+    from festival_organizer.cli import app
+    from typer.testing import CliRunner
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["organize", "--help"])
+    assert result.exit_code == 0
+    assert "config.toml" in result.stdout
+    assert "config.json" not in result.stdout
