@@ -15,6 +15,11 @@ from festival_organizer.config import DEFAULT_CONFIG
 
 EXAMPLE_PATH = Path(__file__).resolve().parent.parent / "config.example.toml"
 
+# Keys that are in DEFAULT_CONFIG but intentionally shown as commented-out
+# blocks in config.example.toml (so a fresh user copy does not inherit
+# possibly-wrong values). The reverse drift-detector below exempts them.
+INTENTIONALLY_COMMENTED_OUT = {"tool_paths"}
+
 
 @pytest.fixture(scope="module")
 def parsed_example() -> dict:
@@ -87,4 +92,23 @@ def test_all_example_top_level_keys_exist_in_default_config(parsed_example):
         f"config.example.toml has top-level keys unknown to DEFAULT_CONFIG: "
         f"{sorted(unknown)}. Either add them to DEFAULT_CONFIG or remove "
         f"them from the example."
+    )
+
+
+def test_all_default_config_keys_are_in_example(parsed_example):
+    """DEFAULT_CONFIG additions must also land in the example.
+
+    This is the direction that would have caught genre_top_n and [cache_ttl]
+    drifting from the example before this test existed. Keys that are
+    intentionally shown as commented-out blocks in the example (tool_paths)
+    must be listed explicitly in INTENTIONALLY_COMMENTED_OUT.
+    """
+    example_keys = set(parsed_example.keys())
+    default_keys = set(DEFAULT_CONFIG.keys())
+    missing = (default_keys - example_keys) - INTENTIONALLY_COMMENTED_OUT
+    assert not missing, (
+        f"config.example.toml is missing DEFAULT_CONFIG keys: "
+        f"{sorted(missing)}. Add them to the example, or add them to "
+        f"INTENTIONALLY_COMMENTED_OUT in this test if the example "
+        f"shows them as a commented-out block."
     )
