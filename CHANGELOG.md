@@ -9,12 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.14.0] - 2026-04-21
 
+Companion release to [TrackSplit 0.7.0](https://github.com/Rouzax/TrackSplit/releases/tag/v0.7.0), which implements the matching storage layout on the TrackSplit side.
+
 ### Added
 
 - `CRATEDIGGER_DATA_DIR` env var now overrides the default data directory (must point at an existing directory). Matches TrackSplit's discovery so both tools agree when set.
 - Rotating log file written on every startup: `~/.local/state/CrateDigger/log/cratedigger.log` on Linux, `~/Library/Logs/CrateDigger/cratedigger.log` on macOS, `$env:LOCALAPPDATA\CrateDigger\Logs\cratedigger.log` on Windows. Five rotating files, 5 MB each. Console output is unchanged.
-- One-time startup WARNING when legacy paths remain from before 0.14.0 (`~/.cratedigger/` or `~/.1001tl-cookies.json`). CrateDigger does not migrate files automatically; the warning tells you to move or delete them.
-- One-time startup WARNING when a library still contains a pre-0.14.0 `{library}/.cratedigger/config.json`. The file is no longer read; copy its `default_layout` value into `config.toml` (same directory) or delete it.
+- Startup WARNING on every run while legacy paths remain from before 0.14.0 (`~/.cratedigger/` or `~/.1001tl-cookies.json`). CrateDigger does not migrate files automatically; the warning tells you to move or delete them.
+- Startup WARNING on every run while a library still contains a pre-0.14.0 `{library}/.cratedigger/config.json`. The file is no longer read; copy its `default_layout` value into `config.toml` (same directory) or delete it.
 
 ### Changed
 

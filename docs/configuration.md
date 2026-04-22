@@ -352,6 +352,7 @@ See [enrich: chapter_artist_mbids](commands/enrich.md#chapter_artist_mbids-per-t
 
 | Variable | Overrides |
 |----------|-----------|
+| `CRATEDIGGER_DATA_DIR` | Default data directory for config, festivals, artists, and logos. Must point at an existing directory. See [Custom data directory](#custom-data-directory). |
 | `TRACKLISTS_EMAIL` | `tracklists.email` |
 | `TRACKLISTS_PASSWORD` | `tracklists.password` |
 | `FANART_PROJECT_API_KEY` | Built-in fanart.tv project key |

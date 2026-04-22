@@ -134,6 +134,7 @@ CrateDigger reads settings from `config.toml` and supports library-level overrid
 | Platform | Config location |
 |----------|----------------|
 | Linux | `~/CrateDigger/config.toml` |
+| macOS | `~/CrateDigger/config.toml` |
 | Windows | `Documents\CrateDigger\config.toml` |
 
 Curated data files (`festivals.json`, `artists.json`, `artist_mbids.json`) live in the same folder as `config.toml`. Caches and logs go to platform-standard locations (`~/.cache/CrateDigger/` on Linux, `$env:LOCALAPPDATA\CrateDigger\` on Windows) and are managed automatically.
