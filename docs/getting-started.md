@@ -149,6 +149,7 @@ CrateDigger stores your settings in a `CrateDigger` folder. Where that folder li
 | Platform | Config location |
 |----------|----------------|
 | Linux | `~/CrateDigger/config.toml` |
+| macOS | `~/CrateDigger/config.toml` |
 | Windows | `Documents\CrateDigger\config.toml` (your Documents folder) |
 
 You do not need to create a config file. CrateDigger has sensible built-in defaults for
@@ -156,7 +157,7 @@ everything. Create it only if you want to customize behavior.
 
 To get a ready-to-edit starting point, download the example config:
 
-=== "Linux"
+=== "Linux / macOS"
 
     ```bash
     mkdir -p ~/CrateDigger
@@ -175,7 +176,7 @@ To get a ready-to-edit starting point, download the example config:
 
 Or, if you have cloned the repository locally, copy from the repo root:
 
-=== "Linux"
+=== "Linux / macOS"
 
     ```bash
     cp config.example.toml ~/CrateDigger/config.toml
@@ -205,7 +206,7 @@ CrateDigger includes built-in knowledge of common festival names. To add your ow
 festivals or customize aliases, copy the example festivals file to the same folder as
 your config:
 
-=== "Linux"
+=== "Linux / macOS"
 
     ```bash
     curl -o ~/CrateDigger/festivals.json \
@@ -222,7 +223,7 @@ your config:
 
 Or from a cloned repo:
 
-=== "Linux"
+=== "Linux / macOS"
 
     ```bash
     cp festivals.example.json ~/CrateDigger/festivals.json

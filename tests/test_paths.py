@@ -25,6 +25,14 @@ class TestDataDir:
             result = paths.data_dir()
             assert result == tmp_path / "CrateDigger"
 
+    def test_darwin_uses_home_like_linux(self, tmp_path: Path):
+        """macOS uses ~/CrateDigger/ (matches TrackSplit's ~/TrackSplit/ layout)."""
+        with patch("festival_organizer.paths.sys") as mock_sys, \
+             patch.object(Path, "home", return_value=tmp_path):
+            mock_sys.platform = "darwin"
+            result = paths.data_dir()
+            assert result == tmp_path / "CrateDigger"
+
 
 class TestConfigFile:
     def test_config_lives_in_data_dir(self, tmp_path: Path):

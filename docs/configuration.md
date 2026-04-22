@@ -7,7 +7,7 @@ CrateDigger works without a config file. Built-in defaults cover everything. Cre
 CrateDigger merges configuration from three layers in this order, with later layers overriding earlier ones:
 
 1. **Built-in defaults:** always present, covers all settings
-2. **User config:** `~/CrateDigger/config.toml` (Linux) or `Documents\CrateDigger\config.toml` (Windows)
+2. **User config:** `~/CrateDigger/config.toml` (Linux / macOS) or `Documents\CrateDigger\config.toml` (Windows)
 3. **Library config:** `{library}/.cratedigger/config.toml`
 
 Only include the settings you want to change. Everything else falls back to built-in defaults.
@@ -18,7 +18,7 @@ You can also pass an explicit path with `--config <path>` on any command. This a
 
 The example config contains all available settings with comments. Copy it to your user config location:
 
-=== "Linux"
+=== "Linux / macOS"
 
     ```bash
     mkdir -p ~/CrateDigger
@@ -37,7 +37,7 @@ The example config contains all available settings with comments. Copy it to you
 
 Or, if you have cloned the repository:
 
-=== "Linux"
+=== "Linux / macOS"
 
     ```bash
     cp config.example.toml ~/CrateDigger/config.toml
@@ -313,6 +313,7 @@ Three JSON files can live alongside your `config.toml` and control name resoluti
 | Platform | Folder |
 |----------|--------|
 | Linux | `~/CrateDigger/` |
+| macOS | `~/CrateDigger/` |
 | Windows | `Documents\CrateDigger\` |
 
 ### festivals.json
@@ -323,7 +324,7 @@ Controls festival name recognition, aliases, and editions. CrateDigger includes 
 
 Controls artist name aliases and B2B group definitions.
 
-Place it in the folder above (`~/CrateDigger/artists.json` on Linux, `Documents\CrateDigger\artists.json` on Windows). Example:
+Place it in the folder above (`~/CrateDigger/artists.json` on Linux or macOS, `Documents\CrateDigger\artists.json` on Windows). Example:
 
 ```json
 {
@@ -353,6 +354,7 @@ Note: CrateDigger automatically discovers artist aliases and group memberships f
 | Platform | Path |
 |----------|------|
 | Linux | `~/CrateDigger/artist_mbids.json` |
+| macOS | `~/CrateDigger/artist_mbids.json` |
 | Windows | `Documents\CrateDigger\artist_mbids.json` |
 
 It is checked first by both the `chapter_artist_mbids` and `album_artist_mbids` enrich operations, before the auto cache and any live MusicBrainz search.
