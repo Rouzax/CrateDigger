@@ -16,7 +16,7 @@ You can also pass an explicit path with `--config <path>` on any command. This a
 
 ### Custom data directory
 
-Set the `CRATEDIGGER_DATA_DIR` environment variable to move the entire visible data folder (config, festivals, artists, logos) somewhere else, for example a shared volume or an external drive. Both CrateDigger and TrackSplit honour this variable, so pointing them at the same path keeps them aligned. The directory must already exist; CrateDigger does not create it, and falls back to the platform default when the variable is unset, empty, or points at a missing or non-directory path.
+Set the `CRATEDIGGER_DATA_DIR` environment variable to read and write the visible data folder (config, festivals, artists, logos) from a different location, for example a shared volume or an external drive. Both CrateDigger and TrackSplit honour this variable, so pointing them at the same path keeps them aligned. The directory must already exist; CrateDigger does not create it. If you want your existing data there, move or copy it yourself before setting the variable. CrateDigger falls back to the platform default when the variable is unset, empty, or points at a missing or non-directory path.
 
 === "Linux / macOS"
 

@@ -10,7 +10,8 @@ from festival_organizer import paths
 
 
 class TestDataDir:
-    def test_windows_uses_documents_dir(self):
+    def test_windows_uses_documents_dir(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.delenv("CRATEDIGGER_DATA_DIR", raising=False)
         with patch("festival_organizer.paths.sys") as mock_sys, \
              patch("festival_organizer.paths.platformdirs") as mock_pd:
             mock_sys.platform = "win32"
@@ -18,15 +19,17 @@ class TestDataDir:
             result = paths.data_dir()
             assert result == Path("C:/Users/Name/Documents/CrateDigger")
 
-    def test_non_windows_uses_home(self, tmp_path: Path):
+    def test_non_windows_uses_home(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.delenv("CRATEDIGGER_DATA_DIR", raising=False)
         with patch("festival_organizer.paths.sys") as mock_sys, \
              patch.object(Path, "home", return_value=tmp_path):
             mock_sys.platform = "linux"
             result = paths.data_dir()
             assert result == tmp_path / "CrateDigger"
 
-    def test_darwin_uses_home_like_linux(self, tmp_path: Path):
+    def test_darwin_uses_home_like_linux(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         """macOS uses ~/CrateDigger/ (matches TrackSplit's ~/TrackSplit/ layout)."""
+        monkeypatch.delenv("CRATEDIGGER_DATA_DIR", raising=False)
         with patch("festival_organizer.paths.sys") as mock_sys, \
              patch.object(Path, "home", return_value=tmp_path):
             mock_sys.platform = "darwin"
@@ -166,13 +169,13 @@ class TestWarnIfLegacyPathsExist:
 
 
 class TestDataDirEnvOverride:
-    def test_env_var_wins_when_dir_exists(self, tmp_path: Path, monkeypatch):
+    def test_env_var_wins_when_dir_exists(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         custom = tmp_path / "custom"
         custom.mkdir()
         monkeypatch.setenv("CRATEDIGGER_DATA_DIR", str(custom))
         assert paths.data_dir() == custom
 
-    def test_env_var_ignored_when_dir_missing(self, tmp_path: Path, monkeypatch):
+    def test_env_var_ignored_when_dir_missing(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         """If the env var points at a non-existent path, fall back to the
         platform default. Matches TrackSplit's behaviour so both tools agree."""
         ghost = tmp_path / "does_not_exist"
@@ -182,7 +185,7 @@ class TestDataDirEnvOverride:
             mock_sys.platform = "linux"
             assert paths.data_dir() == tmp_path / "CrateDigger"
 
-    def test_env_var_ignored_when_dir_is_file(self, tmp_path: Path, monkeypatch):
+    def test_env_var_ignored_when_dir_is_file(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         """Symmetric to TrackSplit: a file at the env var path is not a valid
         data dir, so fall back to the default."""
         blocker = tmp_path / "blocker"
@@ -193,7 +196,7 @@ class TestDataDirEnvOverride:
             mock_sys.platform = "linux"
             assert paths.data_dir() == tmp_path / "CrateDigger"
 
-    def test_empty_env_var_ignored(self, tmp_path: Path, monkeypatch):
+    def test_empty_env_var_ignored(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setenv("CRATEDIGGER_DATA_DIR", "")
         with patch("festival_organizer.paths.sys") as mock_sys, \
              patch.object(Path, "home", return_value=tmp_path):
