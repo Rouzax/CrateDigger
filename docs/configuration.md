@@ -30,6 +30,9 @@ Set the `CRATEDIGGER_DATA_DIR` environment variable to read and write the visibl
     $env:CRATEDIGGER_DATA_DIR = "D:\CrateDigger"
     ```
 
+!!! note "Caches and logs live in separate platform directories"
+    `CRATEDIGGER_DATA_DIR` only controls the visible data folder (config, festivals, artists, logos). Caches (`dj_cache.json`, `mbid_cache.json`, artist artwork) and logs follow standard platform conventions and are not affected by this variable. On Linux, they live under `~/.cache/CrateDigger/` and `~/.local/state/CrateDigger/log/` respectively. If you need to relocate those as well, set the standard `XDG_CACHE_HOME` or `XDG_STATE_HOME` environment variables. Note that these apply system-wide to all XDG-aware applications, and platformdirs appends `CrateDigger/` automatically, so `XDG_CACHE_HOME=/data/cache` results in `/data/cache/CrateDigger/`.
+
 ## Getting a starter config
 
 The example config contains all available settings with comments. Copy it to your user config location:
