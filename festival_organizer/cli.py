@@ -791,7 +791,13 @@ def _run_command(args: types.SimpleNamespace) -> int:
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
-            if use_contract:
+            if isinstance(progress, (OrganizeContractProgress, OrganizeEnrichProgress)):
+                # file_preview is only defined on the organize-side progress
+                # types. The outer `args.dry_run` guard ensures we are in
+                # `organize` here (enrich/identify/audit-logos have no
+                # --dry-run flag), so this isinstance is always True in
+                # practice; the explicit check documents the invariant for
+                # type checkers and future refactors.
                 progress.file_preview(source=fp, media_file=mf, target=target)
             else:
                 progress.file_start(fp, target_folder + "/" + target_name)
