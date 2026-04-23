@@ -587,11 +587,17 @@ def test_run_canary_distinct_missing_sets_both_emit(caplog):
 # --- fetch_source_info ---
 
 def test_fetch_source_info_extracts_name_type_country():
-    """Baseline: the three fields extracted from a /source/ page."""
+    """Baseline: the three fields extracted from a /source/ page.
+
+    Real source pages embed a badge span with the tracklist count and a
+    flag img inside div.h. Only the direct text node should be captured.
+    """
     html = '''
-    <div class="h">Tomorrowland 2026</div>
+    <div class="h"> Tomorrowland 2026
+        <span class="badge spL hO" title="number of tracklists"> 842 </span>
+        <img src="/flags/be.png" alt="Belgium" class="flag">
+    </div>
     <div class="cRow"><div class="mtb5">Festival</div></div>
-    <img src="/flags/be.png" alt="Belgium" class="flag">
     '''
     session = TracklistSession()
     resp = MagicMock(text=html)
@@ -607,14 +613,17 @@ def test_fetch_source_info_parses_reordered_flag_attrs():
     """BS4 migration: the alt attribute may come before src in real
     markup. The pre-migration regex required src first."""
     html = '''
-    <div class="h">Ultra Miami</div>
+    <div class="h"> Ultra Miami
+        <span class="badge spL hO" title="number of tracklists"> 1,203 </span>
+        <img alt="United States" class="flag" src="/flags/us.png">
+    </div>
     <div class="cRow"><div class="mtb5">Open Air / Festival</div></div>
-    <img alt="United States" class="flag" src="/flags/us.png">
     '''
     session = TracklistSession()
     resp = MagicMock(text=html)
     with patch.object(session, "_request", return_value=resp):
         info = session.fetch_source_info("1", "ultra-miami")
+    assert info["name"] == "Ultra Miami"
     assert info["country"] == "United States"
     assert info["type"] == "Open Air / Festival"
 

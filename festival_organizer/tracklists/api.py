@@ -646,7 +646,11 @@ class TracklistSession:
             country = (alt if isinstance(alt, str) else "").strip()
 
         name_el = soup.select_one("div.h")
-        name = name_el.get_text(strip=True) if name_el else slug.replace("-", " ").title()
+        if name_el:
+            first_text = name_el.find(string=True, recursive=False)
+            name = first_text.strip() if first_text else slug.replace("-", " ").title()
+        else:
+            name = slug.replace("-", " ").title()
 
         return {"name": name, "slug": slug, "type": source_type, "country": country}
 
