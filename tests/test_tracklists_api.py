@@ -1198,6 +1198,7 @@ def test_export_tracklist_logs_debug_on_invalid_json(caplog):
     page_resp.text = "<html><title>Test</title></html>"
 
     export_resp = MagicMock()
+    export_resp.url = "https://www.1001tracklists.com/ajax/export_data.php"
     export_resp.json.side_effect = ValueError("malformed")
 
     with patch.object(session, "_request",
@@ -1211,3 +1212,11 @@ def test_export_tracklist_logs_debug_on_invalid_json(caplog):
     joined = "\n".join(r.message for r in caplog.records)
     assert "Export JSON decode failed" in joined
     assert "malformed" in joined
+    # The log must identify the actual failing request (the AJAX export
+    # endpoint + tracklist id), NOT the incoming tracklist page URL. The
+    # tracklist page HTML was already parsed successfully before this
+    # point; attributing the JSON decode failure to the page would mislead
+    # anyone reading the log.
+    assert "abc123" in joined
+    assert "export_data.php" in joined
+    assert "tracklist/abc123/" not in joined

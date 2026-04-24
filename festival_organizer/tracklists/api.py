@@ -426,7 +426,10 @@ class TracklistSession:
         try:
             result = resp.json()
         except (json.JSONDecodeError, ValueError) as e:
-            logger.debug("Export JSON decode failed for %s: %s", page_url, e)
+            logger.debug(
+                "Export JSON decode failed for tracklist %s at %s: %s",
+                tracklist_id, resp.url, e,
+            )
             raise ExportError("Invalid JSON response from export API")
 
         if not result.get("success"):
