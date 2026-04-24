@@ -417,3 +417,71 @@ class TestRefreshUpdateCache:
             m.assert_not_called()
 
         assert not _cache_path().exists()
+
+
+class TestDebugLogging:
+    """Tier 2: every silent-on-failure path in update_check leaves a DEBUG trail."""
+
+    def test_fetch_latest_release_logs_debug_on_http_failure(self, caplog):
+        import logging as _logging
+        from urllib.error import URLError
+
+        from festival_organizer.update_check import _fetch_latest_release
+        with patch("festival_organizer.update_check.urlopen", side_effect=URLError("dns")):
+            with caplog.at_level(_logging.DEBUG, logger="festival_organizer.update_check"):
+                assert _fetch_latest_release() is None
+        assert any("Update check HTTP failed" in r.message for r in caplog.records)
+        assert any("dns" in r.message or "dns" in str(r.exc_info) for r in caplog.records)
+
+    def test_is_suppressed_logs_env_var_reason(self, monkeypatch, caplog):
+        import logging as _logging
+
+        from festival_organizer.update_check import _is_suppressed
+        monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
+        with caplog.at_level(_logging.DEBUG, logger="festival_organizer.update_check"):
+            assert _is_suppressed()
+        joined = "\n".join(r.message for r in caplog.records)
+        assert "env var" in joined.lower()
+
+    def test_is_suppressed_logs_non_tty_reason(self, monkeypatch, caplog):
+        import logging as _logging
+
+        from festival_organizer.update_check import _is_suppressed
+        monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+        monkeypatch.setattr("sys.stdout.isatty", lambda: False)
+        with caplog.at_level(_logging.DEBUG, logger="festival_organizer.update_check"):
+            assert _is_suppressed()
+        joined = "\n".join(r.message for r in caplog.records)
+        assert "tty" in joined.lower()
+
+    def test_is_suppressed_logs_isatty_exception_reason(self, monkeypatch, caplog):
+        import logging as _logging
+
+        from festival_organizer.update_check import _is_suppressed
+        monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+
+        def _raise():
+            raise ValueError("io closed")
+        monkeypatch.setattr("sys.stdout.isatty", _raise)
+        with caplog.at_level(_logging.DEBUG, logger="festival_organizer.update_check"):
+            assert _is_suppressed()
+        joined = "\n".join(r.message for r in caplog.records)
+        assert "isatty raised" in joined
+
+    def test_read_cache_silent_on_missing_file(self, tmp_path, mock_paths, caplog):
+        import logging as _logging
+
+        with caplog.at_level(_logging.DEBUG, logger="festival_organizer.update_check"):
+            assert _read_cache() is None
+        assert not any("unreadable" in r.message for r in caplog.records)
+
+    def test_read_cache_logs_debug_on_corrupt_json(self, tmp_path, mock_paths, caplog):
+        import logging as _logging
+
+        p = _cache_path()
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("not json {{{")
+        with caplog.at_level(_logging.DEBUG, logger="festival_organizer.update_check"):
+            assert _read_cache() is None
+        assert any("unreadable" in r.message for r in caplog.records)
+        assert any(str(p) in r.message for r in caplog.records)
