@@ -580,3 +580,35 @@ def test_embed_tags_warns_when_target_missing_or_wrong_ext(tmp_path, caplog):
     assert result == "error"
     joined = "\n".join(r.message for r in caplog.records)
     assert "nonexistent.mkv" in joined
+
+
+def test_embed_tags_diff_debug_renders_clear_tag_readably(tmp_path, caplog):
+    """Tag diff DEBUG must render CLEAR_TAG as '<CLEAR>', not its raw object
+    repr. Previously the DEBUG line showed '<object object at 0x...>' for
+    DESCRIPTION (which embed_tags always sets to CLEAR_TAG to wipe yt-dlp
+    junk), which is unreadable in logs."""
+    import logging as _logging
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"data")
+    mf = _make_mf(date="2026-03-01")
+
+    # Existing tags include a non-empty DESCRIPTION so CLEAR_TAG is a real
+    # diff (not a no-op filtered out of the output).
+    existing_xml = """<Tags>
+<Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+<Simple><Name>DESCRIPTION</Name><String>yt-dlp junk to clear</String></Simple>
+</Tag>
+</Tags>"""
+    existing_root = ET.fromstring(existing_xml)
+
+    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+        with patch("festival_organizer.embed_tags.extract_all_tags", return_value=existing_root):
+            with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True):
+                with caplog.at_level(_logging.DEBUG, logger="festival_organizer.embed_tags"):
+                    embed_tags(mf, video)
+
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "Tag diff for test.mkv" in joined
+    assert "<CLEAR>" in joined
+    assert "<object object at" not in joined

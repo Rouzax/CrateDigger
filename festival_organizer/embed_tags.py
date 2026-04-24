@@ -133,6 +133,11 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
         """Compare value, treating CLEAR_TAG as empty string."""
         return "" if v is CLEAR_TAG else v
 
+    def _render(v):
+        """Render a tag value for the DEBUG diff. CLEAR_TAG is a sentinel
+        object whose default repr is meaningless in a log line."""
+        return "<CLEAR>" if v is CLEAR_TAG else v
+
     values_differ = any(
         _cmp(v) != existing_50.get(k, "") for k, v in tags.items()
     ) or any(
@@ -144,8 +149,8 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
     if not needs_write:
         return "skipped"  # Already up to date
 
-    diff_50 = {k: (existing_50.get(k, ""), v) for k, v in tags.items() if v != existing_50.get(k, "")}
-    diff_70 = {k: (existing_70.get(k, ""), v) for k, v in tags_70.items() if v != existing_70.get(k, "")}
+    diff_50 = {k: (existing_50.get(k, ""), _render(v)) for k, v in tags.items() if _cmp(v) != existing_50.get(k, "")}
+    diff_70 = {k: (existing_70.get(k, ""), _render(v)) for k, v in tags_70.items() if _cmp(v) != existing_70.get(k, "")}
     logger.debug("Tag diff for %s: TTV50=%s TTV70=%s", target_path.name, diff_50, diff_70)
 
     # Only stamp ENRICHED_AT when actually writing
