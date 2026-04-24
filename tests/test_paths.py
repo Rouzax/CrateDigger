@@ -1,6 +1,7 @@
 """Tests for festival_organizer.paths platform-path resolution."""
 from __future__ import annotations
 
+from datetime import date, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -153,7 +154,9 @@ class TestWarnIfLegacyPathsExist:
         legacy = tmp_path / ".cratedigger"
         legacy.mkdir()
         (legacy / "config.json").write_text("{}")
-        with caplog.at_level("WARNING", logger="festival_organizer.paths"):
+        state = tmp_path / "state"
+        with patch("festival_organizer.paths.state_dir", return_value=state), \
+             caplog.at_level("WARNING", logger="festival_organizer.paths"):
             paths.warn_if_legacy_paths_exist(home=tmp_path)
         messages = [r.getMessage() for r in caplog.records if r.name == "festival_organizer.paths"]
         assert any(
@@ -162,10 +165,186 @@ class TestWarnIfLegacyPathsExist:
         )
 
     def test_silent_when_nothing_legacy(self, tmp_path: Path, caplog):
-        with caplog.at_level("WARNING", logger="festival_organizer.paths"):
+        state = tmp_path / "state"
+        with patch("festival_organizer.paths.state_dir", return_value=state), \
+             caplog.at_level("WARNING", logger="festival_organizer.paths"):
             paths.warn_if_legacy_paths_exist(home=tmp_path)
         ours = [r for r in caplog.records if r.name == "festival_organizer.paths"]
         assert ours == []
+
+
+class TestWarnIfLegacyPathsExistDedup:
+    """Stamp-file suppression: at most one legacy WARNING per day."""
+
+    def _make_legacy(self, home: Path) -> Path:
+        legacy = home / ".cratedigger"
+        legacy.mkdir()
+        (legacy / "config.json").write_text("{}")
+        return legacy
+
+    def _count_warnings(self, caplog) -> int:
+        return sum(
+            1 for r in caplog.records
+            if r.name == "festival_organizer.paths" and r.levelname == "WARNING"
+        )
+
+    def test_first_call_warns_and_writes_stamp(self, tmp_path: Path, caplog):
+        self._make_legacy(tmp_path)
+        state = tmp_path / "state"
+        with patch("festival_organizer.paths.state_dir", return_value=state), \
+             caplog.at_level("WARNING", logger="festival_organizer.paths"):
+            paths.warn_if_legacy_paths_exist(home=tmp_path)
+        assert self._count_warnings(caplog) == 1
+        stamp = state / "legacy-warning.stamp"
+        assert stamp.is_file()
+        assert stamp.read_text().strip() == date.today().isoformat()
+
+    def test_second_call_same_day_silent(self, tmp_path: Path, caplog):
+        self._make_legacy(tmp_path)
+        state = tmp_path / "state"
+        with patch("festival_organizer.paths.state_dir", return_value=state):
+            with caplog.at_level("WARNING", logger="festival_organizer.paths"):
+                paths.warn_if_legacy_paths_exist(home=tmp_path)
+            caplog.clear()
+            with caplog.at_level("WARNING", logger="festival_organizer.paths"):
+                paths.warn_if_legacy_paths_exist(home=tmp_path)
+        assert self._count_warnings(caplog) == 0
+
+    def test_stale_stamp_triggers_rewarn(self, tmp_path: Path, caplog):
+        self._make_legacy(tmp_path)
+        state = tmp_path / "state"
+        state.mkdir()
+        stamp = state / "legacy-warning.stamp"
+        stamp.write_text("2020-01-01")
+        with patch("festival_organizer.paths.state_dir", return_value=state), \
+             caplog.at_level("WARNING", logger="festival_organizer.paths"):
+            paths.warn_if_legacy_paths_exist(home=tmp_path)
+        assert self._count_warnings(caplog) == 1
+        assert stamp.read_text().strip() == date.today().isoformat()
+
+    def test_corrupt_stamp_recovers(self, tmp_path: Path, caplog):
+        self._make_legacy(tmp_path)
+        state = tmp_path / "state"
+        state.mkdir()
+        stamp = state / "legacy-warning.stamp"
+        stamp.write_text("not a date, garbage \x00\x01")
+        with patch("festival_organizer.paths.state_dir", return_value=state), \
+             caplog.at_level("WARNING", logger="festival_organizer.paths"):
+            paths.warn_if_legacy_paths_exist(home=tmp_path)
+        assert self._count_warnings(caplog) == 1
+        assert stamp.read_text().strip() == date.today().isoformat()
+
+    def test_tomorrow_stamp_suppresses(self, tmp_path: Path, caplog):
+        """A stamp dated in the future (clock skew, manual edit) still suppresses."""
+        self._make_legacy(tmp_path)
+        state = tmp_path / "state"
+        state.mkdir()
+        stamp = state / "legacy-warning.stamp"
+        future = (date.today() + timedelta(days=1)).isoformat()
+        stamp.write_text(future)
+        with patch("festival_organizer.paths.state_dir", return_value=state), \
+             caplog.at_level("WARNING", logger="festival_organizer.paths"):
+            paths.warn_if_legacy_paths_exist(home=tmp_path)
+        assert self._count_warnings(caplog) == 0
+
+
+class TestIsSourceCheckoutDir:
+    def test_matches_cratedigger_pyproject(self, tmp_path: Path):
+        (tmp_path / "pyproject.toml").write_text(
+            '[project]\nname = "cratedigger"\nversion = "0.0.0"\n'
+        )
+        assert paths._is_source_checkout_dir(tmp_path) is True
+
+    def test_case_insensitive(self, tmp_path: Path):
+        (tmp_path / "pyproject.toml").write_text(
+            '[project]\nname = "CrateDigger"\nversion = "0.0.0"\n'
+        )
+        assert paths._is_source_checkout_dir(tmp_path) is True
+
+    def test_different_project_name(self, tmp_path: Path):
+        (tmp_path / "pyproject.toml").write_text(
+            '[project]\nname = "tracksplit"\nversion = "0.0.0"\n'
+        )
+        assert paths._is_source_checkout_dir(tmp_path) is False
+
+    def test_no_pyproject(self, tmp_path: Path):
+        assert paths._is_source_checkout_dir(tmp_path) is False
+
+    def test_malformed_pyproject(self, tmp_path: Path):
+        (tmp_path / "pyproject.toml").write_text("this is not toml =====")
+        assert paths._is_source_checkout_dir(tmp_path) is False
+
+    def test_pyproject_without_project_table(self, tmp_path: Path):
+        (tmp_path / "pyproject.toml").write_text('[tool.poetry]\nname = "cratedigger"\n')
+        assert paths._is_source_checkout_dir(tmp_path) is False
+
+    def test_path_does_not_exist(self, tmp_path: Path):
+        assert paths._is_source_checkout_dir(tmp_path / "nonexistent") is False
+
+
+class TestWarnIfDataDirIsSourceCheckout:
+    def _fake_source_checkout(self, path: Path) -> Path:
+        path.mkdir(parents=True, exist_ok=True)
+        (path / "pyproject.toml").write_text(
+            '[project]\nname = "cratedigger"\nversion = "0.0.0"\n'
+        )
+        return path
+
+    @pytest.fixture(autouse=True)
+    def _reset_warned_flag(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr(paths, "_warned_source_checkout", False, raising=False)
+
+    def test_warns_once_per_process(self, tmp_path: Path, caplog, monkeypatch):
+        monkeypatch.delenv("CRATEDIGGER_DATA_DIR", raising=False)
+        checkout = self._fake_source_checkout(tmp_path / "CrateDigger")
+        with patch("festival_organizer.paths.data_dir", return_value=checkout):
+            with caplog.at_level("WARNING", logger="festival_organizer.paths"):
+                paths.warn_if_data_dir_is_source_checkout()
+                paths.warn_if_data_dir_is_source_checkout()
+                paths.warn_if_data_dir_is_source_checkout()
+        warnings = [
+            r for r in caplog.records
+            if r.name == "festival_organizer.paths" and r.levelname == "WARNING"
+        ]
+        assert len(warnings) == 1
+        assert "CRATEDIGGER_DATA_DIR" in warnings[0].getMessage()
+        assert str(checkout) in warnings[0].getMessage()
+
+    def test_silent_for_plain_dir(self, tmp_path: Path, caplog, monkeypatch):
+        monkeypatch.delenv("CRATEDIGGER_DATA_DIR", raising=False)
+        plain = tmp_path / "CrateDigger"
+        plain.mkdir()
+        with patch("festival_organizer.paths.data_dir", return_value=plain):
+            with caplog.at_level("WARNING", logger="festival_organizer.paths"):
+                paths.warn_if_data_dir_is_source_checkout()
+        assert not any(
+            r.name == "festival_organizer.paths" and r.levelname == "WARNING"
+            for r in caplog.records
+        )
+
+    def test_silent_when_env_var_set(self, tmp_path: Path, caplog, monkeypatch):
+        """If the user explicitly set CRATEDIGGER_DATA_DIR, they know what
+        they're doing; don't nag even if the resolved dir is a source checkout."""
+        checkout = self._fake_source_checkout(tmp_path / "CrateDigger")
+        monkeypatch.setenv("CRATEDIGGER_DATA_DIR", str(checkout))
+        with patch("festival_organizer.paths.data_dir", return_value=checkout):
+            with caplog.at_level("WARNING", logger="festival_organizer.paths"):
+                paths.warn_if_data_dir_is_source_checkout()
+        assert not any(
+            r.name == "festival_organizer.paths" and r.levelname == "WARNING"
+            for r in caplog.records
+        )
+
+    def test_silent_when_data_dir_missing(self, tmp_path: Path, caplog, monkeypatch):
+        monkeypatch.delenv("CRATEDIGGER_DATA_DIR", raising=False)
+        ghost = tmp_path / "does-not-exist"
+        with patch("festival_organizer.paths.data_dir", return_value=ghost):
+            with caplog.at_level("WARNING", logger="festival_organizer.paths"):
+                paths.warn_if_data_dir_is_source_checkout()
+        assert not any(
+            r.name == "festival_organizer.paths" and r.levelname == "WARNING"
+            for r in caplog.records
+        )
 
 
 class TestDataDirEnvOverride:
