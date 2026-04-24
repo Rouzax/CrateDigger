@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Startup WARNING when the resolved data directory looks like a CrateDigger source checkout. If you clone the repository into `~/CrateDigger/` on Linux (or the equivalent platform default), that folder doubles as the default data directory, which means any test files you drop at the repo root can be silently read as curated user data. CrateDigger now detects this condition by checking for a `pyproject.toml` whose `[project].name` is `cratedigger` and emits a single WARNING naming the path and recommending you set `CRATEDIGGER_DATA_DIR` to a dedicated folder. The check is skipped when `CRATEDIGGER_DATA_DIR` is already set.
+
+### Changed
+
+- The legacy-path WARNING (present since 0.14.0, fired when `~/.cratedigger/` or `~/.1001tl-cookies.json` still exist) now fires at most once per day. A stamp file at `~/.local/state/CrateDigger/legacy-warning.stamp` (or the platform equivalent) records the date of the last warning; subsequent runs on the same day are silent. Previously, a bulk session running several subcommands in sequence would emit the same warning block once per subcommand. The warning itself is unchanged; only the repeat suppression is new.
+
 ## [0.14.2] - 2026-04-24
 
 ### Fixed

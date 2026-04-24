@@ -30,6 +30,9 @@ import logging
 import os
 import re
 import sys
+import tempfile
+import tomllib
+from datetime import date
 from pathlib import Path
 
 import platformdirs
@@ -37,6 +40,10 @@ import platformdirs
 APP_NAME = "CrateDigger"
 
 _SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9 _()&.\-]")
+
+_LEGACY_STAMP_NAME = "legacy-warning.stamp"
+
+_warned_source_checkout: bool = False
 
 
 def data_dir() -> Path:
@@ -143,12 +150,20 @@ def _legacy_paths_present(home: Path | None = None) -> list[Path]:
 
 
 def warn_if_legacy_paths_exist(home: Path | None = None) -> None:
-    """Log a single WARNING if legacy CrateDigger paths are found.
+    """Log a WARNING at most once per day if legacy CrateDigger paths are found.
 
-    Called once at CLI startup. No data is moved; this is a nudge to migrate.
+    Called at CLI startup. No data is moved; this is a nudge to migrate.
+
+    Suppression uses an ISO-date stamp file at
+    ``state_dir() / "legacy-warning.stamp"``. First call on a given day emits
+    the WARNING and writes today's date. Subsequent calls the same day stay
+    silent. A stamp dated today or later (clock skew, manual edit) suppresses;
+    a corrupt or unparseable stamp behaves as if absent and is overwritten.
     """
     legacy = _legacy_paths_present(home=home)
     if not legacy:
+        return
+    if _legacy_stamp_is_fresh():
         return
     logger = logging.getLogger("festival_organizer.paths")
     pretty = "\n  - ".join(str(p) for p in legacy)
@@ -157,4 +172,101 @@ def warn_if_legacy_paths_exist(home: Path | None = None) -> None:
         "These are no longer read. Move contents to the new platformdirs "
         "locations (see docs/configuration.md) or delete them.",
         pretty,
+    )
+    _write_legacy_stamp()
+
+
+def _legacy_stamp_path() -> Path:
+    return state_dir() / _LEGACY_STAMP_NAME
+
+
+def _legacy_stamp_is_fresh() -> bool:
+    """Return True iff the stamp file contains today's ISO date or a later one."""
+    try:
+        content = _legacy_stamp_path().read_text(encoding="utf-8").strip()
+    except (OSError, ValueError):
+        return False
+    try:
+        stamped = date.fromisoformat(content)
+    except ValueError:
+        return False
+    return stamped >= date.today()
+
+
+def _write_legacy_stamp() -> None:
+    """Atomically write today's ISO date to the stamp file. Silent on failure."""
+    logger = logging.getLogger("festival_organizer.paths")
+    target = _legacy_stamp_path()
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp_path = tempfile.mkstemp(
+            dir=str(target.parent),
+            prefix=target.name + ".",
+            suffix=".tmp",
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(date.today().isoformat())
+            os.replace(tmp_path, target)
+        except BaseException:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
+    except OSError as e:
+        logger.debug("Failed to write legacy-warning stamp at %s: %s", target, e)
+
+
+def _is_source_checkout_dir(path: Path) -> bool:
+    """Return True iff ``path`` looks like a CrateDigger source checkout.
+
+    Detection: ``path / "pyproject.toml"`` exists and parses as TOML with
+    ``[project].name`` equal to ``"cratedigger"`` (case-insensitive). Any
+    read/parse failure returns False, so this helper never raises.
+    """
+    try:
+        with open(path / "pyproject.toml", "rb") as f:
+            data = tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError):
+        return False
+    project = data.get("project")
+    if not isinstance(project, dict):
+        return False
+    name = project.get("name")
+    if not isinstance(name, str):
+        return False
+    return name.strip().lower() == "cratedigger"
+
+
+def warn_if_data_dir_is_source_checkout() -> None:
+    """Log a single WARNING per process if ``data_dir()`` resolves inside a
+    CrateDigger source checkout.
+
+    A user who clones CrateDigger to ``~/CrateDigger/`` on Linux (or into
+    ``<Documents>\\CrateDigger`` on Windows) ends up with the documented data
+    directory pointing at the repo root. Any curated file they create at that
+    root (e.g. ``artists.json`` for local dev) would then be read as if it were
+    real user data. This warning nudges them to set ``CRATEDIGGER_DATA_DIR``.
+
+    If ``CRATEDIGGER_DATA_DIR`` is already set, the user is driving explicitly
+    and no warning is emitted.
+    """
+    global _warned_source_checkout
+    if _warned_source_checkout:
+        return
+    if os.environ.get("CRATEDIGGER_DATA_DIR"):
+        return
+    resolved = data_dir()
+    if not _is_source_checkout_dir(resolved):
+        return
+    _warned_source_checkout = True
+    logger = logging.getLogger("festival_organizer.paths")
+    logger.warning(
+        "Data directory %s looks like a CrateDigger source checkout "
+        "(pyproject.toml found with project name 'cratedigger'). Files "
+        "placed at the repo root may be read as curated user data. "
+        "Set CRATEDIGGER_DATA_DIR to a dedicated user-data folder to "
+        "silence this warning.",
+        resolved,
     )

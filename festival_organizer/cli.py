@@ -562,6 +562,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     setup_logging(verbose=verbose, debug=debug, console=console)
     config.log_load_summary()
     paths.warn_if_legacy_paths_exist()
+    paths.warn_if_data_dir_is_source_checkout()
 
     # Layout override
     if getattr(args, "layout", None):
