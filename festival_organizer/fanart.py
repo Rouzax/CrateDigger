@@ -18,6 +18,10 @@ Logging:
         - theaudiodb.fallback (DEBUG): Trying TheAudioDB as fallback
         - theaudiodb.fail (DEBUG): TheAudioDB lookup failed
         - attribution (INFO): Required attribution notice
+        - mbid.cache_loaded (DEBUG): MBID cache loaded from path with entry count
+        - mbid.cache_not_found (DEBUG): MBID cache file does not exist yet
+        - mbid.overrides_loaded (DEBUG): artist_mbids.json loaded with override count
+        - mbid.overrides_not_found (DEBUG): artist_mbids.json not found at path
     See docs/logging.md for full guidelines.
 """
 import json
@@ -80,12 +84,14 @@ class MBIDCache:
             except (json.JSONDecodeError, OSError) as e:
                 logger.warning("Could not load MBID cache: %s", e)
                 return
-            # Migrate old bare-string format: treat as expired (ts=0)
             for key, value in raw.items():
                 if isinstance(value, dict) and "ts" in value:
                     self._data[key] = value
                 else:
                     self._data[key] = {"mbid": value, "ts": 0}
+            logger.debug("Loaded MBID cache from %s (%d entries)", self._path, len(self._data))
+        else:
+            logger.debug("MBID cache not found at %s", self._path)
 
     def _save(self) -> None:
         paths.ensure_parent(self._path)
@@ -142,6 +148,7 @@ class ArtistMbidOverrides:
 
     def _load(self) -> None:
         if not self._path.exists():
+            logger.debug("artist_mbids.json not found at %s", self._path)
             return
         try:
             raw = json.loads(self._path.read_text(encoding="utf-8"))
@@ -156,6 +163,7 @@ class ArtistMbidOverrides:
             for k, v in raw.items()
             if isinstance(v, str) and v
         }
+        logger.debug("Loaded artist_mbids.json from %s (%d overrides)", self._path, len(self._data))
 
     def get(self, artist_name: str) -> str | None:
         """Return the pinned MBID for an artist, or None when not pinned."""

@@ -298,6 +298,81 @@ def test_load_config_malformed_library_toml(tmp_path, caplog):
     assert any("config.toml" in r.getMessage() for r in caplog.records)
 
 
+# --- Load logging tests ---
+
+
+def test_load_config_journals_user_layer_loaded(tmp_path, caplog):
+    """log_load_summary replays 'loaded' for a present user config.toml."""
+    user_file = tmp_path / "config.toml"
+    user_file.write_text('default_layout = "artist_flat"\n')
+    cfg = load_config(user_config_file=user_file)
+    with caplog.at_level("DEBUG", logger="festival_organizer.config"):
+        cfg.log_load_summary()
+    assert any("config.toml" in msg and "loaded" in msg for msg in caplog.messages)
+
+
+def test_load_config_journals_user_layer_not_found(tmp_path, caplog):
+    """log_load_summary replays 'not found' when user config.toml is absent."""
+    missing = tmp_path / "config.toml"
+    cfg = load_config(user_config_file=missing)
+    with caplog.at_level("DEBUG", logger="festival_organizer.config"):
+        cfg.log_load_summary()
+    assert any("not found" in msg for msg in caplog.messages)
+
+
+def test_load_config_journals_library_layer(tmp_path, caplog):
+    """log_load_summary includes the library config.toml entry."""
+    lib_dir = tmp_path / ".cratedigger"
+    lib_dir.mkdir()
+    (lib_dir / "config.toml").write_text('default_layout = "festival_flat"\n')
+    with patch("festival_organizer.config.paths") as mock_paths:
+        mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
+        cfg = load_config(library_config_dir=lib_dir)
+    with caplog.at_level("DEBUG", logger="festival_organizer.config"):
+        cfg.log_load_summary()
+    messages = " ".join(caplog.messages)
+    assert "config.toml" in messages and "loaded" in messages
+
+
+def test_load_config_journal_clears_after_replay(tmp_path, caplog):
+    """log_load_summary clears the journal so a second call is a no-op."""
+    cfg = load_config(user_config_file=tmp_path / "config.toml")
+    with caplog.at_level("DEBUG", logger="festival_organizer.config"):
+        cfg.log_load_summary()
+    first_count = len(caplog.records)
+    assert first_count > 0
+    caplog.clear()
+    cfg.log_load_summary()
+    assert len(caplog.records) == 0
+
+
+def test_external_config_logs_candidates(tmp_path, caplog):
+    """_load_external_config logs the candidate paths searched."""
+    cfg = Config(DEFAULT_CONFIG, config_dir=tmp_path)
+    with caplog.at_level("DEBUG", logger="festival_organizer.config"):
+        cfg._load_external_config("festivals.json", {})
+    assert any("festivals.json" in msg and "candidates" in msg for msg in caplog.messages)
+
+
+def test_external_config_logs_loaded(tmp_path, caplog):
+    """_load_external_config logs which path was loaded."""
+    (tmp_path / "festivals.json").write_text("{}")
+    cfg = Config(DEFAULT_CONFIG, config_dir=tmp_path)
+    with caplog.at_level("DEBUG", logger="festival_organizer.config"):
+        cfg._load_external_config("festivals.json", {})
+    assert any("Loaded festivals.json from" in msg for msg in caplog.messages)
+
+
+def test_external_config_logs_not_found(tmp_path, caplog):
+    """_load_external_config logs when file is not found anywhere."""
+    cfg = Config(DEFAULT_CONFIG, config_dir=tmp_path)
+    with caplog.at_level("DEBUG", logger="festival_organizer.config"):
+        with patch("festival_organizer.config.paths") as mock_paths:
+            mock_paths.data_dir.return_value = tmp_path / "nonexistent"
+            cfg._load_external_config("nope.json", {})
+    assert any("not found" in msg for msg in caplog.messages)
+
+
 def test_resolve_artist_alias():
     config = Config({"artist_aliases": {"Dimitri Vegas & Like Mike": ["DVLM"], "Martin Garrix": ["Area21"]}})
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"

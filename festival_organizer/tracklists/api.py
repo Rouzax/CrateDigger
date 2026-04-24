@@ -13,6 +13,8 @@ Logging:
         - session.validation_failed (DEBUG): Session validation request failed
         - session.cookie_save_failed (DEBUG): Could not persist cookies
         - session.cookie_restore_failed (DEBUG): Could not load cached cookies
+        - session.cookie_not_found (DEBUG): Cookie file does not exist at path
+        - session.cookie_restored (DEBUG): Session cookies restored from path
         - dj.fetch_failed (DEBUG): DJ profile page request failed
     See docs/logging.md for full guidelines.
 """
@@ -728,6 +730,7 @@ class TracklistSession:
         """Restore cookies from cache. Returns True if cache was valid."""
         try:
             if not self._cookie_path.exists():
+                logger.debug("Cookie file not found at %s", self._cookie_path)
                 return False
 
             cache = json.loads(self._cookie_path.read_text(encoding="utf-8"))
@@ -753,7 +756,10 @@ class TracklistSession:
 
             # Verify required cookies exist
             names = {c.name for c in self._session.cookies}
-            return "sid" in names and "uid" in names
+            valid = "sid" in names and "uid" in names
+            if valid:
+                logger.debug("Restored session cookies from %s", self._cookie_path)
+            return valid
 
         except (OSError, json.JSONDecodeError, KeyError, TypeError) as e:
             logger.debug("Cookie restore failed: %s", e)

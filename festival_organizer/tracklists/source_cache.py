@@ -4,6 +4,8 @@ Logging:
     Logger: 'festival_organizer.tracklists.source_cache'
     Key events:
         - cache.load_failed (DEBUG): Could not read or parse source cache file
+        - cache.loaded (DEBUG): Source cache loaded from path with entry count
+        - cache.not_found (DEBUG): Source cache file does not exist yet
     See docs/logging.md for full guidelines.
 """
 import json
@@ -46,9 +48,12 @@ class SourceCache:
         if self._path.exists():
             try:
                 self._data = json.loads(self._path.read_text(encoding="utf-8"))
+                logger.debug("Loaded source cache from %s (%d entries)", self._path, len(self._data))
             except (json.JSONDecodeError, OSError) as e:
                 logger.debug("Could not load source cache: %s", e)
                 self._data = {}
+        else:
+            logger.debug("Source cache not found at %s", self._path)
 
     def _save(self) -> None:
         paths.ensure_parent(self._path)

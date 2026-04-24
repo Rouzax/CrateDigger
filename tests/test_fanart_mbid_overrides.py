@@ -66,3 +66,25 @@ def test_has_method_reports_presence(tmp_path):
     assert overrides.has("Afrojack") is True
     assert overrides.has("afrojack") is True
     assert overrides.has("Unknown") is False
+
+
+# --- Load logging tests ---
+
+
+def test_overrides_load_logs_not_found(tmp_path, caplog):
+    """Missing artist_mbids.json logs 'not found' at DEBUG."""
+    import logging
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.fanart"):
+        ArtistMbidOverrides(overrides_dir=tmp_path)
+    assert any("artist_mbids.json not found" in msg for msg in caplog.messages)
+
+
+def test_overrides_load_logs_count(tmp_path, caplog):
+    """Existing artist_mbids.json logs path and override count at DEBUG."""
+    import logging
+    (tmp_path / "artist_mbids.json").write_text(json.dumps({
+        "Afrojack": "ffe35dc6-3088-4705-9156-1cc11ab8af71",
+    }))
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.fanart"):
+        ArtistMbidOverrides(overrides_dir=tmp_path)
+    assert any("Loaded artist_mbids.json from" in msg and "1 override" in msg for msg in caplog.messages)
