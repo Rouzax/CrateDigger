@@ -82,9 +82,14 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
     or "error" on failure.
     """
     if not metadata.MKVPROPEDIT_PATH:
+        logger.debug("embed_tags skipped: mkvpropedit not available")
         return "error"
 
     if not target_path.exists() or target_path.suffix.lower() not in MATROSKA_EXTS:
+        logger.warning(
+            "embed_tags skipped: target %s missing or not a Matroska file",
+            target_path,
+        )
         return "error"
 
     tags: dict[str, str] = {}

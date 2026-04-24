@@ -1,4 +1,5 @@
 """Parsers for extracting content information from various sources."""
+import logging
 import re
 from pathlib import Path
 
@@ -11,6 +12,8 @@ from festival_organizer.normalization import (
     strip_noise_words,
     strip_scene_tags,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _clean_leftover(text: str) -> str:
@@ -189,6 +192,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
     elif stem:
         result.setdefault("artist", stem)
 
+    logger.debug("parse_filename fallback for %r: %s", stem, result)
     return result
 
 

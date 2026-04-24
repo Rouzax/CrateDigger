@@ -152,3 +152,29 @@ def test_parent_dirs_no_info():
         CFG,
     )
     assert result == {}
+
+
+def test_parse_filename_logs_debug_on_fallback(caplog):
+    """When none of the named patterns match, parse_filename's fallback path
+    logs a single DEBUG line so users debugging a 'wrong parse' can see which
+    filenames missed all the primary patterns."""
+    import logging
+    # This filename doesn't match any of the primary patterns
+    # (no @, no 'at', no YYYY-Festival-Artist, no pipe-plus-year, no dash
+    # split that looks like "Artist - Title"). Just "name 2024 noise".
+    from festival_organizer.parsers import parse_filename
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.parsers"):
+        parse_filename(Path("bare_name 2024.mkv"), CFG)
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "parse_filename fallback" in joined
+    assert "bare_name 2024" in joined
+
+
+def test_parse_filename_no_debug_when_primary_pattern_matches(caplog):
+    """Primary-pattern matches don't emit the fallback DEBUG line
+    (keeps the log quiet for the happy path)."""
+    import logging
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.parsers"):
+        parse_filename(Path("Martin Garrix @ Tomorrowland 2024.mkv"), CFG)
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "parse_filename fallback" not in joined

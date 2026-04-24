@@ -1,4 +1,5 @@
 """Kodi musicvideo NFO XML generation."""
+import logging
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
@@ -6,6 +7,8 @@ from xml.dom import minidom
 
 from festival_organizer.config import Config
 from festival_organizer.models import MediaFile, build_display_title
+
+logger = logging.getLogger(__name__)
 
 
 def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
@@ -128,7 +131,11 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
     if lines[0].startswith("<?xml"):
         xml_str = "\n".join(lines[1:])
 
-    nfo_path.write_text(xml_str.strip() + "\n", encoding="utf-8")
+    try:
+        nfo_path.write_text(xml_str.strip() + "\n", encoding="utf-8")
+    except OSError as e:
+        logger.warning("NFO write failed for %s: %s", nfo_path, e)
+        raise
     return nfo_path
 
 

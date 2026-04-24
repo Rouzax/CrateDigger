@@ -549,3 +549,34 @@ TML</String></Simple>
 
     assert result == "done"
     mock_wmt.assert_called_once()
+
+
+def test_embed_tags_debug_when_mkvpropedit_missing(tmp_path, caplog):
+    """Missing MKVPROPEDIT_PATH -> DEBUG (not WARNING; would spam over many
+    files when --embed-tags runs without the tool installed) and returns 'error'."""
+    import logging as _logging
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf()
+    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", None):
+        with caplog.at_level(_logging.DEBUG, logger="festival_organizer.embed_tags"):
+            result = embed_tags(mf, video)
+    assert result == "error"
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "mkvpropedit" in joined.lower()
+    warnings = [r for r in caplog.records if r.levelno >= _logging.WARNING]
+    assert warnings == []
+
+
+def test_embed_tags_warns_when_target_missing_or_wrong_ext(tmp_path, caplog):
+    """Missing file or non-Matroska extension -> WARNING (upstream pipeline
+    bug, should be rare; one per bad input is fine)."""
+    import logging as _logging
+    mf = _make_mf()
+    video = tmp_path / "nonexistent.mkv"
+    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+        with caplog.at_level(_logging.WARNING, logger="festival_organizer.embed_tags"):
+            result = embed_tags(mf, video)
+    assert result == "error"
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "nonexistent.mkv" in joined
