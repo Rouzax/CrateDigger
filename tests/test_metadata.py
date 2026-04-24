@@ -372,3 +372,120 @@ def test_extract_ffprobe_old_tag_fallback():
 
     assert result["tracklists_title"] == "Old Title"
     assert result["tracklists_url"] == "https://old-url.com"
+
+
+# _override_title_from_mkv_tags: scope-aware TITLE read for .mkv files.
+# MediaInfo flattens multi-scope TITLE tags into General.Title, in practice
+# picking the last per-chapter TITLE. The override reads the TTV=50 global
+# TITLE directly via mkv_tags.extract_tag_values to give the analyzer the
+# spec-correct global title.
+
+
+def test_override_title_prefers_global_over_mediainfo_flatten():
+    """Global TTV=50 TITLE replaces mediainfo's chapter-flattened value."""
+    from festival_organizer.metadata import _override_title_from_mkv_tags
+
+    meta = {"title": "Midnight City (Eric Prydz Private Remix)"}  # chapter 20 leak
+    scope_aware = {
+        50: {"TITLE": "Eric Prydz @ Resistance Megastructure, Ultra Music Festival Miami"},
+        30: {"TITLE": "Midnight City (Eric Prydz Private Remix)"},
+    }
+    with patch("festival_organizer.mkv_tags.extract_tag_values", return_value=scope_aware):
+        _override_title_from_mkv_tags(Path("/tmp/test.mkv"), meta)
+
+    assert meta["title"] == "Eric Prydz @ Resistance Megastructure, Ultra Music Festival Miami"
+
+
+def test_override_title_clears_when_only_chapter_scope_exists():
+    """When the file has chapter TITLEs but no global TITLE, clear the field.
+
+    The analyzer must not feed a chapter TITLE through filename parsing;
+    returning "" makes the Layer 3 title-parsing branch in analyser a no-op.
+    """
+    from festival_organizer.metadata import _override_title_from_mkv_tags
+
+    meta = {"title": "Some Chapter Title"}
+    scope_aware = {30: {"TITLE": "Some Chapter Title"}}
+    with patch("festival_organizer.mkv_tags.extract_tag_values", return_value=scope_aware):
+        _override_title_from_mkv_tags(Path("/tmp/test.mkv"), meta)
+
+    assert meta["title"] == ""
+
+
+def test_override_title_preserves_mediainfo_when_no_tags():
+    """No Matroska tags at all: keep whatever mediainfo returned.
+
+    General.Title for a tag-less MKV comes from SegmentInfo.Title
+    (container-level, single-scope), which is safe. yt-dlp downloads are
+    the common case.
+    """
+    from festival_organizer.metadata import _override_title_from_mkv_tags
+
+    meta = {"title": "Some Video Title from SegmentInfo"}
+    with patch("festival_organizer.mkv_tags.extract_tag_values", return_value={}):
+        _override_title_from_mkv_tags(Path("/tmp/test.mkv"), meta)
+
+    assert meta["title"] == "Some Video Title from SegmentInfo"
+
+
+def test_override_title_skips_non_mkv_formats():
+    """Non-MKV files bypass the override; mkvextract is never called.
+
+    .mp4/.mov/.avi/.webm/.ts don't carry multi-scope Matroska tags in
+    practice, so the flattening bug doesn't apply and the extra mkvextract
+    subprocess would be wasted.
+    """
+    from festival_organizer.metadata import _override_title_from_mkv_tags
+
+    meta = {"title": "MP4 Title"}
+    with patch("festival_organizer.mkv_tags.extract_tag_values") as mock_extract:
+        _override_title_from_mkv_tags(Path("/tmp/test.mp4"), meta)
+
+    assert meta["title"] == "MP4 Title"
+    mock_extract.assert_not_called()
+
+
+def test_extract_mediainfo_applies_title_override_for_mkv():
+    """End-to-end: _extract_mediainfo runs the scope-aware override on .mkv."""
+    from festival_organizer.metadata import _extract_mediainfo
+
+    fake_mediainfo = json.dumps({
+        "media": {
+            "track": [{
+                "@type": "General",
+                "Title": "Last Chapter Title",
+                "Duration": "3600",
+            }],
+        },
+    })
+    scope_aware = {50: {"TITLE": "Real Global Title"}}
+    with patch("festival_organizer.metadata.MEDIAINFO_PATH", "/usr/bin/mediainfo"):
+        with patch("festival_organizer.metadata.tracked_run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout=fake_mediainfo)
+            with patch("festival_organizer.mkv_tags.extract_tag_values", return_value=scope_aware):
+                result = _extract_mediainfo(Path("/tmp/test.mkv"))
+
+    assert result["title"] == "Real Global Title"
+
+
+def test_extract_mediainfo_leaves_mp4_title_untouched():
+    """End-to-end: non-MKV extensions don't trigger mkv_tags lookup."""
+    from festival_organizer.metadata import _extract_mediainfo
+
+    fake_mediainfo = json.dumps({
+        "media": {
+            "track": [{
+                "@type": "General",
+                "Title": "MP4 Title",
+                "Duration": "3600",
+            }],
+        },
+    })
+    with patch("festival_organizer.metadata.MEDIAINFO_PATH", "/usr/bin/mediainfo"):
+        with patch("festival_organizer.metadata.tracked_run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout=fake_mediainfo)
+            with patch("festival_organizer.mkv_tags.extract_tag_values") as mock_extract:
+                result = _extract_mediainfo(Path("/tmp/test.mp4"))
+
+    assert result["title"] == "MP4 Title"
+    mock_extract.assert_not_called()

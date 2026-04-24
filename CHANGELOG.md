@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-04-24
+
+### Fixed
+
+- Metadata extraction no longer reads a chapter-scoped `TITLE` when the underlying MKV carries both chapter and global `TITLE` tags. MediaInfo flattens multi-scope `TITLE` into `General.Title` by picking the last per-chapter value, which for identified files (festival sets with per-track chapter tags) meant the analyzer received a track title where it expected the set title. The `TITLE` field is now read scope-aware via `mkvextract`, preferring the global (`TargetTypeValue=50`) value. Files with no Matroska tags at all keep their `SegmentInfo.Title` (for example, yt-dlp downloads), and non-MKV formats are unaffected. The bug was masked on identified files by the 1001Tracklists layer overriding the artist field, but would have produced a junk artist on any MKV with chapter `TITLE` tags and no 1001TL tags.
+
 ## [0.14.1] - 2026-04-24
 
 ### Changed

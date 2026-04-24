@@ -184,6 +184,30 @@ def parse_mediainfo_json(data: dict) -> dict:
     return _fix_string_values(result)
 
 
+def _override_title_from_mkv_tags(filepath: Path, meta: dict) -> None:
+    """Replace meta['title'] with the scope-authoritative global TITLE for MKVs.
+
+    MediaInfo's General.Title flattens multi-scope TITLE tags into a single
+    field, in practice picking the last per-chapter TITLE on files that also
+    carry CrateDigger's identify-written chapter tags. The spec-correct global
+    title lives at TTV=50 (or at a <Tag> without a TargetTypeValue, which the
+    Matroska spec defaults to 50). Read scope-aware via mkv_tags and override.
+
+    No-op when the file has no Matroska tags at all (fresh files where
+    General.Title comes from SegmentInfo.Title, which is single-scope and
+    safe). No-op for non-MKV formats.
+    """
+    if filepath.suffix.lower() != ".mkv":
+        return
+    # Lazy import: mkv_tags imports from this module for MKVEXTRACT_PATH.
+    from festival_organizer import mkv_tags
+
+    tag_values = mkv_tags.extract_tag_values(filepath)
+    if not tag_values:
+        return
+    meta["title"] = tag_values.get(50, {}).get("TITLE", "")
+
+
 def _extract_mediainfo(filepath: Path) -> dict:
     """Run MediaInfo CLI and return parsed metadata."""
     if not MEDIAINFO_PATH:
@@ -197,7 +221,9 @@ def _extract_mediainfo(filepath: Path) -> dict:
         if result.returncode != 0:
             return {}
         data = json.loads(result.stdout)
-        return parse_mediainfo_json(data)
+        meta = parse_mediainfo_json(data)
+        _override_title_from_mkv_tags(filepath, meta)
+        return meta
     except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as e:
         logger.debug("mediainfo failed for %s: %s", filepath, e)
         return {}
