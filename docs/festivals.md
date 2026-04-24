@@ -18,17 +18,22 @@ CrateDigger uses a `festivals.json` file to recognize festival names and abbrevi
 
 CrateDigger looks for `festivals.json` in two places, checking the library-local location first:
 
-1. `{library}/.cratedigger/festivals.json` (library-specific overrides)
-2. `~/.cratedigger/festivals.json` (user-level, applies to all libraries)
+1. `{library}/.cratedigger/festivals.json` (library-specific overrides, travels with the library)
+2. User-level, applies to all libraries:
+
+| Platform | Path |
+|----------|------|
+| Linux | `~/CrateDigger/festivals.json` |
+| Windows | `Documents\CrateDigger\festivals.json` |
 
 If neither file exists, CrateDigger falls back to its built-in festival knowledge.
 
-To get the full example file as a starting point:
+To get the full example file as a starting point, download it to your user-level location:
 
-=== "Linux / macOS"
+=== "Linux"
 
     ```bash
-    curl -o ~/.cratedigger/festivals.json \
+    curl -o ~/CrateDigger/festivals.json \
       https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json
     ```
 
@@ -37,14 +42,22 @@ To get the full example file as a starting point:
     ```powershell
     Invoke-WebRequest `
       -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json" `
-      -OutFile "$env:USERPROFILE\.cratedigger\festivals.json"
+      -OutFile "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
     ```
 
 Or, if you have cloned the repository:
 
-```bash
-cp festivals.example.json ~/.cratedigger/festivals.json
-```
+=== "Linux"
+
+    ```bash
+    cp festivals.example.json ~/CrateDigger/festivals.json
+    ```
+
+=== "Windows (PowerShell)"
+
+    ```powershell
+    Copy-Item festivals.example.json "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
+    ```
 
 ## Format
 

@@ -18,10 +18,12 @@ import re
 from colorsys import hsv_to_rgb, rgb_to_hsv
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
-
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+
+from festival_organizer.fonts import get_font_path
+
+logger = logging.getLogger(__name__)
 
 # Layout constants (tuned through ~15 iterations)
 POSTER_W, POSTER_H = 1000, 1500
@@ -34,8 +36,6 @@ PAD_LINE_TO_FEST = 30
 PAD_FEST_TO_YEAR = 22
 PAD_YEAR_TO_DETAIL = 22
 PAD_DETAIL_LINES = 8
-
-from festival_organizer.fonts import get_font_path
 
 _font_overrides: dict[str, str] | None = None
 

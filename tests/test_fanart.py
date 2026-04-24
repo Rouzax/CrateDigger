@@ -1,5 +1,4 @@
 """Tests for fanart.tv integration (all mocked, no real network calls)."""
-import json
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -13,10 +12,6 @@ from festival_organizer.fanart import (
     pick_best_background,
     lookup_mbid,
     fetch_artist_images,
-    download_artist_images,
-    FanartError,
-    MusicBrainzError,
-    FanartAPIError,
 )
 
 
@@ -103,6 +98,29 @@ def test_mbid_cache_persistence():
         cache2 = MBIDCache(cache_dir=Path(tmp))
         assert cache2.get("Hardwell") == "abc-123"
         assert cache2.get("ALOK") == "def-456"
+
+
+def test_mbid_cache_uses_platformdirs_cache_dir(tmp_path):
+    from festival_organizer.fanart import MBIDCache
+    with patch("festival_organizer.fanart.paths") as mock_paths:
+        mock_paths.cache_dir.return_value = tmp_path
+        mock_paths.ensure_parent.side_effect = lambda p: (
+            p.parent.mkdir(parents=True, exist_ok=True),
+            p,
+        )[1]
+        cache = MBIDCache()
+        cache.put("Tiesto", "abc-123")
+    assert (tmp_path / "mbid_cache.json").is_file()
+
+
+def test_artist_mbid_overrides_uses_data_dir(tmp_path):
+    from festival_organizer.fanart import ArtistMbidOverrides
+    override_file = tmp_path / "artist_mbids.json"
+    override_file.write_text('{"Tiesto": "tiesto-mbid"}')
+    with patch("festival_organizer.fanart.paths") as mock_paths:
+        mock_paths.artist_mbids_file.return_value = override_file
+        overrides = ArtistMbidOverrides()
+    assert overrides.get("Tiesto") == "tiesto-mbid"
 
 
 # --- Image selection tests ---
@@ -392,13 +410,13 @@ def test_fanart_op_not_needed_when_images_exist(tmp_path):
     op = FanartOperation(config, library_root=tmp_path, force=False)
 
     # Create existing images
-    artist_dir = tmp_path / ".cratedigger" / "artists" / "Hardwell"
+    artist_dir = tmp_path / "artists" / "Hardwell"
     artist_dir.mkdir(parents=True)
     (artist_dir / "clearlogo.png").write_bytes(b"fake")
     (artist_dir / "fanart.jpg").write_bytes(b"fake")
 
     mf = MediaFile(source_path=Path("/tmp/test.mkv"), artist="Hardwell")
-    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=tmp_path):
         assert op.is_needed(Path("/tmp/test.mkv"), mf) is False
 
 
@@ -412,12 +430,12 @@ def test_fanart_op_needed_when_logo_missing(tmp_path):
     op = FanartOperation(config, library_root=tmp_path, force=False)
 
     # Only fanart.jpg exists, clearlogo missing
-    artist_dir = tmp_path / ".cratedigger" / "artists" / "Hardwell"
+    artist_dir = tmp_path / "artists" / "Hardwell"
     artist_dir.mkdir(parents=True)
     (artist_dir / "fanart.jpg").write_bytes(b"fake")
 
     mf = MediaFile(source_path=Path("/tmp/test.mkv"), artist="Hardwell")
-    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=tmp_path):
         assert op.is_needed(Path("/tmp/test.mkv"), mf) is True
 
 

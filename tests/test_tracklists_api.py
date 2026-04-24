@@ -1,5 +1,4 @@
 """Tests for 1001Tracklists API layer (all mocked, no real network calls)."""
-import json
 import logging
 import tempfile
 from pathlib import Path
@@ -11,8 +10,6 @@ from festival_organizer.tracklists.api import (
     TracklistSession,
     TracklistError,
     AuthenticationError,
-    RateLimitError,
-    ExportError,
     _parse_duration_string,
     _html_decode,
     _normalize_date,
@@ -110,6 +107,46 @@ def test_cookie_restore_no_file():
         cookie_path = Path(tmp) / "nonexistent.json"
         session = TracklistSession(cookie_cache_path=cookie_path)
         assert session._restore_cookies("test@example.com") is False
+
+
+class TestCookieFilePermissions:
+    def test_save_cookies_writes_0o600_on_posix(self, tmp_path):
+        """Cookie file must not be world-readable. Contains live session tokens."""
+        import stat
+        import sys as sys_mod
+        if sys_mod.platform == "win32":
+            pytest.skip("POSIX-only permission semantics")
+
+        cookie_path = tmp_path / "1001tl-cookies.json"
+        api = TracklistSession(cookie_cache_path=cookie_path)
+        api._session.cookies.set("sid", "fake-sid", domain=".1001tracklists.com")
+        api._session.cookies.set("uid", "fake-uid", domain=".1001tracklists.com")
+        api._save_cookies(email="user@example.com")
+
+        assert cookie_path.is_file()
+        mode = stat.S_IMODE(cookie_path.stat().st_mode)
+        assert mode == 0o600, f"expected 0o600, got {oct(mode)}"
+
+
+def test_default_cookie_path_uses_paths_cookies_file(tmp_path, monkeypatch):
+    """Without an explicit cookie_cache_path, the session uses paths.cookies_file()."""
+    expected = tmp_path / "state" / "1001tl-cookies.json"
+    monkeypatch.setattr(
+        "festival_organizer.tracklists.api.paths.cookies_file", lambda: expected
+    )
+    session = TracklistSession()
+    assert session._cookie_path == expected
+
+
+def test_save_cookies_creates_parent_dir(tmp_path):
+    """_save_cookies creates the parent directory on first save."""
+    cookie_path = tmp_path / "freshly" / "nested" / "1001tl-cookies.json"
+    session = TracklistSession(cookie_cache_path=cookie_path)
+    session._session.cookies.set("sid", "s", domain="www.1001tracklists.com")
+    session._session.cookies.set("uid", "u", domain="www.1001tracklists.com")
+    session._save_cookies("user@example.com")
+    assert cookie_path.exists()
+    assert cookie_path.parent.is_dir()
 
 
 # --- Search result parsing ---
@@ -256,8 +293,10 @@ def test_login_success():
 
 def test_cookie_save_failure_logged(tmp_path, caplog):
     """Cookie save failure is logged at debug level."""
-    # Point cookie path to a non-existent subdirectory so write fails with OSError
-    session = TracklistSession(cookie_cache_path=tmp_path / "nonexistent_subdir" / "cookies.json")
+    # Point cookie "parent" at an existing regular file so mkdir fails with OSError.
+    blocker = tmp_path / "not_a_dir"
+    blocker.write_text("x")
+    session = TracklistSession(cookie_cache_path=blocker / "cookies.json")
 
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.api"):
         session._save_cookies("test@example.com")

@@ -4,6 +4,8 @@ Logging:
     Logger: 'festival_organizer.tracklists.source_cache'
     Key events:
         - cache.load_failed (DEBUG): Could not read or parse source cache file
+        - cache.loaded (DEBUG): Source cache loaded from path with entry count
+        - cache.not_found (DEBUG): Source cache file does not exist yet
     See docs/logging.md for full guidelines.
 """
 import json
@@ -11,11 +13,10 @@ import logging
 import time
 from pathlib import Path
 
+from festival_organizer import paths
 from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_PATH = Path.home() / ".cratedigger" / "source_cache.json"
 
 # Maps 1001TL source types to MKV tag names. Club is treated as a venue,
 # since 1001TL uses it for physical venues like Alexandra Palace London that
@@ -33,11 +34,11 @@ class SourceCache:
     """Read-through cache for 1001TL source page metadata.
 
     Keyed by source ID (e.g. "5tb5n3"). Each entry stores name, slug, type, country.
-    Persists to ~/.cratedigger/source_cache.json.
+    Persists under `paths.cache_dir()` (see `festival_organizer.paths`).
     """
 
     def __init__(self, cache_path: Path | None = None, ttl_days: int = 365):
-        self._path = cache_path or DEFAULT_PATH
+        self._path = cache_path if cache_path is not None else paths.cache_dir() / "source_cache.json"
         self._ttl_days = ttl_days
         self._ttl_seconds = ttl_days * 86400
         self._data: dict[str, dict] = {}
@@ -47,12 +48,15 @@ class SourceCache:
         if self._path.exists():
             try:
                 self._data = json.loads(self._path.read_text(encoding="utf-8"))
+                logger.debug("Loaded source cache from %s (%d entries)", self._path, len(self._data))
             except (json.JSONDecodeError, OSError) as e:
                 logger.debug("Could not load source cache: %s", e)
                 self._data = {}
+        else:
+            logger.debug("Source cache not found at %s", self._path)
 
     def _save(self) -> None:
-        self._path.parent.mkdir(parents=True, exist_ok=True)
+        paths.ensure_parent(self._path)
         self._path.write_text(
             json.dumps(self._data, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",

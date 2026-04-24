@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 from festival_organizer.tracklists.source_cache import SourceCache
 
 
@@ -108,3 +107,25 @@ def test_cache_old_entries_without_ts_expire(tmp_path):
     path.write_text(json.dumps({"abc": {"name": "TML", "slug": "tml", "type": "Open Air / Festival", "country": "Belgium"}}))
     cache = SourceCache(cache_path=path, ttl_days=90)
     assert cache.get("abc") is None
+
+
+# --- Load logging tests ---
+
+
+def test_cache_load_logs_not_found(tmp_path, caplog):
+    """New cache file logs 'not found' at DEBUG."""
+    import logging
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.source_cache"):
+        SourceCache(cache_path=tmp_path / "source_cache.json")
+    assert any("not found" in msg for msg in caplog.messages)
+
+
+def test_cache_load_logs_entry_count(tmp_path, caplog):
+    """Existing cache file logs path and entry count at DEBUG."""
+    import logging
+    path = tmp_path / "source_cache.json"
+    c = SourceCache(cache_path=path)
+    c.put("x", {"name": "X", "slug": "x", "type": "Club", "country": "US"})
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.source_cache"):
+        SourceCache(cache_path=path)
+    assert any("Loaded source cache from" in msg and "1 entr" in msg for msg in caplog.messages)

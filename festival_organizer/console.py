@@ -483,7 +483,7 @@ def identify_summary_panel(
 
     # Metadata tagged count
     if tagged_count:
-        body.append(f"\n\nMetadata tagged: ", style="bold")
+        body.append("\n\nMetadata tagged: ", style="bold")
         body.append(str(tagged_count), style="green")
         body.append(" files")
 

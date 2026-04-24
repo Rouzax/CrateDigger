@@ -2,7 +2,6 @@
 import io
 from pathlib import Path
 
-import pytest
 from rich.console import Console
 
 from festival_organizer.operations import OperationResult
@@ -90,7 +89,7 @@ class TestEnrichContractFileDone:
         ]
         p.file_done(source=Path("/lib/my_set.mkv"), results=results, elapsed_s=2.5)
         out = _capture(con)
-        lines = [l for l in out.strip().split("\n") if l.strip()]
+        lines = [entry for entry in out.strip().split("\n") if entry.strip()]
         assert len(lines) == 2
         assert "done" in lines[0]
         assert "my_set.mkv" in lines[0]
@@ -144,7 +143,7 @@ class TestEnrichContractFileDone:
         ]
         p.file_done(source=Path("/lib/f.mkv"), results=results, elapsed_s=1.0)
         out = _capture(con)
-        lines = [l for l in out.strip().split("\n") if l.strip()]
+        lines = [entry for entry in out.strip().split("\n") if entry.strip()]
         # Verdict block (2 lines) + verbose breakdown lines
         assert len(lines) >= 3
 

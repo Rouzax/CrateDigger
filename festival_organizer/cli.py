@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 import typer
 
+from festival_organizer import paths
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import load_config
@@ -57,11 +58,15 @@ _CD_PACKAGES: list[str] = [
     "beautifulsoup4", "Pillow", "ftfy", "numpy", "requests", "rich", "typer",
 ]
 
-_CD_ASSETS: list[tuple[str, str]] = [
-    # (filename, description for warning)
-    ("config.json",    "main config"),
-    ("festivals.json", "festival names"),
-    ("artists.json",   "artist overrides"),
+# Asset probe for `--check`. Each entry is (label, resolver, description).
+# The resolver is called at check time so tests can monkeypatch the paths
+# module without needing to reload this list. Routed through
+# ``festival_organizer.paths`` so the probe follows platformdirs layout.
+_CD_ASSETS: list[tuple[str, Callable[[], Path], str]] = [
+    ("config.toml",       lambda: paths.config_file(),       "user config"),
+    ("festivals.json",    lambda: paths.festivals_file(),    "curated festival aliases"),
+    ("artists.json",      lambda: paths.artists_file(),      "curated artist aliases"),
+    ("artist_mbids.json", lambda: paths.artist_mbids_file(), "curated MBID overrides"),
 ]
 
 
@@ -72,7 +77,7 @@ _CD_ASSETS: list[tuple[str, str]] = [
 RootArg = Annotated[str, typer.Argument(help="File or folder to process")]
 LibraryArg = Annotated[str, typer.Argument(help="Library folder to process")]
 OutputOpt = Annotated[Optional[str], typer.Option("--output", "-o", help="Output folder")]
-ConfigOpt = Annotated[Optional[str], typer.Option("--config", help="Path to config.json")]
+ConfigOpt = Annotated[Optional[str], typer.Option("--config", help="Path to config.toml")]
 QuietOpt = Annotated[bool, typer.Option("--quiet", "-q", help="Suppress per-file progress")]
 VerboseOpt = Annotated[bool, typer.Option("--verbose", "-v", help="Show detailed progress and decisions")]
 DebugOpt = Annotated[bool, typer.Option("--debug", help="Show cache hits, retries, and internal mechanics")]
@@ -180,9 +185,8 @@ def _run_check_impl(con: "Console") -> int:
 
     # --- Config files ---
     con.print("\n[bold]Config[/bold]")
-    base = Path.home() / ".cratedigger"
-    for filename, desc in _CD_ASSETS:
-        p = base / filename
+    for _label, resolve, desc in _CD_ASSETS:
+        p = resolve()
         if p.is_file():
             con.print(f"  [green]\u2713[/green] {p}")
         else:
@@ -201,7 +205,7 @@ def _run_check_impl(con: "Console") -> int:
             con.print("  [yellow]![/yellow] 1001TL       email or password missing (optional, tracklist enrichment)")
             warnings += 1
 
-        cookie_path = Path.home() / ".1001tl-cookies.json"
+        cookie_path = paths.cookies_file()
         if cookie_path.is_file():
             con.print(f"  [green]\u2713[/green] 1001TL cookies  {cookie_path}")
         else:
@@ -555,6 +559,8 @@ def _run_command(args: types.SimpleNamespace) -> int:
     debug = getattr(args, "debug", False)
     console = make_console()
     setup_logging(verbose=verbose, debug=debug, console=console)
+    config.log_load_summary()
+    paths.warn_if_legacy_paths_exist()
 
     # Layout override
     if getattr(args, "layout", None):
@@ -786,11 +792,22 @@ def _run_command(args: types.SimpleNamespace) -> int:
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
-            if use_contract:
+            if isinstance(progress, (OrganizeContractProgress, OrganizeEnrichProgress)):
+                # file_preview is only defined on the organize-side progress
+                # types. The outer `args.dry_run` guard ensures we are in
+                # `organize` here (enrich/identify/audit-logos have no
+                # --dry-run flag), so this isinstance is always True in
+                # practice; the explicit check documents the invariant for
+                # type checkers and future refactors.
                 progress.file_preview(source=fp, media_file=mf, target=target)
-            else:
+            elif isinstance(progress, ProgressPrinter):
+                # Fallback for non-contract progress. Unreachable in practice
+                # when args.dry_run=True (organize always installs one of the
+                # contract types above), but kept for defensive completeness.
                 progress.file_start(fp, target_folder + "/" + target_name)
                 progress.file_done([])
+            # EnrichContractProgress is not reachable in this branch: it only
+            # ships with the `enrich` command, which has no --dry-run flag.
             continue
 
         if args.command == "organize":
@@ -1029,7 +1046,7 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
     # Check logo availability for each festival
     logo_dirs = [
         library_root / ".cratedigger" / "festivals",
-        Path.home() / ".cratedigger" / "festivals",
+        paths.festivals_logo_dir(),
     ]
 
     def find_logo(festival: str) -> Path | None:
@@ -1062,7 +1079,7 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
         console.print()
 
     if missing_logo:
-        user_festivals = Path.home() / ".cratedigger" / "festivals"
+        user_festivals = paths.festivals_logo_dir()
         console.print(f"[yellow]Missing curated logo ({len(missing_logo)}):[/yellow]")
         for fest in missing_logo:
             lib_path = library_root / ".cratedigger" / "festivals" / fest

@@ -1,3 +1,4 @@
+import io
 import logging
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -45,22 +46,30 @@ def test_run_unexpected_error_returns_1(capsys):
     assert "boom" in captured.err
 
 
+def _console_handler_level():
+    """Return the level of the non-file handler (the user-visible console handler)."""
+    import logging.handlers
+    logger = logging.getLogger("festival_organizer")
+    for h in logger.handlers:
+        if not isinstance(h, logging.handlers.RotatingFileHandler):
+            return h.level
+    raise AssertionError("no console handler found")
+
+
 def test_verbose_flag_enables_info_logging():
-    """The --verbose flag enables INFO logging for the package."""
+    """The --verbose flag sets the console handler to INFO."""
     with patch("festival_organizer.cli.scan_folder", return_value=[]):
         with patch("festival_organizer.cli.resolve_library_root", return_value=None):
             run(["organize", "--dry-run", "/tmp", "--verbose"])
-    logger = logging.getLogger("festival_organizer")
-    assert logger.level == logging.INFO
+    assert _console_handler_level() == logging.INFO
 
 
 def test_debug_flag_enables_debug_logging():
-    """The --debug flag enables DEBUG logging for the package."""
+    """The --debug flag sets the console handler to DEBUG."""
     with patch("festival_organizer.cli.scan_folder", return_value=[]):
         with patch("festival_organizer.cli.resolve_library_root", return_value=None):
             run(["organize", "--dry-run", "/tmp", "--debug"])
-    logger = logging.getLogger("festival_organizer")
-    assert logger.level == logging.DEBUG
+    assert _console_handler_level() == logging.DEBUG
 
 
 def test_organize_dry_run_move_conflict(capsys):
@@ -131,7 +140,6 @@ def test_resolve_action_import_with_move(tmp_path):
 
 def test_organize_inside_library_requires_confirmation(tmp_path, capsys):
     """Organize inside existing library without --yes aborts in non-interactive."""
-    from pathlib import Path
     lib = tmp_path / "concerts"
     (lib / ".cratedigger").mkdir(parents=True)
 
@@ -248,7 +256,7 @@ def test_enrich_uses_parallel_analysis(tmp_path):
                 mock_mf.source_path = fake_file
                 mock_parallel.return_value = [(fake_file, mock_mf)]
                 with patch("festival_organizer.cli.run_pipeline", return_value=[]):
-                    result = run(["enrich", str(lib), "--verbose"])
+                    run(["enrich", str(lib), "--verbose"])
 
     mock_parallel.assert_called_once()
     call_args = mock_parallel.call_args
@@ -335,13 +343,9 @@ def test_check_flag_exists_and_exits_zero(monkeypatch):
 # _run_check_impl tests
 # ---------------------------------------------------------------------------
 
-import io
-from rich.console import Console as RichConsole
-
-
-def _make_test_console() -> tuple[RichConsole, io.StringIO]:
+def _make_test_console() -> tuple[Console, io.StringIO]:
     buf = io.StringIO()
-    con = RichConsole(file=buf, highlight=False, markup=True)
+    con = Console(file=buf, highlight=False, markup=True)
     return con, buf
 
 
@@ -362,15 +366,37 @@ def test_run_check_impl_all_pass(monkeypatch, tmp_path):
     # cv2 present
     monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", True)
 
-    # Create real files under tmp_path so is_file() works correctly
-    home = tmp_path
-    cratedigger_dir = home / ".cratedigger"
-    cratedigger_dir.mkdir()
-    (cratedigger_dir / "config.json").write_text("{}")
-    (cratedigger_dir / "festivals.json").write_text("{}")
-    (cratedigger_dir / "artists.json").write_text("{}")
-    (home / ".1001tl-cookies.json").write_text("[]")
-    monkeypatch.setattr(Path, "home", lambda: home)
+    # Create real files under tmp_path so is_file() works correctly.
+    # Asset probe is routed through the paths module, so patch the
+    # data_dir / cookies_file helpers rather than faking Path.home().
+    data_dir = tmp_path / "CrateDigger"
+    data_dir.mkdir()
+    (data_dir / "config.toml").write_text("")
+    (data_dir / "festivals.json").write_text("{}")
+    (data_dir / "artists.json").write_text("{}")
+    (data_dir / "artist_mbids.json").write_text("{}")
+    cookie_path = tmp_path / "state" / "1001tl-cookies.json"
+    cookie_path.parent.mkdir(parents=True, exist_ok=True)
+    cookie_path.write_text("[]")
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.config_file",
+        lambda: data_dir / "config.toml",
+    )
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.festivals_file",
+        lambda: data_dir / "festivals.json",
+    )
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.artists_file",
+        lambda: data_dir / "artists.json",
+    )
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.artist_mbids_file",
+        lambda: data_dir / "artist_mbids.json",
+    )
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.cookies_file", lambda: cookie_path
+    )
 
     # load_config returns a config with credentials set
     fake_config = type("C", (), {
@@ -399,8 +425,14 @@ def test_run_check_impl_required_tool_missing_exits_one(monkeypatch, tmp_path):
         monkeypatch.setattr(metadata, attr, None)
 
     monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", False)
-    # tmp_path exists but has no .cratedigger/ subdirectory, so all is_file() calls return False
-    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    # Point every asset probe at a path under tmp_path that does not exist,
+    # so all is_file() checks return False.
+    missing = tmp_path / "missing"
+    for name in ("config_file", "festivals_file", "artists_file", "artist_mbids_file", "cookies_file"):
+        monkeypatch.setattr(
+            f"festival_organizer.cli.paths.{name}",
+            lambda _n=name: missing / _n,
+        )
 
     def _raise():
         raise RuntimeError("no config")
@@ -427,15 +459,37 @@ def test_run_check_impl_shows_all_section_headers(monkeypatch, tmp_path):
     )
     monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", True)
 
-    # Create real files under tmp_path so is_file() works correctly
-    home = tmp_path
-    cratedigger_dir = home / ".cratedigger"
-    cratedigger_dir.mkdir()
-    (cratedigger_dir / "config.json").write_text("{}")
-    (cratedigger_dir / "festivals.json").write_text("{}")
-    (cratedigger_dir / "artists.json").write_text("{}")
-    (home / ".1001tl-cookies.json").write_text("[]")
-    monkeypatch.setattr(Path, "home", lambda: home)
+    # Create real files under tmp_path so is_file() works correctly.
+    # Route every probe through the paths module so the test is insulated
+    # from platform-specific defaults.
+    data_dir = tmp_path / "CrateDigger"
+    data_dir.mkdir()
+    (data_dir / "config.toml").write_text("")
+    (data_dir / "festivals.json").write_text("{}")
+    (data_dir / "artists.json").write_text("{}")
+    (data_dir / "artist_mbids.json").write_text("{}")
+    cookie_path = tmp_path / "state" / "1001tl-cookies.json"
+    cookie_path.parent.mkdir(parents=True, exist_ok=True)
+    cookie_path.write_text("[]")
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.config_file",
+        lambda: data_dir / "config.toml",
+    )
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.festivals_file",
+        lambda: data_dir / "festivals.json",
+    )
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.artists_file",
+        lambda: data_dir / "artists.json",
+    )
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.artist_mbids_file",
+        lambda: data_dir / "artist_mbids.json",
+    )
+    monkeypatch.setattr(
+        "festival_organizer.cli.paths.cookies_file", lambda: cookie_path
+    )
 
     fake_config = type("C", (), {
         "tracklists_credentials": ("a@b.com", "pass"),
@@ -479,3 +533,15 @@ def test_run_kodi_sync_album_poster_expands_to_folder_siblings(tmp_path):
     assert video_a in called_paths
     assert video_b in called_paths
     assert not any(p.suffix == ".txt" for p in called_paths)
+
+
+def test_config_option_help_mentions_toml():
+    """The --config flag's help string must reference config.toml, not config.json."""
+    from festival_organizer.cli import app
+    from typer.testing import CliRunner
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["organize", "--help"])
+    assert result.exit_code == 0
+    assert "config.toml" in result.stdout
+    assert "config.json" not in result.stdout

@@ -129,7 +129,17 @@ cratedigger enrich /path/to/library
 
 ## Configuration
 
-CrateDigger reads settings from `~/.cratedigger/config.json` for global defaults and supports library-level configuration files for per-library overrides. A `config.example.json` is included in the repository as a starting point. See the [docs](docs/) folder for a full configuration reference.
+CrateDigger reads settings from `config.toml` and supports library-level overrides. Copy `config.example.toml` from the repository as a starting point.
+
+| Platform | Config location |
+|----------|----------------|
+| Linux | `~/CrateDigger/config.toml` |
+| macOS | `~/CrateDigger/config.toml` |
+| Windows | `Documents\CrateDigger\config.toml` |
+
+Curated data files (`festivals.json`, `artists.json`, `artist_mbids.json`) live in the same folder as `config.toml`. Caches and logs go to platform-standard locations (`~/.cache/CrateDigger/` on Linux, `$env:LOCALAPPDATA\CrateDigger\` on Windows) and are managed automatically.
+
+A per-library override at `{library}/.cratedigger/config.toml` takes precedence over the user-level file. See the [docs](docs/) folder for a full configuration reference.
 
 ## Disclaimer
 

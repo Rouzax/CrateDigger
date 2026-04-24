@@ -18,6 +18,10 @@ Logging:
         - theaudiodb.fallback (DEBUG): Trying TheAudioDB as fallback
         - theaudiodb.fail (DEBUG): TheAudioDB lookup failed
         - attribution (INFO): Required attribution notice
+        - mbid.cache_loaded (DEBUG): MBID cache loaded from path with entry count
+        - mbid.cache_not_found (DEBUG): MBID cache file does not exist yet
+        - mbid.overrides_loaded (DEBUG): artist_mbids.json loaded with override count
+        - mbid.overrides_not_found (DEBUG): artist_mbids.json not found at path
     See docs/logging.md for full guidelines.
 """
 import json
@@ -29,12 +33,13 @@ from typing import Callable
 
 import requests
 
-unresolved_artist_names: set[str] = set()
-
+from festival_organizer import paths
 from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 from festival_organizer.normalization import strip_diacritics
 
 logger = logging.getLogger(__name__)
+
+unresolved_artist_names: set[str] = set()
 
 FANART_BASE_URL = "https://webservice.fanart.tv/v3.2"
 MB_BASE_URL = "https://musicbrainz.org/ws/2"
@@ -65,7 +70,7 @@ class MBIDCache:
     """
 
     def __init__(self, cache_dir: Path | None = None, ttl_days: int = 90):
-        self._dir = cache_dir or (Path.home() / ".cratedigger")
+        self._dir = cache_dir if cache_dir is not None else paths.cache_dir()
         self._path = self._dir / "mbid_cache.json"
         self._ttl_days = ttl_days
         self._ttl_seconds = ttl_days * 86400
@@ -79,15 +84,17 @@ class MBIDCache:
             except (json.JSONDecodeError, OSError) as e:
                 logger.warning("Could not load MBID cache: %s", e)
                 return
-            # Migrate old bare-string format: treat as expired (ts=0)
             for key, value in raw.items():
                 if isinstance(value, dict) and "ts" in value:
                     self._data[key] = value
                 else:
                     self._data[key] = {"mbid": value, "ts": 0}
+            logger.debug("Loaded MBID cache from %s (%d entries)", self._path, len(self._data))
+        else:
+            logger.debug("MBID cache not found at %s", self._path)
 
     def _save(self) -> None:
-        self._dir.mkdir(parents=True, exist_ok=True)
+        paths.ensure_parent(self._path)
         self._path.write_text(
             json.dumps(self._data, indent=2, ensure_ascii=False),
             encoding="utf-8",
@@ -132,12 +139,16 @@ class ArtistMbidOverrides:
     _FILENAME = "artist_mbids.json"
 
     def __init__(self, overrides_dir: Path | None = None):
-        self._path = (overrides_dir or (Path.home() / ".cratedigger")) / self._FILENAME
+        if overrides_dir is not None:
+            self._path = overrides_dir / self._FILENAME
+        else:
+            self._path = paths.artist_mbids_file()
         self._data: dict[str, str] = {}
         self._load()
 
     def _load(self) -> None:
         if not self._path.exists():
+            logger.debug("artist_mbids.json not found at %s", self._path)
             return
         try:
             raw = json.loads(self._path.read_text(encoding="utf-8"))
@@ -152,6 +163,7 @@ class ArtistMbidOverrides:
             for k, v in raw.items()
             if isinstance(v, str) and v
         }
+        logger.debug("Loaded artist_mbids.json from %s (%d overrides)", self._path, len(self._data))
 
     def get(self, artist_name: str) -> str | None:
         """Return the pinned MBID for an artist, or None when not pinned."""
@@ -537,8 +549,9 @@ def resolve_mbids_aligned(
     for name, mbid in unique.items():
         if mbid is None:
             logger.info(
-                "No MBID resolved for artist: %r (add to ~/.cratedigger/artist_mbids.json)",
+                "No MBID resolved for artist: %r (add to %s)",
                 name,
+                paths.artist_mbids_file(),
             )
             unresolved_artist_names.add(name)
 

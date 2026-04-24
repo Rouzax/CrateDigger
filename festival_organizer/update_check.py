@@ -15,6 +15,8 @@ import time
 from pathlib import Path
 from urllib.request import Request, urlopen
 
+from festival_organizer import paths
+
 PACKAGE_NAME = "cratedigger"
 ENV_VAR = "CRATEDIGGER_NO_UPDATE_CHECK"
 REPO_URL = "https://github.com/Rouzax/CrateDigger"
@@ -54,12 +56,8 @@ def _is_prerelease_string(v: str) -> bool:
 
 
 def _cache_path() -> Path:
-    """Return the OS-appropriate path for the cache file."""
-    if win := os.environ.get("LOCALAPPDATA"):
-        return Path(win) / PACKAGE_NAME / _CACHE_FILENAME
-    if xdg := os.environ.get("XDG_CACHE_HOME"):
-        return Path(xdg) / PACKAGE_NAME / _CACHE_FILENAME
-    return Path.home() / ".cache" / PACKAGE_NAME / _CACHE_FILENAME
+    """Return the path for the cache file (under paths.cache_dir())."""
+    return paths.cache_dir() / _CACHE_FILENAME
 
 
 def _read_cache() -> dict | None:
@@ -85,8 +83,7 @@ def _cache_is_fresh(entry: dict) -> bool:
 
 def _write_cache(*, latest_version: str | None, ttl_seconds: int) -> None:
     """Atomically write a fresh cache entry."""
-    p = _cache_path()
-    p.parent.mkdir(parents=True, exist_ok=True)
+    p = paths.ensure_parent(_cache_path())
     payload = {
         "schema": SCHEMA_VERSION,
         "checked_at": int(time.time()),

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
-from festival_organizer.config import Config, DEFAULT_CONFIG, load_config
+from festival_organizer.config import load_config
 from festival_organizer.planner import plan_actions
 from festival_organizer.scanner import scan_folder
 

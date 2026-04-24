@@ -7,7 +7,6 @@ from festival_organizer.normalization import (
     scene_dots_to_spaces,
     fix_mojibake,
 )
-from festival_organizer.config import Config, DEFAULT_CONFIG
 
 
 # --- fix_mojibake ---

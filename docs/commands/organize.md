@@ -33,7 +33,7 @@ recognized media files and processes each one.
 | `--enrich` | | off | Run all enrichment operations immediately after organizing |
 | `--yes` | `-y` | off | Skip confirmation when re-organizing an existing library |
 | `--kodi-sync` | | off | Notify Kodi to refresh updated items after organizing |
-| `--config <path>` | | (none) | Path to a config.json file |
+| `--config <path>` | | (none) | Path to a config.toml file |
 | `--quiet` | `-q` | off | Suppress per-file progress output |
 | `--verbose` | `-v` | off | Show detailed decisions |
 | `--debug` | | off | Show cache hits, retries, and internal mechanics |

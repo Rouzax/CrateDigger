@@ -240,7 +240,7 @@ def _compute_score(
 
         if ptype == "Weekend":
             correct_re = rf"(?i)(?:weekend\s*{pnum}|w{pnum}|we{pnum})"
-            wrong_re = rf"(?i)(?:weekend\s*\d|w\d|we\d)"
+            wrong_re = r"(?i)(?:weekend\s*\d|w\d|we\d)"
             if re.search(correct_re, result.title):
                 content_score += 40
                 result.has_event_match = True
@@ -248,7 +248,7 @@ def _compute_score(
                 content_score -= 30
         elif ptype == "Day":
             correct_re = rf"(?i)(?:day\s*{pnum}|d{pnum})"
-            wrong_re = rf"(?i)(?:day\s*\d|d\d)"
+            wrong_re = r"(?i)(?:day\s*\d|d\d)"
             if re.search(correct_re, result.title):
                 content_score += 40
                 result.has_event_match = True

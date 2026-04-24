@@ -2,9 +2,8 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
-    NfoOperation, ArtOperation, PosterOperation, TagsOperation,
+    NfoOperation, ArtOperation, PosterOperation,
     OrganizeOperation, AlbumPosterOperation, FanartOperation,
-    _safe_artist_dir,
 )
 from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
 
@@ -287,11 +286,11 @@ def test_album_poster_fanart_single_artist_finds_image(tmp_path):
     """Fanart background returned for single-artist folder."""
     (tmp_path / "2024 - TML - Bicep.mkv").write_bytes(b"")
     (tmp_path / "2024 - TML - Bicep WE2.mkv").write_bytes(b"")
-    fanart = tmp_path / ".cratedigger" / "artists" / "Bicep" / "fanart.jpg"
+    fanart = tmp_path / "artists" / "Bicep" / "fanart.jpg"
     fanart.parent.mkdir(parents=True)
     fanart.write_bytes(b"\xff\xd8")
     op = AlbumPosterOperation(config=load_config(), library_root=tmp_path)
-    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=tmp_path):
         result = op._find_fanart_background(tmp_path, "Bicep")
     assert result == fanart
 
@@ -300,11 +299,11 @@ def test_album_poster_fanart_single_artist_dash_we(tmp_path):
     """Dash-separated WE suffix doesn't split artist detection."""
     (tmp_path / "2024 - TML - Bicep - WE1.mkv").write_bytes(b"")
     (tmp_path / "2024 - TML - Bicep - WE2.mkv").write_bytes(b"")
-    fanart = tmp_path / ".cratedigger" / "artists" / "Bicep" / "fanart.jpg"
+    fanart = tmp_path / "artists" / "Bicep" / "fanart.jpg"
     fanart.parent.mkdir(parents=True)
     fanart.write_bytes(b"\xff\xd8")
     op = AlbumPosterOperation(config=load_config(), library_root=tmp_path)
-    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=tmp_path):
         result = op._find_fanart_background(tmp_path, "Bicep")
     assert result == fanart
 
@@ -729,44 +728,44 @@ def test_fanart_op_stores_urls_on_mediafile(tmp_path):
                 }
                 op = FanartOperation(config, lib)
                 op._cache = mock_cache
-                result = op.execute(video, mf)
+                op.execute(video, mf)
 
     assert mf.fanart_url == "https://fanart.tv/bg.jpg"
     assert mf.clearlogo_url == "https://fanart.tv/logo.png"
 
 
 def test_artist_dir_uses_global_cache(tmp_path):
-    """Artist artwork directory resolves under ~/.cratedigger/, not library root."""
+    """Artist artwork directory resolves under the user cache_dir(), not library root."""
     lib = tmp_path / "lib"
     lib.mkdir()
-    global_home = tmp_path / "home"
-    global_home.mkdir()
+    cache_root = tmp_path / "cache"
+    cache_root.mkdir()
 
     config = Config({
         **DEFAULT_CONFIG,
         "fanart": {"enabled": True, "project_api_key": "test-key"},
     })
     op = FanartOperation(config, lib)
-    with patch("festival_organizer.operations.Path.home", return_value=global_home):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=cache_root):
         result = op._artist_dir("Tiesto")
 
-    assert str(global_home) in str(result)
+    assert str(cache_root) in str(result)
     assert str(lib) not in str(result)
-    assert result == global_home / ".cratedigger" / "artists" / "Tiesto"
+    assert result == cache_root / "artists" / "Tiesto"
 
 
-def test_safe_artist_dir_sanitizes_name():
-    """_safe_artist_dir sanitizes special characters and resolves to global cache."""
-    from festival_organizer.operations import _safe_artist_dir
+def test_artist_cache_dir_sanitizes_name():
+    """paths.artist_cache_dir sanitizes special characters and resolves under cache_dir()."""
+    from festival_organizer import paths
 
-    result = _safe_artist_dir("Tiesto")
-    assert result == Path.home() / ".cratedigger" / "artists" / "Tiesto"
+    result = paths.artist_cache_dir("Tiesto")
+    assert result == paths.cache_dir() / "artists" / "Tiesto"
 
-    result = _safe_artist_dir("Armin van Buuren")
-    assert result == Path.home() / ".cratedigger" / "artists" / "Armin van Buuren"
+    result = paths.artist_cache_dir("Armin van Buuren")
+    assert result == paths.cache_dir() / "artists" / "Armin van Buuren"
 
     # Special chars replaced with underscore
-    result = _safe_artist_dir("Artist/Name")
+    result = paths.artist_cache_dir("Artist/Name")
     assert "Artist_Name" in str(result)
 
 
@@ -873,6 +872,47 @@ def test_find_curated_logo_missing(tmp_path):
     assert op._find_curated_logo("Nonexistent") is None
 
 
+def test_find_curated_logo_user_global(tmp_path, monkeypatch):
+    """Curated logo resolved from user-global paths.festivals_logo_dir()."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    user_global_dir = tmp_path / "user_festivals"
+    (user_global_dir / "Tomorrowland").mkdir(parents=True)
+    logo_file = user_global_dir / "Tomorrowland" / "logo.png"
+    logo_file.write_bytes(b"\x89PNG")
+    monkeypatch.setattr(
+        "festival_organizer.operations.paths.festivals_logo_dir",
+        lambda: user_global_dir,
+    )
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    assert op._find_curated_logo("Tomorrowland") == logo_file
+
+
+def test_find_curated_logo_library_wins_over_user_global(tmp_path, monkeypatch):
+    """Library-local logo wins when both library and user-global contain a logo."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    lib = tmp_path / "lib"
+    lib_logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
+    lib_logo_dir.mkdir(parents=True)
+    lib_logo = lib_logo_dir / "logo.png"
+    lib_logo.write_bytes(b"\x89PNG")
+
+    user_global_dir = tmp_path / "user_festivals"
+    (user_global_dir / "Tomorrowland").mkdir(parents=True)
+    (user_global_dir / "Tomorrowland" / "logo.png").write_bytes(b"\x89PNG")
+    monkeypatch.setattr(
+        "festival_organizer.operations.paths.festivals_logo_dir",
+        lambda: user_global_dir,
+    )
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    assert op._find_curated_logo("Tomorrowland") == lib_logo
+
+
 def test_find_curated_logo_empty_festival(tmp_path):
     """Returns None for empty festival name."""
     config = Config(DEFAULT_CONFIG)
@@ -933,7 +973,7 @@ def test_download_artwork_max_width_resizes(tmp_path):
     mock_resp.raise_for_status = MagicMock()
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
-    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=tmp_path):
         with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
             result = op._download_artwork("https://example.com/big.jpg", "test-art", max_width=600)
 
@@ -958,7 +998,7 @@ def test_download_artwork_no_max_width_keeps_original(tmp_path):
     mock_resp.raise_for_status = MagicMock()
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
-    with patch("festival_organizer.operations.Path.home", return_value=tmp_path):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=tmp_path):
         with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
             result = op._download_artwork("https://example.com/big.jpg", "test-art")
 
@@ -968,7 +1008,7 @@ def test_download_artwork_no_max_width_keeps_original(tmp_path):
 
 
 def test_download_artwork_uses_global_cache(tmp_path):
-    """Downloaded artwork is cached under ~/.cratedigger/, not library root."""
+    """Downloaded artwork is cached under the user cache_dir(), not library root."""
     from PIL import Image
     import io
 
@@ -981,21 +1021,21 @@ def test_download_artwork_uses_global_cache(tmp_path):
     mock_resp.content = image_bytes
     mock_resp.raise_for_status = MagicMock()
 
-    global_home = tmp_path / "home"
-    global_home.mkdir()
+    cache_root = tmp_path / "cache"
+    cache_root.mkdir()
     lib = tmp_path / "lib"
     lib.mkdir()
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=lib)
-    with patch("festival_organizer.operations.Path.home", return_value=global_home):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=cache_root):
         with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
             result = op._download_artwork("https://example.com/photo.jpg", "dj-artwork")
 
     assert result is not None
-    # Cached under global home, not library root
-    assert str(global_home) in str(result)
+    # Cached under the user cache_dir(), not library root
+    assert str(cache_root) in str(result)
     assert str(lib) not in str(result)
-    assert (global_home / ".cratedigger" / "dj-artwork").exists()
+    assert (cache_root / "dj-artwork").exists()
 
 
 def test_download_dj_artwork_saves_as_jpeg_in_artist_dir(tmp_path):
@@ -1012,11 +1052,11 @@ def test_download_dj_artwork_saves_as_jpeg_in_artist_dir(tmp_path):
     mock_resp.content = image_bytes
     mock_resp.raise_for_status = MagicMock()
 
-    global_home = tmp_path / "home"
-    global_home.mkdir()
+    cache_root = tmp_path / "cache"
+    cache_root.mkdir()
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
-    with patch("festival_organizer.operations.Path.home", return_value=global_home):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=cache_root):
         with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
             result = op._download_dj_artwork("https://example.com/photo.png", "Tiesto")
 
@@ -1041,11 +1081,11 @@ def test_download_dj_artwork_crops_and_resizes(tmp_path):
     mock_resp.content = image_bytes
     mock_resp.raise_for_status = MagicMock()
 
-    global_home = tmp_path / "home"
-    global_home.mkdir()
+    cache_root = tmp_path / "cache"
+    cache_root.mkdir()
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
-    with patch("festival_organizer.operations.Path.home", return_value=global_home):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=cache_root):
         with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
             result = op._download_dj_artwork("https://example.com/big.jpg", "Tiesto")
 
@@ -1058,12 +1098,11 @@ def test_download_dj_artwork_crops_and_resizes(tmp_path):
 def test_download_dj_artwork_returns_cached(tmp_path):
     """DJ artwork returns cached file if fresh."""
     from PIL import Image
-    import io
 
-    global_home = tmp_path / "home"
-    global_home.mkdir()
+    cache_root = tmp_path / "cache"
+    cache_root.mkdir()
 
-    artist_dir = global_home / ".cratedigger" / "artists" / "Tiesto"
+    artist_dir = cache_root / "artists" / "Tiesto"
     artist_dir.mkdir(parents=True)
     cached = artist_dir / "dj-artwork.jpg"
     # Write a valid tiny JPEG
@@ -1071,7 +1110,7 @@ def test_download_dj_artwork_returns_cached(tmp_path):
     img.save(cached, "JPEG")
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
-    with patch("festival_organizer.operations.Path.home", return_value=global_home):
+    with patch("festival_organizer.operations.paths.cache_dir", return_value=cache_root):
         result = op._download_dj_artwork("https://example.com/photo.jpg", "Tiesto")
 
     assert result == cached

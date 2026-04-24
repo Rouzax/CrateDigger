@@ -5,6 +5,7 @@ from festival_organizer.tracklists.query import (
     build_search_query,
     detect_tracklist_source,
     extract_tracklist_id,
+    expand_aliases_in_query,
 )
 
 
@@ -84,9 +85,6 @@ def test_extract_tracklist_id_short_url():
 def test_extract_tracklist_id_invalid():
     with pytest.raises(ValueError):
         extract_tracklist_id("https://example.com/not-a-tracklist")
-
-
-from festival_organizer.tracklists.query import expand_aliases_in_query
 
 
 def test_expand_aliases_replaces_abbreviation():

@@ -7,19 +7,18 @@ Logging:
     See docs/logging.md for full guidelines.
 """
 import logging
-import re
 from pathlib import Path
-
-logger = logging.getLogger(__name__)
 
 from festival_organizer.config import Config
 from festival_organizer.metadata import extract_metadata
 from festival_organizer.models import MediaFile
-from festival_organizer.normalization import normalise_name, safe_filename
+from festival_organizer.normalization import normalise_name
 from festival_organizer.parsers import (
     parse_filename,
     parse_parent_dirs,
 )
+
+logger = logging.getLogger(__name__)
 
 # Extensions
 VIDEO_EXTS = {".mp4", ".mkv", ".webm", ".avi", ".mov", ".m2ts", ".ts"}

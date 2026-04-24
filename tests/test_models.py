@@ -10,7 +10,7 @@ def test_media_file_defaults():
     assert mf.content_type == ""
     assert mf.extension == ""
     assert mf.duration_seconds is None
-    assert mf.has_cover == False
+    assert mf.has_cover is False
 
 
 def test_media_file_with_values():

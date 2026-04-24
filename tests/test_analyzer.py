@@ -44,7 +44,7 @@ def test_analyse_with_1001tl_overrides_filename():
     assert mf.year == "2024"
     assert mf.date == "2024-10-19"
     assert mf.metadata_source == "1001tracklists"
-    assert mf.has_cover == True
+    assert mf.has_cover is True
 
 
 def test_analyser_surfaces_location_from_metadata():

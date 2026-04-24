@@ -11,11 +11,11 @@ import logging
 import subprocess
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
-
 from PIL import Image
 
 from festival_organizer import metadata
+
+logger = logging.getLogger(__name__)
 
 
 def extract_cover(source: Path, target_dir: Path) -> Path | None:

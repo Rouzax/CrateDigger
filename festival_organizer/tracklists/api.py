@@ -13,14 +13,18 @@ Logging:
         - session.validation_failed (DEBUG): Session validation request failed
         - session.cookie_save_failed (DEBUG): Could not persist cookies
         - session.cookie_restore_failed (DEBUG): Could not load cached cookies
+        - session.cookie_not_found (DEBUG): Cookie file does not exist at path
+        - session.cookie_restored (DEBUG): Session cookies restored from path
         - dj.fetch_failed (DEBUG): DJ profile page request failed
     See docs/logging.md for full guidelines.
 """
 import html as html_mod
 import json
 import logging
+import os
 import random
 import re
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -28,14 +32,14 @@ from typing import Callable
 
 import requests
 
-logger = logging.getLogger(__name__)
-
+from festival_organizer import paths
 from festival_organizer.tracklists.scoring import SearchResult
 from festival_organizer.tracklists import canary
 
+logger = logging.getLogger(__name__)
+
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0"
 BASE_URL = "https://www.1001tracklists.com"
-DEFAULT_COOKIE_PATH = Path.home() / ".1001tl-cookies.json"
 
 
 class TracklistError(Exception):
@@ -262,7 +266,9 @@ class TracklistSession:
 
     def __init__(self, cookie_cache_path: Path | None = None,
                  source_cache=None, dj_cache=None, delay: float = 5):
-        self._cookie_path = cookie_cache_path or DEFAULT_COOKIE_PATH
+        self._cookie_path = (
+            cookie_cache_path if cookie_cache_path is not None else paths.cookies_file()
+        )
         self._source_cache = source_cache
         self._dj_cache = dj_cache
         self._delay = delay
@@ -420,7 +426,7 @@ class TracklistSession:
         try:
             result = resp.json()
         except (json.JSONDecodeError, ValueError):
-            raise ExportError(f"Invalid JSON response from export API")
+            raise ExportError("Invalid JSON response from export API")
 
         if not result.get("success"):
             raise ExportError(result.get("message", "Export failed"))
@@ -709,7 +715,14 @@ class TracklistSession:
                 "Cookies": cookies_list,
             }
 
+            paths.ensure_parent(self._cookie_path)
             self._cookie_path.write_text(json.dumps(cache, indent=2), encoding="utf-8")
+            # Lock cookie file to owner read/write. Contains live 1001TL session tokens.
+            if sys.platform != "win32":
+                try:
+                    os.chmod(self._cookie_path, 0o600)
+                except OSError as exc:
+                    logger.debug("Could not chmod cookie file: %s", exc)
         except (OSError, TypeError) as e:
             logger.debug("Cookie save failed: %s", e)
 
@@ -717,6 +730,7 @@ class TracklistSession:
         """Restore cookies from cache. Returns True if cache was valid."""
         try:
             if not self._cookie_path.exists():
+                logger.debug("Cookie file not found at %s", self._cookie_path)
                 return False
 
             cache = json.loads(self._cookie_path.read_text(encoding="utf-8"))
@@ -742,7 +756,10 @@ class TracklistSession:
 
             # Verify required cookies exist
             names = {c.name for c in self._session.cookies}
-            return "sid" in names and "uid" in names
+            valid = "sid" in names and "uid" in names
+            if valid:
+                logger.debug("Restored session cookies from %s", self._cookie_path)
+            return valid
 
         except (OSError, json.JSONDecodeError, KeyError, TypeError) as e:
             logger.debug("Cookie restore failed: %s", e)

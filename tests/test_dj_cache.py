@@ -189,3 +189,25 @@ def test_parse_dj_profile_skip_placeholder_artwork():
     html = '<meta property="og:image" content="https://1001tl.com/images/static/placeholder.jpg">'
     result = _parse_dj_profile(html)
     assert result["artwork_url"] == ""
+
+
+# --- Load logging tests ---
+
+
+def test_dj_cache_load_logs_not_found(tmp_path, caplog):
+    """New DJ cache logs 'not found' at DEBUG."""
+    import logging
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.dj_cache"):
+        DjCache(tmp_path / "dj_cache.json")
+    assert any("not found" in msg for msg in caplog.messages)
+
+
+def test_dj_cache_load_logs_entry_count(tmp_path, caplog):
+    """Existing DJ cache logs path and entry count at DEBUG."""
+    import logging
+    path = tmp_path / "dj_cache.json"
+    c = DjCache(path)
+    c.put("tiesto", {"name": "Tiesto", "artwork_url": "", "aliases": [], "member_of": []})
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.dj_cache"):
+        DjCache(path)
+    assert any("Loaded DJ cache from" in msg and "1 entr" in msg for msg in caplog.messages)

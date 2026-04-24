@@ -33,4 +33,5 @@ CLAUDE.md
 .worktrees/
 C:/
 config.json
+config.toml
 docs/plans/

@@ -14,18 +14,15 @@ CrateDigger relies on three external tools. If any of them is missing or not on 
 | **FFmpeg** (includes ffprobe) | `sudo apt install ffmpeg` / `brew install ffmpeg` / `scoop install ffmpeg` |
 | **MKVToolNix** (mkvpropedit, mkvextract, mkvmerge) | `sudo apt install mkvtoolnix` / `brew install mkvtoolnix` / `scoop install mkvtoolnix` |
 
-If the tools are installed but not on your PATH (for example, a custom install location), tell CrateDigger where to find them in `~/.cratedigger/config.json`:
+If the tools are installed but not on your PATH (for example, a custom install location), tell CrateDigger where to find them in your `config.toml` (`~/CrateDigger/config.toml` on Linux or macOS, `Documents\CrateDigger\config.toml` on Windows):
 
-```json
-{
-    "tool_paths": {
-        "mediainfo": "/usr/local/bin/mediainfo",
-        "ffprobe": "/usr/local/bin/ffprobe",
-        "mkvpropedit": "/usr/local/bin/mkvpropedit",
-        "mkvextract": "/usr/local/bin/mkvextract",
-        "mkvmerge": "/usr/local/bin/mkvmerge"
-    }
-}
+```toml
+[tool_paths]
+mediainfo = "/usr/local/bin/mediainfo"
+ffprobe = "/usr/local/bin/ffprobe"
+mkvpropedit = "/usr/local/bin/mkvpropedit"
+mkvextract = "/usr/local/bin/mkvextract"
+mkvmerge = "/usr/local/bin/mkvmerge"
 ```
 
 See [getting started](getting-started.md#required-tools) for full installation instructions.
@@ -42,7 +39,7 @@ The printed command is already correct for your install method. The three typica
 
 To suppress the notice, set `CRATEDIGGER_NO_UPDATE_CHECK=1` in your environment. The check is also silent automatically when stdout is not a TTY (pipes, cron jobs, CI systems).
 
-The check is designed to stay out of your way. Results are cached locally at `~/.cache/cratedigger/update-check.json` for 24 hours on success, so it does not hit the network on every run. The network timeout is 2 seconds, and any failure is silently ignored. No usage data is sent; the check is a standard read-only request to the GitHub Releases API.
+The check is designed to stay out of your way. Results are cached locally at `~/.cache/CrateDigger/update-check.json` (Linux), `~/Library/Caches/CrateDigger/update-check.json` (macOS), or `$env:LOCALAPPDATA\CrateDigger\Cache\update-check.json` (Windows) for 24 hours on success, so it does not hit the network on every run. The network timeout is 2 seconds, and any failure is silently ignored. No usage data is sent; the check is a standard read-only request to the GitHub Releases API.
 
 ### CrateDigger skips some of my files
 
@@ -54,16 +51,29 @@ Also check `skip_patterns` in your config. Files matching any skip pattern are e
 
 CrateDigger classified a concert as a festival set, or vice versa. Force the correct classification using path rules in `content_type_rules`:
 
-```json
-{
-    "content_type_rules": {
-        "force_concert": ["Coldplay/*", "Pink Floyd/*"],
-        "force_festival": ["*/Ultra Miami/*"]
-    }
-}
+```toml
+[content_type_rules]
+force_concert = ["Coldplay/*", "Pink Floyd/*"]
+force_festival = ["*/Ultra Miami/*"]
 ```
 
 Each rule is matched against the file's path relative to the source root. `Coldplay/*` matches any file directly inside a `Coldplay` folder. See [Configuration: content type rules](configuration.md#content-type-rules) for more examples.
+
+### Where are my logs, and why does concurrent use sometimes garble them?
+
+CrateDigger writes a rotating log to a fixed location on each platform:
+
+| Platform | Path |
+|----------|------|
+| Linux | `~/.local/state/CrateDigger/log/cratedigger.log` |
+| macOS | `~/Library/Logs/CrateDigger/cratedigger.log` |
+| Windows | `$env:LOCALAPPDATA\CrateDigger\Logs\cratedigger.log` |
+
+The log always captures DEBUG-level detail regardless of whether you pass `--verbose` or `--debug` on the command line. Up to five rotated files are kept, each capped at 5 MB, so the total on-disk footprint stays under 30 MB.
+
+If you run two `cratedigger` processes at the same time (for example, `identify` in one terminal while `enrich` is still running in another), both processes write to the same log file. On Linux and macOS, log records from both runs may interleave; individual lines stay intact but the chronological order gets jumbled. On Windows, the log rotation step can fail while both processes hold the file open; you may see a short traceback on stderr and the log may grow past 5 MB until both runs finish.
+
+For most single-user workflows this is harmless. If you need a clean log for a specific run, either wait for one process to finish before starting the next, or point each process at a separate log location by setting a different `HOME` (Linux/macOS) or `USERPROFILE` (Windows) environment variable per process.
 
 ---
 
@@ -71,15 +81,12 @@ Each rule is matched against the file's path relative to the source root. `Coldp
 
 ### "Error: credentials required"
 
-Your 1001Tracklists email and password are not configured. Add them to `~/.cratedigger/config.json`:
+Your 1001Tracklists email and password are not configured. Add them to your `config.toml` (`~/CrateDigger/config.toml` on Linux or macOS, `Documents\CrateDigger\config.toml` on Windows):
 
-```json
-{
-    "tracklists": {
-        "email": "your@email.com",
-        "password": "your-password"
-    }
-}
+```toml
+[tracklists]
+email = "your@email.com"
+password = "your-password"
 ```
 
 Or set them as environment variables:
@@ -207,7 +214,7 @@ cratedigger enrich ~/Music/Library/ --only chapter_artist_mbids
 cratedigger enrich ~/Music/Library/ --only fanart
 ```
 
-If the artist still has no MBID after that, they may not be in the MusicBrainz database or the search may be returning the wrong result. Add the correct MBID to `~/.cratedigger/artist_mbids.json` manually:
+If the artist still has no MBID after that, they may not be in the MusicBrainz database or the search may be returning the wrong result. Add the correct MBID to `artist_mbids.json` manually (`~/CrateDigger/artist_mbids.json` on Linux or macOS, `Documents\CrateDigger\artist_mbids.json` on Windows):
 
 ```json
 {
@@ -219,7 +226,7 @@ Find the correct MBID at [musicbrainz.org](https://musicbrainz.org).
 
 ### MusicBrainz IDs are not resolving for some artists
 
-CrateDigger looks up MBIDs in this order: your override file (`~/.cratedigger/artist_mbids.json`), the auto cache, then a live MusicBrainz search. If an artist is not resolving:
+CrateDigger looks up MBIDs in this order: your override file (`~/CrateDigger/artist_mbids.json` on Linux or macOS, `Documents\CrateDigger\artist_mbids.json` on Windows), the auto cache, then a live MusicBrainz search. If an artist is not resolving:
 
 1. Check if the search is returning the wrong artist (a name collision). Run with `--verbose` to see what MusicBrainz returns.
 2. Look up the correct MBID at [musicbrainz.org](https://musicbrainz.org) and add it to your override file:
@@ -245,7 +252,7 @@ See [Configuration: artist MBID override file](configuration.md#artist-mbid-over
 Add a curated logo for the festival and regenerate:
 
 1. Find out which festivals are missing logos: `cratedigger audit-logos ~/Music/Library/`
-2. Place a logo file at the path the command suggests (for example, `~/.cratedigger/festivals/Tomorrowland/logo.png`)
+2. Place a logo file at the path the command suggests (for example, `~/CrateDigger/festivals/Tomorrowland/logo.png` on Linux or macOS, `Documents\CrateDigger\festivals\Tomorrowland\logo.png` on Windows)
 3. Regenerate the folder posters:
 
 ```bash
@@ -272,10 +279,26 @@ Run with `--verbose` to see the lookup process and any errors.
 
 The fanart cache expires after the number of days configured in `cache_ttl.images_days` (default: 90 days, with ±20% jitter per entry). To force a fresh download for all artists, delete the artist cache folder and rerun:
 
-```bash
-rm -rf ~/.cratedigger/artists/
-cratedigger enrich ~/Music/Library/ --only fanart
-```
+=== "Linux"
+
+    ```bash
+    rm -rf ~/.cache/CrateDigger/artists/
+    cratedigger enrich ~/Music/Library/ --only fanart
+    ```
+
+=== "macOS"
+
+    ```bash
+    rm -rf ~/Library/Caches/CrateDigger/artists/
+    cratedigger enrich ~/Music/Library/ --only fanart
+    ```
+
+=== "Windows (PowerShell)"
+
+    ```powershell
+    Remove-Item -Recurse "$env:LOCALAPPDATA\CrateDigger\Cache\artists"
+    cratedigger enrich ~/Music/Library/ --only fanart
+    ```
 
 ---
 
@@ -293,15 +316,10 @@ The username or password does not match Kodi's web server credentials. Check the
 
 The library path that Kodi uses may not match the path CrateDigger is using. If they differ (for example, Kodi accesses the library over a network share while CrateDigger uses a local path), configure path mapping in your `kodi` config:
 
-```json
-{
-    "kodi": {
-        "path_mapping": {
-            "local": "/home/user/Music/Library/",
-            "kodi": "smb://server/music/Library/"
-        }
-    }
-}
+```toml
+[kodi.path_mapping]
+local = "/home/user/Music/Library/"
+kodi = "smb://server/music/Library/"
 ```
 
 See [Kodi integration: path mapping](kodi-integration.md#path-mapping) for details.

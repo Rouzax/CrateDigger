@@ -12,7 +12,6 @@ from festival_organizer.config import load_config
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
     NfoOperation, ArtOperation, PosterOperation, TagsOperation,
-    OperationResult,
 )
 
 
@@ -69,7 +68,7 @@ def test_art_operation_called_without_has_cover_gate():
 
         with patch("festival_organizer.artwork.extract_cover") as mock_extract:
             mock_extract.return_value = video.parent / f"{video.stem}-thumb.jpg"
-            result = op.execute(video, mf)
+            op.execute(video, mf)
             mock_extract.assert_called_once_with(video, video.parent)
 
 

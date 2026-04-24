@@ -8,18 +8,15 @@ This page covers the Kodi-specific parts: enabling the JSON-RPC sync that refres
 
 ### Always on (config)
 
-Set `enabled` to `true` in the `kodi` section of `~/.cratedigger/config.json`:
+Set `enabled` to `true` in the `[kodi]` section of your `config.toml` (`~/CrateDigger/config.toml` on Linux and macOS, `Documents\CrateDigger\config.toml` on Windows):
 
-```json
-{
-    "kodi": {
-        "enabled": true,
-        "host": "192.168.1.100",
-        "port": 8080,
-        "username": "kodi",
-        "password": "your-password"
-    }
-}
+```toml
+[kodi]
+enabled = true
+host = "192.168.1.100"
+port = 8080
+username = "kodi"
+password = "your-password"
 ```
 
 When enabled, CrateDigger syncs with Kodi at the end of every `organize` or `enrich` run.
@@ -62,20 +59,17 @@ If CrateDigger and Kodi access the same library through different paths (for exa
 
 **Manual mapping:** If auto-detection does not work for your setup, configure explicit path prefixes:
 
-```json
-{
-    "kodi": {
-        "enabled": true,
-        "host": "192.168.1.100",
-        "port": 8080,
-        "username": "kodi",
-        "password": "your-password",
-        "path_mapping": {
-            "local": "/home/user/Music/Library/",
-            "kodi": "smb://server/music/Library/"
-        }
-    }
-}
+```toml
+[kodi]
+enabled = true
+host = "192.168.1.100"
+port = 8080
+username = "kodi"
+password = "your-password"
+
+[kodi.path_mapping]
+local = "/home/user/Music/Library/"
+kodi = "smb://server/music/Library/"
 ```
 
 `local` is the path CrateDigger uses on this machine. `kodi` is the path Kodi uses to reach the same location.

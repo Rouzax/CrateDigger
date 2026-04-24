@@ -10,7 +10,6 @@ Logging:
         - cleanup.removed (DEBUG): Empty directory removed
     See docs/logging.md for full guidelines.
 """
-import json
 import logging
 import os
 from pathlib import Path
@@ -140,29 +139,29 @@ def resolve_library_root(
 def init_library(root: Path, layout: str | None = None) -> Path:
     """Initialize a library at root by creating .cratedigger/ marker.
 
-    If .cratedigger/config.json already exists, merges layout setting
-    without overwriting existing user settings.
+    If .cratedigger/config.toml already exists, leaves it untouched so any
+    user-authored settings survive subsequent `organize` runs. Otherwise
+    writes a minimal config.toml containing only the default_layout line
+    when a layout is provided.
 
     Returns path to the .cratedigger/ directory.
     """
     marker = root / MARKER_DIR
     marker.mkdir(exist_ok=True)
 
-    config_path = marker / "config.json"
+    config_path = marker / "config.toml"
     if config_path.exists():
-        existing = json.loads(config_path.read_text(encoding="utf-8"))
-        if layout and "default_layout" not in existing:
-            existing["default_layout"] = layout
-            config_path.write_text(
-                json.dumps(existing, indent=2) + "\n", encoding="utf-8"
-            )
-    else:
-        config = {}
-        if layout:
-            config["default_layout"] = layout
+        return marker
+
+    # Layout comes from the Layout StrEnum (artist_flat, festival_flat,
+    # artist_nested, festival_nested) via cli.py, so no TOML string
+    # escaping is needed for realistic inputs.
+    if layout:
         config_path.write_text(
-            json.dumps(config, indent=2) + "\n", encoding="utf-8"
+            f'default_layout = "{layout}"\n', encoding="utf-8"
         )
+    else:
+        config_path.write_text("", encoding="utf-8")
 
     return marker
 

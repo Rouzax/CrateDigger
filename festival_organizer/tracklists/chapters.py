@@ -20,12 +20,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Literal, overload
 
-logger = logging.getLogger(__name__)
-
 from festival_organizer import metadata
-from festival_organizer.embed_tags import xml_escape
 from festival_organizer.mkv_tags import CLEAR_TAG, MATROSKA_EXTS, extract_all_tags, write_merged_tags
 from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from festival_organizer.tracklists.api import Track

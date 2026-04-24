@@ -22,7 +22,7 @@ cratedigger audit-logos <library> [options]
 
 | Option | Short | Description |
 |--------|-------|-------------|
-| `--config <path>` | | Path to a config.json file |
+| `--config <path>` | | Path to a config.toml file |
 | `--verbose` | `-v` | Show detailed progress |
 | `--debug` | | Show internal mechanics |
 
@@ -44,7 +44,8 @@ Logo files go in a folder named after the festival, inside one of two locations:
 
 | Location | Path | Scope |
 |----------|------|-------|
-| User-level | `~/.cratedigger/festivals/{Festival Name}/logo.{ext}` | All libraries |
+| User-level (Linux / macOS) | `~/CrateDigger/festivals/{Festival Name}/logo.{ext}` | All libraries |
+| User-level (Windows) | `Documents\CrateDigger\festivals\{Festival Name}\logo.{ext}` | All libraries |
 | Library-local | `{library}/.cratedigger/festivals/{Festival Name}/logo.{ext}` | This library only |
 
 The library-local location takes precedence over the user-level location if both exist.
@@ -66,14 +67,14 @@ Library: /home/user/Music/Library
 Festivals found: 12
 
 With curated logo (8):
-  Tomorrowland: /home/user/.cratedigger/festivals/Tomorrowland/logo.png
-  AMF: /home/user/.cratedigger/festivals/AMF/logo.png
+  Tomorrowland: /home/user/CrateDigger/festivals/Tomorrowland/logo.png
+  AMF: /home/user/CrateDigger/festivals/AMF/logo.png
   ...
 
 Missing curated logo (4):
   Awakenings
     -> place logo at: /home/user/Music/Library/.cratedigger/festivals/Awakenings/logo.png
-       or user-level: /home/user/.cratedigger/festivals/Awakenings/logo.png
+       or user-level: /home/user/CrateDigger/festivals/Awakenings/logo.png
   ...
 ```
 
