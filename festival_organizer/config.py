@@ -211,8 +211,8 @@ class Config:
                     logger.debug("Loaded %s from %s", filename, path)
                     self._ext_cache[filename] = data
                     return data
-                except (json.JSONDecodeError, OSError):
-                    pass
+                except (json.JSONDecodeError, OSError) as e:
+                    logger.warning("Skipped %s: %s", path, e)
 
         logger.debug("%s not found in any candidate directory", filename)
         self._ext_cache[filename] = defaults

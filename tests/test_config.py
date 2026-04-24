@@ -373,6 +373,20 @@ def test_external_config_logs_not_found(tmp_path, caplog):
     assert any("not found" in msg for msg in caplog.messages)
 
 
+def test_external_config_warns_on_malformed(tmp_path, caplog):
+    """_load_external_config warns when a candidate file exists but fails to parse, and falls back to defaults."""
+    (tmp_path / "festivals.json").write_text("{broken json")
+    cfg = Config(DEFAULT_CONFIG, config_dir=tmp_path)
+    defaults = {"sentinel": True}
+    with caplog.at_level("WARNING", logger="festival_organizer.config"):
+        result = cfg._load_external_config("festivals.json", defaults)
+    assert result == defaults
+    assert any(
+        "festivals.json" in r.getMessage() and r.levelname == "WARNING"
+        for r in caplog.records
+    )
+
+
 def test_resolve_artist_alias():
     config = Config({"artist_aliases": {"Dimitri Vegas & Like Mike": ["DVLM"], "Martin Garrix": ["Area21"]}})
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"

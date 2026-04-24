@@ -27,6 +27,7 @@ Companion release to [TrackSplit 0.7.0](https://github.com/Rouzax/TrackSplit/rel
 - Caches (`mbid_cache.json`, `dj_cache.json`, `source_cache.json`, `update-check.json`, artist artwork) moved to the platform cache directory: `~/.cache/CrateDigger/` on Linux, `~/Library/Caches/CrateDigger/` on macOS, `$env:LOCALAPPDATA\CrateDigger\Cache\` on Windows.
 - 1001TL session cookies moved from the rogue `~/.1001tl-cookies.json` in `$HOME` to `~/.local/state/CrateDigger/1001tl-cookies.json` on Linux, `~/Library/Application Support/CrateDigger/1001tl-cookies.json` on macOS, `$env:LOCALAPPDATA\CrateDigger\State\1001tl-cookies.json` on Windows.
 - `--check` output updated to show new file locations.
+- Warn when a curated data file (`festivals.json`, `artists.json`, or `artist_mbids.json`) exists but fails to parse, instead of silently falling back to defaults. The next candidate path is still tried; if all candidates fail, defaults are used and a WARNING per failed file is emitted.
 
 ### Removed
 
