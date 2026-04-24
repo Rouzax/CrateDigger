@@ -1301,7 +1301,11 @@
 <h2 id="what-identification-looks-like">What identification looks like</h2>
 <p>Interactive selection is the default mode. <code>identify</code> prints a ranked list of results and prompts you to pick the correct match or skip. See <a href="../commands/identify/#step-by-step-what-happens-when-you-run-identify">identify: step-by-step</a> for a sample transcript and auto-mode behavior.</p>
 <h2 id="rate-limiting-and-caching">Rate limiting and caching</h2>
-<p>CrateDigger waits between requests to avoid hitting 1001Tracklists rate limits (default: 5 seconds, configurable via <code>tracklists.delay_seconds</code>). The delay is smart: it tracks the time that has already elapsed since the last request and only sleeps for whatever remains. In interactive mode, if you spent more than the delay period choosing a match, no extra sleep is added.</p>
+<p>CrateDigger paces its 1001Tracklists traffic in two ways:</p>
+<ul>
+<li><strong>Between files:</strong> after one file finishes, CrateDigger waits so that at least <code>tracklists.delay_seconds</code> (default 5s) has passed since that file's processing began. Time already spent on the previous file counts, so if interactive selection or fetching took longer than <code>delay_seconds</code> the next file starts immediately. You can override the value per run with <code>--delay</code>.</li>
+<li><strong>Between requests inside one file:</strong> a short fixed 0.5-second pause between consecutive 1001Tracklists requests (the tracklist page fetch, per-source lookups, and per-DJ profile fetches triggered by one selection) so the cascade that follows an interactive pick does not hit the site as a single burst.</li>
+</ul>
 <p>If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds and retries. After the retry limit, it stops with a message asking you to solve a captcha on the 1001Tracklists website.</p>
 <p>Two local caches make subsequent runs faster:</p>
 <ul>
