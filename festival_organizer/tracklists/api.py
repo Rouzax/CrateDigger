@@ -425,7 +425,8 @@ class TracklistSession:
 
         try:
             result = resp.json()
-        except (json.JSONDecodeError, ValueError):
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.debug("Export JSON decode failed for %s: %s", page_url, e)
             raise ExportError("Invalid JSON response from export API")
 
         if not result.get("success"):
@@ -550,6 +551,10 @@ class TracklistSession:
                 if resp.status_code == 429 or _is_rate_limited(resp.text):
                     if attempt < max_retries - 1:
                         wait = 30
+                        logger.debug(
+                            "1001TL 429 rate limit; retry %d/%d in %.1fs",
+                            attempt + 1, max_retries, wait,
+                        )
                         time.sleep(wait)
                         continue
                     raise RateLimitError("Rate limited: solve captcha at 1001tracklists.com in your browser")
@@ -558,6 +563,10 @@ class TracklistSession:
                 if resp.status_code in (502, 503, 504):
                     if attempt < max_retries - 1:
                         wait = min(2 ** attempt + random.uniform(0, 3), 30)
+                        logger.debug(
+                            "1001TL HTTP %d; retry %d/%d in %.1fs",
+                            resp.status_code, attempt + 1, max_retries, wait,
+                        )
                         time.sleep(wait)
                         continue
                     raise TracklistError(
@@ -576,6 +585,10 @@ class TracklistSession:
             except requests.RequestException as e:
                 if attempt < max_retries - 1:
                     wait = min(2 ** attempt + random.uniform(0, 3), 30)
+                    logger.debug(
+                        "1001TL network %s; retry %d/%d in %.1fs",
+                        e, attempt + 1, max_retries, wait,
+                    )
                     time.sleep(wait)
                     continue
                 raise TracklistError(f"Request failed after {max_retries} attempts: {e}")
