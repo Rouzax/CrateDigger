@@ -1550,7 +1550,7 @@
 <a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a># Per chapter (TTV=30) additions:
 <a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>#   MUSICBRAINZ_ARTISTIDS (aligned with CRATEDIGGER_TRACK_PERFORMER_NAMES)
 </code></pre></div>
-<p>If KIKI's MBID is not yet in the cache, her slot in <code>CRATEDIGGER_ALBUMARTIST_MBIDS</code> and the per-chapter <code>MUSICBRAINZ_ARTISTIDS</code> will be an empty string. Add her to <code>~/.cratedigger/artist_mbids.json</code> and re-run:</p>
+<p>If KIKI's MBID is not yet in the cache, her slot in <code>CRATEDIGGER_ALBUMARTIST_MBIDS</code> and the per-chapter <code>MUSICBRAINZ_ARTISTIDS</code> will be an empty string. Add her to your <code>artist_mbids.json</code> (<code>~/CrateDigger/artist_mbids.json</code> on Linux and macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows) and re-run:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids,album_artist_mbids
 </code></pre></div>
 <p>No <code>--regenerate</code> needed. CrateDigger detects that the resolved ID has changed and writes the update automatically.</p>

@@ -1331,7 +1331,7 @@
 </tr>
 </tbody>
 </table>
-<p>Artist artwork downloaded from fanart.tv is stored in <code>~/.cratedigger/artists/{Artist}/</code> and used by the poster pipeline. It is not copied into the library tree itself.</p>
+<p>Artist artwork downloaded from fanart.tv is stored in the cache folder (<code>~/.cache/CrateDigger/artists/{Artist}/</code> on Linux, <code>~/Library/Caches/CrateDigger/artists/{Artist}/</code> on macOS, <code>$env:LOCALAPPDATA\CrateDigger\Cache\artists\{Artist}\</code> on Windows) and used by the poster pipeline. It is not copied into the library tree itself.</p>
 <hr />
 <h2 id="artwork">Artwork</h2>
 <h3 id="cover-art-sources">Cover art sources</h3>
@@ -1494,8 +1494,30 @@
 <p>CrateDigger searches two locations, library-local first:</p>
 <ol>
 <li><code>{library}/.cratedigger/festivals/{FestivalName}/logo.&lt;ext&gt;</code>: travels with the library; takes precedence when both locations have a file</li>
-<li><code>~/.cratedigger/festivals/{FestivalName}/logo.&lt;ext&gt;</code>: shared across all your libraries</li>
+<li>User-level, shared across all your libraries:</li>
 </ol>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux</td>
+<td><code>~/CrateDigger/festivals/{FestivalName}/logo.&lt;ext&gt;</code></td>
+</tr>
+<tr>
+<td>macOS</td>
+<td><code>~/CrateDigger/festivals/{FestivalName}/logo.&lt;ext&gt;</code></td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>Documents\CrateDigger\festivals\{FestivalName}\logo.&lt;ext&gt;</code></td>
+</tr>
+</tbody>
+</table>
 <h3 id="checking-coverage">Checking coverage</h3>
 <p>Use <a href="../commands/audit-logos/"><code>audit-logos</code></a> to see which festivals in your library have logos and which are missing them. The command shows the suggested placement path for each missing festival.</p>
 <p>When a logo is missing, the folder poster falls back to a gradient layout.</p>

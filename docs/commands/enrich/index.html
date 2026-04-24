@@ -1418,7 +1418,7 @@ working on the right folder. Without it, <code>enrich</code> exits with an error
 <td><code>--config &lt;path&gt;</code></td>
 <td></td>
 <td>(none)</td>
-<td>Path to a config.json file</td>
+<td>Path to a config.toml file</td>
 </tr>
 <tr>
 <td><code>--quiet</code></td>
@@ -1458,7 +1458,7 @@ how to install the <code>vision</code> extra.</p>
 <h3 id="fanart-artist-artwork">fanart: artist artwork</h3>
 <p>Downloads high-quality artist images from <a href="https://fanart.tv">fanart.tv</a> (a community
 site with artist logos, backgrounds, and thumbnails). These are saved to a shared cache
-folder (<code>~/.cratedigger/artists/{artist}/</code>) and used as backgrounds in poster generation.</p>
+folder (<code>~/.cache/CrateDigger/artists/{artist}/</code> on Linux, <code>~/Library/Caches/CrateDigger/artists/{artist}/</code> on macOS, <code>$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\</code> on Windows) and used as backgrounds in poster generation.</p>
 <p>To find an artist's images on fanart.tv, CrateDigger first resolves their MusicBrainz ID.
 It uses the same lookup chain as the MBID operations: your override file first, then the
 auto-cache, then a live MusicBrainz search. This lookup is used only for image retrieval
@@ -1535,9 +1535,9 @@ IDs back into the chapter tags.</p>
 is what embeds the per-chapter performer names.</p>
 <p><strong>Lookup order for each artist name:</strong></p>
 <ol>
-<li>Your override file (<code>~/.cratedigger/artist_mbids.json</code>): manually curated, never
+<li>Your override file (<code>~/CrateDigger/artist_mbids.json</code> on Linux and macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows): manually curated, never
    expires, never auto-written by CrateDigger</li>
-<li>Auto cache (<code>~/.cratedigger/mbid_cache.json</code>): populated automatically by MusicBrainz
+<li>Auto cache (in <code>~/.cache/CrateDigger/</code> on Linux, <code>~/Library/Caches/CrateDigger/</code> on macOS, <code>$env:LOCALAPPDATA\CrateDigger\Cache\</code> on Windows): populated automatically by MusicBrainz
    searches, expires after 90 days by default</li>
 <li>Live MusicBrainz search: result is saved to the auto cache</li>
 </ol>
@@ -1558,7 +1558,7 @@ already stored and writes the update automatically when they differ.</p>
 <p>The same lookup process as <code>chapter_artist_mbids</code>, but applied at the file level rather
 than per chapter. Resolves the full list of artists for the set and writes their
 MusicBrainz IDs as a set-level tag.</p>
-<p>The same override file (<code>~/.cratedigger/artist_mbids.json</code>) is used for both operations.
+<p>The same override file is used for both operations (<code>~/CrateDigger/artist_mbids.json</code> on Linux and macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows).
 An entry in that file fixes the ID everywhere, per-chapter and album-level alike.</p>
 <h2 id="what-files-change">What files change</h2>
 <p>For each video, <code>enrich</code> may create or update:</p>
@@ -1592,7 +1592,7 @@ An entry in that file fixes the ID everywhere, per-chapter and album-level alike
 </tr>
 </tbody>
 </table>
-<p>Artist artwork is cached to <code>~/.cratedigger/artists/{artist}/</code> and reused across runs.
+<p>Artist artwork is cached to <code>~/.cache/CrateDigger/artists/{artist}/</code> (Linux), <code>~/Library/Caches/CrateDigger/artists/{artist}/</code> (macOS), or <code>$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\</code> (Windows) and reused across runs.
 MKV tag changes (<code>tags</code>, <code>chapter_artist_mbids</code>, <code>album_artist_mbids</code>) are written
 directly into the MKV file's metadata section. The video and audio streams are not touched.</p>
 <h2 id="common-examples">Common examples</h2>

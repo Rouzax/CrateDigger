@@ -1627,7 +1627,7 @@ you skip this step.</p>
 <td><code>--config &lt;path&gt;</code></td>
 <td></td>
 <td>(none)</td>
-<td>Path to a config.json file</td>
+<td>Path to a config.toml file</td>
 </tr>
 <tr>
 <td><code>--quiet</code></td>
@@ -1933,9 +1933,9 @@ skipped so you can handle them manually later.</p>
 </code></pre></div>
 <h2 id="common-problems">Common problems</h2>
 <p><strong>"Error: credentials required"</strong></p>
-<p>Your 1001Tracklists email and password are not configured. Set them in
-<code>~/.cratedigger/config.json</code> under <code>tracklists.email</code> and <code>tracklists.password</code>, or via the
-environment variables <code>TRACKLISTS_EMAIL</code> and <code>TRACKLISTS_PASSWORD</code>. See
+<p>Your 1001Tracklists email and password are not configured. Set them in your <code>config.toml</code>
+under <code>[tracklists]</code> (<code>email</code> and <code>password</code>), or via the environment variables
+<code>TRACKLISTS_EMAIL</code> and <code>TRACKLISTS_PASSWORD</code>. See
 <a href="../../tracklists/#account-setup">Tracklists: account setup</a>.</p>
 <p><strong>No results found for a file</strong></p>
 <p>CrateDigger could not find a matching tracklist. Try:</p>

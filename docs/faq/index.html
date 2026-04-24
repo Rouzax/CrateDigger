@@ -934,6 +934,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#where-are-my-logs-and-why-does-concurrent-use-sometimes-garble-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where are my logs, and why does concurrent use sometimes garble them?
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1334,6 +1345,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#where-are-my-logs-and-why-does-concurrent-use-sometimes-garble-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where are my logs, and why does concurrent use sometimes garble them?
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1691,16 +1713,13 @@
 </tr>
 </tbody>
 </table>
-<p>If the tools are installed but not on your PATH (for example, a custom install location), tell CrateDigger where to find them in <code>~/.cratedigger/config.json</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="nt">&quot;tool_paths&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">        </span><span class="nt">&quot;mediainfo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mediainfo&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">        </span><span class="nt">&quot;ffprobe&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/ffprobe&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">        </span><span class="nt">&quot;mkvpropedit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvpropedit&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">        </span><span class="nt">&quot;mkvextract&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvextract&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">        </span><span class="nt">&quot;mkvmerge&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvmerge&quot;</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
+<p>If the tools are installed but not on your PATH (for example, a custom install location), tell CrateDigger where to find them in your <code>config.toml</code> (<code>~/CrateDigger/config.toml</code> on Linux or macOS, <code>Documents\CrateDigger\config.toml</code> on Windows):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[tool_paths]</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">mediainfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mediainfo&quot;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">ffprobe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/ffprobe&quot;</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">mkvpropedit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvpropedit&quot;</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">mkvextract</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvextract&quot;</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">mkvmerge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvmerge&quot;</span>
 </code></pre></div>
 <p>See <a href="../getting-started/#required-tools">getting started</a> for full installation instructions.</p>
 <h3 id="what-is-the-yellow-message-on-startup">What is the yellow "!" message on startup?</h3>
@@ -1712,30 +1731,51 @@
 <li>pip or other: <code>pip install --upgrade git+https://github.com/Rouzax/CrateDigger.git</code></li>
 </ul>
 <p>To suppress the notice, set <code>CRATEDIGGER_NO_UPDATE_CHECK=1</code> in your environment. The check is also silent automatically when stdout is not a TTY (pipes, cron jobs, CI systems).</p>
-<p>The check is designed to stay out of your way. Results are cached locally at <code>~/.cache/cratedigger/update-check.json</code> for 24 hours on success, so it does not hit the network on every run. The network timeout is 2 seconds, and any failure is silently ignored. No usage data is sent; the check is a standard read-only request to the GitHub Releases API.</p>
+<p>The check is designed to stay out of your way. Results are cached locally at <code>~/.cache/CrateDigger/update-check.json</code> (Linux), <code>~/Library/Caches/CrateDigger/update-check.json</code> (macOS), or <code>$env:LOCALAPPDATA\CrateDigger\Cache\update-check.json</code> (Windows) for 24 hours on success, so it does not hit the network on every run. The network timeout is 2 seconds, and any failure is silently ignored. No usage data is sent; the check is a standard read-only request to the GitHub Releases API.</p>
 <h3 id="cratedigger-skips-some-of-my-files">CrateDigger skips some of my files</h3>
 <p>CrateDigger only processes files with recognized media extensions. The defaults include <code>.mp4</code>, <code>.mkv</code>, <code>.webm</code>, <code>.avi</code>, <code>.mov</code>, <code>.m2ts</code>, <code>.ts</code> for video and common audio formats. Add extensions in the <code>media_extensions</code> config section if your files use something else.</p>
 <p>Also check <code>skip_patterns</code> in your config. Files matching any skip pattern are excluded. The defaults skip <code>*/BDMV/*</code> (Blu-ray disc structures) and <code>Dolby*</code> (demo content).</p>
 <h3 id="a-file-is-classified-as-the-wrong-type">A file is classified as the wrong type</h3>
 <p>CrateDigger classified a concert as a festival set, or vice versa. Force the correct classification using path rules in <code>content_type_rules</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nt">&quot;content_type_rules&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">        </span><span class="nt">&quot;force_concert&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Coldplay/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Pink Floyd/*&quot;</span><span class="p">],</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">        </span><span class="nt">&quot;force_festival&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;*/Ultra Miami/*&quot;</span><span class="p">]</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[content_type_rules]</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">force_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Coldplay/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Pink Floyd/*&quot;</span><span class="p">]</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">force_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;*/Ultra Miami/*&quot;</span><span class="p">]</span>
 </code></pre></div>
 <p>Each rule is matched against the file's path relative to the source root. <code>Coldplay/*</code> matches any file directly inside a <code>Coldplay</code> folder. See <a href="../configuration/#content-type-rules">Configuration: content type rules</a> for more examples.</p>
+<h3 id="where-are-my-logs-and-why-does-concurrent-use-sometimes-garble-them">Where are my logs, and why does concurrent use sometimes garble them?</h3>
+<p>CrateDigger writes a rotating log to a fixed location on each platform:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux</td>
+<td><code>~/.local/state/CrateDigger/log/cratedigger.log</code></td>
+</tr>
+<tr>
+<td>macOS</td>
+<td><code>~/Library/Logs/CrateDigger/cratedigger.log</code></td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>$env:LOCALAPPDATA\CrateDigger\Logs\cratedigger.log</code></td>
+</tr>
+</tbody>
+</table>
+<p>The log always captures DEBUG-level detail regardless of whether you pass <code>--verbose</code> or <code>--debug</code> on the command line. Up to five rotated files are kept, each capped at 5 MB, so the total on-disk footprint stays under 30 MB.</p>
+<p>If you run two <code>cratedigger</code> processes at the same time (for example, <code>identify</code> in one terminal while <code>enrich</code> is still running in another), both processes write to the same log file. On Linux and macOS, log records from both runs may interleave; individual lines stay intact but the chronological order gets jumbled. On Windows, the log rotation step can fail while both processes hold the file open; you may see a short traceback on stderr and the log may grow past 5 MB until both runs finish.</p>
+<p>For most single-user workflows this is harmless. If you need a clean log for a specific run, either wait for one process to finish before starting the next, or point each process at a separate log location by setting a different <code>HOME</code> (Linux/macOS) or <code>USERPROFILE</code> (Windows) environment variable per process.</p>
 <hr />
 <h2 id="identify">identify</h2>
 <h3 id="error-credentials-required">"Error: credentials required"</h3>
-<p>Your 1001Tracklists email and password are not configured. Add them to <code>~/.cratedigger/config.json</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="nt">&quot;tracklists&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;your@email.com&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">        </span><span class="nt">&quot;password&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;your-password&quot;</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">}</span>
+<p>Your 1001Tracklists email and password are not configured. Add them to your <code>config.toml</code> (<code>~/CrateDigger/config.toml</code> on Linux or macOS, <code>Documents\CrateDigger\config.toml</code> on Windows):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[tracklists]</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your@email.com&quot;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-password&quot;</span>
 </code></pre></div>
 <p>Or set them as environment variables:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Linux / macOS</label><label for="__tabbed_1_2">Windows (PowerShell)</label></div>
@@ -1818,14 +1858,14 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids
 <a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
 </code></pre></div>
-<p>If the artist still has no MBID after that, they may not be in the MusicBrainz database or the search may be returning the wrong result. Add the correct MBID to <code>~/.cratedigger/artist_mbids.json</code> manually:</p>
+<p>If the artist still has no MBID after that, they may not be in the MusicBrainz database or the search may be returning the wrong result. Add the correct MBID to <code>artist_mbids.json</code> manually (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">{</span>
 <a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="nt">&quot;Artist Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&quot;</span>
 <a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">}</span>
 </code></pre></div>
 <p>Find the correct MBID at <a href="https://musicbrainz.org">musicbrainz.org</a>.</p>
 <h3 id="musicbrainz-ids-are-not-resolving-for-some-artists">MusicBrainz IDs are not resolving for some artists</h3>
-<p>CrateDigger looks up MBIDs in this order: your override file (<code>~/.cratedigger/artist_mbids.json</code>), the auto cache, then a live MusicBrainz search. If an artist is not resolving:</p>
+<p>CrateDigger looks up MBIDs in this order: your override file (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows), the auto cache, then a live MusicBrainz search. If an artist is not resolving:</p>
 <ol>
 <li>Check if the search is returning the wrong artist (a name collision). Run with <code>--verbose</code> to see what MusicBrainz returns.</li>
 <li>Look up the correct MBID at <a href="https://musicbrainz.org">musicbrainz.org</a> and add it to your override file:</li>
@@ -1845,7 +1885,7 @@
 <p>Add a curated logo for the festival and regenerate:</p>
 <ol>
 <li>Find out which festivals are missing logos: <code>cratedigger audit-logos ~/Music/Library/</code></li>
-<li>Place a logo file at the path the command suggests (for example, <code>~/.cratedigger/festivals/Tomorrowland/logo.png</code>)</li>
+<li>Place a logo file at the path the command suggests (for example, <code>~/CrateDigger/festivals/Tomorrowland/logo.png</code> on Linux or macOS, <code>Documents\CrateDigger\festivals\Tomorrowland\logo.png</code> on Windows)</li>
 <li>Regenerate the folder posters:</li>
 </ol>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
@@ -1863,9 +1903,25 @@
 <p>Run with <code>--verbose</code> to see the lookup process and any errors.</p>
 <h3 id="fanart-images-are-stale-or-outdated">Fanart images are stale or outdated</h3>
 <p>The fanart cache expires after the number of days configured in <code>cache_ttl.images_days</code> (default: 90 days, with ±20% jitter per entry). To force a fresh download for all artists, delete the artist cache folder and rerun:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.cratedigger/artists/
+<div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Linux</label><label for="__tabbed_2_2">macOS</label><label for="__tabbed_2_3">Windows (PowerShell)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.cache/CrateDigger/artists/
 <a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
 </code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/Library/Caches/CrateDigger/artists/
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nb">Remove-Item</span> <span class="n">-Recurse</span> <span class="s2">&quot;$env:LOCALAPPDATA\CrateDigger\Cache\artists&quot;</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">cratedigger</span> <span class="n">enrich</span> <span class="p">~/</span><span class="n">Music</span><span class="p">/</span><span class="n">Library</span><span class="p">/</span> <span class="p">-</span><span class="n">-only</span> <span class="n">fanart</span>
+</code></pre></div>
+</div>
+</div>
+</div>
 <hr />
 <h2 id="kodi">Kodi</h2>
 <h3 id="kodi-sync-failed-connection-refused">"Kodi sync failed: connection refused"</h3>
@@ -1874,14 +1930,9 @@
 <p>The username or password does not match Kodi's web server credentials. Check the <code>kodi.username</code> and <code>kodi.password</code> values in your config against the Kodi settings.</p>
 <h3 id="items-are-not-updating-in-kodi-after-a-sync">Items are not updating in Kodi after a sync</h3>
 <p>The library path that Kodi uses may not match the path CrateDigger is using. If they differ (for example, Kodi accesses the library over a network share while CrateDigger uses a local path), configure path mapping in your <code>kodi</code> config:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="p">{</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">    </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">        </span><span class="nt">&quot;path_mapping&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">            </span><span class="nt">&quot;local&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/home/user/Music/Library/&quot;</span><span class="p">,</span>
-<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">            </span><span class="nt">&quot;kodi&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;smb://server/music/Library/&quot;</span>
-<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">        </span><span class="p">}</span>
-<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">[kodi.path_mapping]</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/home/user/Music/Library/&quot;</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">kodi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;smb://server/music/Library/&quot;</span>
 </code></pre></div>
 <p>See <a href="../kodi-integration/#path-mapping">Kodi integration: path mapping</a> for details.</p>
 <h3 id="sync-runs-but-nothing-changes-in-kodi">Sync runs but nothing changes in Kodi</h3>

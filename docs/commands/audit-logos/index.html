@@ -1138,7 +1138,7 @@
 <tr>
 <td><code>--config &lt;path&gt;</code></td>
 <td></td>
-<td>Path to a config.json file</td>
+<td>Path to a config.toml file</td>
 </tr>
 <tr>
 <td><code>--verbose</code></td>
@@ -1170,8 +1170,13 @@
 </thead>
 <tbody>
 <tr>
-<td>User-level</td>
-<td><code>~/.cratedigger/festivals/{Festival Name}/logo.{ext}</code></td>
+<td>User-level (Linux / macOS)</td>
+<td><code>~/CrateDigger/festivals/{Festival Name}/logo.{ext}</code></td>
+<td>All libraries</td>
+</tr>
+<tr>
+<td>User-level (Windows)</td>
+<td><code>Documents\CrateDigger\festivals\{Festival Name}\logo.{ext}</code></td>
 <td>All libraries</td>
 </tr>
 <tr>
@@ -1192,14 +1197,14 @@
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Festivals found: 12
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>With curated logo (8):
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  Tomorrowland: /home/user/.cratedigger/festivals/Tomorrowland/logo.png
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  AMF: /home/user/.cratedigger/festivals/AMF/logo.png
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  Tomorrowland: /home/user/CrateDigger/festivals/Tomorrowland/logo.png
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  AMF: /home/user/CrateDigger/festivals/AMF/logo.png
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  ...
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>Missing curated logo (4):
 <a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>  Awakenings
 <a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    -&gt; place logo at: /home/user/Music/Library/.cratedigger/festivals/Awakenings/logo.png
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>       or user-level: /home/user/.cratedigger/festivals/Awakenings/logo.png
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>       or user-level: /home/user/CrateDigger/festivals/Awakenings/logo.png
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>  ...
 </code></pre></div>
 <p>After adding a logo for a missing festival, regenerate its poster:</p>
