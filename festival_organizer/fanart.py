@@ -329,7 +329,12 @@ def fetch_artist_images(
             return resp.json()
         except requests.RequestException as e:
             if attempt < 2:
-                time.sleep(2 ** attempt + 1)
+                wait = 2 ** attempt + 1
+                logger.debug(
+                    "fanart.tv request failed (attempt %d/3): %s; retry in %ds",
+                    attempt + 1, e, wait,
+                )
+                time.sleep(wait)
                 continue
             raise FanartAPIError(f"fanart.tv request failed for MBID {mbid}: {e}") from e
     return None

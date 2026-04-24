@@ -7,6 +7,7 @@ Requires opencv-python-headless and numpy (optional dependencies).
 """
 from __future__ import annotations
 
+import logging
 import math
 from pathlib import Path
 
@@ -16,6 +17,8 @@ try:
     _HAS_CV2 = True
 except ImportError:
     _HAS_CV2 = False
+
+logger = logging.getLogger(__name__)
 
 
 def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | None:
@@ -34,10 +37,12 @@ def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | N
     video_path = Path(video_path)
 
     if not _HAS_CV2:
+        logger.debug("Frame sampler skipped: cv2/numpy not installed")
         return None
 
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
+        logger.warning("Frame sampler could not open video %s", video_path)
         return None
 
     try:
@@ -45,6 +50,10 @@ def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | N
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
         if total_frames < 10 or fps <= 0:
+            logger.warning(
+                "Frame sampler: %s too short or invalid (frames=%d fps=%s)",
+                video_path, total_frames, fps,
+            )
             return None
 
         # Skip first and last 5% (intros/outros are often black or title cards)
@@ -70,6 +79,7 @@ def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | N
         cap.release()
 
     if best_frame is None:
+        logger.warning("Frame sampler: no readable frames in %s", video_path)
         return None
 
     # Save as PNG next to the video

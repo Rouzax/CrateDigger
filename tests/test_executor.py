@@ -195,3 +195,27 @@ def test_keyboard_interrupt_propagates(tmp_path):
     with patch("festival_organizer.executor.shutil.move", side_effect=KeyboardInterrupt):
         with pytest.raises(KeyboardInterrupt):
             execute_actions([action])
+
+
+def test_execute_actions_logs_warning_on_oserror(tmp_path, caplog):
+    """File action OSError is logged WARNING with src, target, and exception."""
+    import logging
+    source = tmp_path / "test.mkv"
+    source.write_bytes(b"data")
+    target = tmp_path / "dest" / "test.mkv"
+
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   festival="TML", year="2024", content_type="festival_set")
+    action = FileAction(source=source, target=target, action="move", media_file=mf)
+
+    with patch("festival_organizer.executor.shutil.move",
+               side_effect=OSError("permission denied")):
+        with caplog.at_level(logging.WARNING, logger="festival_organizer.executor"):
+            result = execute_actions([action])
+
+    assert result[0].status == "error"
+    assert "permission denied" in result[0].error
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "File action failed" in joined
+    assert "permission denied" in joined
+    assert "test.mkv" in joined

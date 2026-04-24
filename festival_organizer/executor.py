@@ -1,8 +1,11 @@
 """File executor: moves, copies, or renames files with collision handling."""
+import logging
 import shutil
 from pathlib import Path
 
 from festival_organizer.models import FileAction
+
+logger = logging.getLogger(__name__)
 
 
 def paths_are_same_file(a: Path, b: Path) -> bool:
@@ -70,6 +73,10 @@ def execute_actions(actions: list[FileAction]) -> list[FileAction]:
             action.status = "done"
 
         except OSError as e:
+            logger.warning(
+                "File action failed (%s -> %s): %s",
+                action.source, action.target, e,
+            )
             action.status = "error"
             action.error = str(e)
 

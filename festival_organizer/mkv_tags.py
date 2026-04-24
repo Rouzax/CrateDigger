@@ -20,6 +20,7 @@ from pathlib import Path
 
 from festival_organizer import metadata
 from festival_organizer.normalization import fix_mojibake
+from festival_organizer.subprocess_utils import tracked_run
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
         ) as f:
             tag_file = f.name
 
-        result = subprocess.run(
+        result = tracked_run(
             [metadata.MKVEXTRACT_PATH, str(filepath), "tags", tag_file],
             capture_output=True,
             text=True,
@@ -396,6 +397,63 @@ def merge_tags(
     return xml_str
 
 
+def _count_tag_deltas(
+    existing: ET.Element | None,
+    new_tags: dict[int, dict],
+) -> tuple[int, int, int]:
+    """Count the global-scope tag changes merge_tags would produce.
+
+    Returns (added, removed, changed). A CLEAR_TAG value on an existing
+    non-empty tag counts as removed; a new (TTV, Name) pair that did not
+    exist counts as added; an existing tag whose String text changes to a
+    new non-empty value counts as changed. Empty non-CLEAR_TAG values
+    preserve existing and are not counted. Must be called BEFORE
+    merge_tags, which mutates the existing root.
+
+    Per-chapter (ChapterUID) and track-targeted (TrackUID) blocks are
+    excluded: they are not in merge_tags' global-scope iteration.
+    """
+    existing_index: dict[tuple[int, str], str] = {}
+    if existing is not None:
+        for tag in existing.findall("Tag"):
+            targets = tag.find("Targets")
+            if targets is not None:
+                if (targets.find("TrackUID") is not None
+                        or targets.find("ChapterUID") is not None):
+                    continue
+                ttv_el = targets.find("TargetTypeValue")
+                if ttv_el is not None and ttv_el.text is not None:
+                    ttv = int(ttv_el.text)
+                else:
+                    ttv = 50
+            else:
+                ttv = 50
+            for simple in tag.findall("Simple"):
+                name_el = simple.find("Name")
+                if name_el is None or name_el.text is None:
+                    continue
+                string_el = simple.find("String")
+                old_text = string_el.text if (string_el is not None and string_el.text is not None) else ""
+                existing_index[(ttv, name_el.text)] = old_text
+
+    added = removed = changed = 0
+    for ttv, tag_dict in new_tags.items():
+        for name, value in tag_dict.items():
+            key = (ttv, name)
+            if key in existing_index:
+                old_text = existing_index[key]
+                if value is CLEAR_TAG:
+                    if old_text:
+                        removed += 1
+                elif value:
+                    if value != old_text:
+                        changed += 1
+            else:
+                if value and value is not CLEAR_TAG:
+                    added += 1
+    return (added, removed, changed)
+
+
 def write_merged_tags(
     filepath: Path,
     new_tags: dict[int, dict[str, str]],
@@ -429,6 +487,14 @@ def write_merged_tags(
     # Extract existing tags (skip if caller already extracted)
     existing = existing_root if existing_root is not None else extract_all_tags(filepath)
 
+    # Count deltas BEFORE merge_tags mutates existing.
+    added, removed, changed = _count_tag_deltas(existing, new_tags)
+    if added or removed or changed:
+        logger.debug(
+            "Tags for %s: +%d -%d ~%d",
+            filepath.name, added, removed, changed,
+        )
+
     # Merge
     merged_xml = merge_tags(existing, new_tags, chapter_tags=chapter_tags)
 
@@ -441,7 +507,7 @@ def write_merged_tags(
             f.write(merged_xml)
             tag_file = f.name
 
-        result = subprocess.run(
+        result = tracked_run(
             [metadata.MKVPROPEDIT_PATH, str(filepath), "--tags", f"global:{tag_file}"],
             capture_output=True,
             text=True,

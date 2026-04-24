@@ -374,6 +374,27 @@ def test_fetch_artist_images_no_personal_key(mock_get):
     assert "client-key" not in headers
 
 
+@patch("festival_organizer.fanart.time.sleep")
+@patch("festival_organizer.fanart.requests.get")
+def test_fetch_artist_images_logs_request_exception_retry(mock_get, _sleep, caplog):
+    """RequestException retry branch logs DEBUG symmetric with 5xx retry branch."""
+    import logging as _logging
+    import requests as _requests
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {}
+    mock_resp.raise_for_status = MagicMock()
+    mock_get.side_effect = [_requests.ConnectionError("conn reset"), mock_resp]
+
+    with caplog.at_level(_logging.DEBUG, logger="festival_organizer.fanart"):
+        fetch_artist_images("abc-123", "project-key")
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "fanart.tv request failed" in joined
+    assert "conn reset" in joined
+    assert "attempt 1/3" in joined
+
+
 # --- FanartOperation tests ---
 
 def test_fanart_op_not_needed_when_disabled():

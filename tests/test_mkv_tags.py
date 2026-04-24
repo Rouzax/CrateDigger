@@ -321,7 +321,7 @@ def test_extract_all_tags_exit_code_1_still_parses(tmp_path):
         return subprocess.CompletedProcess(cmd, returncode=1, stdout="", stderr="Warning: something")
 
     with patch("festival_organizer.mkv_tags.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
-        with patch("festival_organizer.mkv_tags.subprocess.run", side_effect=fake_run):
+        with patch("festival_organizer.mkv_tags.tracked_run", side_effect=fake_run):
             root = extract_all_tags(video)
 
     assert root is not None
@@ -693,3 +693,71 @@ def test_merge_tags_updates_targetless_block_in_place():
     keeper = global_blocks[0]
     assert _get_simple_value(keeper, "ARTIST") == "New Artist"
     assert _get_simple_value(keeper, "TITLE") == "New Title"
+
+
+# --- Tier 2 tag-diff DEBUG for write_merged_tags ---
+
+def test_write_merged_tags_logs_diff_counts(tmp_path, caplog):
+    """write_merged_tags emits a DEBUG summary of +added -removed ~changed."""
+    import logging
+    from festival_organizer.mkv_tags import write_merged_tags, CLEAR_TAG
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+
+    existing_xml = """<Tags>
+<Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+<Simple><Name>ARTIST</Name><String>Tiesto</String></Simple>
+<Simple><Name>ALBUM</Name><String>Live</String></Simple>
+<Simple><Name>GENRE</Name><String>Trance</String></Simple>
+</Tag>
+</Tags>"""
+    existing_root = ET.fromstring(existing_xml)
+
+    new_tags = {
+        50: {
+            "ARTIST": "Skrillex",   # changed: Tiesto -> Skrillex
+            "YEAR": "2025",         # added: not in existing
+            "GENRE": CLEAR_TAG,     # removed: was "Trance"
+            "ALBUM": "Live",        # no change: same value
+        }
+    }
+
+    from unittest.mock import MagicMock
+    with patch("festival_organizer.mkv_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+        with patch("festival_organizer.mkv_tags.tracked_run",
+                   return_value=MagicMock(returncode=0, stderr="")):
+            with caplog.at_level(logging.DEBUG, logger="festival_organizer.mkv_tags"):
+                ok = write_merged_tags(video, new_tags, existing_root=existing_root)
+    assert ok is True
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "Tags for test.mkv: +1 -1 ~1" in joined
+
+
+def test_write_merged_tags_skips_debug_when_no_changes(tmp_path, caplog):
+    """No-op merges emit no tag-diff DEBUG line."""
+    import logging
+    from festival_organizer.mkv_tags import write_merged_tags
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+
+    existing_xml = """<Tags>
+<Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+<Simple><Name>ARTIST</Name><String>Tiesto</String></Simple>
+</Tag>
+</Tags>"""
+    existing_root = ET.fromstring(existing_xml)
+
+    # Same value = no change
+    new_tags = {50: {"ARTIST": "Tiesto"}}
+
+    from unittest.mock import MagicMock
+    with patch("festival_organizer.mkv_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+        with patch("festival_organizer.mkv_tags.tracked_run",
+                   return_value=MagicMock(returncode=0, stderr="")):
+            with caplog.at_level(logging.DEBUG, logger="festival_organizer.mkv_tags"):
+                ok = write_merged_tags(video, new_tags, existing_root=existing_root)
+    assert ok is True
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "Tags for test.mkv" not in joined

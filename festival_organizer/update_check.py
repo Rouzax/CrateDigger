@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib.metadata
 import json
+import logging
 import os
 import re
 import sys
@@ -16,6 +17,8 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 from festival_organizer import paths
+
+logger = logging.getLogger(__name__)
 
 PACKAGE_NAME = "cratedigger"
 ENV_VAR = "CRATEDIGGER_NO_UPDATE_CHECK"
@@ -65,7 +68,10 @@ def _read_cache() -> dict | None:
     p = _cache_path()
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError, OSError):
+    except FileNotFoundError:
+        return None
+    except (json.JSONDecodeError, OSError) as e:
+        logger.debug("Update cache unreadable at %s: %s", p, e)
         return None
     if not isinstance(data, dict) or data.get("schema") != SCHEMA_VERSION:
         return None
@@ -119,11 +125,14 @@ def _upgrade_command() -> str:
 def _is_suppressed() -> bool:
     """Return True if the update check should be skipped entirely."""
     if os.environ.get(ENV_VAR, "").strip().lower() in _TRUTHY:
+        logger.debug("Update check suppressed: env var %s set", ENV_VAR)
         return True
     try:
         if not sys.stdout.isatty():
+            logger.debug("Update check suppressed: stdout is not a tty")
             return True
-    except (AttributeError, ValueError):
+    except (AttributeError, ValueError) as e:
+        logger.debug("Update check suppressed: isatty raised: %s", e)
         return True
     return False
 
@@ -147,7 +156,8 @@ def _fetch_latest_release() -> str | None:
         req = Request(_releases_url(), headers={"User-Agent": _user_agent()})
         with urlopen(req, timeout=_HTTP_TIMEOUT_SECONDS) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-    except Exception:
+    except Exception as e:
+        logger.debug("Update check HTTP failed: %s", e, exc_info=True)
         return None
 
     tag = data.get("tag_name") if isinstance(data, dict) else None

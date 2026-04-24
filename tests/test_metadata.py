@@ -310,7 +310,7 @@ def test_mediainfo_failure_is_logged(tmp_path, caplog):
     video.write_bytes(b"")
 
     with patch("festival_organizer.metadata.MEDIAINFO_PATH", "/usr/bin/mediainfo"):
-        with patch("festival_organizer.metadata.subprocess.run",
+        with patch("festival_organizer.metadata.tracked_run",
                    side_effect=subprocess_mod.SubprocessError("oops")):
             with caplog.at_level(logging.DEBUG, logger="festival_organizer.metadata"):
                 result = _extract_mediainfo(video)
@@ -338,7 +338,7 @@ def test_extract_ffprobe_new_tag_names():
     })
 
     with patch("festival_organizer.metadata.FFPROBE_PATH", "/usr/bin/ffprobe"):
-        with patch("festival_organizer.metadata.subprocess.run") as mock_run:
+        with patch("festival_organizer.metadata.tracked_run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0, stdout=fake_output)
             result = _extract_ffprobe(Path("/tmp/test.mkv"))
 
@@ -366,7 +366,7 @@ def test_extract_ffprobe_old_tag_fallback():
     })
 
     with patch("festival_organizer.metadata.FFPROBE_PATH", "/usr/bin/ffprobe"):
-        with patch("festival_organizer.metadata.subprocess.run") as mock_run:
+        with patch("festival_organizer.metadata.tracked_run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0, stdout=fake_output)
             result = _extract_ffprobe(Path("/tmp/test.mkv"))
 

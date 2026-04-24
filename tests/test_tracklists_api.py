@@ -5,10 +5,13 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock, PropertyMock
 
 import pytest
+import requests
 
 from festival_organizer.tracklists.api import (
     TracklistSession,
     TracklistError,
+    RateLimitError,
+    ExportError,
     AuthenticationError,
     _parse_duration_string,
     _html_decode,
@@ -1110,3 +1113,110 @@ def test_export_tracklist_date_empty_when_h1_has_no_date():
             export = session.export_tracklist("abc123")
 
     assert export.date == ""
+
+
+# --- Tier 2 DEBUG logging for retry loop and export JSON decode ---
+
+def test_request_retry_429_logs_debug_with_reason_and_wait(caplog):
+    """A 429 retry logs DEBUG naming the rate-limit reason, attempt, and wait."""
+    session = TracklistSession()
+
+    mock_resp_bad = MagicMock()
+    mock_resp_bad.status_code = 429
+    mock_resp_bad.text = ""
+    mock_resp_ok = MagicMock()
+    mock_resp_ok.status_code = 200
+    mock_resp_ok.text = "ok"
+
+    with patch.object(session._session, "get",
+                      side_effect=[mock_resp_bad, mock_resp_ok]):
+        with patch("festival_organizer.tracklists.api.time.sleep") as sleep_mock:
+            with caplog.at_level(logging.DEBUG,
+                                 logger="festival_organizer.tracklists.api"):
+                resp = session._request("GET", "http://example.com", max_retries=3)
+
+    assert resp is mock_resp_ok
+    sleep_mock.assert_called_once_with(30)
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "429" in joined
+    assert "rate limit" in joined.lower()
+    assert "1/3" in joined
+    assert "30" in joined
+
+
+def test_request_retry_5xx_logs_debug_with_status_and_wait(caplog):
+    """A 502/503/504 retry logs DEBUG naming the HTTP status, attempt, and wait."""
+    session = TracklistSession()
+
+    mock_resp_bad = MagicMock()
+    mock_resp_bad.status_code = 503
+    mock_resp_bad.text = "Service Unavailable"
+    mock_resp_ok = MagicMock()
+    mock_resp_ok.status_code = 200
+    mock_resp_ok.text = "ok"
+
+    with patch.object(session._session, "get",
+                      side_effect=[mock_resp_bad, mock_resp_ok]):
+        with patch("festival_organizer.tracklists.api.time.sleep"):
+            with caplog.at_level(logging.DEBUG,
+                                 logger="festival_organizer.tracklists.api"):
+                session._request("GET", "http://example.com", max_retries=3)
+
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "HTTP 503" in joined
+    assert "1/3" in joined
+
+
+def test_request_retry_network_exception_logs_debug_with_exc_and_wait(caplog):
+    """A RequestException retry logs DEBUG naming the network error and wait."""
+    session = TracklistSession()
+
+    mock_resp_ok = MagicMock()
+    mock_resp_ok.status_code = 200
+    mock_resp_ok.text = "ok"
+
+    with patch.object(session._session, "get",
+                      side_effect=[requests.ConnectionError("conn reset"),
+                                   mock_resp_ok]):
+        with patch("festival_organizer.tracklists.api.time.sleep"):
+            with caplog.at_level(logging.DEBUG,
+                                 logger="festival_organizer.tracklists.api"):
+                session._request("GET", "http://example.com", max_retries=3)
+
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "network" in joined.lower()
+    assert "conn reset" in joined
+    assert "1/3" in joined
+
+
+def test_export_tracklist_logs_debug_on_invalid_json(caplog):
+    """ExportError on malformed JSON response includes a DEBUG trail before raise."""
+    session = TracklistSession()
+
+    page_resp = MagicMock()
+    page_resp.url = "https://www.1001tracklists.com/tracklist/abc123/"
+    page_resp.text = "<html><title>Test</title></html>"
+
+    export_resp = MagicMock()
+    export_resp.url = "https://www.1001tracklists.com/ajax/export_data.php"
+    export_resp.json.side_effect = ValueError("malformed")
+
+    with patch.object(session, "_request",
+                      side_effect=[page_resp, export_resp]):
+        with patch.object(session, "_run_canary"):
+            with caplog.at_level(logging.DEBUG,
+                                 logger="festival_organizer.tracklists.api"):
+                with pytest.raises(ExportError, match="Invalid JSON"):
+                    session.export_tracklist("abc123")
+
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "Export JSON decode failed" in joined
+    assert "malformed" in joined
+    # The log must identify the actual failing request (the AJAX export
+    # endpoint + tracklist id), NOT the incoming tracklist page URL. The
+    # tracklist page HTML was already parsed successfully before this
+    # point; attributing the JSON decode failure to the page would mislead
+    # anyone reading the log.
+    assert "abc123" in joined
+    assert "export_data.php" in joined
+    assert "tracklist/abc123/" not in joined
