@@ -176,9 +176,18 @@
       </div>
       <div class="install-block">
         <h3>Install</h3>
+        <p class="install-note">Recommended: pipx installs CrateDigger into an isolated environment and puts the command on your PATH.</p>
         <div class="code-block">
           <div class="code-header">
-            <span>Terminal</span>
+            <span>Terminal (pipx)</span>
+            <button class="copy-btn" onclick="navigator.clipboard.writeText('pipx install git+https://github.com/Rouzax/CrateDigger.git')">Copy</button>
+          </div>
+          <pre><code>pipx install git+https://github.com/Rouzax/CrateDigger.git</code></pre>
+        </div>
+        <p class="install-note">Or use pip, for example inside a virtual environment:</p>
+        <div class="code-block">
+          <div class="code-header">
+            <span>Terminal (pip)</span>
             <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install git+https://github.com/Rouzax/CrateDigger.git')">Copy</button>
           </div>
           <pre><code>pip install git+https://github.com/Rouzax/CrateDigger.git</code></pre>
@@ -186,7 +195,14 @@
         <p class="install-note">Optional: install with vision support for advanced frame analysis</p>
         <div class="code-block">
           <div class="code-header">
-            <span>Terminal</span>
+            <span>Terminal (pipx)</span>
+            <button class="copy-btn" onclick="navigator.clipboard.writeText('pipx install &quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;')">Copy</button>
+          </div>
+          <pre><code>pipx install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-header">
+            <span>Terminal (pip)</span>
             <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install &quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;')">Copy</button>
           </div>
           <pre><code>pip install "cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"</code></pre>

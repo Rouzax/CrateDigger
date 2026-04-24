@@ -56,7 +56,9 @@ Extract cover art from video files, fetch HD ClearLOGOs and artist fanart from f
 
 Trigger library refreshes over JSON-RPC so Kodi picks up new content automatically. Automatic path mapping translates between local and Kodi filesystem paths. NFO files follow Kodi conventions for seamless scraper compatibility.
 
-When a newer GitHub release is available, CrateDigger prints a one-line notice at startup with the exact upgrade command for your install method. The check is silent in non-interactive contexts (pipes, cron, CI). Set `CRATEDIGGER_NO_UPDATE_CHECK=1` to disable it entirely.
+### Update Check
+
+Interactive runs check GitHub for newer stable releases and print a one-line upgrade hint. See [Update Check](#update-check-1) for the full reference.
 
 ## Quick Start
 
@@ -140,6 +142,22 @@ CrateDigger reads settings from `config.toml` and supports library-level overrid
 Curated data files (`festivals.json`, `artists.json`, `artist_mbids.json`) live in the same folder as `config.toml`. Caches and logs go to platform-standard locations (`~/.cache/CrateDigger/` on Linux, `$env:LOCALAPPDATA\CrateDigger\` on Windows) and are managed automatically.
 
 A per-library override at `{library}/.cratedigger/config.toml` takes precedence over the user-level file. See the [docs](docs/) folder for a full configuration reference.
+
+## Update Check
+
+When you run CrateDigger interactively and a newer stable release is available on GitHub, it prints a one-line notice showing the new version and the upgrade command for your install method:
+
+```
+! CrateDigger 0.14.1 is available. Run: pipx upgrade cratedigger
+```
+
+The check uses a 2-second HTTP timeout, never delays your run, and is silent on any network failure. Results are cached locally for 24 hours on success and 1 hour on failure, so repeat runs do not hit the network.
+
+**Automatic suppression.** The notice is suppressed whenever stdout is not a terminal, including pipes, redirects, cron jobs, and CI environments.
+
+**Disable explicitly.** Set `CRATEDIGGER_NO_UPDATE_CHECK=1` before running. The values `true` and `yes` are also accepted, case-insensitively.
+
+No telemetry: the check is a read-only request to the GitHub Releases API. See the [FAQ](docs/faq.md#what-is-the-yellow--message-on-startup) for cache locations by platform and the full list of upgrade-command variants.
 
 ## Disclaimer
 

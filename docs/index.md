@@ -37,11 +37,19 @@ cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/ --enrich
 
 ## Install
 
+**pipx (recommended):** installs CrateDigger into an isolated environment and puts `cratedigger` on your PATH.
+
+```bash
+pipx install git+https://github.com/Rouzax/CrateDigger.git
+```
+
+**pip** also works, for example inside a virtual environment:
+
 ```bash
 pip install git+https://github.com/Rouzax/CrateDigger.git
 ```
 
-See [Getting Started](getting-started.md) for required tools, config setup, and the recommended yt-dlp download settings.
+See [Getting Started](getting-started.md) for required tools, upgrade commands, config setup, and the recommended yt-dlp download settings.
 
 ## Related projects
 
