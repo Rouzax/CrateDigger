@@ -13,8 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Metadata extraction no longer reads a chapter-scoped `TITLE` when the underlying MKV carries both chapter and global `TITLE` tags. MediaInfo flattens multi-scope `TITLE` into `General.Title` by picking the last per-chapter value, which for identified files (festival sets with per-track chapter tags) meant the analyzer received a track title where it expected the set title. The `TITLE` field is now read scope-aware via `mkvextract`, preferring the global (`TargetTypeValue=50`) value. Files with no Matroska tags at all keep their `SegmentInfo.Title` (for example, yt-dlp downloads), and non-MKV formats are unaffected. The bug was masked on identified files by the 1001Tracklists layer overriding the artist field, but would have produced a junk artist on any MKV with chapter `TITLE` tags and no 1001TL tags.
 
-## [0.14.1] - 2026-04-24
-
 ### Changed
 
 - The rotating log file introduced in 0.14.0 now captures a complete post-mortem trail. Every subprocess invocation (mediainfo, ffprobe, mkvextract, mkvpropedit) logs its command line and, on non-zero exit, a tail of stderr. Silent retry loops in the 1001Tracklists client (429 rate limit, 502/503/504 transient, network errors) and the fanart.tv client now log each retry with reason and wait duration. The `enrich` tag-write step logs a one-line diff (`+added -removed ~changed`) per file. Previously-silent failure branches in `nfo`, `executor`, `parsers`, `frame_sampler`, and `embed_tags` now leave a WARNING or DEBUG trace. The update-check network and cache paths log their skip or failure reasons. No behavior changes; console output is unchanged.
