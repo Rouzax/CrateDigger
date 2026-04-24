@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.14.4] - 2026-04-24
+
+### Fixed
+
+- `identify` rate limiting now delivers what the 0.13.1 "smart throttle" patch promised. The pacing was previously re-armed after every 1001Tracklists request, so time you spent in the interactive selection menu never shortened the wait before the next file, and each internal source and DJ fetch inside a single file blocked for the full `delay_seconds` (5s each by default). Identifying one fresh-cache file with two uncached sources and a handful of DJs could stack up around 30 seconds of silent pauses on top of the network time. The between-files wait now anchors on when the previous file's processing began, so interactive-menu time and per-file API work count against it and a file that already ran longer than `delay_seconds` adds no extra wait at all. Internal pacing inside one file drops to a short fixed 0.5 seconds between consecutive requests, just enough to avoid bursting the server right after a pick. The spinner now shows the real remaining cooldown (for example `Cooling down 2.3s`) instead of always advertising the nominal delay. No config changes; `tracklists.delay_seconds` and `--delay` keep their between-files meaning.
+
 ## [0.14.3] - 2026-04-24
 
 ### Added

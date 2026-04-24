@@ -41,6 +41,14 @@ logger = logging.getLogger(__name__)
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0"
 BASE_URL = "https://www.1001tracklists.com"
 
+# Short pause between consecutive 1001TL requests inside one file's processing
+# (page GET, ajax export POST, per-source and per-DJ fetches). Keeps the
+# post-selection burst modest without dominating wall-clock time on fresh
+# caches. Between-files politeness is handled by the CLI orchestrator, not
+# here, so this value is deliberately much smaller than the user-configurable
+# tracklists.delay_seconds.
+INTRA_REQUEST_DELAY = 0.5
+
 
 class TracklistError(Exception):
     """Base error for tracklist operations."""
@@ -265,13 +273,12 @@ class TracklistSession:
     """Manages authenticated session with 1001tracklists.com."""
 
     def __init__(self, cookie_cache_path: Path | None = None,
-                 source_cache=None, dj_cache=None, delay: float = 5):
+                 source_cache=None, dj_cache=None):
         self._cookie_path = (
             cookie_cache_path if cookie_cache_path is not None else paths.cookies_file()
         )
         self._source_cache = source_cache
         self._dj_cache = dj_cache
-        self._delay = delay
         self._last_request_time: float = 0
         self._session = requests.Session()
         self._session.headers.update({
@@ -308,14 +315,20 @@ class TracklistSession:
         )
 
     def throttle(self) -> None:
-        """Sleep only the remaining delay since the last request.
+        """Short pause between consecutive 1001TL requests within one file.
 
-        If enough time has already passed (e.g. user was choosing interactively),
-        returns immediately instead of adding a redundant wait.
+        Used inside export_tracklist around per-source and per-DJ fetches so
+        the cascade that fires after the user picks a search result does not
+        hit 1001TL as a single unbroken burst. Sleeps only the remainder of
+        INTRA_REQUEST_DELAY since the last request; returns immediately if the
+        previous request's network time already covered it.
+
+        Between-files pacing is orchestrated by the CLI identify loop, not
+        here, so this method stays intentionally short.
         """
         if self._last_request_time:
             elapsed = time.monotonic() - self._last_request_time
-            remaining = self._delay - elapsed
+            remaining = INTRA_REQUEST_DELAY - elapsed
             if remaining > 0:
                 time.sleep(remaining)
 

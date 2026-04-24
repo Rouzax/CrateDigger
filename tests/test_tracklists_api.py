@@ -825,7 +825,7 @@ def test_request_forces_utf8_encoding(tmp_path):
     utf8_bytes = "Tiësto".encode("utf-8")
 
     with patch.object(TracklistSession, "throttle"):
-        sess = TracklistSession(cookie_cache_path=tmp_path / "cookies.json", delay=0)
+        sess = TracklistSession(cookie_cache_path=tmp_path / "cookies.json")
         # Mock the underlying session.get to return a response with no
         # charset header; requests would otherwise default to ISO-8859-1.
         resp = MagicMock()

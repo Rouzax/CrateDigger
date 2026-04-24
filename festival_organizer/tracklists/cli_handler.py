@@ -158,7 +158,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
     from festival_organizer.tracklists.dj_cache import DjCache
     source_cache = SourceCache()
     dj_cache = DjCache()
-    session = TracklistSession(source_cache=source_cache, dj_cache=dj_cache, delay=delay)
+    session = TracklistSession(source_cache=source_cache, dj_cache=dj_cache)
     email, password = _get_credentials(config)
     if not email or not password:
         print("Error: credentials required. Set TRACKLISTS_EMAIL and TRACKLISTS_PASSWORD environment variables.", file=sys.stderr)
@@ -205,14 +205,23 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         info_enabled = logger.isEnabledFor(logging.INFO)
 
         aborted = False
+        # Anchor inter-file pacing on when the previous file's processing
+        # began, not on the last 1001TL request. That way time spent in the
+        # interactive selection menu (and any per-file API work) counts
+        # toward the delay, and a file that already ran longer than `delay`
+        # adds no extra wait before the next file starts.
+        prev_file_start: float | None = None
         for i, filepath in enumerate(files):
-            if i > 0 and not preview:
-                spinner.update(
-                    f"[{i+1}/{len(files)}] Throttling {delay}s",
-                    filename=filepath.name,
-                )
-                session.throttle()
+            if prev_file_start is not None and not preview:
+                remaining = delay - (time.monotonic() - prev_file_start)
+                if remaining > 0:
+                    spinner.update(
+                        f"[{i+1}/{len(files)}] Cooling down {remaining:.1f}s",
+                        filename=filepath.name,
+                    )
+                    time.sleep(remaining)
 
+            prev_file_start = time.monotonic()
             file_start = time.perf_counter()
             try:
                 stat_key, vstatus, detail = _process_file(

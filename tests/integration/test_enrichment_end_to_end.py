@@ -186,7 +186,7 @@ def _run_enrich(mkv: Path, tracklist_id: str, tmp_path: Path, tracklist_date: st
     dj_cache = DjCache(cache_path=tmp_path / "dj_cache.json", ttl_days=90)
     src_cache = SourceCache(cache_path=tmp_path / "source_cache.json", ttl_days=365)
     sess = TracklistSession(
-        cookie_cache_path=COOKIES, source_cache=src_cache, dj_cache=dj_cache, delay=5
+        cookie_cache_path=COOKIES, source_cache=src_cache, dj_cache=dj_cache,
     )
     sess.login(email, password)
 

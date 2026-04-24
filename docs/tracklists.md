@@ -75,7 +75,10 @@ Interactive selection is the default mode. `identify` prints a ranked list of re
 
 ## Rate limiting and caching
 
-CrateDigger waits between requests to avoid hitting 1001Tracklists rate limits (default: 5 seconds, configurable via `tracklists.delay_seconds`). The delay is smart: it tracks the time that has already elapsed since the last request and only sleeps for whatever remains. In interactive mode, if you spent more than the delay period choosing a match, no extra sleep is added.
+CrateDigger paces its 1001Tracklists traffic in two ways:
+
+- **Between files:** after one file finishes, CrateDigger waits so that at least `tracklists.delay_seconds` (default 5s) has passed since that file's processing began. Time already spent on the previous file counts, so if interactive selection or fetching took longer than `delay_seconds` the next file starts immediately. You can override the value per run with `--delay`.
+- **Between requests inside one file:** a short fixed 0.5-second pause between consecutive 1001Tracklists requests (the tracklist page fetch, per-source lookups, and per-DJ profile fetches triggered by one selection) so the cascade that follows an interactive pick does not hit the site as a single burst.
 
 If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds and retries. After the retry limit, it stops with a message asking you to solve a captcha on the 1001Tracklists website.
 
