@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Callable, Literal, overload
 
 from festival_organizer import metadata
 from festival_organizer.mkv_tags import CLEAR_TAG, MATROSKA_EXTS, extract_all_tags, write_merged_tags
+from festival_organizer.subprocess_utils import tracked_run
 from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
 
 logger = logging.getLogger(__name__)
@@ -216,7 +217,7 @@ def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
         with tempfile.NamedTemporaryFile(suffix=".xml", delete=False, mode="w") as f:
             xml_path = f.name
 
-        result = subprocess.run(
+        result = tracked_run(
             [metadata.MKVEXTRACT_PATH, str(filepath), "chapters", xml_path],
             capture_output=True, text=True, timeout=30,
             encoding="utf-8", errors="replace",
@@ -445,7 +446,7 @@ def embed_chapters(
                 f.write(chapter_xml)
                 chapter_file = f.name
 
-            result = subprocess.run(
+            result = tracked_run(
                 [metadata.MKVPROPEDIT_PATH, str(filepath), "--chapters", chapter_file],
                 capture_output=True, text=True, timeout=30,
                 encoding="utf-8", errors="replace",

@@ -321,7 +321,7 @@ def test_extract_all_tags_exit_code_1_still_parses(tmp_path):
         return subprocess.CompletedProcess(cmd, returncode=1, stdout="", stderr="Warning: something")
 
     with patch("festival_organizer.mkv_tags.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
-        with patch("festival_organizer.mkv_tags.subprocess.run", side_effect=fake_run):
+        with patch("festival_organizer.mkv_tags.tracked_run", side_effect=fake_run):
             root = extract_all_tags(video)
 
     assert root is not None

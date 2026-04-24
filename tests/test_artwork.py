@@ -159,7 +159,7 @@ def test_mkvextract_failure_logged(tmp_path, caplog):
     thumb = tmp_path / "test-thumb.jpg"
 
     with patch("festival_organizer.artwork.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
-        with patch("festival_organizer.artwork.subprocess.run",
+        with patch("festival_organizer.artwork.tracked_run",
                    side_effect=subprocess_mod.SubprocessError("fail")):
             with caplog.at_level(logging.DEBUG, logger="festival_organizer.artwork"):
                 result = _extract_mkvattachment(video, thumb)

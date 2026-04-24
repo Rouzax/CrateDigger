@@ -20,6 +20,7 @@ from pathlib import Path
 
 from festival_organizer import metadata
 from festival_organizer.normalization import fix_mojibake
+from festival_organizer.subprocess_utils import tracked_run
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
         ) as f:
             tag_file = f.name
 
-        result = subprocess.run(
+        result = tracked_run(
             [metadata.MKVEXTRACT_PATH, str(filepath), "tags", tag_file],
             capture_output=True,
             text=True,
@@ -441,7 +442,7 @@ def write_merged_tags(
             f.write(merged_xml)
             tag_file = f.name
 
-        result = subprocess.run(
+        result = tracked_run(
             [metadata.MKVPROPEDIT_PATH, str(filepath), "--tags", f"global:{tag_file}"],
             capture_output=True,
             text=True,

@@ -14,6 +14,7 @@ from pathlib import Path
 from PIL import Image
 
 from festival_organizer import metadata
+from festival_organizer.subprocess_utils import tracked_run
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ def _extract_mkvattachment(source: Path, thumb_path: Path) -> bool:
     temp_path = thumb_path.with_suffix(".tmp.png")
 
     try:
-        result = subprocess.run(
+        result = tracked_run(
             [metadata.MKVEXTRACT_PATH, str(source), "attachments", f"1:{temp_path}"],
             capture_output=True, text=True, timeout=30,
             encoding="utf-8", errors="replace",

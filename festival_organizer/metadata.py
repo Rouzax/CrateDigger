@@ -16,6 +16,7 @@ import subprocess
 from pathlib import Path
 
 from festival_organizer.normalization import fix_mojibake
+from festival_organizer.subprocess_utils import tracked_run
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +189,7 @@ def _extract_mediainfo(filepath: Path) -> dict:
     if not MEDIAINFO_PATH:
         return {}
     try:
-        result = subprocess.run(
+        result = tracked_run(
             [MEDIAINFO_PATH, "--Output=JSON", str(filepath)],
             capture_output=True, text=True, timeout=30,
             encoding="utf-8", errors="replace",
@@ -207,7 +208,7 @@ def _extract_ffprobe(filepath: Path) -> dict:
     if not FFPROBE_PATH:
         return {}
     try:
-        result = subprocess.run(
+        result = tracked_run(
             [FFPROBE_PATH, "-v", "quiet", "-print_format", "json",
              "-show_format", "-show_streams", str(filepath)],
             capture_output=True, text=True, timeout=30,

@@ -134,6 +134,7 @@ def _run_check_impl(con: "Console") -> int:
     from festival_organizer.config import load_config
     from festival_organizer.metadata import get_install_hint
     from festival_organizer.frame_sampler import _HAS_CV2
+    from festival_organizer.subprocess_utils import tracked_run
     from importlib.metadata import version as pkg_version, PackageNotFoundError
 
     errors = warnings = 0
@@ -154,7 +155,7 @@ def _run_check_impl(con: "Console") -> int:
                 warnings += 1
         else:
             try:
-                r = subprocess.run(
+                r = tracked_run(
                     [path, "--version"], capture_output=True, text=True, timeout=5, check=False,
                 )
                 version_line = _pick_version_line(r.stdout or r.stderr or "")

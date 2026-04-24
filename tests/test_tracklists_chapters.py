@@ -332,7 +332,7 @@ def test_extract_chapters_failure_logged(tmp_path, caplog):
     video.write_bytes(b"")
 
     with patch("festival_organizer.tracklists.chapters.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
-        with patch("festival_organizer.tracklists.chapters.subprocess.run",
+        with patch("festival_organizer.tracklists.chapters.tracked_run",
                    side_effect=subprocess_mod.SubprocessError("timeout")):
             with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.chapters"):
                 result = extract_existing_chapters(video)
@@ -350,7 +350,7 @@ def test_embed_chapters_uses_merged_tags(tmp_path):
 
     with patch("festival_organizer.tracklists.chapters.write_merged_tags", return_value=True) as mock_wmt:
         with patch("festival_organizer.tracklists.chapters.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-            with patch("festival_organizer.tracklists.chapters.subprocess.run") as mock_run:
+            with patch("festival_organizer.tracklists.chapters.tracked_run") as mock_run:
                 mock_run.return_value = MagicMock(returncode=0)
                 result = embed_chapters(
                     video, chapters,
@@ -376,7 +376,7 @@ def test_embed_chapters_writes_all_new_tag_names(tmp_path):
 
     with patch("festival_organizer.tracklists.chapters.write_merged_tags", return_value=True) as mock_wmt:
         with patch("festival_organizer.tracklists.chapters.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-            with patch("festival_organizer.tracklists.chapters.subprocess.run") as mock_run:
+            with patch("festival_organizer.tracklists.chapters.tracked_run") as mock_run:
                 mock_run.return_value = MagicMock(returncode=0)
                 embed_chapters(
                     video, chapters,
