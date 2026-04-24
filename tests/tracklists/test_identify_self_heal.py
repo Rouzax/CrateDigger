@@ -95,7 +95,7 @@ def test_up_to_date_when_ttv30_present_and_tags_match(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            _make_session(), "https://x", fake, 126, _make_config(),
+            _make_session(), "https://x", fake, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
             duration_seconds=7560, regenerate=False,
@@ -120,7 +120,7 @@ def test_self_heal_triggers_when_ttv30_missing(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            _make_session(), "https://x", fake, 126, _make_config(),
+            _make_session(), "https://x", fake, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
             duration_seconds=7560, regenerate=False,
@@ -150,7 +150,7 @@ def test_self_heal_triggers_when_album_artist_display_missing(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            _make_session(), "https://x", fake, 126, _make_config(),
+            _make_session(), "https://x", fake, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
             duration_seconds=7560, regenerate=False,
@@ -182,7 +182,7 @@ def test_album_artist_check_skipped_when_no_dj_artists(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            session, "https://x", fake, 126, _make_config(),
+            session, "https://x", fake, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
             duration_seconds=7560, regenerate=False,
@@ -207,7 +207,7 @@ def test_regenerate_forces_retag_even_when_up_to_date(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            _make_session(), "https://x", fake, 126, _make_config(),
+            _make_session(), "https://x", fake, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
             duration_seconds=7560, regenerate=True,
@@ -252,7 +252,7 @@ def test_ttv70_tag_diff_also_routes_through_embed_chapters(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            _make_session(), "https://x", fake, 126, _make_config(),
+            _make_session(), "https://x", fake, _make_config(),
             preview=False, quiet=True, language="eng",
             tracklist_id="abc", tracklist_date="",
             duration_seconds=7560, regenerate=False,
@@ -317,7 +317,7 @@ def test_set_genres_capped_via_config_genre_top_n(tmp_path):
                side_effect=fake_embed), \
          patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
                return_value="abc"):
-        _fetch_and_embed(session, "https://x", fake_mkv, 0, config,
+        _fetch_and_embed(session, "https://x", fake_mkv, config,
                          preview=False, quiet=True, language="eng",
                          tracklist_id="abc", tracklist_date=None,
                          duration_seconds=None, regenerate=False)
@@ -365,7 +365,7 @@ def test_set_genres_uncapped_when_config_zero(tmp_path):
                side_effect=fake_embed), \
          patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
                return_value="abc"):
-        _fetch_and_embed(session, "https://x", fake_mkv, 0, config,
+        _fetch_and_embed(session, "https://x", fake_mkv, config,
                          preview=False, quiet=True, language="eng",
                          tracklist_id="abc", tracklist_date=None,
                          duration_seconds=None, regenerate=False)
@@ -423,7 +423,7 @@ def test_fetch_and_embed_uses_export_date_when_tracklist_date_none(tmp_path):
                side_effect=fake_embed), \
          patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
                return_value="abc"):
-        _fetch_and_embed(session, "https://x", fake_mkv, 0, config,
+        _fetch_and_embed(session, "https://x", fake_mkv, config,
                          preview=False, quiet=True, language="eng",
                          tracklist_id="abc", tracklist_date=None,
                          duration_seconds=None, regenerate=False)
@@ -479,7 +479,7 @@ def test_fetch_and_embed_tracklist_date_wins_over_export_date(tmp_path):
                side_effect=fake_embed), \
          patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
                return_value="abc"):
-        _fetch_and_embed(session, "https://x", fake_mkv, 0, config,
+        _fetch_and_embed(session, "https://x", fake_mkv, config,
                          preview=False, quiet=True, language="eng",
                          tracklist_id="abc", tracklist_date="2025-10-24",
                          duration_seconds=None, regenerate=False)

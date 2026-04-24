@@ -220,7 +220,6 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                     scan_root=scan_root,
                     session=session,
                     config=config,
-                    source_cache=source_cache,
                     search_expansion=search_expansion,
                     dj_name_set=dj_name_set,
                     source_name_set=source_name_set,
@@ -231,7 +230,6 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                     quiet=quiet,
                     language=language,
                     console=con,
-                    verbose=info_enabled,
                     spinner=spinner,
                     index=i + 1,
                     total=len(files),
@@ -297,7 +295,6 @@ def _process_file(
     scan_root: Path,
     session: TracklistSession,
     config: Config,
-    source_cache: SourceCache,
     search_expansion: dict[str, str],
     dj_name_set: set[str],
     source_name_set: set[str],
@@ -308,7 +305,6 @@ def _process_file(
     quiet: bool,
     language: str,
     console: Console | None = None,
-    verbose: bool = False,
     spinner: StepProgress | None = None,
     index: int = 0,
     total: int = 0,
@@ -335,15 +331,20 @@ def _process_file(
                         filename=filepath.name,
                     )
                 return _fetch_and_embed(
-                    session, stored["url"], filepath, duration_mins,
+                    session, stored["url"], filepath,
                     config, preview, quiet, language, console=con,
-                    verbose=verbose, duration_seconds=mf.duration_seconds,
+                    duration_seconds=mf.duration_seconds,
                     regenerate=ignore_stored,
                     spinner=spinner, index=index, total=total,
                 )
             else:
                 if spinner is not None:
                     spinner.stop()
+                con.print()
+                if total > 0:
+                    con.print(f"  [bold]\\[{index}/{total}][/bold] {escape(filepath.name)}")
+                else:
+                    con.print(f"  {escape(filepath.name)}")
                 con.print(f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]")
                 choice = input("  Use stored? [Y]es / (S)kip / (R)esearch: ").strip().lower()
                 con.print()
@@ -356,9 +357,9 @@ def _process_file(
                             filename=filepath.name,
                         )
                     return _fetch_and_embed(
-                        session, stored["url"], filepath, duration_mins,
+                        session, stored["url"], filepath,
                         config, preview, quiet, language, console=con,
-                        verbose=verbose, duration_seconds=mf.duration_seconds,
+                        duration_seconds=mf.duration_seconds,
                         regenerate=ignore_stored,
                         spinner=spinner, index=index, total=total,
                     )
@@ -376,18 +377,18 @@ def _process_file(
     # Handle direct URL or ID
     if source["type"] == "url":
         return _fetch_and_embed(
-            session, source["value"], filepath, duration_mins,
+            session, source["value"], filepath,
             config, preview, quiet, language, console=con,
-            verbose=verbose, duration_seconds=mf.duration_seconds,
+            duration_seconds=mf.duration_seconds,
             regenerate=ignore_stored,
             spinner=spinner, index=index, total=total,
         )
     elif source["type"] == "id":
         return _fetch_and_embed(
-            session, None, filepath, duration_mins,
+            session, None, filepath,
             config, preview, quiet, language, console=con,
             tracklist_id=source["value"],
-            verbose=verbose, duration_seconds=mf.duration_seconds,
+            duration_seconds=mf.duration_seconds,
             regenerate=ignore_stored,
             spinner=spinner, index=index, total=total,
         )
@@ -426,7 +427,11 @@ def _process_file(
     else:
         if spinner is not None:
             spinner.stop()
-        selected = _select_interactive(scored, duration_mins, query_parts, con)
+        selected = _select_interactive(
+            scored, duration_mins, query_parts, con,
+            filename=filepath.name, query_str=query_str,
+            index=index, total=total,
+        )
         if spinner is not None:
             spinner.start()
         if selected is None:
@@ -435,11 +440,11 @@ def _process_file(
     # Fetch and embed
     tl_id = selected.id
     return _fetch_and_embed(
-        session, selected.url, filepath, duration_mins,
+        session, selected.url, filepath,
         config, preview, quiet, language, console=con,
         tracklist_id=tl_id,
         tracklist_date=selected.date,
-        verbose=verbose, duration_seconds=mf.duration_seconds,
+        duration_seconds=mf.duration_seconds,
         regenerate=ignore_stored,
         spinner=spinner, index=index, total=total,
     )
@@ -449,7 +454,6 @@ def _fetch_and_embed(
     session: TracklistSession,
     url: str | None,
     filepath: Path,
-    duration_mins: int,
     config: Config,
     preview: bool,
     quiet: bool,
@@ -457,7 +461,6 @@ def _fetch_and_embed(
     tracklist_id: str | None = None,
     tracklist_date: str | None = None,
     console: Console | None = None,
-    verbose: bool = False,
     duration_seconds: float | None = None,
     regenerate: bool = False,
     spinner: StepProgress | None = None,
@@ -653,11 +656,29 @@ def _fetch_and_embed(
     return ("error", "error", "mkvpropedit failed")
 
 
-def _select_interactive(results: list, duration_mins: int, query_parts=None, console: Console | None = None) -> object | None:
+def _select_interactive(
+    results: list,
+    duration_mins: int,
+    query_parts=None,
+    console: Console | None = None,
+    *,
+    filename: str | None = None,
+    query_str: str | None = None,
+    index: int = 0,
+    total: int = 0,
+) -> object | None:
     """Display results table and prompt for selection."""
     con = console or make_console()
 
-    con.print(f"\n  [bold]Search Results[/bold] [dim](video: {duration_mins}m)[/dim]")
+    con.print()
+    if filename:
+        if total > 0:
+            con.print(f"  [bold]\\[{index}/{total}][/bold] {escape(filename)}")
+        else:
+            con.print(f"  {escape(filename)}")
+    if query_str:
+        con.print(f"  [dim]Query:[/dim] {escape(query_str)}")
+    con.print(f"  [bold]Search Results[/bold] [dim](video: {duration_mins}m)[/dim]")
     table = results_table(results, duration_mins, query_parts)
     con.print(table)
     con.print("   [dim]0. Cancel[/dim]\n")

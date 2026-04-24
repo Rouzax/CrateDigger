@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.14.3] - 2026-04-24
+
 ### Added
 
 - Startup WARNING when the resolved data directory looks like a CrateDigger source checkout. If you clone the repository into `~/CrateDigger/` on Linux (or the equivalent platform default), that folder doubles as the default data directory, which means any test files you drop at the repo root can be silently read as curated user data. CrateDigger now detects this condition by checking for a `pyproject.toml` whose `[project].name` is `cratedigger` and emits a single WARNING naming the path and recommending you set `CRATEDIGGER_DATA_DIR` to a dedicated folder. The check is skipped when `CRATEDIGGER_DATA_DIR` is already set.
@@ -14,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - The legacy-path WARNING (present since 0.14.0, fired when `~/.cratedigger/` or `~/.1001tl-cookies.json` still exist) now fires at most once per day. A stamp file at `~/.local/state/CrateDigger/legacy-warning.stamp` (or the platform equivalent) records the date of the last warning; subsequent runs on the same day are silent. Previously, a bulk session running several subcommands in sequence would emit the same warning block once per subcommand. The warning itself is unchanged; only the repeat suppression is new.
+
+### Fixed
+
+- Interactive selection during `identify` now shows the filename and search query above the results table, and the "Use stored?" prompt shows the filename above the stored URL. The 0.13.0 StepProgress refactor replaced the per-file `[i/N] filename` header with a transient spinner that is stopped before any interactive prompt opens, so you were left picking between candidates with no indication of which file the prompt was for or what query produced the results. Both prompts now print a `[i/N] filename` line (and, for search, a `Query:` line with the expanded search string) before the existing content. No other behavior changes.
 
 ## [0.14.2] - 2026-04-24
 
