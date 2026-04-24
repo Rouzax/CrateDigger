@@ -62,3 +62,20 @@ def test_tracked_run_passes_through_kwargs(tmp_path, caplog):
         )
     assert result.returncode == 0
     assert str(tmp_path) in result.stdout
+
+
+def test_tracked_run_logs_called_process_error_as_exit_not_spawn(caplog):
+    """When check=True causes CalledProcessError, the DEBUG message must
+    match the non-zero-exit shape (exit N + stderr tail), NOT 'failed to spawn'."""
+    cmd = [
+        sys.executable,
+        "-c",
+        "import sys; sys.stderr.write('oops-check-true-marker'); sys.exit(2)",
+    ]
+    with caplog.at_level(logging.DEBUG, logger="festival_organizer.subprocess"):
+        with pytest.raises(subprocess.CalledProcessError):
+            tracked_run(cmd, capture_output=True, text=True, timeout=10, check=True)
+    joined = "\n".join(rec.message for rec in caplog.records)
+    assert "exit 2" in joined
+    assert "oops-check-true-marker" in joined
+    assert "failed to spawn" not in joined

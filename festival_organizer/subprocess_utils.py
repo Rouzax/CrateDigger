@@ -37,14 +37,23 @@ def _stderr_tail(stderr: Any) -> str:
     if stderr is None:
         return ""
     if isinstance(stderr, bytes):
-        try:
-            stderr = stderr.decode("utf-8", errors="replace")
-        except Exception:
-            stderr = repr(stderr)
+        stderr = stderr.decode("utf-8", errors="replace")
     text = str(stderr).strip()
     if len(text) > _STDERR_TAIL_CHARS:
         return "..." + text[-_STDERR_TAIL_CHARS:]
     return text
+
+
+def _log_nonzero_exit(returncode: int, cmd_str: str, stderr: Any) -> None:
+    """Emit the DEBUG line for a non-zero exit, with stderr tail if present."""
+    tail = _stderr_tail(stderr)
+    if tail:
+        logger.debug(
+            "subprocess exit %d: %s; stderr tail: %s",
+            returncode, cmd_str, tail,
+        )
+    else:
+        logger.debug("subprocess exit %d: %s", returncode, cmd_str)
 
 
 def tracked_run(cmd: Any, **kwargs: Any) -> subprocess.CompletedProcess:
@@ -60,9 +69,11 @@ def tracked_run(cmd: Any, **kwargs: Any) -> subprocess.CompletedProcess:
         (``cwd`` segment only when ``cwd`` kwarg is set).
       - After invocation: ``subprocess exit <n>: <cmd>`` on success;
         ``subprocess exit <n>: <cmd>; stderr tail: <tail>`` on non-zero.
+        Same shape applies when ``check=True`` surfaces the non-zero
+        exit as ``CalledProcessError``.
       - On ``TimeoutExpired``: ``subprocess timed out: <cmd>``.
-      - On spawn failure (``OSError``/``SubprocessError``):
-        ``subprocess failed to spawn: <cmd>: <exc>``.
+      - On spawn failure (``OSError``): ``subprocess failed to spawn:
+        <cmd>: <exc>``.
     """
     cmd_str = _fmt_cmd(cmd)
     cwd = kwargs.get("cwd")
@@ -76,19 +87,15 @@ def tracked_run(cmd: Any, **kwargs: Any) -> subprocess.CompletedProcess:
     except subprocess.TimeoutExpired:
         logger.debug("subprocess timed out: %s", cmd_str)
         raise
-    except (subprocess.SubprocessError, OSError) as e:
+    except subprocess.CalledProcessError as e:
+        _log_nonzero_exit(e.returncode, cmd_str, e.stderr)
+        raise
+    except OSError as e:
         logger.debug("subprocess failed to spawn: %s: %s", cmd_str, e)
         raise
 
     if result.returncode != 0:
-        tail = _stderr_tail(result.stderr)
-        if tail:
-            logger.debug(
-                "subprocess exit %d: %s; stderr tail: %s",
-                result.returncode, cmd_str, tail,
-            )
-        else:
-            logger.debug("subprocess exit %d: %s", result.returncode, cmd_str)
+        _log_nonzero_exit(result.returncode, cmd_str, result.stderr)
     else:
         logger.debug("subprocess exit 0: %s", cmd_str)
 
