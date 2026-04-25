@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.14.5] - 2026-04-25
+
+### Changed
+
+- `cratedigger --version` now performs a live check against GitHub Releases on every invocation, ignoring the cached freshness window. Output is one of three states: a single `cratedigger X.Y.Z` line followed by `(latest)` when current; the existing two-line stale notice when a newer release is available; or just the version line when the network call fails or the check is suppressed via `CRATEDIGGER_NO_UPDATE_CHECK=1`. Suppression by non-TTY output no longer applies on `--version`, since explicit invocation overrides the implicit-suppression rule.
+- `cratedigger --check` adds a new `Update status` row reporting the same freshness state, sitting between the `Credentials` and `Python packages` sections. A newer release counts as a warning in the summary; failed or suppressed checks show as informational and do not affect the count.
+- `cratedigger --version` and `--check` now contribute to the rotating log file. The seven tool-version subprocess probes from `--check` and the GitHub Releases HTTP call from both paths now leave DEBUG records that can be attached to bug reports. Previously these flags were Typer eager callbacks and exited before `setup_logging` ran, so their activity was never captured.
+- `cratedigger --check` no longer reports spurious warnings for genuinely optional items. `cv2/numpy`, `artists.json`, and `artist_mbids.json` now display with the dim `~` (informational) marker instead of the yellow `!` (warning) marker, and do not increment the warnings counter. A clean install with required tools and configured 1001TL credentials reports `All checks passed.` instead of `3 warnings.`. The `!` marker is now reserved for missing items that meaningfully degrade a core workflow (`config.toml`, `festivals.json`, missing 1001TL credentials).
+
+### Performance
+
+- `Config.artist_aliases` and `Config.artist_groups` now cache their result for the lifetime of each `Config` instance. Previously the underlying `DjCache` was re-instantiated on every property access, reading `dj_cache.json` from disk and emitting a duplicate `Loaded DJ cache` DEBUG line each time. During analyse, this fired up to eight times per file, flooding the rotating log with duplicates and degrading per-file throughput. One DJ cache load per process now.
+
 ## [0.14.4] - 2026-04-24
 
 ### Fixed

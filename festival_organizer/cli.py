@@ -58,15 +58,16 @@ _CD_PACKAGES: list[str] = [
     "beautifulsoup4", "Pillow", "ftfy", "numpy", "requests", "rich", "typer",
 ]
 
-# Asset probe for `--check`. Each entry is (label, resolver, description).
+# Asset probe for `--check`. Each entry is (label, resolver, description, severity).
+# severity is "warning" (degrades a workflow) or "info" (genuinely optional, no count).
 # The resolver is called at check time so tests can monkeypatch the paths
 # module without needing to reload this list. Routed through
 # ``festival_organizer.paths`` so the probe follows platformdirs layout.
-_CD_ASSETS: list[tuple[str, Callable[[], Path], str]] = [
-    ("config.toml",       lambda: paths.config_file(),       "user config"),
-    ("festivals.json",    lambda: paths.festivals_file(),    "curated festival aliases"),
-    ("artists.json",      lambda: paths.artists_file(),      "curated artist aliases"),
-    ("artist_mbids.json", lambda: paths.artist_mbids_file(), "curated MBID overrides"),
+_CD_ASSETS: list[tuple[str, Callable[[], Path], str, str]] = [
+    ("config.toml",       lambda: paths.config_file(),       "user config",                "warning"),
+    ("festivals.json",    lambda: paths.festivals_file(),    "curated festival aliases",   "warning"),
+    ("artists.json",      lambda: paths.artists_file(),      "curated artist aliases",     "info"),
+    ("artist_mbids.json", lambda: paths.artist_mbids_file(), "curated MBID overrides",     "info"),
 ]
 
 
@@ -106,12 +107,53 @@ app = typer.Typer(
 )
 
 
-def _version_callback(value: bool) -> None:
-    if value:
-        from importlib.metadata import version
+def _print_version_with_freshness(console: "Console") -> None:
+    """Print 'cratedigger X.Y.Z' and an indented freshness annotation.
 
-        typer.echo(f"cratedigger {version('cratedigger')}")
-        raise typer.Exit()
+    Always performs a live fetch (force=True) when not env-suppressed, so the
+    user gets a definitive answer for the moment they ran --version.
+    """
+    from importlib.metadata import version, PackageNotFoundError
+    from festival_organizer.update_check import (
+        _is_suppressed_explicit,
+        _is_newer,
+        _read_cache,
+        _upgrade_command,
+        refresh_update_cache,
+    )
+
+    logging.getLogger("festival_organizer.update_check").debug(
+        "version freshness check requested via --version"
+    )
+
+    try:
+        installed = version("cratedigger")
+    except PackageNotFoundError:
+        installed = "unknown"
+
+    typer.echo(f"cratedigger {installed}")
+
+    if installed == "unknown":
+        return
+    if _is_suppressed_explicit():
+        return
+
+    refresh_update_cache(force=True)
+    entry = _read_cache()
+    latest = entry.get("latest_version") if entry else None
+    if latest is None:
+        # Fetch failed; stay silent in --version output (matches implicit-notice
+        # contract). --check surfaces this state instead.
+        return
+    if _is_newer(installed=installed, candidate=latest):
+        cmd = _upgrade_command()
+        console.print(
+            f"[yellow]![/yellow] A new cratedigger version is available: "
+            f"{installed} → {latest}"
+        )
+        console.print(f"  Upgrade: [cyan]{cmd}[/cyan]")
+    else:
+        console.print("  [dim](latest)[/dim]")
 
 
 def _pick_version_line(output: str) -> str:
@@ -176,20 +218,26 @@ def _run_check_impl(con: "Console") -> int:
                 else:
                     warnings += 1
 
-    # cv2/numpy uses the already-computed _HAS_CV2 flag
+    # cv2/numpy is genuinely optional: dim ~ marker, no warning count.
     if _HAS_CV2:
         con.print("  [green]\u2713[/green] cv2/numpy")
     else:
-        con.print("  [yellow]![/yellow] cv2/numpy      not found (optional, vision features)")
+        con.print("  [dim]~[/dim] cv2/numpy      not found (optional, vision features)")
         con.print("    [cyan]Install with: pip install opencv-python numpy[/cyan]")
-        warnings += 1
 
     # --- Config files ---
+    # Marker convention:
+    #   ✓ green:  configured and working
+    #   ~ dim:    informational; genuinely optional, does not increment warnings
+    #   ! yellow: missing and degrades a core workflow; increments warnings
+    #   ✗ red:    hard failure; required thing missing or broken; increments errors
     con.print("\n[bold]Config[/bold]")
-    for _label, resolve, desc in _CD_ASSETS:
+    for _label, resolve, desc, severity in _CD_ASSETS:
         p = resolve()
         if p.is_file():
             con.print(f"  [green]\u2713[/green] {p}")
+        elif severity == "info":
+            con.print(f"  [dim]~[/dim] {p}   not found (optional, {desc})")
         else:
             con.print(f"  [yellow]![/yellow] {p}   not found (optional, {desc})")
             warnings += 1
@@ -227,6 +275,50 @@ def _run_check_impl(con: "Console") -> int:
         con.print(f"  [red]\u2717[/red] Could not load config: {exc}")
         errors += 1
 
+    # --- Update status ---
+    con.print("\n[bold]Update status[/bold]")
+    from festival_organizer.update_check import (
+        PACKAGE_NAME,
+        _is_suppressed_explicit,
+        _is_newer,
+        _read_cache,
+        format_freshness_line,
+        refresh_update_cache,
+    )
+    try:
+        update_installed = pkg_version(PACKAGE_NAME)
+    except PackageNotFoundError:
+        update_installed = "unknown"
+
+    if update_installed == "unknown":
+        con.print(f"  [dim]~[/dim] {PACKAGE_NAME:<14} version not detected")
+    elif _is_suppressed_explicit():
+        con.print(
+            f"  [dim]~[/dim] {PACKAGE_NAME:<14} {update_installed} "
+            f"(update check suppressed)"
+        )
+    else:
+        refresh_update_cache(force=True)
+        update_entry = _read_cache()
+        update_latest = update_entry.get("latest_version") if update_entry else None
+        annotation = format_freshness_line(
+            update_installed, update_latest, package_name=PACKAGE_NAME,
+        )
+        if update_latest is None:
+            con.print(
+                f"  [dim]~[/dim] {PACKAGE_NAME:<14} {update_installed} {annotation}"
+            )
+        elif _is_newer(installed=update_installed, candidate=update_latest):
+            con.print(
+                f"  [yellow]![/yellow] {PACKAGE_NAME:<14} {update_installed} "
+                f"{annotation}"
+            )
+            warnings += 1
+        else:
+            con.print(
+                f"  [green]✓[/green] {PACKAGE_NAME:<14} {update_installed} {annotation}"
+            )
+
     # --- Python packages ---
     con.print("\n[bold]Python packages[/bold]")
     for pkg in _CD_PACKAGES:
@@ -252,34 +344,32 @@ def _run_check_impl(con: "Console") -> int:
     return 1 if errors else 0
 
 
-def _run_check() -> int:
-    return _run_check_impl(make_console())
-
-
-def _check_callback(value: bool) -> None:
-    if value:
-        raise typer.Exit(code=_run_check())
-
-
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
     version_flag: bool = typer.Option(
         False,
         "--version",
-        callback=_version_callback,
-        is_eager=True,
-        help="Show version and exit.",
+        help="Show version and check for updates, then exit.",
     ),
     check_flag: bool = typer.Option(
         False,
         "--check",
-        callback=_check_callback,
-        is_eager=True,
         help="Verify tools, config, credentials, and Python packages, then exit.",
     ),
 ):
     """CrateDigger: Festival set & concert library manager."""
+    if version_flag:
+        from festival_organizer.log import setup_logging
+        console = make_console()
+        setup_logging(verbose=False, debug=False, console=console)
+        _print_version_with_freshness(console)
+        raise typer.Exit()
+    if check_flag:
+        from festival_organizer.log import setup_logging
+        console = make_console()
+        setup_logging(verbose=False, debug=False, console=console)
+        raise typer.Exit(code=_run_check_impl(console))
     if ctx.invoked_subcommand is None:
         typer.echo(ctx.get_help())
         raise SystemExit(1)

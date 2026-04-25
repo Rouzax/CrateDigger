@@ -122,6 +122,32 @@ def _upgrade_command() -> str:
     return f"pip install --upgrade git+{REPO_URL}.git"
 
 
+def format_freshness_line(
+    installed: str,
+    latest: str | None,
+    *,
+    package_name: str,
+) -> str:
+    """Render the version-freshness annotation as a single string.
+
+    Returns one of three strings keyed by state:
+      - "(latest)"                                when installed matches or exceeds latest
+      - "(newer: X.Y.Z, run: <upgrade cmd>)"      when a newer release is available
+      - "(could not check for updates)"           when latest is None
+
+    `package_name` is part of the signature for cross-repo symmetry with the
+    TrackSplit twin module; the body uses the module-level PACKAGE_NAME via
+    _upgrade_command(). Pass the same value to keep call sites self-documenting.
+
+    Pure renderer; no I/O. Caller decides where to splice the line.
+    """
+    if latest is None:
+        return "(could not check for updates)"
+    if _is_newer(installed=installed, candidate=latest):
+        return f"(newer: {latest}, run: {_upgrade_command()})"
+    return "(latest)"
+
+
 def _is_suppressed() -> bool:
     """Return True if the update check should be skipped entirely."""
     if os.environ.get(ENV_VAR, "").strip().lower() in _TRUTHY:
@@ -133,6 +159,19 @@ def _is_suppressed() -> bool:
             return True
     except (AttributeError, ValueError) as e:
         logger.debug("Update check suppressed: isatty raised: %s", e)
+        return True
+    return False
+
+
+def _is_suppressed_explicit() -> bool:
+    """Suppression rule for explicitly-invoked freshness checks (--version / --check).
+
+    Honours CRATEDIGGER_NO_UPDATE_CHECK only. Unlike _is_suppressed(), this does
+    not consult sys.stdout.isatty(): when the user explicitly typed --version or
+    --check, they want the answer even when piping output to a script or log file.
+    """
+    if os.environ.get(ENV_VAR, "").strip().lower() in _TRUTHY:
+        logger.debug("Update check suppressed: env var %s set", ENV_VAR)
         return True
     return False
 
@@ -199,22 +238,34 @@ def print_cached_update_notice(console) -> None:
         )
         console.print(f"  Upgrade: [cyan]{cmd}[/cyan]")
     except BaseException:
-        import logging
-        logging.getLogger(__name__).debug("update-check notice failed", exc_info=True)
+        logger.debug("update-check notice failed", exc_info=True)
 
 
-def refresh_update_cache() -> None:
-    """Called at CLI exit. Refreshes the cache by hitting the GitHub
-    Releases API if the cache is stale. Silent on any failure."""
+def refresh_update_cache(force: bool = False) -> None:
+    """Refresh the update-check cache.
+
+    By default (force=False), called at CLI exit, hits the GitHub Releases API
+    only when the cached entry is stale. With force=True, used by --version
+    and --check, skips the freshness check and always fetches.
+
+    Suppression: force=False uses _is_suppressed (env var OR non-TTY). force=True
+    uses _is_suppressed_explicit (env var only); the user explicitly asked for
+    a freshness answer, so non-TTY does not suppress.
+
+    Silent on any failure.
+    """
     try:
-        if _is_suppressed():
-            return
-        entry = _read_cache()
-        if entry is not None and _cache_is_fresh(entry):
-            return
+        if force:
+            if _is_suppressed_explicit():
+                return
+        else:
+            if _is_suppressed():
+                return
+            entry = _read_cache()
+            if entry is not None and _cache_is_fresh(entry):
+                return
         latest = _fetch_latest_release()
         ttl = _SUCCESS_TTL_SECONDS if latest is not None else _FAILURE_TTL_SECONDS
         _write_cache(latest_version=latest, ttl_seconds=ttl)
     except BaseException:
-        import logging
-        logging.getLogger(__name__).debug("update-check refresh failed", exc_info=True)
+        logger.debug("update-check refresh failed", exc_info=True)

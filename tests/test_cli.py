@@ -330,9 +330,11 @@ def test_run_kodi_sync_empty_logs_debug_and_skips_sync(tmp_path, caplog):
     )
 
 
-def test_check_flag_exists_and_exits_zero(monkeypatch):
+def test_check_flag_exists_and_exits_zero(monkeypatch, tmp_path):
     import festival_organizer.cli as cli_mod
-    monkeypatch.setattr(cli_mod, "_run_check", lambda: 0)
+    from festival_organizer import paths
+    monkeypatch.setattr(cli_mod, "_run_check_impl", lambda con: 0)
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
     from typer.testing import CliRunner
     runner = CliRunner()
     result = runner.invoke(cli_mod.app, ["--check"])
@@ -545,3 +547,218 @@ def test_config_option_help_mentions_toml():
     assert result.exit_code == 0
     assert "config.toml" in result.stdout
     assert "config.json" not in result.stdout
+
+
+def test_version_prints_version_then_latest(monkeypatch, tmp_path):
+    """When installed == latest, output ends with '(latest)'."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    installed = version("cratedigger")
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: installed)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--version"])
+    assert result.exit_code == 0
+    assert f"cratedigger {installed}" in result.stdout
+    assert "(latest)" in result.stdout
+
+
+def test_version_prints_stale_notice(monkeypatch, tmp_path):
+    """When a newer release exists, the stale 2-line notice prints."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    installed = version("cratedigger")
+    parts = installed.split(".")
+    bumped = f"{parts[0]}.{parts[1]}.{int(parts[2]) + 1}"
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: bumped)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--version"])
+    assert result.exit_code == 0
+    assert f"cratedigger {installed}" in result.stdout
+    assert f"newer version is available" in result.stdout or f"{bumped}" in result.stdout
+
+
+def test_version_silent_on_fetch_failure(monkeypatch, tmp_path):
+    """Fetch returning None yields just the version line, no exception."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    installed = version("cratedigger")
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: None)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--version"])
+    assert result.exit_code == 0
+    assert f"cratedigger {installed}" in result.stdout
+    assert "newer version" not in result.stdout
+    assert "(latest)" not in result.stdout
+
+
+def test_version_honours_env_var_suppression(monkeypatch, tmp_path):
+    """CRATEDIGGER_NO_UPDATE_CHECK=1 skips the network call entirely."""
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    fetch_calls = []
+    monkeypatch.setattr(update_check, "_fetch_latest_release",
+                        lambda: fetch_calls.append(1) or "9.9.9")
+    monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--version"])
+    assert result.exit_code == 0
+    assert fetch_calls == []
+    assert "newer version" not in result.stdout
+    assert "(latest)" not in result.stdout
+
+
+def test_check_attaches_file_handler(monkeypatch, tmp_path):
+    """--check must populate the rotating log with at least one DEBUG record."""
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths
+    from festival_organizer import update_check
+
+    log_path = tmp_path / "cratedigger.log"
+    monkeypatch.setattr(paths, "log_file", lambda: log_path)
+    monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: None)
+
+    runner = CliRunner()
+    runner.invoke(cli.app, ["--check"])
+
+    assert log_path.exists(), "log file should have been created by --check"
+    content = log_path.read_text(encoding="utf-8")
+    assert "festival_organizer" in content, (
+        "expected at least one festival_organizer record in log"
+    )
+
+
+def test_version_attaches_file_handler(monkeypatch, tmp_path):
+    """--version must also populate the rotating log."""
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    log_path = tmp_path / "cratedigger.log"
+    monkeypatch.setattr(paths, "log_file", lambda: log_path)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: None)
+
+    runner = CliRunner()
+    runner.invoke(cli.app, ["--version"])
+
+    assert log_path.exists()
+    content = log_path.read_text(encoding="utf-8")
+    assert "festival_organizer.update_check" in content, (
+        "expected at least one update_check DEBUG record in log"
+    )
+
+
+def test_check_update_status_row_current(monkeypatch, tmp_path):
+    """Update status: current installed version returns (latest)."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    installed = version("cratedigger")
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: installed)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--check"])
+    assert "Update status" in result.stdout
+    assert "(latest)" in result.stdout
+
+
+def test_check_update_status_row_stale(monkeypatch, tmp_path):
+    """Update status: newer release available counts as a warning."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    installed = version("cratedigger")
+    parts = installed.split(".")
+    bumped = f"{parts[0]}.{parts[1]}.{int(parts[2]) + 1}"
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: bumped)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--check"])
+    assert "Update status" in result.stdout
+    assert f"newer: {bumped}" in result.stdout
+    # Stale should be reported as a warning in the summary
+    assert "warning" in result.stdout.lower()
+
+
+def test_check_update_status_row_suppressed(monkeypatch, tmp_path):
+    """Update status: env var suppression shows informational ~ line."""
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths
+
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--check"])
+    assert "Update status" in result.stdout
+    assert "suppressed" in result.stdout
+
+
+def test_check_clean_install_reports_all_passed(monkeypatch, tmp_path):
+    """A clean install with required tools, optional cv2 absent, no
+    artists.json/artist_mbids.json, and 1001TL credentials configured should
+    report 'All checks passed.', not warning about optional items."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, metadata, paths, update_check
+
+    # Required tools all present
+    for attr in ("FFPROBE_PATH", "MEDIAINFO_PATH", "MKVEXTRACT_PATH",
+                 "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+        monkeypatch.setattr(metadata, attr, "/usr/bin/true")
+    # cv2/numpy absent
+    monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", False)
+
+    # Required config files present, optional ones absent.
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        "[tracklists]\nemail = 'test@example.com'\npassword = 'secret'\n",
+        encoding="utf-8",
+    )
+    festivals_path = tmp_path / "festivals.json"
+    festivals_path.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(paths, "config_file", lambda: config_path)
+    monkeypatch.setattr(paths, "festivals_file", lambda: festivals_path)
+    # Optional assets absent
+    monkeypatch.setattr(paths, "artists_file", lambda: tmp_path / "missing-artists.json")
+    monkeypatch.setattr(paths, "artist_mbids_file", lambda: tmp_path / "missing-mbids.json")
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "cookies_file", lambda: tmp_path / "missing-cookies.txt")
+
+    # Update status: current
+    installed = version("cratedigger")
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: installed)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--check"])
+    out = result.stdout
+
+    # The summary should show "All checks passed.", not any warnings.
+    assert "All checks passed" in out, (
+        f"expected 'All checks passed' in output, got:\n{out}"
+    )
