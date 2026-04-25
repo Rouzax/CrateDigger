@@ -106,12 +106,49 @@ app = typer.Typer(
 )
 
 
-def _version_callback(value: bool) -> None:
-    if value:
-        from importlib.metadata import version
+def _print_version_with_freshness(console: "Console") -> None:
+    """Print 'cratedigger X.Y.Z' and an indented freshness annotation.
 
-        typer.echo(f"cratedigger {version('cratedigger')}")
-        raise typer.Exit()
+    Always performs a live fetch (force=True) when not env-suppressed, so the
+    user gets a definitive answer for the moment they ran --version.
+    """
+    from importlib.metadata import version, PackageNotFoundError
+    from festival_organizer.update_check import (
+        _is_suppressed_explicit,
+        _is_newer,
+        _read_cache,
+        _upgrade_command,
+        refresh_update_cache,
+    )
+
+    try:
+        installed = version("cratedigger")
+    except PackageNotFoundError:
+        installed = "unknown"
+
+    typer.echo(f"cratedigger {installed}")
+
+    if installed == "unknown":
+        return
+    if _is_suppressed_explicit():
+        return
+
+    refresh_update_cache(force=True)
+    entry = _read_cache()
+    latest = entry.get("latest_version") if entry else None
+    if latest is None:
+        # Fetch failed; stay silent in --version output (matches implicit-notice
+        # contract). --check surfaces this state instead.
+        return
+    if _is_newer(installed=installed, candidate=latest):
+        cmd = _upgrade_command()
+        console.print(
+            f"[yellow]![/yellow] A new cratedigger version is available: "
+            f"{installed} → {latest}"
+        )
+        console.print(f"  Upgrade: [cyan]{cmd}[/cyan]")
+    else:
+        console.print("  [dim](latest)[/dim]")
 
 
 def _pick_version_line(output: str) -> str:
@@ -267,9 +304,7 @@ def main(
     version_flag: bool = typer.Option(
         False,
         "--version",
-        callback=_version_callback,
-        is_eager=True,
-        help="Show version and exit.",
+        help="Show version and check for updates, then exit.",
     ),
     check_flag: bool = typer.Option(
         False,
@@ -280,6 +315,12 @@ def main(
     ),
 ):
     """CrateDigger: Festival set & concert library manager."""
+    if version_flag:
+        from festival_organizer.log import setup_logging
+        console = make_console()
+        setup_logging(verbose=False, debug=False, console=console)
+        _print_version_with_freshness(console)
+        raise typer.Exit()
     if ctx.invoked_subcommand is None:
         typer.echo(ctx.get_help())
         raise SystemExit(1)

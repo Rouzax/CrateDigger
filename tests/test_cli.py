@@ -545,3 +545,79 @@ def test_config_option_help_mentions_toml():
     assert result.exit_code == 0
     assert "config.toml" in result.stdout
     assert "config.json" not in result.stdout
+
+
+def test_version_prints_version_then_latest(monkeypatch, tmp_path):
+    """When installed == latest, output ends with '(latest)'."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    installed = version("cratedigger")
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: installed)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--version"])
+    assert result.exit_code == 0
+    assert f"cratedigger {installed}" in result.stdout
+    assert "(latest)" in result.stdout
+
+
+def test_version_prints_stale_notice(monkeypatch, tmp_path):
+    """When a newer release exists, the stale 2-line notice prints."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    installed = version("cratedigger")
+    parts = installed.split(".")
+    bumped = f"{parts[0]}.{parts[1]}.{int(parts[2]) + 1}"
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: bumped)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--version"])
+    assert result.exit_code == 0
+    assert f"cratedigger {installed}" in result.stdout
+    assert f"newer version is available" in result.stdout or f"{bumped}" in result.stdout
+
+
+def test_version_silent_on_fetch_failure(monkeypatch, tmp_path):
+    """Fetch returning None yields just the version line, no exception."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    installed = version("cratedigger")
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: None)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--version"])
+    assert result.exit_code == 0
+    assert f"cratedigger {installed}" in result.stdout
+    assert "newer version" not in result.stdout
+    assert "(latest)" not in result.stdout
+
+
+def test_version_honours_env_var_suppression(monkeypatch, tmp_path):
+    """CRATEDIGGER_NO_UPDATE_CHECK=1 skips the network call entirely."""
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    fetch_calls = []
+    monkeypatch.setattr(update_check, "_fetch_latest_release",
+                        lambda: fetch_calls.append(1) or "9.9.9")
+    monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--version"])
+    assert result.exit_code == 0
+    assert fetch_calls == []
+    assert "newer version" not in result.stdout
+    assert "(latest)" not in result.stdout
