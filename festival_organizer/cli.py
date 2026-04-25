@@ -271,44 +271,45 @@ def _run_check_impl(con: "Console") -> int:
     # --- Update status ---
     con.print("\n[bold]Update status[/bold]")
     from festival_organizer.update_check import (
+        PACKAGE_NAME,
         _is_suppressed_explicit,
         _is_newer,
         _read_cache,
-        _upgrade_command,
+        format_freshness_line,
         refresh_update_cache,
     )
     try:
-        update_installed = pkg_version("cratedigger")
+        update_installed = pkg_version(PACKAGE_NAME)
     except PackageNotFoundError:
         update_installed = "unknown"
 
     if update_installed == "unknown":
-        con.print(f"  [dim]~[/dim] cratedigger     version not detected")
+        con.print(f"  [dim]~[/dim] {PACKAGE_NAME:<14} version not detected")
     elif _is_suppressed_explicit():
         con.print(
-            f"  [dim]~[/dim] cratedigger     {update_installed} "
+            f"  [dim]~[/dim] {PACKAGE_NAME:<14} {update_installed} "
             f"(update check suppressed)"
         )
     else:
         refresh_update_cache(force=True)
         update_entry = _read_cache()
         update_latest = update_entry.get("latest_version") if update_entry else None
+        annotation = format_freshness_line(
+            update_installed, update_latest, package_name=PACKAGE_NAME,
+        )
         if update_latest is None:
             con.print(
-                f"  [dim]~[/dim] cratedigger     {update_installed} "
-                f"(could not check for updates)"
+                f"  [dim]~[/dim] {PACKAGE_NAME:<14} {update_installed} {annotation}"
             )
         elif _is_newer(installed=update_installed, candidate=update_latest):
-            cmd = _upgrade_command()
             con.print(
-                f"  [yellow]![/yellow] cratedigger     {update_installed} "
-                f"(newer: {update_latest}, run: {cmd})"
+                f"  [yellow]![/yellow] {PACKAGE_NAME:<14} {update_installed} "
+                f"{annotation}"
             )
             warnings += 1
         else:
             con.print(
-                f"  [green]✓[/green] cratedigger     {update_installed} "
-                f"(latest)"
+                f"  [green]✓[/green] {PACKAGE_NAME:<14} {update_installed} {annotation}"
             )
 
     # --- Python packages ---
