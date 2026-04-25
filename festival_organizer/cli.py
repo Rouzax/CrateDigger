@@ -121,6 +121,10 @@ def _print_version_with_freshness(console: "Console") -> None:
         refresh_update_cache,
     )
 
+    logging.getLogger("festival_organizer.update_check").debug(
+        "version freshness check requested via --version"
+    )
+
     try:
         installed = version("cratedigger")
     except PackageNotFoundError:
@@ -293,11 +297,6 @@ def _run_check() -> int:
     return _run_check_impl(make_console())
 
 
-def _check_callback(value: bool) -> None:
-    if value:
-        raise typer.Exit(code=_run_check())
-
-
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
@@ -309,8 +308,6 @@ def main(
     check_flag: bool = typer.Option(
         False,
         "--check",
-        callback=_check_callback,
-        is_eager=True,
         help="Verify tools, config, credentials, and Python packages, then exit.",
     ),
 ):
@@ -321,6 +318,11 @@ def main(
         setup_logging(verbose=False, debug=False, console=console)
         _print_version_with_freshness(console)
         raise typer.Exit()
+    if check_flag:
+        from festival_organizer.log import setup_logging
+        console = make_console()
+        setup_logging(verbose=False, debug=False, console=console)
+        raise typer.Exit(code=_run_check_impl(console))
     if ctx.invoked_subcommand is None:
         typer.echo(ctx.get_help())
         raise SystemExit(1)
