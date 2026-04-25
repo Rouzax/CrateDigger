@@ -122,6 +122,32 @@ def _upgrade_command() -> str:
     return f"pip install --upgrade git+{REPO_URL}.git"
 
 
+def format_freshness_line(
+    installed: str,
+    latest: str | None,
+    *,
+    package_name: str,
+) -> str:
+    """Render the version-freshness annotation as a single string.
+
+    Returns one of three strings keyed by state:
+      - "(latest)"                                when installed matches or exceeds latest
+      - "(newer: X.Y.Z, run: <upgrade cmd>)"      when a newer release is available
+      - "(could not check for updates)"           when latest is None
+
+    `package_name` is part of the signature for cross-repo symmetry with the
+    TrackSplit twin module; the body uses the module-level PACKAGE_NAME via
+    _upgrade_command(). Pass the same value to keep call sites self-documenting.
+
+    Pure renderer; no I/O. Caller decides where to splice the line.
+    """
+    if latest is None:
+        return "(could not check for updates)"
+    if _is_newer(installed=installed, candidate=latest):
+        return f"(newer: {latest}, run: {_upgrade_command()})"
+    return "(latest)"
+
+
 def _is_suppressed() -> bool:
     """Return True if the update check should be skipped entirely."""
     if os.environ.get(ENV_VAR, "").strip().lower() in _TRUTHY:

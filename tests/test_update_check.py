@@ -585,3 +585,38 @@ def test_refresh_force_honours_explicit_suppression(monkeypatch, tmp_path):
     update_check.refresh_update_cache(force=True)
     assert fetch_calls == []
     assert not cache_file.exists()
+
+
+def test_format_freshness_line_current():
+    from festival_organizer import update_check
+
+    assert update_check.format_freshness_line(
+        installed="0.14.2",
+        latest="0.14.2",
+        package_name="cratedigger",
+    ) == "(latest)"
+
+
+def test_format_freshness_line_stale(monkeypatch):
+    from festival_organizer import update_check
+
+    # Pin the upgrade-command branch to pipx so the lowercase package name
+    # appears in the rendered output regardless of where the test runs.
+    monkeypatch.setenv("PIPX_HOME", "/home/user/.local/pipx")
+    text = update_check.format_freshness_line(
+        installed="0.14.2",
+        latest="0.14.3",
+        package_name="cratedigger",
+    )
+    assert "newer: 0.14.3" in text
+    assert "cratedigger" in text  # upgrade command references the package
+
+
+def test_format_freshness_line_unknown():
+    from festival_organizer import update_check
+
+    assert update_check.format_freshness_line(
+        installed="0.14.2",
+        latest=None,
+        package_name="cratedigger",
+    ) == "(could not check for updates)"
