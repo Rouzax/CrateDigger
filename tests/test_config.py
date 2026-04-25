@@ -610,3 +610,53 @@ def test_legacy_library_config_json_silent_when_toml_absent_too(tmp_path, caplog
 
     ours = [r for r in caplog.records if r.name == "festival_organizer.config"]
     assert not ours, f"expected no warnings, got: {[r.getMessage() for r in ours]}"
+
+
+def test_artist_aliases_loads_dj_cache_once(monkeypatch):
+    """Multiple accesses to config.artist_aliases must instantiate DjCache once."""
+    from festival_organizer import config as config_mod
+    from festival_organizer.tracklists import dj_cache as dj_cache_mod
+
+    init_calls = []
+    real_init = dj_cache_mod.DjCache.__init__
+
+    def counting_init(self, *args, **kwargs):
+        init_calls.append(1)
+        real_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(dj_cache_mod.DjCache, "__init__", counting_init)
+
+    cfg = config_mod.Config({})
+
+    _ = cfg.artist_aliases
+    _ = cfg.artist_aliases
+    _ = cfg.artist_aliases
+
+    assert len(init_calls) == 1, (
+        f"expected DjCache to be constructed once, got {len(init_calls)}"
+    )
+
+
+def test_artist_groups_loads_dj_cache_once(monkeypatch):
+    """Multiple accesses to config.artist_groups must instantiate DjCache once."""
+    from festival_organizer import config as config_mod
+    from festival_organizer.tracklists import dj_cache as dj_cache_mod
+
+    init_calls = []
+    real_init = dj_cache_mod.DjCache.__init__
+
+    def counting_init(self, *args, **kwargs):
+        init_calls.append(1)
+        real_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(dj_cache_mod.DjCache, "__init__", counting_init)
+
+    cfg = config_mod.Config({})
+
+    _ = cfg.artist_groups
+    _ = cfg.artist_groups
+    _ = cfg.artist_groups
+
+    assert len(init_calls) == 1, (
+        f"expected DjCache to be constructed once, got {len(init_calls)}"
+    )

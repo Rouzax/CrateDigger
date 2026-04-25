@@ -20,6 +20,7 @@ import re
 import tomllib
 from copy import deepcopy
 from fnmatch import fnmatch
+from functools import cached_property
 from pathlib import Path
 
 from festival_organizer import paths
@@ -376,45 +377,45 @@ class Config:
             logger.debug("Festival alias (case-insensitive): '%s' -> '%s'", name, resolved)
         return resolved
 
-    def _load_dj_aliases(self) -> dict[str, str]:
-        """Load artist aliases derived from DJ cache."""
-        try:
-            from festival_organizer.tracklists.dj_cache import DjCache
-            cache = DjCache()
-            return cache.derive_artist_aliases()
-        except (ImportError, OSError, json.JSONDecodeError, KeyError, ValueError) as e:
-            logger.debug("DjCache alias load skipped: %s", e)
-            return {}
-
-    def _load_dj_groups(self) -> set[str]:
-        """Load artist groups derived from DJ cache."""
-        try:
-            from festival_organizer.tracklists.dj_cache import DjCache
-            cache = DjCache()
-            return cache.derive_artist_groups()
-        except (ImportError, OSError, json.JSONDecodeError, KeyError, ValueError) as e:
-            logger.debug("DjCache group load skipped: %s", e)
-            return set()
-
-    @property
+    @cached_property
     def artist_aliases(self) -> dict[str, str]:
+        """Combined alias map: DJ-cache derived first, manual config overrides on top.
+
+        Cached for the lifetime of this Config instance: DjCache is read from
+        disk once on first access. If dj_cache.json is updated mid-run by a
+        concurrent process, this Config keeps its snapshot, which is acceptable
+        because each CLI invocation builds a fresh Config.
+        """
         raw = self._load_external_config("artists.json", {}).get("aliases", {})
         if "artist_aliases" in self._data:
             raw = {**raw, **self._data["artist_aliases"]}
         flat = _invert_alias_map(raw)
-        # Merge DJ cache aliases (manual config takes priority)
-        dj_aliases = self._load_dj_aliases()
+        try:
+            from festival_organizer.tracklists.dj_cache import DjCache
+            dj_aliases = DjCache().derive_artist_aliases()
+        except (ImportError, OSError, json.JSONDecodeError, KeyError, ValueError) as e:
+            logger.debug("DjCache alias load skipped: %s", e)
+            dj_aliases = {}
         return {**dj_aliases, **flat}
 
-    @property
+    @cached_property
     def artist_groups(self) -> set[str]:
+        """Combined group set: manual config + external + DJ-cache derived.
+
+        Same caching semantics as artist_aliases: DjCache is read once per
+        Config instance.
+        """
         if "artist_groups" in self._data:
             groups = {g.lower() for g in self._data["artist_groups"]}
         else:
             groups = set()
         ext_groups = self._load_external_config("artists.json", {}).get("groups", [])
         groups.update(g.lower() for g in ext_groups)
-        groups.update(self._load_dj_groups())
+        try:
+            from festival_organizer.tracklists.dj_cache import DjCache
+            groups.update(DjCache().derive_artist_groups())
+        except (ImportError, OSError, json.JSONDecodeError, KeyError, ValueError) as e:
+            logger.debug("DjCache group load skipped: %s", e)
         return groups
 
     def resolve_artist(self, name: str) -> str:
