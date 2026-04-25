@@ -212,22 +212,34 @@ def print_cached_update_notice(console) -> None:
         )
         console.print(f"  Upgrade: [cyan]{cmd}[/cyan]")
     except BaseException:
-        import logging
-        logging.getLogger(__name__).debug("update-check notice failed", exc_info=True)
+        logger.debug("update-check notice failed", exc_info=True)
 
 
-def refresh_update_cache() -> None:
-    """Called at CLI exit. Refreshes the cache by hitting the GitHub
-    Releases API if the cache is stale. Silent on any failure."""
+def refresh_update_cache(force: bool = False) -> None:
+    """Refresh the update-check cache.
+
+    By default (force=False), called at CLI exit, hits the GitHub Releases API
+    only when the cached entry is stale. With force=True, used by --version
+    and --check, skips the freshness check and always fetches.
+
+    Suppression: force=False uses _is_suppressed (env var OR non-TTY). force=True
+    uses _is_suppressed_explicit (env var only); the user explicitly asked for
+    a freshness answer, so non-TTY does not suppress.
+
+    Silent on any failure.
+    """
     try:
-        if _is_suppressed():
-            return
-        entry = _read_cache()
-        if entry is not None and _cache_is_fresh(entry):
-            return
+        if force:
+            if _is_suppressed_explicit():
+                return
+        else:
+            if _is_suppressed():
+                return
+            entry = _read_cache()
+            if entry is not None and _cache_is_fresh(entry):
+                return
         latest = _fetch_latest_release()
         ttl = _SUCCESS_TTL_SECONDS if latest is not None else _FAILURE_TTL_SECONDS
         _write_cache(latest_version=latest, ttl_seconds=ttl)
     except BaseException:
-        import logging
-        logging.getLogger(__name__).debug("update-check refresh failed", exc_info=True)
+        logger.debug("update-check refresh failed", exc_info=True)

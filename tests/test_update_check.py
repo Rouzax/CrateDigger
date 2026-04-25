@@ -508,3 +508,80 @@ def test_is_suppressed_explicit_ignores_tty(monkeypatch):
     monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
     monkeypatch.setattr("sys.stdout.isatty", lambda: False)
     assert update_check._is_suppressed_explicit() is False
+
+
+def test_refresh_force_bypasses_freshness_check(monkeypatch, tmp_path):
+    """force=True must fetch and write even when the cache is fresh."""
+    import json
+    import time
+
+    from festival_organizer import update_check
+
+    cache_file = tmp_path / "update-check.json"
+    cache_file.write_text(json.dumps({
+        "schema": update_check.SCHEMA_VERSION,
+        "checked_at": int(time.time()),
+        "ttl_seconds": 86400,
+        "latest_version": "0.0.1",
+    }), encoding="utf-8")
+
+    monkeypatch.setattr(update_check, "_cache_path", lambda: cache_file)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+
+    fetch_calls = []
+
+    def fake_fetch():
+        fetch_calls.append(1)
+        return "9.9.9"
+
+    monkeypatch.setattr(update_check, "_fetch_latest_release", fake_fetch)
+
+    update_check.refresh_update_cache(force=True)
+
+    assert fetch_calls == [1]
+    written = json.loads(cache_file.read_text(encoding="utf-8"))
+    assert written["latest_version"] == "9.9.9"
+
+
+def test_refresh_default_respects_fresh_cache(monkeypatch, tmp_path):
+    """force=False (default) preserves existing behaviour."""
+    import json
+    import time
+
+    from festival_organizer import update_check
+
+    cache_file = tmp_path / "update-check.json"
+    cache_file.write_text(json.dumps({
+        "schema": update_check.SCHEMA_VERSION,
+        "checked_at": int(time.time()),
+        "ttl_seconds": 86400,
+        "latest_version": "0.0.1",
+    }), encoding="utf-8")
+
+    monkeypatch.setattr(update_check, "_cache_path", lambda: cache_file)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+
+    fetch_calls = []
+    monkeypatch.setattr(update_check, "_fetch_latest_release",
+                        lambda: fetch_calls.append(1) or "9.9.9")
+
+    update_check.refresh_update_cache()  # default force=False
+
+    assert fetch_calls == []  # cache fresh, no fetch
+
+
+def test_refresh_force_honours_explicit_suppression(monkeypatch, tmp_path):
+    """With force=True, env-var suppression still applies; TTY does not."""
+    from festival_organizer import update_check
+
+    cache_file = tmp_path / "update-check.json"
+    monkeypatch.setattr(update_check, "_cache_path", lambda: cache_file)
+
+    fetch_calls = []
+    monkeypatch.setattr(update_check, "_fetch_latest_release",
+                        lambda: fetch_calls.append(1) or "9.9.9")
+
+    monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
+    update_check.refresh_update_cache(force=True)
+    assert fetch_calls == []
+    assert not cache_file.exists()
