@@ -268,6 +268,49 @@ def _run_check_impl(con: "Console") -> int:
         con.print(f"  [red]\u2717[/red] Could not load config: {exc}")
         errors += 1
 
+    # --- Update status ---
+    con.print("\n[bold]Update status[/bold]")
+    from festival_organizer.update_check import (
+        _is_suppressed_explicit,
+        _is_newer,
+        _read_cache,
+        _upgrade_command,
+        refresh_update_cache,
+    )
+    try:
+        update_installed = pkg_version("cratedigger")
+    except PackageNotFoundError:
+        update_installed = "unknown"
+
+    if update_installed == "unknown":
+        con.print(f"  [dim]~[/dim] cratedigger     version not detected")
+    elif _is_suppressed_explicit():
+        con.print(
+            f"  [dim]~[/dim] cratedigger     {update_installed} "
+            f"(update check suppressed)"
+        )
+    else:
+        refresh_update_cache(force=True)
+        update_entry = _read_cache()
+        update_latest = update_entry.get("latest_version") if update_entry else None
+        if update_latest is None:
+            con.print(
+                f"  [dim]~[/dim] cratedigger     {update_installed} "
+                f"(could not check for updates)"
+            )
+        elif _is_newer(installed=update_installed, candidate=update_latest):
+            cmd = _upgrade_command()
+            con.print(
+                f"  [yellow]![/yellow] cratedigger     {update_installed} "
+                f"(newer: {update_latest}, run: {cmd})"
+            )
+            warnings += 1
+        else:
+            con.print(
+                f"  [green]✓[/green] cratedigger     {update_installed} "
+                f"(latest)"
+            )
+
     # --- Python packages ---
     con.print("\n[bold]Python packages[/bold]")
     for pkg in _CD_PACKAGES:

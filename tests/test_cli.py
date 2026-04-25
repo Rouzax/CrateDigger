@@ -664,3 +664,55 @@ def test_version_attaches_file_handler(monkeypatch, tmp_path):
     assert "festival_organizer.update_check" in content, (
         "expected at least one update_check DEBUG record in log"
     )
+
+
+def test_check_update_status_row_current(monkeypatch, tmp_path):
+    """Update status: current installed version returns (latest)."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    installed = version("cratedigger")
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: installed)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--check"])
+    assert "Update status" in result.stdout
+    assert "(latest)" in result.stdout
+
+
+def test_check_update_status_row_stale(monkeypatch, tmp_path):
+    """Update status: newer release available counts as a warning."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths, update_check
+
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    installed = version("cratedigger")
+    parts = installed.split(".")
+    bumped = f"{parts[0]}.{parts[1]}.{int(parts[2]) + 1}"
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: bumped)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--check"])
+    assert "Update status" in result.stdout
+    assert f"newer: {bumped}" in result.stdout
+    # Stale should be reported as a warning in the summary
+    assert "warning" in result.stdout.lower()
+
+
+def test_check_update_status_row_suppressed(monkeypatch, tmp_path):
+    """Update status: env var suppression shows informational ~ line."""
+    from typer.testing import CliRunner
+    from festival_organizer import cli, paths
+
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--check"])
+    assert "Update status" in result.stdout
+    assert "suppressed" in result.stdout
