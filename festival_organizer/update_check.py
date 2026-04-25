@@ -137,6 +137,19 @@ def _is_suppressed() -> bool:
     return False
 
 
+def _is_suppressed_explicit() -> bool:
+    """Suppression rule for explicitly-invoked freshness checks (--version / --check).
+
+    Honours CRATEDIGGER_NO_UPDATE_CHECK only. Unlike _is_suppressed(), this does
+    not consult sys.stdout.isatty(): when the user explicitly typed --version or
+    --check, they want the answer even when piping output to a script or log file.
+    """
+    if os.environ.get(ENV_VAR, "").strip().lower() in _TRUTHY:
+        logger.debug("Update check suppressed: env var %s set", ENV_VAR)
+        return True
+    return False
+
+
 def _releases_url() -> str:
     owner_repo = REPO_URL.rsplit("github.com/", 1)[-1].rstrip("/")
     return _RELEASES_URL_TEMPLATE.format(owner_repo=owner_repo)

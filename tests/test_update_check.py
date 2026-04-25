@@ -485,3 +485,26 @@ class TestDebugLogging:
             assert _read_cache() is None
         assert any("unreadable" in r.message for r in caplog.records)
         assert any(str(p) in r.message for r in caplog.records)
+
+
+def test_is_suppressed_explicit_true_when_env_var_set(monkeypatch):
+    from festival_organizer import update_check
+
+    monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
+    assert update_check._is_suppressed_explicit() is True
+
+
+def test_is_suppressed_explicit_false_when_env_var_unset(monkeypatch):
+    from festival_organizer import update_check
+
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    assert update_check._is_suppressed_explicit() is False
+
+
+def test_is_suppressed_explicit_ignores_tty(monkeypatch):
+    """Explicit --version/--check paths must not suppress on non-TTY."""
+    from festival_organizer import update_check
+
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+    monkeypatch.setattr("sys.stdout.isatty", lambda: False)
+    assert update_check._is_suppressed_explicit() is False
