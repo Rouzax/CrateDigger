@@ -293,10 +293,6 @@ def _run_check_impl(con: "Console") -> int:
     return 1 if errors else 0
 
 
-def _run_check() -> int:
-    return _run_check_impl(make_console())
-
-
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,

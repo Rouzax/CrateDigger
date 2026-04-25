@@ -330,9 +330,11 @@ def test_run_kodi_sync_empty_logs_debug_and_skips_sync(tmp_path, caplog):
     )
 
 
-def test_check_flag_exists_and_exits_zero(monkeypatch):
+def test_check_flag_exists_and_exits_zero(monkeypatch, tmp_path):
     import festival_organizer.cli as cli_mod
-    monkeypatch.setattr(cli_mod, "_run_check", lambda: 0)
+    from festival_organizer import paths
+    monkeypatch.setattr(cli_mod, "_run_check_impl", lambda con: 0)
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
     from typer.testing import CliRunner
     runner = CliRunner()
     result = runner.invoke(cli_mod.app, ["--check"])
