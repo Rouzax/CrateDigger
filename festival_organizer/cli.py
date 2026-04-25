@@ -58,15 +58,16 @@ _CD_PACKAGES: list[str] = [
     "beautifulsoup4", "Pillow", "ftfy", "numpy", "requests", "rich", "typer",
 ]
 
-# Asset probe for `--check`. Each entry is (label, resolver, description).
+# Asset probe for `--check`. Each entry is (label, resolver, description, severity).
+# severity is "warning" (degrades a workflow) or "info" (genuinely optional, no count).
 # The resolver is called at check time so tests can monkeypatch the paths
 # module without needing to reload this list. Routed through
 # ``festival_organizer.paths`` so the probe follows platformdirs layout.
-_CD_ASSETS: list[tuple[str, Callable[[], Path], str]] = [
-    ("config.toml",       lambda: paths.config_file(),       "user config"),
-    ("festivals.json",    lambda: paths.festivals_file(),    "curated festival aliases"),
-    ("artists.json",      lambda: paths.artists_file(),      "curated artist aliases"),
-    ("artist_mbids.json", lambda: paths.artist_mbids_file(), "curated MBID overrides"),
+_CD_ASSETS: list[tuple[str, Callable[[], Path], str, str]] = [
+    ("config.toml",       lambda: paths.config_file(),       "user config",                "warning"),
+    ("festivals.json",    lambda: paths.festivals_file(),    "curated festival aliases",   "warning"),
+    ("artists.json",      lambda: paths.artists_file(),      "curated artist aliases",     "info"),
+    ("artist_mbids.json", lambda: paths.artist_mbids_file(), "curated MBID overrides",     "info"),
 ]
 
 
@@ -217,20 +218,26 @@ def _run_check_impl(con: "Console") -> int:
                 else:
                     warnings += 1
 
-    # cv2/numpy uses the already-computed _HAS_CV2 flag
+    # cv2/numpy is genuinely optional: dim ~ marker, no warning count.
     if _HAS_CV2:
         con.print("  [green]\u2713[/green] cv2/numpy")
     else:
-        con.print("  [yellow]![/yellow] cv2/numpy      not found (optional, vision features)")
+        con.print("  [dim]~[/dim] cv2/numpy      not found (optional, vision features)")
         con.print("    [cyan]Install with: pip install opencv-python numpy[/cyan]")
-        warnings += 1
 
     # --- Config files ---
+    # Marker convention:
+    #   ✓ green:  configured and working
+    #   ~ dim:    informational; genuinely optional, does not increment warnings
+    #   ! yellow: missing and degrades a core workflow; increments warnings
+    #   ✗ red:    hard failure; required thing missing or broken; increments errors
     con.print("\n[bold]Config[/bold]")
-    for _label, resolve, desc in _CD_ASSETS:
+    for _label, resolve, desc, severity in _CD_ASSETS:
         p = resolve()
         if p.is_file():
             con.print(f"  [green]\u2713[/green] {p}")
+        elif severity == "info":
+            con.print(f"  [dim]~[/dim] {p}   not found (optional, {desc})")
         else:
             con.print(f"  [yellow]![/yellow] {p}   not found (optional, {desc})")
             warnings += 1

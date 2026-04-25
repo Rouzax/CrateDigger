@@ -716,3 +716,49 @@ def test_check_update_status_row_suppressed(monkeypatch, tmp_path):
     result = runner.invoke(cli.app, ["--check"])
     assert "Update status" in result.stdout
     assert "suppressed" in result.stdout
+
+
+def test_check_clean_install_reports_all_passed(monkeypatch, tmp_path):
+    """A clean install with required tools, optional cv2 absent, no
+    artists.json/artist_mbids.json, and 1001TL credentials configured should
+    report 'All checks passed.', not warning about optional items."""
+    from importlib.metadata import version
+    from typer.testing import CliRunner
+    from festival_organizer import cli, metadata, paths, update_check
+
+    # Required tools all present
+    for attr in ("FFPROBE_PATH", "MEDIAINFO_PATH", "MKVEXTRACT_PATH",
+                 "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+        monkeypatch.setattr(metadata, attr, "/usr/bin/true")
+    # cv2/numpy absent
+    monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", False)
+
+    # Required config files present, optional ones absent.
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        "[tracklists]\nemail = 'test@example.com'\npassword = 'secret'\n",
+        encoding="utf-8",
+    )
+    festivals_path = tmp_path / "festivals.json"
+    festivals_path.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(paths, "config_file", lambda: config_path)
+    monkeypatch.setattr(paths, "festivals_file", lambda: festivals_path)
+    # Optional assets absent
+    monkeypatch.setattr(paths, "artists_file", lambda: tmp_path / "missing-artists.json")
+    monkeypatch.setattr(paths, "artist_mbids_file", lambda: tmp_path / "missing-mbids.json")
+    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "cookies_file", lambda: tmp_path / "missing-cookies.txt")
+
+    # Update status: current
+    installed = version("cratedigger")
+    monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: installed)
+    monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.app, ["--check"])
+    out = result.stdout
+
+    # The summary should show "All checks passed.", not any warnings.
+    assert "All checks passed" in out, (
+        f"expected 'All checks passed' in output, got:\n{out}"
+    )
