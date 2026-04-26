@@ -454,6 +454,24 @@ class Config:
         )
         return self.resolve_place_alias(name)
 
+    def resolve_place_for_media(self, mf) -> tuple[str, str]:
+        """Return (canonical_name, place_kind) for the routing chain.
+
+        Chain: festival -> venue -> location -> artist.
+        place_kind values: "festival" | "venue" | "location" | "artist".
+        Empty (name, kind) tuple indicates nothing routable.
+        """
+        if mf.festival:
+            return (mf.festival, "festival")
+        if mf.venue:
+            return (mf.venue, "venue")
+        if mf.location:
+            canonical = self.resolve_place_alias(mf.location)
+            return (canonical, "location")
+        if mf.artist:
+            return (mf.artist, "artist")
+        return ("", "")
+
     @cached_property
     def artist_aliases(self) -> dict[str, str]:
         """Combined alias map: DJ-cache derived first, manual config overrides on top.
