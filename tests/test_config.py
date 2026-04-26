@@ -20,63 +20,63 @@ def test_default_config_has_required_keys():
     assert "concert_film" in cfg.filename_templates
 
 
-def test_config_festival_aliases():
+def test_config_place_aliases():
     cfg = Config(TEST_CONFIG)
-    assert cfg.resolve_festival_alias("Amsterdam Music Festival") == "AMF"
-    assert cfg.resolve_festival_alias("amf") == "AMF"
+    assert cfg.resolve_place_alias("Amsterdam Music Festival") == "AMF"
+    assert cfg.resolve_place_alias("amf") == "AMF"
     # "EDC Las Vegas" is a per-edition alias that resolves to canonical "EDC"
-    assert cfg.resolve_festival_alias("EDC Las Vegas") == "EDC"
-    assert cfg.resolve_festival_alias("Unknown Thing") == "Unknown Thing"
+    assert cfg.resolve_place_alias("EDC Las Vegas") == "EDC"
+    assert cfg.resolve_place_alias("Unknown Thing") == "Unknown Thing"
 
 
-def test_config_festival_edition():
+def test_config_place_edition():
     cfg = Config(TEST_CONFIG)
     # Tomorrowland has editions configured
-    assert cfg.get_festival_display("Tomorrowland", "Winter") == "Tomorrowland Winter"
-    assert cfg.get_festival_display("Tomorrowland", "") == "Tomorrowland"
+    assert cfg.get_place_display("Tomorrowland", "Winter") == "Tomorrowland Winter"
+    assert cfg.get_place_display("Tomorrowland", "") == "Tomorrowland"
     # AMF has no editions
-    assert cfg.get_festival_display("AMF", "Netherlands") == "AMF"
+    assert cfg.get_place_display("AMF", "Netherlands") == "AMF"
 
 
-def test_get_festival_display_rejects_unknown_edition():
+def test_get_place_display_rejects_unknown_edition():
     cfg = Config(TEST_CONFIG)
     # Dreamstate has editions: [SoCal, Europe, Australia, Mexico]
     # "United States" is not in that list, should be omitted
-    assert cfg.get_festival_display("Dreamstate", "United States") == "Dreamstate"
-    assert cfg.get_festival_display("Dreamstate", "SoCal") == "Dreamstate SoCal"
+    assert cfg.get_place_display("Dreamstate", "United States") == "Dreamstate"
+    assert cfg.get_place_display("Dreamstate", "SoCal") == "Dreamstate SoCal"
 
 
-def test_resolve_festival_with_edition():
+def test_resolve_place_with_edition():
     cfg = Config(TEST_CONFIG)
     # Edition decomposition (no alias needed)
-    assert cfg.resolve_festival_with_edition("Tomorrowland Winter") == ("Tomorrowland", "Winter")
-    assert cfg.resolve_festival_with_edition("Tomorrowland Brasil") == ("Tomorrowland", "Brasil")
-    assert cfg.resolve_festival_with_edition("EDC Las Vegas") == ("EDC", "Las Vegas")
-    assert cfg.resolve_festival_with_edition("Dreamstate SoCal") == ("Dreamstate", "SoCal")
-    assert cfg.resolve_festival_with_edition("Dreamstate Europe") == ("Dreamstate", "Europe")
+    assert cfg.resolve_place_with_edition("Tomorrowland Winter") == ("Tomorrowland", "Winter")
+    assert cfg.resolve_place_with_edition("Tomorrowland Brasil") == ("Tomorrowland", "Brasil")
+    assert cfg.resolve_place_with_edition("EDC Las Vegas") == ("EDC", "Las Vegas")
+    assert cfg.resolve_place_with_edition("Dreamstate SoCal") == ("Dreamstate", "SoCal")
+    assert cfg.resolve_place_with_edition("Dreamstate Europe") == ("Dreamstate", "Europe")
     # Alias prefix + edition (Ultra is alias for UMF)
-    assert cfg.resolve_festival_with_edition("Ultra Europe") == ("UMF", "Europe")
-    assert cfg.resolve_festival_with_edition("Ultra Music Festival Miami") == ("UMF", "Miami")
+    assert cfg.resolve_place_with_edition("Ultra Europe") == ("UMF", "Europe")
+    assert cfg.resolve_place_with_edition("Ultra Music Festival Miami") == ("UMF", "Miami")
     # Pure alias (no edition)
-    assert cfg.resolve_festival_with_edition("TML") == ("Tomorrowland", "")
-    assert cfg.resolve_festival_with_edition("AMF") == ("AMF", "")
+    assert cfg.resolve_place_with_edition("TML") == ("Tomorrowland", "")
+    assert cfg.resolve_place_with_edition("AMF") == ("AMF", "")
     # Weekend aliases resolve to plain Tomorrowland (no edition)
-    assert cfg.resolve_festival_with_edition("Tomorrowland Weekend 1") == ("Tomorrowland", "")
+    assert cfg.resolve_place_with_edition("Tomorrowland Weekend 1") == ("Tomorrowland", "")
     # Genuine alternate name (not an edition)
-    assert cfg.resolve_festival_with_edition("Red Rocks Amphitheatre") == ("Red Rocks", "")
-    # Unknown festival
-    assert cfg.resolve_festival_with_edition("Unknown Fest") == ("Unknown Fest", "")
+    assert cfg.resolve_place_with_edition("Red Rocks Amphitheatre") == ("Red Rocks", "")
+    # Unknown place
+    assert cfg.resolve_place_with_edition("Unknown Fest") == ("Unknown Fest", "")
 
 
-def test_resolve_festival_with_edition_case_insensitive():
+def test_resolve_place_with_edition_case_insensitive():
     cfg = Config(TEST_CONFIG)
-    assert cfg.resolve_festival_with_edition("tomorrowland winter") == ("Tomorrowland", "Winter")
-    assert cfg.resolve_festival_with_edition("EDC LAS VEGAS") == ("EDC", "Las Vegas")
+    assert cfg.resolve_place_with_edition("tomorrowland winter") == ("Tomorrowland", "Winter")
+    assert cfg.resolve_place_with_edition("EDC LAS VEGAS") == ("EDC", "Las Vegas")
 
 
-def test_known_festivals_includes_edition_combos():
+def test_known_places_includes_edition_combos():
     cfg = Config(TEST_CONFIG)
-    known = cfg.known_festivals
+    known = cfg.known_places
     # Canonical names
     assert "Tomorrowland" in known
     assert "EDC" in known
@@ -89,16 +89,16 @@ def test_known_festivals_includes_edition_combos():
     assert "Ultra" in known
 
 
-def test_get_festival_display_with_editions():
+def test_get_place_display_with_editions():
     cfg = Config(TEST_CONFIG)
-    assert cfg.get_festival_display("Tomorrowland", "Winter") == "Tomorrowland Winter"
-    assert cfg.get_festival_display("Tomorrowland", "Brasil") == "Tomorrowland Brasil"
-    assert cfg.get_festival_display("Tomorrowland", "") == "Tomorrowland"
+    assert cfg.get_place_display("Tomorrowland", "Winter") == "Tomorrowland Winter"
+    assert cfg.get_place_display("Tomorrowland", "Brasil") == "Tomorrowland Brasil"
+    assert cfg.get_place_display("Tomorrowland", "") == "Tomorrowland"
     # AMF has no editions configured
-    assert cfg.get_festival_display("AMF", "Netherlands") == "AMF"
+    assert cfg.get_place_display("AMF", "Netherlands") == "AMF"
     # Unknown edition rejected
-    assert cfg.get_festival_display("Dreamstate", "United States") == "Dreamstate"
-    assert cfg.get_festival_display("Dreamstate", "SoCal") == "Dreamstate SoCal"
+    assert cfg.get_place_display("Dreamstate", "United States") == "Dreamstate"
+    assert cfg.get_place_display("Dreamstate", "SoCal") == "Dreamstate SoCal"
 
 
 def test_config_layout_templates():
@@ -134,7 +134,7 @@ def test_load_config_from_toml_file():
     toml_text = (
         'default_layout = "festival_first"\n'
         '\n'
-        '[festival_aliases]\n'
+        '[place_aliases]\n'
         'Tomorrowland = ["TML"]\n'
     )
     with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
@@ -144,9 +144,9 @@ def test_load_config_from_toml_file():
     # Custom value overrides default (and triggers legacy rename)
     assert cfg.default_layout == "festival_nested"
     # Custom alias merged
-    assert cfg.resolve_festival_alias("TML") == "Tomorrowland"
+    assert cfg.resolve_place_alias("TML") == "Tomorrowland"
     # Default aliases still present
-    assert cfg.resolve_festival_alias("AMF") == "AMF"
+    assert cfg.resolve_place_alias("AMF") == "AMF"
 
 
 def test_config_media_extensions():
@@ -157,12 +157,12 @@ def test_config_media_extensions():
     assert ".txt" not in cfg.media_extensions
 
 
-def test_config_known_festivals():
+def test_config_known_places():
     cfg = Config(TEST_CONFIG)
-    festivals = cfg.known_festivals
-    assert "AMF" in festivals
-    assert "Tomorrowland" in festivals
-    assert "EDC" in festivals
+    places = cfg.known_places
+    assert "AMF" in places
+    assert "Tomorrowland" in places
+    assert "EDC" in places
 
 
 def test_load_config_builtin_defaults(tmp_path):
@@ -185,7 +185,7 @@ def test_load_config_user_layer(tmp_path):
     user_dir.mkdir()
     user_config = user_dir / "config.toml"
     user_config.write_text(
-        '[festival_aliases]\n'
+        '[place_aliases]\n'
         '"My Festival" = ["My Fest"]\n'
         '\n'
         '[tracklists]\n'
@@ -194,9 +194,9 @@ def test_load_config_user_layer(tmp_path):
     )
     config = load_config(user_config_file=user_config)
     # User alias merged in
-    assert config.resolve_festival_alias("My Fest") == "My Festival"
+    assert config.resolve_place_alias("My Fest") == "My Festival"
     # Built-in aliases still present
-    assert config.resolve_festival_alias("EDC") == "EDC"
+    assert config.resolve_place_alias("EDC") == "EDC"
     # Credentials accessible
     assert config.tracklists_credentials == ("me@example.com", "secret")
 
@@ -476,15 +476,6 @@ def test_known_places_includes_canonicals_and_aliases(tmp_path):
     assert {"Tomorrowland", "TML", "Printworks"} <= cfg.known_places
 
 
-def test_festival_aliases_still_works_emits_deprecation(tmp_path, caplog):
-    import logging
-    caplog.set_level(logging.WARNING)
-    (tmp_path / "places.json").write_text('{"Tomorrowland": {"aliases": ["TML"]}}')
-    cfg = Config({}, config_dir=tmp_path)
-    assert cfg.festival_aliases.get("TML") == "Tomorrowland"
-    assert any("festival_aliases" in r.getMessage() for r in caplog.records)
-
-
 def test_place_background_priority_default():
     cfg = Config({})
     assert cfg.poster_settings["place_background_priority"] == ["curated_logo", "gradient"]
@@ -565,15 +556,15 @@ def test_resolve_artist_alias_then_group():
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
 
 
-def test_festival_aliases_grouped_format():
-    config = Config({"festival_aliases": {
+def test_place_aliases_grouped_format():
+    config = Config({"place_aliases": {
         "Tomorrowland": ["TML", "Tomorrowland Weekend 1"],
         "AMF": ["Amsterdam Music Festival"],
     }})
-    assert config.resolve_festival_alias("TML") == "Tomorrowland"
-    assert config.resolve_festival_alias("Tomorrowland Weekend 1") == "Tomorrowland"
-    assert config.resolve_festival_alias("Tomorrowland") == "Tomorrowland"
-    assert config.resolve_festival_alias("Amsterdam Music Festival") == "AMF"
+    assert config.resolve_place_alias("TML") == "Tomorrowland"
+    assert config.resolve_place_alias("Tomorrowland Weekend 1") == "Tomorrowland"
+    assert config.resolve_place_alias("Tomorrowland") == "Tomorrowland"
+    assert config.resolve_place_alias("Amsterdam Music Festival") == "AMF"
 
 
 def test_artist_aliases_grouped_format():
@@ -585,28 +576,28 @@ def test_artist_aliases_grouped_format():
     assert config.resolve_artist("Martin Garrix") == "Martin Garrix"
 
 
-def test_festival_aliases_flat_format():
+def test_place_aliases_flat_format():
     """Flat format {alias: canonical} should be handled correctly."""
-    config = Config({"festival_aliases": {
+    config = Config({"place_aliases": {
         "AMF": "AMF",
         "Amsterdam Music Festival": "AMF",
         "EDC": "EDC Las Vegas",
     }})
-    assert config.resolve_festival_alias("Amsterdam Music Festival") == "AMF"
-    assert config.resolve_festival_alias("AMF") == "AMF"
-    assert config.resolve_festival_alias("EDC") == "EDC Las Vegas"
+    assert config.resolve_place_alias("Amsterdam Music Festival") == "AMF"
+    assert config.resolve_place_alias("AMF") == "AMF"
+    assert config.resolve_place_alias("EDC") == "EDC Las Vegas"
 
 
-def test_festival_aliases_mixed_format():
+def test_place_aliases_mixed_format():
     """Mixed dict with some grouped and some flat entries."""
-    config = Config({"festival_aliases": {
+    config = Config({"place_aliases": {
         "Tomorrowland": ["TML", "Tomorrowland Weekend 1"],
         "AMF": "AMF",
         "Amsterdam Music Festival": "AMF",
     }})
-    assert config.resolve_festival_alias("TML") == "Tomorrowland"
-    assert config.resolve_festival_alias("Amsterdam Music Festival") == "AMF"
-    assert config.resolve_festival_alias("AMF") == "AMF"
+    assert config.resolve_place_alias("TML") == "Tomorrowland"
+    assert config.resolve_place_alias("Amsterdam Music Festival") == "AMF"
+    assert config.resolve_place_alias("AMF") == "AMF"
 
 
 def test_invert_alias_map_flat_does_not_iterate_characters():

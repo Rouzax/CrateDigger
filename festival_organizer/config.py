@@ -270,15 +270,6 @@ class Config:
         return _invert_alias_map(raw)
 
     @property
-    def festival_aliases(self) -> dict[str, str]:
-        _log_deprecated_once(
-            "Config.festival_aliases",
-            "Config.festival_aliases is deprecated, use Config.place_aliases instead. "
-            "Support for Config.festival_aliases will be removed in 1.0.0.",
-        )
-        return self.place_aliases
-
-    @property
     def place_config(self) -> dict:
         raw = self._load_external_config("places.json", {})
         defaults = {k: v for k, v in raw.items()
@@ -287,15 +278,6 @@ class Config:
         if overlay:
             return {**defaults, **overlay}
         return defaults
-
-    @property
-    def festival_config(self) -> dict:
-        _log_deprecated_once(
-            "Config.festival_config",
-            "Config.festival_config is deprecated, use Config.place_config instead. "
-            "Support for Config.festival_config will be removed in 1.0.0.",
-        )
-        return self.place_config
 
     @property
     def all_known_editions(self) -> set[str]:
@@ -344,14 +326,6 @@ class Config:
                     return canon, ed_name
 
         return name, ""
-
-    def resolve_festival_with_edition(self, name: str) -> tuple[str, str]:
-        _log_deprecated_once(
-            "Config.resolve_festival_with_edition",
-            "Config.resolve_festival_with_edition is deprecated, use Config.resolve_place_with_edition instead. "
-            "Support for Config.resolve_festival_with_edition will be removed in 1.0.0.",
-        )
-        return self.resolve_place_with_edition(name)
 
     @property
     def poster_settings(self) -> dict:
@@ -439,15 +413,6 @@ class Config:
                     names.add(alias)
         return names
 
-    @property
-    def known_festivals(self) -> set[str]:
-        _log_deprecated_once(
-            "Config.known_festivals",
-            "Config.known_festivals is deprecated, use Config.known_places instead. "
-            "Support for Config.known_festivals will be removed in 1.0.0.",
-        )
-        return self.known_places
-
     def resolve_place_alias(self, name: str) -> str:
         """Map a place name/abbreviation to its canonical form."""
         # Try exact match first, then case-insensitive
@@ -460,14 +425,6 @@ class Config:
         if resolved != name:
             logger.debug("Place alias (case-insensitive): '%s' -> '%s'", name, resolved)
         return resolved
-
-    def resolve_festival_alias(self, name: str) -> str:
-        _log_deprecated_once(
-            "Config.resolve_festival_alias",
-            "Config.resolve_festival_alias is deprecated, use Config.resolve_place_alias instead. "
-            "Support for Config.resolve_festival_alias will be removed in 1.0.0.",
-        )
-        return self.resolve_place_alias(name)
 
     def resolve_place_for_media(self, mf) -> tuple[str, str]:
         """Return (canonical_name, place_kind) for the routing chain.
@@ -579,14 +536,6 @@ class Config:
         if edition and edition in pc.get("editions", {}):
             return f"{canonical_place} {edition}"
         return canonical_place
-
-    def get_festival_display(self, canonical_festival: str, edition: str) -> str:
-        _log_deprecated_once(
-            "Config.get_festival_display",
-            "Config.get_festival_display is deprecated, use Config.get_place_display instead. "
-            "Support for Config.get_festival_display will be removed in 1.0.0.",
-        )
-        return self.get_place_display(canonical_festival, edition)
 
     _LEGACY_LAYOUT_ALIASES = {
         "festival_flat": "place_flat",
