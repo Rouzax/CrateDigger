@@ -1,6 +1,7 @@
 """Tests for festival_organizer.paths platform-path resolution."""
 from __future__ import annotations
 
+import logging
 from datetime import date, timedelta
 from pathlib import Path
 from unittest.mock import patch
@@ -95,6 +96,14 @@ class TestCuratedDataFiles:
     def test_festivals_logo_dir(self, tmp_path: Path):
         with patch("festival_organizer.paths.data_dir", return_value=tmp_path):
             assert paths.festivals_logo_dir() == tmp_path / "festivals"
+
+    def test_places_logo_dir(self, tmp_path: Path):
+        with patch("festival_organizer.paths.data_dir", return_value=tmp_path):
+            assert paths.places_logo_dir() == tmp_path / "places"
+
+    def test_places_file(self, tmp_path: Path):
+        with patch("festival_organizer.paths.data_dir", return_value=tmp_path):
+            assert paths.places_file() == tmp_path / "places.json"
 
 
 class TestCookiesFile:
@@ -381,3 +390,137 @@ class TestDataDirEnvOverride:
              patch.object(Path, "home", return_value=tmp_path):
             mock_sys.platform = "linux"
             assert paths.data_dir() == tmp_path / "CrateDigger"
+
+
+class TestMigrateLegacyPaths:
+    """Auto-migration of festival-named curated paths to place-named locations."""
+
+    def _wire(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        *,
+        festivals_file: Path,
+        places_file: Path,
+        festivals_logo_dir: Path,
+        places_logo_dir: Path,
+    ) -> None:
+        monkeypatch.setattr(paths, "festivals_file", lambda: festivals_file)
+        monkeypatch.setattr(paths, "places_file", lambda: places_file)
+        monkeypatch.setattr(paths, "festivals_logo_dir", lambda: festivals_logo_dir)
+        monkeypatch.setattr(paths, "places_logo_dir", lambda: places_logo_dir)
+
+    def test_copies_file_when_target_missing(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        legacy = tmp_path / "festivals.json"
+        legacy.write_text('{"X": {}}', encoding="utf-8")
+        target = tmp_path / "places.json"
+        self._wire(
+            monkeypatch,
+            festivals_file=legacy,
+            places_file=target,
+            festivals_logo_dir=tmp_path / "no_legacy_dir",
+            places_logo_dir=tmp_path / "places_dir",
+        )
+
+        paths._migrate_legacy_paths()
+
+        assert target.read_text(encoding="utf-8") == '{"X": {}}'
+        assert legacy.exists(), "legacy festivals.json must be preserved"
+
+    def test_skips_file_when_target_exists(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        legacy = tmp_path / "festivals.json"
+        legacy.write_text('{"old": {}}', encoding="utf-8")
+        target = tmp_path / "places.json"
+        target.write_text('{"new": {}}', encoding="utf-8")
+        self._wire(
+            monkeypatch,
+            festivals_file=legacy,
+            places_file=target,
+            festivals_logo_dir=tmp_path / "no_legacy_dir",
+            places_logo_dir=tmp_path / "places_dir",
+        )
+
+        paths._migrate_legacy_paths()
+
+        assert target.read_text(encoding="utf-8") == '{"new": {}}'
+        assert legacy.read_text(encoding="utf-8") == '{"old": {}}'
+
+    def test_copies_logo_subdirs(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        legacy_dir = tmp_path / "festivals"
+        (legacy_dir / "Tomorrowland").mkdir(parents=True)
+        (legacy_dir / "Tomorrowland" / "logo.png").write_bytes(b"PNG")
+        (legacy_dir / "Awakenings").mkdir()
+        (legacy_dir / "Awakenings" / "logo.jpg").write_bytes(b"JPG")
+        new_dir = tmp_path / "places"
+        self._wire(
+            monkeypatch,
+            festivals_file=tmp_path / "no_legacy.json",
+            places_file=tmp_path / "no_target.json",
+            festivals_logo_dir=legacy_dir,
+            places_logo_dir=new_dir,
+        )
+
+        paths._migrate_legacy_paths()
+
+        assert (new_dir / "Tomorrowland" / "logo.png").read_bytes() == b"PNG"
+        assert (new_dir / "Awakenings" / "logo.jpg").read_bytes() == b"JPG"
+        assert (legacy_dir / "Tomorrowland" / "logo.png").exists()
+        assert (legacy_dir / "Awakenings" / "logo.jpg").exists()
+
+    def test_skips_existing_logo_subdir(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        legacy_dir = tmp_path / "festivals"
+        (legacy_dir / "Tomorrowland").mkdir(parents=True)
+        (legacy_dir / "Tomorrowland" / "logo.png").write_bytes(b"OLD")
+        new_dir = tmp_path / "places"
+        (new_dir / "Tomorrowland").mkdir(parents=True)
+        (new_dir / "Tomorrowland" / "logo.png").write_bytes(b"NEW")
+        self._wire(
+            monkeypatch,
+            festivals_file=tmp_path / "no_legacy.json",
+            places_file=tmp_path / "no_target.json",
+            festivals_logo_dir=legacy_dir,
+            places_logo_dir=new_dir,
+        )
+
+        paths._migrate_legacy_paths()
+
+        assert (new_dir / "Tomorrowland" / "logo.png").read_bytes() == b"NEW"
+
+    def test_idempotent_within_process(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog
+    ):
+        legacy = tmp_path / "festivals.json"
+        legacy.write_text('{"X": {}}', encoding="utf-8")
+        target = tmp_path / "places.json"
+        legacy_dir = tmp_path / "festivals"
+        (legacy_dir / "Tomorrowland").mkdir(parents=True)
+        (legacy_dir / "Tomorrowland" / "logo.png").write_bytes(b"PNG")
+        new_dir = tmp_path / "places"
+        self._wire(
+            monkeypatch,
+            festivals_file=legacy,
+            places_file=target,
+            festivals_logo_dir=legacy_dir,
+            places_logo_dir=new_dir,
+        )
+
+        with caplog.at_level(logging.INFO, logger="festival_organizer.paths"):
+            paths._migrate_legacy_paths()
+            paths._migrate_legacy_paths()
+            paths._migrate_legacy_paths()
+
+        info_records = [
+            r for r in caplog.records
+            if r.name == "festival_organizer.paths" and r.levelname == "INFO"
+        ]
+        file_msgs = [r for r in info_records if "places.json" in r.getMessage()]
+        logo_msgs = [r for r in info_records if "Migrated curated logos" in r.getMessage()]
+        assert len(file_msgs) == 1
+        assert len(logo_msgs) == 1
