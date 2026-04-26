@@ -457,6 +457,30 @@ def test_get_folder_poster_type_returns_artist_for_artist_fallback():
     assert op._get_folder_poster_type(mf) == "artist"
 
 
+def test_priority_chain_uses_place_background_priority():
+    """The poster pipeline reads place_background_priority for festival/place posters."""
+    cfg = load_config()
+    op = AlbumPosterOperation(cfg, library_root=Path("/tmp"))
+    chain = op._get_priority_chain_for_poster_type("festival")
+    assert chain == ["curated_logo", "gradient"]
+
+
+def test_priority_chain_artist_returns_artist_chain():
+    """Artist poster_type uses artist_background_priority."""
+    cfg = load_config()
+    op = AlbumPosterOperation(cfg, library_root=Path("/tmp"))
+    chain = op._get_priority_chain_for_poster_type("artist")
+    assert chain == ["dj_artwork", "fanart_tv", "gradient"]
+
+
+def test_priority_chain_year_returns_year_chain():
+    """Year poster_type uses year_background_priority."""
+    cfg = load_config()
+    op = AlbumPosterOperation(cfg, library_root=Path("/tmp"))
+    chain = op._get_priority_chain_for_poster_type("year")
+    assert chain == ["gradient"]
+
+
 def test_album_poster_hero_text_uses_mf_place(tmp_path):
     """Album poster hero/festival slot equals mf.place, regardless of place_kind."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
