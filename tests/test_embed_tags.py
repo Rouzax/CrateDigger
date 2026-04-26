@@ -159,7 +159,7 @@ def test_embed_tags_skipped_when_tags_match(tmp_path):
     """embed_tags returns 'skipped' when existing TTV=50 tags already match."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
-    mf = _make_mf(artist="Tiesto", festival="TML", year="2024")
+    mf = _make_mf(artist="Tiesto", festival="TML", festival_full="TML", year="2024")
 
     existing_xml = """<Tags>
   <Tag>
@@ -188,7 +188,7 @@ def test_embed_tags_skipped_with_enrichment_tags_match(tmp_path):
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
-        artist="Tiesto", festival="TML", year="2024",
+        artist="Tiesto", festival="TML", festival_full="TML", year="2024",
         fanart_url="https://fanart.tv/bg.jpg",
         clearlogo_url="https://fanart.tv/logo.png",
     )
@@ -231,7 +231,8 @@ def test_embed_tags_curated_description_full(tmp_path):
     mf = _make_mf(
         artist="Armin van Buuren",
         display_artist="Armin van Buuren",
-        festival="Tomorrowland", stage="Mainstage",
+        festival="Tomorrowland", festival_full="Tomorrowland",
+        stage="Mainstage",
         country="Belgium", source_type="Open Air / Festival",
         edition="Belgium", set_title="WE2", year="2024",
     )
@@ -252,7 +253,7 @@ def test_embed_tags_description_no_stage(tmp_path):
     mf = _make_mf(
         artist="Martin Garrix",
         display_artist="Martin Garrix",
-        festival="Tomorrowland",
+        festival="Tomorrowland", festival_full="Tomorrowland",
         country="Belgium", source_type="Open Air / Festival",
         year="2024",
     )
@@ -267,13 +268,14 @@ def test_embed_tags_description_no_stage(tmp_path):
 
 
 def test_embed_tags_description_venue_fallback(tmp_path):
-    """DESCRIPTION uses venue when no festival."""
+    """DESCRIPTION uses raw venue_full when no festival_full."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
         artist="Martin Garrix",
         display_artist="Martin Garrix",
         festival="", venue="Red Rocks Amphitheatre",
+        venue_full="Red Rocks Amphitheatre",
         country="United States", source_type="Event Location",
         year="2025",
     )
@@ -293,7 +295,7 @@ def test_embed_tags_description_skipped_when_same(tmp_path):
     video.write_bytes(b"")
     mf = _make_mf(
         artist="Tiesto", display_artist="Tiesto",
-        festival="TML", country="Belgium",
+        festival="TML", festival_full="TML", country="Belgium",
         source_type="Open Air / Festival", year="2024",
     )
 
@@ -406,8 +408,8 @@ def test_embed_tags_description_uses_location_when_festival_and_venue_empty(tmp_
     assert "United Kingdom" in desc
 
 
-def test_embed_tags_description_prefers_venue_over_location(tmp_path):
-    """SYNOPSIS prefers structured venue over plain-text location fallback."""
+def test_embed_tags_description_prefers_venue_full_over_location(tmp_path):
+    """SYNOPSIS prefers raw venue_full over plain-text location fallback."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
@@ -416,6 +418,7 @@ def test_embed_tags_description_prefers_venue_over_location(tmp_path):
         stage="Main",
         festival="", festival_full="",
         venue="Structured Venue",
+        venue_full="raw structured venue, london",
         location="Free Text Location",
         country="Belgium",
         year="2024",
@@ -427,7 +430,7 @@ def test_embed_tags_description_prefers_venue_over_location(tmp_path):
 
     tags_dict = mock_wmt.call_args[0][1]
     desc = tags_dict[50]["SYNOPSIS"]
-    assert "Structured Venue" in desc
+    assert "raw structured venue, london" in desc
     assert "Free Text Location" not in desc
 
 
@@ -580,6 +583,37 @@ def test_embed_tags_warns_when_target_missing_or_wrong_ext(tmp_path, caplog):
     assert result == "error"
     joined = "\n".join(r.message for r in caplog.records)
     assert "nonexistent.mkv" in joined
+
+
+# --- compute_location_tag (raw-only fallback chain for SYNOPSIS line 2) ---
+
+
+def test_location_tag_uses_raw_venue_full():
+    """When festival is empty but venue is alias-resolved, the location line carries the raw scrape."""
+    from festival_organizer.embed_tags import compute_location_tag
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
+                   festival="", festival_full="",
+                   venue="Alexandra Palace",
+                   venue_full="alexandra palace, london",
+                   location="")
+    assert compute_location_tag(mf) == "alexandra palace, london"
+
+
+def test_location_tag_falls_through_to_location_field():
+    from festival_organizer.embed_tags import compute_location_tag
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
+                   festival="", festival_full="",
+                   venue="", venue_full="",
+                   location="Some Bar, Berlin")
+    assert compute_location_tag(mf) == "Some Bar, Berlin"
+
+
+def test_location_tag_prefers_festival_full():
+    from festival_organizer.embed_tags import compute_location_tag
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
+                   festival="Tomorrowland", festival_full="Tomorrowland Belgium",
+                   venue="Anywhere", venue_full="Anywhere Else")
+    assert compute_location_tag(mf) == "Tomorrowland Belgium"
 
 
 def test_embed_tags_diff_debug_renders_clear_tag_readably(tmp_path, caplog):
