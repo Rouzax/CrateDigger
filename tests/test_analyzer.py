@@ -632,7 +632,7 @@ def _venue_alias_config() -> Config:
     """Config with a curated venue alias for venue-resolution tests."""
     data = dict(TEST_CONFIG)
     data["place_config"] = {
-        **TEST_CONFIG.get("festival_config", {}),
+        **TEST_CONFIG.get("place_config", {}),
         "Alexandra Palace": {
             "aliases": ["alexandra palace, london"],
         },

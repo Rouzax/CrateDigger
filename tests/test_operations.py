@@ -542,7 +542,7 @@ def test_album_poster_config_priority_defaults():
     config = Config(DEFAULT_CONFIG)
     ps = config.poster_settings
     assert ps["artist_background_priority"] == ["dj_artwork", "fanart_tv", "gradient"]
-    assert ps["festival_background_priority"] == ["curated_logo", "gradient"]
+    assert ps["place_background_priority"] == ["curated_logo", "gradient"]
     assert ps["year_background_priority"] == ["gradient"]
 
 
