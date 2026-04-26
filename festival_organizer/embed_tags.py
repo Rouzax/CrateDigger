@@ -1,7 +1,7 @@
 """Plex tag embedding via mkvpropedit (opt-in via --embed-tags flag).
 
 Embeds artist, title, and date into MKV file tags so Plex can read them.
-Only operates on destination files — never modifies source collection.
+Only operates on destination files; never modifies source collection.
 
 Logging:
     Logger: 'festival_organizer.embed_tags'
@@ -27,12 +27,28 @@ from festival_organizer.models import MediaFile, build_display_title
 logger = logging.getLogger(__name__)
 
 
+def compute_location_tag(mf: MediaFile) -> str:
+    """Pick the rawest available place name for the SYNOPSIS location line.
+
+    Canonical / alias-resolved names (mf.festival, mf.venue, mf.place) live in
+    folder paths and posters; the embedded synopsis is a different concept and
+    should carry the raw scrape from 1001TL where available. The chain is:
+
+        festival_full  (raw 1001TL festival name)
+        venue_full     (raw 1001TL venue name, before alias resolution)
+        location       (plain-text h1 tail, e.g. "Alexandra Palace London")
+
+    Returns "" when none of the three are populated.
+    """
+    return mf.festival_full or mf.venue_full or mf.location
+
+
 def _build_curated_description(mf: MediaFile) -> str:
     """Build a curated description from MediaFile metadata.
 
     Format:
         {display_artist} @ {stage}
-        {festival|venue} ({source_type}), {country}
+        {location} ({source_type}), {country}
         Edition: {edition} | {set_title}
 
     Lines are omitted when data is missing.
@@ -47,10 +63,7 @@ def _build_curated_description(mf: MediaFile) -> str:
         lines.append(artist)
 
     # Line 2: location with source type and country
-    # Fallback chain (highest to lowest tier):
-    #   festival_full (raw 1001TL name) > resolved festival > structured venue
-    #   > plain-text location from h1 tail (e.g. "Alexandra Palace London")
-    location = mf.festival_full or mf.festival or mf.venue or mf.location
+    location = compute_location_tag(mf)
     if location:
         qualifiers: list[str] = []
         if mf.source_type:
@@ -164,13 +177,3 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
         all_tags[70] = tags_70
 
     return "done" if write_merged_tags(target_path, all_tags, existing_root=root) else "error"
-
-
-def xml_escape(text: str) -> str:
-    """Escape XML special characters."""
-    return (text
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace('"', "&quot;")
-            .replace("'", "&apos;"))
