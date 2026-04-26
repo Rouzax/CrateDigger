@@ -83,7 +83,7 @@ def build_display_title(mf: MediaFile, config=None) -> str:
         festival = ""
         if mf.festival:
             if config and mf.edition:
-                festival = config.get_festival_display(mf.festival, mf.edition)
+                festival = config.get_place_display(mf.festival, mf.edition)
             else:
                 festival = mf.festival
             if mf.set_title:

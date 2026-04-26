@@ -68,7 +68,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
     # Remove "-concert" suffix (Plex convention)
     stem = re.sub(r"-concert\s*$", "", stem, flags=re.IGNORECASE).strip()
 
-    known_festivals = config.known_festivals
+    known_festivals = config.known_places
 
     # --- Pattern: YYYY - Part2 - Part3 [WE1/WE2] ---
     m = re.match(r"^(\d{4})\s*[-\u2013]\s*(.+?)\s*[-\u2013]\s*(.+?)(?:(?:\s*[-\u2013]\s*|\s+)(WE\d))?\s*$", stem)
@@ -213,7 +213,7 @@ def parse_parent_dirs(filepath: Path, root: Path, config: Config) -> dict:
             result.setdefault("year", year_match.group(1))
 
         # Known festival
-        for fest in config.known_festivals:
+        for fest in config.known_places:
             if _festival_in_text(fest, part):
                 result.setdefault("festival", fest)
                 break
