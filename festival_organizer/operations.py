@@ -566,6 +566,16 @@ class AlbumPosterOperation(Operation):
             return None  # No image needed, poster generator creates gradient
         return None
 
+    def _get_priority_chain_for_poster_type(self, poster_type: str) -> list[str]:
+        ps = self.config.poster_settings
+        if poster_type == "artist":
+            return ps.get("artist_background_priority",
+                          ["dj_artwork", "fanart_tv", "gradient"])
+        if poster_type == "festival":
+            return ps.get("place_background_priority",
+                          ["curated_logo", "gradient"])
+        return ps.get("year_background_priority", ["gradient"])
+
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.poster import generate_album_poster
         try:
@@ -593,15 +603,7 @@ class AlbumPosterOperation(Operation):
             logger.debug("Album poster: type=%s (from layout template)", poster_type)
 
             # Walk configurable background priority chain
-            ps = self.config.poster_settings
-            if poster_type == "artist":
-                priority = ps.get("artist_background_priority",
-                                  ["dj_artwork", "fanart_tv", "gradient"])
-            elif poster_type == "festival":
-                priority = ps.get("festival_background_priority",
-                                  ["curated_logo", "gradient"])
-            else:  # year
-                priority = ps.get("year_background_priority", ["gradient"])
+            priority = self._get_priority_chain_for_poster_type(poster_type)
 
             bg_path, bg_source = self._resolve_background(priority, file_path.parent, mf)
 
