@@ -374,7 +374,7 @@ def test_run_check_impl_all_pass(monkeypatch, tmp_path):
     data_dir = tmp_path / "CrateDigger"
     data_dir.mkdir()
     (data_dir / "config.toml").write_text("")
-    (data_dir / "festivals.json").write_text("{}")
+    (data_dir / "places.json").write_text("{}")
     (data_dir / "artists.json").write_text("{}")
     (data_dir / "artist_mbids.json").write_text("{}")
     cookie_path = tmp_path / "state" / "1001tl-cookies.json"
@@ -385,8 +385,8 @@ def test_run_check_impl_all_pass(monkeypatch, tmp_path):
         lambda: data_dir / "config.toml",
     )
     monkeypatch.setattr(
-        "festival_organizer.cli.paths.festivals_file",
-        lambda: data_dir / "festivals.json",
+        "festival_organizer.cli.paths.places_file",
+        lambda: data_dir / "places.json",
     )
     monkeypatch.setattr(
         "festival_organizer.cli.paths.artists_file",
@@ -430,7 +430,7 @@ def test_run_check_impl_required_tool_missing_exits_one(monkeypatch, tmp_path):
     # Point every asset probe at a path under tmp_path that does not exist,
     # so all is_file() checks return False.
     missing = tmp_path / "missing"
-    for name in ("config_file", "festivals_file", "artists_file", "artist_mbids_file", "cookies_file"):
+    for name in ("config_file", "places_file", "artists_file", "artist_mbids_file", "cookies_file"):
         monkeypatch.setattr(
             f"festival_organizer.cli.paths.{name}",
             lambda _n=name: missing / _n,
@@ -467,7 +467,7 @@ def test_run_check_impl_shows_all_section_headers(monkeypatch, tmp_path):
     data_dir = tmp_path / "CrateDigger"
     data_dir.mkdir()
     (data_dir / "config.toml").write_text("")
-    (data_dir / "festivals.json").write_text("{}")
+    (data_dir / "places.json").write_text("{}")
     (data_dir / "artists.json").write_text("{}")
     (data_dir / "artist_mbids.json").write_text("{}")
     cookie_path = tmp_path / "state" / "1001tl-cookies.json"
@@ -478,8 +478,8 @@ def test_run_check_impl_shows_all_section_headers(monkeypatch, tmp_path):
         lambda: data_dir / "config.toml",
     )
     monkeypatch.setattr(
-        "festival_organizer.cli.paths.festivals_file",
-        lambda: data_dir / "festivals.json",
+        "festival_organizer.cli.paths.places_file",
+        lambda: data_dir / "places.json",
     )
     monkeypatch.setattr(
         "festival_organizer.cli.paths.artists_file",
@@ -739,10 +739,10 @@ def test_check_clean_install_reports_all_passed(monkeypatch, tmp_path):
         "[tracklists]\nemail = 'test@example.com'\npassword = 'secret'\n",
         encoding="utf-8",
     )
-    festivals_path = tmp_path / "festivals.json"
-    festivals_path.write_text("{}", encoding="utf-8")
+    places_path = tmp_path / "places.json"
+    places_path.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(paths, "config_file", lambda: config_path)
-    monkeypatch.setattr(paths, "festivals_file", lambda: festivals_path)
+    monkeypatch.setattr(paths, "places_file", lambda: places_path)
     # Optional assets absent
     monkeypatch.setattr(paths, "artists_file", lambda: tmp_path / "missing-artists.json")
     monkeypatch.setattr(paths, "artist_mbids_file", lambda: tmp_path / "missing-mbids.json")

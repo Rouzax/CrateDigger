@@ -90,8 +90,17 @@ def log_file() -> Path:
     return Path(platformdirs.user_log_dir(APP_NAME, appauthor=False)) / "cratedigger.log"
 
 
+def places_file() -> Path:
+    """Return the user-curated places.json path (primary, since 0.15.0)."""
+    return data_dir() / "places.json"
+
+
 def festivals_file() -> Path:
-    """Return the user-curated festivals.json path."""
+    """Return the user-curated festivals.json path.
+
+    Deprecated since 0.15.0: prefer places_file(). Kept for backward-compat
+    readers that still need to locate an existing legacy file.
+    """
     return data_dir() / "festivals.json"
 
 
