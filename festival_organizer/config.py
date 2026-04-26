@@ -12,6 +12,7 @@ Logging:
         - config.external_loaded (DEBUG): External JSON config loaded from path
         - config.external_not_found (DEBUG): External JSON not found in any candidate
         - config.invalid_kodi_port (WARNING): KODI_PORT env var is not a valid int
+        - config.deprecated_once (WARNING): Deprecated config surface used; logged once per key per process
     See docs/logging.md for full guidelines.
 """
 import json
@@ -27,6 +28,17 @@ from festival_organizer import paths
 from festival_organizer.normalization import strip_diacritics
 
 logger = logging.getLogger(__name__)
+
+
+_emitted_deprecations: set[str] = set()
+
+
+def _log_deprecated_once(key: str, message: str) -> None:
+    """Emit a WARNING-level deprecation log exactly once per process per key."""
+    if key in _emitted_deprecations:
+        return
+    _emitted_deprecations.add(key)
+    logger.warning(message)
 
 
 # Defaults for external config files (artists.json, festivals.json)
@@ -247,14 +259,42 @@ class Config:
             raw = {**raw, **self._data["festival_aliases"]}
         return _invert_alias_map(raw)
 
+    def _external_config_exists(self, filename: str) -> bool:
+        """Return True if ``filename`` is present in any candidate directory."""
+        candidates: list[Path] = []
+        if self._config_dir:
+            candidates.append(self._config_dir / filename)
+        candidates.append(paths.data_dir() / filename)
+        return any(p.exists() for p in candidates)
+
+    @property
+    def place_config(self) -> dict:
+        if self._external_config_exists("places.json"):
+            raw = self._load_external_config("places.json", {})
+        elif self._external_config_exists("festivals.json"):
+            _log_deprecated_once(
+                "festivals.json",
+                "festivals.json is deprecated, rename it to places.json. "
+                "Support for festivals.json will be removed in 1.0.0.",
+            )
+            raw = self._load_external_config("festivals.json", {})
+        else:
+            raw = self._load_external_config("places.json", {})
+        defaults = {k: v for k, v in raw.items()
+                    if not k.startswith("_") and isinstance(v, dict)}
+        overlay = self._data.get("place_config") or self._data.get("festival_config")
+        if overlay:
+            return {**defaults, **overlay}
+        return defaults
+
     @property
     def festival_config(self) -> dict:
-        defaults = self._load_external_config("festivals.json", {})
-        defaults = {k: v for k, v in defaults.items()
-                    if not k.startswith("_") and isinstance(v, dict)}
-        if "festival_config" in self._data:
-            return {**defaults, **self._data["festival_config"]}
-        return defaults
+        _log_deprecated_once(
+            "Config.festival_config",
+            "Config.festival_config is deprecated, use Config.place_config instead. "
+            "Support for Config.festival_config will be removed in 1.0.0.",
+        )
+        return self.place_config
 
     @property
     def all_known_editions(self) -> set[str]:
