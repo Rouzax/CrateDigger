@@ -1134,13 +1134,13 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
         analyzed = _analyse_parallel(videos, root, config)
         for _fp, mf in analyzed:
             if mf.festival:
-                display = config.get_festival_display(mf.festival, mf.edition)
+                display = config.get_place_display(mf.festival, mf.edition)
                 festivals_found.add(display)
 
     # Check logo availability for each festival
     logo_dirs = [
-        library_root / ".cratedigger" / "festivals",
-        paths.festivals_logo_dir(),
+        library_root / ".cratedigger" / "places",
+        paths.places_logo_dir(),
     ]
 
     def find_logo(festival: str) -> Path | None:
@@ -1173,11 +1173,11 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
         console.print()
 
     if missing_logo:
-        user_festivals = paths.festivals_logo_dir()
+        user_places = paths.places_logo_dir()
         console.print(f"[yellow]Missing curated logo ({len(missing_logo)}):[/yellow]")
         for fest in missing_logo:
-            lib_path = library_root / ".cratedigger" / "festivals" / fest
-            usr_path = user_festivals / fest
+            lib_path = library_root / ".cratedigger" / "places" / fest
+            usr_path = user_places / fest
             console.print(f"  {escape(fest)}")
             console.print(f"    [dim]-> place logo at: {escape(str(lib_path))}/logo.png[/dim]")
             console.print(f"    [dim]   or user-level: {escape(str(usr_path))}/logo.png[/dim]")

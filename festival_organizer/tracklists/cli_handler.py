@@ -65,10 +65,10 @@ def _build_search_expansion(config: Config) -> dict[str, str]:
     """Build {abbreviation: full_name} map for search query expansion.
 
     Only expands short uppercase abbreviations (AMF, ASOT, EDC) to their
-    full names. Does not modify festivals.json or affect file naming.
+    full names. Does not modify places.json or affect file naming.
     """
     expansion = {}
-    for alias, canon in config.festival_aliases.items():
+    for alias, canon in config.place_aliases.items():
         if alias == canon:
             continue
         short, long = (canon, alias) if len(canon) < len(alias) else (alias, canon)
@@ -194,7 +194,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         dj_name_set |= {g.lower() for g in config.artist_groups}
 
         source_name_set = source_cache.all_names_lower() if source_cache else set()
-        source_name_set |= {n.lower() for n in config.known_festivals}
+        source_name_set |= {n.lower() for n in config.known_places}
 
         # Process files
         stats = {"added": 0, "updated": 0, "up_to_date": 0, "skipped": 0,
