@@ -1140,3 +1140,30 @@ def test_organize_op_sidecars_moved_zero_when_none(tmp_path):
     result = op.execute(video, _make_mf())
     assert result.status == "done"
     assert op.sidecars_moved == 0
+
+
+# --- AlbumPosterOperation._classify_segment ---
+
+
+def test_classify_segment_recognizes_place():
+    assert AlbumPosterOperation._classify_segment("{place}{ edition}") == "festival"
+    assert AlbumPosterOperation._classify_segment("{place}") == "festival"
+
+
+def test_classify_segment_festival_token_still_works():
+    assert AlbumPosterOperation._classify_segment("{festival}{ edition}") == "festival"
+
+
+def test_classify_segment_artist_token():
+    # festival/place wins over artist when both tokens are present in a segment
+    assert AlbumPosterOperation._classify_segment("{artist}/{festival}") == "festival"
+    assert AlbumPosterOperation._classify_segment("{artist}/{place}") == "festival"
+    assert AlbumPosterOperation._classify_segment("{artist}") == "artist"
+
+
+def test_classify_segment_year_token():
+    assert AlbumPosterOperation._classify_segment("{year}") == "year"
+
+
+def test_classify_segment_default_to_artist():
+    assert AlbumPosterOperation._classify_segment("literal_text_no_tokens") == "artist"

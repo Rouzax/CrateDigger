@@ -302,7 +302,11 @@ class AlbumPosterOperation(Operation):
 
     @staticmethod
     def _classify_segment(segment: str) -> str:
-        """Classify a template segment by priority: festival > artist > year."""
+        """Classify a template segment by priority: place/festival > artist > year.
+
+        The {place} and {festival} tokens are interchangeable for classification purposes.
+        {festival} is the deprecated alias kept for backward compatibility through 1.0.0.
+        """
         if "{place}" in segment or "{festival}" in segment:
             return "festival"
         if "{artist}" in segment:
