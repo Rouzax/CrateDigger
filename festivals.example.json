@@ -13,7 +13,10 @@
     },
     "Awakenings": {},
     "Balaton Sound": {},
-    "Coachella": {},
+    "Coachella": {
+        "aliases": ["Coachella Festival"],
+        "color": "#f5ebdb"
+    },
     "Creamfields": {},
     "Dance Valley": {},
     "Decibel Outdoor": {},
