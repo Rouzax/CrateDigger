@@ -70,7 +70,6 @@ class OrganizeOperation(Operation):
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.executor import resolve_collision
-        import shutil
 
         target = resolve_collision(self.target, source=file_path)
         target.parent.mkdir(parents=True, exist_ok=True)

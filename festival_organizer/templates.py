@@ -77,7 +77,7 @@ def _build_values(media_file: MediaFile, config: Config, *, for_filename: bool =
     # Validate edition: only include if it matches a configured edition
     edition = ""
     if festival and media_file.edition:
-        fc = config.festival_config.get(festival, {})
+        fc = config.place_config.get(festival, {})
         known = [e.lower() for e in fc.get("editions", [])]
         if media_file.edition.lower() in known:
             edition = media_file.edition

@@ -41,7 +41,7 @@ def _log_deprecated_once(key: str, message: str) -> None:
     logger.warning(message)
 
 
-# Defaults for external config files (artists.json, festivals.json)
+# Defaults for external config files (artists.json, places.json)
 # Default config embedded so the tool works without a config file
 DEFAULT_CONFIG = {
     "default_layout": "artist_flat",
@@ -215,7 +215,7 @@ class Config:
     def _load_external_config(self, filename: str, defaults: dict) -> dict:
         """Load a curated JSON data file from library override or user data dir.
 
-        Curated data files (festivals.json, artists.json, artist_mbids.json)
+        Curated data files (places.json, artists.json, artist_mbids.json)
         stay JSON on purpose; only ``config.toml`` switched to TOML.
         """
         if filename in self._ext_cache:
