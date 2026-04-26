@@ -65,7 +65,7 @@ _CD_PACKAGES: list[str] = [
 # ``festival_organizer.paths`` so the probe follows platformdirs layout.
 _CD_ASSETS: list[tuple[str, Callable[[], Path], str, str]] = [
     ("config.toml",       lambda: paths.config_file(),       "user config",                "warning"),
-    ("festivals.json",    lambda: paths.festivals_file(),    "curated festival aliases",   "warning"),
+    ("places.json",       lambda: paths.places_file(),       "curated place aliases",      "warning"),
     ("artists.json",      lambda: paths.artists_file(),      "curated artist aliases",     "info"),
     ("artist_mbids.json", lambda: paths.artist_mbids_file(), "curated MBID overrides",     "info"),
 ]
