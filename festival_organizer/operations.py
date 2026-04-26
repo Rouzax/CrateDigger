@@ -21,7 +21,7 @@ import requests
 
 from festival_organizer import paths
 from festival_organizer.cache_ttl import hashed_jitter_factor
-from festival_organizer.config import Config
+from festival_organizer.config import Config, _log_deprecated_once
 from festival_organizer.fanart import lookup_mbid
 from festival_organizer.models import MediaFile
 
@@ -242,8 +242,8 @@ class AlbumPosterOperation(Operation):
         self.library_root = library_root
         self._ttl_days = ttl_days
         self._completed_folders: set[Path] = set()
-        self._logo_hits: dict[str, Path] = {}   # festival -> logo path
-        self._logo_misses: set[str] = set()      # festivals without curated logo
+        self._logo_hits: dict[str, Path] = {}   # place -> logo path
+        self._logo_misses: set[str] = set()      # places without curated logo
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         folder = file_path.parent
@@ -415,33 +415,49 @@ class AlbumPosterOperation(Operation):
             logger.debug("DJ artwork download failed for %s: %s", artist, e)
             return None
 
-    def _find_curated_logo(self, festival: str, edition: str = "") -> Path | None:
-        """Find curated festival logo from library or user-level folders.
+    def _find_curated_logo(self, place: str, edition: str = "") -> Path | None:
+        """Find curated logo for a place from library or user-level folders.
 
-        Tries edition-specific path first (e.g., festivals/EDC Las Vegas/logo.png),
-        then falls back to canonical (e.g., festivals/EDC/logo.png).
+        Library lookup prefers ``.cratedigger/places/<name>/`` and falls back to
+        the legacy ``.cratedigger/festivals/<name>/`` directory for backward
+        compatibility, emitting a one-shot deprecation warning when the legacy
+        path is used. Tries edition-specific path first (e.g.,
+        ``places/EDC Las Vegas/logo.png``), then falls back to canonical
+        (e.g., ``places/EDC/logo.png``).
         """
-        canonical = self.config.resolve_festival_alias(festival) if festival else ""
+        canonical = self.config.resolve_place_alias(place) if place else ""
         if not canonical:
             return None
 
-        # Build search names: edition-specific first, then canonical
         names = []
         if edition:
-            display = self.config.get_festival_display(canonical, edition)
+            display = self.config.get_place_display(canonical, edition)
             if display != canonical:
                 names.append(display)
         names.append(canonical)
 
         for name in names:
-            search_dirs: list[Path] = []
+            search_dirs: list[tuple[Path, bool]] = []
             if self.library_root:
-                search_dirs.append(self.library_root / ".cratedigger" / "festivals" / name)
-            search_dirs.append(paths.festivals_logo_dir() / name)
-            for d in search_dirs:
+                search_dirs.append(
+                    (self.library_root / ".cratedigger" / "places" / name, False)
+                )
+                search_dirs.append(
+                    (self.library_root / ".cratedigger" / "festivals" / name, True)
+                )
+            search_dirs.append((paths.festivals_logo_dir() / name, False))
+            for d, is_legacy in search_dirs:
                 for ext in ("jpg", "jpeg", "png", "webp"):
                     candidate = d / f"logo.{ext}"
                     if candidate.exists():
+                        if is_legacy:
+                            _log_deprecated_once(
+                                ".cratedigger/festivals dir",
+                                "Curated logo found under .cratedigger/festivals/; "
+                                "this directory is deprecated, move logos to "
+                                ".cratedigger/places/. Support for "
+                                ".cratedigger/festivals/ will be removed in 1.0.0.",
+                            )
                         logger.info("Curated logo: %s", candidate)
                         return candidate
         return None
@@ -522,17 +538,17 @@ class AlbumPosterOperation(Operation):
             bg = self._try_background_source(source, folder, media_file)
             if source == "curated_logo":
                 tried_curated = True
-                if bg and media_file.festival:
-                    display = self.config.get_festival_display(
-                        media_file.festival, media_file.edition)
+                if bg and media_file.place:
+                    display = self.config.get_place_display(
+                        media_file.place, media_file.edition)
                     self._logo_hits[display] = bg
             if bg:
                 logger.info("Album poster: using %s", source)
                 return bg, source
             logger.debug("Album poster: %s not available", source)
-        if tried_curated and media_file.festival:
-            display = self.config.get_festival_display(
-                media_file.festival, media_file.edition)
+        if tried_curated and media_file.place:
+            display = self.config.get_place_display(
+                media_file.place, media_file.edition)
             if display not in self._logo_hits:
                 self._logo_misses.add(display)
         return None, ""
@@ -541,7 +557,7 @@ class AlbumPosterOperation(Operation):
                                 media_file: MediaFile) -> Path | None:
         """Try a single background source. Returns path or None."""
         if source == "curated_logo":
-            return self._find_curated_logo(media_file.festival, media_file.edition)
+            return self._find_curated_logo(media_file.place, media_file.edition)
         elif source == "dj_artwork":
             return self._find_dj_artwork(folder)
         elif source == "fanart_tv":
@@ -632,19 +648,22 @@ class AlbumPosterOperation(Operation):
         lines: list[str] = []
         if self._logo_hits:
             lines.append(f"Curated logos used: {len(self._logo_hits)}")
-            for fest, path in sorted(self._logo_hits.items()):
-                lines.append(f"  {fest}: {path}")
+            for place, path in sorted(self._logo_hits.items()):
+                lines.append(f"  {place}: {path}")
         if self._logo_misses:
             lines.append(f"Missing curated logos: {len(self._logo_misses)}")
-            for fest in sorted(self._logo_misses):
-                lines.append(f"  {fest}")
-        # Check for unmatched folders in .cratedigger/festivals/
+            for place in sorted(self._logo_misses):
+                lines.append(f"  {place}")
         if self.library_root:
-            festivals_dir = self.library_root / ".cratedigger" / "festivals"
-            if festivals_dir.is_dir():
-                known = set(self._logo_hits.keys()) | self._logo_misses
-                for d in sorted(festivals_dir.iterdir()):
-                    if d.is_dir() and d.name not in known:
+            known = set(self._logo_hits.keys()) | self._logo_misses
+            seen_dirs: set[str] = set()
+            for sub in ("places", "festivals"):
+                logo_root = self.library_root / ".cratedigger" / sub
+                if not logo_root.is_dir():
+                    continue
+                for d in sorted(logo_root.iterdir()):
+                    if d.is_dir() and d.name not in known and d.name not in seen_dirs:
+                        seen_dirs.add(d.name)
                         lines.append(f"  Unmatched folder: {d.name}")
         return lines
 
