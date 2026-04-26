@@ -13,6 +13,15 @@ from festival_organizer.operations import OperationResult
 from tests.conftest import TEST_CONFIG
 
 
+def test_layout_enum_includes_place_and_festival_names():
+    """The --layout flag accepts both new place_* names and deprecated festival_* aliases."""
+    from festival_organizer.cli import Layout
+
+    values = {layout.value for layout in Layout}
+    assert {"artist_flat", "place_flat", "festival_flat",
+            "artist_nested", "place_nested", "festival_nested"} <= values
+
+
 def test_version_flag_prints_version_and_exits():
     """--version should print the installed version and exit 0."""
     from typer.testing import CliRunner

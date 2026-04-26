@@ -86,8 +86,10 @@ DebugOpt = Annotated[bool, typer.Option("--debug", help="Show cache hits, retrie
 
 class Layout(StrEnum):
     artist_flat = "artist_flat"
+    place_flat = "place_flat"
     festival_flat = "festival_flat"
     artist_nested = "artist_nested"
+    place_nested = "place_nested"
     festival_nested = "festival_nested"
 
 
