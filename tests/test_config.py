@@ -2,7 +2,10 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from festival_organizer.config import Config, DEFAULT_CONFIG, load_config
+from festival_organizer.models import MediaFile
 from tests.conftest import TEST_CONFIG
 
 
@@ -721,3 +724,49 @@ def test_artist_groups_loads_dj_cache_once(monkeypatch):
     assert len(init_calls) == 1, (
         f"expected DjCache to be constructed once, got {len(init_calls)}"
     )
+
+
+@pytest.fixture
+def cfg_with_places(tmp_path):
+    (tmp_path / "places.json").write_text(
+        '{"Tomorrowland": {"aliases": ["TML"]}, '
+        '"Alexandra Palace": {"aliases": ["alexandra palace, london"]}}'
+    )
+    return Config({}, config_dir=tmp_path)
+
+
+def test_resolve_place_chain_festival(cfg_with_places):
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"), festival="Tomorrowland")
+    name, kind = cfg_with_places.resolve_place_for_media(mf)
+    assert (name, kind) == ("Tomorrowland", "festival")
+
+
+def test_resolve_place_chain_venue_canonical(cfg_with_places):
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"), venue="Alexandra Palace")
+    name, kind = cfg_with_places.resolve_place_for_media(mf)
+    assert (name, kind) == ("Alexandra Palace", "venue")
+
+
+def test_resolve_place_chain_venue_raw(cfg_with_places):
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"), venue="Some Uncurated Bar")
+    name, kind = cfg_with_places.resolve_place_for_media(mf)
+    assert (name, kind) == ("Some Uncurated Bar", "venue")
+
+
+def test_resolve_place_chain_location_resolves_through_alias(cfg_with_places):
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"), location="alexandra palace, london")
+    name, kind = cfg_with_places.resolve_place_for_media(mf)
+    assert (name, kind) == ("Alexandra Palace", "location")
+
+
+def test_resolve_place_chain_location_raw(cfg_with_places):
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
+                   location="Random Bar, Berlin, Germany")
+    name, kind = cfg_with_places.resolve_place_for_media(mf)
+    assert (name, kind) == ("Random Bar, Berlin, Germany", "location")
+
+
+def test_resolve_place_chain_artist_fallback(cfg_with_places):
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"), artist="Fred again..")
+    name, kind = cfg_with_places.resolve_place_for_media(mf)
+    assert (name, kind) == ("Fred again..", "artist")
