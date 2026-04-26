@@ -50,7 +50,7 @@ nav:
       - Enrich: commands/enrich.md
       - Audit Logos: commands/audit-logos.md
   - Configuration: configuration.md
-  - Festivals: festivals.md
+  - Places: places.md
   - 1001Tracklists: tracklists.md
   - Tag reference: tag-reference.md
   - Library layout: library-layout.md
