@@ -16,7 +16,7 @@ You can also pass an explicit path with `--config <path>` on any command. This a
 
 ### Custom data directory
 
-Set the `CRATEDIGGER_DATA_DIR` environment variable to read and write the visible data folder (config, festivals, artists, logos) from a different location, for example a shared volume or an external drive. Both CrateDigger and TrackSplit honour this variable, so pointing them at the same path keeps them aligned. The directory must already exist; CrateDigger does not create it. If you want your existing data there, move or copy it yourself before setting the variable. CrateDigger falls back to the platform default when the variable is unset, empty, or points at a missing or non-directory path.
+Set the `CRATEDIGGER_DATA_DIR` environment variable to read and write the visible data folder (config, places, artists, logos) from a different location, for example a shared volume or an external drive. Both CrateDigger and TrackSplit honour this variable, so pointing them at the same path keeps them aligned. The directory must already exist; CrateDigger does not create it. If you want your existing data there, move or copy it yourself before setting the variable. CrateDigger falls back to the platform default when the variable is unset, empty, or points at a missing or non-directory path.
 
 If you have cloned the CrateDigger repository into `~/CrateDigger/` on Linux or the equivalent default folder on other platforms, CrateDigger will warn at startup that the data folder appears to be a source checkout. Set `CRATEDIGGER_DATA_DIR` to a separate dedicated folder to resolve the warning and keep your curated data files away from the repository.
 
@@ -33,7 +33,7 @@ If you have cloned the CrateDigger repository into `~/CrateDigger/` on Linux or 
     ```
 
 !!! note "Caches and logs live in separate platform directories"
-    `CRATEDIGGER_DATA_DIR` only controls the visible data folder (config, festivals, artists, logos). Caches (`dj_cache.json`, `mbid_cache.json`, artist artwork) and logs follow standard platform conventions and are not affected by this variable. On Linux, they live under `~/.cache/CrateDigger/` and `~/.local/state/CrateDigger/log/` respectively. If you need to relocate those as well, set the standard `XDG_CACHE_HOME` or `XDG_STATE_HOME` environment variables. Note that these apply system-wide to all XDG-aware applications, and platformdirs appends `CrateDigger/` automatically, so `XDG_CACHE_HOME=/data/cache` results in `/data/cache/CrateDigger/`.
+    `CRATEDIGGER_DATA_DIR` only controls the visible data folder (config, places, artists, logos). Caches (`dj_cache.json`, `mbid_cache.json`, artist artwork) and logs follow standard platform conventions and are not affected by this variable. On Linux, they live under `~/.cache/CrateDigger/` and `~/.local/state/CrateDigger/log/` respectively. If you need to relocate those as well, set the standard `XDG_CACHE_HOME` or `XDG_STATE_HOME` environment variables. Note that these apply system-wide to all XDG-aware applications, and platformdirs appends `CrateDigger/` automatically, so `XDG_CACHE_HOME=/data/cache` results in `/data/cache/CrateDigger/`.
 
 ## Getting a starter config
 
@@ -78,7 +78,7 @@ Or, if you have cloned the repository:
 default_layout = "artist_flat"
 ```
 
-The folder layout used by `organize` when `--layout` is not specified. Available values: `artist_flat`, `festival_flat`, `artist_nested`, `festival_nested`. See [Organize: layouts](commands/organize.md#layouts) for what each looks like.
+The folder layout used by `organize` when `--layout` is not specified. Available values: `artist_flat`, `place_flat`, `artist_nested`, `place_nested`. The older names `festival_flat` and `festival_nested` are deprecated aliases for `place_flat` and `place_nested`; they continue to work until 1.0.0 but log a one-shot deprecation warning. See [Organize: layouts](commands/organize.md#layouts) for what each looks like.
 
 ### Layouts
 
@@ -87,30 +87,34 @@ The folder layout used by `organize` when `--layout` is not specified. Available
 festival_set = "{artist}"
 concert_film = "{artist}"
 
-[layouts.festival_flat]
-festival_set = "{festival}{ edition}"
+[layouts.place_flat]
+festival_set = "{place}{ edition}"
 concert_film = "{artist}"
 
 [layouts.artist_nested]
-festival_set = "{artist}/{festival}{ edition}/{year}"
+festival_set = "{artist}/{place}{ edition}/{year}"
 concert_film = "{artist}/{year} - {title}"
 
-[layouts.festival_nested]
-festival_set = "{festival}{ edition}/{year}/{artist}"
+[layouts.place_nested]
+festival_set = "{place}{ edition}/{year}/{artist}"
 concert_film = "{artist}/{year} - {title}"
 ```
 
-Folder path templates for each layout and content type. See [Organize: template syntax](commands/organize.md#filename-template-syntax) for how optional tokens work.
+Folder path templates for each layout and content type. The `{place}` token resolves to the canonical name of the festival, club, or venue associated with the set. See [Organize: template syntax](commands/organize.md#filename-template-syntax) for how optional tokens work.
+
+**Deprecated layout names:** `festival_flat` and `festival_nested` are aliases for `place_flat` and `place_nested`. They resolve to the same layouts and use the same templates. If you have customised a `[layouts.festival_flat]` or `[layouts.festival_nested]` section in your config, CrateDigger uses your custom section unchanged and logs a one-shot deprecation warning. Support for the deprecated names will be removed in 1.0.0.
 
 ### Filename templates
 
 ```toml
 [filename_templates]
-festival_set = "{year} - {artist} - {festival}{ edition}{ [stage]}{ - set_title}"
+festival_set = "{year} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}"
 concert_film = "{artist} - {title}{ (year)}"
 ```
 
-Templates for generated filenames. The original file extension is preserved automatically. See [Organize: template syntax](commands/organize.md#filename-template-syntax) for field names and optional token syntax.
+Templates for generated filenames. The original file extension is preserved automatically. The `{ - place}` token is optional: it is included only when a place name is available. See [Organize: template syntax](commands/organize.md#filename-template-syntax) for field names and optional token syntax.
+
+**Template tokens:** `{place}` is the primary routing token for the associated festival, club, or venue. The older `{festival}` token continues to work as a deprecated alias rendering the same value, and will be removed in 1.0.0.
 
 ### Content type rules
 
@@ -145,19 +149,21 @@ File extensions recognized as media files, grouped by type. Add extensions here 
 ```toml
 [fallback_values]
 unknown_artist = "Unknown Artist"
-unknown_festival = "_Needs Review"
+unknown_place = "_Needs Review"
 unknown_year = "Unknown Year"
 unknown_title = "Unknown Title"
 ```
 
 Placeholder values used in folder and filename templates when metadata is missing. `_Needs Review` sorts near the top in most file managers, making unclassified files easy to find.
 
+**Deprecated key:** `unknown_festival` is a deprecated alias for `unknown_place`. If you set `unknown_festival` without also setting `unknown_place`, CrateDigger copies your value into `unknown_place` and logs a one-shot deprecation warning. Setting `unknown_place` directly is preferred. Support for `unknown_festival` will be removed in 1.0.0.
+
 ### Poster settings
 
 ```toml
 [poster_settings]
 artist_background_priority = ["dj_artwork", "fanart_tv", "gradient"]
-festival_background_priority = ["curated_logo", "gradient"]
+place_background_priority = ["curated_logo", "gradient"]
 year_background_priority = ["gradient"]
 ```
 
@@ -167,8 +173,12 @@ Priority chains for poster background image selection. CrateDigger tries each so
 |--------|-------------|
 | `dj_artwork` | DJ photo from 1001Tracklists (embedded during identify) |
 | `fanart_tv` | Artist artwork from fanart.tv |
-| `curated_logo` | Hand-placed festival logo (see [audit-logos](commands/audit-logos.md)) |
+| `curated_logo` | Hand-placed place logo (see [audit-logos](commands/audit-logos.md)) |
 | `gradient` | Color gradient generated from metadata (always available) |
+
+`place_background_priority` controls background selection for festival sets routed by a named place (festival, club, or venue). When the set has no linked place, the `artist_background_priority` chain is used instead, so the poster comes out as a proper artist poster rather than a plain gradient.
+
+**Deprecated key:** `festival_background_priority` is a deprecated alias for `place_background_priority`. If you set `festival_background_priority` without also setting `place_background_priority`, CrateDigger copies your value into `place_background_priority` and logs a one-shot deprecation warning. Support for `festival_background_priority` will be removed in 1.0.0.
 
 ### Tracklists
 
@@ -291,9 +301,13 @@ Three JSON files can live alongside your `config.toml` and control name resoluti
 | macOS | `~/CrateDigger/` |
 | Windows | `Documents\CrateDigger\` |
 
-### festivals.json
+### places.json
 
-Controls festival name recognition, aliases, and editions. CrateDigger includes built-in festival knowledge. To add your own festivals or customize aliases, place a `festivals.json` in the folder above. See [Festivals](festivals.md) for the file format and how to add entries.
+Controls place name recognition, aliases, and editions. Places include festivals, clubs, venues, and any other named entities that host DJ sets in your library. CrateDigger includes built-in place knowledge. To add your own entries or customize aliases, place a `places.json` in the folder above. See [Places](places.md) for the file format and how to add entries.
+
+**Curated assets directory:** logo and background images for each place go in `.cratedigger/places/<canonical-name>/logo.png` inside your library, or `.cratedigger/places/<canonical-name>/<edition>/logo.png` for edition-specific logos. CrateDigger also checks the old `.cratedigger/festivals/<name>/` path as a fallback and logs a one-shot deprecation notice on first use.
+
+**Deprecated file:** `festivals.json` is a deprecated alias for `places.json`. When `places.json` is absent, CrateDigger reads `festivals.json` instead and logs a one-shot deprecation warning. Rename the file to `places.json` when you are ready to migrate. Support for `festivals.json` will be removed in 1.0.0.
 
 ### artists.json {#artist-aliases}
 
@@ -357,7 +371,7 @@ See [enrich: chapter_artist_mbids](commands/enrich.md#chapter_artist_mbids-per-t
 
 | Variable | Overrides |
 |----------|-----------|
-| `CRATEDIGGER_DATA_DIR` | Default data directory for config, festivals, artists, and logos. Must point at an existing directory. See [Custom data directory](#custom-data-directory). |
+| `CRATEDIGGER_DATA_DIR` | Default data directory for config, places, artists, and logos. Must point at an existing directory. See [Custom data directory](#custom-data-directory). |
 | `TRACKLISTS_EMAIL` | `tracklists.email` |
 | `TRACKLISTS_PASSWORD` | `tracklists.password` |
 | `FANART_PROJECT_API_KEY` | Built-in fanart.tv project key |
