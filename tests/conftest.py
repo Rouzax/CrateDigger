@@ -26,17 +26,17 @@ def make_mediafile(*, place: str | None = None, place_kind: str | None = None, *
     mf = MediaFile(**kwargs)
     if place is not None:
         mf.place = place
-    elif mf.festival:
-        mf.place = mf.festival
+    elif mf.festival.strip():
+        mf.place = mf.festival.strip()
         mf.place_kind = "festival"
-    elif mf.venue:
-        mf.place = mf.venue
+    elif mf.venue.strip():
+        mf.place = mf.venue.strip()
         mf.place_kind = "venue"
-    elif mf.location:
-        mf.place = mf.location
+    elif mf.location.strip():
+        mf.place = mf.location.strip()
         mf.place_kind = "location"
-    elif mf.artist:
-        mf.place = mf.artist
+    elif mf.artist.strip():
+        mf.place = mf.artist.strip()
         mf.place_kind = "artist"
     if place_kind is not None:
         mf.place_kind = place_kind

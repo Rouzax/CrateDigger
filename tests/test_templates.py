@@ -160,6 +160,42 @@ def test_render_folder_unknown_content():
     assert "_Needs Review" in result
 
 
+def test_render_folder_falls_back_to_unknown_place_when_all_empty():
+    """A festival_set with empty festival/venue/location/artist falls back to _Needs Review.
+
+    This is the degenerate case where 1001Tracklists yielded no usable
+    routing data. The chain in resolve_place_for_media returns ("", ""),
+    leaving mf.place empty. The {place} slot then renders the unknown_place
+    fallback (_Needs Review by default).
+    """
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        festival="",
+        venue="",
+        location="",
+        artist="",
+        year="2024",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG, layout_name="place_flat")
+    assert "_Needs Review" in result
+
+
+def test_render_folder_falls_back_to_unknown_place_when_all_whitespace():
+    """Whitespace-only routing fields produce the same _Needs Review folder."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        festival="   ",
+        venue="\t",
+        location=" ",
+        artist="",
+        year="2024",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG, layout_name="place_flat")
+    assert "_Needs Review" in result
+
+
 def test_render_folder_uses_primary_artist_not_display():
     """Folder path uses primary artist, never display_artist."""
     mf = make_mediafile(
