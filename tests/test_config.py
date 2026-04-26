@@ -387,6 +387,34 @@ def test_external_config_warns_on_malformed(tmp_path, caplog):
     )
 
 
+def test_places_json_loads_when_present(tmp_path):
+    (tmp_path / "places.json").write_text('{"Printworks": {"color": "#000"}}')
+    cfg = Config({}, config_dir=tmp_path)
+    assert "Printworks" in cfg.place_config
+
+
+def test_festivals_json_falls_back_when_no_places(tmp_path, caplog):
+    import logging
+    from festival_organizer import config as config_mod
+    config_mod._emitted_deprecations.discard("festivals.json")
+    (tmp_path / "festivals.json").write_text('{"Tomorrowland": {"color": "#9B1B5A"}}')
+    with patch("festival_organizer.config.paths") as mock_paths:
+        mock_paths.data_dir.return_value = tmp_path / "nonexistent_user_data"
+        with caplog.at_level(logging.WARNING, logger="festival_organizer.config"):
+            cfg = Config({}, config_dir=tmp_path)
+            assert "Tomorrowland" in cfg.place_config
+    assert any("festivals.json" in r.getMessage() and "deprecat" in r.getMessage().lower()
+               for r in caplog.records)
+
+
+def test_places_wins_when_both_present(tmp_path):
+    (tmp_path / "places.json").write_text('{"Printworks": {}}')
+    (tmp_path / "festivals.json").write_text('{"Tomorrowland": {}}')
+    cfg = Config({}, config_dir=tmp_path)
+    assert "Printworks" in cfg.place_config
+    assert "Tomorrowland" not in cfg.place_config
+
+
 def test_resolve_artist_alias():
     config = Config({"artist_aliases": {"Dimitri Vegas & Like Mike": ["DVLM"], "Martin Garrix": ["Area21"]}})
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
