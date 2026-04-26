@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch, MagicMock
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
@@ -8,9 +9,11 @@ from festival_organizer.operations import (
 from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
 
 
-def _make_mf(**kwargs):
-    defaults = dict(source_path=Path("test.mkv"), artist="Test",
-                    festival="TML", year="2024", content_type="festival_set")
+def _make_mf(**kwargs: Any) -> MediaFile:
+    defaults: dict[str, Any] = dict(
+        source_path=Path("test.mkv"), artist="Test",
+        festival="TML", year="2024", content_type="festival_set",
+    )
     defaults.update(kwargs)
     return MediaFile(**defaults)
 
