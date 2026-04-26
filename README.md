@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="GPL-3.0">
-  <img src="https://img.shields.io/badge/version-v0.12.3-orange" alt="v0.12.3">
+  <img src="https://img.shields.io/badge/version-v0.15.0-orange" alt="v0.15.0">
 </p>
 
 <p align="center"><em>Festival set & concert library manager. Organize, enrich, and curate your collection with professional artwork, metadata, and chapter markers.</em></p>

@@ -48,14 +48,21 @@ audio = [".mp3", ".m4a", ".flac", ".wav", ".aac", ".ogg", ".opus"]
 # Placeholder values when metadata is missing.
 [fallback_values]
 unknown_artist = "Unknown Artist"
-unknown_festival = "_Needs Review"
+# unknown_place is the folder name used when a set cannot be matched to any
+# known place (festival, venue, club, etc.). Deprecated alias: unknown_festival
+# still works through 1.0.0; unknown_place takes priority if both are set.
+unknown_place = "_Needs Review"
 unknown_year = "Unknown Year"
 unknown_title = "Unknown Title"
 
 # Background image priority chains for poster generation.
 [poster_settings]
 artist_background_priority = ["dj_artwork", "fanart_tv", "gradient"]
-festival_background_priority = ["curated_logo", "gradient"]
+# place_background_priority sets the order CrateDigger tries when generating
+# a poster background for a place folder (festival, venue, club, etc.).
+# Deprecated alias: festival_background_priority still works through 1.0.0;
+# place_background_priority takes priority if both are set.
+place_background_priority = ["curated_logo", "gradient"]
 year_background_priority = ["gradient"]
 
 # 1001Tracklists credentials for chapter embedding. Optional.
