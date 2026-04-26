@@ -1,14 +1,17 @@
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 from festival_organizer.embed_tags import embed_tags
 from festival_organizer.models import MediaFile
 
 
-def _make_mf(**kwargs):
-    defaults = dict(source_path=Path("test.mkv"), artist="Test",
-                    festival="TML", year="2024", content_type="festival_set")
+def _make_mf(**kwargs: Any) -> MediaFile:
+    defaults: dict[str, Any] = dict(
+        source_path=Path("test.mkv"), artist="Test",
+        festival="TML", year="2024", content_type="festival_set",
+    )
     defaults.update(kwargs)
     return MediaFile(**defaults)
 
