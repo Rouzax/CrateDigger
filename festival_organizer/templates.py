@@ -13,7 +13,7 @@ from festival_organizer.normalization import safe_filename
 
 # All known placeholder field names used in templates.
 _KNOWN_FIELDS = frozenset({
-    "artist", "festival", "year", "date",
+    "artist", "festival", "place", "year", "date",
     "edition", "stage", "set_title", "title",
 })
 
@@ -87,16 +87,10 @@ def _build_values(media_file: MediaFile, config: Config, *, for_filename: bool =
     if for_filename and media_file.display_artist:
         artist = media_file.display_artist
 
-    # For folder paths, fall back to artist when festival is empty.
-    # Standalone sets (no festival) should be grouped under the artist folder
-    # rather than a fallback like "_Needs Review".
-    folder_festival = festival
-    if not for_filename and not festival and artist:
-        folder_festival = artist
-
     return {
         "artist": safe_filename(artist),
-        "festival": safe_filename(folder_festival),
+        "festival": safe_filename(media_file.place),
+        "place": safe_filename(media_file.place),
         "year": media_file.year,
         "date": media_file.date,
         "edition": safe_filename(edition),
