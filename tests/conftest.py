@@ -6,6 +6,40 @@ import pytest
 
 from festival_organizer import config as _config_module
 from festival_organizer.config import DEFAULT_CONFIG
+from festival_organizer.models import MediaFile
+
+
+def make_mediafile(*, place: str | None = None, place_kind: str | None = None, **kwargs) -> MediaFile:
+    """Construct a MediaFile and auto-populate ``place`` / ``place_kind`` for tests.
+
+    Production code populates ``mf.place`` and ``mf.place_kind`` in
+    ``analyzer.py`` via ``Config.resolve_place_for_media(mf)`` after MediaFile
+    construction. Tests that bypass the analyzer use this helper to mimic that
+    auto-population so the templates engine (which routes via ``mf.place``) sees
+    a non-empty value.
+
+    The chain mirrors ``Config.resolve_place_for_media``:
+    festival -> venue -> location -> artist. Pass ``place=`` and/or
+    ``place_kind=`` explicitly to override.
+    """
+    mf = MediaFile(**kwargs)
+    if place is not None:
+        mf.place = place
+    elif mf.festival:
+        mf.place = mf.festival
+        mf.place_kind = "festival"
+    elif mf.venue:
+        mf.place = mf.venue
+        mf.place_kind = "venue"
+    elif mf.location:
+        mf.place = mf.location
+        mf.place_kind = "location"
+    elif mf.artist:
+        mf.place = mf.artist
+        mf.place_kind = "artist"
+    if place_kind is not None:
+        mf.place_kind = place_kind
+    return mf
 
 
 @pytest.fixture(autouse=True)

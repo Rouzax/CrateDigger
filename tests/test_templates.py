@@ -2,7 +2,7 @@ from pathlib import Path
 from festival_organizer.templates import render_folder, render_filename, _render
 from festival_organizer.config import Config
 from festival_organizer.models import MediaFile
-from tests.conftest import TEST_CONFIG
+from tests.conftest import TEST_CONFIG, make_mediafile
 
 CFG = Config(TEST_CONFIG)
 
@@ -23,7 +23,7 @@ def test_render_folder_artist_flat_festival():
 
 
 def test_render_folder_artist_nested_festival():
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         festival="AMF",
@@ -47,7 +47,7 @@ def test_render_folder_artist_nested_concert():
 
 
 def test_render_folder_festival_nested():
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Hardwell",
         festival="Tomorrowland",
@@ -61,7 +61,7 @@ def test_render_folder_festival_nested():
 
 def test_render_folder_festival_flat_festival_set():
     """festival_flat layout: festival sets go into {festival}{edition}/."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         festival="Tomorrowland",
@@ -74,7 +74,7 @@ def test_render_folder_festival_flat_festival_set():
 
 def test_render_folder_festival_flat_with_edition():
     """festival_flat layout: edition appended when configured."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Alok",
         festival="Tomorrowland",
@@ -100,7 +100,7 @@ def test_render_folder_festival_flat_concert_film():
 
 
 def test_render_folder_with_edition_in_nested():
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Alok",
         festival="Tomorrowland",
@@ -114,7 +114,7 @@ def test_render_folder_with_edition_in_nested():
 
 def test_render_folder_edition_collapses_when_empty():
     """Edition collapses cleanly in folder paths when not present."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         festival="AMF",
@@ -127,7 +127,7 @@ def test_render_folder_edition_collapses_when_empty():
 
 def test_render_folder_edition_collapses_when_unknown():
     """Unknown editions are not included in folder paths."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Hardwell",
         festival="AMF",
@@ -162,7 +162,7 @@ def test_render_folder_unknown_content():
 
 def test_render_folder_uses_primary_artist_not_display():
     """Folder path uses primary artist, never display_artist."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         display_artist="Martin Garrix & Alesso",
@@ -180,7 +180,7 @@ def test_render_folder_uses_primary_artist_not_display():
 
 
 def test_render_filename_festival_set():
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         festival="AMF",
@@ -193,7 +193,7 @@ def test_render_filename_festival_set():
 
 
 def test_render_filename_with_set_title():
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Hardwell",
         festival="Tomorrowland",
@@ -208,7 +208,7 @@ def test_render_filename_with_set_title():
 
 
 def test_render_filename_with_stage():
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Hardwell",
         festival="Tomorrowland",
@@ -223,7 +223,7 @@ def test_render_filename_with_stage():
 
 
 def test_render_filename_with_stage_and_set_title():
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Hardwell",
         festival="Tomorrowland",
@@ -240,7 +240,7 @@ def test_render_filename_with_stage_and_set_title():
 
 def test_render_filename_stage_empty_collapses():
     """When stage is empty, brackets and surrounding space collapse."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         festival="AMF",
@@ -255,7 +255,7 @@ def test_render_filename_stage_empty_collapses():
 
 def test_render_filename_no_optional_fields():
     """No stage, no set_title, no edition: clean output."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         festival="AMF",
@@ -269,7 +269,7 @@ def test_render_filename_no_optional_fields():
 
 def test_render_filename_uses_display_artist():
     """Filename uses display_artist (full B2B name), not artist (primary)."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         display_artist="Martin Garrix & Alesso",
@@ -284,7 +284,7 @@ def test_render_filename_uses_display_artist():
 
 def test_render_filename_display_artist_empty_falls_back():
     """When display_artist is empty, filename falls back to artist."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         display_artist="",
@@ -310,7 +310,7 @@ def test_render_filename_missing_values_uses_fallbacks():
 
 def test_render_filename_edition_collapses_when_not_configured():
     """Edition for a festival without configured editions is omitted."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         festival="AMF",
@@ -433,7 +433,7 @@ def test_render_filename_no_festival_collapses():
 
 def test_render_filename_with_festival_unchanged():
     """Normal festival set: festival still renders with separator."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         festival="AMF",
@@ -445,56 +445,55 @@ def test_render_filename_with_festival_unchanged():
     assert result == "2024 - Martin Garrix - AMF.mkv"
 
 
-def test_render_folder_festival_flat_no_festival_falls_back_to_artist():
-    """festival_flat with no festival: folder falls back to artist."""
-    mf = MediaFile(
+def test_festival_set_routes_by_festival():
+    """place_kind="festival": folder routes by canonical festival name."""
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
-        artist="FISHER",
-        festival="",
-        year="2026",
-        content_type="festival_set",
-    )
-    result = render_folder(mf, CFG, layout_name="festival_flat")
-    assert result == "FISHER"
-
-
-def test_render_folder_festival_nested_no_festival_falls_back_to_artist():
-    """festival_nested with no festival: festival segment uses artist."""
-    mf = MediaFile(
-        source_path=Path("test.mkv"),
-        artist="FISHER",
-        festival="",
-        year="2026",
-        content_type="festival_set",
-    )
-    result = render_folder(mf, CFG, layout_name="festival_nested")
-    assert result == "FISHER/2026/FISHER"
-
-
-def test_render_folder_artist_nested_no_festival_falls_back_to_artist():
-    """artist_nested with no festival: festival segment uses artist."""
-    mf = MediaFile(
-        source_path=Path("test.mkv"),
-        artist="FISHER",
-        festival="",
-        year="2026",
-        content_type="festival_set",
-    )
-    result = render_folder(mf, CFG, layout_name="artist_nested")
-    assert result == "FISHER/FISHER/2026"
-
-
-def test_render_folder_festival_flat_with_festival_unchanged():
-    """festival_flat with festival: no change to existing behavior."""
-    mf = MediaFile(
-        source_path=Path("test.mkv"),
-        artist="Martin Garrix",
+        artist="Armin van Buuren",
         festival="Tomorrowland",
         year="2024",
         content_type="festival_set",
     )
     result = render_folder(mf, CFG, layout_name="festival_flat")
     assert result == "Tomorrowland"
+
+
+def test_no_festival_routes_by_venue():
+    """place_kind="venue": folder routes by canonical venue name."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Fred again..",
+        venue="Alexandra Palace",
+        year="2024",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG, layout_name="festival_flat")
+    assert result == "Alexandra Palace"
+
+
+def test_no_festival_no_venue_routes_by_location():
+    """place_kind="location": folder routes by free-form location string."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="DJ Example",
+        location="Random Bar, Berlin, Germany",
+        year="2024",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG, layout_name="festival_flat")
+    assert result == "Random Bar, Berlin, Germany"
+
+
+def test_no_routing_info_falls_back_to_artist():
+    """place_kind="artist": folder falls back to the artist name."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="FISHER",
+        year="2026",
+        content_type="festival_set",
+    )
+    result = render_folder(mf, CFG, layout_name="festival_flat")
+    assert result == "FISHER"
 
 
 # --- {place} token (T7) ---
