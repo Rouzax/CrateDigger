@@ -480,6 +480,56 @@ def test_festival_aliases_still_works_emits_deprecation(tmp_path, caplog):
     assert any("festival_aliases" in r.getMessage() for r in caplog.records)
 
 
+def test_place_background_priority_default():
+    cfg = Config({})
+    assert cfg.poster_settings["place_background_priority"] == ["curated_logo", "gradient"]
+
+
+def test_festival_background_priority_still_readable_with_deprecation(caplog):
+    import logging
+    caplog.set_level(logging.WARNING)
+    cfg = Config({"poster_settings": {"festival_background_priority": ["gradient"]}})
+    assert cfg.poster_settings["place_background_priority"] == ["gradient"]
+    assert any("festival_background_priority" in r.getMessage() for r in caplog.records)
+
+
+def test_unknown_place_default():
+    cfg = Config({})
+    assert cfg.fallback_values["unknown_place"] == "_Needs Review"
+
+
+def test_unknown_festival_still_readable_with_deprecation(caplog):
+    import logging
+    caplog.set_level(logging.WARNING)
+    cfg = Config({"fallback_values": {"unknown_festival": "_Custom"}})
+    assert cfg.fallback_values["unknown_place"] == "_Custom"
+    assert any("unknown_festival" in r.getMessage() for r in caplog.records)
+
+
+def test_place_background_priority_user_value_wins_no_deprecation(caplog):
+    """If user TOML sets BOTH keys, new wins and no deprecation log fires."""
+    import logging
+    caplog.set_level(logging.WARNING)
+    cfg = Config({"poster_settings": {
+        "festival_background_priority": ["gradient"],
+        "place_background_priority": ["curated_logo"],
+    }})
+    assert cfg.poster_settings["place_background_priority"] == ["curated_logo"]
+    assert not any("festival_background_priority" in r.getMessage() for r in caplog.records)
+
+
+def test_unknown_place_user_value_wins_no_deprecation(caplog):
+    """If user TOML sets BOTH keys, new wins and no deprecation log fires."""
+    import logging
+    caplog.set_level(logging.WARNING)
+    cfg = Config({"fallback_values": {
+        "unknown_festival": "_Old",
+        "unknown_place": "_New",
+    }})
+    assert cfg.fallback_values["unknown_place"] == "_New"
+    assert not any("unknown_festival" in r.getMessage() for r in caplog.records)
+
+
 def test_resolve_artist_alias():
     config = Config({"artist_aliases": {"Dimitri Vegas & Like Mike": ["DVLM"], "Martin Garrix": ["Area21"]}})
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
