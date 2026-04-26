@@ -106,75 +106,75 @@ def _run_poster_and_capture_kwargs(tmp_path, mf):
     return gen.call_args.kwargs
 
 
-def test_poster_festival_slot_prefers_festival_over_venue(tmp_path):
-    """Festival set: the festival_display wins the headline slot."""
+def test_poster_festival_slot_uses_place_for_festival(tmp_path):
+    """Festival set: mf.place fills the headline slot."""
     mf = _make_mf(festival="Tomorrowland", venue="Some Venue",
-                  location="Some Location", title="Artist @ Stage, TML")
+                  location="Some Location", title="Artist @ Stage, TML",
+                  place="Tomorrowland", place_kind="festival")
     assert _run_poster_and_capture_festival(tmp_path, mf) == "Tomorrowland"
 
 
-def test_poster_festival_slot_falls_back_to_venue_when_no_festival(tmp_path):
-    """Concert at a linked venue (Club / Event Location): venue wins the slot."""
+def test_poster_festival_slot_uses_place_for_venue(tmp_path):
+    """Concert at a linked venue: mf.place holds the venue and fills the slot."""
     mf = _make_mf(festival="", venue="Alexandra Palace London",
                   location="ignored freeform",
-                  title="Fred again.. @ USB002")
+                  title="Fred again.. @ USB002",
+                  place="Alexandra Palace London", place_kind="venue")
     assert _run_poster_and_capture_festival(tmp_path, mf) == "Alexandra Palace London"
 
 
-def test_poster_festival_slot_falls_back_to_location_when_no_venue(tmp_path):
-    """Freeform h1 location fills in when no festival and no linked venue."""
+def test_poster_festival_slot_uses_place_for_location(tmp_path):
+    """Freeform location: mf.place carries the canonical location."""
     mf = _make_mf(festival="", venue="", location="Some Unlinked Venue",
-                  title="Artist @ Stage")
+                  title="Artist @ Stage",
+                  place="Some Unlinked Venue", place_kind="location")
     assert _run_poster_and_capture_festival(tmp_path, mf) == "Some Unlinked Venue"
 
 
-def test_poster_festival_slot_falls_back_to_title_when_no_location_fields(tmp_path):
-    """Last-resort backstop: title fires only when festival+venue+location all empty."""
-    mf = _make_mf(festival="", venue="", location="",
-                  title="Artist @ Some Unknown Place")
-    assert _run_poster_and_capture_festival(tmp_path, mf) == "Artist @ Some Unknown Place"
-
-
-def test_poster_venue_subline_suppressed_when_venue_filled_festival_slot(tmp_path):
-    """When the venue is rendered as the big accent line (festival fallback),
-    the venue subline below must be blank to avoid duplicate rendering."""
+def test_poster_venue_subline_suppressed_when_place_kind_is_venue(tmp_path):
+    """When place_kind=venue the venue is already in the slot; subline is blank."""
     mf = _make_mf(festival="", venue="Red Rocks Amphitheatre",
-                  stage="", title="Martin Garrix @ Red Rocks")
+                  stage="", title="Martin Garrix @ Red Rocks",
+                  place="Red Rocks Amphitheatre", place_kind="venue")
     kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
     assert kwargs["festival"] == "Red Rocks Amphitheatre"
     assert kwargs["venue"] == ""
 
 
-def test_poster_venue_subline_rendered_when_festival_has_real_festival(tmp_path):
-    """When a real festival fills the slot, the venue still renders as a
-    subline (it adds useful info like 'Johan Cruijff ArenA Amsterdam')."""
+def test_poster_venue_subline_suppressed_when_place_kind_is_location(tmp_path):
+    """place_kind=location also suppresses the venue subline (same slot)."""
+    mf = _make_mf(festival="", venue="Some Bar", location="Some Bar, Berlin",
+                  stage="", title="irrelevant",
+                  place="Some Bar, Berlin", place_kind="location")
+    kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
+    assert kwargs["festival"] == "Some Bar, Berlin"
+    assert kwargs["venue"] == ""
+
+
+def test_poster_venue_subline_rendered_when_place_kind_is_festival(tmp_path):
+    """Real festival in the slot: venue still renders as a subline."""
     mf = _make_mf(festival="Amsterdam Music Festival",
                   venue="Johan Cruijff ArenA Amsterdam",
-                  stage="Mainstage", title="irrelevant")
+                  stage="Mainstage", title="irrelevant",
+                  place="Amsterdam Music Festival", place_kind="festival")
     kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
     assert kwargs["festival"] == "Amsterdam Music Festival"
     assert kwargs["venue"] == "Johan Cruijff ArenA Amsterdam"
 
 
-def test_poster_venue_fallback_runs_through_festival_alias(tmp_path):
-    """User-configured festival aliases apply to the venue when it fills
-    the festival slot. Preserves the short-form display users set up in
-    their festivals config."""
+def test_poster_festival_slot_uses_edition_display(tmp_path):
+    """When mf.edition matches a known edition, the slot uses 'Place Edition'."""
+    mf = _make_mf(festival="Tomorrowland", edition="Winter",
+                  place="Tomorrowland", place_kind="festival",
+                  title="irrelevant")
+    cfg = load_config()
+    cfg._data["place_config"] = {"Tomorrowland": {"editions": {"Winter": {}}}}
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
-    cfg = load_config()
-    cfg.resolve_festival_alias = (
-        lambda name: "Red Rocks" if name == "Red Rocks Amphitheatre" else name
-    )
-    mf = _make_mf(festival="", venue="Red Rocks Amphitheatre",
-                  stage="", title="irrelevant")
     with patch("festival_organizer.poster.generate_set_poster") as gen:
         PosterOperation(cfg).execute(video, mf)
-    kwargs = gen.call_args.kwargs
-    assert kwargs["festival"] == "Red Rocks"
-    # Venue subline still suppressed — dedup is by source, not display form
-    assert kwargs["venue"] == ""
+    assert gen.call_args.kwargs["festival"] == "Tomorrowland Winter"
 
 
 def test_organize_op_needed_when_not_at_target(tmp_path):
@@ -455,6 +455,61 @@ def test_get_folder_poster_type_returns_artist_for_artist_fallback():
     op = AlbumPosterOperation(config=config)
     mf = _make_mf(place="Fred again..", place_kind="artist")
     assert op._get_folder_poster_type(mf) == "artist"
+
+
+def test_album_poster_hero_text_uses_mf_place(tmp_path):
+    """Album poster hero/festival slot equals mf.place, regardless of place_kind."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_flat"
+    folder = tmp_path / "Alexandra Palace"
+    folder.mkdir()
+    video = folder / "2024 - Alexandra Palace - Fred again...mkv"
+    video.write_bytes(b"")
+    op = AlbumPosterOperation(config=config, force=True)
+    mf = _make_mf(festival="", artist="Fred again..",
+                  place="Alexandra Palace", place_kind="venue", year="2024")
+    with patch("festival_organizer.poster.generate_album_poster") as gen:
+        op.execute(video, mf)
+    assert gen.call_args.kwargs["festival"] == "Alexandra Palace"
+
+
+def test_album_poster_color_lookup_uses_canonical_place(tmp_path):
+    """Brand color lookup keys on mf.place, not mf.festival."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config({
+        **DEFAULT_CONFIG,
+        "default_layout": "place_flat",
+        "place_config": {"Tomorrowland": {"color": "#9B1B5A"}},
+    })
+    folder = tmp_path / "Tomorrowland"
+    folder.mkdir()
+    video = folder / "2024 - Tomorrowland - Tiesto.mkv"
+    video.write_bytes(b"")
+    op = AlbumPosterOperation(config=config, force=True)
+    mf = _make_mf(festival="", artist="Tiesto",
+                  place="Tomorrowland", place_kind="festival", year="2024")
+    with patch("festival_organizer.poster.generate_album_poster") as gen:
+        with patch("festival_organizer.poster._hex_to_rgb",
+                   return_value=(0x9B, 0x1B, 0x5A)) as hexer:
+            op.execute(video, mf)
+    hexer.assert_called_with("#9B1B5A")
+    assert gen.call_args.kwargs["override_color"] == (0x9B, 0x1B, 0x5A)
+
+
+def test_set_poster_subline_skipped_when_venue_is_place(tmp_path):
+    """When place_kind=venue, the venue is in the festival slot, so the subline must not repeat it."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    mf = _make_mf(festival="", artist="Fred again..",
+                  venue="Printworks", place="Printworks", place_kind="venue",
+                  title="irrelevant")
+    with patch("festival_organizer.poster.generate_set_poster") as gen:
+        PosterOperation(load_config()).execute(video, mf)
+    kwargs = gen.call_args.kwargs
+    assert kwargs["festival"] == "Printworks"
+    assert kwargs["venue"] == ""
 
 
 def test_album_poster_config_priority_defaults():

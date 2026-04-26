@@ -211,27 +211,10 @@ class PosterOperation(Operation):
             thumb = file_path.with_name(f"{file_path.stem}-thumb.jpg")
             poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
             mf = media_file
-            festival_display = mf.festival
+            festival_slot = mf.place
             if mf.edition:
-                festival_display = self.config.get_festival_display(
-                    mf.festival, mf.edition
-                )
-            # Festival-slot fallback chain: real festival wins, then venue,
-            # then freeform location, finally the MKV title as a backstop.
-            # Venue and location pass through the festival alias resolver so
-            # user-configured aliases like "Red Rocks Amphitheatre" -> "Red
-            # Rocks" apply to the accent line regardless of which tag the
-            # value came from.
-            resolve = self.config.resolve_festival_alias
-            resolved_venue = resolve(mf.venue) if mf.venue else ""
-            resolved_location = resolve(mf.location) if mf.location else ""
-            festival_slot = (festival_display or resolved_venue
-                             or resolved_location or mf.title or "")
-            # When the venue was the fallback source, suppress the venue
-            # subline so the same place doesn't render twice (once in the
-            # accent slot, once below). Compare by source, not displayed
-            # value, so aliasing doesn't defeat the dedup.
-            venue_used_in_slot = (not festival_display) and bool(mf.venue)
+                festival_slot = self.config.get_place_display(mf.place, mf.edition)
+            venue_used_in_slot = mf.place_kind in ("venue", "location")
             venue_for_subline = "" if venue_used_in_slot else (mf.venue or "")
             generate_set_poster(
                 source_image_path=thumb,
@@ -572,11 +555,6 @@ class AlbumPosterOperation(Operation):
         try:
             folder_jpg = file_path.parent / "folder.jpg"
             mf = media_file
-            festival_display = mf.festival
-            if mf.edition:
-                festival_display = self.config.get_festival_display(
-                    mf.festival, mf.edition
-                )
             # Determine year: scan folder for consensus, omit if mixed
             from festival_organizer.parsers import parse_filename
             years_in_folder: set[str] = set()
@@ -618,8 +596,8 @@ class AlbumPosterOperation(Operation):
             # DJ artwork: always warm for ALL artists in folder, not just the first
             self._warm_dj_artwork_cache(file_path.parent)
 
-            # Look up brand color from festival config
-            fc = self.config.festival_config.get(mf.festival, {})
+            # Look up brand color keyed by canonical place
+            fc = self.config.place_config.get(mf.place, {})
             color_hex = fc.get("editions", {}).get(mf.edition, {}).get("color") or fc.get("color")
             if color_hex:
                 from festival_organizer.poster import _hex_to_rgb
@@ -627,16 +605,10 @@ class AlbumPosterOperation(Operation):
             else:
                 override_color = None
 
-            # Determine hero_text and festival/title based on poster type
-            if poster_type == "artist":
-                hero_text = mf.artist
-                poster_festival = festival_display or mf.artist or "Unknown"
-            elif poster_type == "festival":
-                hero_text = None
-                poster_festival = mf.festival or mf.artist or "Unknown"
-            else:  # year
-                hero_text = date_or_year or mf.year
-                poster_festival = festival_display or mf.artist or "Unknown"
+            poster_festival = mf.place or "Unknown"
+            hero_text = mf.artist if poster_type == "artist" else (
+                date_or_year or mf.year if poster_type == "year" else None
+            )
 
             generate_album_poster(
                 output_path=folder_jpg,
