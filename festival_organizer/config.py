@@ -83,12 +83,14 @@ DEFAULT_CONFIG = {
     "fallback_values": {
         "unknown_artist": "Unknown Artist",
         "unknown_festival": "_Needs Review",
+        "unknown_place": "_Needs Review",
         "unknown_year": "Unknown Year",
         "unknown_title": "Unknown Title",
     },
     "poster_settings": {
         "artist_background_priority": ["dj_artwork", "fanart_tv", "gradient"],
         "festival_background_priority": ["curated_logo", "gradient"],
+        "place_background_priority": ["curated_logo", "gradient"],
         "year_background_priority": ["gradient"],
     },
     "nfo_settings": {
@@ -368,7 +370,19 @@ class Config:
     def poster_settings(self) -> dict:
         defaults = DEFAULT_CONFIG.get("poster_settings", {})
         overrides = self._data.get("poster_settings", {})
-        return {**defaults, **overrides}
+        merged = {**defaults, **overrides}
+        if (
+            "festival_background_priority" in overrides
+            and "place_background_priority" not in overrides
+        ):
+            _log_deprecated_once(
+                "poster_settings.festival_background_priority",
+                "poster_settings.festival_background_priority is deprecated, "
+                "use poster_settings.place_background_priority instead. "
+                "Support for festival_background_priority will be removed in 1.0.0.",
+            )
+            merged["place_background_priority"] = overrides["festival_background_priority"]
+        return merged
 
     @property
     def skip_patterns(self) -> list[str]:
@@ -376,7 +390,21 @@ class Config:
 
     @property
     def fallback_values(self) -> dict:
-        return self._data.get("fallback_values", {})
+        defaults = DEFAULT_CONFIG.get("fallback_values", {})
+        overrides = self._data.get("fallback_values", {})
+        merged = {**defaults, **overrides}
+        if (
+            "unknown_festival" in overrides
+            and "unknown_place" not in overrides
+        ):
+            _log_deprecated_once(
+                "fallback_values.unknown_festival",
+                "fallback_values.unknown_festival is deprecated, "
+                "use fallback_values.unknown_place instead. "
+                "Support for unknown_festival will be removed in 1.0.0.",
+            )
+            merged["unknown_place"] = overrides["unknown_festival"]
+        return merged
 
     @property
     def nfo_settings(self) -> dict:
