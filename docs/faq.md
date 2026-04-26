@@ -161,6 +161,20 @@ These two flags are mutually exclusive. Use `--dry-run` first to preview what wo
 
 If `enrich` says the folder is not a CrateDigger library, check that `organize` completed successfully. It creates the `.cratedigger/` marker folder that `enrich` requires. If you pointed `enrich` at a subfolder rather than the library root, point it at the root instead.
 
+### Why is my set in an artist folder instead of a venue folder?
+
+Without a `places.json` entry for the venue, CrateDigger has no way to recognise it as a curated place, and the set falls through the routing chain to the artist as a last resort. Add an entry to `places.json` for the venue (with optional aliases, color, and curated logo). After re-running `cratedigger`, the set routes by the venue name.
+
+Note: if 1001Tracklists has no linked venue and no plain-text location for the set, the artist fallback is the only available routing target regardless of what is in your `places.json`. This is intended behavior when the tracklist page has no location data.
+
+See [Places](places.md) for the file format, and [1001Tracklists integration: how venue and location data affects routing](tracklists.md#how-venue-and-location-data-affects-routing) for the full routing chain.
+
+### What is the difference between a festival and a venue in CrateDigger?
+
+Nothing structural. Both live in `places.json` and use the same schema: a canonical name, optional aliases, optional color, optional editions, and an optional curated logo. The distinction is conceptual: a festival is typically a recurring branded event, a venue is typically a permanent physical location. CrateDigger treats both as "places" — named entities that host DJ sets. Use the same fields for both.
+
+See [Places](places.md) for examples of festivals, clubs, and venue brands side by side.
+
 ---
 
 ## enrich
@@ -247,19 +261,19 @@ CrateDigger detects that the resolved ID has changed and writes the update autom
 
 See [Configuration: artist MBID override file](configuration.md#artist-mbid-override-file) for details.
 
-### Festival folder posters show a plain gradient instead of a logo
+### Place folder posters show a plain gradient instead of a logo
 
-Add a curated logo for the festival and regenerate:
+Add a curated logo for the place and regenerate:
 
-1. Find out which festivals are missing logos: `cratedigger audit-logos ~/Music/Library/`
-2. Place a logo file at the path the command suggests (for example, `~/CrateDigger/festivals/Tomorrowland/logo.png` on Linux or macOS, `Documents\CrateDigger\festivals\Tomorrowland\logo.png` on Windows)
+1. Find out which places are missing logos: `cratedigger audit-logos ~/Music/Library/`
+2. Place a logo file at the path the command suggests (for example, `~/CrateDigger/places/Tomorrowland/logo.png` on Linux or macOS, `Documents\CrateDigger\places\Tomorrowland\logo.png` on Windows)
 3. Regenerate the folder posters:
 
 ```bash
 cratedigger enrich ~/Music/Library/ --only posters --regenerate
 ```
 
-See [audit-logos](commands/audit-logos.md) and [library layout: festival logos](library-layout.md#festival-logos) for supported formats and placement paths.
+See [audit-logos](commands/audit-logos.md) and [Places: curated assets](places.md#curated-assets-logos-and-artwork) for supported formats and placement paths.
 
 ---
 

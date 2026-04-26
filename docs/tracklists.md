@@ -9,7 +9,7 @@ Short answer: no, but the feature gap is significant.
 | Capability | Without account | With account |
 |---|---|---|
 | Filename and embedded metadata parsing | Yes | Yes |
-| Alias resolution (artists.json, festival aliases) | Yes | Yes |
+| Alias resolution (artists.json, places.json entries) | Yes | Yes |
 | Organize into library tree | Yes | Yes |
 | Cover art (embedded or sampled video frame) | Yes | Yes |
 | Posters (per-video and folder) | Yes | Yes |
@@ -23,7 +23,7 @@ Short answer: no, but the feature gap is significant.
 | DJ artwork from 1001Tracklists | No | Yes |
 | Canonical DJ name (casing, learned aliases) | Partial | Full |
 
-**Without an account**, CrateDigger still produces a usable library. Metadata comes from parsing your filenames using your `festivals.json` aliases and `artists.json` rules, reading any embedded MKV tags, looking up artist artwork from fanart.tv via a resolved MusicBrainz ID, and extracting cover art from embedded attachments or sampled video frames. You get organized folders, reasonable posters, and NFO files. What you lose is everything tied to the authoritative tracklist: chapter markers, per-track metadata (title, label, genre, artist MBIDs), canonical DJ naming beyond your manual aliases, and the stage and venue context tags.
+**Without an account**, CrateDigger still produces a usable library. Metadata comes from parsing your filenames using your `places.json` entries and `artists.json` rules, reading any embedded MKV tags, looking up artist artwork from fanart.tv via a resolved MusicBrainz ID, and extracting cover art from embedded attachments or sampled video frames. You get organized folders, reasonable posters, and NFO files. What you lose is everything tied to the authoritative tracklist: chapter markers, per-track metadata (title, label, genre, artist MBIDs), canonical DJ naming beyond your manual aliases, and the stage and venue context tags.
 
 **With an account**, every row in the table is filled in. `identify` matches your recording against 1001Tracklists, and embeds per-chapter metadata plus album-level event context directly into the MKV.
 
@@ -68,6 +68,21 @@ For each identified tracklist, CrateDigger captures:
 - **Album-level event context:** tracklist URL, title, ID, date, and source taxonomy (festival, venue, conference, event promoter, country, stage). See [collection-level tags](tag-reference.md#collection-level-tags-ttv70).
 - **DJ list and album-artist MBIDs:** canonical DJ names, 1001Tracklists slugs, and aligned MusicBrainz IDs for multi-value album-artist credits. See [album-level artist tags](tag-reference.md#album-level-artist-tags).
 - **DJ artwork URL:** the DJ photo from the tracklist page, used as a background source in the [poster pipeline](library-layout.md#poster-layouts).
+
+## How venue and location data affects routing
+
+When 1001Tracklists has a linked festival for a set, CrateDigger uses that as the primary routing target. When no festival is present, it works down a chain:
+
+1. **Festival** (linked on the tracklist page)
+2. **Venue** (a linked venue page, if present)
+3. **Location** (plain-text location from the page heading, if present)
+4. **Artist** (last resort when none of the above is available)
+
+The venue and location data that 1001Tracklists provides feeds directly into your `places.json` registry. If the venue name matches a canonical name or alias in `places.json`, CrateDigger uses the canonical name for folder and file naming. If it does not match, it uses the raw text from the tracklist page.
+
+Adding a `places.json` entry for a venue is all it takes to bring it into the same alias-resolution pipeline as festivals. A set recorded at a club with no `places.json` entry uses the raw venue name or falls through to the artist folder. A set with no linked venue and no plain-text location always routes by artist. This is the intended behavior when 1001Tracklists has no location data to provide.
+
+See [Places](places.md) for the full registry format and matching rules.
 
 ## What identification looks like
 
