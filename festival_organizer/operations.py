@@ -271,25 +271,31 @@ class AlbumPosterOperation(Operation):
             return True
         return not folder_jpg.exists()
 
-    def _get_folder_poster_type(self, content_type: str) -> str:
+    def _get_folder_poster_type(self, mf: MediaFile) -> str:
         """Determine poster type from the first segment of the layout template.
 
-        Priority for mixed segments: {festival} > {artist} > {year}.
+        Priority for mixed segments: {place}/{festival} > {artist} > {year}.
+        When the layout's first segment resolves to "festival" but the runtime
+        place_kind is "artist" (no festival/venue/location matched), the poster
+        type falls back to "artist" so the artist background pipeline runs.
         """
-        template = self.config.get_layout_template(content_type)
+        template = self.config.get_layout_template(mf.content_type)
         first_segment = template.split("/")[0]
-        return self._classify_segment(first_segment)
+        base = self._classify_segment(first_segment)
+        if base == "festival" and mf.place_kind == "artist":
+            return "artist"
+        return base
 
     def _get_layout_segments(self, content_type: str) -> list[str]:
         """Return poster type for each segment of the layout template."""
         template = self.config.get_layout_template(content_type)
         return [self._classify_segment(seg) for seg in template.split("/")]
 
-    def _get_poster_type_for_folder(self, folder: Path, content_type: str) -> str:
+    def _get_poster_type_for_folder(self, folder: Path, mf: MediaFile) -> str:
         """Determine poster type for a specific folder depth in a nested layout."""
         if not self.library_root:
-            return self._get_folder_poster_type(content_type)
-        segments = self._get_layout_segments(content_type)
+            return self._get_folder_poster_type(mf)
+        segments = self._get_layout_segments(mf.content_type)
         try:
             depth = len(folder.resolve().relative_to(self.library_root.resolve()).parts) - 1
         except ValueError:
@@ -297,8 +303,12 @@ class AlbumPosterOperation(Operation):
         if depth < 0:
             depth = 0
         if depth < len(segments):
-            return segments[depth]
-        return segments[-1] if segments else "artist"
+            base = segments[depth]
+        else:
+            base = segments[-1] if segments else "artist"
+        if base == "festival" and mf.place_kind == "artist":
+            return "artist"
+        return base
 
     @staticmethod
     def _classify_segment(segment: str) -> str:
@@ -585,7 +595,7 @@ class AlbumPosterOperation(Operation):
             thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
 
             # Determine poster type from layout template
-            poster_type = self._get_folder_poster_type(mf.content_type)
+            poster_type = self._get_folder_poster_type(mf)
             logger.debug("Album poster: type=%s (from layout template)", poster_type)
 
             # Walk configurable background priority chain

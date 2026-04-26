@@ -350,7 +350,8 @@ def test_album_poster_type_from_artist_flat_layout():
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_flat"
     op = AlbumPosterOperation(config=config)
-    assert op._get_folder_poster_type("festival_set") == "artist"
+    mf = _make_mf(place="Test", place_kind="festival")
+    assert op._get_folder_poster_type(mf) == "artist"
 
 
 def test_album_poster_type_from_festival_flat_layout():
@@ -359,7 +360,8 @@ def test_album_poster_type_from_festival_flat_layout():
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "festival_flat"
     op = AlbumPosterOperation(config=config)
-    assert op._get_folder_poster_type("festival_set") == "festival"
+    mf = _make_mf(place="Tomorrowland", place_kind="festival")
+    assert op._get_folder_poster_type(mf) == "festival"
 
 
 def test_album_poster_type_nested_segments():
@@ -391,7 +393,8 @@ def test_album_poster_type_mixed_segment_festival_wins():
     }})
     config._data["default_layout"] = "custom"
     op = AlbumPosterOperation(config=config)
-    assert op._get_folder_poster_type("festival_set") == "festival"
+    mf = _make_mf(place="Tomorrowland", place_kind="festival")
+    assert op._get_folder_poster_type(mf) == "festival"
 
 
 def test_album_poster_segment_for_folder_depth(tmp_path):
@@ -400,14 +403,55 @@ def test_album_poster_segment_for_folder_depth(tmp_path):
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_nested"
     op = AlbumPosterOperation(config=config, library_root=tmp_path)
+    mf = _make_mf(place="Tomorrowland", place_kind="festival")
     # Template: {artist}/{festival}/{year}
     # Depth 0 = artist, depth 1 = festival, depth 2 = year
     artist_folder = tmp_path / "Tiësto"
     festival_folder = artist_folder / "Tomorrowland"
     year_folder = festival_folder / "2025"
-    assert op._get_poster_type_for_folder(year_folder, "festival_set") == "year"
-    assert op._get_poster_type_for_folder(festival_folder, "festival_set") == "festival"
-    assert op._get_poster_type_for_folder(artist_folder, "festival_set") == "artist"
+    assert op._get_poster_type_for_folder(year_folder, mf) == "year"
+    assert op._get_poster_type_for_folder(festival_folder, mf) == "festival"
+    assert op._get_poster_type_for_folder(artist_folder, mf) == "artist"
+
+
+def test_get_folder_poster_type_returns_festival_for_festival_kind():
+    """place_kind='festival' on a place_flat layout yields 'festival' poster type."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_flat"
+    op = AlbumPosterOperation(config=config)
+    mf = _make_mf(place="Tomorrowland", place_kind="festival")
+    assert op._get_folder_poster_type(mf) == "festival"
+
+
+def test_get_folder_poster_type_returns_festival_for_venue_kind():
+    """place_kind='venue' still routes through the festival poster pipeline."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_flat"
+    op = AlbumPosterOperation(config=config)
+    mf = _make_mf(place="Printworks", place_kind="venue")
+    assert op._get_folder_poster_type(mf) == "festival"
+
+
+def test_get_folder_poster_type_returns_festival_for_location_kind():
+    """place_kind='location' still routes through the festival poster pipeline."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_flat"
+    op = AlbumPosterOperation(config=config)
+    mf = _make_mf(place="Some Bar, Berlin", place_kind="location")
+    assert op._get_folder_poster_type(mf) == "festival"
+
+
+def test_get_folder_poster_type_returns_artist_for_artist_fallback():
+    """place_kind='artist' overrides the layout's place segment to 'artist' poster type."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_flat"
+    op = AlbumPosterOperation(config=config)
+    mf = _make_mf(place="Fred again..", place_kind="artist")
+    assert op._get_folder_poster_type(mf) == "artist"
 
 
 def test_album_poster_config_priority_defaults():
