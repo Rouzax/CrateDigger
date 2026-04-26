@@ -2,7 +2,18 @@
 import json
 from pathlib import Path
 
+import pytest
+
+from festival_organizer import config as _config_module
 from festival_organizer.config import DEFAULT_CONFIG
+
+
+@pytest.fixture(autouse=True)
+def _reset_deprecation_log_state():
+    """Clear the per-process deprecation-log dedup set so tests don't suppress each other's logs."""
+    _config_module._emitted_deprecations.clear()
+    yield
+    _config_module._emitted_deprecations.clear()
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 

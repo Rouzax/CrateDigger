@@ -395,8 +395,6 @@ def test_places_json_loads_when_present(tmp_path):
 
 def test_festivals_json_falls_back_when_no_places(tmp_path, caplog):
     import logging
-    from festival_organizer import config as config_mod
-    config_mod._emitted_deprecations.discard("festivals.json")
     (tmp_path / "festivals.json").write_text('{"Tomorrowland": {"color": "#9B1B5A"}}')
     with patch("festival_organizer.config.paths") as mock_paths:
         mock_paths.data_dir.return_value = tmp_path / "nonexistent_user_data"

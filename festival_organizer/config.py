@@ -194,15 +194,24 @@ class Config:
             logger.debug(entry[0], *entry[1:])
         self._load_journal.clear()
 
-    def _load_external_config(self, filename: str, defaults: dict) -> dict:
-        """Load a curated JSON data file from library override or user data dir.
+    def _external_config_candidates(self, filename: str) -> list[Path]:
+        """Return the candidate paths the loader checks, in priority order.
 
-        Search order:
+        Order:
           1. ``self._config_dir / filename`` (typically the library-local
              ``.cratedigger/`` dir).
           2. ``paths.data_dir() / filename`` (the visible user data dir, e.g.
              ``Documents/CrateDigger/`` on Windows or ``~/CrateDigger/`` on
              Linux).
+        """
+        candidates: list[Path] = []
+        if self._config_dir:
+            candidates.append(self._config_dir / filename)
+        candidates.append(paths.data_dir() / filename)
+        return candidates
+
+    def _load_external_config(self, filename: str, defaults: dict) -> dict:
+        """Load a curated JSON data file from library override or user data dir.
 
         Curated data files (festivals.json, artists.json, artist_mbids.json)
         stay JSON on purpose; only ``config.toml`` switched to TOML.
@@ -210,10 +219,7 @@ class Config:
         if filename in self._ext_cache:
             return self._ext_cache[filename]
 
-        candidates: list[Path] = []
-        if self._config_dir:
-            candidates.append(self._config_dir / filename)
-        candidates.append(paths.data_dir() / filename)
+        candidates = self._external_config_candidates(filename)
 
         logger.debug("%s candidates: %s", filename, [str(p) for p in candidates])
 
@@ -261,11 +267,7 @@ class Config:
 
     def _external_config_exists(self, filename: str) -> bool:
         """Return True if ``filename`` is present in any candidate directory."""
-        candidates: list[Path] = []
-        if self._config_dir:
-            candidates.append(self._config_dir / filename)
-        candidates.append(paths.data_dir() / filename)
-        return any(p.exists() for p in candidates)
+        return any(p.exists() for p in self._external_config_candidates(filename))
 
     @property
     def place_config(self) -> dict:
