@@ -854,3 +854,37 @@ def test_resolve_place_chain_artist_fallback(cfg_with_places):
     mf = MediaFile(source_path=Path("/tmp/x.mkv"), artist="Fred again..")
     name, kind = cfg_with_places.resolve_place_for_media(mf)
     assert (name, kind) == ("Fred again..", "artist")
+
+
+def test_resolve_place_chain_strips_whitespace_only_festival(cfg_with_places):
+    """A whitespace-only festival field falls through to the next chain position."""
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
+                   festival="   ", venue="Alexandra Palace",
+                   artist="Fred again..")
+    name, kind = cfg_with_places.resolve_place_for_media(mf)
+    assert (name, kind) == ("Alexandra Palace", "venue")
+
+
+def test_resolve_place_chain_strips_whitespace_only_venue(cfg_with_places):
+    """A whitespace-only venue field falls through to the next chain position."""
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
+                   venue="\t \n", location="Some Bar, Berlin",
+                   artist="DJ Example")
+    name, kind = cfg_with_places.resolve_place_for_media(mf)
+    assert (name, kind) == ("Some Bar, Berlin", "location")
+
+
+def test_resolve_place_chain_strips_whitespace_only_artist(cfg_with_places):
+    """All-whitespace fields produce an empty result, not a whitespace folder."""
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
+                   festival=" ", venue="  ", location="\t", artist="   ")
+    name, kind = cfg_with_places.resolve_place_for_media(mf)
+    assert (name, kind) == ("", "")
+
+
+def test_resolve_place_chain_returns_stripped_value(cfg_with_places):
+    """When a field has padding, the returned name is stripped."""
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
+                   festival="  Tomorrowland  ")
+    name, kind = cfg_with_places.resolve_place_for_media(mf)
+    assert (name, kind) == ("Tomorrowland", "festival")

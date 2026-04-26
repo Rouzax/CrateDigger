@@ -475,16 +475,24 @@ class Config:
         Chain: festival -> venue -> location -> artist.
         place_kind values: "festival" | "venue" | "location" | "artist".
         Empty (name, kind) tuple indicates nothing routable.
+
+        Whitespace-only fields are treated as empty so a malformed scrape
+        like "   " falls through to the next chain position rather than
+        producing a folder named after whitespace.
         """
-        if mf.festival:
-            return (mf.festival, "festival")
-        if mf.venue:
-            return (mf.venue, "venue")
-        if mf.location:
-            canonical = self.resolve_place_alias(mf.location)
+        festival = mf.festival.strip()
+        if festival:
+            return (festival, "festival")
+        venue = mf.venue.strip()
+        if venue:
+            return (venue, "venue")
+        location = mf.location.strip()
+        if location:
+            canonical = self.resolve_place_alias(location)
             return (canonical, "location")
-        if mf.artist:
-            return (mf.artist, "artist")
+        artist = mf.artist.strip()
+        if artist:
+            return (artist, "artist")
         return ("", "")
 
     @cached_property
