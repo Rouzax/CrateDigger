@@ -52,7 +52,7 @@ def _reset_deprecation_log_state():
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
 _artists = json.loads((_REPO_ROOT / "artists.example.json").read_text(encoding="utf-8"))
-_festivals = json.loads((_REPO_ROOT / "festivals.example.json").read_text(encoding="utf-8"))
+_festivals = json.loads((_REPO_ROOT / "places.example.json").read_text(encoding="utf-8"))
 
 # Build alias and config dicts from unified festival format
 _fest_aliases: dict[str, list[str]] = {}

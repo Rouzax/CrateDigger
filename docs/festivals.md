@@ -34,14 +34,14 @@ To get the full example file as a starting point, download it to your user-level
 
     ```bash
     curl -o ~/CrateDigger/festivals.json \
-      https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json
+      https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
     Invoke-WebRequest `
-      -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json" `
+      -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json" `
       -OutFile "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
     ```
 
@@ -50,13 +50,13 @@ Or, if you have cloned the repository:
 === "Linux"
 
     ```bash
-    cp festivals.example.json ~/CrateDigger/festivals.json
+    cp places.example.json ~/CrateDigger/festivals.json
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
-    Copy-Item festivals.example.json "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
+    Copy-Item places.example.json "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
     ```
 
 ## Format
@@ -177,7 +177,7 @@ CrateDigger picks up the new entry on the next run.
 
 ## What the example file includes
 
-`festivals.example.json` covers major electronic music festivals including Tomorrowland, Ultra Music Festival, EDC, ASOT, AMF, Dreamstate, and more. It is a good starting point for most libraries. Add your own entries for any festivals it does not cover.
+`places.example.json` covers major electronic music festivals including Tomorrowland, Ultra Music Festival, EDC, ASOT, AMF, Dreamstate, and more. It is a good starting point for most libraries. Add your own entries for any festivals it does not cover.
 
 ## Related
 
