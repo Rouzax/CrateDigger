@@ -12,7 +12,7 @@
 
 CrateDigger is a Python CLI tool for managing festival set and concert recording libraries. It follows a three-command workflow: **identify** matches recordings against 1001Tracklists and embeds chapter markers, **organize** moves files into your library with smart folder layouts, and **enrich** generates posters, artwork, NFO files, and embeds tags. CrateDigger integrates with Kodi for a polished media center experience, complete with artwork, metadata, and library sync.
 
-> **Pair it with [TrackSplit](https://rouzax.github.io/TrackSplit/):** a sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for Jellyfin, Lyrion, and other music servers. TrackSplit reads CrateDigger's festival and artist config, so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries.
+> **Pair it with [TrackSplit](https://rouzax.github.io/TrackSplit/):** a sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for Jellyfin, Lyrion, and other music servers. TrackSplit reads CrateDigger's place and artist config, so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries.
 > [Landing page](https://rouzax.github.io/TrackSplit/) · [Documentation](https://rouzax.github.io/TrackSplit/docs/) · [GitHub](https://github.com/Rouzax/TrackSplit)
 
 ## Poster Gallery
@@ -46,7 +46,7 @@ Match recordings against 1001Tracklists to retrieve full tracklist metadata. Cha
 
 ### Organize
 
-Sort your library using four folder layouts: `artist_flat`, `festival_flat`, `artist_nested`, and `festival_nested`. Sonarr-style collapsing tokens let you group events under a single folder (for example, grouping all Ultra stages together). Files can be copied, moved, or renamed in place.
+Sort your library using four folder layouts: `artist_flat`, `place_flat`, `artist_nested`, and `place_nested`. Sonarr-style collapsing tokens let you group events under a single folder (for example, grouping all Ultra stages together). Files can be copied, moved, or renamed in place. The older names `festival_flat` and `festival_nested` continue to work as deprecated aliases.
 
 ### Enrich
 
@@ -139,7 +139,7 @@ CrateDigger reads settings from `config.toml` and supports library-level overrid
 | macOS | `~/CrateDigger/config.toml` |
 | Windows | `Documents\CrateDigger\config.toml` |
 
-Curated data files (`festivals.json`, `artists.json`, `artist_mbids.json`) live in the same folder as `config.toml`. Caches and logs go to platform-standard locations (`~/.cache/CrateDigger/` on Linux, `$env:LOCALAPPDATA\CrateDigger\` on Windows) and are managed automatically.
+Curated data files (`places.json`, `artists.json`, `artist_mbids.json`) live in the same folder as `config.toml`. The older filename `festivals.json` continues to work as a fallback when `places.json` is not present. Caches and logs go to platform-standard locations (`~/.cache/CrateDigger/` on Linux, `$env:LOCALAPPDATA\CrateDigger\` on Windows) and are managed automatically.
 
 A per-library override at `{library}/.cratedigger/config.toml` takes precedence over the user-level file. See the [docs](docs/) folder for a full configuration reference.
 
