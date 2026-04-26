@@ -495,3 +495,54 @@ def test_render_folder_festival_flat_with_festival_unchanged():
     )
     result = render_folder(mf, CFG, layout_name="festival_flat")
     assert result == "Tomorrowland"
+
+
+# --- {place} token (T7) ---
+
+
+def test_place_token_renders_mf_place():
+    """{place} token renders mf.place directly."""
+    cfg_data = {
+        **TEST_CONFIG,
+        "layouts": {
+            **TEST_CONFIG.get("layouts", {}),
+            "place_flat_test": {
+                "festival_set": "{place}/{year}",
+                "concert_film": "{place}/{year}",
+            },
+        },
+    }
+    cfg = Config(cfg_data)
+    mf = MediaFile(
+        source_path=Path("/tmp/x.mkv"),
+        place="Tomorrowland",
+        place_kind="festival",
+        year="2024",
+        artist="Armin van Buuren",
+        content_type="festival_set",
+    )
+    assert render_folder(mf, cfg, layout_name="place_flat_test") == "Tomorrowland/2024"
+
+
+def test_festival_token_still_renders_mf_place():
+    """{festival} token keeps rendering, now sourced from mf.place (backward compat)."""
+    cfg_data = {
+        **TEST_CONFIG,
+        "layouts": {
+            **TEST_CONFIG.get("layouts", {}),
+            "festival_year_test": {
+                "festival_set": "{festival}/{year}",
+                "concert_film": "{festival}/{year}",
+            },
+        },
+    }
+    cfg = Config(cfg_data)
+    mf = MediaFile(
+        source_path=Path("/tmp/x.mkv"),
+        place="Tomorrowland",
+        place_kind="festival",
+        year="2024",
+        artist="Armin van Buuren",
+        content_type="festival_set",
+    )
+    assert render_folder(mf, cfg, layout_name="festival_year_test") == "Tomorrowland/2024"
