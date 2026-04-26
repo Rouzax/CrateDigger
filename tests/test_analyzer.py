@@ -682,3 +682,60 @@ def test_analyzer_venue_full_empty_when_no_tag():
         mf = analyse_file(Path("/tmp/test.mkv"), Path("/tmp"), CFG)
     assert mf.venue == ""
     assert mf.venue_full == ""
+
+
+def test_analyzer_populates_place_for_festival_set():
+    """A 1001TL festival tag drives mf.place via the festival chain step."""
+    fake_meta = {
+        "tracklists_artists": "Martin Garrix",
+        "tracklists_festival": "Tomorrowland",
+        "tracklists_date": "2024-07-21",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Tomorrowland - Martin Garrix.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.festival == "Tomorrowland"
+    assert mf.place == "Tomorrowland"
+    assert mf.place_kind == "festival"
+
+
+def test_analyzer_populates_place_for_venue_set():
+    """A venue tag with no festival drives mf.place via the venue chain step."""
+    cfg = _venue_alias_config()
+    fake_meta = {
+        "tracklists_artists": "Fred again..",
+        "tracklists_venue": "alexandra palace, london",
+        "tracklists_date": "2024-11-02",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Fred again.. - Alexandra Palace.mkv"),
+            Path("/library"),
+            cfg,
+        )
+    assert mf.festival == ""
+    assert mf.venue == "Alexandra Palace"
+    assert mf.place == "Alexandra Palace"
+    assert mf.place_kind == "venue"
+
+
+def test_analyzer_populates_place_for_artist_fallback():
+    """With no festival/venue/location tag, mf.place falls back to the artist."""
+    fake_meta = {
+        "tracklists_artists": "Hardwell",
+        "tracklists_date": "2024-11-02",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Hardwell - studio set.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.festival == ""
+    assert mf.venue == ""
+    assert mf.location == ""
+    assert mf.place == "Hardwell"
+    assert mf.place_kind == "artist"

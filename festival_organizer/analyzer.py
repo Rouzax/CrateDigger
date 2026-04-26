@@ -104,7 +104,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # Layer 5: Direct 1001TL festival tag (written by chapters command from
     # source cache). Authoritative for festival + edition.
     if meta.get("tracklists_festival"):
-        fest, ed = config.resolve_festival_with_edition(
+        fest, ed = config.resolve_place_with_edition(
             meta["tracklists_festival"]
         )
         info["festival"] = fest
@@ -159,14 +159,14 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     festival = info.get("festival", "")
     # Resolve festival alias
     if festival:
-        festival = config.resolve_festival_alias(festival)
+        festival = config.resolve_place_alias(festival)
 
     # Clear festival when it's a parser artifact. When 1001TL metadata is
     # present but has no festival tag, the filename parser's guess is unreliable
     # (e.g., standalone venue sets where YYYY-Part2-Part3 misparses). Trust the
     # 1001TL signal: if it doesn't name a festival, there probably isn't one.
-    # Preserve only festivals that are independently recognized (known_festivals).
-    if festival and festival not in config.known_festivals:
+    # Preserve only festivals that are independently recognized (known_places).
+    if festival and festival not in config.known_places:
         if artists_list and not meta.get("tracklists_festival"):
             festival = ""
         elif artist and festival.lower() == artist.lower():
@@ -188,7 +188,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     set_title = "" if identified else normalise_name(info.get("set_title", ""))
     title_field = "" if identified else normalise_name(info.get("title", ""))
 
-    return MediaFile(
+    mf = MediaFile(
         source_path=filepath,
         artist=artist,
         display_artist=display_artist,
@@ -227,6 +227,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         overall_bitrate=meta.get("overall_bitrate", ""),
         has_cover=meta.get("has_cover", False),
     )
+    mf.place, mf.place_kind = config.resolve_place_for_media(mf)
+    return mf
 
 
 def _merge_missing(target: dict, source: dict) -> None:
