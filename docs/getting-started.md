@@ -210,14 +210,14 @@ your config:
 
     ```bash
     curl -o ~/CrateDigger/festivals.json \
-      https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json
+      https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
     Invoke-WebRequest `
-      -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json" `
+      -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json" `
       -OutFile "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
     ```
 
@@ -226,13 +226,13 @@ Or from a cloned repo:
 === "Linux / macOS"
 
     ```bash
-    cp festivals.example.json ~/CrateDigger/festivals.json
+    cp places.example.json ~/CrateDigger/festivals.json
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
-    Copy-Item festivals.example.json "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
+    Copy-Item places.example.json "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
     ```
 
 See [Festivals](festivals.md) for how to add entries and what the file format looks like.
