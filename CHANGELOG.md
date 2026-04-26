@@ -15,6 +15,10 @@ Place routing replaces festival-only routing with a full `festival → venue →
 
 No action required for 0.15.0. Existing libraries and config files keep working without any changes. When deprecated names are detected, CrateDigger emits one WARNING per process run naming the old key and the replacement. To migrate: rename `festivals.json` to `places.json`, update layout names if you use `festival_flat` or `festival_nested` to `place_flat` or `place_nested`, and rename `.cratedigger/festivals/` to `.cratedigger/places/`. All of these steps are optional until 1.0.0.
 
+On first run after upgrade, CrateDigger automatically copies your existing `festivals.json` and user-global `.cratedigger/festivals/<name>/` curated logo directories to the new place-named locations (`places.json` and `.cratedigger/places/<name>/`). The legacy paths stay in place so you can roll back to 0.14.x without losing data; delete them once you have verified the new locations work.
+
+If you keep curated logos under a library-local `<library>/.cratedigger/festivals/` directory, that location is NOT auto-migrated. Rename it to `<library>/.cratedigger/places/` to keep those logos picked up.
+
 ### Added
 
 - `places.json` curated registry replaces `festivals.json` as the primary file. It uses the same schema (aliases, color, editions, and so on) and extends the domain to cover festivals, clubs, permanent venues, residencies, and any other named branded entity that hosts DJ sets. `festivals.json` is still loaded as a fallback while the deprecation window is open.
