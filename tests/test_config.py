@@ -413,6 +413,41 @@ def test_places_wins_when_both_present(tmp_path):
     assert "Tomorrowland" not in cfg.place_config
 
 
+def test_place_aliases_includes_registry_aliases(tmp_path):
+    (tmp_path / "places.json").write_text(
+        '{"Tomorrowland": {"aliases": ["TML", "Tomorrowland Weekend 1"]}}'
+    )
+    cfg = Config({}, config_dir=tmp_path)
+    assert cfg.place_aliases.get("TML") == "Tomorrowland"
+    assert cfg.place_aliases.get("Tomorrowland Weekend 1") == "Tomorrowland"
+
+
+def test_resolve_place_alias_returns_canonical(tmp_path):
+    (tmp_path / "places.json").write_text(
+        '{"Tomorrowland": {"aliases": ["TML"]}}'
+    )
+    cfg = Config({}, config_dir=tmp_path)
+    assert cfg.resolve_place_alias("TML") == "Tomorrowland"
+    assert cfg.resolve_place_alias("unknown") == "unknown"
+
+
+def test_known_places_includes_canonicals_and_aliases(tmp_path):
+    (tmp_path / "places.json").write_text(
+        '{"Tomorrowland": {"aliases": ["TML"]}, "Printworks": {}}'
+    )
+    cfg = Config({}, config_dir=tmp_path)
+    assert {"Tomorrowland", "TML", "Printworks"} <= cfg.known_places
+
+
+def test_festival_aliases_still_works_emits_deprecation(tmp_path, caplog):
+    import logging
+    caplog.set_level(logging.WARNING)
+    (tmp_path / "places.json").write_text('{"Tomorrowland": {"aliases": ["TML"]}}')
+    cfg = Config({}, config_dir=tmp_path)
+    assert cfg.festival_aliases.get("TML") == "Tomorrowland"
+    assert any("festival_aliases" in r.getMessage() for r in caplog.records)
+
+
 def test_resolve_artist_alias():
     config = Config({"artist_aliases": {"Dimitri Vegas & Like Mike": ["DVLM"], "Martin Garrix": ["Area21"]}})
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
