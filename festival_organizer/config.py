@@ -182,6 +182,7 @@ class Config:
     """Typed access to the configuration."""
 
     def __init__(self, data: dict, config_dir: Path | None = None):
+        paths._migrate_legacy_paths()
         self._data = {**DEFAULT_CONFIG, **data}
         self._config_dir = config_dir
         self._ext_cache: dict[str, dict] = {}

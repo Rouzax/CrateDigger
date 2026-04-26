@@ -29,6 +29,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import shutil
 import sys
 import tempfile
 import tomllib
@@ -44,6 +45,7 @@ _SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9 _()&.\-]")
 _LEGACY_STAMP_NAME = "legacy-warning.stamp"
 
 _warned_source_checkout: bool = False
+_migrated_this_process: bool = False
 
 
 def data_dir() -> Path:
@@ -114,11 +116,21 @@ def artist_mbids_file() -> Path:
     return data_dir() / "artist_mbids.json"
 
 
-def festivals_logo_dir() -> Path:
-    """Return the user-global curated festival logos directory.
+def places_logo_dir() -> Path:
+    """Return the user-global curated place logos directory (primary, since 0.15.0).
 
-    Library-local logos at ``{library}/.cratedigger/festivals/`` still
-    win over this directory when both contain a logo for the same festival.
+    Library-local logos at ``{library}/.cratedigger/places/`` still win over
+    this directory when both contain a logo for the same place.
+    """
+    return data_dir() / "places"
+
+
+def festivals_logo_dir() -> Path:
+    """Return the legacy user-global curated festival logos directory.
+
+    Deprecated since 0.15.0: prefer :func:`places_logo_dir`. Kept so the
+    auto-migration helper can locate an existing legacy directory and copy
+    its contents forward.
     """
     return data_dir() / "festivals"
 
@@ -142,6 +154,76 @@ def ensure_parent(path: Path) -> Path:
     """Create ``path.parent`` if missing. Returns ``path`` unchanged."""
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def _migrate_legacy_paths() -> None:
+    """Copy legacy festival-named curated paths forward to place-named locations.
+
+    Two migrations run, both idempotent and rollback-safe:
+
+    - ``festivals.json`` is copied to ``places.json`` (via :func:`shutil.copy2`)
+      when the legacy file exists and the new file does not.
+    - Each subdirectory under :func:`festivals_logo_dir` is copied to the
+      matching subdirectory under :func:`places_logo_dir` (via
+      :func:`shutil.copytree`) when the per-name target does not yet exist.
+
+    Legacy paths are left in place so reverting to a 0.14.x release continues
+    to read from the original locations. Targets are never overwritten, so
+    re-running the helper is a cheap no-op.
+
+    Runs at most once per process; the module-level ``_migrated_this_process``
+    flag short-circuits subsequent calls.
+    """
+    global _migrated_this_process
+    if _migrated_this_process:
+        return
+    _migrated_this_process = True
+
+    logger = logging.getLogger("festival_organizer.paths")
+
+    legacy_file = festivals_file()
+    new_file = places_file()
+    if legacy_file.is_file() and not new_file.is_file():
+        try:
+            new_file.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(legacy_file, new_file)
+            logger.info(
+                "Migrated festivals.json to places.json "
+                "(legacy file kept for backward compatibility)"
+            )
+        except OSError as e:
+            logger.warning(
+                "Could not migrate festivals.json to places.json: %s", e
+            )
+
+    legacy_dir = festivals_logo_dir()
+    new_dir = places_logo_dir()
+    if legacy_dir.is_dir():
+        try:
+            new_dir.mkdir(parents=True, exist_ok=True)
+            for entry in legacy_dir.iterdir():
+                if not entry.is_dir():
+                    continue
+                target = new_dir / entry.name
+                if target.exists():
+                    continue
+                try:
+                    shutil.copytree(entry, target)
+                except OSError as e:
+                    logger.warning(
+                        "Could not migrate curated logo directory %s: %s",
+                        entry, e,
+                    )
+                    continue
+                logger.info(
+                    "Migrated curated logos: "
+                    ".cratedigger/festivals/%s/ to .cratedigger/places/%s/",
+                    entry.name, entry.name,
+                )
+        except OSError as e:
+            logger.warning(
+                "Could not migrate curated logo directories: %s", e
+            )
 
 
 def _legacy_paths_present(home: Path | None = None) -> list[Path]:
