@@ -600,9 +600,9 @@ def _analyse_parallel(
 
     # Populate config._ext_cache (file I/O cache) so worker threads
     # only perform dict reads, avoiding redundant file loads.
-    _ = config.known_festivals
+    _ = config.known_places
     _ = config.artist_aliases
-    _ = config.festival_aliases
+    _ = config.place_aliases
 
     results: list[tuple | None] = [None] * len(files)
 

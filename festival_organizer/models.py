@@ -18,7 +18,7 @@ class MediaFile:
     set_title: str = ""
     title: str = ""          # For concert films: the concert/show title
     stage: str = ""
-    venue: str = ""          # Will hold the alias-resolved canonical venue name once subsequent place-routing tasks land
+    venue: str = ""          # Alias-resolved canonical venue name
     venue_full: str = ""     # Raw 1001TL venue name before alias resolution
     location: str = ""  # Plain-text venue+city from 1001TL h1 tail (fallback when no linked source)
     edition: str = ""
