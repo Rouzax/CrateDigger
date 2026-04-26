@@ -303,7 +303,7 @@ class AlbumPosterOperation(Operation):
     @staticmethod
     def _classify_segment(segment: str) -> str:
         """Classify a template segment by priority: festival > artist > year."""
-        if "{festival}" in segment:
+        if "{place}" in segment or "{festival}" in segment:
             return "festival"
         if "{artist}" in segment:
             return "artist"

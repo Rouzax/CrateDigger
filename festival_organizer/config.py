@@ -50,21 +50,21 @@ DEFAULT_CONFIG = {
             "festival_set": "{artist}",
             "concert_film": "{artist}",
         },
-        "festival_flat": {
-            "festival_set": "{festival}{ edition}",
+        "place_flat": {
+            "festival_set": "{place}{ edition}",
             "concert_film": "{artist}",
         },
         "artist_nested": {
-            "festival_set": "{artist}/{festival}{ edition}/{year}",
+            "festival_set": "{artist}/{place}{ edition}/{year}",
             "concert_film": "{artist}/{year} - {title}",
         },
-        "festival_nested": {
-            "festival_set": "{festival}{ edition}/{year}/{artist}",
+        "place_nested": {
+            "festival_set": "{place}{ edition}/{year}/{artist}",
             "concert_film": "{artist}/{year} - {title}",
         },
     },
     "filename_templates": {
-        "festival_set": "{year} - {artist}{ - festival}{ edition}{ [stage]}{ - set_title}",
+        "festival_set": "{year} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}",
         "concert_film": "{artist} - {title}{ (year)}",
     },
     "content_type_rules": {
@@ -565,9 +565,33 @@ class Config:
         )
         return self.get_place_display(canonical_festival, edition)
 
+    _LEGACY_LAYOUT_ALIASES = {
+        "festival_flat": "place_flat",
+        "festival_nested": "place_nested",
+    }
+
+    def _resolve_layout_name(self, layout: str) -> str:
+        """Map deprecated layout names to their canonical ``place_*`` form.
+
+        A user-defined override in ``self.layouts`` for the deprecated name
+        wins (with a deprecation warning); otherwise the name is rewritten to
+        the modern equivalent.
+        """
+        if layout not in self._LEGACY_LAYOUT_ALIASES:
+            return layout
+        canonical = self._LEGACY_LAYOUT_ALIASES[layout]
+        _log_deprecated_once(
+            f"layout.{layout}",
+            f"Layout name '{layout}' is deprecated, use '{canonical}' instead. "
+            f"Support for '{layout}' will be removed in 1.0.0.",
+        )
+        if layout in self.layouts:
+            return layout
+        return canonical
+
     def get_layout_template(self, content_type: str, layout_name: str | None = None) -> str:
         """Get the folder layout template for a content type."""
-        layout = layout_name or self.default_layout
+        layout = self._resolve_layout_name(layout_name or self.default_layout)
         layouts = self.layouts.get(layout, {})
         return layouts.get(content_type, layouts.get("festival_set", "{artist}/{year}"))
 

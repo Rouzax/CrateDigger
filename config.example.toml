@@ -3,7 +3,8 @@
 # A per-library override at {library}/.cratedigger/config.toml wins over this file.
 # Only include settings you want to override; defaults are built in.
 
-# Folder structure. Available layouts: artist_flat, festival_flat, artist_nested, festival_nested.
+# Folder structure. Available layouts: artist_flat, place_flat, artist_nested, place_nested.
+# Legacy names festival_flat and festival_nested still work as deprecated aliases.
 default_layout = "artist_flat"
 
 # Glob patterns for paths to skip during scanning. Must stay above every
@@ -11,26 +12,27 @@ default_layout = "artist_flat"
 # the loader silently ignores it.
 skip_patterns = ["*/BDMV/*", "Dolby*"]
 
-# Folder templates per layout type. Tokens: {artist}, {festival}, {edition}, {year}, {title}.
+# Folder templates per layout type. Tokens: {artist}, {place}, {edition}, {year}, {title}.
+# {festival} is accepted as a synonym of {place} for backward compatibility.
 [layouts.artist_flat]
 festival_set = "{artist}"
 concert_film = "{artist}"
 
-[layouts.festival_flat]
-festival_set = "{festival}{ edition}"
+[layouts.place_flat]
+festival_set = "{place}{ edition}"
 concert_film = "{artist}"
 
 [layouts.artist_nested]
-festival_set = "{artist}/{festival}{ edition}/{year}"
+festival_set = "{artist}/{place}{ edition}/{year}"
 concert_film = "{artist}/{year} - {title}"
 
-[layouts.festival_nested]
-festival_set = "{festival}{ edition}/{year}/{artist}"
+[layouts.place_nested]
+festival_set = "{place}{ edition}/{year}/{artist}"
 concert_film = "{artist}/{year} - {title}"
 
 # File naming templates. Use Sonarr-style collapsing syntax for optional fields.
 [filename_templates]
-festival_set = "{year} - {artist}{ - festival}{ edition}{ [stage]}{ - set_title}"
+festival_set = "{year} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}"
 concert_film = "{artist} - {title}{ (year)}"
 
 # Glob patterns to force classification. Paths are relative to library root.

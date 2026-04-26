@@ -13,9 +13,9 @@ def test_default_config_has_required_keys():
     cfg = Config(DEFAULT_CONFIG)
     assert cfg.default_layout == "artist_flat"
     assert "artist_flat" in cfg.layouts
-    assert "festival_flat" in cfg.layouts
+    assert "place_flat" in cfg.layouts
     assert "artist_nested" in cfg.layouts
-    assert "festival_nested" in cfg.layouts
+    assert "place_nested" in cfg.layouts
     assert "festival_set" in cfg.filename_templates
     assert "concert_film" in cfg.filename_templates
 
@@ -108,10 +108,10 @@ def test_config_layout_templates():
     assert "{artist}" in fs
     cf = cfg.get_layout_template("concert_film")
     assert "{artist}" in cf
-    # Nested layouts still have festival
+    # Nested layouts still include the place token
     fs_nested = cfg.get_layout_template("festival_set", "artist_nested")
     assert "{artist}" in fs_nested
-    assert "{festival}" in fs_nested
+    assert "{place}" in fs_nested
 
 
 def test_config_skip_patterns():
@@ -174,9 +174,9 @@ def test_load_config_builtin_defaults(tmp_path):
         config = load_config()
     assert config.default_layout == "artist_flat"
     assert "artist_flat" in config.layouts
-    assert "festival_flat" in config.layouts
+    assert "place_flat" in config.layouts
     assert "artist_nested" in config.layouts
-    assert "festival_nested" in config.layouts
+    assert "place_nested" in config.layouts
 
 
 def test_load_config_user_layer(tmp_path):
@@ -235,13 +235,15 @@ def test_new_flat_layouts(tmp_path):
     # artist_flat
     tpl = config.get_layout_template("festival_set", "artist_flat")
     assert tpl == "{artist}"
-    # festival_flat
+    # place_flat (festival_flat is a deprecated alias and resolves identically)
+    tpl = config.get_layout_template("festival_set", "place_flat")
+    assert tpl == "{place}{ edition}"
     tpl = config.get_layout_template("festival_set", "festival_flat")
-    assert tpl == "{festival}{ edition}"
+    assert tpl == "{place}{ edition}"
     # Concerts in flat layouts fall back to {artist}
     tpl = config.get_layout_template("concert_film", "artist_flat")
     assert tpl == "{artist}"
-    tpl = config.get_layout_template("concert_film", "festival_flat")
+    tpl = config.get_layout_template("concert_film", "place_flat")
     assert tpl == "{artist}"
 
 
@@ -251,9 +253,36 @@ def test_renamed_nested_layouts(tmp_path):
         mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
         config = load_config()
     tpl = config.get_layout_template("festival_set", "artist_nested")
-    assert tpl == "{artist}/{festival}{ edition}/{year}"
+    assert tpl == "{artist}/{place}{ edition}/{year}"
     tpl = config.get_layout_template("festival_set", "festival_nested")
-    assert tpl == "{festival}{ edition}/{year}/{artist}"
+    assert tpl == "{place}{ edition}/{year}/{artist}"
+
+
+def test_place_flat_layout_present():
+    cfg = Config({})
+    assert cfg.get_layout_template("festival_set", "place_flat") == "{place}{ edition}"
+
+
+def test_festival_flat_aliases_to_place_flat(caplog):
+    import logging
+    caplog.set_level(logging.WARNING)
+    cfg = Config({})
+    assert cfg.get_layout_template("festival_set", "festival_flat") == cfg.get_layout_template("festival_set", "place_flat")
+    assert any("festival_flat" in r.getMessage() and "deprecat" in r.getMessage().lower()
+               for r in caplog.records)
+
+
+def test_place_nested_layout_present():
+    cfg = Config({})
+    assert cfg.get_layout_template("festival_set", "place_nested") == "{place}{ edition}/{year}/{artist}"
+
+
+def test_festival_nested_aliases_to_place_nested(caplog):
+    import logging
+    caplog.set_level(logging.WARNING)
+    cfg = Config({})
+    assert cfg.get_layout_template("festival_set", "festival_nested") == cfg.get_layout_template("festival_set", "place_nested")
+    assert any("festival_nested" in r.getMessage() for r in caplog.records)
 
 
 def test_tracklists_credentials_from_config():
