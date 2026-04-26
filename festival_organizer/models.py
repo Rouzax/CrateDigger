@@ -18,7 +18,8 @@ class MediaFile:
     set_title: str = ""
     title: str = ""          # For concert films: the concert/show title
     stage: str = ""
-    venue: str = ""
+    venue: str = ""          # Will hold the alias-resolved canonical venue name once subsequent place-routing tasks land
+    venue_full: str = ""     # Raw 1001TL venue name before alias resolution
     location: str = ""  # Plain-text venue+city from 1001TL h1 tail (fallback when no linked source)
     edition: str = ""
     content_type: str = ""   # "festival_set" | "concert_film" | "unknown"
@@ -26,6 +27,8 @@ class MediaFile:
     country: str = ""
     source_type: str = ""          # e.g. "Open Air / Festival", "Event Location"
     metadata_source: str = "" # "1001tracklists" | "metadata" | "filename"
+    place: str = ""          # Canonical resolved name used for folder routing
+    place_kind: str = ""     # "festival" | "venue" | "location" | "artist"
 
     # Identifiers
     youtube_id: str = ""

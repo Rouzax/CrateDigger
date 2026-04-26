@@ -54,6 +54,15 @@ def test_display_artist_defaults_empty():
     assert mf.display_artist == ""
 
 
+def test_mediafile_has_place_fields():
+    from festival_organizer.models import MediaFile
+    from pathlib import Path
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"))
+    assert mf.place == ""
+    assert mf.place_kind == ""
+    assert mf.venue_full == ""
+
+
 def test_display_artist_set_explicitly():
     mf = MediaFile(source_path=Path("test.mkv"), display_artist="Martin Garrix & Alesso")
     assert mf.display_artist == "Martin Garrix & Alesso"
