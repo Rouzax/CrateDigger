@@ -425,16 +425,21 @@ def test_places_json_loads_when_present(tmp_path):
     assert "Printworks" in cfg.place_config
 
 
-def test_festivals_json_falls_back_when_no_places(tmp_path, caplog):
-    import logging
-    (tmp_path / "festivals.json").write_text('{"Tomorrowland": {"color": "#9B1B5A"}}')
-    with patch("festival_organizer.config.paths") as mock_paths:
-        mock_paths.data_dir.return_value = tmp_path / "nonexistent_user_data"
-        with caplog.at_level(logging.WARNING, logger="festival_organizer.config"):
-            cfg = Config({}, config_dir=tmp_path)
-            assert "Tomorrowland" in cfg.place_config
-    assert any("festivals.json" in r.getMessage() and "deprecat" in r.getMessage().lower()
-               for r in caplog.records)
+def test_festivals_json_migrates_to_places_on_config_init(tmp_path, monkeypatch):
+    """Legacy festivals.json is copied to places.json by the auto-migration
+    helper that runs on Config construction, and place_config reads from it."""
+    user_data = tmp_path / "user_data"
+    user_data.mkdir()
+    (user_data / "festivals.json").write_text('{"Tomorrowland": {"color": "#9B1B5A"}}')
+
+    from festival_organizer import paths as paths_module
+    monkeypatch.setattr(paths_module, "data_dir", lambda: user_data)
+
+    cfg = Config({}, config_dir=user_data)
+
+    assert (user_data / "places.json").is_file()
+    assert "Tomorrowland" in cfg.place_config
+    assert (user_data / "festivals.json").is_file(), "legacy file kept"
 
 
 def test_places_wins_when_both_present(tmp_path):
