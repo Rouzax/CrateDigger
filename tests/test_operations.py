@@ -959,11 +959,11 @@ def test_album_poster_dj_artwork_fallback_no_credentials(tmp_path):
 # --- Curated logo tests ---
 
 def test_find_curated_logo_library_level(tmp_path):
-    """Curated logo found at library .cratedigger/festivals/{Name}/logo.png."""
+    """Curated logo found at library .cratedigger/places/{Name}/logo.png."""
     config = Config(DEFAULT_CONFIG)
-    config._data["festival_aliases"] = {"Tomorrowland": ["TML", "Tomorrowland Belgium"]}
+    config._data["place_aliases"] = {"Tomorrowland": ["TML", "Tomorrowland Belgium"]}
     lib = tmp_path / "lib"
-    logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
+    logo_dir = lib / ".cratedigger" / "places" / "Tomorrowland"
     logo_dir.mkdir(parents=True)
     logo_file = logo_dir / "logo.png"
     logo_file.write_bytes(b"\x89PNG")
@@ -976,9 +976,9 @@ def test_find_curated_logo_library_level(tmp_path):
 def test_find_curated_logo_alias_resolution(tmp_path):
     """Alias resolves to canonical name for logo lookup."""
     config = Config(DEFAULT_CONFIG)
-    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    config._data["place_aliases"] = {"Tomorrowland": ["TML"]}
     lib = tmp_path / "lib"
-    logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
+    logo_dir = lib / ".cratedigger" / "places" / "Tomorrowland"
     logo_dir.mkdir(parents=True)
     (logo_dir / "logo.jpg").write_bytes(b"\xff\xd8")
 
@@ -999,17 +999,17 @@ def test_find_curated_logo_missing(tmp_path):
 
 
 def test_find_curated_logo_user_global(tmp_path, monkeypatch):
-    """Curated logo resolved from user-global paths.festivals_logo_dir()."""
+    """Curated logo resolved from user-global paths.places_logo_dir()."""
     config = Config(DEFAULT_CONFIG)
-    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    config._data["place_aliases"] = {"Tomorrowland": ["TML"]}
     lib = tmp_path / "lib"
     lib.mkdir()
-    user_global_dir = tmp_path / "user_festivals"
+    user_global_dir = tmp_path / "user_places"
     (user_global_dir / "Tomorrowland").mkdir(parents=True)
     logo_file = user_global_dir / "Tomorrowland" / "logo.png"
     logo_file.write_bytes(b"\x89PNG")
     monkeypatch.setattr(
-        "festival_organizer.operations.paths.festivals_logo_dir",
+        "festival_organizer.operations.paths.places_logo_dir",
         lambda: user_global_dir,
     )
 
@@ -1020,18 +1020,18 @@ def test_find_curated_logo_user_global(tmp_path, monkeypatch):
 def test_find_curated_logo_library_wins_over_user_global(tmp_path, monkeypatch):
     """Library-local logo wins when both library and user-global contain a logo."""
     config = Config(DEFAULT_CONFIG)
-    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    config._data["place_aliases"] = {"Tomorrowland": ["TML"]}
     lib = tmp_path / "lib"
-    lib_logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
+    lib_logo_dir = lib / ".cratedigger" / "places" / "Tomorrowland"
     lib_logo_dir.mkdir(parents=True)
     lib_logo = lib_logo_dir / "logo.png"
     lib_logo.write_bytes(b"\x89PNG")
 
-    user_global_dir = tmp_path / "user_festivals"
+    user_global_dir = tmp_path / "user_places"
     (user_global_dir / "Tomorrowland").mkdir(parents=True)
     (user_global_dir / "Tomorrowland" / "logo.png").write_bytes(b"\x89PNG")
     monkeypatch.setattr(
-        "festival_organizer.operations.paths.festivals_logo_dir",
+        "festival_organizer.operations.paths.places_logo_dir",
         lambda: user_global_dir,
     )
 
@@ -1076,60 +1076,6 @@ def test_curated_logo_found_in_places_dir(tmp_path):
     assert op._find_curated_logo("Tomorrowland") == logo_file
 
 
-def test_curated_logo_falls_back_to_festivals_dir(tmp_path):
-    """Falls back to .cratedigger/festivals/ when places/ has no match."""
-    config = Config(DEFAULT_CONFIG)
-    config._data["place_aliases"] = {"Tomorrowland": ["TML"]}
-    lib = tmp_path / "lib"
-    logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
-    logo_dir.mkdir(parents=True)
-    logo_file = logo_dir / "logo.png"
-    logo_file.write_bytes(b"\x89PNG")
-
-    op = AlbumPosterOperation(config=config, library_root=lib)
-    assert op._find_curated_logo("Tomorrowland") == logo_file
-
-
-def test_curated_logo_places_wins_over_festivals(tmp_path):
-    """Places directory wins when both places/ and festivals/ contain a logo."""
-    config = Config(DEFAULT_CONFIG)
-    config._data["place_aliases"] = {"Tomorrowland": ["TML"]}
-    lib = tmp_path / "lib"
-
-    places_dir = lib / ".cratedigger" / "places" / "Tomorrowland"
-    places_dir.mkdir(parents=True)
-    places_logo = places_dir / "logo.png"
-    places_logo.write_bytes(b"\x89PNG")
-
-    festivals_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
-    festivals_dir.mkdir(parents=True)
-    (festivals_dir / "logo.png").write_bytes(b"\x89PNG")
-
-    op = AlbumPosterOperation(config=config, library_root=lib)
-    assert op._find_curated_logo("Tomorrowland") == places_logo
-
-
-def test_curated_logo_festivals_fallback_emits_deprecation(tmp_path, caplog):
-    """Hitting the festivals/ fallback emits a one-shot deprecation warning."""
-    import logging
-
-    from festival_organizer import config as config_module
-
-    config_module._emitted_deprecations.discard(".cratedigger/festivals dir")
-
-    config = Config(DEFAULT_CONFIG)
-    config._data["place_aliases"] = {"Tomorrowland": ["TML"]}
-    lib = tmp_path / "lib"
-    festivals_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
-    festivals_dir.mkdir(parents=True)
-    (festivals_dir / "logo.png").write_bytes(b"\x89PNG")
-
-    op = AlbumPosterOperation(config=config, library_root=lib)
-    with caplog.at_level(logging.WARNING, logger="festival_organizer.config"):
-        op._find_curated_logo("Tomorrowland")
-    assert any(".cratedigger/festivals" in rec.message for rec in caplog.records)
-
-
 def test_try_background_source_uses_mf_place_for_venue(tmp_path):
     """_try_background_source passes mf.place (not mf.festival) to logo lookup."""
     config = Config(DEFAULT_CONFIG)
@@ -1161,18 +1107,16 @@ def test_logo_summary_tracks_hits_and_misses(tmp_path):
     assert any("TML" in line for line in summary)
 
 
-def test_logo_summary_scans_places_and_festivals_dirs(tmp_path):
-    """logo_summary reports unmatched folders from both places/ and festivals/."""
+def test_logo_summary_scans_places_dir(tmp_path):
+    """logo_summary reports unmatched folders from .cratedigger/places/."""
     config = Config(DEFAULT_CONFIG)
     lib = tmp_path / "lib"
     (lib / ".cratedigger" / "places" / "PlaceOnly").mkdir(parents=True)
-    (lib / ".cratedigger" / "festivals" / "FestivalOnly").mkdir(parents=True)
 
     op = AlbumPosterOperation(config=config, library_root=lib)
     summary = op.logo_summary()
     text = "\n".join(summary)
     assert "PlaceOnly" in text
-    assert "FestivalOnly" in text
 
 
 def test_download_artwork_max_width_resizes(tmp_path):

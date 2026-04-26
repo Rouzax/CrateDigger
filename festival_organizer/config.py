@@ -278,23 +278,9 @@ class Config:
         )
         return self.place_aliases
 
-    def _external_config_exists(self, filename: str) -> bool:
-        """Return True if ``filename`` is present in any candidate directory."""
-        return any(p.exists() for p in self._external_config_candidates(filename))
-
     @property
     def place_config(self) -> dict:
-        if self._external_config_exists("places.json"):
-            raw = self._load_external_config("places.json", {})
-        elif self._external_config_exists("festivals.json"):
-            _log_deprecated_once(
-                "festivals.json",
-                "festivals.json is deprecated, rename it to places.json. "
-                "Support for festivals.json will be removed in 1.0.0.",
-            )
-            raw = self._load_external_config("festivals.json", {})
-        else:
-            raw = self._load_external_config("places.json", {})
+        raw = self._load_external_config("places.json", {})
         defaults = {k: v for k, v in raw.items()
                     if not k.startswith("_") and isinstance(v, dict)}
         overlay = self._data.get("place_config") or self._data.get("festival_config")

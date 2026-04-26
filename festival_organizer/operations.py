@@ -21,7 +21,7 @@ import requests
 
 from festival_organizer import paths
 from festival_organizer.cache_ttl import hashed_jitter_factor
-from festival_organizer.config import Config, _log_deprecated_once
+from festival_organizer.config import Config
 from festival_organizer.fanart import lookup_mbid
 from festival_organizer.models import MediaFile
 
@@ -417,12 +417,10 @@ class AlbumPosterOperation(Operation):
     def _find_curated_logo(self, place: str, edition: str = "") -> Path | None:
         """Find curated logo for a place from library or user-level folders.
 
-        Library lookup prefers ``.cratedigger/places/<name>/`` and falls back to
-        the legacy ``.cratedigger/festivals/<name>/`` directory for backward
-        compatibility, emitting a one-shot deprecation warning when the legacy
-        path is used. Tries edition-specific path first (e.g.,
-        ``places/EDC Las Vegas/logo.png``), then falls back to canonical
-        (e.g., ``places/EDC/logo.png``).
+        Library lookup checks ``.cratedigger/places/<name>/`` first, then the
+        user-global :func:`paths.places_logo_dir`. Tries edition-specific path
+        first (e.g. ``places/EDC Las Vegas/logo.png``), then falls back to the
+        canonical name (e.g. ``places/EDC/logo.png``).
         """
         canonical = self.config.resolve_place_alias(place) if place else ""
         if not canonical:
@@ -436,27 +434,16 @@ class AlbumPosterOperation(Operation):
         names.append(canonical)
 
         for name in names:
-            search_dirs: list[tuple[Path, bool]] = []
+            search_dirs: list[Path] = []
             if self.library_root:
                 search_dirs.append(
-                    (self.library_root / ".cratedigger" / "places" / name, False)
+                    self.library_root / ".cratedigger" / "places" / name
                 )
-                search_dirs.append(
-                    (self.library_root / ".cratedigger" / "festivals" / name, True)
-                )
-            search_dirs.append((paths.festivals_logo_dir() / name, False))
-            for d, is_legacy in search_dirs:
+            search_dirs.append(paths.places_logo_dir() / name)
+            for d in search_dirs:
                 for ext in ("jpg", "jpeg", "png", "webp"):
                     candidate = d / f"logo.{ext}"
                     if candidate.exists():
-                        if is_legacy:
-                            _log_deprecated_once(
-                                ".cratedigger/festivals dir",
-                                "Curated logo found under .cratedigger/festivals/; "
-                                "this directory is deprecated, move logos to "
-                                ".cratedigger/places/. Support for "
-                                ".cratedigger/festivals/ will be removed in 1.0.0.",
-                            )
                         logger.info("Curated logo: %s", candidate)
                         return candidate
         return None
@@ -657,14 +644,10 @@ class AlbumPosterOperation(Operation):
                 lines.append(f"  {place}")
         if self.library_root:
             known = set(self._logo_hits.keys()) | self._logo_misses
-            seen_dirs: set[str] = set()
-            for sub in ("places", "festivals"):
-                logo_root = self.library_root / ".cratedigger" / sub
-                if not logo_root.is_dir():
-                    continue
+            logo_root = self.library_root / ".cratedigger" / "places"
+            if logo_root.is_dir():
                 for d in sorted(logo_root.iterdir()):
-                    if d.is_dir() and d.name not in known and d.name not in seen_dirs:
-                        seen_dirs.add(d.name)
+                    if d.is_dir() and d.name not in known:
                         lines.append(f"  Unmatched folder: {d.name}")
         return lines
 
