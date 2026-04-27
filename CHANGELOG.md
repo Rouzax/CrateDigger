@@ -9,15 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.15.0] - 2026-04-26
 
-Place routing replaces festival-only routing with a full `festival → venue → location → artist` chain. Sets that previously had no linked festival were silently routed by artist; they now file under their venue or location name. All festival-specific surface (config keys, template tokens, layout names, curated asset paths) is superseded by place-equivalent names and will be removed at 1.0.0.
+Place routing replaces festival-only routing with a full `festival → venue → location → artist` chain. Sets that previously had no linked festival were silently routed by artist; they now file under their venue or location name. All festival-specific API surface, config keys, template tokens, and layout names are removed in this release; the place-named equivalents replace them directly.
 
 ### Migration
 
-No action required for 0.15.0. Existing libraries and config files keep working without any changes. When deprecated names are detected, CrateDigger emits one WARNING per process run naming the old key and the replacement. To migrate: rename `festivals.json` to `places.json`, update layout names if you use `festival_flat` or `festival_nested` to `place_flat` or `place_nested`, and rename `.cratedigger/festivals/` to `.cratedigger/places/`. All of these steps are optional until 1.0.0.
+On first run after upgrade, CrateDigger automatically copies your existing `festivals.json` to `places.json` and copies user-global `.cratedigger/festivals/<name>/` curated logo directories to `.cratedigger/places/<name>/`. The legacy files and directories stay in place so you can roll back to 0.14.x without losing data; delete them once you have verified the new locations work.
 
-On first run after upgrade, CrateDigger automatically copies your existing `festivals.json` and user-global `.cratedigger/festivals/<name>/` curated logo directories to the new place-named locations (`places.json` and `.cratedigger/places/<name>/`). The legacy paths stay in place so you can roll back to 0.14.x without losing data; delete them once you have verified the new locations work.
+The `default_layout` value in your `config.toml` is also rewritten automatically: `festival_flat` becomes `place_flat` and `festival_nested` becomes `place_nested` at load time.
 
-If you keep curated logos under a library-local `<library>/.cratedigger/festivals/` directory, that location is NOT auto-migrated. Rename it to `<library>/.cratedigger/places/` to keep those logos picked up.
+Everything else listed in the Removed section below requires a manual update. There are no runtime aliases or deprecation warnings for those items; they are gone.
 
 ### Added
 
@@ -39,16 +39,21 @@ If you keep curated logos under a library-local `<library>/.cratedigger/festival
 - `mf.venue` now carries the alias-resolved canonical venue name. The raw 1001TL venue text moves to `mf.venue_full`. This mirrors the existing `mf.festival` / `mf.festival_full` split and means alias-resolved names appear consistently in folder paths, poster text, and metadata fields.
 - The `LOCATION` embedded MKV tag now carries the best available raw venue text (`festival_full`, `venue_full`, or location string) rather than a mix of canonical and raw values. The tag is an archival record of where the set was performed; canonical names appear in folder paths and poster text.
 
-### Deprecated
+### Removed (breaking, but auto-migrated where possible)
 
-The following user-facing surface continues to work in 0.15.0 but logs one WARNING per process run when detected. All items are slated for removal at 1.0.0.
+The festival-named API surface and config keys are removed. Auto-migration covers the on-disk data files transparently:
 
-- Config file `festivals.json`. Use `places.json` instead.
-- Template token `{festival}`. Use `{place}` instead.
-- Layouts `festival_flat` and `festival_nested`. Use `place_flat` and `place_nested` instead.
-- Config keys `festival_background_priority` and `unknown_festival`. Use `place_background_priority` and `unknown_place` instead.
-- Curated assets directory `.cratedigger/festivals/`. Use `.cratedigger/places/` instead.
-- Internal `Config` methods `festival_aliases`, `festival_config`, `resolve_festival_alias`, `resolve_festival_with_edition`, `get_festival_display`, and `known_festivals`. Use the corresponding `place_*` equivalents.
+- `festivals.json` is copied to `places.json` on first run; legacy file retained for rollback.
+- `.cratedigger/festivals/<name>/` curated logo subdirectories are copied to `.cratedigger/places/<name>/` on first run; legacy directories retained.
+- `default_layout = "festival_flat"` (or `festival_nested`) in your `config.toml` is rewritten to the place-named equivalent at load time.
+
+Manual updates required if your `config.toml` or external code uses any of:
+
+- `[layouts.festival_flat]` / `[layouts.festival_nested]` table headers for custom layout definitions. Rename to `[layouts.place_flat]` or a user-chosen name.
+- `{festival}` template token in custom layouts. Replace with `{place}`.
+- TOML keys: `[festival_aliases]`, `[festival_config]`, `festival_background_priority`, `unknown_festival`. Use `[place_aliases]`, `[place_config]`, `place_background_priority`, `unknown_place`.
+- `Config.festival_aliases` / `festival_config` / `resolve_festival_alias` / `resolve_festival_with_edition` / `get_festival_display` / `known_festivals` in external Python code. Use the `place_*` equivalents.
+- Library-local `<library>/.cratedigger/festivals/` directories (NOT auto-migrated). Rename to `<library>/.cratedigger/places/`.
 
 ## [0.14.5] - 2026-04-25
 
