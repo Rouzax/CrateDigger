@@ -5,15 +5,21 @@ from typing import Any
 from unittest.mock import patch
 from festival_organizer.embed_tags import embed_tags
 from festival_organizer.models import MediaFile
+from tests.conftest import make_mediafile
 
 
 def _make_mf(**kwargs: Any) -> MediaFile:
+    """Construct a MediaFile via ``make_mediafile`` so ``mf.place`` /
+    ``mf.place_kind`` are auto-populated the way ``analyzer.py`` would in
+    production. Tests asserting on ``build_display_title`` output (TITLE tag,
+    SYNOPSIS line) need the canonical place set, since the function reads
+    ``mf.place`` rather than ``mf.festival``."""
     defaults: dict[str, Any] = dict(
         source_path=Path("test.mkv"), artist="Test",
         festival="TML", year="2024", content_type="festival_set",
     )
     defaults.update(kwargs)
-    return MediaFile(**defaults)
+    return make_mediafile(**defaults)
 
 
 def test_embed_tags_failure_logged(tmp_path, caplog):
