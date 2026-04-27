@@ -74,27 +74,32 @@ def build_display_title(mf: MediaFile, config=None) -> str:
     """Build a display title for Kodi browse views and MKV TITLE tag.
 
     Format:
-        With stage:    Artist @ Stage, Festival [SetTitle]
-        Without stage: Artist @ Festival [SetTitle]
-        No festival:   Artist
+        With stage:    Artist @ Stage, Place [SetTitle]
+        Without stage: Artist @ Place [SetTitle]
+        No place:      Artist
+
+    "Place" here is the canonical resolved name from `mf.place` when the
+    routing chain matched a festival, venue, or location. The "artist"
+    fallback case (place_kind == "artist") intentionally suppresses the
+    "@ Place" segment so the title doesn't render as `Artist @ Artist`.
     """
     if mf.content_type == "festival_set":
         artist = mf.display_artist or mf.artist or "Unknown Artist"
-        festival = ""
-        if mf.festival:
+        place = ""
+        if mf.place_kind in ("festival", "venue", "location") and mf.place:
             if config and mf.edition:
-                festival = config.get_place_display(mf.festival, mf.edition)
+                place = config.get_place_display(mf.place, mf.edition)
             else:
-                festival = mf.festival
+                place = mf.place
             if mf.set_title:
-                festival = f"{festival} {mf.set_title}"
+                place = f"{place} {mf.set_title}"
         if mf.stage:
             parts = [f"{artist} @ {mf.stage}"]
-            if festival:
-                parts.append(festival)
+            if place:
+                parts.append(place)
             return ", ".join(parts)
-        if festival:
-            return f"{artist} @ {festival}"
+        if place:
+            return f"{artist} @ {place}"
         return artist
     return mf.title or mf.artist or "Unknown"
 
