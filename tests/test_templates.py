@@ -46,7 +46,7 @@ def test_render_folder_artist_nested_concert():
     assert result == "Coldplay/2018 - A Head Full of Dreams"
 
 
-def test_render_folder_festival_nested():
+def test_render_folder_place_nested():
     mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Hardwell",
@@ -55,12 +55,12 @@ def test_render_folder_festival_nested():
         edition="Winter",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG, layout_name="festival_nested")
+    result = render_folder(mf, CFG, layout_name="place_nested")
     assert result == "Tomorrowland Winter/2025/Hardwell"
 
 
-def test_render_folder_festival_flat_festival_set():
-    """festival_flat layout: festival sets go into {festival}{edition}/."""
+def test_render_folder_place_flat_festival_set():
+    """place_flat layout: festival sets go into {place}{edition}/."""
     mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
@@ -68,12 +68,12 @@ def test_render_folder_festival_flat_festival_set():
         year="2024",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG, layout_name="festival_flat")
+    result = render_folder(mf, CFG, layout_name="place_flat")
     assert result == "Tomorrowland"
 
 
-def test_render_folder_festival_flat_with_edition():
-    """festival_flat layout: edition appended when configured."""
+def test_render_folder_place_flat_with_edition():
+    """place_flat layout: edition appended when configured."""
     mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Alok",
@@ -82,12 +82,12 @@ def test_render_folder_festival_flat_with_edition():
         edition="Brasil",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG, layout_name="festival_flat")
+    result = render_folder(mf, CFG, layout_name="place_flat")
     assert result == "Tomorrowland Brasil"
 
 
-def test_render_folder_festival_flat_concert_film():
-    """festival_flat layout: concerts fall back to {artist}/."""
+def test_render_folder_place_flat_concert_film():
+    """place_flat layout: concerts fall back to {artist}/."""
     mf = MediaFile(
         source_path=Path("test.mkv"),
         artist="Adele",
@@ -95,7 +95,7 @@ def test_render_folder_festival_flat_concert_film():
         year="2022",
         content_type="concert_film",
     )
-    result = render_folder(mf, CFG, layout_name="festival_flat")
+    result = render_folder(mf, CFG, layout_name="place_flat")
     assert result == "Adele"
 
 
@@ -121,7 +121,7 @@ def test_render_folder_edition_collapses_when_empty():
         year="2024",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG, layout_name="festival_nested")
+    result = render_folder(mf, CFG, layout_name="place_nested")
     assert result == "AMF/2024/Martin Garrix"
 
 
@@ -135,7 +135,7 @@ def test_render_folder_edition_collapses_when_unknown():
         edition="Netherlands",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG, layout_name="festival_nested")
+    result = render_folder(mf, CFG, layout_name="place_nested")
     assert result == "AMF/2024/Hardwell"
 
 
@@ -490,7 +490,7 @@ def test_festival_set_routes_by_festival():
         year="2024",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG, layout_name="festival_flat")
+    result = render_folder(mf, CFG, layout_name="place_flat")
     assert result == "Tomorrowland"
 
 
@@ -503,7 +503,7 @@ def test_no_festival_routes_by_venue():
         year="2024",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG, layout_name="festival_flat")
+    result = render_folder(mf, CFG, layout_name="place_flat")
     assert result == "Alexandra Palace"
 
 
@@ -516,7 +516,7 @@ def test_no_festival_no_venue_routes_by_location():
         year="2024",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG, layout_name="festival_flat")
+    result = render_folder(mf, CFG, layout_name="place_flat")
     assert result == "Random Bar, Berlin, Germany"
 
 
@@ -528,7 +528,7 @@ def test_no_routing_info_falls_back_to_artist():
         year="2026",
         content_type="festival_set",
     )
-    result = render_folder(mf, CFG, layout_name="festival_flat")
+    result = render_folder(mf, CFG, layout_name="place_flat")
     assert result == "FISHER"
 
 

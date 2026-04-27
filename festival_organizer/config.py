@@ -12,7 +12,6 @@ Logging:
         - config.external_loaded (DEBUG): External JSON config loaded from path
         - config.external_not_found (DEBUG): External JSON not found in any candidate
         - config.invalid_kodi_port (WARNING): KODI_PORT env var is not a valid int
-        - config.deprecated_once (WARNING): Deprecated config surface used; logged once per key per process
     See docs/logging.md for full guidelines.
 """
 import json
@@ -28,17 +27,6 @@ from festival_organizer import paths
 from festival_organizer.normalization import strip_diacritics
 
 logger = logging.getLogger(__name__)
-
-
-_emitted_deprecations: set[str] = set()
-
-
-def _log_deprecated_once(key: str, message: str) -> None:
-    """Emit a WARNING-level deprecation log exactly once per process per key."""
-    if key in _emitted_deprecations:
-        return
-    _emitted_deprecations.add(key)
-    logger.warning(message)
 
 
 # Defaults for external config files (artists.json, places.json)
@@ -511,33 +499,9 @@ class Config:
             return f"{canonical_place} {edition}"
         return canonical_place
 
-    _LEGACY_LAYOUT_ALIASES = {
-        "festival_flat": "place_flat",
-        "festival_nested": "place_nested",
-    }
-
-    def _resolve_layout_name(self, layout: str) -> str:
-        """Map deprecated layout names to their canonical ``place_*`` form.
-
-        A user-defined override in ``self.layouts`` for the deprecated name
-        wins (with a deprecation warning); otherwise the name is rewritten to
-        the modern equivalent.
-        """
-        if layout not in self._LEGACY_LAYOUT_ALIASES:
-            return layout
-        canonical = self._LEGACY_LAYOUT_ALIASES[layout]
-        _log_deprecated_once(
-            f"layout.{layout}",
-            f"Layout name '{layout}' is deprecated, use '{canonical}' instead. "
-            f"Support for '{layout}' will be removed in 1.0.0.",
-        )
-        if layout in self.layouts:
-            return layout
-        return canonical
-
     def get_layout_template(self, content_type: str, layout_name: str | None = None) -> str:
         """Get the folder layout template for a content type."""
-        layout = self._resolve_layout_name(layout_name or self.default_layout)
+        layout = layout_name or self.default_layout
         layouts = self.layouts.get(layout, {})
         return layouts.get(content_type, layouts.get("festival_set", "{artist}/{year}"))
 
@@ -702,11 +666,16 @@ def load_config(
 
 
 def _migrate_layout_names(data: dict) -> None:
-    """Backward compatibility: map old layout names to new."""
-    if data.get("default_layout") == "artist_first":
-        data["default_layout"] = "artist_nested"
-    elif data.get("default_layout") == "festival_first":
-        data["default_layout"] = "festival_nested"
+    """Backward compatibility: map historical layout names to current ones."""
+    legacy = {
+        "artist_first": "artist_nested",
+        "festival_first": "place_nested",
+        "festival_flat": "place_flat",
+        "festival_nested": "place_nested",
+    }
+    current = data.get("default_layout")
+    if current in legacy:
+        data["default_layout"] = legacy[current]
 
 
 def _deep_merge(base: dict, override: dict) -> None:

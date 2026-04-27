@@ -13,13 +13,18 @@ from festival_organizer.operations import OperationResult
 from tests.conftest import TEST_CONFIG
 
 
-def test_layout_enum_includes_place_and_festival_names():
-    """The --layout flag accepts both new place_* names and deprecated festival_* aliases."""
+def test_layout_enum_only_exposes_place_named_layouts():
+    """The --layout flag exposes only the canonical place_* names.
+
+    Festival-named layouts were removed in 0.15.0; users with
+    `default_layout = "festival_flat"` in config.toml are migrated by
+    `_migrate_layout_names` at load time, but the CLI flag only accepts
+    the canonical names.
+    """
     from festival_organizer.cli import Layout
 
     values = {layout.value for layout in Layout}
-    assert {"artist_flat", "place_flat", "festival_flat",
-            "artist_nested", "place_nested", "festival_nested"} <= values
+    assert values == {"artist_flat", "place_flat", "artist_nested", "place_nested"}
 
 
 def test_version_flag_prints_version_and_exits():

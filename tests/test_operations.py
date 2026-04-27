@@ -357,11 +357,11 @@ def test_album_poster_type_from_artist_flat_layout():
     assert op._get_folder_poster_type(mf) == "artist"
 
 
-def test_album_poster_type_from_festival_flat_layout():
-    """festival_flat layout: {festival} -> festival poster type."""
+def test_album_poster_type_from_place_flat_layout():
+    """place_flat layout: {festival} -> festival poster type."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config(DEFAULT_CONFIG)
-    config._data["default_layout"] = "festival_flat"
+    config._data["default_layout"] = "place_flat"
     op = AlbumPosterOperation(config=config)
     mf = _make_mf(place="Tomorrowland", place_kind="festival")
     assert op._get_folder_poster_type(mf) == "festival"
@@ -377,11 +377,11 @@ def test_album_poster_type_nested_segments():
     assert segments == ["artist", "festival", "year"]
 
 
-def test_album_poster_type_festival_nested_segments():
-    """festival_nested: {festival}/{year}/{artist} -> per-segment types."""
+def test_album_poster_type_place_nested_segments():
+    """place_nested: {festival}/{year}/{artist} -> per-segment types."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config(DEFAULT_CONFIG)
-    config._data["default_layout"] = "festival_nested"
+    config._data["default_layout"] = "place_nested"
     op = AlbumPosterOperation(config=config)
     segments = op._get_layout_segments("festival_set")
     assert segments == ["festival", "year", "artist"]
@@ -580,7 +580,7 @@ def test_album_poster_execute_festival_layout_no_hero_text(tmp_path):
     """Festival layout poster should NOT have hero_text (artist name)."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config(DEFAULT_CONFIG)
-    config._data["default_layout"] = "festival_flat"
+    config._data["default_layout"] = "place_flat"
     lib = tmp_path / "lib"
     (lib / ".cratedigger").mkdir(parents=True)
 
@@ -606,7 +606,7 @@ def test_album_poster_warms_caches_for_unused_sources(tmp_path):
     """Album poster warms fanart_tv and DJ artwork caches even for festival layout."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config(DEFAULT_CONFIG)
-    config._data["default_layout"] = "festival_flat"
+    config._data["default_layout"] = "place_flat"
     lib = tmp_path / "lib"
     (lib / ".cratedigger").mkdir(parents=True)
 
