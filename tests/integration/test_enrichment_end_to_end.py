@@ -510,7 +510,7 @@ def test_in_place_layout_switch_migrates_sidecars_and_folder_artefacts(tmp_path)
     # now-empty artist_dir must be removed.
     subprocess.run(
         ["cratedigger", "organize", *cfg_arg,
-         "--layout", "festival_flat", "--yes", str(inbox)],
+         "--layout", "place_flat", "--yes", str(inbox)],
         check=True, timeout=300,
     )
 

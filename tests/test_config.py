@@ -141,8 +141,8 @@ def test_load_config_from_toml_file():
         f.write(toml_text)
         f.flush()
         cfg = load_config(Path(f.name))
-    # Custom value overrides default (and triggers legacy rename)
-    assert cfg.default_layout == "festival_nested"
+    # Custom value overrides default (and triggers legacy rename to place_nested)
+    assert cfg.default_layout == "place_nested"
     # Custom alias merged
     assert cfg.resolve_place_alias("TML") == "Tomorrowland"
     # Default aliases still present
@@ -206,12 +206,12 @@ def test_load_config_library_layer(tmp_path):
     lib_dir = tmp_path / ".cratedigger"
     lib_dir.mkdir()
     lib_config = lib_dir / "config.toml"
-    lib_config.write_text('default_layout = "festival_flat"\n')
+    lib_config.write_text('default_layout = "place_flat"\n')
     # Point the user layer at a non-existent file.
     with patch("festival_organizer.config.paths") as mock_paths:
         mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
         config = load_config(library_config_dir=lib_dir)
-    assert config.default_layout == "festival_flat"
+    assert config.default_layout == "place_flat"
 
 
 def test_load_config_merge_order(tmp_path):
@@ -222,9 +222,9 @@ def test_load_config_merge_order(tmp_path):
     user_file.write_text('default_layout = "artist_nested"\n')
     lib_dir = tmp_path / "lib" / ".cratedigger"
     lib_dir.mkdir(parents=True)
-    (lib_dir / "config.toml").write_text('default_layout = "festival_nested"\n')
+    (lib_dir / "config.toml").write_text('default_layout = "place_nested"\n')
     config = load_config(user_config_file=user_file, library_config_dir=lib_dir)
-    assert config.default_layout == "festival_nested"
+    assert config.default_layout == "place_nested"
 
 
 def test_new_flat_layouts(tmp_path):
@@ -235,10 +235,8 @@ def test_new_flat_layouts(tmp_path):
     # artist_flat
     tpl = config.get_layout_template("festival_set", "artist_flat")
     assert tpl == "{artist}"
-    # place_flat (festival_flat is a deprecated alias and resolves identically)
+    # place_flat
     tpl = config.get_layout_template("festival_set", "place_flat")
-    assert tpl == "{place}{ edition}"
-    tpl = config.get_layout_template("festival_set", "festival_flat")
     assert tpl == "{place}{ edition}"
     # Concerts in flat layouts fall back to {artist}
     tpl = config.get_layout_template("concert_film", "artist_flat")
@@ -248,13 +246,13 @@ def test_new_flat_layouts(tmp_path):
 
 
 def test_renamed_nested_layouts(tmp_path):
-    """Old layout names renamed: artist_first -> artist_nested, etc."""
+    """Old layout names renamed: artist_first -> artist_nested, festival_first -> place_nested."""
     with patch("festival_organizer.config.paths") as mock_paths:
         mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
         config = load_config()
     tpl = config.get_layout_template("festival_set", "artist_nested")
     assert tpl == "{artist}/{place}{ edition}/{year}"
-    tpl = config.get_layout_template("festival_set", "festival_nested")
+    tpl = config.get_layout_template("festival_set", "place_nested")
     assert tpl == "{place}{ edition}/{year}/{artist}"
 
 
@@ -263,26 +261,9 @@ def test_place_flat_layout_present():
     assert cfg.get_layout_template("festival_set", "place_flat") == "{place}{ edition}"
 
 
-def test_festival_flat_aliases_to_place_flat(caplog):
-    import logging
-    caplog.set_level(logging.WARNING)
-    cfg = Config({})
-    assert cfg.get_layout_template("festival_set", "festival_flat") == cfg.get_layout_template("festival_set", "place_flat")
-    assert any("festival_flat" in r.getMessage() and "deprecat" in r.getMessage().lower()
-               for r in caplog.records)
-
-
 def test_place_nested_layout_present():
     cfg = Config({})
     assert cfg.get_layout_template("festival_set", "place_nested") == "{place}{ edition}/{year}/{artist}"
-
-
-def test_festival_nested_aliases_to_place_nested(caplog):
-    import logging
-    caplog.set_level(logging.WARNING)
-    cfg = Config({})
-    assert cfg.get_layout_template("festival_set", "festival_nested") == cfg.get_layout_template("festival_set", "place_nested")
-    assert any("festival_nested" in r.getMessage() for r in caplog.records)
 
 
 def test_tracklists_credentials_from_config():
@@ -320,13 +301,13 @@ def test_load_config_malformed_library_toml(tmp_path, caplog):
     user_dir = tmp_path / "user"
     user_dir.mkdir(parents=True)
     user_file = user_dir / "config.toml"
-    user_file.write_text('default_layout = "festival_flat"\n')
+    user_file.write_text('default_layout = "place_flat"\n')
     lib_dir = tmp_path / "lib" / ".cratedigger"
     lib_dir.mkdir(parents=True)
     (lib_dir / "config.toml").write_text("not = valid = toml = syntax")
     with caplog.at_level("WARNING", logger="festival_organizer.config"):
         config = load_config(user_config_file=user_file, library_config_dir=lib_dir)
-    assert config.default_layout == "festival_flat"  # user layer applied
+    assert config.default_layout == "place_flat"  # user layer applied
     assert any("config.toml" in r.getMessage() for r in caplog.records)
 
 
@@ -356,7 +337,7 @@ def test_load_config_journals_library_layer(tmp_path, caplog):
     """log_load_summary includes the library config.toml entry."""
     lib_dir = tmp_path / ".cratedigger"
     lib_dir.mkdir()
-    (lib_dir / "config.toml").write_text('default_layout = "festival_flat"\n')
+    (lib_dir / "config.toml").write_text('default_layout = "place_flat"\n')
     with patch("festival_organizer.config.paths") as mock_paths:
         mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
         cfg = load_config(library_config_dir=lib_dir)
@@ -605,7 +586,7 @@ def test_load_config_unreadable_file(tmp_path, caplog):
     user_dir = tmp_path / "user"
     user_dir.mkdir()
     cfg_file = user_dir / "config.toml"
-    cfg_file.write_text('default_layout = "festival_flat"\n')
+    cfg_file.write_text('default_layout = "place_flat"\n')
     os.chmod(cfg_file, 0o000)
     try:
         with caplog.at_level("WARNING", logger="festival_organizer.config"):
@@ -623,7 +604,7 @@ class TestTomlConfigLoading:
         user_dir = tmp_path / "user"
         user_dir.mkdir()
         (user_dir / "config.toml").write_text(
-            'default_layout = "festival_nested"\n'
+            'default_layout = "place_nested"\n'
             '\n'
             '[kodi]\n'
             'enabled = true\n'
@@ -632,7 +613,7 @@ class TestTomlConfigLoading:
         with patch("festival_organizer.config.paths") as mock_paths:
             mock_paths.config_file.return_value = user_dir / "config.toml"
             cfg = load_config()
-        assert cfg.default_layout == "festival_nested"
+        assert cfg.default_layout == "place_nested"
         assert cfg._data["kodi"]["enabled"] is True
         assert cfg._data["kodi"]["host"] == "192.168.1.10"
 
@@ -680,7 +661,7 @@ def test_legacy_library_config_json_logs_warning(tmp_path, caplog):
     library_dir = tmp_path / "library" / ".cratedigger"
     library_dir.mkdir(parents=True)
     (library_dir / "config.json").write_text(
-        '{"default_layout": "festival_nested"}', encoding="utf-8"
+        '{"default_layout": "place_nested"}', encoding="utf-8"
     )
 
     with patch("festival_organizer.config.paths") as mock_paths:

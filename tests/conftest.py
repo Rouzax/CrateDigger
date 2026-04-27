@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from festival_organizer import config as _config_module
 from festival_organizer import paths as _paths_module
 from festival_organizer.config import DEFAULT_CONFIG
 from festival_organizer.models import MediaFile
@@ -47,18 +46,12 @@ def make_mediafile(*, place: str | None = None, place_kind: str | None = None, *
 def _reset_per_process_state():
     """Reset module-level once-per-process flags between tests.
 
-    Covers two unrelated dedup mechanisms:
-
-    - ``config._emitted_deprecations``: dedup set for one-shot deprecation
-      WARNINGs, cleared so tests don't suppress each other's logs.
-    - ``paths._migrated_this_process``: flag that gates the legacy-path
-      auto-migration so it runs at most once per process. Reset so each test
-      that constructs a Config sees a fresh migration attempt.
+    ``paths._migrated_this_process`` gates the legacy-path auto-migration so
+    it runs at most once per process. Reset so each test that constructs a
+    Config sees a fresh migration attempt.
     """
-    _config_module._emitted_deprecations.clear()
     _paths_module._migrated_this_process = False
     yield
-    _config_module._emitted_deprecations.clear()
     _paths_module._migrated_this_process = False
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
