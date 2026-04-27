@@ -256,7 +256,7 @@ class AlbumPosterOperation(Operation):
     def _get_folder_poster_type(self, mf: MediaFile) -> str:
         """Determine poster type from the first segment of the layout template.
 
-        Priority for mixed segments: {place}/{festival} > {artist} > {year}.
+        Priority for mixed segments: {place} > {artist} > {year}.
         When the layout's first segment resolves to "festival" but the runtime
         place_kind is "artist" (no festival/venue/location matched), the poster
         type falls back to "artist" so the artist background pipeline runs.
@@ -294,12 +294,8 @@ class AlbumPosterOperation(Operation):
 
     @staticmethod
     def _classify_segment(segment: str) -> str:
-        """Classify a template segment by priority: place/festival > artist > year.
-
-        The {place} and {festival} tokens are interchangeable for classification purposes.
-        {festival} is the deprecated alias kept for backward compatibility through 1.0.0.
-        """
-        if "{place}" in segment or "{festival}" in segment:
+        """Classify a template segment by priority: place > artist > year."""
+        if "{place}" in segment:
             return "festival"
         if "{artist}" in segment:
             return "artist"
