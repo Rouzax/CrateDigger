@@ -13,7 +13,7 @@ from festival_organizer.normalization import safe_filename
 
 # All known placeholder field names used in templates.
 _KNOWN_FIELDS = frozenset({
-    "artist", "festival", "place", "year", "date",
+    "artist", "place", "year", "date",
     "edition", "stage", "set_title", "title",
 })
 
@@ -72,12 +72,12 @@ def render_filename(media_file: MediaFile, config: Config) -> str:
 
 def _build_values(media_file: MediaFile, config: Config, *, for_filename: bool = False) -> dict[str, str]:
     """Build the substitution values dict for a media file."""
-    festival = media_file.festival
+    place = media_file.place
 
-    # Validate edition: only include if it matches a configured edition
+    # Validate edition: only include if it matches a configured edition for this place
     edition = ""
-    if festival and media_file.edition:
-        fc = config.place_config.get(festival, {})
+    if place and media_file.edition:
+        fc = config.place_config.get(place, {})
         known = [e.lower() for e in fc.get("editions", [])]
         if media_file.edition.lower() in known:
             edition = media_file.edition
@@ -89,8 +89,7 @@ def _build_values(media_file: MediaFile, config: Config, *, for_filename: bool =
 
     return {
         "artist": safe_filename(artist),
-        "festival": safe_filename(media_file.place),
-        "place": safe_filename(media_file.place),
+        "place": safe_filename(place),
         "year": media_file.year,
         "date": media_file.date,
         "edition": safe_filename(edition),
