@@ -68,7 +68,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
     # Remove "-concert" suffix (Plex convention)
     stem = re.sub(r"-concert\s*$", "", stem, flags=re.IGNORECASE).strip()
 
-    known_festivals = config.known_places
+    known_places = config.known_places
 
     # --- Pattern: YYYY - Part2 - Part3 [WE1/WE2] ---
     m = re.match(r"^(\d{4})\s*[-\u2013]\s*(.+?)\s*[-\u2013]\s*(.+?)(?:(?:\s*[-\u2013]\s*|\s+)(WE\d))?\s*$", stem)
@@ -78,7 +78,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         part3 = m.group(3).strip()
         weekend = m.group(4)
         # Part2 could be festival or edition; Part3 is artist
-        if _is_known_festival(part2, known_festivals):
+        if _is_known_place(part2, known_places):
             result.setdefault("festival", part2)
         else:
             # Could be edition like "Belgium"; store both
@@ -133,10 +133,10 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         part1 = m.group(1).strip()
         part2 = m.group(2).strip()
         year = m.group(3)
-        if _is_known_festival(part1, known_festivals):
+        if _is_known_place(part1, known_places):
             result.setdefault("festival", part1)
             result.setdefault("artist", part2)
-        elif _is_known_festival(part2, known_festivals):
+        elif _is_known_place(part2, known_places):
             result.setdefault("artist", part1)
             result.setdefault("festival", part2)
         else:
@@ -157,7 +157,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
             result.setdefault("artist", artist.strip())
             result.setdefault("set_title", weekend)
             result.setdefault("year", year)
-            if _is_known_festival(festival_part.strip(), known_festivals):
+            if _is_known_place(festival_part.strip(), known_places):
                 result.setdefault("festival", festival_part.strip())
             else:
                 result.setdefault("festival", festival_part.strip())
@@ -165,7 +165,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
             artist, festival_part, year = groups
             result.setdefault("artist", artist.strip())
             result.setdefault("year", year)
-            if _is_known_festival(festival_part.strip(), known_festivals):
+            if _is_known_place(festival_part.strip(), known_places):
                 result.setdefault("festival", festival_part.strip())
             else:
                 result.setdefault("festival", festival_part.strip())
@@ -177,7 +177,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         result.setdefault("year", year_match.group(1))
         remainder = (stem[:year_match.start()] + stem[year_match.end():]).strip(" -\u2013\u2014")
         # Check if remainder contains a known festival
-        for fest in known_festivals:
+        for fest in known_places:
             if _festival_in_text(fest, remainder):
                 result.setdefault("festival", fest)
                 # Remove the festival name to get the artist
@@ -232,6 +232,6 @@ def _festival_in_text(fest: str, text: str) -> bool:
     return bool(re.search(r"(?<!\w)" + re.escape(fest) + r"(?!\w)", text, re.IGNORECASE))
 
 
-def _is_known_festival(name: str, known: set[str]) -> bool:
-    """Check if name matches a known festival."""
+def _is_known_place(name: str, known: set[str]) -> bool:
+    """Check if name matches a known place (festival, venue, club, etc.)."""
     return any(_festival_in_text(f, name) for f in known)

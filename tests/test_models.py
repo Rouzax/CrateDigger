@@ -1,5 +1,5 @@
 from pathlib import Path
-from festival_organizer.models import MediaFile, FileAction
+from festival_organizer.models import MediaFile, FileAction, build_display_title
 
 
 def test_media_file_defaults():
@@ -66,6 +66,79 @@ def test_mediafile_has_place_fields():
 def test_display_artist_set_explicitly():
     mf = MediaFile(source_path=Path("test.mkv"), display_artist="Martin Garrix & Alesso")
     assert mf.display_artist == "Martin Garrix & Alesso"
+
+
+def test_build_display_title_uses_place_for_festival_kind():
+    mf = MediaFile(
+        source_path=Path("x.mkv"),
+        artist="Armin van Buuren",
+        place="Tomorrowland",
+        place_kind="festival",
+        content_type="festival_set",
+    )
+    assert build_display_title(mf) == "Armin van Buuren @ Tomorrowland"
+
+
+def test_build_display_title_uses_place_for_venue_kind():
+    """Venue-routed sets must show '@ Venue' in the title (not just artist)."""
+    mf = MediaFile(
+        source_path=Path("x.mkv"),
+        artist="Fred again..",
+        place="Alexandra Palace",
+        place_kind="venue",
+        content_type="festival_set",
+    )
+    assert build_display_title(mf) == "Fred again.. @ Alexandra Palace"
+
+
+def test_build_display_title_uses_place_for_location_kind():
+    """Location-routed sets show '@ Location' in the title."""
+    mf = MediaFile(
+        source_path=Path("x.mkv"),
+        artist="DJ Example",
+        place="Some Bar, Berlin",
+        place_kind="location",
+        content_type="festival_set",
+    )
+    assert build_display_title(mf) == "DJ Example @ Some Bar, Berlin"
+
+
+def test_build_display_title_falls_back_to_artist_only_for_artist_kind():
+    """Artist-fallback sets render as just the artist (no '@ Artist' duplicate)."""
+    mf = MediaFile(
+        source_path=Path("x.mkv"),
+        artist="Fred again..",
+        place="Fred again..",
+        place_kind="artist",
+        content_type="festival_set",
+    )
+    assert build_display_title(mf) == "Fred again.."
+
+
+def test_build_display_title_with_stage_and_venue():
+    """Stage with venue-routed set: 'Artist @ Stage, Venue'."""
+    mf = MediaFile(
+        source_path=Path("x.mkv"),
+        artist="Fred again..",
+        place="Alexandra Palace",
+        place_kind="venue",
+        stage="USB002",
+        content_type="festival_set",
+    )
+    assert build_display_title(mf) == "Fred again.. @ USB002, Alexandra Palace"
+
+
+def test_build_display_title_with_set_title_and_venue():
+    """Set title appended to venue-routed place segment."""
+    mf = MediaFile(
+        source_path=Path("x.mkv"),
+        artist="Bicep",
+        place="Printworks",
+        place_kind="venue",
+        set_title="Closing Set",
+        content_type="festival_set",
+    )
+    assert build_display_title(mf) == "Bicep @ Printworks Closing Set"
 
 
 def test_file_action_defaults():
