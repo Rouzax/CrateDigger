@@ -387,12 +387,12 @@ def test_album_poster_type_place_nested_segments():
     assert segments == ["festival", "year", "artist"]
 
 
-def test_album_poster_type_mixed_segment_festival_wins():
-    """Mixed segment {artist} - {festival} -> festival wins (higher priority)."""
+def test_album_poster_type_mixed_segment_place_wins():
+    """Mixed segment {artist} - {place} -> place wins (higher priority)."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config({**DEFAULT_CONFIG, "layouts": {
         **DEFAULT_CONFIG["layouts"],
-        "custom": {"festival_set": "{artist} - {festival}"},
+        "custom": {"festival_set": "{artist} - {place}"},
     }})
     config._data["default_layout"] = "custom"
     op = AlbumPosterOperation(config=config)
@@ -1312,13 +1312,14 @@ def test_classify_segment_recognizes_place():
     assert AlbumPosterOperation._classify_segment("{place}") == "festival"
 
 
-def test_classify_segment_festival_token_still_works():
-    assert AlbumPosterOperation._classify_segment("{festival}{ edition}") == "festival"
+def test_classify_segment_festival_token_no_longer_recognized():
+    # {festival} was removed in 0.15.0; classifier no longer treats it as a place token.
+    # A segment containing only {festival} therefore defaults to "artist".
+    assert AlbumPosterOperation._classify_segment("{festival}{ edition}") == "artist"
 
 
 def test_classify_segment_artist_token():
-    # festival/place wins over artist when both tokens are present in a segment
-    assert AlbumPosterOperation._classify_segment("{artist}/{festival}") == "festival"
+    # place wins over artist when both tokens are present in a segment
     assert AlbumPosterOperation._classify_segment("{artist}/{place}") == "festival"
     assert AlbumPosterOperation._classify_segment("{artist}") == "artist"
 
