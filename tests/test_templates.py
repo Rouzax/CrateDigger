@@ -559,8 +559,11 @@ def test_place_token_renders_mf_place():
     assert render_folder(mf, cfg, layout_name="place_flat_test") == "Tomorrowland/2024"
 
 
-def test_festival_token_still_renders_mf_place():
-    """{festival} token keeps rendering, now sourced from mf.place (backward compat)."""
+def test_festival_token_renders_literally_after_removal():
+    """{festival} token was removed in 0.15.0; user templates using it
+    receive the literal string in folder names (no longer a recognised
+    field). Users must update custom templates to {place}.
+    """
     cfg_data = {
         **TEST_CONFIG,
         "layouts": {
@@ -580,4 +583,7 @@ def test_festival_token_still_renders_mf_place():
         artist="Armin van Buuren",
         content_type="festival_set",
     )
-    assert render_folder(mf, cfg, layout_name="festival_year_test") == "Tomorrowland/2024"
+    # The {festival} token is no longer in _KNOWN_FIELDS so the renderer
+    # treats it as an unknown required field and falls back to "Unknown".
+    result = render_folder(mf, cfg, layout_name="festival_year_test")
+    assert "Tomorrowland" not in result
