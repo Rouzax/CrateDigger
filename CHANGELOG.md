@@ -38,6 +38,7 @@ Everything else listed in the Removed section below requires a manual update. Th
 - Poster hero text always matches the folder name. Previously a venue-routed set could produce a folder named after the venue while the poster title showed the artist name. Both now show the same canonical place name.
 - `mf.venue` now carries the alias-resolved canonical venue name. The raw 1001TL venue text moves to `mf.venue_full`. This mirrors the existing `mf.festival` / `mf.festival_full` split and means alias-resolved names appear consistently in folder paths, poster text, and metadata fields.
 - The `LOCATION` embedded MKV tag now carries the best available raw venue text (`festival_full`, `venue_full`, or location string) rather than a mix of canonical and raw values. The tag is an archival record of where the set was performed; canonical names appear in folder paths and poster text.
+- `build_display_title` (used for the Kodi browse-view title and the embedded MKV `TITLE` tag) now reads `mf.place` instead of `mf.festival`. Venue and location-routed sets that previously rendered as just the artist name now render as `Artist @ Place` (or `Artist @ Stage, Place` when a stage is set), matching what the folder routing already does.
 
 ### Removed (breaking, but auto-migrated where possible)
 
