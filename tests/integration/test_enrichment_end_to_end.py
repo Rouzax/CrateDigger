@@ -84,7 +84,12 @@ FIXTURES = {
                 "dj_cache_min_entries": 1,
             },
             "pipeline": {
-                "library_path_glob": "**/Tiësto/*We Belong Here*.mkv",
+                "library_path_glob": {
+                    "place_flat": "**/We Belong Here*/*Tiësto*.mkv",
+                    "place_nested": "**/We Belong Here*/2026/*Tiësto*.mkv",
+                    "artist_flat": "**/Tiësto/*We Belong Here*.mkv",
+                    "artist_nested": "**/Tiësto/We Belong Here*/2026/*.mkv",
+                },
                 "nfo_must_exist": True,
                 "poster_must_exist": True,
                 "fanart_must_exist": True,
@@ -112,7 +117,12 @@ FIXTURES = {
                 "min_performer_chapters": 1,
             },
             "pipeline": {
-                "library_path_glob": "**/ALOK/*SOMETHING ELSE*Tomorrowland Winter*.mkv",
+                "library_path_glob": {
+                    "place_flat": "**/Tomorrowland Winter*/*SOMETHING ELSE*.mkv",
+                    "place_nested": "**/Tomorrowland Winter*/2026/*SOMETHING ELSE*.mkv",
+                    "artist_flat": "**/SOMETHING ELSE/*Tomorrowland Winter*.mkv",
+                    "artist_nested": "**/SOMETHING ELSE/Tomorrowland Winter*/2026/*.mkv",
+                },
             },
         },
     },
@@ -148,6 +158,40 @@ FIXTURES = {
             "performer_must_include": ["Eric Prydz"],
             "max_chapters": 50,
         }},
+    },
+    # Synthetic fixture: reuses an existing MKV but identifies it against a
+    # non-festival venue tracklist (Fred again.. & Thomas Bangalter @
+    # USB002, Alexandra Palace, London, 2026-02-27). Exercises the
+    # place-routing chain's venue branch end-to-end: the embedded
+    # CRATEDIGGER_1001TL_VENUE drives mf.venue, the place chain falls
+    # through festival -> venue, and place_kind ends up "venue".
+    "fred-bangalter-alexandra-palace": {
+        "filename": "Fred Again.. & Thomas Bangalter (USB002, Alexandra Palace, London 27 February 2026) [gfF8jzBVWvM].mkv",
+        "tracklist_id": "2gu8q2xk",
+        "tracklist_date": "2026-02-27",
+        "scenarios": ["b2b", "venue-routing"],
+        "expect": {
+            "embedding": {
+                "ttv70_artists_contains": ["Fred again..", "Thomas Bangalter"],
+                "min_chapters": 5,
+                "max_chapters": 80,
+                "performer_must_include": ["Fred again..", "Thomas Bangalter"],
+            },
+            "pipeline": {
+                "library_path_glob": {
+                    "place_flat": "**/Alexandra Palace*/*Fred again*.mkv",
+                    "place_nested": "**/Alexandra Palace*/2026/*Fred again*.mkv",
+                    "artist_flat": "**/Fred again*/*Alexandra Palace*.mkv",
+                    "artist_nested": "**/Fred again*/Alexandra Palace*/2026/*.mkv",
+                },
+                "nfo_must_exist": True,
+                "poster_must_exist": True,
+            },
+            "pipeline_in_place": {
+                "nfo_must_exist": True,
+                "poster_must_exist": True,
+            },
+        },
     },
 }
 
@@ -510,7 +554,7 @@ def test_in_place_layout_switch_migrates_sidecars_and_folder_artefacts(tmp_path)
     # now-empty artist_dir must be removed.
     subprocess.run(
         ["cratedigger", "organize", *cfg_arg,
-         "--layout", "festival_flat", "--yes", str(inbox)],
+         "--layout", "place_flat", "--yes", str(inbox)],
         check=True, timeout=300,
     )
 
@@ -1142,19 +1186,56 @@ def _any_image(folder: Path, stem: str) -> bool:
     return False
 
 
+def _read_configured_layout() -> str:
+    """Return the default_layout from CRATEDIGGER_TEST_CONFIG, with fallback."""
+    if CONFIG is None:
+        return "place_flat"
+    try:
+        import tomllib
+        with open(CONFIG, "rb") as f:
+            data = tomllib.load(f)
+        return data.get("default_layout", "place_flat")
+    except (OSError, ValueError):
+        return "place_flat"
+
+
+def _select_path_glob(expect: dict) -> str | None:
+    """Pick the right path glob for the configured layout.
+
+    Supports two shapes for ``library_path_glob`` in fixture expects:
+    - ``str``: layout-agnostic single pattern (legacy).
+    - ``dict[str, str]``: keyed by layout name; the entry matching
+      ``CRATEDIGGER_TEST_CONFIG``'s ``default_layout`` is used.
+    """
+    raw = expect.get("library_path_glob")
+    if raw is None:
+        return None
+    if isinstance(raw, str):
+        return raw
+    layout = _read_configured_layout()
+    pattern = raw.get(layout)
+    if pattern is None:
+        raise AssertionError(
+            f"fixture has no library_path_glob entry for layout {layout!r}; "
+            f"available: {sorted(raw.keys())}"
+        )
+    return pattern
+
+
 def _assert_pipeline_expect(library_root: Path, expect: dict) -> None:
     """Apply a fixture's `expect.pipeline` assertions against the library tree."""
     if not expect:
         return
     sidecar_keys = ("nfo_must_exist", "poster_must_exist", "fanart_must_exist")
     has_sidecar_asserts = any(expect.get(k) for k in sidecar_keys)
-    if "library_path_glob" not in expect:
+    glob = _select_path_glob(expect)
+    if glob is None:
         assert not has_sidecar_asserts, (
             "pipeline expect has sidecar assertions but no library_path_glob"
         )
         return
-    matches = list(library_root.glob(expect["library_path_glob"]))
-    assert matches, f"no files matched {expect['library_path_glob']!r} under {library_root}"
+    matches = list(library_root.glob(glob))
+    assert matches, f"no files matched {glob!r} under {library_root}"
     folder = matches[0].parent
 
     if expect.get("nfo_must_exist"):

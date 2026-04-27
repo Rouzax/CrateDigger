@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-04-26
+
+Place routing replaces festival-only routing with a full `festival → venue → location → artist` chain. Sets that previously had no linked festival were silently routed by artist; they now file under their venue or location name. All festival-specific API surface, config keys, template tokens, and layout names are removed in this release; the place-named equivalents replace them directly.
+
+### Migration
+
+On first run after upgrade, CrateDigger automatically copies your existing `festivals.json` to `places.json` and copies user-global `.cratedigger/festivals/<name>/` curated logo directories to `.cratedigger/places/<name>/`. The legacy files and directories stay in place so you can roll back to 0.14.x without losing data; delete them once you have verified the new locations work.
+
+The `default_layout` value in your `config.toml` is also rewritten automatically: `festival_flat` becomes `place_flat` and `festival_nested` becomes `place_nested` at load time.
+
+Everything else listed in the Removed section below requires a manual update. There are no runtime aliases or deprecation warnings for those items; they are gone.
+
+### Added
+
+- `places.json` curated registry replaces `festivals.json` as the primary file. It uses the same schema (aliases, color, editions, and so on) and extends the domain to cover festivals, clubs, permanent venues, residencies, and any other named branded entity that hosts DJ sets. `festivals.json` is still loaded as a fallback while the deprecation window is open.
+- `{place}` template token for routing. The token resolves to the canonical name derived from `mf.place` and works identically to `{festival}` for festival-routed sets. For venue- or location-routed sets it carries the canonical venue or location name.
+- `place_flat` and `place_nested` layouts replace `festival_flat` and `festival_nested`. They behave identically and accept the same sub-options; only the key name changes.
+- `place_background_priority` config setting replaces `festival_background_priority`. Controls the order of artwork sources used for poster backgrounds when routing by place.
+- `unknown_place` fallback config value replaces `unknown_festival`. Used as the folder name when a set cannot be matched to any known place.
+- `mf.place` MediaFile field carrying the canonical place name as resolved by the full routing chain.
+- `mf.place_kind` MediaFile field carrying one of `festival`, `venue`, `location`, or `artist`, indicating which tier of the routing chain was authoritative for this set.
+- `mf.venue_full` MediaFile field carrying the raw 1001TL venue text as scraped, mirroring the existing `mf.festival_full` field for festivals.
+- `.cratedigger/places/<name>/<edition>/` curated assets directory replaces `.cratedigger/festivals/<name>/<edition>/`. The old path is checked as a fallback while the deprecation window is open.
+- Real artist poster when no festival, venue, or location information is available. Previously these sets received a gradient image with the artist name rendered on it. They now receive a proper artist portrait sourced through the same `dj_artwork` then `fanart_tv` chain used by `artist_flat` and `artist_nested` layouts, falling back to the gradient only when no artwork can be fetched.
+
+### Changed
+
+- Sets without a 1001Tracklists festival now route by venue or location instead of by artist. The full chain is `festival → venue → location → artist`. A set recorded at "Alexandra Palace" with no linked festival now files under `Alexandra Palace/` (or the equivalent under the configured layout) rather than inside the performing artist's folder.
+- Poster hero text always matches the folder name. Previously a venue-routed set could produce a folder named after the venue while the poster title showed the artist name. Both now show the same canonical place name.
+- `mf.venue` now carries the alias-resolved canonical venue name. The raw 1001TL venue text moves to `mf.venue_full`. This mirrors the existing `mf.festival` / `mf.festival_full` split and means alias-resolved names appear consistently in folder paths, poster text, and metadata fields.
+- The `LOCATION` embedded MKV tag now carries the best available raw venue text (`festival_full`, `venue_full`, or location string) rather than a mix of canonical and raw values. The tag is an archival record of where the set was performed; canonical names appear in folder paths and poster text.
+- `build_display_title` (used for the Kodi browse-view title and the embedded MKV `TITLE` tag) now reads `mf.place` instead of `mf.festival`. Venue and location-routed sets that previously rendered as just the artist name now render as `Artist @ Place` (or `Artist @ Stage, Place` when a stage is set), matching what the folder routing already does.
+
+### Removed (breaking, but auto-migrated where possible)
+
+The festival-named API surface and config keys are removed. Auto-migration covers the on-disk data files transparently:
+
+- `festivals.json` is copied to `places.json` on first run; legacy file retained for rollback.
+- `.cratedigger/festivals/<name>/` curated logo subdirectories are copied to `.cratedigger/places/<name>/` on first run; legacy directories retained.
+- `default_layout = "festival_flat"` (or `festival_nested`) in your `config.toml` is rewritten to the place-named equivalent at load time.
+
+Manual updates required if your `config.toml` or external code uses any of:
+
+- `[layouts.festival_flat]` / `[layouts.festival_nested]` table headers for custom layout definitions. Rename to `[layouts.place_flat]` or a user-chosen name.
+- `{festival}` template token in custom layouts. Replace with `{place}`.
+- TOML keys: `[festival_aliases]`, `[festival_config]`, `festival_background_priority`, `unknown_festival`. Use `[place_aliases]`, `[place_config]`, `place_background_priority`, `unknown_place`.
+- `Config.festival_aliases` / `festival_config` / `resolve_festival_alias` / `resolve_festival_with_edition` / `get_festival_display` / `known_festivals` in external Python code. Use the `place_*` equivalents.
+- Library-local `<library>/.cratedigger/festivals/` directories (NOT auto-migrated). Rename to `<library>/.cratedigger/places/`.
+
 ## [0.14.5] - 2026-04-25
 
 ### Changed

@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch, MagicMock
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
@@ -8,9 +9,11 @@ from festival_organizer.operations import (
 from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
 
 
-def _make_mf(**kwargs):
-    defaults = dict(source_path=Path("test.mkv"), artist="Test",
-                    festival="TML", year="2024", content_type="festival_set")
+def _make_mf(**kwargs: Any) -> MediaFile:
+    defaults: dict[str, Any] = dict(
+        source_path=Path("test.mkv"), artist="Test",
+        festival="TML", year="2024", content_type="festival_set",
+    )
     defaults.update(kwargs)
     return MediaFile(**defaults)
 
@@ -103,75 +106,75 @@ def _run_poster_and_capture_kwargs(tmp_path, mf):
     return gen.call_args.kwargs
 
 
-def test_poster_festival_slot_prefers_festival_over_venue(tmp_path):
-    """Festival set: the festival_display wins the headline slot."""
+def test_poster_festival_slot_uses_place_for_festival(tmp_path):
+    """Festival set: mf.place fills the headline slot."""
     mf = _make_mf(festival="Tomorrowland", venue="Some Venue",
-                  location="Some Location", title="Artist @ Stage, TML")
+                  location="Some Location", title="Artist @ Stage, TML",
+                  place="Tomorrowland", place_kind="festival")
     assert _run_poster_and_capture_festival(tmp_path, mf) == "Tomorrowland"
 
 
-def test_poster_festival_slot_falls_back_to_venue_when_no_festival(tmp_path):
-    """Concert at a linked venue (Club / Event Location): venue wins the slot."""
+def test_poster_festival_slot_uses_place_for_venue(tmp_path):
+    """Concert at a linked venue: mf.place holds the venue and fills the slot."""
     mf = _make_mf(festival="", venue="Alexandra Palace London",
                   location="ignored freeform",
-                  title="Fred again.. @ USB002")
+                  title="Fred again.. @ USB002",
+                  place="Alexandra Palace London", place_kind="venue")
     assert _run_poster_and_capture_festival(tmp_path, mf) == "Alexandra Palace London"
 
 
-def test_poster_festival_slot_falls_back_to_location_when_no_venue(tmp_path):
-    """Freeform h1 location fills in when no festival and no linked venue."""
+def test_poster_festival_slot_uses_place_for_location(tmp_path):
+    """Freeform location: mf.place carries the canonical location."""
     mf = _make_mf(festival="", venue="", location="Some Unlinked Venue",
-                  title="Artist @ Stage")
+                  title="Artist @ Stage",
+                  place="Some Unlinked Venue", place_kind="location")
     assert _run_poster_and_capture_festival(tmp_path, mf) == "Some Unlinked Venue"
 
 
-def test_poster_festival_slot_falls_back_to_title_when_no_location_fields(tmp_path):
-    """Last-resort backstop: title fires only when festival+venue+location all empty."""
-    mf = _make_mf(festival="", venue="", location="",
-                  title="Artist @ Some Unknown Place")
-    assert _run_poster_and_capture_festival(tmp_path, mf) == "Artist @ Some Unknown Place"
-
-
-def test_poster_venue_subline_suppressed_when_venue_filled_festival_slot(tmp_path):
-    """When the venue is rendered as the big accent line (festival fallback),
-    the venue subline below must be blank to avoid duplicate rendering."""
+def test_poster_venue_subline_suppressed_when_place_kind_is_venue(tmp_path):
+    """When place_kind=venue the venue is already in the slot; subline is blank."""
     mf = _make_mf(festival="", venue="Red Rocks Amphitheatre",
-                  stage="", title="Martin Garrix @ Red Rocks")
+                  stage="", title="Martin Garrix @ Red Rocks",
+                  place="Red Rocks Amphitheatre", place_kind="venue")
     kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
     assert kwargs["festival"] == "Red Rocks Amphitheatre"
     assert kwargs["venue"] == ""
 
 
-def test_poster_venue_subline_rendered_when_festival_has_real_festival(tmp_path):
-    """When a real festival fills the slot, the venue still renders as a
-    subline (it adds useful info like 'Johan Cruijff ArenA Amsterdam')."""
+def test_poster_venue_subline_suppressed_when_place_kind_is_location(tmp_path):
+    """place_kind=location also suppresses the venue subline (same slot)."""
+    mf = _make_mf(festival="", venue="Some Bar", location="Some Bar, Berlin",
+                  stage="", title="irrelevant",
+                  place="Some Bar, Berlin", place_kind="location")
+    kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
+    assert kwargs["festival"] == "Some Bar, Berlin"
+    assert kwargs["venue"] == ""
+
+
+def test_poster_venue_subline_rendered_when_place_kind_is_festival(tmp_path):
+    """Real festival in the slot: venue still renders as a subline."""
     mf = _make_mf(festival="Amsterdam Music Festival",
                   venue="Johan Cruijff ArenA Amsterdam",
-                  stage="Mainstage", title="irrelevant")
+                  stage="Mainstage", title="irrelevant",
+                  place="Amsterdam Music Festival", place_kind="festival")
     kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
     assert kwargs["festival"] == "Amsterdam Music Festival"
     assert kwargs["venue"] == "Johan Cruijff ArenA Amsterdam"
 
 
-def test_poster_venue_fallback_runs_through_festival_alias(tmp_path):
-    """User-configured festival aliases apply to the venue when it fills
-    the festival slot. Preserves the short-form display users set up in
-    their festivals config."""
+def test_poster_festival_slot_uses_edition_display(tmp_path):
+    """When mf.edition matches a known edition, the slot uses 'Place Edition'."""
+    mf = _make_mf(festival="Tomorrowland", edition="Winter",
+                  place="Tomorrowland", place_kind="festival",
+                  title="irrelevant")
+    cfg = load_config()
+    cfg._data["place_config"] = {"Tomorrowland": {"editions": {"Winter": {}}}}
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
-    cfg = load_config()
-    cfg.resolve_festival_alias = (
-        lambda name: "Red Rocks" if name == "Red Rocks Amphitheatre" else name
-    )
-    mf = _make_mf(festival="", venue="Red Rocks Amphitheatre",
-                  stage="", title="irrelevant")
     with patch("festival_organizer.poster.generate_set_poster") as gen:
         PosterOperation(cfg).execute(video, mf)
-    kwargs = gen.call_args.kwargs
-    assert kwargs["festival"] == "Red Rocks"
-    # Venue subline still suppressed — dedup is by source, not display form
-    assert kwargs["venue"] == ""
+    assert gen.call_args.kwargs["festival"] == "Tomorrowland Winter"
 
 
 def test_organize_op_needed_when_not_at_target(tmp_path):
@@ -350,16 +353,18 @@ def test_album_poster_type_from_artist_flat_layout():
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_flat"
     op = AlbumPosterOperation(config=config)
-    assert op._get_folder_poster_type("festival_set") == "artist"
+    mf = _make_mf(place="Test", place_kind="festival")
+    assert op._get_folder_poster_type(mf) == "artist"
 
 
-def test_album_poster_type_from_festival_flat_layout():
-    """festival_flat layout: {festival} -> festival poster type."""
+def test_album_poster_type_from_place_flat_layout():
+    """place_flat layout: {festival} -> festival poster type."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config(DEFAULT_CONFIG)
-    config._data["default_layout"] = "festival_flat"
+    config._data["default_layout"] = "place_flat"
     op = AlbumPosterOperation(config=config)
-    assert op._get_folder_poster_type("festival_set") == "festival"
+    mf = _make_mf(place="Tomorrowland", place_kind="festival")
+    assert op._get_folder_poster_type(mf) == "festival"
 
 
 def test_album_poster_type_nested_segments():
@@ -372,26 +377,27 @@ def test_album_poster_type_nested_segments():
     assert segments == ["artist", "festival", "year"]
 
 
-def test_album_poster_type_festival_nested_segments():
-    """festival_nested: {festival}/{year}/{artist} -> per-segment types."""
+def test_album_poster_type_place_nested_segments():
+    """place_nested: {festival}/{year}/{artist} -> per-segment types."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config(DEFAULT_CONFIG)
-    config._data["default_layout"] = "festival_nested"
+    config._data["default_layout"] = "place_nested"
     op = AlbumPosterOperation(config=config)
     segments = op._get_layout_segments("festival_set")
     assert segments == ["festival", "year", "artist"]
 
 
-def test_album_poster_type_mixed_segment_festival_wins():
-    """Mixed segment {artist} - {festival} -> festival wins (higher priority)."""
+def test_album_poster_type_mixed_segment_place_wins():
+    """Mixed segment {artist} - {place} -> place wins (higher priority)."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config({**DEFAULT_CONFIG, "layouts": {
         **DEFAULT_CONFIG["layouts"],
-        "custom": {"festival_set": "{artist} - {festival}"},
+        "custom": {"festival_set": "{artist} - {place}"},
     }})
     config._data["default_layout"] = "custom"
     op = AlbumPosterOperation(config=config)
-    assert op._get_folder_poster_type("festival_set") == "festival"
+    mf = _make_mf(place="Tomorrowland", place_kind="festival")
+    assert op._get_folder_poster_type(mf) == "festival"
 
 
 def test_album_poster_segment_for_folder_depth(tmp_path):
@@ -400,14 +406,134 @@ def test_album_poster_segment_for_folder_depth(tmp_path):
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_nested"
     op = AlbumPosterOperation(config=config, library_root=tmp_path)
+    mf = _make_mf(place="Tomorrowland", place_kind="festival")
     # Template: {artist}/{festival}/{year}
     # Depth 0 = artist, depth 1 = festival, depth 2 = year
     artist_folder = tmp_path / "Tiësto"
     festival_folder = artist_folder / "Tomorrowland"
     year_folder = festival_folder / "2025"
-    assert op._get_poster_type_for_folder(year_folder, "festival_set") == "year"
-    assert op._get_poster_type_for_folder(festival_folder, "festival_set") == "festival"
-    assert op._get_poster_type_for_folder(artist_folder, "festival_set") == "artist"
+    assert op._get_poster_type_for_folder(year_folder, mf) == "year"
+    assert op._get_poster_type_for_folder(festival_folder, mf) == "festival"
+    assert op._get_poster_type_for_folder(artist_folder, mf) == "artist"
+
+
+def test_get_folder_poster_type_returns_festival_for_festival_kind():
+    """place_kind='festival' on a place_flat layout yields 'festival' poster type."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_flat"
+    op = AlbumPosterOperation(config=config)
+    mf = _make_mf(place="Tomorrowland", place_kind="festival")
+    assert op._get_folder_poster_type(mf) == "festival"
+
+
+def test_get_folder_poster_type_returns_festival_for_venue_kind():
+    """place_kind='venue' still routes through the festival poster pipeline."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_flat"
+    op = AlbumPosterOperation(config=config)
+    mf = _make_mf(place="Printworks", place_kind="venue")
+    assert op._get_folder_poster_type(mf) == "festival"
+
+
+def test_get_folder_poster_type_returns_festival_for_location_kind():
+    """place_kind='location' still routes through the festival poster pipeline."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_flat"
+    op = AlbumPosterOperation(config=config)
+    mf = _make_mf(place="Some Bar, Berlin", place_kind="location")
+    assert op._get_folder_poster_type(mf) == "festival"
+
+
+def test_get_folder_poster_type_returns_artist_for_artist_fallback():
+    """place_kind='artist' overrides the layout's place segment to 'artist' poster type."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_flat"
+    op = AlbumPosterOperation(config=config)
+    mf = _make_mf(place="Fred again..", place_kind="artist")
+    assert op._get_folder_poster_type(mf) == "artist"
+
+
+def test_priority_chain_uses_place_background_priority():
+    """The poster pipeline reads place_background_priority for festival/place posters."""
+    cfg = load_config()
+    op = AlbumPosterOperation(cfg, library_root=Path("/tmp"))
+    chain = op._get_priority_chain_for_poster_type("festival")
+    assert chain == ["curated_logo", "gradient"]
+
+
+def test_priority_chain_artist_returns_artist_chain():
+    """Artist poster_type uses artist_background_priority."""
+    cfg = load_config()
+    op = AlbumPosterOperation(cfg, library_root=Path("/tmp"))
+    chain = op._get_priority_chain_for_poster_type("artist")
+    assert chain == ["dj_artwork", "fanart_tv", "gradient"]
+
+
+def test_priority_chain_year_returns_year_chain():
+    """Year poster_type uses year_background_priority."""
+    cfg = load_config()
+    op = AlbumPosterOperation(cfg, library_root=Path("/tmp"))
+    chain = op._get_priority_chain_for_poster_type("year")
+    assert chain == ["gradient"]
+
+
+def test_album_poster_hero_text_uses_mf_place(tmp_path):
+    """Album poster hero/festival slot equals mf.place, regardless of place_kind."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_flat"
+    folder = tmp_path / "Alexandra Palace"
+    folder.mkdir()
+    video = folder / "2024 - Alexandra Palace - Fred again...mkv"
+    video.write_bytes(b"")
+    op = AlbumPosterOperation(config=config, force=True)
+    mf = _make_mf(festival="", artist="Fred again..",
+                  place="Alexandra Palace", place_kind="venue", year="2024")
+    with patch("festival_organizer.poster.generate_album_poster") as gen:
+        op.execute(video, mf)
+    assert gen.call_args.kwargs["festival"] == "Alexandra Palace"
+
+
+def test_album_poster_color_lookup_uses_canonical_place(tmp_path):
+    """Brand color lookup keys on mf.place, not mf.festival."""
+    from festival_organizer.config import Config, DEFAULT_CONFIG
+    config = Config({
+        **DEFAULT_CONFIG,
+        "default_layout": "place_flat",
+        "place_config": {"Tomorrowland": {"color": "#9B1B5A"}},
+    })
+    folder = tmp_path / "Tomorrowland"
+    folder.mkdir()
+    video = folder / "2024 - Tomorrowland - Tiesto.mkv"
+    video.write_bytes(b"")
+    op = AlbumPosterOperation(config=config, force=True)
+    mf = _make_mf(festival="", artist="Tiesto",
+                  place="Tomorrowland", place_kind="festival", year="2024")
+    with patch("festival_organizer.poster.generate_album_poster") as gen:
+        with patch("festival_organizer.poster._hex_to_rgb",
+                   return_value=(0x9B, 0x1B, 0x5A)) as hexer:
+            op.execute(video, mf)
+    hexer.assert_called_with("#9B1B5A")
+    assert gen.call_args.kwargs["override_color"] == (0x9B, 0x1B, 0x5A)
+
+
+def test_set_poster_subline_skipped_when_venue_is_place(tmp_path):
+    """When place_kind=venue, the venue is in the festival slot, so the subline must not repeat it."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    mf = _make_mf(festival="", artist="Fred again..",
+                  venue="Printworks", place="Printworks", place_kind="venue",
+                  title="irrelevant")
+    with patch("festival_organizer.poster.generate_set_poster") as gen:
+        PosterOperation(load_config()).execute(video, mf)
+    kwargs = gen.call_args.kwargs
+    assert kwargs["festival"] == "Printworks"
+    assert kwargs["venue"] == ""
 
 
 def test_album_poster_config_priority_defaults():
@@ -416,7 +542,7 @@ def test_album_poster_config_priority_defaults():
     config = Config(DEFAULT_CONFIG)
     ps = config.poster_settings
     assert ps["artist_background_priority"] == ["dj_artwork", "fanart_tv", "gradient"]
-    assert ps["festival_background_priority"] == ["curated_logo", "gradient"]
+    assert ps["place_background_priority"] == ["curated_logo", "gradient"]
     assert ps["year_background_priority"] == ["gradient"]
 
 
@@ -454,7 +580,7 @@ def test_album_poster_execute_festival_layout_no_hero_text(tmp_path):
     """Festival layout poster should NOT have hero_text (artist name)."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config(DEFAULT_CONFIG)
-    config._data["default_layout"] = "festival_flat"
+    config._data["default_layout"] = "place_flat"
     lib = tmp_path / "lib"
     (lib / ".cratedigger").mkdir(parents=True)
 
@@ -480,7 +606,7 @@ def test_album_poster_warms_caches_for_unused_sources(tmp_path):
     """Album poster warms fanart_tv and DJ artwork caches even for festival layout."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
     config = Config(DEFAULT_CONFIG)
-    config._data["default_layout"] = "festival_flat"
+    config._data["default_layout"] = "place_flat"
     lib = tmp_path / "lib"
     (lib / ".cratedigger").mkdir(parents=True)
 
@@ -833,11 +959,11 @@ def test_album_poster_dj_artwork_fallback_no_credentials(tmp_path):
 # --- Curated logo tests ---
 
 def test_find_curated_logo_library_level(tmp_path):
-    """Curated logo found at library .cratedigger/festivals/{Name}/logo.png."""
+    """Curated logo found at library .cratedigger/places/{Name}/logo.png."""
     config = Config(DEFAULT_CONFIG)
-    config._data["festival_aliases"] = {"Tomorrowland": ["TML", "Tomorrowland Belgium"]}
+    config._data["place_aliases"] = {"Tomorrowland": ["TML", "Tomorrowland Belgium"]}
     lib = tmp_path / "lib"
-    logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
+    logo_dir = lib / ".cratedigger" / "places" / "Tomorrowland"
     logo_dir.mkdir(parents=True)
     logo_file = logo_dir / "logo.png"
     logo_file.write_bytes(b"\x89PNG")
@@ -850,9 +976,9 @@ def test_find_curated_logo_library_level(tmp_path):
 def test_find_curated_logo_alias_resolution(tmp_path):
     """Alias resolves to canonical name for logo lookup."""
     config = Config(DEFAULT_CONFIG)
-    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    config._data["place_aliases"] = {"Tomorrowland": ["TML"]}
     lib = tmp_path / "lib"
-    logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
+    logo_dir = lib / ".cratedigger" / "places" / "Tomorrowland"
     logo_dir.mkdir(parents=True)
     (logo_dir / "logo.jpg").write_bytes(b"\xff\xd8")
 
@@ -873,17 +999,17 @@ def test_find_curated_logo_missing(tmp_path):
 
 
 def test_find_curated_logo_user_global(tmp_path, monkeypatch):
-    """Curated logo resolved from user-global paths.festivals_logo_dir()."""
+    """Curated logo resolved from user-global paths.places_logo_dir()."""
     config = Config(DEFAULT_CONFIG)
-    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    config._data["place_aliases"] = {"Tomorrowland": ["TML"]}
     lib = tmp_path / "lib"
     lib.mkdir()
-    user_global_dir = tmp_path / "user_festivals"
+    user_global_dir = tmp_path / "user_places"
     (user_global_dir / "Tomorrowland").mkdir(parents=True)
     logo_file = user_global_dir / "Tomorrowland" / "logo.png"
     logo_file.write_bytes(b"\x89PNG")
     monkeypatch.setattr(
-        "festival_organizer.operations.paths.festivals_logo_dir",
+        "festival_organizer.operations.paths.places_logo_dir",
         lambda: user_global_dir,
     )
 
@@ -894,18 +1020,18 @@ def test_find_curated_logo_user_global(tmp_path, monkeypatch):
 def test_find_curated_logo_library_wins_over_user_global(tmp_path, monkeypatch):
     """Library-local logo wins when both library and user-global contain a logo."""
     config = Config(DEFAULT_CONFIG)
-    config._data["festival_aliases"] = {"Tomorrowland": ["TML"]}
+    config._data["place_aliases"] = {"Tomorrowland": ["TML"]}
     lib = tmp_path / "lib"
-    lib_logo_dir = lib / ".cratedigger" / "festivals" / "Tomorrowland"
+    lib_logo_dir = lib / ".cratedigger" / "places" / "Tomorrowland"
     lib_logo_dir.mkdir(parents=True)
     lib_logo = lib_logo_dir / "logo.png"
     lib_logo.write_bytes(b"\x89PNG")
 
-    user_global_dir = tmp_path / "user_festivals"
+    user_global_dir = tmp_path / "user_places"
     (user_global_dir / "Tomorrowland").mkdir(parents=True)
     (user_global_dir / "Tomorrowland" / "logo.png").write_bytes(b"\x89PNG")
     monkeypatch.setattr(
-        "festival_organizer.operations.paths.festivals_logo_dir",
+        "festival_organizer.operations.paths.places_logo_dir",
         lambda: user_global_dir,
     )
 
@@ -921,27 +1047,51 @@ def test_find_curated_logo_empty_festival(tmp_path):
 
 
 def test_try_background_source_curated_logo(tmp_path):
-    """curated_logo source calls _find_curated_logo with festival name."""
+    """curated_logo source calls _find_curated_logo with mf.place."""
     config = Config(DEFAULT_CONFIG)
-    config._data["festival_aliases"] = {"AMF": ["AMF"]}
+    config._data["place_aliases"] = {"AMF": ["AMF"]}
     lib = tmp_path / "lib"
-    logo_dir = lib / ".cratedigger" / "festivals" / "AMF"
+    logo_dir = lib / ".cratedigger" / "places" / "AMF"
     logo_dir.mkdir(parents=True)
     logo_file = logo_dir / "logo.webp"
     logo_file.write_bytes(b"RIFF")
 
     op = AlbumPosterOperation(config=config, library_root=lib)
-    mf = _make_mf(festival="AMF")
+    mf = _make_mf(festival="AMF", place="AMF", place_kind="festival")
     result = op._try_background_source("curated_logo", tmp_path, mf)
     assert result == logo_file
+
+
+def test_curated_logo_found_in_places_dir(tmp_path):
+    """Curated logo found at library .cratedigger/places/{Name}/logo.png."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["place_aliases"] = {"Tomorrowland": ["TML"]}
+    lib = tmp_path / "lib"
+    logo_dir = lib / ".cratedigger" / "places" / "Tomorrowland"
+    logo_dir.mkdir(parents=True)
+    logo_file = logo_dir / "logo.png"
+    logo_file.write_bytes(b"\x89PNG")
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    assert op._find_curated_logo("Tomorrowland") == logo_file
+
+
+def test_try_background_source_uses_mf_place_for_venue(tmp_path):
+    """_try_background_source passes mf.place (not mf.festival) to logo lookup."""
+    config = Config(DEFAULT_CONFIG)
+    op = AlbumPosterOperation(config=config, library_root=tmp_path)
+    mf = _make_mf(festival="", place="Alexandra Palace", place_kind="venue")
+    with patch.object(op, "_find_curated_logo", return_value=None) as find:
+        op._try_background_source("curated_logo", tmp_path, mf)
+    find.assert_called_once_with("Alexandra Palace", mf.edition)
 
 
 def test_logo_summary_tracks_hits_and_misses(tmp_path):
     """logo_summary reports used logos and missing ones."""
     config = Config(DEFAULT_CONFIG)
-    config._data["festival_aliases"] = {"AMF": ["AMF"], "TML": ["TML"]}
+    config._data["place_aliases"] = {"AMF": ["AMF"], "TML": ["TML"]}
     lib = tmp_path / "lib"
-    logo_dir = lib / ".cratedigger" / "festivals" / "AMF"
+    logo_dir = lib / ".cratedigger" / "places" / "AMF"
     logo_dir.mkdir(parents=True)
     logo_file = logo_dir / "logo.png"
     logo_file.write_bytes(b"\x89PNG")
@@ -955,6 +1105,18 @@ def test_logo_summary_tracks_hits_and_misses(tmp_path):
     assert any("Missing curated logos: 1" in line for line in summary)
     assert any("AMF" in line for line in summary)
     assert any("TML" in line for line in summary)
+
+
+def test_logo_summary_scans_places_dir(tmp_path):
+    """logo_summary reports unmatched folders from .cratedigger/places/."""
+    config = Config(DEFAULT_CONFIG)
+    lib = tmp_path / "lib"
+    (lib / ".cratedigger" / "places" / "PlaceOnly").mkdir(parents=True)
+
+    op = AlbumPosterOperation(config=config, library_root=lib)
+    summary = op.logo_summary()
+    text = "\n".join(summary)
+    assert "PlaceOnly" in text
 
 
 def test_download_artwork_max_width_resizes(tmp_path):
@@ -1140,3 +1302,31 @@ def test_organize_op_sidecars_moved_zero_when_none(tmp_path):
     result = op.execute(video, _make_mf())
     assert result.status == "done"
     assert op.sidecars_moved == 0
+
+
+# --- AlbumPosterOperation._classify_segment ---
+
+
+def test_classify_segment_recognizes_place():
+    assert AlbumPosterOperation._classify_segment("{place}{ edition}") == "festival"
+    assert AlbumPosterOperation._classify_segment("{place}") == "festival"
+
+
+def test_classify_segment_festival_token_no_longer_recognized():
+    # {festival} was removed in 0.15.0; classifier no longer treats it as a place token.
+    # A segment containing only {festival} therefore defaults to "artist".
+    assert AlbumPosterOperation._classify_segment("{festival}{ edition}") == "artist"
+
+
+def test_classify_segment_artist_token():
+    # place wins over artist when both tokens are present in a segment
+    assert AlbumPosterOperation._classify_segment("{artist}/{place}") == "festival"
+    assert AlbumPosterOperation._classify_segment("{artist}") == "artist"
+
+
+def test_classify_segment_year_token():
+    assert AlbumPosterOperation._classify_segment("{year}") == "year"
+
+
+def test_classify_segment_default_to_artist():
+    assert AlbumPosterOperation._classify_segment("literal_text_no_tokens") == "artist"

@@ -2,13 +2,14 @@ from pathlib import Path
 from festival_organizer.planner import plan_actions
 from festival_organizer.config import Config, DEFAULT_CONFIG
 from festival_organizer.models import MediaFile
+from tests.conftest import make_mediafile
 
 CFG = Config(DEFAULT_CONFIG)
 OUTPUT = Path("/tmp/test/Output")
 
 
 def test_plan_festival_set_artist_flat():
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("/tmp/test/Input/file.mkv"),
         artist="Martin Garrix",
         festival="AMF",

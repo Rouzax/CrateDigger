@@ -70,7 +70,6 @@ class OrganizeOperation(Operation):
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.executor import resolve_collision
-        import shutil
 
         target = resolve_collision(self.target, source=file_path)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -211,27 +210,10 @@ class PosterOperation(Operation):
             thumb = file_path.with_name(f"{file_path.stem}-thumb.jpg")
             poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
             mf = media_file
-            festival_display = mf.festival
+            festival_slot = mf.place
             if mf.edition:
-                festival_display = self.config.get_festival_display(
-                    mf.festival, mf.edition
-                )
-            # Festival-slot fallback chain: real festival wins, then venue,
-            # then freeform location, finally the MKV title as a backstop.
-            # Venue and location pass through the festival alias resolver so
-            # user-configured aliases like "Red Rocks Amphitheatre" -> "Red
-            # Rocks" apply to the accent line regardless of which tag the
-            # value came from.
-            resolve = self.config.resolve_festival_alias
-            resolved_venue = resolve(mf.venue) if mf.venue else ""
-            resolved_location = resolve(mf.location) if mf.location else ""
-            festival_slot = (festival_display or resolved_venue
-                             or resolved_location or mf.title or "")
-            # When the venue was the fallback source, suppress the venue
-            # subline so the same place doesn't render twice (once in the
-            # accent slot, once below). Compare by source, not displayed
-            # value, so aliasing doesn't defeat the dedup.
-            venue_used_in_slot = (not festival_display) and bool(mf.venue)
+                festival_slot = self.config.get_place_display(mf.place, mf.edition)
+            venue_used_in_slot = mf.place_kind in ("venue", "location")
             venue_for_subline = "" if venue_used_in_slot else (mf.venue or "")
             generate_set_poster(
                 source_image_path=thumb,
@@ -259,8 +241,8 @@ class AlbumPosterOperation(Operation):
         self.library_root = library_root
         self._ttl_days = ttl_days
         self._completed_folders: set[Path] = set()
-        self._logo_hits: dict[str, Path] = {}   # festival -> logo path
-        self._logo_misses: set[str] = set()      # festivals without curated logo
+        self._logo_hits: dict[str, Path] = {}   # place -> logo path
+        self._logo_misses: set[str] = set()      # places without curated logo
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         folder = file_path.parent
@@ -271,25 +253,31 @@ class AlbumPosterOperation(Operation):
             return True
         return not folder_jpg.exists()
 
-    def _get_folder_poster_type(self, content_type: str) -> str:
+    def _get_folder_poster_type(self, mf: MediaFile) -> str:
         """Determine poster type from the first segment of the layout template.
 
-        Priority for mixed segments: {festival} > {artist} > {year}.
+        Priority for mixed segments: {place} > {artist} > {year}.
+        When the layout's first segment resolves to "festival" but the runtime
+        place_kind is "artist" (no festival/venue/location matched), the poster
+        type falls back to "artist" so the artist background pipeline runs.
         """
-        template = self.config.get_layout_template(content_type)
+        template = self.config.get_layout_template(mf.content_type)
         first_segment = template.split("/")[0]
-        return self._classify_segment(first_segment)
+        base = self._classify_segment(first_segment)
+        if base == "festival" and mf.place_kind == "artist":
+            return "artist"
+        return base
 
     def _get_layout_segments(self, content_type: str) -> list[str]:
         """Return poster type for each segment of the layout template."""
         template = self.config.get_layout_template(content_type)
         return [self._classify_segment(seg) for seg in template.split("/")]
 
-    def _get_poster_type_for_folder(self, folder: Path, content_type: str) -> str:
+    def _get_poster_type_for_folder(self, folder: Path, mf: MediaFile) -> str:
         """Determine poster type for a specific folder depth in a nested layout."""
         if not self.library_root:
-            return self._get_folder_poster_type(content_type)
-        segments = self._get_layout_segments(content_type)
+            return self._get_folder_poster_type(mf)
+        segments = self._get_layout_segments(mf.content_type)
         try:
             depth = len(folder.resolve().relative_to(self.library_root.resolve()).parts) - 1
         except ValueError:
@@ -297,13 +285,17 @@ class AlbumPosterOperation(Operation):
         if depth < 0:
             depth = 0
         if depth < len(segments):
-            return segments[depth]
-        return segments[-1] if segments else "artist"
+            base = segments[depth]
+        else:
+            base = segments[-1] if segments else "artist"
+        if base == "festival" and mf.place_kind == "artist":
+            return "artist"
+        return base
 
     @staticmethod
     def _classify_segment(segment: str) -> str:
-        """Classify a template segment by priority: festival > artist > year."""
-        if "{festival}" in segment:
+        """Classify a template segment by priority: place > artist > year."""
+        if "{place}" in segment:
             return "festival"
         if "{artist}" in segment:
             return "artist"
@@ -418,20 +410,21 @@ class AlbumPosterOperation(Operation):
             logger.debug("DJ artwork download failed for %s: %s", artist, e)
             return None
 
-    def _find_curated_logo(self, festival: str, edition: str = "") -> Path | None:
-        """Find curated festival logo from library or user-level folders.
+    def _find_curated_logo(self, place: str, edition: str = "") -> Path | None:
+        """Find curated logo for a place from library or user-level folders.
 
-        Tries edition-specific path first (e.g., festivals/EDC Las Vegas/logo.png),
-        then falls back to canonical (e.g., festivals/EDC/logo.png).
+        Library lookup checks ``.cratedigger/places/<name>/`` first, then the
+        user-global :func:`paths.places_logo_dir`. Tries edition-specific path
+        first (e.g. ``places/EDC Las Vegas/logo.png``), then falls back to the
+        canonical name (e.g. ``places/EDC/logo.png``).
         """
-        canonical = self.config.resolve_festival_alias(festival) if festival else ""
+        canonical = self.config.resolve_place_alias(place) if place else ""
         if not canonical:
             return None
 
-        # Build search names: edition-specific first, then canonical
         names = []
         if edition:
-            display = self.config.get_festival_display(canonical, edition)
+            display = self.config.get_place_display(canonical, edition)
             if display != canonical:
                 names.append(display)
         names.append(canonical)
@@ -439,8 +432,10 @@ class AlbumPosterOperation(Operation):
         for name in names:
             search_dirs: list[Path] = []
             if self.library_root:
-                search_dirs.append(self.library_root / ".cratedigger" / "festivals" / name)
-            search_dirs.append(paths.festivals_logo_dir() / name)
+                search_dirs.append(
+                    self.library_root / ".cratedigger" / "places" / name
+                )
+            search_dirs.append(paths.places_logo_dir() / name)
             for d in search_dirs:
                 for ext in ("jpg", "jpeg", "png", "webp"):
                     candidate = d / f"logo.{ext}"
@@ -525,17 +520,17 @@ class AlbumPosterOperation(Operation):
             bg = self._try_background_source(source, folder, media_file)
             if source == "curated_logo":
                 tried_curated = True
-                if bg and media_file.festival:
-                    display = self.config.get_festival_display(
-                        media_file.festival, media_file.edition)
+                if bg and media_file.place:
+                    display = self.config.get_place_display(
+                        media_file.place, media_file.edition)
                     self._logo_hits[display] = bg
             if bg:
                 logger.info("Album poster: using %s", source)
                 return bg, source
             logger.debug("Album poster: %s not available", source)
-        if tried_curated and media_file.festival:
-            display = self.config.get_festival_display(
-                media_file.festival, media_file.edition)
+        if tried_curated and media_file.place:
+            display = self.config.get_place_display(
+                media_file.place, media_file.edition)
             if display not in self._logo_hits:
                 self._logo_misses.add(display)
         return None, ""
@@ -544,7 +539,7 @@ class AlbumPosterOperation(Operation):
                                 media_file: MediaFile) -> Path | None:
         """Try a single background source. Returns path or None."""
         if source == "curated_logo":
-            return self._find_curated_logo(media_file.festival, media_file.edition)
+            return self._find_curated_logo(media_file.place, media_file.edition)
         elif source == "dj_artwork":
             return self._find_dj_artwork(folder)
         elif source == "fanart_tv":
@@ -553,16 +548,21 @@ class AlbumPosterOperation(Operation):
             return None  # No image needed, poster generator creates gradient
         return None
 
+    def _get_priority_chain_for_poster_type(self, poster_type: str) -> list[str]:
+        ps = self.config.poster_settings
+        if poster_type == "artist":
+            return ps.get("artist_background_priority",
+                          ["dj_artwork", "fanart_tv", "gradient"])
+        if poster_type == "festival":
+            return ps.get("place_background_priority",
+                          ["curated_logo", "gradient"])
+        return ps.get("year_background_priority", ["gradient"])
+
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.poster import generate_album_poster
         try:
             folder_jpg = file_path.parent / "folder.jpg"
             mf = media_file
-            festival_display = mf.festival
-            if mf.edition:
-                festival_display = self.config.get_festival_display(
-                    mf.festival, mf.edition
-                )
             # Determine year: scan folder for consensus, omit if mixed
             from festival_organizer.parsers import parse_filename
             years_in_folder: set[str] = set()
@@ -581,19 +581,11 @@ class AlbumPosterOperation(Operation):
             thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
 
             # Determine poster type from layout template
-            poster_type = self._get_folder_poster_type(mf.content_type)
+            poster_type = self._get_folder_poster_type(mf)
             logger.debug("Album poster: type=%s (from layout template)", poster_type)
 
             # Walk configurable background priority chain
-            ps = self.config.poster_settings
-            if poster_type == "artist":
-                priority = ps.get("artist_background_priority",
-                                  ["dj_artwork", "fanart_tv", "gradient"])
-            elif poster_type == "festival":
-                priority = ps.get("festival_background_priority",
-                                  ["curated_logo", "gradient"])
-            else:  # year
-                priority = ps.get("year_background_priority", ["gradient"])
+            priority = self._get_priority_chain_for_poster_type(poster_type)
 
             bg_path, bg_source = self._resolve_background(priority, file_path.parent, mf)
 
@@ -604,8 +596,8 @@ class AlbumPosterOperation(Operation):
             # DJ artwork: always warm for ALL artists in folder, not just the first
             self._warm_dj_artwork_cache(file_path.parent)
 
-            # Look up brand color from festival config
-            fc = self.config.festival_config.get(mf.festival, {})
+            # Look up brand color keyed by canonical place
+            fc = self.config.place_config.get(mf.place, {})
             color_hex = fc.get("editions", {}).get(mf.edition, {}).get("color") or fc.get("color")
             if color_hex:
                 from festival_organizer.poster import _hex_to_rgb
@@ -613,16 +605,10 @@ class AlbumPosterOperation(Operation):
             else:
                 override_color = None
 
-            # Determine hero_text and festival/title based on poster type
-            if poster_type == "artist":
-                hero_text = mf.artist
-                poster_festival = festival_display or mf.artist or "Unknown"
-            elif poster_type == "festival":
-                hero_text = None
-                poster_festival = mf.festival or mf.artist or "Unknown"
-            else:  # year
-                hero_text = date_or_year or mf.year
-                poster_festival = festival_display or mf.artist or "Unknown"
+            poster_festival = mf.place or "Unknown"
+            hero_text = mf.artist if poster_type == "artist" else (
+                date_or_year or mf.year if poster_type == "year" else None
+            )
 
             generate_album_poster(
                 output_path=folder_jpg,
@@ -646,18 +632,17 @@ class AlbumPosterOperation(Operation):
         lines: list[str] = []
         if self._logo_hits:
             lines.append(f"Curated logos used: {len(self._logo_hits)}")
-            for fest, path in sorted(self._logo_hits.items()):
-                lines.append(f"  {fest}: {path}")
+            for place, path in sorted(self._logo_hits.items()):
+                lines.append(f"  {place}: {path}")
         if self._logo_misses:
             lines.append(f"Missing curated logos: {len(self._logo_misses)}")
-            for fest in sorted(self._logo_misses):
-                lines.append(f"  {fest}")
-        # Check for unmatched folders in .cratedigger/festivals/
+            for place in sorted(self._logo_misses):
+                lines.append(f"  {place}")
         if self.library_root:
-            festivals_dir = self.library_root / ".cratedigger" / "festivals"
-            if festivals_dir.is_dir():
-                known = set(self._logo_hits.keys()) | self._logo_misses
-                for d in sorted(festivals_dir.iterdir()):
+            known = set(self._logo_hits.keys()) | self._logo_misses
+            logo_root = self.library_root / ".cratedigger" / "places"
+            if logo_root.is_dir():
+                for d in sorted(logo_root.iterdir()):
                     if d.is_dir() and d.name not in known:
                         lines.append(f"  Unmatched folder: {d.name}")
         return lines

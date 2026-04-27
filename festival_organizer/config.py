@@ -5,7 +5,7 @@ Logging:
     Key events:
         - alias.invalid_entry (WARNING): Alias map entry has unexpected type
         - alias.circular (WARNING): Two aliases point at each other
-        - alias.resolve_festival (DEBUG): Festival name resolved via alias
+        - alias.resolve_place (DEBUG): Place name resolved via alias
         - alias.resolve_artist (DEBUG): Artist name resolved via alias
         - config.layer (DEBUG): Config TOML file loaded or not found (deferred)
         - config.external_candidates (DEBUG): Candidate paths for external config
@@ -29,7 +29,7 @@ from festival_organizer.normalization import strip_diacritics
 logger = logging.getLogger(__name__)
 
 
-# Defaults for external config files (artists.json, festivals.json)
+# Defaults for external config files (artists.json, places.json)
 # Default config embedded so the tool works without a config file
 DEFAULT_CONFIG = {
     "default_layout": "artist_flat",
@@ -38,21 +38,21 @@ DEFAULT_CONFIG = {
             "festival_set": "{artist}",
             "concert_film": "{artist}",
         },
-        "festival_flat": {
-            "festival_set": "{festival}{ edition}",
+        "place_flat": {
+            "festival_set": "{place}{ edition}",
             "concert_film": "{artist}",
         },
         "artist_nested": {
-            "festival_set": "{artist}/{festival}{ edition}/{year}",
+            "festival_set": "{artist}/{place}{ edition}/{year}",
             "concert_film": "{artist}/{year} - {title}",
         },
-        "festival_nested": {
-            "festival_set": "{festival}{ edition}/{year}/{artist}",
+        "place_nested": {
+            "festival_set": "{place}{ edition}/{year}/{artist}",
             "concert_film": "{artist}/{year} - {title}",
         },
     },
     "filename_templates": {
-        "festival_set": "{year} - {artist}{ - festival}{ edition}{ [stage]}{ - set_title}",
+        "festival_set": "{year} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}",
         "concert_film": "{artist} - {title}{ (year)}",
     },
     "content_type_rules": {
@@ -70,13 +70,13 @@ DEFAULT_CONFIG = {
     },
     "fallback_values": {
         "unknown_artist": "Unknown Artist",
-        "unknown_festival": "_Needs Review",
+        "unknown_place": "_Needs Review",
         "unknown_year": "Unknown Year",
         "unknown_title": "Unknown Title",
     },
     "poster_settings": {
         "artist_background_priority": ["dj_artwork", "fanart_tv", "gradient"],
-        "festival_background_priority": ["curated_logo", "gradient"],
+        "place_background_priority": ["curated_logo", "gradient"],
         "year_background_priority": ["gradient"],
     },
     "nfo_settings": {
@@ -139,8 +139,8 @@ def _invert_alias_map(grouped: dict) -> dict[str, str]:
     """Convert alias map to {alias: canonical} flat lookup.
 
     Accepts two formats:
-    - Grouped: {canonical: [aliases]} — standard format
-    - Flat: {alias: canonical} — deprecated, auto-detected per entry
+    - Grouped: {canonical: [aliases]}, standard format
+    - Flat: {alias: canonical}, deprecated, auto-detected per entry
     """
     flat = {}
     for key, value in grouped.items():
@@ -150,7 +150,7 @@ def _invert_alias_map(grouped: dict) -> dict[str, str]:
             for alias in value:
                 flat[alias] = key
         elif isinstance(value, str):
-            # Flat format: {alias: canonical} — already inverted
+            # Flat format: {alias: canonical}, already inverted
             flat[key] = value
         else:
             logger.warning("Skipping alias entry '%s': expected str or list, got %s",
@@ -168,6 +168,7 @@ class Config:
     """Typed access to the configuration."""
 
     def __init__(self, data: dict, config_dir: Path | None = None):
+        paths._migrate_legacy_paths()
         self._data = {**DEFAULT_CONFIG, **data}
         self._config_dir = config_dir
         self._ext_cache: dict[str, dict] = {}
@@ -182,26 +183,32 @@ class Config:
             logger.debug(entry[0], *entry[1:])
         self._load_journal.clear()
 
-    def _load_external_config(self, filename: str, defaults: dict) -> dict:
-        """Load a curated JSON data file from library override or user data dir.
+    def _external_config_candidates(self, filename: str) -> list[Path]:
+        """Return the candidate paths the loader checks, in priority order.
 
-        Search order:
+        Order:
           1. ``self._config_dir / filename`` (typically the library-local
              ``.cratedigger/`` dir).
           2. ``paths.data_dir() / filename`` (the visible user data dir, e.g.
              ``Documents/CrateDigger/`` on Windows or ``~/CrateDigger/`` on
              Linux).
+        """
+        candidates: list[Path] = []
+        if self._config_dir:
+            candidates.append(self._config_dir / filename)
+        candidates.append(paths.data_dir() / filename)
+        return candidates
 
-        Curated data files (festivals.json, artists.json, artist_mbids.json)
+    def _load_external_config(self, filename: str, defaults: dict) -> dict:
+        """Load a curated JSON data file from library override or user data dir.
+
+        Curated data files (places.json, artists.json, artist_mbids.json)
         stay JSON on purpose; only ``config.toml`` switched to TOML.
         """
         if filename in self._ext_cache:
             return self._ext_cache[filename]
 
-        candidates: list[Path] = []
-        if self._config_dir:
-            candidates.append(self._config_dir / filename)
-        candidates.append(paths.data_dir() / filename)
+        candidates = self._external_config_candidates(filename)
 
         logger.debug("%s candidates: %s", filename, [str(p) for p in candidates])
 
@@ -232,73 +239,75 @@ class Config:
         return self._data.get("filename_templates", {})
 
     @property
-    def festival_aliases(self) -> dict[str, str]:
-        festivals = self._load_external_config("festivals.json", {})
+    def place_aliases(self) -> dict[str, str]:
+        places = self.place_config
         raw: dict[str, list[str]] = {}
-        for canon, fc in festivals.items():
-            if canon.startswith("_") or not isinstance(fc, dict):
+        for canon, pc in places.items():
+            if canon.startswith("_") or not isinstance(pc, dict):
                 continue
-            raw[canon] = list(fc.get("aliases", []))
-            # Per-edition aliases also resolve to the canonical festival
-            for ed_conf in fc.get("editions", {}).values():
+            raw[canon] = list(pc.get("aliases", []))
+            # Per-edition aliases also resolve to the canonical place
+            for ed_conf in pc.get("editions", {}).values():
                 for alias in ed_conf.get("aliases", []):
                     raw.setdefault(canon, []).append(alias)
-        if "festival_aliases" in self._data:
-            raw = {**raw, **self._data["festival_aliases"]}
+        overlay = self._data.get("place_aliases")
+        if overlay:
+            raw = {**raw, **overlay}
         return _invert_alias_map(raw)
 
     @property
-    def festival_config(self) -> dict:
-        defaults = self._load_external_config("festivals.json", {})
-        defaults = {k: v for k, v in defaults.items()
+    def place_config(self) -> dict:
+        raw = self._load_external_config("places.json", {})
+        defaults = {k: v for k, v in raw.items()
                     if not k.startswith("_") and isinstance(v, dict)}
-        if "festival_config" in self._data:
-            return {**defaults, **self._data["festival_config"]}
+        overlay = self._data.get("place_config")
+        if overlay:
+            return {**defaults, **overlay}
         return defaults
 
     @property
     def all_known_editions(self) -> set[str]:
-        """Collect all editions from every festival config entry."""
+        """Collect all editions from every place config entry."""
         editions = set()
-        for fc in self.festival_config.values():
-            editions.update(fc.get("editions", {}).keys())
+        for pc in self.place_config.values():
+            editions.update(pc.get("editions", {}).keys())
         return editions
 
-    def resolve_festival_with_edition(self, name: str) -> tuple[str, str]:
+    def resolve_place_with_edition(self, name: str) -> tuple[str, str]:
         """Resolve alias and extract edition from the name if applicable.
 
-        Returns (canonical_festival, edition).
+        Returns (canonical_place, edition).
         "Dreamstate SoCal" -> ("Dreamstate", "SoCal")
         "Tomorrowland Winter" -> ("Tomorrowland", "Winter")
         "TML" -> ("Tomorrowland", "")
         """
-        canonical = self.resolve_festival_alias(name)
+        canonical = self.resolve_place_alias(name)
 
         # Alias resolved to something different: check for edition suffix
         if canonical != name:
-            fc = self.festival_config.get(canonical, {})
+            pc = self.place_config.get(canonical, {})
             # Check per-edition aliases
-            for ed_name, ed_conf in fc.get("editions", {}).items():
+            for ed_name, ed_conf in pc.get("editions", {}).items():
                 if name in ed_conf.get("aliases", []):
                     return canonical, ed_name
             # Check if suffix matches an edition name
             suffix = name[len(canonical):].strip() if name.lower().startswith(canonical.lower()) else ""
             if suffix:
-                for ed_name in fc.get("editions", {}):
+                for ed_name in pc.get("editions", {}):
                     if ed_name.lower() == suffix.lower():
                         return canonical, ed_name
             return canonical, ""
 
         # No alias match. Try canonical + edition decomposition.
-        for fest_name, fc in self.festival_config.items():
-            for ed_name in fc.get("editions", {}):
-                if f"{fest_name} {ed_name}".lower() == name.lower():
-                    return fest_name, ed_name
+        for place_name, pc in self.place_config.items():
+            for ed_name in pc.get("editions", {}):
+                if f"{place_name} {ed_name}".lower() == name.lower():
+                    return place_name, ed_name
 
         # Try alias prefixes (handles "Ultra Europe" via alias "Ultra")
-        for alias, canon in self.festival_aliases.items():
-            fc = self.festival_config.get(canon, {})
-            for ed_name in fc.get("editions", {}):
+        for alias, canon in self.place_aliases.items():
+            pc = self.place_config.get(canon, {})
+            for ed_name in pc.get("editions", {}):
                 if f"{alias} {ed_name}".lower() == name.lower():
                     return canon, ed_name
 
@@ -316,7 +325,9 @@ class Config:
 
     @property
     def fallback_values(self) -> dict:
-        return self._data.get("fallback_values", {})
+        defaults = DEFAULT_CONFIG.get("fallback_values", {})
+        overrides = self._data.get("fallback_values", {})
+        return {**defaults, **overrides}
 
     @property
     def nfo_settings(self) -> dict:
@@ -333,7 +344,7 @@ class Config:
 
     @property
     def tracklists_credentials(self) -> tuple[str, str]:
-        """Return (email, password) — env vars override config."""
+        """Return (email, password); env vars override config."""
         import os
         tl = self._data.get("tracklists", {})
         email = os.environ.get("TRACKLISTS_EMAIL") or tl.get("email", "")
@@ -353,29 +364,55 @@ class Config:
         return set(self._data.get("media_extensions", {}).get("video", []))
 
     @property
-    def known_festivals(self) -> set[str]:
-        """All festival names the system can recognize."""
-        names = set(self.festival_aliases.keys())
-        names.update(self.festival_aliases.values())
-        for fest_name, fc in self.festival_config.items():
-            for ed_name, ed_conf in fc.get("editions", {}).items():
-                names.add(f"{fest_name} {ed_name}")
+    def known_places(self) -> set[str]:
+        """All place names the system can recognize."""
+        names = set(self.place_aliases.keys())
+        names.update(self.place_aliases.values())
+        for place_name, pc in self.place_config.items():
+            for ed_name, ed_conf in pc.get("editions", {}).items():
+                names.add(f"{place_name} {ed_name}")
                 for alias in ed_conf.get("aliases", []):
                     names.add(alias)
         return names
 
-    def resolve_festival_alias(self, name: str) -> str:
-        """Map a festival name/abbreviation to its canonical form."""
+    def resolve_place_alias(self, name: str) -> str:
+        """Map a place name/abbreviation to its canonical form."""
         # Try exact match first, then case-insensitive
-        if name in self.festival_aliases:
-            resolved = self.festival_aliases[name]
+        if name in self.place_aliases:
+            resolved = self.place_aliases[name]
             if resolved != name:
-                logger.debug("Festival alias: '%s' -> '%s'", name, resolved)
+                logger.debug("Place alias: '%s' -> '%s'", name, resolved)
             return resolved
-        resolved = _ci_lookup(self.festival_aliases, name) or name
+        resolved = _ci_lookup(self.place_aliases, name) or name
         if resolved != name:
-            logger.debug("Festival alias (case-insensitive): '%s' -> '%s'", name, resolved)
+            logger.debug("Place alias (case-insensitive): '%s' -> '%s'", name, resolved)
         return resolved
+
+    def resolve_place_for_media(self, mf) -> tuple[str, str]:
+        """Return (canonical_name, place_kind) for the routing chain.
+
+        Chain: festival -> venue -> location -> artist.
+        place_kind values: "festival" | "venue" | "location" | "artist".
+        Empty (name, kind) tuple indicates nothing routable.
+
+        Whitespace-only fields are treated as empty so a malformed scrape
+        like "   " falls through to the next chain position rather than
+        producing a folder named after whitespace.
+        """
+        festival = mf.festival.strip()
+        if festival:
+            return (festival, "festival")
+        venue = mf.venue.strip()
+        if venue:
+            return (venue, "venue")
+        location = mf.location.strip()
+        if location:
+            canonical = self.resolve_place_alias(location)
+            return (canonical, "location")
+        artist = mf.artist.strip()
+        if artist:
+            return (artist, "artist")
+        return ("", "")
 
     @cached_property
     def artist_aliases(self) -> dict[str, str]:
@@ -455,12 +492,12 @@ class Config:
 
         return name
 
-    def get_festival_display(self, canonical_festival: str, edition: str) -> str:
-        """Get display name for a festival, optionally including edition."""
-        fc = self.festival_config.get(canonical_festival, {})
-        if edition and edition in fc.get("editions", {}):
-            return f"{canonical_festival} {edition}"
-        return canonical_festival
+    def get_place_display(self, canonical_place: str, edition: str) -> str:
+        """Get display name for a place, optionally including edition."""
+        pc = self.place_config.get(canonical_place, {})
+        if edition and edition in pc.get("editions", {}):
+            return f"{canonical_place} {edition}"
+        return canonical_place
 
     def get_layout_template(self, content_type: str, layout_name: str | None = None) -> str:
         """Get the folder layout template for a content type."""
@@ -478,13 +515,13 @@ class Config:
 
     @property
     def fanart_project_api_key(self) -> str:
-        """Return fanart.tv project API key — env var override + config fallback."""
+        """Return fanart.tv project API key; env var override + config fallback."""
         import os
         return os.environ.get("FANART_PROJECT_API_KEY") or self.fanart_settings.get("project_api_key", "")
 
     @property
     def fanart_personal_api_key(self) -> str:
-        """Return fanart.tv personal API key — env var override + config fallback."""
+        """Return fanart.tv personal API key; env var override + config fallback."""
         import os
         return os.environ.get("FANART_PERSONAL_API_KEY") or self.fanart_settings.get("personal_api_key", "")
 
@@ -629,11 +666,16 @@ def load_config(
 
 
 def _migrate_layout_names(data: dict) -> None:
-    """Backward compatibility: map old layout names to new."""
-    if data.get("default_layout") == "artist_first":
-        data["default_layout"] = "artist_nested"
-    elif data.get("default_layout") == "festival_first":
-        data["default_layout"] = "festival_nested"
+    """Backward compatibility: map historical layout names to current ones."""
+    legacy = {
+        "artist_first": "artist_nested",
+        "festival_first": "place_nested",
+        "festival_flat": "place_flat",
+        "festival_nested": "place_nested",
+    }
+    current = data.get("default_layout")
+    if current in legacy:
+        data["default_layout"] = legacy[current]
 
 
 def _deep_merge(base: dict, override: dict) -> None:

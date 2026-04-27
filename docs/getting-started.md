@@ -200,25 +200,26 @@ The settings most users change first:
 
 See [Configuration](configuration.md) for all options.
 
-### Festival definitions
+### Place definitions
 
-CrateDigger includes built-in knowledge of common festival names. To add your own
-festivals or customize aliases, copy the example festivals file to the same folder as
-your config:
+CrateDigger uses a `places.json` file to recognise festivals, clubs, and other named
+venues that host DJ sets. Built-in knowledge covers the most common electronic music
+festivals. To add your own entries or customize aliases, copy the example file to the
+same folder as your config:
 
 === "Linux / macOS"
 
     ```bash
-    curl -o ~/CrateDigger/festivals.json \
-      https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json
+    curl -o ~/CrateDigger/places.json \
+      https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
     Invoke-WebRequest `
-      -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json" `
-      -OutFile "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
+      -Uri "https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json" `
+      -OutFile "$env:USERPROFILE\Documents\CrateDigger\places.json"
     ```
 
 Or from a cloned repo:
@@ -226,16 +227,20 @@ Or from a cloned repo:
 === "Linux / macOS"
 
     ```bash
-    cp festivals.example.json ~/CrateDigger/festivals.json
+    cp places.example.json ~/CrateDigger/places.json
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
-    Copy-Item festivals.example.json "$env:USERPROFILE\Documents\CrateDigger\festivals.json"
+    Copy-Item places.example.json "$env:USERPROFILE\Documents\CrateDigger\places.json"
     ```
 
-See [Festivals](festivals.md) for how to add entries and what the file format looks like.
+If you have an existing `festivals.json` from a previous version, you do not need to
+rename it right away. CrateDigger reads it automatically when `places.json` is absent
+and prints a one-time deprecation notice.
+
+See [Places](places.md) for how to add entries and what the file format looks like.
 
 ## Preparing your recordings
 
@@ -362,9 +367,9 @@ cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/ --enrich
 ```
 
 CrateDigger will build your library using metadata from your filenames and any tags already
-embedded in your video files. Your [festivals.json](festivals.md) aliases help it recognize
-festival names in filenames, and your [artists.json](configuration.md#artist-aliases) aliases
-help normalize artist names.
+embedded in your video files. Your [places.json](places.md) entries help it recognize
+festival and venue names in filenames, and your [artists.json](configuration.md#artist-aliases)
+aliases help normalize artist names.
 
 **What you still get:**
 
@@ -391,4 +396,4 @@ For the full feature comparison, see [Do I need an account?](tracklists.md#do-i-
 - [enrich](commands/enrich.md): artwork, posters, MBIDs, selective operations
 - [Configuration](configuration.md): all config settings explained
 - [Tracklists integration](tracklists.md): 1001Tracklists account setup and what it adds
-- [Festivals](festivals.md): how to add and customize festival definitions
+- [Places](places.md): how to add and customize festival and venue definitions

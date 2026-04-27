@@ -65,7 +65,7 @@ _CD_PACKAGES: list[str] = [
 # ``festival_organizer.paths`` so the probe follows platformdirs layout.
 _CD_ASSETS: list[tuple[str, Callable[[], Path], str, str]] = [
     ("config.toml",       lambda: paths.config_file(),       "user config",                "warning"),
-    ("festivals.json",    lambda: paths.festivals_file(),    "curated festival aliases",   "warning"),
+    ("places.json",       lambda: paths.places_file(),       "curated place aliases",      "warning"),
     ("artists.json",      lambda: paths.artists_file(),      "curated artist aliases",     "info"),
     ("artist_mbids.json", lambda: paths.artist_mbids_file(), "curated MBID overrides",     "info"),
 ]
@@ -86,9 +86,9 @@ DebugOpt = Annotated[bool, typer.Option("--debug", help="Show cache hits, retrie
 
 class Layout(StrEnum):
     artist_flat = "artist_flat"
-    festival_flat = "festival_flat"
+    place_flat = "place_flat"
     artist_nested = "artist_nested"
-    festival_nested = "festival_nested"
+    place_nested = "place_nested"
 
 
 LayoutOpt = Annotated[Optional[Layout], typer.Option("--layout", help="Folder layout")]
@@ -600,9 +600,9 @@ def _analyse_parallel(
 
     # Populate config._ext_cache (file I/O cache) so worker threads
     # only perform dict reads, avoiding redundant file loads.
-    _ = config.known_festivals
+    _ = config.known_places
     _ = config.artist_aliases
-    _ = config.festival_aliases
+    _ = config.place_aliases
 
     results: list[tuple | None] = [None] * len(files)
 
@@ -1132,13 +1132,13 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
         analyzed = _analyse_parallel(videos, root, config)
         for _fp, mf in analyzed:
             if mf.festival:
-                display = config.get_festival_display(mf.festival, mf.edition)
+                display = config.get_place_display(mf.festival, mf.edition)
                 festivals_found.add(display)
 
     # Check logo availability for each festival
     logo_dirs = [
-        library_root / ".cratedigger" / "festivals",
-        paths.festivals_logo_dir(),
+        library_root / ".cratedigger" / "places",
+        paths.places_logo_dir(),
     ]
 
     def find_logo(festival: str) -> Path | None:
@@ -1171,11 +1171,11 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
         console.print()
 
     if missing_logo:
-        user_festivals = paths.festivals_logo_dir()
+        user_places = paths.places_logo_dir()
         console.print(f"[yellow]Missing curated logo ({len(missing_logo)}):[/yellow]")
         for fest in missing_logo:
-            lib_path = library_root / ".cratedigger" / "festivals" / fest
-            usr_path = user_festivals / fest
+            lib_path = library_root / ".cratedigger" / "places" / fest
+            usr_path = user_places / fest
             console.print(f"  {escape(fest)}")
             console.print(f"    [dim]-> place logo at: {escape(str(lib_path))}/logo.png[/dim]")
             console.print(f"    [dim]   or user-level: {escape(str(usr_path))}/logo.png[/dim]")

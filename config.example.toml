@@ -3,7 +3,7 @@
 # A per-library override at {library}/.cratedigger/config.toml wins over this file.
 # Only include settings you want to override; defaults are built in.
 
-# Folder structure. Available layouts: artist_flat, festival_flat, artist_nested, festival_nested.
+# Folder structure. Available layouts: artist_flat, place_flat, artist_nested, place_nested.
 default_layout = "artist_flat"
 
 # Glob patterns for paths to skip during scanning. Must stay above every
@@ -11,26 +11,26 @@ default_layout = "artist_flat"
 # the loader silently ignores it.
 skip_patterns = ["*/BDMV/*", "Dolby*"]
 
-# Folder templates per layout type. Tokens: {artist}, {festival}, {edition}, {year}, {title}.
+# Folder templates per layout type. Tokens: {artist}, {place}, {edition}, {year}, {title}.
 [layouts.artist_flat]
 festival_set = "{artist}"
 concert_film = "{artist}"
 
-[layouts.festival_flat]
-festival_set = "{festival}{ edition}"
+[layouts.place_flat]
+festival_set = "{place}{ edition}"
 concert_film = "{artist}"
 
 [layouts.artist_nested]
-festival_set = "{artist}/{festival}{ edition}/{year}"
+festival_set = "{artist}/{place}{ edition}/{year}"
 concert_film = "{artist}/{year} - {title}"
 
-[layouts.festival_nested]
-festival_set = "{festival}{ edition}/{year}/{artist}"
+[layouts.place_nested]
+festival_set = "{place}{ edition}/{year}/{artist}"
 concert_film = "{artist}/{year} - {title}"
 
 # File naming templates. Use Sonarr-style collapsing syntax for optional fields.
 [filename_templates]
-festival_set = "{year} - {artist}{ - festival}{ edition}{ [stage]}{ - set_title}"
+festival_set = "{year} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}"
 concert_film = "{artist} - {title}{ (year)}"
 
 # Glob patterns to force classification. Paths are relative to library root.
@@ -46,14 +46,18 @@ audio = [".mp3", ".m4a", ".flac", ".wav", ".aac", ".ogg", ".opus"]
 # Placeholder values when metadata is missing.
 [fallback_values]
 unknown_artist = "Unknown Artist"
-unknown_festival = "_Needs Review"
+# unknown_place is the folder name used when a set cannot be matched to any
+# known place (festival, venue, club, etc.).
+unknown_place = "_Needs Review"
 unknown_year = "Unknown Year"
 unknown_title = "Unknown Title"
 
 # Background image priority chains for poster generation.
 [poster_settings]
 artist_background_priority = ["dj_artwork", "fanart_tv", "gradient"]
-festival_background_priority = ["curated_logo", "gradient"]
+# place_background_priority sets the order CrateDigger tries when generating
+# a poster background for a place folder (festival, venue, club, etc.).
+place_background_priority = ["curated_logo", "gradient"]
 year_background_priority = ["gradient"]
 
 # 1001Tracklists credentials for chapter embedding. Optional.

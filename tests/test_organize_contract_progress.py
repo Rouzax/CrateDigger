@@ -29,7 +29,7 @@ class TestFileDone:
         p = OrganizeContractProgress(
             total=1, console=con, quiet=False, verbose=False,
             output_root=Path("/lib"), dry_run=False,
-            action="rename", layout="festival_nested",
+            action="rename", layout="place_nested",
         )
         op = OrganizeOperation(target=Path("/lib/new.mkv"), action="rename")
         op.sidecars_moved = 0
@@ -47,7 +47,7 @@ class TestFileDone:
         p = OrganizeContractProgress(
             total=1, console=con, quiet=False, verbose=False,
             output_root=Path("/lib"), dry_run=False,
-            action="rename", layout="festival_nested",
+            action="rename", layout="place_nested",
         )
         target = Path("/lib/same.mkv")
         op = OrganizeOperation(target=target, action="rename")
@@ -66,7 +66,7 @@ class TestFileDone:
         p = OrganizeContractProgress(
             total=1, console=con, quiet=False, verbose=False,
             output_root=Path("/lib"), dry_run=False,
-            action="copy", layout="festival_flat",
+            action="copy", layout="place_flat",
         )
         op = OrganizeOperation(target=Path("/lib/out/f.mkv"), action="copy")
         op.sidecars_moved = 0
@@ -85,7 +85,7 @@ class TestFileDone:
         p = OrganizeContractProgress(
             total=1, console=con, quiet=False, verbose=False,
             output_root=Path("/lib"), dry_run=False,
-            action="rename", layout="festival_nested",
+            action="rename", layout="place_nested",
         )
         op = OrganizeOperation(target=Path("/lib/new.mkv"), action="rename")
         op.sidecars_moved = 0
@@ -105,7 +105,7 @@ class TestFileDone:
         p = OrganizeContractProgress(
             total=1, console=con, quiet=True, verbose=False,
             output_root=Path("/lib"), dry_run=False,
-            action="rename", layout="festival_nested",
+            action="rename", layout="place_nested",
         )
         op = OrganizeOperation(target=Path("/lib/new.mkv"), action="rename")
         op.sidecars_moved = 0
@@ -123,7 +123,7 @@ class TestFilePreview:
         p = OrganizeContractProgress(
             total=1, console=con, quiet=False, verbose=False,
             output_root=Path("/lib"), dry_run=True,
-            action="copy", layout="festival_flat",
+            action="copy", layout="place_flat",
         )
         p.file_preview(
             source=Path("/in/f.mkv"), media_file=_mf(),
@@ -140,7 +140,7 @@ class TestVerboseMetadata:
         p = OrganizeContractProgress(
             total=1, console=con, quiet=False, verbose=True,
             output_root=Path("/lib"), dry_run=False,
-            action="rename", layout="festival_nested",
+            action="rename", layout="place_nested",
         )
         op = OrganizeOperation(target=Path("/lib/new.mkv"), action="rename")
         op.sidecars_moved = 2
@@ -151,7 +151,7 @@ class TestVerboseMetadata:
         )
         out = _capture(con)
         assert "festival_set" in out
-        assert "festival_nested" in out
+        assert "place_nested" in out
         assert "2 sidecars" in out
 
     def test_metadata_line_absent_when_not_verbose(self):
@@ -159,7 +159,7 @@ class TestVerboseMetadata:
         p = OrganizeContractProgress(
             total=1, console=con, quiet=False, verbose=False,
             output_root=Path("/lib"), dry_run=False,
-            action="rename", layout="festival_nested",
+            action="rename", layout="place_nested",
         )
         op = OrganizeOperation(target=Path("/lib/new.mkv"), action="rename")
         op.sidecars_moved = 2
@@ -178,7 +178,7 @@ class TestSummary:
         p = OrganizeContractProgress(
             total=2, console=con, quiet=False, verbose=False,
             output_root=Path("/lib"), dry_run=False,
-            action="copy", layout="festival_flat",
+            action="copy", layout="place_flat",
         )
         op1 = OrganizeOperation(target=Path("/lib/Fests/Ultra/a.mkv"), action="copy")
         op1.sidecars_moved = 0

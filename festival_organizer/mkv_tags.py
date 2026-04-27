@@ -17,6 +17,7 @@ import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import Any
 
 from festival_organizer import metadata
 from festival_organizer.normalization import fix_mojibake
@@ -28,7 +29,9 @@ MATROSKA_EXTS = frozenset({".mkv", ".webm"})
 
 # Sentinel value: pass as a tag value to explicitly clear an existing tag.
 # Regular empty string "" preserves the existing value (backward compatible).
-CLEAR_TAG = object()
+# Typed as Any so it can flow through dict[str, str] tag containers without
+# tripping static type checkers; identity (`is CLEAR_TAG`) is what callers check.
+CLEAR_TAG: Any = object()
 
 
 def extract_all_tags(filepath: Path) -> ET.Element | None:
