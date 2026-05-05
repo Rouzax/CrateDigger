@@ -10,14 +10,13 @@ import pytest
 from festival_organizer.subprocess_utils import tracked_run
 
 
-def test_tracked_run_logs_command_and_zero_exit(caplog):
-    """Successful run emits DEBUG with command and exit 0."""
+def test_tracked_run_silent_on_zero_exit(caplog):
+    """Successful run produces no DEBUG output."""
     cmd = [sys.executable, "-c", "pass"]
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.subprocess"):
         result = tracked_run(cmd, capture_output=True, text=True, timeout=10)
     assert result.returncode == 0
-    assert any(sys.executable in rec.message for rec in caplog.records)
-    assert any("exit 0" in rec.message for rec in caplog.records)
+    assert not caplog.records
 
 
 def test_tracked_run_logs_stderr_tail_on_nonzero(caplog):

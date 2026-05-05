@@ -1,17 +1,17 @@
-"""DEBUG-logged wrapper around ``subprocess.run``.
+"""Failure-logged wrapper around ``subprocess.run``.
 
 All ``festival_organizer`` subprocess invocations (mkvextract, mkvpropedit,
 mediainfo, ffprobe, tool version probes) route through :func:`tracked_run`
-so the rotating log file captures the full post-mortem trail: the argv
-command, the working directory when set, the exit code, and a stderr tail
-on non-zero exits.
+so the rotating log file captures a post-mortem trail when something goes
+wrong: the argv command, the exit code, and a stderr tail on non-zero exits.
+
+Successful invocations (exit 0) are not logged; only failures, timeouts,
+and spawn errors produce DEBUG output.
 
 Cross-repo note: TrackSplit has a parallel ``tracked_run`` that adds
 cancel-event tracking for Ctrl+C in its ``ThreadPoolExecutor`` worker
 pool. CrateDigger has no worker pool, so this wrapper intentionally omits
-that tracking and stays a thin pass-through to ``subprocess.run``. The
-DEBUG log shape (command + returncode + stderr tail) is kept symmetric
-with TrackSplit's copy so the rotating logs read the same across repos.
+that tracking and stays a thin pass-through to ``subprocess.run``.
 """
 from __future__ import annotations
 
@@ -57,30 +57,25 @@ def _log_nonzero_exit(returncode: int, cmd_str: str, stderr: Any) -> None:
 
 
 def tracked_run(cmd: Any, **kwargs: Any) -> subprocess.CompletedProcess:
-    """Run a subprocess and log the invocation at DEBUG level.
+    """Run a subprocess, logging only failures at DEBUG level.
 
     Drop-in replacement for :func:`subprocess.run`. All keyword arguments
     are forwarded unchanged. Exceptions propagate to the caller; failures
     are logged at DEBUG before re-raising so the rotating log file sees
     them even when the caller catches and handles silently.
 
-    DEBUG log shape:
-      - Before invocation: ``subprocess: <cmd> (cwd=<cwd>)``
-        (``cwd`` segment only when ``cwd`` kwarg is set).
-      - After invocation: ``subprocess exit <n>: <cmd>`` on success;
-        ``subprocess exit <n>: <cmd>; stderr tail: <tail>`` on non-zero.
-        Same shape applies when ``check=True`` surfaces the non-zero
-        exit as ``CalledProcessError``.
+    Successful invocations (exit 0) produce no log output.
+
+    DEBUG log shape (failures only):
+      - Non-zero exit: ``subprocess exit <n>: <cmd>``; with stderr tail
+        when available. Same shape applies when ``check=True`` surfaces
+        the non-zero exit as ``CalledProcessError``.
       - On ``TimeoutExpired``: ``subprocess timed out: <cmd>``.
       - On spawn failure (``OSError``): ``subprocess failed to spawn:
         <cmd>: <exc>``.
     """
     cmd_str = _fmt_cmd(cmd)
     cwd = kwargs.get("cwd")
-    if cwd is not None:
-        logger.debug("subprocess: %s (cwd=%s)", cmd_str, cwd)
-    else:
-        logger.debug("subprocess: %s", cmd_str)
 
     try:
         result = subprocess.run(cmd, **kwargs)
@@ -96,7 +91,5 @@ def tracked_run(cmd: Any, **kwargs: Any) -> subprocess.CompletedProcess:
 
     if result.returncode != 0:
         _log_nonzero_exit(result.returncode, cmd_str, result.stderr)
-    else:
-        logger.debug("subprocess exit 0: %s", cmd_str)
 
     return result
