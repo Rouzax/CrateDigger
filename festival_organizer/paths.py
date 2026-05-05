@@ -361,3 +361,26 @@ def warn_if_data_dir_is_source_checkout() -> None:
         "silence this warning.",
         resolved,
     )
+
+
+def same_library_path(a: Path, b: Path, library_root: Path) -> bool:
+    """True when *a* and *b* refer to the same location inside a library.
+
+    The path prefix up to *library_root* is compared case-insensitively
+    (on Windows the drive letter and intermediate directories are
+    case-insensitive). The remainder (the library-relative path) is
+    compared case-sensitively so that directory-case renames like
+    ``Alok`` -> ``ALOK`` are still detected as different.
+
+    On POSIX, ``os.path.normcase`` is a no-op, so every component is
+    compared case-sensitively.
+    """
+    sa, sb, sr = str(a), str(b), str(library_root)
+    if not sr.endswith(os.sep) and not sr.endswith("/"):
+        sr += os.sep
+    sa_norm = os.path.normcase(sa)
+    sb_norm = os.path.normcase(sb)
+    sr_norm = os.path.normcase(sr)
+    if sa_norm.startswith(sr_norm) and sb_norm.startswith(sr_norm):
+        return sa[len(sr):] == sb[len(sr):]
+    return sa_norm == sb_norm
