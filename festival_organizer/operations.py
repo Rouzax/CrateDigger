@@ -1,12 +1,4 @@
-"""Composable operations with gap detection.
-
-Logging:
-    Logger: 'festival_organizer.operations'
-    Key events:
-        - album_poster.style (INFO): Album poster style decision (artist vs festival)
-        - dj_artwork.prepare (DEBUG): DJ artwork cropped/resized for centered layout
-    See docs/logging.md for full guidelines.
-"""
+"""Composable operations with gap detection."""
 from __future__ import annotations
 
 import hashlib

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-05-05
+
+### Fixed
+
+- Organize dry-run and live-run now correctly show "up-to-date" on Windows when the typed path prefix differs in case from the resolved library path (e.g., `e:\Data\Festivals\Video` vs `E:\Data\Festivals\Video`). Directory-case renames within the library (e.g., `Alok` to `ALOK`) are still detected.
+
+### Changed
+
+- Subprocess debug logging no longer emits a line for every successful invocation. Only failures (non-zero exit, timeout, spawn error) are logged. This removes roughly 60% of `--debug` output noise.
+- New structured debug events for the organize flow: `organize.resolve` (startup), `organize.template` (per-file template rendering), `organize.target` (per-file path comparison), `organize.is_needed` (per-file operation decision). All use `command.event: key=value` format for grepability.
+
 ## [0.15.0] - 2026-04-26
 
 Place routing replaces festival-only routing with a full `festival → venue → location → artist` chain. Sets that previously had no linked festival were silently routed by artist; they now file under their venue or location name. All festival-specific API surface, config keys, template tokens, and layout names are removed in this release; the place-named equivalents replace them directly.
