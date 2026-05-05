@@ -146,12 +146,9 @@ The badge tells you the outcome:
 | `skipped` | File was skipped (not a recognized media file, or user declined) |
 | `error` | Something went wrong (permission denied, disk full, etc.) |
 
-The detail field shows only what changed:
-
-- **Rename in place (same folder):** the new filename.
-- **Import (same filename, new folder):** the destination folder.
-- **Both changed:** the full relative path.
-- **Dry-run:** prefixed with `would copy to`, `would move to`, or `would rename to`.
+The detail field shows the full relative target path (folder and filename),
+so you always see exactly where a file ends up. In dry-run mode the path is
+prefixed with `would copy to`, `would move to`, or `would rename to`.
 
 Elapsed time appears only when an operation takes more than half a second.
 
