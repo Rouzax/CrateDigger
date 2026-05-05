@@ -47,8 +47,8 @@ def classify(media_file: MediaFile, root: Path, config: Config) -> str:
 
     # 3. Has a known festival name -> festival (resolve aliases first)
     if media_file.festival:
-        canonical = config.resolve_festival_alias(media_file.festival)
-        if canonical in config.known_festivals:
+        canonical = config.resolve_place_alias(media_file.festival)
+        if canonical in config.known_places:
             logger.info("Classified as festival_set (known festival: %s)", canonical)
             return "festival_set"
 

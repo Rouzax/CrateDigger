@@ -626,3 +626,116 @@ def test_analyse_1001tl_artists_preserves_known_festival_from_filename():
         )
     assert mf.festival == "Tomorrowland"  # Known festival preserved
     assert mf.artist == "Martin Garrix"
+
+
+def _venue_alias_config() -> Config:
+    """Config with a curated venue alias for venue-resolution tests."""
+    data = dict(TEST_CONFIG)
+    data["place_config"] = {
+        **TEST_CONFIG.get("place_config", {}),
+        "Alexandra Palace": {
+            "aliases": ["alexandra palace, london"],
+        },
+    }
+    return Config(data)
+
+
+def test_analyzer_venue_full_preserves_raw_and_resolves_alias():
+    """venue_full keeps raw 1001TL text while venue gets alias-resolved."""
+    cfg = _venue_alias_config()
+    fake_meta = {
+        "tracklists_artists": "Fred again..",
+        "tracklists_venue": "alexandra palace, london",
+        "tracklists_date": "2024-11-02",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Fred again.. - Alexandra Palace.mkv"),
+            Path("/library"),
+            cfg,
+        )
+    assert mf.venue == "Alexandra Palace"  # resolved canonical
+    assert mf.venue_full == "alexandra palace, london"  # raw 1001TL text
+
+
+def test_analyzer_venue_without_alias_match_stays_raw():
+    """When no alias matches, mf.venue equals mf.venue_full (raw passthrough)."""
+    cfg = _venue_alias_config()
+    fake_meta = {
+        "tracklists_artists": "Some DJ",
+        "tracklists_venue": "Some Uncurated Bar",
+        "tracklists_date": "2024-05-01",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Some DJ - Some Uncurated Bar.mkv"),
+            Path("/library"),
+            cfg,
+        )
+    assert mf.venue == "Some Uncurated Bar"
+    assert mf.venue_full == "Some Uncurated Bar"
+
+
+def test_analyzer_venue_full_empty_when_no_tag():
+    """venue_full and venue both empty when no 1001TL venue tag is present."""
+    with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
+        mf = analyse_file(Path("/tmp/test.mkv"), Path("/tmp"), CFG)
+    assert mf.venue == ""
+    assert mf.venue_full == ""
+
+
+def test_analyzer_populates_place_for_festival_set():
+    """A 1001TL festival tag drives mf.place via the festival chain step."""
+    fake_meta = {
+        "tracklists_artists": "Martin Garrix",
+        "tracklists_festival": "Tomorrowland",
+        "tracklists_date": "2024-07-21",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Tomorrowland - Martin Garrix.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.festival == "Tomorrowland"
+    assert mf.place == "Tomorrowland"
+    assert mf.place_kind == "festival"
+
+
+def test_analyzer_populates_place_for_venue_set():
+    """A venue tag with no festival drives mf.place via the venue chain step."""
+    cfg = _venue_alias_config()
+    fake_meta = {
+        "tracklists_artists": "Fred again..",
+        "tracklists_venue": "alexandra palace, london",
+        "tracklists_date": "2024-11-02",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Fred again.. - Alexandra Palace.mkv"),
+            Path("/library"),
+            cfg,
+        )
+    assert mf.festival == ""
+    assert mf.venue == "Alexandra Palace"
+    assert mf.place == "Alexandra Palace"
+    assert mf.place_kind == "venue"
+
+
+def test_analyzer_populates_place_for_artist_fallback():
+    """With no festival/venue/location tag, mf.place falls back to the artist."""
+    fake_meta = {
+        "tracklists_artists": "Hardwell",
+        "tracklists_date": "2024-11-02",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2024 - Hardwell - studio set.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.festival == ""
+    assert mf.venue == ""
+    assert mf.location == ""
+    assert mf.place == "Hardwell"
+    assert mf.place_kind == "artist"

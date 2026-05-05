@@ -3,6 +3,7 @@ from pathlib import Path
 from festival_organizer.models import MediaFile
 from festival_organizer.config import load_config
 from festival_organizer.nfo import generate_nfo
+from tests.conftest import make_mediafile
 
 
 def _parse_nfo(nfo_path: Path) -> ET.Element:
@@ -34,7 +35,7 @@ def test_nfo_album_is_festival_plus_year(tmp_path):
 
 def test_nfo_title_artist_at_festival_when_no_stage(tmp_path):
     """title = 'Artist @ Festival' when no stage available for festival sets."""
-    mf = MediaFile(source_path=Path("2024 - TML - Artist.mkv"), artist="Martin Garrix",
+    mf = make_mediafile(source_path=Path("2024 - TML - Artist.mkv"), artist="Martin Garrix",
                    festival="Tomorrowland", year="2024",
                    content_type="festival_set")
     video = tmp_path / "2024 - TML - Martin Garrix.mkv"
@@ -150,7 +151,7 @@ def test_nfo_concert_film(tmp_path):
 
 def test_nfo_title_artist_at_stage_festival(tmp_path):
     """title = 'Artist @ Stage, Festival' for festival sets."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Afrojack",
+    mf = make_mediafile(source_path=Path("test.mkv"), artist="Afrojack",
                    stage="kineticFIELD", festival="EDC Las Vegas", year="2025",
                    content_type="festival_set")
     video = tmp_path / "test.mkv"
@@ -161,7 +162,7 @@ def test_nfo_title_artist_at_stage_festival(tmp_path):
 
 def test_nfo_title_includes_set_title(tmp_path):
     """title appends set_title (WE1/WE2) to festival name."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Armin van Buuren",
+    mf = make_mediafile(source_path=Path("test.mkv"), artist="Armin van Buuren",
                    stage="Mainstage", festival="Tomorrowland", year="2025",
                    set_title="WE2", content_type="festival_set")
     video = tmp_path / "test.mkv"
@@ -172,7 +173,7 @@ def test_nfo_title_includes_set_title(tmp_path):
 
 def test_nfo_title_artist_at_festival_no_stage(tmp_path):
     """title = 'Artist @ Festival' when no stage available."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Martin Garrix",
+    mf = make_mediafile(source_path=Path("test.mkv"), artist="Martin Garrix",
                    festival="Red Rocks", year="2025",
                    content_type="festival_set")
     video = tmp_path / "test.mkv"
@@ -183,7 +184,7 @@ def test_nfo_title_artist_at_festival_no_stage(tmp_path):
 
 def test_nfo_title_uses_display_artist_for_b2b(tmp_path):
     """NFO title uses display_artist for B2B sets."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         display_artist="Martin Garrix & Alesso",
@@ -201,7 +202,7 @@ def test_nfo_title_uses_display_artist_for_b2b(tmp_path):
 
 def test_nfo_title_display_artist_at_festival_no_stage(tmp_path):
     """NFO title = 'display_artist @ Festival' when no stage."""
-    mf = MediaFile(
+    mf = make_mediafile(
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         display_artist="Martin Garrix & Alesso",
@@ -227,7 +228,7 @@ def test_nfo_title_no_stage_no_festival(tmp_path):
 
 def test_nfo_title_no_stage_with_set_title(tmp_path):
     """set_title appended to festival when no stage."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Agents Of Time",
+    mf = make_mediafile(source_path=Path("test.mkv"), artist="Agents Of Time",
                    festival="Tomorrowland", set_title="WE1", year="2025",
                    content_type="festival_set")
     video = tmp_path / "test.mkv"

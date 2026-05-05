@@ -46,16 +46,16 @@ def test_init_library_creates_marker(tmp_path):
 
 def test_init_library_creates_config(tmp_path):
     """init_library creates config.toml with layout."""
-    init_library(tmp_path, layout="festival_flat")
+    init_library(tmp_path, layout="place_flat")
     cfg = tomllib.loads((tmp_path / ".cratedigger" / "config.toml").read_text())
-    assert cfg["default_layout"] == "festival_flat"
+    assert cfg["default_layout"] == "place_flat"
 
 
 def test_init_library_leaves_existing_config_alone(tmp_path):
     """Running init_library twice does not overwrite existing config."""
-    init_library(tmp_path, layout="festival_flat")
+    init_library(tmp_path, layout="place_flat")
     cfg_path = tmp_path / ".cratedigger" / "config.toml"
-    user_content = 'default_layout = "festival_flat"\ncustom_key = "custom_value"\n'
+    user_content = 'default_layout = "place_flat"\ncustom_key = "custom_value"\n'
     cfg_path.write_text(user_content, encoding="utf-8")
     # Re-init should not clobber
     init_library(tmp_path, layout="artist_flat")
@@ -66,7 +66,7 @@ def test_init_library_roundtrips_layout_via_load_config(tmp_path):
     """init_library writes a file load_config can read back (regression: PR #14 audit)."""
     from festival_organizer.config import load_config
 
-    init_library(tmp_path, layout="festival_nested")
+    init_library(tmp_path, layout="place_nested")
     marker = tmp_path / ".cratedigger"
 
     # Point the user-config layer at a non-existent file so only the library layer applies.
@@ -74,7 +74,7 @@ def test_init_library_roundtrips_layout_via_load_config(tmp_path):
         mock_paths.config_file.return_value = tmp_path / "nonexistent.toml"
         config = load_config(library_config_dir=marker)
 
-    assert config.default_layout == "festival_nested"
+    assert config.default_layout == "place_nested"
 
 
 def test_find_library_root_config_dir(tmp_path):
@@ -350,7 +350,7 @@ def test_resolve_library_root_output_nonexistent(tmp_path):
 def test_migrate_folder_artefacts_moves_files_to_target(tmp_path):
     """When a video has been moved to a new folder and the source folder no
     longer contains any videos, folder.jpg / fanart.jpg follow to the target
-    folder. This is the festival_flat alias-change scenario."""
+    folder. This is the place_flat alias-change scenario."""
     old_dir = tmp_path / "UMF Miami"
     new_dir = tmp_path / "Ultra Music Festival Miami"
     old_dir.mkdir()

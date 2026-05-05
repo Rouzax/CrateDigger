@@ -40,7 +40,7 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
         album_parts = []
         festival_display = mf.festival
         if mf.edition:
-            festival_display = config.get_festival_display(mf.festival, mf.edition)
+            festival_display = config.get_place_display(mf.festival, mf.edition)
         if festival_display:
             album_parts.append(festival_display)
         if mf.year:
