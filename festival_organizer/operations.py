@@ -67,7 +67,20 @@ class OrganizeOperation(Operation):
         # while the library-relative portion stays case-sensitive for
         # canonical-casing renames like Alok -> ALOK.
         if self.output_root is not None:
-            return not same_library_path(file_path, self.target, self.output_root)
+            needed = not same_library_path(file_path, self.target, self.output_root)
+            try:
+                src_rel = str(file_path.relative_to(self.output_root))
+            except ValueError:
+                src_rel = str(file_path)
+            try:
+                tgt_rel = str(self.target.relative_to(self.output_root))
+            except ValueError:
+                tgt_rel = str(self.target)
+            logger.debug(
+                "organize.is_needed: source=%s target=%s needed=%s",
+                src_rel, tgt_rel, needed,
+            )
+            return needed
         return str(file_path) != str(self.target)
 
     # Folder-level files that belong to the folder, not individual videos.

@@ -706,6 +706,12 @@ def _run_command(args: types.SimpleNamespace) -> int:
     else:
         header_action = ""
 
+    if args.command == "organize":
+        logger.debug(
+            "organize.resolve: source=%s output=%s action=%s",
+            root, output, header_action,
+        )
+
     # Organize safety: confirm when source is inside existing library
     if args.command == "organize" and not getattr(args, "dry_run", False) and library_root and not explicit_output:
         try:
@@ -884,6 +890,15 @@ def _run_command(args: types.SimpleNamespace) -> int:
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
+            logger.debug(
+                "organize.template: file=%s folder_tpl=%s folder=%s"
+                " filename_tpl=%s filename=%s",
+                fp.name,
+                config.get_layout_template(mf.content_type),
+                target_folder,
+                config.get_filename_template(mf.content_type),
+                target_name,
+            )
             if isinstance(progress, (OrganizeContractProgress, OrganizeEnrichProgress)):
                 # file_preview is only defined on the organize-side progress
                 # types. The outer `args.dry_run` guard ensures we are in
@@ -906,6 +921,15 @@ def _run_command(args: types.SimpleNamespace) -> int:
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
+            logger.debug(
+                "organize.template: file=%s folder_tpl=%s folder=%s"
+                " filename_tpl=%s filename=%s",
+                fp.name,
+                config.get_layout_template(mf.content_type),
+                target_folder,
+                config.get_filename_template(mf.content_type),
+                target_name,
+            )
             ops.append(OrganizeOperation(target=target, action=action, output_root=output))
 
             if getattr(args, "enrich", False):

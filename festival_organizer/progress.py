@@ -1,6 +1,7 @@
 """Live progress output formatting."""
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from festival_organizer.console import (
 from festival_organizer.operations import OperationResult
 from festival_organizer.paths import same_library_path
 
+logger = logging.getLogger(__name__)
 
 _TRIVIAL_SKIP_REASONS = frozenset({"exists", ""})
 
@@ -88,14 +90,23 @@ def _organize_detail(
     Always shows the full relative target path so the destination is
     unambiguous.
     """
-    if same_library_path(source, target, output_root):
+    match = same_library_path(source, target, output_root)
+    try:
+        src_rel = str(source.relative_to(output_root))
+    except ValueError:
+        src_rel = str(source)
+    try:
+        tgt_rel = str(target.relative_to(output_root))
+    except ValueError:
+        tgt_rel = str(target)
+    logger.debug(
+        "organize.target: source=%s target=%s match=%s",
+        src_rel, tgt_rel, match,
+    )
+    if match:
         return "already at target"
 
-    try:
-        rel = target.relative_to(output_root)
-    except ValueError:
-        rel = target
-    base = str(rel)
+    base = tgt_rel
 
     if dry_run:
         return f"would {action} to {base}"
