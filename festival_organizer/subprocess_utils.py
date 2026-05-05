@@ -75,7 +75,6 @@ def tracked_run(cmd: Any, **kwargs: Any) -> subprocess.CompletedProcess:
         <cmd>: <exc>``.
     """
     cmd_str = _fmt_cmd(cmd)
-    cwd = kwargs.get("cwd")
 
     try:
         result = subprocess.run(cmd, **kwargs)
