@@ -1770,13 +1770,9 @@ are handled differently:</p>
 </tr>
 </tbody>
 </table>
-<p>The detail field shows only what changed:</p>
-<ul>
-<li><strong>Rename in place (same folder):</strong> the new filename.</li>
-<li><strong>Import (same filename, new folder):</strong> the destination folder.</li>
-<li><strong>Both changed:</strong> the full relative path.</li>
-<li><strong>Dry-run:</strong> prefixed with <code>would copy to</code>, <code>would move to</code>, or <code>would rename to</code>.</li>
-</ul>
+<p>The detail field shows the full relative target path (folder and filename),
+so you always see exactly where a file ends up. In dry-run mode the path is
+prefixed with <code>would copy to</code>, <code>would move to</code>, or <code>would rename to</code>.</p>
 <p>Elapsed time appears only when an operation takes more than half a second.</p>
 <h3 id="verbose-output">Verbose output</h3>
 <p>With <code>--verbose</code>, each verdict is followed by a dim metadata line showing:</p>
