@@ -1,12 +1,17 @@
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch, MagicMock
+
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
     NfoOperation, ArtOperation, PosterOperation,
     OrganizeOperation, AlbumPosterOperation, FanartOperation,
 )
 from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
+
+
+def _win_normcase(s: str) -> str:
+    return s.replace("/", "\\").lower()
 
 
 def _make_mf(**kwargs: Any) -> MediaFile:
@@ -207,6 +212,17 @@ def test_organize_op_needed_for_case_only_rename(tmp_path):
     target = tmp_path / "2025 - ALOK - EDC.mkv"
     op = OrganizeOperation(target=target)
     assert op.is_needed(source, _make_mf()) is True
+
+
+def test_organize_op_not_needed_for_prefix_case():
+    """e:\\ vs E:\\ prefix difference is not a real rename."""
+    with patch("festival_organizer.paths.os.sep", "\\"), \
+         patch("festival_organizer.paths.os.path.normcase", side_effect=_win_normcase):
+        source = Path("e:\\Data\\AMF\\2024 - Marlon Hoffstadt - AMF.mkv")
+        target = Path("E:\\Data\\AMF\\2024 - Marlon Hoffstadt - AMF.mkv")
+        root = Path("E:\\Data")
+        op = OrganizeOperation(target=target, output_root=root)
+        assert op.is_needed(source, _make_mf()) is False
 
 
 def test_organize_op_case_only_rename_executes_without_collision_suffix(tmp_path):

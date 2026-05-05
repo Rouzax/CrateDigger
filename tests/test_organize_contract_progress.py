@@ -1,12 +1,16 @@
 """Tests for OrganizeContractProgress."""
 import io
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from rich.console import Console
 
 from festival_organizer.operations import OrganizeOperation, OperationResult
 from festival_organizer.progress import OrganizeContractProgress
+
+
+def _win_normcase(s: str) -> str:
+    return s.replace("/", "\\").lower()
 
 
 def _console():
@@ -115,6 +119,29 @@ class TestFileDone:
             op=op, result=result, elapsed_s=0.1,
         )
         assert _capture(con).strip() == ""
+
+    def test_up_to_date_with_prefix_case_difference(self):
+        """e:\\ source vs E:\\ target must still be recognised as up-to-date."""
+        con = _console()
+        p = OrganizeContractProgress(
+            total=1, console=con, quiet=False, verbose=False,
+            output_root=Path("E:\\lib"), dry_run=False,
+            action="rename", layout="place_flat",
+        )
+        source = Path("e:\\lib\\AMF\\file.mkv")
+        target = Path("E:\\lib\\AMF\\file.mkv")
+        op = OrganizeOperation(target=target, action="rename")
+        op.sidecars_moved = 0
+        result = OperationResult("organize", "skipped", "exists")
+        with patch("festival_organizer.paths.os.sep", "\\"), \
+             patch("festival_organizer.paths.os.path.normcase", side_effect=_win_normcase):
+            p.file_done(
+                source=source, media_file=_mf(),
+                op=op, result=result, elapsed_s=0.0,
+            )
+        out = _capture(con)
+        assert "up-to-date" in out
+        assert "already at target" in out
 
 
 class TestFilePreview:

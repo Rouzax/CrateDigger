@@ -20,6 +20,7 @@ from pathlib import Path
 import requests
 
 from festival_organizer import paths
+from festival_organizer.paths import same_library_path
 from festival_organizer.cache_ttl import hashed_jitter_factor
 from festival_organizer.config import Config
 from festival_organizer.fanart import lookup_mbid
@@ -54,15 +55,19 @@ class Operation:
 class OrganizeOperation(Operation):
     name = "organize"
 
-    def __init__(self, target: Path, action: str = "move"):
+    def __init__(self, target: Path, action: str = "move", output_root: Path | None = None):
         self.target = target
         self.action = action  # "move", "copy", "rename"
+        self.output_root = output_root
         self.sidecars_moved = 0
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
-        # Case-sensitive string compare: a canonical-casing rename such as
-        # Alok -> ALOK must run even on case-insensitive filesystems, where
-        # Path.resolve() would normalise both sides to the same string.
+        # When output_root is available, use same_library_path so the
+        # prefix (drive letter on Windows) is compared case-insensitively
+        # while the library-relative portion stays case-sensitive for
+        # canonical-casing renames like Alok -> ALOK.
+        if self.output_root is not None:
+            return not same_library_path(file_path, self.target, self.output_root)
         return str(file_path) != str(self.target)
 
     # Folder-level files that belong to the folder, not individual videos.

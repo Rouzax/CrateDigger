@@ -18,6 +18,7 @@ from festival_organizer.console import (
     verdict,
 )
 from festival_organizer.operations import OperationResult
+from festival_organizer.paths import same_library_path
 
 
 _TRIVIAL_SKIP_REASONS = frozenset({"exists", ""})
@@ -87,7 +88,7 @@ def _organize_detail(
     Always shows the full relative target path so the destination is
     unambiguous.
     """
-    if str(source) == str(target):
+    if same_library_path(source, target, output_root):
         return "already at target"
 
     try:
@@ -236,7 +237,7 @@ class OrganizeContractProgress:
             detail = result.detail or "unknown error"
             self._stats["error"] += 1
             self._errors.append((source.name, detail))
-        elif result.status == "skipped" and str(source) == str(op.target):
+        elif result.status == "skipped" and same_library_path(source, op.target, self.output_root):
             vstatus = "up-to-date"
             detail = "already at target"
             self._stats["up_to_date"] += 1

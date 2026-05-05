@@ -906,7 +906,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
             target_folder = render_folder(mf, config)
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
-            ops.append(OrganizeOperation(target=target, action=action))
+            ops.append(OrganizeOperation(target=target, action=action, output_root=output))
 
             if getattr(args, "enrich", False):
                 ops.append(NfoOperation(config, dj_cache=dj_cache))

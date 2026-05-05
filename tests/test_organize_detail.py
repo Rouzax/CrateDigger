@@ -1,6 +1,12 @@
 """Tests for the context-aware organize detail string builder."""
 from pathlib import Path
+from unittest.mock import patch
+
 from festival_organizer.progress import _organize_detail
+
+
+def _win_normcase(s: str) -> str:
+    return s.replace("/", "\\").lower()
 
 
 class TestLiveRun:
@@ -42,6 +48,18 @@ class TestLiveRun:
         )
         assert detail == "already at target"
 
+    def test_prefix_case_difference_is_up_to_date(self):
+        with patch("festival_organizer.paths.os.sep", "\\"), \
+             patch("festival_organizer.paths.os.path.normcase", side_effect=_win_normcase):
+            detail = _organize_detail(
+                source=Path("e:\\lib\\file.mkv"),
+                target=Path("E:\\lib\\file.mkv"),
+                output_root=Path("E:\\lib"),
+                action="rename",
+                dry_run=False,
+            )
+        assert detail == "already at target"
+
 
 class TestDryRun:
     def test_rename_only_preview(self):
@@ -73,3 +91,16 @@ class TestDryRun:
             dry_run=True,
         )
         assert detail == "would move to Fests/Ultra/clean.mkv"
+
+    def test_prefix_case_difference_is_up_to_date(self):
+        """e:\\Data vs E:\\data prefix is the same library; file is at target."""
+        with patch("festival_organizer.paths.os.sep", "\\"), \
+             patch("festival_organizer.paths.os.path.normcase", side_effect=_win_normcase):
+            detail = _organize_detail(
+                source=Path("e:\\Data\\AMF\\2024 - Marlon Hoffstadt - AMF.mkv"),
+                target=Path("E:\\Data\\AMF\\2024 - Marlon Hoffstadt - AMF.mkv"),
+                output_root=Path("E:\\Data"),
+                action="rename",
+                dry_run=True,
+            )
+        assert detail == "already at target"
