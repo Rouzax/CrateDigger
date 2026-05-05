@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.14.6] - 2026-05-05
+
+### Fixed
+
+- `organize` now shows the full relative target path in both dry-run previews and live verdicts. Previously, when only the folder changed (the common case for in-place organize with well-named files), the detail line showed just the folder with a trailing slash (e.g., `would rename to AMF/`), which made it look like the filename was being lost. The detail now always includes the filename (e.g., `would rename to AMF/2024 - Marlon Hoffstadt - AMF.mkv`).
+
+### Added
+
+- Coachella festival aliases and brand color.
+
 ## [0.14.5] - 2026-04-25
 
 ### Changed
