@@ -270,13 +270,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="../festivals/" class="md-tabs__link">
+      <a href="../places/" class="md-tabs__link">
         
   
   
     
   
-  Festivals
+  Places
 
       </a>
     </li>
@@ -684,14 +684,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../festivals/" class="md-nav__link">
+      <a href="../places/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Festivals
+    Places
   
 
     
@@ -1067,6 +1067,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#why-is-my-set-in-an-artist-folder-instead-of-a-venue-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why is my set in an artist folder instead of a venue folder?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-the-difference-between-a-festival-and-a-venue-in-cratedigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is the difference between a festival and a venue in CrateDigger?
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1140,10 +1162,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#festival-folder-posters-show-a-plain-gradient-instead-of-a-logo" class="md-nav__link">
+  <a href="#place-folder-posters-show-a-plain-gradient-instead-of-a-logo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Festival folder posters show a plain gradient instead of a logo
+        Place folder posters show a plain gradient instead of a logo
       
     </span>
   </a>
@@ -1478,6 +1500,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#why-is-my-set-in-an-artist-folder-instead-of-a-venue-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why is my set in an artist folder instead of a venue folder?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-the-difference-between-a-festival-and-a-venue-in-cratedigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is the difference between a festival and a venue in CrateDigger?
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1551,10 +1595,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#festival-folder-posters-show-a-plain-gradient-instead-of-a-logo" class="md-nav__link">
+  <a href="#place-folder-posters-show-a-plain-gradient-instead-of-a-logo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Festival folder posters show a plain gradient instead of a logo
+        Place folder posters show a plain gradient instead of a logo
       
     </span>
   </a>
@@ -1826,6 +1870,13 @@
 <p>These two flags are mutually exclusive. Use <code>--dry-run</code> first to preview what would happen, then run again with <code>--move</code> (without <code>--dry-run</code>) to actually move the files.</p>
 <h3 id="not-a-cratedigger-library-after-organize">"not a CrateDigger library" after organize</h3>
 <p>If <code>enrich</code> says the folder is not a CrateDigger library, check that <code>organize</code> completed successfully. It creates the <code>.cratedigger/</code> marker folder that <code>enrich</code> requires. If you pointed <code>enrich</code> at a subfolder rather than the library root, point it at the root instead.</p>
+<h3 id="why-is-my-set-in-an-artist-folder-instead-of-a-venue-folder">Why is my set in an artist folder instead of a venue folder?</h3>
+<p>Without a <code>places.json</code> entry for the venue, CrateDigger has no way to recognise it as a curated place, and the set falls through the routing chain to the artist as a last resort. Add an entry to <code>places.json</code> for the venue (with optional aliases, color, and curated logo). After re-running <code>cratedigger</code>, the set routes by the venue name.</p>
+<p>Note: if 1001Tracklists has no linked venue and no plain-text location for the set, the artist fallback is the only available routing target regardless of what is in your <code>places.json</code>. This is intended behavior when the tracklist page has no location data.</p>
+<p>See <a href="../places/">Places</a> for the file format, and <a href="../tracklists/#how-venue-and-location-data-affects-routing">1001Tracklists integration: how venue and location data affects routing</a> for the full routing chain.</p>
+<h3 id="what-is-the-difference-between-a-festival-and-a-venue-in-cratedigger">What is the difference between a festival and a venue in CrateDigger?</h3>
+<p>Nothing structural. Both live in <code>places.json</code> and use the same schema: a canonical name, optional aliases, optional color, optional editions, and an optional curated logo. The distinction is conceptual: a festival is typically a recurring branded event, a venue is typically a permanent physical location. CrateDigger treats both as "places" — named entities that host DJ sets. Use the same fields for both.</p>
+<p>See <a href="../places/">Places</a> for examples of festivals, clubs, and venue brands side by side.</p>
 <hr />
 <h2 id="enrich">enrich</h2>
 <h3 id="not-a-cratedigger-library">"not a CrateDigger library"</h3>
@@ -1881,16 +1932,16 @@
 </code></pre></div>
 <p>CrateDigger detects that the resolved ID has changed and writes the update automatically.</p>
 <p>See <a href="../configuration/#artist-mbid-override-file">Configuration: artist MBID override file</a> for details.</p>
-<h3 id="festival-folder-posters-show-a-plain-gradient-instead-of-a-logo">Festival folder posters show a plain gradient instead of a logo</h3>
-<p>Add a curated logo for the festival and regenerate:</p>
+<h3 id="place-folder-posters-show-a-plain-gradient-instead-of-a-logo">Place folder posters show a plain gradient instead of a logo</h3>
+<p>Add a curated logo for the place and regenerate:</p>
 <ol>
-<li>Find out which festivals are missing logos: <code>cratedigger audit-logos ~/Music/Library/</code></li>
-<li>Place a logo file at the path the command suggests (for example, <code>~/CrateDigger/festivals/Tomorrowland/logo.png</code> on Linux or macOS, <code>Documents\CrateDigger\festivals\Tomorrowland\logo.png</code> on Windows)</li>
+<li>Find out which places are missing logos: <code>cratedigger audit-logos ~/Music/Library/</code></li>
+<li>Place a logo file at the path the command suggests (for example, <code>~/CrateDigger/places/Tomorrowland/logo.png</code> on Linux or macOS, <code>Documents\CrateDigger\places\Tomorrowland\logo.png</code> on Windows)</li>
 <li>Regenerate the folder posters:</li>
 </ol>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
 </code></pre></div>
-<p>See <a href="../commands/audit-logos/">audit-logos</a> and <a href="../library-layout/#festival-logos">library layout: festival logos</a> for supported formats and placement paths.</p>
+<p>See <a href="../commands/audit-logos/">audit-logos</a> and <a href="../places/#curated-assets-logos-and-artwork">Places: curated assets</a> for supported formats and placement paths.</p>
 <hr />
 <h2 id="fanarttv">fanart.tv</h2>
 <h3 id="fanart-lookups-fail-or-return-no-images">Fanart lookups fail or return no images</h3>

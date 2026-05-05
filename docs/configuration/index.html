@@ -14,7 +14,7 @@
         <link rel="prev" href="../commands/audit-logos/">
       
       
-        <link rel="next" href="../festivals/">
+        <link rel="next" href="../places/">
       
       
         
@@ -274,13 +274,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="../festivals/" class="md-tabs__link">
+      <a href="../places/" class="md-tabs__link">
         
   
   
     
   
-  Festivals
+  Places
 
       </a>
     </li>
@@ -941,10 +941,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#festivalsjson" class="md-nav__link">
+  <a href="#placesjson" class="md-nav__link">
     <span class="md-ellipsis">
       
-        festivals.json
+        places.json
       
     </span>
   </a>
@@ -1004,14 +1004,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../festivals/" class="md-nav__link">
+      <a href="../places/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Festivals
+    Places
   
 
     
@@ -1408,10 +1408,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#festivalsjson" class="md-nav__link">
+  <a href="#placesjson" class="md-nav__link">
     <span class="md-ellipsis">
       
-        festivals.json
+        places.json
       
     </span>
   </a>
@@ -1488,7 +1488,7 @@
 <p>Only include the settings you want to change. Everything else falls back to built-in defaults.</p>
 <p>You can also pass an explicit path with <code>--config &lt;path&gt;</code> on any command. This acts as your user config for that run.</p>
 <h3 id="custom-data-directory">Custom data directory</h3>
-<p>Set the <code>CRATEDIGGER_DATA_DIR</code> environment variable to read and write the visible data folder (config, festivals, artists, logos) from a different location, for example a shared volume or an external drive. Both CrateDigger and TrackSplit honour this variable, so pointing them at the same path keeps them aligned. The directory must already exist; CrateDigger does not create it. If you want your existing data there, move or copy it yourself before setting the variable. CrateDigger falls back to the platform default when the variable is unset, empty, or points at a missing or non-directory path.</p>
+<p>Set the <code>CRATEDIGGER_DATA_DIR</code> environment variable to read and write the visible data folder (config, places, artists, logos) from a different location, for example a shared volume or an external drive. Both CrateDigger and TrackSplit honour this variable, so pointing them at the same path keeps them aligned. The directory must already exist; CrateDigger does not create it. If you want your existing data there, move or copy it yourself before setting the variable. CrateDigger falls back to the platform default when the variable is unset, empty, or points at a missing or non-directory path.</p>
 <p>If you have cloned the CrateDigger repository into <code>~/CrateDigger/</code> on Linux or the equivalent default folder on other platforms, CrateDigger will warn at startup that the data folder appears to be a source checkout. Set <code>CRATEDIGGER_DATA_DIR</code> to a separate dedicated folder to resolve the warning and keep your curated data files away from the repository.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Linux / macOS</label><label for="__tabbed_1_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
@@ -1504,7 +1504,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Caches and logs live in separate platform directories</p>
-<p><code>CRATEDIGGER_DATA_DIR</code> only controls the visible data folder (config, festivals, artists, logos). Caches (<code>dj_cache.json</code>, <code>mbid_cache.json</code>, artist artwork) and logs follow standard platform conventions and are not affected by this variable. On Linux, they live under <code>~/.cache/CrateDigger/</code> and <code>~/.local/state/CrateDigger/log/</code> respectively. If you need to relocate those as well, set the standard <code>XDG_CACHE_HOME</code> or <code>XDG_STATE_HOME</code> environment variables. Note that these apply system-wide to all XDG-aware applications, and platformdirs appends <code>CrateDigger/</code> automatically, so <code>XDG_CACHE_HOME=/data/cache</code> results in <code>/data/cache/CrateDigger/</code>.</p>
+<p><code>CRATEDIGGER_DATA_DIR</code> only controls the visible data folder (config, places, artists, logos). Caches (<code>dj_cache.json</code>, <code>mbid_cache.json</code>, artist artwork) and logs follow standard platform conventions and are not affected by this variable. On Linux, they live under <code>~/.cache/CrateDigger/</code> and <code>~/.local/state/CrateDigger/log/</code> respectively. If you need to relocate those as well, set the standard <code>XDG_CACHE_HOME</code> or <code>XDG_STATE_HOME</code> environment variables. Note that these apply system-wide to all XDG-aware applications, and platformdirs appends <code>CrateDigger/</code> automatically, so <code>XDG_CACHE_HOME=/data/cache</code> results in <code>/data/cache/CrateDigger/</code>.</p>
 </div>
 <h2 id="getting-a-starter-config">Getting a starter config</h2>
 <p>The example config contains all available settings with comments. Copy it to your user config location:</p>
@@ -1542,31 +1542,33 @@
 <h3 id="default-layout">Default layout</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">default_layout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;artist_flat&quot;</span>
 </code></pre></div>
-<p>The folder layout used by <code>organize</code> when <code>--layout</code> is not specified. Available values: <code>artist_flat</code>, <code>festival_flat</code>, <code>artist_nested</code>, <code>festival_nested</code>. See <a href="../commands/organize/#layouts">Organize: layouts</a> for what each looks like.</p>
+<p>The folder layout used by <code>organize</code> when <code>--layout</code> is not specified. Available values: <code>artist_flat</code>, <code>place_flat</code>, <code>artist_nested</code>, <code>place_nested</code>. The older names <code>festival_flat</code> and <code>festival_nested</code> are deprecated aliases for <code>place_flat</code> and <code>place_nested</code>; they continue to work until 1.0.0 but log a one-shot deprecation warning. See <a href="../commands/organize/#layouts">Organize: layouts</a> for what each looks like.</p>
 <h3 id="layouts">Layouts</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[layouts.artist_flat]</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
 <a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">[layouts.festival_flat]</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{festival}{ edition}&quot;</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">[layouts.place_flat]</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{place}{ edition}&quot;</span>
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
 <a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
 <a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="k">[layouts.artist_nested]</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}/{festival}{ edition}/{year}&quot;</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}/{place}{ edition}/{year}&quot;</span>
 <a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}/{year} - {title}&quot;</span>
 <a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="k">[layouts.festival_nested]</span>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{festival}{ edition}/{year}/{artist}&quot;</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="k">[layouts.place_nested]</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{place}{ edition}/{year}/{artist}&quot;</span>
 <a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}/{year} - {title}&quot;</span>
 </code></pre></div>
-<p>Folder path templates for each layout and content type. See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for how optional tokens work.</p>
+<p>Folder path templates for each layout and content type. The <code>{place}</code> token resolves to the canonical name of the festival, club, or venue associated with the set. See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for how optional tokens work.</p>
+<p><strong>Deprecated layout names:</strong> <code>festival_flat</code> and <code>festival_nested</code> are aliases for <code>place_flat</code> and <code>place_nested</code>. They resolve to the same layouts and use the same templates. If you have customised a <code>[layouts.festival_flat]</code> or <code>[layouts.festival_nested]</code> section in your config, CrateDigger uses your custom section unchanged and logs a one-shot deprecation warning. Support for the deprecated names will be removed in 1.0.0.</p>
 <h3 id="filename-templates">Filename templates</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">[filename_templates]</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{year} - {artist} - {festival}{ edition}{ [stage]}{ - set_title}&quot;</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{year} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}&quot;</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist} - {title}{ (year)}&quot;</span>
 </code></pre></div>
-<p>Templates for generated filenames. The original file extension is preserved automatically. See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for field names and optional token syntax.</p>
+<p>Templates for generated filenames. The original file extension is preserved automatically. The <code>{ - place}</code> token is optional: it is included only when a place name is available. See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for field names and optional token syntax.</p>
+<p><strong>Template tokens:</strong> <code>{place}</code> is the primary routing token for the associated festival, club, or venue. The older <code>{festival}</code> token continues to work as a deprecated alias rendering the same value, and will be removed in 1.0.0.</p>
 <h3 id="content-type-rules">Content type rules</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">[content_type_rules]</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">force_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Adele/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Coldplay/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;U2/*&quot;</span><span class="p">]</span>
@@ -1586,15 +1588,16 @@
 <h3 id="fallback-values">Fallback values</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">[fallback_values]</span>
 <a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">unknown_artist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Artist&quot;</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">unknown_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;_Needs Review&quot;</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">unknown_place</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;_Needs Review&quot;</span>
 <a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="n">unknown_year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Year&quot;</span>
 <a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="n">unknown_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Title&quot;</span>
 </code></pre></div>
 <p>Placeholder values used in folder and filename templates when metadata is missing. <code>_Needs Review</code> sorts near the top in most file managers, making unclassified files easy to find.</p>
+<p><strong>Deprecated key:</strong> <code>unknown_festival</code> is a deprecated alias for <code>unknown_place</code>. If you set <code>unknown_festival</code> without also setting <code>unknown_place</code>, CrateDigger copies your value into <code>unknown_place</code> and logs a one-shot deprecation warning. Setting <code>unknown_place</code> directly is preferred. Support for <code>unknown_festival</code> will be removed in 1.0.0.</p>
 <h3 id="poster-settings">Poster settings</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">[poster_settings]</span>
 <a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">artist_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;dj_artwork&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;fanart_tv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">festival_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;curated_logo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">place_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;curated_logo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
 <a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">year_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
 </code></pre></div>
 <p>Priority chains for poster background image selection. CrateDigger tries each source in order and uses the first one available.</p>
@@ -1616,7 +1619,7 @@
 </tr>
 <tr>
 <td><code>curated_logo</code></td>
-<td>Hand-placed festival logo (see <a href="../commands/audit-logos/">audit-logos</a>)</td>
+<td>Hand-placed place logo (see <a href="../commands/audit-logos/">audit-logos</a>)</td>
 </tr>
 <tr>
 <td><code>gradient</code></td>
@@ -1624,6 +1627,8 @@
 </tr>
 </tbody>
 </table>
+<p><code>place_background_priority</code> controls background selection for festival sets routed by a named place (festival, club, or venue). When the set has no linked place, the <code>artist_background_priority</code> chain is used instead, so the poster comes out as a proper artist poster rather than a plain gradient.</p>
+<p><strong>Deprecated key:</strong> <code>festival_background_priority</code> is a deprecated alias for <code>place_background_priority</code>. If you set <code>festival_background_priority</code> without also setting <code>place_background_priority</code>, CrateDigger copies your value into <code>place_background_priority</code> and logs a one-shot deprecation warning. Support for <code>festival_background_priority</code> will be removed in 1.0.0.</p>
 <h3 id="tracklists">Tracklists</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">[tracklists]</span>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
@@ -1814,8 +1819,10 @@
 </tr>
 </tbody>
 </table>
-<h3 id="festivalsjson">festivals.json</h3>
-<p>Controls festival name recognition, aliases, and editions. CrateDigger includes built-in festival knowledge. To add your own festivals or customize aliases, place a <code>festivals.json</code> in the folder above. See <a href="../festivals/">Festivals</a> for the file format and how to add entries.</p>
+<h3 id="placesjson">places.json</h3>
+<p>Controls place name recognition, aliases, and editions. Places include festivals, clubs, venues, and any other named entities that host DJ sets in your library. CrateDigger includes built-in place knowledge. To add your own entries or customize aliases, place a <code>places.json</code> in the folder above. See <a href="../places/">Places</a> for the file format and how to add entries.</p>
+<p><strong>Curated assets directory:</strong> logo and background images for each place go in <code>.cratedigger/places/&lt;canonical-name&gt;/logo.png</code> inside your library, or <code>.cratedigger/places/&lt;canonical-name&gt;/&lt;edition&gt;/logo.png</code> for edition-specific logos. CrateDigger also checks the old <code>.cratedigger/festivals/&lt;name&gt;/</code> path as a fallback and logs a one-shot deprecation notice on first use.</p>
+<p><strong>Deprecated file:</strong> <code>festivals.json</code> is a deprecated alias for <code>places.json</code>. When <code>places.json</code> is absent, CrateDigger reads <code>festivals.json</code> instead and logs a one-shot deprecation warning. Rename the file to <code>places.json</code> when you are ready to migrate. Support for <code>festivals.json</code> will be removed in 1.0.0.</p>
 <h3 id="artist-aliases">artists.json</h3>
 <p>Controls artist name aliases and B2B group definitions.</p>
 <p>Place it in the folder above (<code>~/CrateDigger/artists.json</code> on Linux or macOS, <code>Documents\CrateDigger\artists.json</code> on Windows). Example:</p>
@@ -1908,7 +1915,7 @@
 <tbody>
 <tr>
 <td><code>CRATEDIGGER_DATA_DIR</code></td>
-<td>Default data directory for config, festivals, artists, and logos. Must point at an existing directory. See <a href="#custom-data-directory">Custom data directory</a>.</td>
+<td>Default data directory for config, places, artists, and logos. Must point at an existing directory. See <a href="#custom-data-directory">Custom data directory</a>.</td>
 </tr>
 <tr>
 <td><code>TRACKLISTS_EMAIL</code></td>

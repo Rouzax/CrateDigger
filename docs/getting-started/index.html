@@ -274,13 +274,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="../festivals/" class="md-tabs__link">
+      <a href="../places/" class="md-tabs__link">
         
   
   
     
   
-  Festivals
+  Places
 
       </a>
     </li>
@@ -611,10 +611,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#festival-definitions" class="md-nav__link">
+  <a href="#place-definitions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Festival definitions
+        Place definitions
       
     </span>
   </a>
@@ -933,14 +933,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../festivals/" class="md-nav__link">
+      <a href="../places/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Festivals
+    Places
   
 
     
@@ -1205,10 +1205,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#festival-definitions" class="md-nav__link">
+  <a href="#place-definitions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Festival definitions
+        Place definitions
       
     </span>
   </a>
@@ -1512,21 +1512,22 @@ everything. Create it only if you want to customize behavior.</p>
 <li><strong>Default layout</strong>: controls how CrateDigger names and arranges your library folders.</li>
 </ul>
 <p>See <a href="../configuration/">Configuration</a> for all options.</p>
-<h3 id="festival-definitions">Festival definitions</h3>
-<p>CrateDigger includes built-in knowledge of common festival names. To add your own
-festivals or customize aliases, copy the example festivals file to the same folder as
-your config:</p>
+<h3 id="place-definitions">Place definitions</h3>
+<p>CrateDigger uses a <code>places.json</code> file to recognise festivals, clubs, and other named
+venues that host DJ sets. Built-in knowledge covers the most common electronic music
+festivals. To add your own entries or customize aliases, copy the example file to the
+same folder as your config:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Linux / macOS</label><label for="__tabbed_4_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/CrateDigger/festivals.json<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/CrateDigger/places.json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/festivals.example.json&quot;</span> <span class="p">`</span>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\festivals.json&quot;</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json&quot;</span> <span class="p">`</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\places.json&quot;</span>
 </code></pre></div>
 </div>
 </div>
@@ -1535,16 +1536,19 @@ your config:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Linux / macOS</label><label for="__tabbed_5_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>cp<span class="w"> </span>festivals.example.json<span class="w"> </span>~/CrateDigger/festivals.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>cp<span class="w"> </span>places.example.json<span class="w"> </span>~/CrateDigger/places.json
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">Copy-Item</span> <span class="n">festivals</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">json</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\festivals.json&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">Copy-Item</span> <span class="n">places</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">json</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\places.json&quot;</span>
 </code></pre></div>
 </div>
 </div>
 </div>
-<p>See <a href="../festivals/">Festivals</a> for how to add entries and what the file format looks like.</p>
+<p>If you have an existing <code>festivals.json</code> from a previous version, you do not need to
+rename it right away. CrateDigger reads it automatically when <code>places.json</code> is absent
+and prints a one-time deprecation notice.</p>
+<p>See <a href="../places/">Places</a> for how to add entries and what the file format looks like.</p>
 <h2 id="preparing-your-recordings">Preparing your recordings</h2>
 <p>CrateDigger works best with MKV files that have an embedded thumbnail. If you are
 downloading sets from YouTube, the following yt-dlp command produces exactly the right
@@ -1657,9 +1661,9 @@ run organize and enrich directly:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
 </code></pre></div>
 <p>CrateDigger will build your library using metadata from your filenames and any tags already
-embedded in your video files. Your <a href="../festivals/">festivals.json</a> aliases help it recognize
-festival names in filenames, and your <a href="../configuration/#artist-aliases">artists.json</a> aliases
-help normalize artist names.</p>
+embedded in your video files. Your <a href="../places/">places.json</a> entries help it recognize
+festival and venue names in filenames, and your <a href="../configuration/#artist-aliases">artists.json</a>
+aliases help normalize artist names.</p>
 <p><strong>What you still get:</strong></p>
 <ul>
 <li>An organized library with consistent folder and file names</li>
@@ -1684,7 +1688,7 @@ help normalize artist names.</p>
 <li><a href="../commands/enrich/">enrich</a>: artwork, posters, MBIDs, selective operations</li>
 <li><a href="../configuration/">Configuration</a>: all config settings explained</li>
 <li><a href="../tracklists/">Tracklists integration</a>: 1001Tracklists account setup and what it adds</li>
-<li><a href="../festivals/">Festivals</a>: how to add and customize festival definitions</li>
+<li><a href="../places/">Places</a>: how to add and customize festival and venue definitions</li>
 </ul>
 
 

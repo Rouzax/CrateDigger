@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://rouzax.github.io/CrateDigger/docs/tracklists/">
       
       
-        <link rel="prev" href="../festivals/">
+        <link rel="prev" href="../places/">
       
       
         <link rel="next" href="../tag-reference/">
@@ -272,13 +272,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="../festivals/" class="md-tabs__link">
+      <a href="../places/" class="md-tabs__link">
         
   
   
     
   
-  Festivals
+  Places
 
       </a>
     </li>
@@ -686,14 +686,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../festivals/" class="md-nav__link">
+      <a href="../places/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Festivals
+    Places
   
 
     
@@ -827,6 +827,17 @@
     <span class="md-ellipsis">
       
         What CrateDigger extracts from a tracklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-venue-and-location-data-affects-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How venue and location data affects routing
       
     </span>
   </a>
@@ -1098,6 +1109,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-venue-and-location-data-affects-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How venue and location data affects routing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-identification-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1197,7 +1219,7 @@
 <td>Yes</td>
 </tr>
 <tr>
-<td>Alias resolution (artists.json, festival aliases)</td>
+<td>Alias resolution (artists.json, places.json entries)</td>
 <td>Yes</td>
 <td>Yes</td>
 </tr>
@@ -1263,7 +1285,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Without an account</strong>, CrateDigger still produces a usable library. Metadata comes from parsing your filenames using your <code>festivals.json</code> aliases and <code>artists.json</code> rules, reading any embedded MKV tags, looking up artist artwork from fanart.tv via a resolved MusicBrainz ID, and extracting cover art from embedded attachments or sampled video frames. You get organized folders, reasonable posters, and NFO files. What you lose is everything tied to the authoritative tracklist: chapter markers, per-track metadata (title, label, genre, artist MBIDs), canonical DJ naming beyond your manual aliases, and the stage and venue context tags.</p>
+<p><strong>Without an account</strong>, CrateDigger still produces a usable library. Metadata comes from parsing your filenames using your <code>places.json</code> entries and <code>artists.json</code> rules, reading any embedded MKV tags, looking up artist artwork from fanart.tv via a resolved MusicBrainz ID, and extracting cover art from embedded attachments or sampled video frames. You get organized folders, reasonable posters, and NFO files. What you lose is everything tied to the authoritative tracklist: chapter markers, per-track metadata (title, label, genre, artist MBIDs), canonical DJ naming beyond your manual aliases, and the stage and venue context tags.</p>
 <p><strong>With an account</strong>, every row in the table is filled in. <code>identify</code> matches your recording against 1001Tracklists, and embeds per-chapter metadata plus album-level event context directly into the MKV.</p>
 <h2 id="account-setup">Account setup</h2>
 <p>You need a free account at <a href="https://www.1001tracklists.com/">1001Tracklists</a>. Configure your credentials in one of two ways.</p>
@@ -1298,6 +1320,17 @@
 <li><strong>DJ list and album-artist MBIDs:</strong> canonical DJ names, 1001Tracklists slugs, and aligned MusicBrainz IDs for multi-value album-artist credits. See <a href="../tag-reference/#album-level-artist-tags">album-level artist tags</a>.</li>
 <li><strong>DJ artwork URL:</strong> the DJ photo from the tracklist page, used as a background source in the <a href="../library-layout/#poster-layouts">poster pipeline</a>.</li>
 </ul>
+<h2 id="how-venue-and-location-data-affects-routing">How venue and location data affects routing</h2>
+<p>When 1001Tracklists has a linked festival for a set, CrateDigger uses that as the primary routing target. When no festival is present, it works down a chain:</p>
+<ol>
+<li><strong>Festival</strong> (linked on the tracklist page)</li>
+<li><strong>Venue</strong> (a linked venue page, if present)</li>
+<li><strong>Location</strong> (plain-text location from the page heading, if present)</li>
+<li><strong>Artist</strong> (last resort when none of the above is available)</li>
+</ol>
+<p>The venue and location data that 1001Tracklists provides feeds directly into your <code>places.json</code> registry. If the venue name matches a canonical name or alias in <code>places.json</code>, CrateDigger uses the canonical name for folder and file naming. If it does not match, it uses the raw text from the tracklist page.</p>
+<p>Adding a <code>places.json</code> entry for a venue is all it takes to bring it into the same alias-resolution pipeline as festivals. A set recorded at a club with no <code>places.json</code> entry uses the raw venue name or falls through to the artist folder. A set with no linked venue and no plain-text location always routes by artist. This is the intended behavior when 1001Tracklists has no location data to provide.</p>
+<p>See <a href="../places/">Places</a> for the full registry format and matching rules.</p>
 <h2 id="what-identification-looks-like">What identification looks like</h2>
 <p>Interactive selection is the default mode. <code>identify</code> prints a ranked list of results and prompts you to pick the correct match or skip. See <a href="../commands/identify/#step-by-step-what-happens-when-you-run-identify">identify: step-by-step</a> for a sample transcript and auto-mode behavior.</p>
 <h2 id="rate-limiting-and-caching">Rate limiting and caching</h2>
