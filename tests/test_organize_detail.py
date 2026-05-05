@@ -14,7 +14,7 @@ class TestLiveRun:
         )
         assert detail == "new_name.mkv"
 
-    def test_import_only_shows_relative_folder(self):
+    def test_import_shows_full_relative_path(self):
         detail = _organize_detail(
             source=Path("/inbox/file.mkv"),
             target=Path("/lib/Festivals/Ultra Miami 2026/file.mkv"),
@@ -22,7 +22,7 @@ class TestLiveRun:
             action="copy",
             dry_run=False,
         )
-        assert detail == "Festivals/Ultra Miami 2026/"
+        assert detail == "Festivals/Ultra Miami 2026/file.mkv"
 
     def test_both_changed_shows_full_relative(self):
         detail = _organize_detail(
@@ -62,7 +62,7 @@ class TestDryRun:
             action="copy",
             dry_run=True,
         )
-        assert detail == "would copy to Fests/"
+        assert detail == "would copy to Fests/f.mkv"
 
     def test_move_both_changed_preview(self):
         detail = _organize_detail(
