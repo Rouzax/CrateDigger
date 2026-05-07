@@ -97,7 +97,7 @@ class TestEnrichContractFileDone:
         assert "nfo, art" in lines[1]
         assert "->" not in lines[0]
 
-    def test_all_skipped_shows_up_to_date(self):
+    def test_all_skipped_shows_up_to_date_compact(self):
         from festival_organizer.progress import EnrichContractProgress
         con = _console()
         p = EnrichContractProgress(total=1, console=con, quiet=False, verbose=False)
@@ -108,7 +108,9 @@ class TestEnrichContractFileDone:
         p.file_done(source=Path("/lib/my_set.mkv"), results=results, elapsed_s=0.1)
         out = _capture(con)
         assert "up-to-date" in out
-        assert "all up to date" in out
+        assert "all up to date" not in out
+        content_lines = [ln for ln in out.strip().split("\n") if ln.strip()]
+        assert len(content_lines) == 1
 
     def test_error_badge_with_mixed(self):
         from festival_organizer.progress import EnrichContractProgress
