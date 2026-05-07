@@ -1,4 +1,11 @@
-"""Parsers for extracting content information from various sources."""
+"""Parsers for extracting content information from various sources.
+
+Logging:
+    Logger: 'festival_organizer.parsers'
+    Key events:
+        - parsers.filename_fallback (DEBUG): Filename did not match primary pattern
+    See docs/logging.md for full guidelines.
+"""
 import logging
 import re
 from pathlib import Path

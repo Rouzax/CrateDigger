@@ -12,6 +12,14 @@ Cross-repo note: TrackSplit has a parallel ``tracked_run`` that adds
 cancel-event tracking for Ctrl+C in its ``ThreadPoolExecutor`` worker
 pool. CrateDigger has no worker pool, so this wrapper intentionally omits
 that tracking and stays a thin pass-through to ``subprocess.run``.
+
+Logging:
+    Logger: 'festival_organizer.subprocess_utils'
+    Key events:
+        - subprocess.exit (DEBUG): Non-zero exit code with optional stderr tail
+        - subprocess.timeout (DEBUG): Subprocess exceeded timeout
+        - subprocess.spawn_failed (DEBUG): Subprocess could not be started
+    See docs/logging.md for full guidelines.
 """
 from __future__ import annotations
 
