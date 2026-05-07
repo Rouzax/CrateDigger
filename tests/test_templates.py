@@ -453,7 +453,12 @@ def test_render_multiple_optional_fields_all_present():
 
 
 def test_render_filename_no_festival_collapses():
-    """Festival set without festival: festival and separator collapse cleanly."""
+    """Legacy: files tagged before h1 cleanup may have raw stage text.
+
+    Stage carries the full post-@ text including country and date.
+    Since place is derived from artist (no festival/venue/location),
+    stage != place and the brackets render normally.
+    """
     mf = MediaFile(
         source_path=Path("test.mkv"),
         artist="FISHER",
