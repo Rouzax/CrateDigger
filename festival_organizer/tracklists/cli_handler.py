@@ -3,6 +3,18 @@
 Logging:
     Logger: 'festival_organizer.tracklists.cli_handler'
     Key events:
+        - identify.stored_url (INFO): Stored URL decision (reuse/skip/research)
+        - identify.direct_input (DEBUG): Direct URL or ID supplied
+        - identify.search (INFO): Search query dispatched (with optional alias expansion)
+        - identify.results (DEBUG): Scored result count and top scores
+        - identify.auto_select (INFO): Auto-select accept or reject with reason
+        - identify.fetch (INFO): Tracklist fetch initiated
+        - identify.skip (DEBUG): Early return before embed (parse_failed/no_chapters/single_chapter)
+        - identify.chapters_match (DEBUG): Chapter identity comparison result
+        - identify.chapters_no_stored (DEBUG): Chapters match but no stored tags found
+        - identify.tags_update (DEBUG): Tag diff computed (changed count and names)
+        - identify.self_heal (DEBUG): Legacy self-heal triggered (missing_chapter_tags/missing_album_tags)
+        - identify.regenerate (DEBUG): Forced re-embed via --regenerate
         - identify.write_failed (WARNING): Tag writing via mkvpropedit failed
     See docs/logging.md for full guidelines.
 """
@@ -342,6 +354,7 @@ def _process_file(
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
             if auto_select:
+                logger.info("identify.stored_url: file=%s url=%s action=reuse", filepath.name, stored["url"])
                 if spinner is not None:
                     spinner.update(
                         f"[{index}/{total}] Verifying stored tracklist",
@@ -368,6 +381,7 @@ def _process_file(
                 if spinner is not None:
                     spinner.start()
                 if choice in ("y", "yes", ""):
+                    logger.info("identify.stored_url: file=%s url=%s action=reuse", filepath.name, stored["url"])
                     if spinner is not None:
                         spinner.update(
                             f"[{index}/{total}] Verifying stored tracklist",
@@ -381,8 +395,11 @@ def _process_file(
                         spinner=spinner, index=index, total=total,
                     )
                 elif choice in ("s", "skip"):
+                    logger.info("identify.stored_url: file=%s url=%s action=skip", filepath.name, stored["url"])
                     return ("skipped", "skipped", "user skipped")
-                # else: fall through to search
+                else:
+                    logger.info("identify.stored_url: file=%s url=%s action=research", filepath.name, stored["url"])
+                # fall through to search
 
     # Determine search query
     if tracklist_input:
@@ -393,6 +410,7 @@ def _process_file(
 
     # Handle direct URL or ID
     if source["type"] == "url":
+        logger.debug("identify.direct_input: file=%s type=url value=%s", filepath.name, source["value"])
         return _fetch_and_embed(
             session, source["value"], filepath,
             config, preview, quiet, language, console=con,
@@ -401,6 +419,7 @@ def _process_file(
             spinner=spinner, index=index, total=total,
         )
     elif source["type"] == "id":
+        logger.debug("identify.direct_input: file=%s type=id value=%s", filepath.name, source["value"])
         return _fetch_and_embed(
             session, None, filepath,
             config, preview, quiet, language, console=con,
@@ -411,10 +430,15 @@ def _process_file(
         )
 
     # Search
-    query_str = source["value"]
+    original_query = source["value"]
 
     # Expand abbreviations for better 1001TL search results
-    query_str = expand_aliases_in_query(query_str, search_expansion)
+    query_str = expand_aliases_in_query(original_query, search_expansion)
+
+    if query_str != original_query:
+        logger.info("identify.search: file=%s query=\"%s\" expanded=\"%s\" duration_m=%d year=%s", filepath.name, original_query, query_str, duration_mins, mf.year or "")
+    else:
+        logger.info("identify.search: file=%s query=\"%s\" duration_m=%d year=%s", filepath.name, query_str, duration_mins, mf.year or "")
 
     if spinner is not None:
         spinner.update(f"[{index}/{total}] Searching 1001TL", filename=filepath.name)
@@ -431,6 +455,8 @@ def _process_file(
     if not scored:
         return ("skipped", "skipped", "no results")
 
+    logger.debug("identify.results: file=%s count=%d top_score=%.0f runner_up=%.0f", filepath.name, len(scored), scored[0].score if scored else 0, scored[1].score if len(scored) > 1 else 0)
+
     # Select result
     if auto_select:
         selected = scored[0]
@@ -438,9 +464,12 @@ def _process_file(
         gap = selected.score - runner_up
 
         if selected.score < AUTO_SELECT_MIN_SCORE:
+            logger.info("identify.auto_select: file=%s action=reject reason=low_score score=%.0f min=%d", filepath.name, selected.score, AUTO_SELECT_MIN_SCORE)
             return ("skipped", "skipped", f"low confidence (score {selected.score:.0f})")
         if gap < AUTO_SELECT_MIN_GAP:
+            logger.info("identify.auto_select: file=%s action=reject reason=low_gap score=%.0f gap=%.0f min=%d", filepath.name, selected.score, gap, AUTO_SELECT_MIN_GAP)
             return ("skipped", "skipped", f"low confidence (gap {gap:.0f})")
+        logger.info("identify.auto_select: file=%s action=accept score=%.0f gap=%.0f id=%s", filepath.name, selected.score, gap, selected.id)
     else:
         if spinner is not None:
             spinner.stop()
@@ -493,6 +522,8 @@ def _fetch_and_embed(
     if not tracklist_id and url:
         tracklist_id = extract_tracklist_id(url)
 
+    logger.info("identify.fetch: file=%s id=%s", filepath.name, tracklist_id or "")
+
     if spinner is not None:
         spinner.update(
             f"[{index}/{total}] Fetching tracklist",
@@ -530,22 +561,27 @@ def _fetch_and_embed(
         chapters = parse_tracklist_lines(export.lines, language=language)
         chapters = trim_chapters_to_duration(chapters, duration_seconds)
     except ValueError:
+        logger.debug("identify.skip: file=%s reason=parse_failed", filepath.name)
         if not preview:
             # Tag file with URL for future pickup
             embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=effective_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
         return ("skipped", "skipped", "no chapters parsed")
 
     if not chapters:
+        logger.debug("identify.skip: file=%s reason=no_chapters", filepath.name)
         return ("skipped", "skipped", "no chapters parsed")
 
     if len(chapters) < 2:
+        logger.debug("identify.skip: file=%s reason=single_chapter chapters=%d", filepath.name, len(chapters))
         if not preview:
             embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=effective_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
         return ("skipped", "skipped", "only 1 chapter")
 
     # Check for duplicates
     existing = extract_existing_chapters(filepath)
-    if chapters_are_identical(existing, chapters):
+    match = chapters_are_identical(existing, chapters)
+    logger.debug("identify.chapters_match: file=%s match=%s existing=%d new=%d", filepath.name, match, len(existing) if existing else 0, len(chapters))
+    if match:
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
             # Chapters match. Decide whether a re-tag is needed.
@@ -591,6 +627,11 @@ def _fetch_and_embed(
                         tags_to_update[k] = v
                 elif v and v != stored_val:
                     tags_to_update[k] = v
+            if tags_to_update:
+                friendly = ", ".join(_FRIENDLY_TAG_NAMES.get(k, k) for k in tags_to_update)
+                logger.debug("identify.tags_update: file=%s changed=%d tags=%s", filepath.name, len(tags_to_update), friendly)
+            else:
+                logger.debug("identify.tags_update: file=%s changed=0", filepath.name)
             # Self-heal: legacy files enriched before 0.9.9 lack TTV=30
             # per-chapter tags. Detect and route through the full embed path
             # so they get populated on next run without requiring a flag.
@@ -601,6 +642,10 @@ def _fetch_and_embed(
             # user doesn't have to --regenerate (which would re-search 1001TL
             # and risk rebinding to a different tracklist).
             missing_album_tags = bool(export.dj_artists) and not has_album_artist_display_tags(filepath)
+            if missing_chapter_tags:
+                logger.debug("identify.self_heal: file=%s reason=missing_chapter_tags", filepath.name)
+            elif missing_album_tags:
+                logger.debug("identify.self_heal: file=%s reason=missing_album_tags", filepath.name)
             if (not tags_to_update and not missing_chapter_tags
                     and not missing_album_tags and not regenerate):
                 return ("up_to_date", "up-to-date", "")
@@ -618,6 +663,7 @@ def _fetch_and_embed(
                 reason = f"updated {friendly}"
             else:
                 reason = "refreshed (regenerate)"
+                logger.debug("identify.regenerate: file=%s", filepath.name)
             if preview:
                 return ("updated", "updated", f"{export.title} . {reason} . {len(chapters)} chapters")
             if spinner is not None:
@@ -641,6 +687,8 @@ def _fetch_and_embed(
                 return ("updated", "updated", f"{export.title} . {reason} . {len(chapters)} chapters")
             logger.warning("Failed to re-tag %s", filepath)
             return ("error", "error", "mkvpropedit failed")
+        else:
+            logger.debug("identify.chapters_no_stored: file=%s existing=%d", filepath.name, len(existing) if existing else 0)
 
     # Preview-only: show the planned chapter list, don't write.
     if preview:
