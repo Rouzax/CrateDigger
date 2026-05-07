@@ -6,6 +6,7 @@ headers, result tables, status indicators, and summaries.
 """
 from __future__ import annotations
 
+import difflib
 import re
 import sys
 import threading
@@ -343,6 +344,40 @@ def _truncate_preserving_id(name: str, max_len: int) -> str:
     head = max_len // 2 - 1
     tail = max_len - head - 1
     return name[:head] + "\u2026" + name[-tail:]
+
+
+def _diff_highlight(
+    source: str,
+    target: str,
+    change_style: str = "orange1",
+) -> Text:
+    """Return a Rich Text for *target* with changed segments styled.
+
+    Uses SequenceMatcher to find inserted/replaced substrings.
+    When the strings are too different (ratio < 0.3), the entire
+    target is styled as changed.
+    """
+    text = Text()
+    if not target:
+        return text
+    if not source:
+        text.append(target, style=change_style)
+        return text
+
+    sm = difflib.SequenceMatcher(None, source, target, autojunk=False)
+    if sm.ratio() < 0.3:
+        text.append(target, style=change_style)
+        return text
+
+    for tag, _i1, _i2, j1, j2 in sm.get_opcodes():
+        segment = target[j1:j2]
+        if not segment:
+            continue
+        if tag == "equal":
+            text.append(segment)
+        else:
+            text.append(segment, style=change_style)
+    return text
 
 
 def verdict(
