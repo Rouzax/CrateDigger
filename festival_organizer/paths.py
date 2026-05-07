@@ -87,9 +87,14 @@ def state_dir() -> Path:
     return Path(platformdirs.user_state_dir(APP_NAME, appauthor=False))
 
 
+def log_dir() -> Path:
+    """Return the directory for per-command log files."""
+    return Path(platformdirs.user_log_dir(APP_NAME, appauthor=False))
+
+
 def log_file() -> Path:
-    """Return the path to the rotating log file (``cratedigger.log``)."""
-    return Path(platformdirs.user_log_dir(APP_NAME, appauthor=False)) / "cratedigger.log"
+    """Return the legacy rotating log file path (deprecated, use log_dir)."""
+    return log_dir() / "cratedigger.log"
 
 
 def places_file() -> Path:

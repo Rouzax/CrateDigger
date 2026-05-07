@@ -65,7 +65,7 @@ def _console_handler_level():
     import logging.handlers
     logger = logging.getLogger("festival_organizer")
     for h in logger.handlers:
-        if not isinstance(h, logging.handlers.RotatingFileHandler):
+        if not isinstance(h, (logging.handlers.MemoryHandler, logging.FileHandler)):
             return h.level
     raise AssertionError("no console handler found")
 
@@ -348,7 +348,7 @@ def test_check_flag_exists_and_exits_zero(monkeypatch, tmp_path):
     import festival_organizer.cli as cli_mod
     from festival_organizer import paths
     monkeypatch.setattr(cli_mod, "_run_check_impl", lambda con: 0)
-    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
     from typer.testing import CliRunner
     runner = CliRunner()
     result = runner.invoke(cli_mod.app, ["--check"])
@@ -572,7 +572,7 @@ def test_version_prints_version_then_latest(monkeypatch, tmp_path):
     installed = version("cratedigger")
     monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: installed)
     monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
-    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
 
     runner = CliRunner()
     result = runner.invoke(cli.app, ["--version"])
@@ -592,7 +592,7 @@ def test_version_prints_stale_notice(monkeypatch, tmp_path):
     bumped = f"{parts[0]}.{parts[1]}.{int(parts[2]) + 1}"
     monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: bumped)
     monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
-    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
 
     runner = CliRunner()
     result = runner.invoke(cli.app, ["--version"])
@@ -610,7 +610,7 @@ def test_version_silent_on_fetch_failure(monkeypatch, tmp_path):
     installed = version("cratedigger")
     monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: None)
     monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
-    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
 
     runner = CliRunner()
     result = runner.invoke(cli.app, ["--version"])
@@ -629,7 +629,7 @@ def test_version_honours_env_var_suppression(monkeypatch, tmp_path):
     monkeypatch.setattr(update_check, "_fetch_latest_release",
                         lambda: fetch_calls.append(1) or "9.9.9")
     monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
-    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
 
     runner = CliRunner()
     result = runner.invoke(cli.app, ["--version"])
@@ -640,41 +640,50 @@ def test_version_honours_env_var_suppression(monkeypatch, tmp_path):
 
 
 def test_check_attaches_file_handler(monkeypatch, tmp_path):
-    """--check must populate the rotating log with at least one DEBUG record."""
+    """--check must populate the per-command log with at least one DEBUG record."""
     from typer.testing import CliRunner
     from festival_organizer import cli, paths
     from festival_organizer import update_check
 
-    log_path = tmp_path / "cratedigger.log"
-    monkeypatch.setattr(paths, "log_file", lambda: log_path)
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
     monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
     monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: None)
 
     runner = CliRunner()
     runner.invoke(cli.app, ["--check"])
 
-    assert log_path.exists(), "log file should have been created by --check"
-    content = log_path.read_text(encoding="utf-8")
+    # Flush buffered records (MemoryHandler defers writes until close/flush).
+    # In real usage, logging.shutdown() handles this at interpreter exit.
+    for h in logging.getLogger("festival_organizer").handlers:
+        h.close()
+
+    log_files = list(tmp_path.glob("*.log"))
+    assert log_files, "log file should have been created by --check"
+    content = log_files[0].read_text(encoding="utf-8")
     assert "festival_organizer" in content, (
         "expected at least one festival_organizer record in log"
     )
 
 
 def test_version_attaches_file_handler(monkeypatch, tmp_path):
-    """--version must also populate the rotating log."""
+    """--version must also populate the per-command log."""
     from typer.testing import CliRunner
     from festival_organizer import cli, paths, update_check
 
-    log_path = tmp_path / "cratedigger.log"
-    monkeypatch.setattr(paths, "log_file", lambda: log_path)
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
     monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
     monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: None)
 
     runner = CliRunner()
     runner.invoke(cli.app, ["--version"])
 
-    assert log_path.exists()
-    content = log_path.read_text(encoding="utf-8")
+    # Flush buffered records (MemoryHandler defers writes until close/flush).
+    for h in logging.getLogger("festival_organizer").handlers:
+        h.close()
+
+    log_files = list(tmp_path.glob("*.log"))
+    assert log_files, "log file should have been created by --version"
+    content = log_files[0].read_text(encoding="utf-8")
     assert "festival_organizer.update_check" in content, (
         "expected at least one update_check DEBUG record in log"
     )
@@ -686,7 +695,7 @@ def test_check_update_status_row_current(monkeypatch, tmp_path):
     from typer.testing import CliRunner
     from festival_organizer import cli, paths, update_check
 
-    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
     monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
     installed = version("cratedigger")
     monkeypatch.setattr(update_check, "_fetch_latest_release", lambda: installed)
@@ -703,7 +712,7 @@ def test_check_update_status_row_stale(monkeypatch, tmp_path):
     from typer.testing import CliRunner
     from festival_organizer import cli, paths, update_check
 
-    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
     monkeypatch.delenv("CRATEDIGGER_NO_UPDATE_CHECK", raising=False)
     installed = version("cratedigger")
     parts = installed.split(".")
@@ -723,7 +732,7 @@ def test_check_update_status_row_suppressed(monkeypatch, tmp_path):
     from typer.testing import CliRunner
     from festival_organizer import cli, paths
 
-    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
     monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
 
     runner = CliRunner()
@@ -760,7 +769,7 @@ def test_check_clean_install_reports_all_passed(monkeypatch, tmp_path):
     # Optional assets absent
     monkeypatch.setattr(paths, "artists_file", lambda: tmp_path / "missing-artists.json")
     monkeypatch.setattr(paths, "artist_mbids_file", lambda: tmp_path / "missing-mbids.json")
-    monkeypatch.setattr(paths, "log_file", lambda: tmp_path / "x.log")
+    monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
     monkeypatch.setattr(paths, "cookies_file", lambda: tmp_path / "missing-cookies.txt")
 
     # Update status: current

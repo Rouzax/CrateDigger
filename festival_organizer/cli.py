@@ -649,7 +649,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     verbose = getattr(args, "verbose", False)
     debug = getattr(args, "debug", False)
     console = make_console()
-    setup_logging(verbose=verbose, debug=debug, console=console)
+    log_path = setup_logging(verbose=verbose, debug=debug, console=console, command=args.command)
     config.log_load_summary()
     paths.warn_if_legacy_paths_exist()
     paths.warn_if_data_dir_is_source_checkout()

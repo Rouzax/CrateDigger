@@ -71,12 +71,18 @@ class TestConfigPathIsInsideDataDir:
             assert paths.config_file().parent == paths.festivals_file().parent == tmp_path
 
 
-class TestLogFile:
+class TestLogDir:
     def test_uses_platformdirs_user_log_dir(self):
         with patch("festival_organizer.paths.platformdirs") as mock_pd:
             mock_pd.user_log_dir.return_value = "/fake/log/CrateDigger"
-            result = paths.log_file()
+            result = paths.log_dir()
             mock_pd.user_log_dir.assert_called_once_with("CrateDigger", appauthor=False)
+            assert result == Path("/fake/log/CrateDigger")
+
+    def test_log_file_delegates_to_log_dir(self):
+        with patch("festival_organizer.paths.platformdirs") as mock_pd:
+            mock_pd.user_log_dir.return_value = "/fake/log/CrateDigger"
+            result = paths.log_file()
             assert result == Path("/fake/log/CrateDigger/cratedigger.log")
 
 

@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import logging
 import logging.handlers
+import os
 import sys
+import time
+from datetime import datetime
 
 from rich.console import Console
 from rich.highlighter import NullHighlighter
@@ -19,11 +22,32 @@ from rich.logging import RichHandler
 from festival_organizer import paths
 
 
+def _cleanup_old_logs(log_directory: os.PathLike, max_age_days: int = 7) -> None:
+    """Delete ``.log`` files older than *max_age_days* from *log_directory*.
+
+    Silently ignores missing directories and permission errors so startup
+    is never blocked by stale log cleanup.
+    """
+    try:
+        cutoff = time.time() - max_age_days * 86400
+        with os.scandir(log_directory) as entries:
+            for entry in entries:
+                if entry.name.endswith(".log") and entry.is_file(follow_symlinks=False):
+                    try:
+                        if entry.stat().st_mtime < cutoff:
+                            os.unlink(entry.path)
+                    except OSError:
+                        pass
+    except OSError:
+        pass
+
+
 def setup_logging(
     verbose: bool = False,
     debug: bool = False,
     console: Console | None = None,
-) -> None:
+    command: str = "",
+) -> "os.PathLike[str] | None":
     """Configure the festival_organizer logger.
 
     Call once at CLI startup. All modules use logging.getLogger(__name__).
@@ -37,8 +61,11 @@ def setup_logging(
         --verbose: console at INFO  (key decisions, downloads, parse results)
         default:   console at WARNING (failures that don't stop the pipeline)
 
-    The rotating log file always captures DEBUG regardless of CLI
+    The per-command log file always captures DEBUG regardless of CLI
     verbosity, so the file is a full post-mortem trail for the run.
+
+    Returns the log file path on success, or ``None`` when file logging
+    could not be set up (unwritable directory, permissions, etc.).
     """
     logger = logging.getLogger("festival_organizer")
 
@@ -48,6 +75,11 @@ def setup_logging(
     # underlying streams stay open until we explicitly close them.
     for handler in list(logger.handlers):
         try:
+            # MemoryHandler.close() flushes buffered records but does not
+            # close its target FileHandler. Close the target explicitly so
+            # we do not leak file descriptors on repeated calls.
+            if isinstance(handler, logging.handlers.MemoryHandler) and handler.target:
+                handler.target.close()
             handler.close()
         except Exception:
             pass
@@ -76,19 +108,25 @@ def setup_logging(
     handler.setFormatter(fmt)
     logger.addHandler(handler)
 
-    # Rotating file handler: always active at DEBUG so the log file is a
+    # Per-command log file: always active at DEBUG so the log file is a
     # full post-mortem trail regardless of the CLI verbosity chosen for
-    # this run. delay=True defers opening the file until the first emit,
-    # narrowing cross-process contention and avoiding empty log files for
-    # silent runs (see Task 7). If the log directory cannot be created
-    # or opened (read-only mount, permissions, quota), fall back to
-    # console-only and emit a single WARNING.
+    # this run. A MemoryHandler buffers up to 50 records, flushing
+    # immediately on WARNING or above, and on close. delay=True defers
+    # opening the file until the first flush, avoiding empty log files
+    # for silent runs (e.g. `--version`).
+    log_path = None
     try:
-        log_path = paths.ensure_parent(paths.log_file())
-        file_handler = logging.handlers.RotatingFileHandler(
+        log_directory = paths.log_dir()
+        _cleanup_old_logs(log_directory)
+
+        prefix = command if command else "cratedigger"
+        stamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+        suffix = os.urandom(2).hex()
+        filename = f"{prefix}-{stamp}-{suffix}.log"
+        log_path = paths.ensure_parent(log_directory / filename)
+
+        file_handler = logging.FileHandler(
             log_path,
-            maxBytes=5 * 1024 * 1024,
-            backupCount=5,
             encoding="utf-8",
             delay=True,
         )
@@ -96,9 +134,19 @@ def setup_logging(
         file_handler.setFormatter(logging.Formatter(
             "%(asctime)s %(levelname)s %(name)s: %(message)s"
         ))
-        logger.addHandler(file_handler)
-    except OSError as exc:
-        logger.warning(
-            "Rotating log file disabled (%s): %s",
-            paths.log_file(), exc,
+
+        memory_handler = logging.handlers.MemoryHandler(
+            capacity=50,
+            flushLevel=logging.WARNING,
+            target=file_handler,
+            flushOnClose=True,
         )
+        logger.addHandler(memory_handler)
+    except OSError as exc:
+        log_path = None
+        logger.warning(
+            "Log file disabled (%s): %s",
+            paths.log_dir(), exc,
+        )
+
+    return log_path
