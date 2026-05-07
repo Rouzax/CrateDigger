@@ -605,7 +605,7 @@ def _fetch_and_embed(
             missing_album_tags = bool(export.dj_artists) and not has_album_artist_display_tags(filepath)
             if (not tags_to_update and not missing_chapter_tags
                     and not missing_album_tags and not regenerate):
-                return ("up_to_date", "up-to-date", f"{len(chapters)} chapters")
+                return ("up_to_date", "up-to-date", "")
             # Otherwise route through embed_chapters: it writes TTV=70 +
             # per-chapter TTV=30 + folds any duplicate global Tag blocks.
             # Deterministic ChapterUIDs make this byte-idempotent on re-run.

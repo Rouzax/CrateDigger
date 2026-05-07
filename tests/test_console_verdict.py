@@ -210,3 +210,17 @@ def test_verdict_counter_no_pad_when_single_digit_total():
         filename="f.mkv", detail="x", elapsed_s=1.0,
     )
     assert "[1/5]" in row.plain
+
+
+def test_verdict_no_detail_line_when_empty_string_via_falsy():
+    """Empty string detail, passed as `detail if detail else None`, yields single line."""
+    detail = ""
+    row = verdict(
+        status="up-to-date",
+        index=1,
+        total=5,
+        filename="f.mkv",
+        detail_line=detail if detail else None,
+        elapsed_s=0.1,
+    )
+    assert "\n" not in row.plain
