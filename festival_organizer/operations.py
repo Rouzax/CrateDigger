@@ -73,7 +73,12 @@ class OrganizeOperation(Operation):
                 src_rel, tgt_rel, needed,
             )
             return needed
-        return str(file_path) != str(self.target)
+        needed = str(file_path) != str(self.target)
+        logger.debug(
+            "organize.is_needed: source=%s target=%s needed=%s",
+            file_path.name, self.target.name, needed,
+        )
+        return needed
 
     # Folder-level files that belong to the folder, not individual videos.
     FOLDER_LEVEL_FILES = frozenset({"folder.jpg", "fanart.jpg"})
@@ -94,6 +99,10 @@ class OrganizeOperation(Operation):
                 file_path.rename(target)
             else:
                 shutil.move(str(file_path), str(target))
+            logger.debug(
+                "organize.action: file=%s action=%s target=%s",
+                file_path.name, self.action, target.name,
+            )
             # Update target so downstream operations (nfo, art, etc.) use the
             # resolved path. This mutation is read by run_pipeline(); requires
             # serial execution; do not reuse operation instances across files.
@@ -140,7 +149,7 @@ class OrganizeOperation(Operation):
                     sidecar.rename(new_path)
                 else:
                     shutil.move(str(sidecar), str(new_path))
-                logger.debug("Sidecar %s: %s -> %s", action, sidecar.name, new_path.name)
+                logger.debug("organize.sidecar: action=%s source=%s target=%s", action, sidecar.name, new_path.name)
                 moved += 1
             except OSError as e:
                 logger.warning("Failed to %s sidecar %s: %s", action, sidecar.name, e)

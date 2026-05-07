@@ -1,7 +1,6 @@
 """Command-line interface with workflow-oriented subcommands."""
 from __future__ import annotations
 
-import json
 import logging
 import sys
 import time
@@ -875,13 +874,15 @@ def _run_command(args: types.SimpleNamespace) -> int:
             album_poster_op = AlbumPosterOperation(config, force=force, library_root=output,
                                                     ttl_days=images_ttl)
 
-    # Load DJ cache once for group member expansion in NFO tags
-    dj_cache = None
-    try:
-        from festival_organizer.tracklists.dj_cache import DjCache
-        dj_cache = DjCache()
-    except (ImportError, OSError, json.JSONDecodeError) as e:
-        logger.debug("DjCache init skipped: %s", e)
+    # Reuse the Config-level DJ cache (already loaded as a cached_property)
+    dj_cache = config.dj_cache
+
+    # Log layout/filename templates once before the file loop
+    for ct in ("festival_set", "concert_film"):
+        folder_tpl = config.get_layout_template(ct)
+        filename_tpl = config.get_filename_template(ct)
+        if folder_tpl or filename_tpl:
+            logger.debug("organize.templates: content_type=%s folder_tpl=%s filename_tpl=%s", ct, folder_tpl, filename_tpl)
 
     for fp, mf in media_files:
         ops: list = []
@@ -891,13 +892,17 @@ def _run_command(args: types.SimpleNamespace) -> int:
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
             logger.debug(
-                "organize.template: file=%s folder_tpl=%s folder=%s"
-                " filename_tpl=%s filename=%s",
-                fp.name,
-                config.get_layout_template(mf.content_type),
-                target_folder,
-                config.get_filename_template(mf.content_type),
-                target_name,
+                "organize.template: file=%s folder=%s filename=%s place_kind=%s",
+                fp.name, target_folder, target_name, mf.place_kind or "none",
+            )
+            try:
+                src_rel = str(fp.relative_to(output))
+            except ValueError:
+                src_rel = fp.name
+            tgt_rel = str(target.relative_to(output))
+            logger.debug(
+                "organize.target: file=%s source=%s target=%s match=%s",
+                fp.name, src_rel, tgt_rel, src_rel == tgt_rel,
             )
             if isinstance(progress, (OrganizeContractProgress, OrganizeEnrichProgress)):
                 # file_preview is only defined on the organize-side progress
@@ -922,13 +927,8 @@ def _run_command(args: types.SimpleNamespace) -> int:
             target_name = render_filename(mf, config)
             target = output / target_folder / target_name
             logger.debug(
-                "organize.template: file=%s folder_tpl=%s folder=%s"
-                " filename_tpl=%s filename=%s",
-                fp.name,
-                config.get_layout_template(mf.content_type),
-                target_folder,
-                config.get_filename_template(mf.content_type),
-                target_name,
+                "organize.template: file=%s folder=%s filename=%s place_kind=%s",
+                fp.name, target_folder, target_name, mf.place_kind or "none",
             )
             ops.append(OrganizeOperation(target=target, action=action, output_root=output))
 
