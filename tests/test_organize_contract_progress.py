@@ -44,6 +44,8 @@ class TestFileDone:
         )
         out = _capture(con)
         assert "done" in out
+        assert "from:" in out
+        assert "to:" in out
         assert "new.mkv" in out
 
     def test_emits_up_to_date_when_same_path(self):
@@ -63,7 +65,7 @@ class TestFileDone:
         )
         out = _capture(con)
         assert "up-to-date" in out
-        assert "already at target" in out
+        assert "already at target" not in out
 
     def test_emits_error_verdict(self):
         con = _console()
@@ -84,7 +86,7 @@ class TestFileDone:
         assert "Permission denied" in out
 
     def test_verdict_is_two_lines(self):
-        """file_done emits a two-line verdict block."""
+        """file_done emits a two-line from/to verdict block."""
         con = _console()
         p = OrganizeContractProgress(
             total=1, console=con, quiet=False, verbose=False,
@@ -101,7 +103,9 @@ class TestFileDone:
         out = _capture(con)
         lines = [entry for entry in out.strip().split("\n") if entry.strip()]
         assert len(lines) == 2
-        assert "->" not in lines[0]
+        assert "from:" in lines[0]
+        assert "old.mkv" in lines[0]
+        assert "to:" in lines[1]
         assert "new.mkv" in lines[1]
 
     def test_quiet_suppresses_output(self):
@@ -141,7 +145,7 @@ class TestFileDone:
             )
         out = _capture(con)
         assert "up-to-date" in out
-        assert "already at target" in out
+        assert "already at target" not in out
 
 
 class TestFilePreview:
@@ -158,7 +162,29 @@ class TestFilePreview:
         )
         out = _capture(con)
         assert "preview" in out
-        assert "would copy to" in out
+        assert "from:" in out
+        assert "to:" in out
+        assert "Fests/Ultra/f.mkv" in out
+
+    def test_up_to_date_is_single_line(self):
+        con = _console()
+        p = OrganizeContractProgress(
+            total=1, console=con, quiet=False, verbose=False,
+            output_root=Path("/lib"), dry_run=False,
+            action="rename", layout="place_flat",
+        )
+        target = Path("/lib/same.mkv")
+        op = OrganizeOperation(target=target, action="rename")
+        op.sidecars_moved = 0
+        result = OperationResult("organize", "skipped", "exists")
+        p.file_done(
+            source=target, media_file=_mf(),
+            op=op, result=result, elapsed_s=0.0,
+        )
+        out = _capture(con)
+        content_lines = [ln for ln in out.strip().split("\n") if ln.strip()]
+        assert len(content_lines) == 1
+        assert "up-to-date" in content_lines[0]
 
 
 class TestVerboseMetadata:

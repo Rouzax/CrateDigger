@@ -14,6 +14,7 @@ from festival_organizer.console import (
     header_panel,
     make_console,
     organize_summary_panel,
+    organize_verdict,
     status_text,
     summary_panel,
     verdict,
@@ -250,7 +251,7 @@ class OrganizeContractProgress:
             self._errors.append((source.name, detail))
         elif result.status == "skipped" and same_library_path(source, op.target, self.output_root):
             vstatus = "up-to-date"
-            detail = "already at target"
+            detail = ""
             self._stats["up_to_date"] += 1
         elif result.status == "skipped":
             vstatus = "skipped"
@@ -259,11 +260,7 @@ class OrganizeContractProgress:
             self._skipped_reasons[detail] = self._skipped_reasons.get(detail, 0) + 1
         else:
             vstatus = "done"
-            detail = _organize_detail(
-                source=source, target=op.target,
-                output_root=self.output_root,
-                action=self.action, dry_run=False,
-            )
+            detail = ""
             self._stats["done"] += 1
             self._record_destination(op.target)
 
@@ -271,10 +268,12 @@ class OrganizeContractProgress:
             return
 
         console_width = self.console.size.width if self.console.size else 120
-        self.console.print(verdict(
+        self.console.print(organize_verdict(
             status=vstatus, index=self._file_index, total=self.total,
-            filename=source.name, detail_line=detail, elapsed_s=elapsed_s,
-            width=console_width,
+            source=source, target=op.target,
+            output_root=self.output_root,
+            elapsed_s=elapsed_s, width=console_width,
+            detail=detail,
         ))
 
         if self.verbose and vstatus in ("done", "up-to-date"):
@@ -288,12 +287,8 @@ class OrganizeContractProgress:
     ) -> None:
         """Emit one preview verdict line for a dry-run file."""
         self._file_index += 1
-        detail = _organize_detail(
-            source=source, target=target,
-            output_root=self.output_root,
-            action=self.action, dry_run=True,
-        )
-        if detail == "already at target":
+
+        if same_library_path(source, target, self.output_root):
             vstatus = "up-to-date"
             self._stats["up_to_date"] += 1
         else:
@@ -305,10 +300,11 @@ class OrganizeContractProgress:
             return
 
         console_width = self.console.size.width if self.console.size else 120
-        self.console.print(verdict(
+        self.console.print(organize_verdict(
             status=vstatus, index=self._file_index, total=self.total,
-            filename=source.name, detail_line=detail, elapsed_s=0.0,
-            width=console_width,
+            source=source, target=target,
+            output_root=self.output_root,
+            elapsed_s=0.0, width=console_width,
         ))
 
         if self.verbose and vstatus == "preview":
