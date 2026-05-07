@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-05-07
+
+### Fixed
+
+- DJ cache is now loaded once per run instead of three times. `Config` owns a single lazy `DjCache` instance shared by `artist_aliases`, `artist_groups`, and the identify session.
+
+### Changed
+
+- All remaining freeform debug/info log events migrated to structured `command.event: key=value` format across `config.*`, `dj_cache.*`, `source_cache.*`, `analyzer.*`, `classifier.*`, `parsers.*`, `embed_tags.*`, `subprocess.*`, and `tags.write`. Every DEBUG/INFO event in the identify flow is now greppable by prefix.
+
 ## [0.17.0] - 2026-05-07
 
 ### Changed
