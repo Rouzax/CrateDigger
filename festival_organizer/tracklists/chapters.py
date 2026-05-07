@@ -287,6 +287,8 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         "CRATEDIGGER_1001TL_COUNTRY": "country",
         "CRATEDIGGER_1001TL_LOCATION": "location",
         "CRATEDIGGER_1001TL_SOURCE_TYPE": "source_type",
+        "CRATEDIGGER_ALBUMARTIST_SLUGS": "albumartist_slugs",
+        "CRATEDIGGER_ALBUMARTIST_DISPLAY": "albumartist_display",
         # Old names (backward compatibility)
         "1001TRACKLISTS_URL": "url",
         "1001TRACKLISTS_TITLE": "title",

@@ -36,9 +36,10 @@ from festival_organizer.tracklists.api import (
     ExportError,
     top_genres_by_frequency,
 )
-from festival_organizer.mkv_tags import has_album_artist_display_tags, has_chapter_tags
-from festival_organizer.tracklists.source_cache import SourceCache, SOURCE_TYPE_TO_TAG
+from festival_organizer.mkv_tags import CLEAR_TAG, has_album_artist_display_tags, has_chapter_tags
+from festival_organizer.tracklists.source_cache import SourceCache
 from festival_organizer.tracklists.chapters import (
+    build_1001tl_tags,
     parse_tracklist_lines,
     extract_existing_chapters,
     extract_stored_tracklist_info,
@@ -94,6 +95,8 @@ _FRIENDLY_TAG_NAMES = {
     "CRATEDIGGER_1001TL_COUNTRY": "country",
     "CRATEDIGGER_1001TL_LOCATION": "location",
     "CRATEDIGGER_1001TL_SOURCE_TYPE": "source type",
+    "CRATEDIGGER_ALBUMARTIST_SLUGS": "artist slugs",
+    "CRATEDIGGER_ALBUMARTIST_DISPLAY": "artist display",
 }
 
 
@@ -541,36 +544,20 @@ def _fetch_and_embed(
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
             # Chapters match. Decide whether a re-tag is needed.
-            desired = {
-                "CRATEDIGGER_1001TL_URL": export.url,
-                "CRATEDIGGER_1001TL_TITLE": export.title,
-                "CRATEDIGGER_1001TL_ID": tracklist_id or "",
-                "CRATEDIGGER_1001TL_DATE": effective_date or "",
-                "CRATEDIGGER_1001TL_GENRES": "|".join(set_genres) if set_genres else "",
-                "CRATEDIGGER_1001TL_DJ_ARTWORK": export.dj_artwork_url,
-            }
-            if export.dj_artists:
-                # See embed_chapters: this tag preserves the 1001TL display form;
-                # alias resolution happens at the ARTIST (TTV=50) and filesystem
-                # layout layer, not here.
-                if session._dj_cache:
-                    names = [session._dj_cache.canonical_name(slug, fallback=name)
-                             for slug, name in export.dj_artists]
-                else:
-                    names = [name for _, name in export.dj_artists]
-                desired["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(names)
-            if export.country:
-                desired["CRATEDIGGER_1001TL_COUNTRY"] = export.country
-            if export.location:
-                desired["CRATEDIGGER_1001TL_LOCATION"] = export.location
-            if export.source_type:
-                desired["CRATEDIGGER_1001TL_SOURCE_TYPE"] = export.source_type
-            if export.stage_text:
-                desired["CRATEDIGGER_1001TL_STAGE"] = export.stage_text
-            for source_type, names in export.sources_by_type.items():
-                tag_name = SOURCE_TYPE_TO_TAG.get(source_type)
-                if tag_name and names:
-                    desired[tag_name] = "|".join(names)
+            desired = build_1001tl_tags(
+                tracklist_url=export.url,
+                tracklist_title=export.title,
+                tracklist_id=tracklist_id or "",
+                tracklist_date=effective_date or "",
+                genres=set_genres,
+                dj_artwork_url=export.dj_artwork_url,
+                stage_text=export.stage_text,
+                sources_by_type=export.sources_by_type,
+                country=export.country,
+                location=export.location,
+                dj_artists=export.dj_artists,
+                dj_cache=session._dj_cache,
+            )
             stored_map = {
                 "CRATEDIGGER_1001TL_URL": stored.get("url", ""),
                 "CRATEDIGGER_1001TL_TITLE": stored.get("title", ""),
@@ -587,12 +574,18 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_COUNTRY": stored.get("country", ""),
                 "CRATEDIGGER_1001TL_LOCATION": stored.get("location", ""),
                 "CRATEDIGGER_1001TL_SOURCE_TYPE": stored.get("source_type", ""),
+                "CRATEDIGGER_ALBUMARTIST_SLUGS": stored.get("albumartist_slugs", ""),
+                "CRATEDIGGER_ALBUMARTIST_DISPLAY": stored.get("albumartist_display", ""),
             }
             # Tags that would change at TTV=70
-            tags_to_update = {
-                k: v for k, v in desired.items()
-                if v and v != stored_map.get(k, "")
-            }
+            tags_to_update = {}
+            for k, v in desired.items():
+                stored_val = stored_map.get(k, "")
+                if v is CLEAR_TAG:
+                    if stored_val:
+                        tags_to_update[k] = v
+                elif v and v != stored_val:
+                    tags_to_update[k] = v
             # Self-heal: legacy files enriched before 0.9.9 lack TTV=30
             # per-chapter tags. Detect and route through the full embed path
             # so they get populated on next run without requiring a flag.

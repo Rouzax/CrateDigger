@@ -69,6 +69,8 @@ def _patch_identify_internals(**overrides):
             "artists": "Test DJ",
             "country": "",
             "source_type": "",
+            "albumartist_slugs": "testdj",
+            "albumartist_display": "Test DJ",
         }),
         "has_chapter_tags": MagicMock(return_value=True),
         "has_album_artist_display_tags": MagicMock(return_value=True),
@@ -165,9 +167,29 @@ def test_album_artist_check_skipped_when_no_dj_artists(tmp_path):
     session = _make_session()
     export = session.export_tracklist.return_value
     export.dj_artists = []  # no-op self-heal
+    # Stored info also has no artist data, matching the no-artist export.
+    stored_no_artists = {
+        "url": "https://www.1001tracklists.com/tracklist/abc/",
+        "title": "Test Set",
+        "id": "abc",
+        "date": "",
+        "genres": "House",
+        "dj_artwork": "",
+        "stage": "",
+        "venue": "",
+        "festival": "",
+        "conference": "",
+        "radio": "",
+        "artists": "",
+        "country": "",
+        "source_type": "",
+        "albumartist_slugs": "",
+        "albumartist_display": "",
+    }
     mocks = _patch_identify_internals(
         has_chapter_tags=MagicMock(return_value=True),
         has_album_artist_display_tags=MagicMock(return_value=False),
+        extract_stored_tracklist_info=MagicMock(return_value=stored_no_artists),
     )
     fake = tmp_path / "x.mkv"
     fake.write_bytes(b"")
@@ -234,6 +256,8 @@ def test_ttv70_tag_diff_also_routes_through_embed_chapters(tmp_path):
         "artists": "Test DJ",
         "country": "",
         "source_type": "",
+        "albumartist_slugs": "testdj",
+        "albumartist_display": "Test DJ",
     }
     mocks = _patch_identify_internals(
         has_chapter_tags=MagicMock(return_value=True),
