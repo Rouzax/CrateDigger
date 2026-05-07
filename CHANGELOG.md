@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-05-07
+
+Verdict output redesign across all three commands. The organize output now shows a from/to layout with color-highlighted changes, and up-to-date files use a compact single-line format across identify, organize, and enrich.
+
+### Changed
+
+- Organize preview and done verdicts now show a two-line from/to block: line 1 shows the source path, line 2 shows the target path. The target folder is bold orange when it differs from the source, and only the changed segments of the target filename are highlighted. Previously the output showed a single detail line with just the target path or "would copy/rename/move to" prefix.
+- Up-to-date verdicts across all commands are now a single compact line with no detail. Previously identify showed "N chapters", enrich showed "all up to date" or verbose skip reasons, and organize showed "already at target" on a second line.
+- Counter index is right-aligned within the total width: `[ 1/86]` instead of `[1/86]`. Filenames now start at the same column regardless of the current file number.
+- Source paths in organize output include folder context. Files at the library root show `./` as the folder prefix; files outside the library show the bare filename.
+
+### Removed
+
+- The `_organize_detail()` helper in `progress.py` and its test file `tests/test_organize_detail.py`. Replaced by `organize_verdict()` in `console.py`.
+
 ## [0.15.1] - 2026-05-05
 
 ### Fixed
