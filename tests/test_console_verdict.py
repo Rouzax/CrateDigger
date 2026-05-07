@@ -179,3 +179,34 @@ def test_verdict_preview_shape():
     assert "would copy to" in plain
     # No elapsed shown for 0.0s (below 0.5s threshold)
     assert "0.0s" not in plain
+
+
+def test_verdict_counter_right_aligned():
+    row = verdict(
+        status="done", index=1, total=86,
+        filename="f.mkv", detail="x", elapsed_s=1.0,
+    )
+    assert "[ 1/86]" in row.plain
+
+
+def test_verdict_counter_alignment_consistent():
+    """Index=1 and index=86 produce filenames at the same column."""
+    row1 = verdict(
+        status="done", index=1, total=86,
+        filename="f.mkv", detail="x", elapsed_s=1.0,
+    )
+    row86 = verdict(
+        status="done", index=86, total=86,
+        filename="f.mkv", detail="x", elapsed_s=1.0,
+    )
+    col1 = row1.plain.index("f.mkv")
+    col86 = row86.plain.index("f.mkv")
+    assert col1 == col86
+
+
+def test_verdict_counter_no_pad_when_single_digit_total():
+    row = verdict(
+        status="done", index=1, total=5,
+        filename="f.mkv", detail="x", elapsed_s=1.0,
+    )
+    assert "[1/5]" in row.plain

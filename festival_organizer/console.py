@@ -373,7 +373,8 @@ def verdict(
         raise ValueError(f"Unknown verdict status: {status}")
     label, style = _VERDICT_STYLES[status]
 
-    counter = f"[{index}/{total}] "
+    iw = len(str(total))
+    counter = f"[{index:{iw}}/{total}] "
     pad = _VERDICT_BADGE_WIDTH - len(label) - 2
     if pad < 0:
         pad = 0
