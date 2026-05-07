@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-05-07
+
+### Fixed
+
+- Skip Title tag parsing for identified files. Removes noisy `parsers.filename_fallback` debug lines that fired on every identified file (the Title tag contains a chapter title, not a parseable filename).
+- `analyzer.result` and `classifier.result` log events now include `file=` so you can tell which file they refer to.
+
+### Changed
+
+- New `identify.genres` log event shows the final genre list written to the file, including how many survived frequency capping vs. how many were scraped (`written=5 scraped=13 source=frequency`).
+
 ## [0.17.1] - 2026-05-07
 
 ### Fixed
