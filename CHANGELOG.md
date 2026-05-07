@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.3] - 2026-05-07
+
+### Fixed
+
+- DJ cache is now loaded once per run for organize/enrich (same fix as 0.17.1 for identify). Previously the organize flow constructed a separate `DjCache` instance.
+
+### Changed
+
+- Organize template strings are now logged once at startup (`organize.templates`) instead of repeating on every file. Per-file `organize.template` events are slimmer and include `place_kind`.
+- New `organize.target` event in dry-run mode shows source vs target path comparison with match status.
+- New `organize.action` event after file operations shows what actually happened (rename/copy/move).
+- `organize.is_needed` now logs in all code paths (previously only when output_root was set).
+- Sidecar log event migrated to structured `organize.sidecar` format.
+
 ## [0.17.2] - 2026-05-07
 
 ### Fixed
