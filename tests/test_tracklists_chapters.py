@@ -238,15 +238,15 @@ def test_trim_logs_when_dropping(caplog):
     chapters = _chs(0, 60, 120, 180)
     with caplog.at_level(logging.INFO, logger="festival_organizer.tracklists.chapters"):
         trim_chapters_to_duration(chapters, 100.0)
-    assert "Trimmed 2 chapters" in caplog.text
-    assert "duration=100.0s" in caplog.text
+    assert "dropped=2" in caplog.text
+    assert "duration=100.0" in caplog.text
 
 
 def test_trim_no_log_when_nothing_dropped(caplog):
     chapters = _chs(0, 60, 120)
     with caplog.at_level(logging.INFO, logger="festival_organizer.tracklists.chapters"):
         trim_chapters_to_duration(chapters, 300.0)
-    assert "Trimmed" not in caplog.text
+    assert "chapters.trim" not in caplog.text
 
 
 # --- build_chapter_xml ---

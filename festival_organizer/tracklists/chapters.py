@@ -5,6 +5,8 @@ Handles Matroska chapter/tag XML for MKV files via mkvextract/mkvpropedit.
 Logging:
     Logger: 'festival_organizer.tracklists.chapters'
     Key events:
+        - chapters.drop_mashup (INFO): Mashup chapter dropped during parsing
+        - chapters.trim (INFO): Chapters trimmed to video duration
         - chapters.extract_failed (DEBUG): Chapter extraction from MKV failed
         - chapters.embed_failed (DEBUG): Chapter or tag embedding failed
     See docs/logging.md for full guidelines.
@@ -117,7 +119,7 @@ def parse_tracklist_lines(lines: list[str], language: str = "eng") -> list[Chapt
             if i < len(chapters) - 1:
                 gap = _timestamp_to_seconds(chapters[i + 1].timestamp) - _timestamp_to_seconds(ch.timestamp)
                 if gap < MASHUP_THRESHOLD_SECONDS:
-                    logger.info("Dropping mashup chapter: %s (%.0fs before next)", ch.title, gap)
+                    logger.info("chapters.drop_mashup: title=\"%s\" gap_s=%.0f", ch.title, gap)
                     continue
             filtered.append(ch)
         chapters = filtered
@@ -154,7 +156,7 @@ def trim_chapters_to_duration(
     dropped = len(chapters) - len(kept)
     if dropped:
         logger.info(
-            "Trimmed %d chapters past video end (duration=%.1fs)",
+            "chapters.trim: dropped=%d duration=%.1fs",
             dropped, duration_s,
         )
     return kept
@@ -252,7 +254,7 @@ def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
         return chapters if chapters else None
 
     except (OSError, subprocess.SubprocessError, ET.ParseError) as e:
-        logger.debug("Chapter extraction failed for %s: %s", filepath, e)
+        logger.debug("chapters.extract_failed: path=%s error=\"%s\"", filepath.name, e)
         return None
     finally:
         try:
@@ -580,7 +582,7 @@ def embed_chapters(
         return True
 
     except (OSError, subprocess.SubprocessError) as e:
-        logger.debug("Chapter embedding failed for %s: %s", filepath, e)
+        logger.debug("chapters.embed_failed: path=%s error=\"%s\"", filepath.name, e)
         return False
     finally:
         if chapter_file:
