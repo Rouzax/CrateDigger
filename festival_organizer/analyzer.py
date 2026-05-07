@@ -68,8 +68,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
             embedded["year"] = dt[:4]
         if len(dt) == 8:
             embedded["date"] = f"{dt[:4]}-{dt[4:6]}-{dt[6:8]}"
-    if meta.get("title"):
-        # Parse the Title tag with the same filename heuristics
+    identified = bool(meta.get("tracklists_url") or meta.get("tracklists_title"))
+    if meta.get("title") and not identified:
         title_info = parse_filename(Path(meta["title"] + filepath.suffix), config)
         _merge_missing(embedded, title_info)
     # Direct tag values (artist_tag, date_tag) overwrite lower layers
@@ -184,7 +184,6 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # render idempotency because the filename shape mutates between runs while
     # the tags stay put. Gate them on the identified-ness signal so renders
     # converge after one organize.
-    identified = bool(meta.get("tracklists_url") or meta.get("tracklists_title"))
     set_title = "" if identified else normalise_name(info.get("set_title", ""))
     title_field = "" if identified else normalise_name(info.get("title", ""))
 
