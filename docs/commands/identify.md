@@ -127,11 +127,15 @@ any files that did not get embedded.
 A real batch of five festival recordings looks like this:
 
 ```
-[ done        ] [1/5] Tiesto - Live at We Belong Here Miami 2026.mkv  ->  Tiesto @ We Belong Here, Miami 2026 (2026-03-01) - 38 tracks  (12.4s)
-[ done        ] [2/5] Martin Garrix @ AMF 2026.webm  ->  Martin Garrix @ Amsterdam Music Festival 2026 (2026-10-18) - 24 tracks  (9.8s)
-[ up-to-date  ] [3/5] David Guetta @ Tomorrowland 2026.mkv  ->  already embedded (stored URL)  (2.1s)
-[ skipped     ] [4/5] unknown_set_001.mkv  ->  low confidence (score 84)  (6.5s)
-[ done        ] [5/5] Armin van Buuren @ ASOT 2026.mkv  ->  Armin van Buuren @ A State of Trance 2026 (2026-02-15) - 42 tracks  (11.2s)
+  done       [ 1/5] Tiesto - Live at We Belong Here Miami 2026.mkv  (12.4s)
+                    Tiesto @ We Belong Here, Miami 2026 (2026-03-01) - 38 tracks
+  done       [ 2/5] Martin Garrix @ AMF 2026.webm  (9.8s)
+                    Martin Garrix @ Amsterdam Music Festival 2026 (2026-10-18) - 24 tracks
+  up-to-date [ 3/5] David Guetta @ Tomorrowland 2026.mkv
+  skipped    [ 4/5] unknown_set_001.mkv  (6.5s)
+                    low confidence (score 84)
+  done       [ 5/5] Armin van Buuren @ ASOT 2026.mkv  (11.2s)
+                    Armin van Buuren @ A State of Trance 2026 (2026-02-15) - 42 tracks
 
 Summary
   added: 3  updated: 0  up_to_date: 1  skipped: 1  error: 0  previewed: 0
@@ -152,7 +156,7 @@ align in a terminal and stay grep-friendly in log files.
 |-------|-----------------------|
 | `done` | Matched a tracklist and embedded fresh chapters and tags |
 | `updated` | Already had chapters; re-fetched and wrote newer or missing tags (for example self-healing, or `--regenerate`) |
-| `up-to-date` | File already has a stored tracklist and all tags are current; nothing written |
+| `up-to-date` | File already has a stored tracklist and all tags are current; shown as a single compact line with no detail |
 | `skipped` | No confident match (auto mode), user entered `0`, tracklist had fewer than 2 tracks, or file type is not supported |
 | `error` | A tool failed (for example `mkvpropedit`) or the tracklist fetch raised. The file is left untouched. |
 

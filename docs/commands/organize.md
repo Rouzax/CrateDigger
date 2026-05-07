@@ -126,29 +126,42 @@ The `.cratedigger/` marker folder is created inside the output library on the fi
 
 ## Console output
 
-When you run `organize`, CrateDigger shows one line per file describing what happened.
+When you run `organize`, CrateDigger shows one or two lines per file describing what happened.
 
 ### Per-file verdict
-
-Each file gets a single result line in this format:
-
-```
-  <badge>  [i/N] <filename>  ->  <detail>  .  <elapsed>
-```
 
 The badge tells you the outcome:
 
 | Badge | Meaning |
 |-------|---------|
 | `done` | File was successfully copied, moved, or renamed |
-| `up-to-date` | File is already at the correct location; nothing changed |
+| `up-to-date` | File is already at the correct location; shown as a single compact line with no detail |
 | `preview` | Dry-run preview showing what would happen |
 | `skipped` | File was skipped (not a recognized media file, or user declined) |
 | `error` | Something went wrong (permission denied, disk full, etc.) |
 
-The detail field shows the full relative target path (folder and filename),
-so you always see exactly where a file ends up. In dry-run mode the path is
-prefixed with `would copy to`, `would move to`, or `would rename to`.
+Up-to-date files appear as a single compact line with no detail:
+
+```
+  up-to-date  [1/6] filename.mkv
+```
+
+Files that are moved, copied, renamed, or previewed use a two-line from/to layout:
+
+```
+  preview    [ 1/6] from: ./2026 - FISHER [Bay Oval Park].mkv
+                      to: Bay Oval Park/2026 - FISHER - Bay Oval Park [Bay Oval Park].mkv
+```
+
+The `from:` line shows the source path relative to the library root, prefixed with `./` when
+the file is inside the library, or as a bare filename when it sits outside. The `to:` line
+shows the relative target path; the folder segment is highlighted in orange when it changes,
+and only the changed filename segments are highlighted in orange.
+
+The counter is right-aligned so columns stay tidy in larger batches: `[ 1/86]` not `[1/86]`.
+
+Skipped and error files also use a two-line layout, with the badge and filename on the first
+line and the reason or error detail on the second.
 
 Elapsed time appears only when an operation takes more than half a second.
 
