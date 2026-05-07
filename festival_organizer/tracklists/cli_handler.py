@@ -550,11 +550,19 @@ def _fetch_and_embed(
     # the per-track parser returned nothing (defensive: a 1001TL layout
     # change or an unparsed page still writes genres instead of an empty tag).
     genre_top_n = config.tracklists_settings.get("genre_top_n", 5)
+    capped: list[str] = []
     if genre_top_n and export.tracks:
         capped = top_genres_by_frequency(export.tracks, n=genre_top_n)
         set_genres = capped or list(export.genres)
     else:
         set_genres = list(export.genres)
+    if set_genres:
+        source = "frequency" if capped else "scrape"
+        logger.info(
+            "identify.genres: file=%s written=%d scraped=%d source=%s genres=%s",
+            filepath.name, len(set_genres), len(export.genres), source,
+            "|".join(set_genres),
+        )
 
     try:
         chapters = parse_tracklist_lines(export.lines, language=language)
