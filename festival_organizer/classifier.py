@@ -34,24 +34,24 @@ def classify(media_file: MediaFile, root: Path, config: Config) -> str:
 
     # 1. Explicit user overrides
     if config.is_forced_concert(rel):
-        logger.info("classifier.result: type=concert_film reason=config_forced")
+        logger.info("classifier.result: file=%s type=concert_film reason=config_forced", media_file.source_path.name)
         return "concert_film"
     if config.is_forced_festival(rel):
-        logger.info("classifier.result: type=festival_set reason=config_forced")
+        logger.info("classifier.result: file=%s type=festival_set reason=config_forced", media_file.source_path.name)
         return "festival_set"
 
     # 2. Has 1001TL metadata -> festival
     if media_file.metadata_source == "1001tracklists":
-        logger.info("classifier.result: type=festival_set reason=1001tracklists_metadata")
+        logger.info("classifier.result: file=%s type=festival_set reason=1001tracklists_metadata", media_file.source_path.name)
         return "festival_set"
 
     # 3. Has a known festival name -> festival (resolve aliases first)
     if media_file.festival:
         canonical = config.resolve_place_alias(media_file.festival)
         if canonical in config.known_places:
-            logger.info("classifier.result: type=festival_set reason=known_festival festival=%s", canonical)
+            logger.info("classifier.result: file=%s type=festival_set reason=known_festival festival=%s", media_file.source_path.name, canonical)
             return "festival_set"
 
     # 4. Fallback
-    logger.info("classifier.result: type=unknown")
+    logger.info("classifier.result: file=%s type=unknown", media_file.source_path.name)
     return "unknown"

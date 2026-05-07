@@ -175,8 +175,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     ext = filepath.suffix.lower()
     file_type = "video" if ext in VIDEO_EXTS else "audio"
 
-    logger.info("analyzer.result: artist=%s festival=%s year=%s source=%s",
-                artist, festival, info.get("year", ""), metadata_source)
+    logger.info("analyzer.result: file=%s artist=%s festival=%s year=%s source=%s",
+                filepath.name, artist, festival, info.get("year", ""), metadata_source)
 
     # Identified files (anything with 1001TL tags) get their canonical fields
     # from the embedded tags, not from filename parsing. set_title and title are
