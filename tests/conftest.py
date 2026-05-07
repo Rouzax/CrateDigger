@@ -39,6 +39,8 @@ def make_mediafile(*, place: str | None = None, place_kind: str | None = None, *
         mf.place_kind = "artist"
     if place_kind is not None:
         mf.place_kind = place_kind
+    if mf.stage and mf.stage == mf.place:
+        mf.stage = ""
     return mf
 
 

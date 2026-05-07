@@ -141,6 +141,25 @@ def test_build_display_title_with_set_title_and_venue():
     assert build_display_title(mf) == "Bicep @ Printworks Closing Set"
 
 
+def test_display_title_stage_equals_place_no_duplication():
+    """When stage equals place, display title does not duplicate the name."""
+    from tests.conftest import make_mediafile
+
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="FISHER",
+        display_artist="FISHER",
+        location="Bay Oval Park",
+        year="2026",
+        stage="Bay Oval Park",
+        content_type="festival_set",
+    )
+    title = build_display_title(mf)
+    assert title == "FISHER @ Bay Oval Park"
+    assert "Bay Oval Park, Bay Oval Park" not in title
+    assert "Bay Oval Park [Bay Oval Park]" not in title
+
+
 def test_file_action_defaults():
     mf = MediaFile(source_path=Path("src.mkv"))
     fa = FileAction(

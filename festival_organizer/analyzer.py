@@ -228,6 +228,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         has_cover=meta.get("has_cover", False),
     )
     mf.place, mf.place_kind = config.resolve_place_for_media(mf)
+    if mf.stage and mf.stage == mf.place:
+        mf.stage = ""
     return mf
 
 

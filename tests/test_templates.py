@@ -587,3 +587,18 @@ def test_festival_token_renders_literally_after_removal():
     # treats it as an unknown required field and falls back to "Unknown".
     result = render_folder(mf, cfg, layout_name="festival_year_test")
     assert "Tomorrowland" not in result
+
+
+def test_render_filename_stage_equals_place_suppressed():
+    """When stage duplicates place, brackets are suppressed."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="FISHER",
+        location="Bay Oval Park",
+        year="2026",
+        stage="Bay Oval Park",
+        extension=".mkv",
+        content_type="festival_set",
+    )
+    result = render_filename(mf, CFG)
+    assert result == "2026 - FISHER - Bay Oval Park.mkv"
