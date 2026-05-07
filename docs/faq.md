@@ -59,21 +59,17 @@ force_festival = ["*/Ultra Miami/*"]
 
 Each rule is matched against the file's path relative to the source root. `Coldplay/*` matches any file directly inside a `Coldplay` folder. See [Configuration: content type rules](configuration.md#content-type-rules) for more examples.
 
-### Where are my logs, and why does concurrent use sometimes garble them?
+### Where are my logs?
 
-CrateDigger writes a rotating log to a fixed location on each platform:
+Each CrateDigger invocation writes its own log file to a per-platform directory:
 
-| Platform | Path |
-|----------|------|
-| Linux | `~/.local/state/CrateDigger/log/cratedigger.log` |
-| macOS | `~/Library/Logs/CrateDigger/cratedigger.log` |
-| Windows | `$env:LOCALAPPDATA\CrateDigger\Logs\cratedigger.log` |
+| Platform | Directory |
+|----------|-----------|
+| Linux | `~/.local/state/CrateDigger/log/` |
+| macOS | `~/Library/Logs/CrateDigger/` |
+| Windows | `$env:LOCALAPPDATA\CrateDigger\Logs\` |
 
-The log always captures DEBUG-level detail regardless of whether you pass `--verbose` or `--debug` on the command line. Up to five rotated files are kept, each capped at 5 MB, so the total on-disk footprint stays under 30 MB.
-
-If you run two `cratedigger` processes at the same time (for example, `identify` in one terminal while `enrich` is still running in another), both processes write to the same log file. On Linux and macOS, log records from both runs may interleave; individual lines stay intact but the chronological order gets jumbled. On Windows, the log rotation step can fail while both processes hold the file open; you may see a short traceback on stderr and the log may grow past 5 MB until both runs finish.
-
-For most single-user workflows this is harmless. If you need a clean log for a specific run, either wait for one process to finish before starting the next, or point each process at a separate log location by setting a different `HOME` (Linux/macOS) or `USERPROFILE` (Windows) environment variable per process.
+Files are named `{command}-{timestamp}-{hex}.log`, for example `identify-2026-05-07T13-44-01-a3f2.log`. Every file captures DEBUG-level detail regardless of whether you pass `--verbose` or `--debug` on the command line. Log files older than 7 days are deleted automatically at startup. Because each run gets its own file, concurrent runs never conflict or interleave.
 
 ---
 

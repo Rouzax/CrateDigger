@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - The `Tagged:` metadata line in identify output is now aligned with the filename column instead of flush-left.
+- Log files are now per-command (`identify-2026-05-07T13-44-01-a3f2.log`) instead of a single rotating `cratedigger.log`. Each CLI invocation writes its own file, so concurrent runs never conflict. Files older than 7 days are deleted automatically at startup. Writes are buffered for efficiency.
+- The identify command now emits structured debug/info events at every decision point: stored URL reuse, search queries, auto-select scoring, chapter comparison, tag updates, self-heal triggers, and skip reasons. All events use the `identify.*` prefix and `key=value` format for grepability.
+- All freeform log events in `api.py` and `chapters.py` migrated to structured `identify.*`, `session.*`, and `chapters.*` format.
 
 ## [0.16.1] - 2026-05-07
 
