@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - The inline tag-building block in `embed_chapters()` is extracted into a standalone `build_1001tl_tags()` function. The identify command's verify path uses the same function, so dry-run output accurately reflects both tag additions and tag clearings.
+- The `Tagged:` metadata line in identify output is now aligned with the filename column instead of flush-left.
 
 ## [0.16.0] - 2026-05-07
 
