@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-05-07
+
 ### Changed
 
 - The `Tagged:` metadata line in identify output is now aligned with the filename column instead of flush-left.
