@@ -232,6 +232,6 @@ def test_reidentify_writes_location_when_no_linked_location_source(tmp_path):
     album_tags = mock_write.call_args[0][1][70]
     assert album_tags["CRATEDIGGER_1001TL_LOCATION"] == "Alexandra Palace London"
     assert album_tags["CRATEDIGGER_1001TL_COUNTRY"] == "United Kingdom"
-    # No venue / festival / conference / radio got written, so the clear
-    # path must NOT have fired.
-    assert "CRATEDIGGER_1001TL_VENUE" not in album_tags
+    # No venue / festival / conference / radio applies, so they are cleared
+    # by the blanket managed-tag sweep.
+    assert album_tags["CRATEDIGGER_1001TL_VENUE"] is CLEAR_TAG

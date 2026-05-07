@@ -9,12 +9,14 @@ from festival_organizer.tracklists.chapters import (
     _timestamp_to_seconds,
     parse_tracklist_lines,
     build_chapter_xml,
+    build_1001tl_tags,
     chapters_are_identical,
     extract_existing_chapters,
     embed_chapters,
     trim_chapters_to_duration,
     Chapter,
 )
+from festival_organizer.mkv_tags import CLEAR_TAG
 import pytest
 
 
@@ -534,3 +536,65 @@ def test_build_chapter_xml_uid_is_positive():
     chapters = [Chapter(timestamp=f"00:0{i}:00.000", title=f"t{i}") for i in range(10)]
     _, uids = build_chapter_xml(chapters, return_uids=True)
     assert all(u > 0 for u in uids)
+
+
+# --- build_1001tl_tags ---
+
+def test_stale_source_tags_cleared_on_reidentify():
+    """Tags from a prior identification that no longer apply are cleared."""
+    tags = build_1001tl_tags(
+        tracklist_url="https://www.1001tracklists.com/tracklist/abc/",
+        tracklist_title="FISHER @ Bay Oval Park",
+        tracklist_id="abc",
+        tracklist_date="2026-01-31",
+        stage_text="",
+        sources_by_type={},
+        country="New Zealand",
+        location="Bay Oval Park",
+        genres=["Tech House"],
+        dj_artwork_url="https://example.com/art.jpg",
+        dj_artists=[("fisher", "FISHER")],
+    )
+    assert tags.get("CRATEDIGGER_1001TL_FESTIVAL") is CLEAR_TAG
+    assert tags.get("CRATEDIGGER_1001TL_VENUE") is CLEAR_TAG
+    assert tags.get("CRATEDIGGER_1001TL_CONFERENCE") is CLEAR_TAG
+    assert tags.get("CRATEDIGGER_1001TL_RADIO") is CLEAR_TAG
+    assert tags.get("CRATEDIGGER_1001TL_STAGE") is CLEAR_TAG
+    assert tags["CRATEDIGGER_1001TL_LOCATION"] == "Bay Oval Park"
+    assert tags["CRATEDIGGER_1001TL_COUNTRY"] == "New Zealand"
+
+
+def test_stale_stage_cleared_when_no_stage():
+    """STAGE cleared when current identification has no stage."""
+    tags = build_1001tl_tags(
+        tracklist_url="https://www.1001tracklists.com/tracklist/xyz/",
+        stage_text="",
+        sources_by_type={"Open Air / Festival": ["Tomorrowland"]},
+    )
+    assert tags.get("CRATEDIGGER_1001TL_STAGE") is CLEAR_TAG
+    assert tags["CRATEDIGGER_1001TL_FESTIVAL"] == "Tomorrowland"
+
+
+def test_build_tags_sets_all_positive_tags():
+    """All provided values appear as positive tags."""
+    tags = build_1001tl_tags(
+        tracklist_url="https://www.1001tracklists.com/tracklist/abc/",
+        tracklist_title="FISHER @ Mainstage, Tomorrowland",
+        tracklist_id="abc",
+        tracklist_date="2025-07-25",
+        stage_text="Mainstage",
+        sources_by_type={"Open Air / Festival": ["Tomorrowland"]},
+        country="Belgium",
+        genres=["Tech House", "House"],
+        dj_artwork_url="https://example.com/art.jpg",
+        dj_artists=[("fisher", "FISHER")],
+    )
+    assert tags["CRATEDIGGER_1001TL_URL"] == "https://www.1001tracklists.com/tracklist/abc/"
+    assert tags["CRATEDIGGER_1001TL_STAGE"] == "Mainstage"
+    assert tags["CRATEDIGGER_1001TL_FESTIVAL"] == "Tomorrowland"
+    assert tags["CRATEDIGGER_1001TL_COUNTRY"] == "Belgium"
+    assert tags["CRATEDIGGER_1001TL_GENRES"] == "Tech House|House"
+    assert tags["CRATEDIGGER_1001TL_ARTISTS"] == "FISHER"
+    assert tags["CRATEDIGGER_ALBUMARTIST_DISPLAY"] == "FISHER"
+    assert tags.get("CRATEDIGGER_1001TL_LOCATION") is CLEAR_TAG
+    assert tags.get("CRATEDIGGER_1001TL_VENUE") is CLEAR_TAG

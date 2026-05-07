@@ -404,6 +404,102 @@ def _build_chapter_tags_map(
     return result
 
 
+_MANAGED_1001TL_TAGS = frozenset({
+    "CRATEDIGGER_1001TL_URL",
+    "CRATEDIGGER_1001TL_TITLE",
+    "CRATEDIGGER_1001TL_ID",
+    "CRATEDIGGER_1001TL_DATE",
+    "CRATEDIGGER_1001TL_GENRES",
+    "CRATEDIGGER_1001TL_DJ_ARTWORK",
+    "CRATEDIGGER_1001TL_STAGE",
+    "CRATEDIGGER_1001TL_FESTIVAL",
+    "CRATEDIGGER_1001TL_VENUE",
+    "CRATEDIGGER_1001TL_CONFERENCE",
+    "CRATEDIGGER_1001TL_RADIO",
+    "CRATEDIGGER_1001TL_COUNTRY",
+    "CRATEDIGGER_1001TL_LOCATION",
+    "CRATEDIGGER_1001TL_SOURCE_TYPE",
+    "CRATEDIGGER_1001TL_ARTISTS",
+    "CRATEDIGGER_ALBUMARTIST_SLUGS",
+    "CRATEDIGGER_ALBUMARTIST_DISPLAY",
+})
+
+
+def build_1001tl_tags(
+    *,
+    tracklist_url: str,
+    tracklist_title: str = "",
+    tracklist_id: str = "",
+    tracklist_date: str = "",
+    genres: list[str] | None = None,
+    dj_artwork_url: str | None = None,
+    stage_text: str = "",
+    sources_by_type: dict[str, list[str]] | None = None,
+    country: str = "",
+    location: str = "",
+    dj_artists: list[tuple[str, str]] | None = None,
+    dj_cache: "DjCache | None" = None,
+    alias_resolver: "Callable[[str], str] | None" = None,
+) -> dict[str, str]:
+    """Build the TTV=70 tag dict for a 1001Tracklists identification.
+
+    Every tag in _MANAGED_1001TL_TAGS is either set to a positive value or
+    explicitly set to CLEAR_TAG, so re-identifying a file never leaves stale
+    data from a prior identification.
+    """
+    tags: dict[str, str] = {"CRATEDIGGER_1001TL_URL": tracklist_url}
+    if tracklist_title:
+        tags["CRATEDIGGER_1001TL_TITLE"] = tracklist_title
+    if tracklist_id:
+        tags["CRATEDIGGER_1001TL_ID"] = tracklist_id
+    if tracklist_date:
+        tags["CRATEDIGGER_1001TL_DATE"] = tracklist_date
+    if genres:
+        tags["CRATEDIGGER_1001TL_GENRES"] = "|".join(genres)
+    if dj_artwork_url:
+        tags["CRATEDIGGER_1001TL_DJ_ARTWORK"] = dj_artwork_url
+    if stage_text:
+        tags["CRATEDIGGER_1001TL_STAGE"] = stage_text
+    if sources_by_type:
+        for source_type, names in sources_by_type.items():
+            tag_name = SOURCE_TYPE_TO_TAG.get(source_type)
+            if tag_name and names:
+                tags[tag_name] = "|".join(names)
+    if country:
+        tags["CRATEDIGGER_1001TL_COUNTRY"] = country
+    if location:
+        tags["CRATEDIGGER_1001TL_LOCATION"] = location
+    # TODO: source_type priority is also derived in api.py export_tracklist().
+    # Consider passing source_type as a parameter instead of re-deriving.
+    for stype in ("Open Air / Festival", "Event Location", "Club",
+                  "Conference", "Concert / Live Event", "Event Promoter"):
+        if sources_by_type and stype in sources_by_type:
+            tags["CRATEDIGGER_1001TL_SOURCE_TYPE"] = stype
+            break
+    if dj_artists:
+        # CRATEDIGGER_1001TL_ARTISTS preserves the 1001TL display form
+        # (e.g. 'SOMETHING ELSE'). The top-level ARTIST tag and the
+        # filesystem layout route through alias resolution separately;
+        # this tag is the raw 1001TL-stated DJ name, casing-normalised
+        # via DjCache (so we don't re-emit 1001TL's UPPERCASE-on-submit
+        # artefact when DjCache has the canonical casing).
+        names = [
+            dj_cache.canonical_name(slug, fallback=name) if dj_cache is not None else name
+            for slug, name in dj_artists
+        ]
+        slugs = [slug for slug, _name in dj_artists]
+        tags["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(names)
+        tags["CRATEDIGGER_ALBUMARTIST_SLUGS"] = "|".join(slugs)
+        tags["CRATEDIGGER_ALBUMARTIST_DISPLAY"] = " & ".join(names)
+
+    # Clear any managed tag not set by this identification.
+    for tag_name in _MANAGED_1001TL_TAGS:
+        if tag_name not in tags:
+            tags[tag_name] = CLEAR_TAG
+
+    return tags
+
+
 def embed_chapters(
     filepath: Path,
     chapters: list[Chapter],
@@ -457,65 +553,21 @@ def embed_chapters(
 
         # Write 1001TL tags via merge (preserves ARTIST/TITLE/DATE etc.)
         if tracklist_url:
-            tags: dict[str, str] = {"CRATEDIGGER_1001TL_URL": tracklist_url}
-            if tracklist_title:
-                tags["CRATEDIGGER_1001TL_TITLE"] = tracklist_title
-            if tracklist_id:
-                tags["CRATEDIGGER_1001TL_ID"] = tracklist_id
-            if tracklist_date:
-                tags["CRATEDIGGER_1001TL_DATE"] = tracklist_date
-            if genres:
-                tags["CRATEDIGGER_1001TL_GENRES"] = "|".join(genres)
-            if dj_artwork_url:
-                tags["CRATEDIGGER_1001TL_DJ_ARTWORK"] = dj_artwork_url
-            if stage_text:
-                tags["CRATEDIGGER_1001TL_STAGE"] = stage_text
-            if sources_by_type:
-                for source_type, names in sources_by_type.items():
-                    tag_name = SOURCE_TYPE_TO_TAG.get(source_type)
-                    if tag_name and names:
-                        tags[tag_name] = "|".join(names)
-            if country:
-                tags["CRATEDIGGER_1001TL_COUNTRY"] = country
-            # CRATEDIGGER_1001TL_LOCATION is a lowest-tier fallback derived
-            # from the 1001TL h1 plain-text tail. It only applies when no
-            # linked location-bearing source (Festival / Venue / Conference /
-            # Radio) is present. When such a source IS present, any stale
-            # LOCATION tag from a prior run must be cleared so the file
-            # doesn't carry a contradictory freeform value.
-            LOCATION_BEARING_TAGS = (
-                "CRATEDIGGER_1001TL_FESTIVAL",
-                "CRATEDIGGER_1001TL_VENUE",
-                "CRATEDIGGER_1001TL_CONFERENCE",
-                "CRATEDIGGER_1001TL_RADIO",
+            tags = build_1001tl_tags(
+                tracklist_url=tracklist_url,
+                tracklist_title=tracklist_title or "",
+                tracklist_id=tracklist_id or "",
+                tracklist_date=tracklist_date or "",
+                genres=genres,
+                dj_artwork_url=dj_artwork_url,
+                stage_text=stage_text,
+                sources_by_type=sources_by_type,
+                country=country,
+                location=location,
+                dj_artists=dj_artists,
+                dj_cache=dj_cache,
+                alias_resolver=alias_resolver,
             )
-            linked_source_tag_present = any(t in tags for t in LOCATION_BEARING_TAGS)
-            if location and not linked_source_tag_present:
-                tags["CRATEDIGGER_1001TL_LOCATION"] = location
-            elif linked_source_tag_present:
-                tags["CRATEDIGGER_1001TL_LOCATION"] = CLEAR_TAG
-            # TODO: source_type priority is also derived in api.py export_tracklist().
-            # Consider passing source_type as a parameter instead of re-deriving.
-            for stype in ("Open Air / Festival", "Event Location", "Club",
-                          "Conference", "Concert / Live Event", "Event Promoter"):
-                if sources_by_type and stype in sources_by_type:
-                    tags["CRATEDIGGER_1001TL_SOURCE_TYPE"] = stype
-                    break
-            if dj_artists:
-                # CRATEDIGGER_1001TL_ARTISTS preserves the 1001TL display form
-                # (e.g. 'SOMETHING ELSE'). The top-level ARTIST tag and the
-                # filesystem layout route through alias resolution separately;
-                # this tag is the raw 1001TL-stated DJ name, casing-normalised
-                # via DjCache (so we don't re-emit 1001TL's UPPERCASE-on-submit
-                # artefact when DjCache has the canonical casing).
-                names = [
-                    dj_cache.canonical_name(slug, fallback=name) if dj_cache is not None else name
-                    for slug, name in dj_artists
-                ]
-                slugs = [slug for slug, _name in dj_artists]
-                tags["CRATEDIGGER_1001TL_ARTISTS"] = "|".join(names)
-                tags["CRATEDIGGER_ALBUMARTIST_SLUGS"] = "|".join(slugs)
-                tags["CRATEDIGGER_ALBUMARTIST_DISPLAY"] = " & ".join(names)
             chapter_tags: dict[int, dict[str, str]] | None = None
             if tracks and chapters and chapter_uids:
                 chapter_tags = _build_chapter_tags_map(

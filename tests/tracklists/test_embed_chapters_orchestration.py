@@ -328,7 +328,8 @@ def test_embed_chapters_clears_location_when_linked_venue_present(tmp_path):
 
 
 def test_embed_chapters_clears_location_when_festival_present(tmp_path):
-    """Festival source (Open Air / Festival) also triggers the clear path."""
+    """When location is empty and a festival source is present, LOCATION
+    is cleared by the blanket managed-tag sweep while FESTIVAL is set."""
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
 
@@ -341,7 +342,7 @@ def test_embed_chapters_clears_location_when_festival_present(tmp_path):
             fake_mkv,
             chapters=[],
             tracklist_url="https://x",
-            location="Some leftover venue string",
+            location="",
             sources_by_type={"Open Air / Festival": ["Tomorrowland"]},
         )
         tags = mock_write.call_args[0][1][70]
@@ -349,11 +350,10 @@ def test_embed_chapters_clears_location_when_festival_present(tmp_path):
         assert tags["CRATEDIGGER_1001TL_FESTIVAL"] == "Tomorrowland"
 
 
-def test_embed_chapters_omits_location_when_empty_and_no_linked_source(tmp_path):
-    """When location is empty AND no linked source is present, the tag is
-    neither written nor cleared: no CRATEDIGGER_1001TL_LOCATION key at all
-    in the tags dict. This matches files that never had LOCATION and
-    shouldn't get an empty-string entry added.
+def test_embed_chapters_clears_location_when_empty_and_no_linked_source(tmp_path):
+    """When location is empty AND no linked source is present, the blanket
+    managed-tag sweep sets LOCATION to CLEAR_TAG so any stale value from a
+    prior identification is removed.
     """
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
@@ -371,4 +371,4 @@ def test_embed_chapters_omits_location_when_empty_and_no_linked_source(tmp_path)
             sources_by_type={},
         )
         tags = mock_write.call_args[0][1][70]
-        assert "CRATEDIGGER_1001TL_LOCATION" not in tags
+        assert tags["CRATEDIGGER_1001TL_LOCATION"] is CLEAR_TAG
