@@ -935,10 +935,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#where-are-my-logs-and-why-does-concurrent-use-sometimes-garble-them" class="md-nav__link">
+  <a href="#where-are-my-logs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where are my logs, and why does concurrent use sometimes garble them?
+        Where are my logs?
       
     </span>
   </a>
@@ -1368,10 +1368,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#where-are-my-logs-and-why-does-concurrent-use-sometimes-garble-them" class="md-nav__link">
+  <a href="#where-are-my-logs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where are my logs, and why does concurrent use sometimes garble them?
+        Where are my logs?
       
     </span>
   </a>
@@ -1786,33 +1786,31 @@
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">force_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;*/Ultra Miami/*&quot;</span><span class="p">]</span>
 </code></pre></div>
 <p>Each rule is matched against the file's path relative to the source root. <code>Coldplay/*</code> matches any file directly inside a <code>Coldplay</code> folder. See <a href="../configuration/#content-type-rules">Configuration: content type rules</a> for more examples.</p>
-<h3 id="where-are-my-logs-and-why-does-concurrent-use-sometimes-garble-them">Where are my logs, and why does concurrent use sometimes garble them?</h3>
-<p>CrateDigger writes a rotating log to a fixed location on each platform:</p>
+<h3 id="where-are-my-logs">Where are my logs?</h3>
+<p>Each CrateDigger invocation writes its own log file to a per-platform directory:</p>
 <table>
 <thead>
 <tr>
 <th>Platform</th>
-<th>Path</th>
+<th>Directory</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Linux</td>
-<td><code>~/.local/state/CrateDigger/log/cratedigger.log</code></td>
+<td><code>~/.local/state/CrateDigger/log/</code></td>
 </tr>
 <tr>
 <td>macOS</td>
-<td><code>~/Library/Logs/CrateDigger/cratedigger.log</code></td>
+<td><code>~/Library/Logs/CrateDigger/</code></td>
 </tr>
 <tr>
 <td>Windows</td>
-<td><code>$env:LOCALAPPDATA\CrateDigger\Logs\cratedigger.log</code></td>
+<td><code>$env:LOCALAPPDATA\CrateDigger\Logs\</code></td>
 </tr>
 </tbody>
 </table>
-<p>The log always captures DEBUG-level detail regardless of whether you pass <code>--verbose</code> or <code>--debug</code> on the command line. Up to five rotated files are kept, each capped at 5 MB, so the total on-disk footprint stays under 30 MB.</p>
-<p>If you run two <code>cratedigger</code> processes at the same time (for example, <code>identify</code> in one terminal while <code>enrich</code> is still running in another), both processes write to the same log file. On Linux and macOS, log records from both runs may interleave; individual lines stay intact but the chronological order gets jumbled. On Windows, the log rotation step can fail while both processes hold the file open; you may see a short traceback on stderr and the log may grow past 5 MB until both runs finish.</p>
-<p>For most single-user workflows this is harmless. If you need a clean log for a specific run, either wait for one process to finish before starting the next, or point each process at a separate log location by setting a different <code>HOME</code> (Linux/macOS) or <code>USERPROFILE</code> (Windows) environment variable per process.</p>
+<p>Files are named <code>{command}-{timestamp}-{hex}.log</code>, for example <code>identify-2026-05-07T13-44-01-a3f2.log</code>. Every file captures DEBUG-level detail regardless of whether you pass <code>--verbose</code> or <code>--debug</code> on the command line. Log files older than 7 days are deleted automatically at startup. Because each run gets its own file, concurrent runs never conflict or interleave.</p>
 <hr />
 <h2 id="identify">identify</h2>
 <h3 id="error-credentials-required">"Error: credentials required"</h3>
