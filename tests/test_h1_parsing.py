@@ -117,17 +117,18 @@ def test_stage_from_source_link_the_cove():
 def test_no_sources_strips_trailing_country_and_date():
     """FISHER @ Bay Oval Park, New Zealand 2026-01-31 (no source links).
 
-    Without source-link delimiters, the trailing "Country YYYY-MM-DD" would
-    otherwise be absorbed into stage_text. Stage should be venue only, and
-    country should surface via the new fallback.
+    Without source-link delimiters, the post-@ text is the venue/location,
+    not a stage. stage_text should be empty; location carries the name.
     """
     h1 = (
         '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
         ' @ Bay Oval Park, New Zealand 2026-01-31'
     )
     result = _parse_h1_structure(h1)
-    assert result["stage_text"] == "Bay Oval Park"
+    assert result["stage_text"] == ""
+    assert result["location"] == "Bay Oval Park"
     assert result["country"] == "New Zealand"
+    assert result["date"] == "2026-01-31"
     assert result["sources"] == []
 
 
@@ -138,18 +139,20 @@ def test_no_sources_strips_trailing_date_only():
         ' @ Bay Oval Park 2026-01-31'
     )
     result = _parse_h1_structure(h1)
-    assert result["stage_text"] == "Bay Oval Park"
+    assert result["stage_text"] == ""
+    assert result["location"] == "Bay Oval Park"
     assert result["country"] == ""
 
 
-def test_no_sources_unknown_country_kept_in_stage():
-    """Unknown country names stay in stage (defensive, avoids false positives)."""
+def test_no_sources_unknown_country_kept_in_location():
+    """Unknown country names stay in location (defensive)."""
     h1 = (
         '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
         ' @ Some Venue, Unknownland 2026-01-31'
     )
     result = _parse_h1_structure(h1)
-    assert result["stage_text"] == "Some Venue, Unknownland"
+    assert result["stage_text"] == ""
+    assert result["location"] == "Some Venue, Unknownland"
     assert result["country"] == ""
 
 

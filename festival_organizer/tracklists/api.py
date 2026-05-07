@@ -932,11 +932,8 @@ def _parse_h1_structure(h1_html: str) -> dict:
 
     result["location"] = _html_decode(tail)
 
-    # When no source links exist, the "stage" and the tail refer to the same
-    # post-@ text; expose the cleaned location as the stage so the trailing
-    # country/date does not bleed into stage_text.
     if not source_matches:
-        plain = tail
+        plain = ""
 
     result["stage_text"] = _html_decode(plain)
 
