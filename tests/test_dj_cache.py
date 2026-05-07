@@ -199,7 +199,7 @@ def test_dj_cache_load_logs_not_found(tmp_path, caplog):
     import logging
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.dj_cache"):
         DjCache(tmp_path / "dj_cache.json")
-    assert any("not found" in msg for msg in caplog.messages)
+    assert any("dj_cache.not_found:" in msg for msg in caplog.messages)
 
 
 def test_dj_cache_load_logs_entry_count(tmp_path, caplog):
@@ -210,4 +210,4 @@ def test_dj_cache_load_logs_entry_count(tmp_path, caplog):
     c.put("tiesto", {"name": "Tiesto", "artwork_url": "", "aliases": [], "member_of": []})
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.dj_cache"):
         DjCache(path)
-    assert any("Loaded DJ cache from" in msg and "1 entr" in msg for msg in caplog.messages)
+    assert any("dj_cache.load:" in msg and "entries=1" in msg for msg in caplog.messages)

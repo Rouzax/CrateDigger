@@ -415,6 +415,16 @@ class Config:
         return ("", "")
 
     @cached_property
+    def dj_cache(self):
+        """Lazy single DjCache instance, shared by artist_aliases and artist_groups."""
+        try:
+            from festival_organizer.tracklists.dj_cache import DjCache
+            return DjCache()
+        except (ImportError, OSError, json.JSONDecodeError) as e:
+            logger.debug("config.dj_cache_skipped: error=\"%s\"", e)
+            return None
+
+    @cached_property
     def artist_aliases(self) -> dict[str, str]:
         """Combined alias map: DJ-cache derived first, manual config overrides on top.
 
@@ -427,12 +437,7 @@ class Config:
         if "artist_aliases" in self._data:
             raw = {**raw, **self._data["artist_aliases"]}
         flat = _invert_alias_map(raw)
-        try:
-            from festival_organizer.tracklists.dj_cache import DjCache
-            dj_aliases = DjCache().derive_artist_aliases()
-        except (ImportError, OSError, json.JSONDecodeError, KeyError, ValueError) as e:
-            logger.debug("DjCache alias load skipped: %s", e)
-            dj_aliases = {}
+        dj_aliases = self.dj_cache.derive_artist_aliases() if self.dj_cache else {}
         return {**dj_aliases, **flat}
 
     @cached_property
@@ -448,11 +453,8 @@ class Config:
             groups = set()
         ext_groups = self._load_external_config("artists.json", {}).get("groups", [])
         groups.update(g.lower() for g in ext_groups)
-        try:
-            from festival_organizer.tracklists.dj_cache import DjCache
-            groups.update(DjCache().derive_artist_groups())
-        except (ImportError, OSError, json.JSONDecodeError, KeyError, ValueError) as e:
-            logger.debug("DjCache group load skipped: %s", e)
+        if self.dj_cache:
+            groups.update(self.dj_cache.derive_artist_groups())
         return groups
 
     def resolve_artist(self, name: str) -> str:

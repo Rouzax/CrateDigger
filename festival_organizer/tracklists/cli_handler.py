@@ -175,9 +175,8 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         return 0
 
     # Get credentials and login
-    from festival_organizer.tracklists.dj_cache import DjCache
     source_cache = SourceCache()
-    dj_cache = DjCache()
+    dj_cache = config.dj_cache
     session = TracklistSession(source_cache=source_cache, dj_cache=dj_cache)
     email, password = _get_credentials(config)
     if not email or not password:
