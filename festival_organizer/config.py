@@ -5,12 +5,12 @@ Logging:
     Key events:
         - alias.invalid_entry (WARNING): Alias map entry has unexpected type
         - alias.circular (WARNING): Two aliases point at each other
-        - alias.resolve_place (DEBUG): Place name resolved via alias
-        - alias.resolve_artist (DEBUG): Artist name resolved via alias
-        - config.layer (DEBUG): Config TOML file loaded or not found (deferred)
-        - config.external_candidates (DEBUG): Candidate paths for external config
-        - config.external_loaded (DEBUG): External JSON config loaded from path
-        - config.external_not_found (DEBUG): External JSON not found in any candidate
+        - config.place_alias (DEBUG): Place name resolved via alias
+        - config.artist_alias (DEBUG): Artist name resolved via alias
+        - config.load (DEBUG): Config TOML file loaded or not found (deferred)
+        - config.candidates (DEBUG): Candidate paths for external config
+        - config.loaded (DEBUG): External JSON config loaded from path
+        - config.not_found (DEBUG): External JSON not found in any candidate
         - config.invalid_kodi_port (WARNING): KODI_PORT env var is not a valid int
     See docs/logging.md for full guidelines.
 """
@@ -210,19 +210,19 @@ class Config:
 
         candidates = self._external_config_candidates(filename)
 
-        logger.debug("%s candidates: %s", filename, [str(p) for p in candidates])
+        logger.debug("config.candidates: file=%s paths=%s", filename, [str(p) for p in candidates])
 
         for path in candidates:
             if path.exists():
                 try:
                     data = json.loads(path.read_text(encoding="utf-8"))
-                    logger.debug("Loaded %s from %s", filename, path)
+                    logger.debug("config.loaded: file=%s path=%s", filename, path)
                     self._ext_cache[filename] = data
                     return data
                 except (json.JSONDecodeError, OSError) as e:
                     logger.warning("Skipped %s: %s", path, e)
 
-        logger.debug("%s not found in any candidate directory", filename)
+        logger.debug("config.not_found: file=%s", filename)
         self._ext_cache[filename] = defaults
         return defaults
 
@@ -381,11 +381,11 @@ class Config:
         if name in self.place_aliases:
             resolved = self.place_aliases[name]
             if resolved != name:
-                logger.debug("Place alias: '%s' -> '%s'", name, resolved)
+                logger.debug("config.place_alias: name=\"%s\" resolved=%s", name, resolved)
             return resolved
         resolved = _ci_lookup(self.place_aliases, name) or name
         if resolved != name:
-            logger.debug("Place alias (case-insensitive): '%s' -> '%s'", name, resolved)
+            logger.debug("config.place_alias: name=\"%s\" resolved=%s case_insensitive=true", name, resolved)
         return resolved
 
     def resolve_place_for_media(self, mf) -> tuple[str, str]:
@@ -480,7 +480,7 @@ class Config:
         # If an alias matched, the user explicitly chose this canonical name
         if aliased:
             if name != original:
-                logger.debug("Artist alias: '%s' -> '%s'", original, name)
+                logger.debug("config.artist_alias: name=\"%s\" resolved=%s", original, name)
             return name
 
         # 2. If the full name is a known group, keep it
@@ -635,14 +635,14 @@ def load_config(
         _migrate_layout_names(data)
         cfg = Config(data, config_dir=config_path.parent)
         cfg._load_journal.append(
-            ("Config: %s -> %s", str(config_path), "loaded" if loaded else "not found")
+            ("config.load: path=%s status=%s", str(config_path), "loaded" if loaded else "not found")
         )
         return cfg
 
     user_file = user_config_file if user_config_file is not None else paths.config_file()
     user_loaded = _merge_toml(user_file)
     journal.append(
-        ("Config: %s -> %s", str(user_file), "loaded" if user_loaded else "not found")
+        ("config.load: path=%s status=%s", str(user_file), "loaded" if user_loaded else "not found")
     )
 
     if library_config_dir is not None:
@@ -658,7 +658,7 @@ def load_config(
         lib_toml = library_config_dir / "config.toml"
         lib_loaded = _merge_toml(lib_toml)
         journal.append(
-            ("Config: %s -> %s", str(lib_toml), "loaded" if lib_loaded else "not found")
+            ("config.load: path=%s status=%s", str(lib_toml), "loaded" if lib_loaded else "not found")
         )
 
     _migrate_layout_names(data)

@@ -192,7 +192,7 @@ def parse_filename(filepath: Path, config: Config) -> dict:
     elif stem:
         result.setdefault("artist", stem)
 
-    logger.debug("parse_filename fallback for %r: %s", stem, result)
+    logger.debug("parsers.filename_fallback: stem=%r result=%s", stem, result)
     return result
 
 

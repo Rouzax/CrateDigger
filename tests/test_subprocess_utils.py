@@ -30,7 +30,7 @@ def test_tracked_run_logs_stderr_tail_on_nonzero(caplog):
         result = tracked_run(cmd, capture_output=True, text=True, timeout=10)
     assert result.returncode == 3
     joined = "\n".join(rec.message for rec in caplog.records)
-    assert "exit 3" in joined
+    assert "subprocess.exit: code=3" in joined
     assert "boom-distinct-marker" in joined
 
 
@@ -40,7 +40,7 @@ def test_tracked_run_logs_timeout(caplog):
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.subprocess"):
         with pytest.raises(subprocess.TimeoutExpired):
             tracked_run(cmd, capture_output=True, text=True, timeout=0.2)
-    assert any("timed out" in rec.message for rec in caplog.records)
+    assert any("subprocess.timeout:" in rec.message for rec in caplog.records)
 
 
 def test_tracked_run_logs_spawn_failure(caplog):
@@ -49,7 +49,7 @@ def test_tracked_run_logs_spawn_failure(caplog):
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.subprocess"):
         with pytest.raises((OSError, FileNotFoundError)):
             tracked_run(cmd, capture_output=True, text=True, timeout=10)
-    assert any("failed to spawn" in rec.message for rec in caplog.records)
+    assert any("subprocess.spawn_failed:" in rec.message for rec in caplog.records)
 
 
 def test_tracked_run_passes_through_kwargs(tmp_path, caplog):
@@ -75,6 +75,6 @@ def test_tracked_run_logs_called_process_error_as_exit_not_spawn(caplog):
         with pytest.raises(subprocess.CalledProcessError):
             tracked_run(cmd, capture_output=True, text=True, timeout=10, check=True)
     joined = "\n".join(rec.message for rec in caplog.records)
-    assert "exit 2" in joined
+    assert "subprocess.exit: code=2" in joined
     assert "oops-check-true-marker" in joined
-    assert "failed to spawn" not in joined
+    assert "subprocess.spawn_failed:" not in joined

@@ -49,11 +49,11 @@ def _log_nonzero_exit(returncode: int, cmd_str: str, stderr: Any) -> None:
     tail = _stderr_tail(stderr)
     if tail:
         logger.debug(
-            "subprocess exit %d: %s; stderr tail: %s",
+            "subprocess.exit: code=%d cmd=%s tail=%s",
             returncode, cmd_str, tail,
         )
     else:
-        logger.debug("subprocess exit %d: %s", returncode, cmd_str)
+        logger.debug("subprocess.exit: code=%d cmd=%s", returncode, cmd_str)
 
 
 def tracked_run(cmd: Any, **kwargs: Any) -> subprocess.CompletedProcess:
@@ -67,25 +67,25 @@ def tracked_run(cmd: Any, **kwargs: Any) -> subprocess.CompletedProcess:
     Successful invocations (exit 0) produce no log output.
 
     DEBUG log shape (failures only):
-      - Non-zero exit: ``subprocess exit <n>: <cmd>``; with stderr tail
-        when available. Same shape applies when ``check=True`` surfaces
-        the non-zero exit as ``CalledProcessError``.
-      - On ``TimeoutExpired``: ``subprocess timed out: <cmd>``.
-      - On spawn failure (``OSError``): ``subprocess failed to spawn:
-        <cmd>: <exc>``.
+      - Non-zero exit: ``subprocess.exit: code=<n> cmd=<cmd>``; with
+        ``tail=<stderr>`` when available. Same shape applies when
+        ``check=True`` surfaces the non-zero exit as ``CalledProcessError``.
+      - On ``TimeoutExpired``: ``subprocess.timeout: cmd=<cmd>``.
+      - On spawn failure (``OSError``): ``subprocess.spawn_failed:
+        cmd=<cmd> error="<exc>"``.
     """
     cmd_str = _fmt_cmd(cmd)
 
     try:
         result = subprocess.run(cmd, **kwargs)
     except subprocess.TimeoutExpired:
-        logger.debug("subprocess timed out: %s", cmd_str)
+        logger.debug("subprocess.timeout: cmd=%s", cmd_str)
         raise
     except subprocess.CalledProcessError as e:
         _log_nonzero_exit(e.returncode, cmd_str, e.stderr)
         raise
     except OSError as e:
-        logger.debug("subprocess failed to spawn: %s: %s", cmd_str, e)
+        logger.debug("subprocess.spawn_failed: cmd=%s error=\"%s\"", cmd_str, e)
         raise
 
     if result.returncode != 0:

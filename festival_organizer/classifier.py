@@ -3,7 +3,7 @@
 Logging:
     Logger: 'festival_organizer.classifier'
     Key events:
-        - classify.result (INFO): Classification result for each file
+        - classifier.result (INFO): Classification result for each file
     See docs/logging.md for full guidelines.
 """
 import logging
@@ -34,24 +34,24 @@ def classify(media_file: MediaFile, root: Path, config: Config) -> str:
 
     # 1. Explicit user overrides
     if config.is_forced_concert(rel):
-        logger.info("Classified as concert_film (forced by config)")
+        logger.info("classifier.result: type=concert_film reason=config_forced")
         return "concert_film"
     if config.is_forced_festival(rel):
-        logger.info("Classified as festival_set (forced by config)")
+        logger.info("classifier.result: type=festival_set reason=config_forced")
         return "festival_set"
 
     # 2. Has 1001TL metadata -> festival
     if media_file.metadata_source == "1001tracklists":
-        logger.info("Classified as festival_set (1001tracklists metadata)")
+        logger.info("classifier.result: type=festival_set reason=1001tracklists_metadata")
         return "festival_set"
 
     # 3. Has a known festival name -> festival (resolve aliases first)
     if media_file.festival:
         canonical = config.resolve_place_alias(media_file.festival)
         if canonical in config.known_places:
-            logger.info("Classified as festival_set (known festival: %s)", canonical)
+            logger.info("classifier.result: type=festival_set reason=known_festival festival=%s", canonical)
             return "festival_set"
 
     # 4. Fallback
-    logger.info("Classified as unknown")
+    logger.info("classifier.result: type=unknown")
     return "unknown"

@@ -166,7 +166,7 @@ def test_parse_filename_logs_debug_on_fallback(caplog):
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.parsers"):
         parse_filename(Path("bare_name 2024.mkv"), CFG)
     joined = "\n".join(r.message for r in caplog.records)
-    assert "parse_filename fallback" in joined
+    assert "parsers.filename_fallback:" in joined
     assert "bare_name 2024" in joined
 
 
@@ -177,4 +177,4 @@ def test_parse_filename_no_debug_when_primary_pattern_matches(caplog):
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.parsers"):
         parse_filename(Path("Martin Garrix @ Tomorrowland 2024.mkv"), CFG)
     joined = "\n".join(r.message for r in caplog.records)
-    assert "parse_filename fallback" not in joined
+    assert "parsers.filename_fallback:" not in joined

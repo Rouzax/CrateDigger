@@ -575,7 +575,7 @@ def test_embed_tags_debug_when_mkvpropedit_missing(tmp_path, caplog):
             result = embed_tags(mf, video)
     assert result == "error"
     joined = "\n".join(r.message for r in caplog.records)
-    assert "mkvpropedit" in joined.lower()
+    assert "embed_tags.skip:" in joined
     warnings = [r for r in caplog.records if r.levelno >= _logging.WARNING]
     assert warnings == []
 
@@ -652,6 +652,6 @@ def test_embed_tags_diff_debug_renders_clear_tag_readably(tmp_path, caplog):
                     embed_tags(mf, video)
 
     joined = "\n".join(r.message for r in caplog.records)
-    assert "Tag diff for test.mkv" in joined
+    assert "embed_tags.diff: file=test.mkv" in joined
     assert "<CLEAR>" in joined
     assert "<object object at" not in joined

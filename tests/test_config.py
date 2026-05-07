@@ -373,7 +373,7 @@ def test_external_config_logs_loaded(tmp_path, caplog):
     cfg = Config(DEFAULT_CONFIG, config_dir=tmp_path)
     with caplog.at_level("DEBUG", logger="festival_organizer.config"):
         cfg._load_external_config("festivals.json", {})
-    assert any("Loaded festivals.json from" in msg for msg in caplog.messages)
+    assert any("config.loaded: file=festivals.json" in msg for msg in caplog.messages)
 
 
 def test_external_config_logs_not_found(tmp_path, caplog):
@@ -383,7 +383,7 @@ def test_external_config_logs_not_found(tmp_path, caplog):
         with patch("festival_organizer.config.paths") as mock_paths:
             mock_paths.data_dir.return_value = tmp_path / "nonexistent"
             cfg._load_external_config("nope.json", {})
-    assert any("not found" in msg for msg in caplog.messages)
+    assert any("config.not_found:" in msg for msg in caplog.messages)
 
 
 def test_external_config_warns_on_malformed(tmp_path, caplog):

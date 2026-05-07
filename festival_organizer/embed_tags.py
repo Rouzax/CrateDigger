@@ -6,7 +6,8 @@ Only operates on destination files; never modifies source collection.
 Logging:
     Logger: 'festival_organizer.embed_tags'
     Key events:
-        - tags.embed_error (DEBUG): Tag embedding via mkvpropedit failed
+        - embed_tags.skip (DEBUG): Embedding skipped (e.g. mkvpropedit not available)
+        - embed_tags.diff (DEBUG): Tag value diff before write
     See docs/logging.md for full guidelines.
 """
 import logging
@@ -95,7 +96,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
     or "error" on failure.
     """
     if not metadata.MKVPROPEDIT_PATH:
-        logger.debug("embed_tags skipped: mkvpropedit not available")
+        logger.debug("embed_tags.skip: reason=mkvpropedit_not_available")
         return "error"
 
     if not target_path.exists() or target_path.suffix.lower() not in MATROSKA_EXTS:
@@ -164,7 +165,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
 
     diff_50 = {k: (existing_50.get(k, ""), _render(v)) for k, v in tags.items() if _cmp(v) != existing_50.get(k, "")}
     diff_70 = {k: (existing_70.get(k, ""), _render(v)) for k, v in tags_70.items() if _cmp(v) != existing_70.get(k, "")}
-    logger.debug("Tag diff for %s: TTV50=%s TTV70=%s", target_path.name, diff_50, diff_70)
+    logger.debug("embed_tags.diff: file=%s ttv50=%s ttv70=%s", target_path.name, diff_50, diff_70)
 
     # Only stamp ENRICHED_AT when actually writing
     if tags_70:

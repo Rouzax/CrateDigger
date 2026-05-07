@@ -117,7 +117,7 @@ def test_cache_load_logs_not_found(tmp_path, caplog):
     import logging
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.source_cache"):
         SourceCache(cache_path=tmp_path / "source_cache.json")
-    assert any("not found" in msg for msg in caplog.messages)
+    assert any("source_cache.not_found:" in msg for msg in caplog.messages)
 
 
 def test_cache_load_logs_entry_count(tmp_path, caplog):
@@ -128,4 +128,4 @@ def test_cache_load_logs_entry_count(tmp_path, caplog):
     c.put("x", {"name": "X", "slug": "x", "type": "Club", "country": "US"})
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.source_cache"):
         SourceCache(cache_path=path)
-    assert any("Loaded source cache from" in msg and "1 entr" in msg for msg in caplog.messages)
+    assert any("source_cache.load:" in msg and "entries=1" in msg for msg in caplog.messages)
