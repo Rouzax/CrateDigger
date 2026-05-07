@@ -607,7 +607,7 @@ def test_run_canary_dedupes_by_page_type_and_missing_set(caplog):
     ]
     debugs = [
         r for r in caplog.records
-        if r.levelno == logging.DEBUG and "suppressed duplicate" in r.message
+        if r.levelno == logging.DEBUG and "identify.canary.suppressed:" in r.message
     ]
     assert len(warnings_emitted) == 1
     assert len(debugs) == 2
@@ -1138,9 +1138,8 @@ def test_request_retry_429_logs_debug_with_reason_and_wait(caplog):
     assert resp is mock_resp_ok
     sleep_mock.assert_called_once_with(30)
     joined = "\n".join(r.message for r in caplog.records)
-    assert "429" in joined
-    assert "rate limit" in joined.lower()
-    assert "1/3" in joined
+    assert "session.rate_limit:" in joined
+    assert "retry=1/3" in joined
     assert "30" in joined
 
 
@@ -1163,8 +1162,9 @@ def test_request_retry_5xx_logs_debug_with_status_and_wait(caplog):
                 session._request("GET", "http://example.com", max_retries=3)
 
     joined = "\n".join(r.message for r in caplog.records)
-    assert "HTTP 503" in joined
-    assert "1/3" in joined
+    assert "session.http_error:" in joined
+    assert "status=503" in joined
+    assert "retry=1/3" in joined
 
 
 def test_request_retry_network_exception_logs_debug_with_exc_and_wait(caplog):
@@ -1184,9 +1184,9 @@ def test_request_retry_network_exception_logs_debug_with_exc_and_wait(caplog):
                 session._request("GET", "http://example.com", max_retries=3)
 
     joined = "\n".join(r.message for r in caplog.records)
-    assert "network" in joined.lower()
+    assert "session.network_error:" in joined
     assert "conn reset" in joined
-    assert "1/3" in joined
+    assert "retry=1/3" in joined
 
 
 def test_export_tracklist_logs_debug_on_invalid_json(caplog):
@@ -1210,7 +1210,7 @@ def test_export_tracklist_logs_debug_on_invalid_json(caplog):
                     session.export_tracklist("abc123")
 
     joined = "\n".join(r.message for r in caplog.records)
-    assert "Export JSON decode failed" in joined
+    assert "identify.export.decode_failed:" in joined
     assert "malformed" in joined
     # The log must identify the actual failing request (the AJAX export
     # endpoint + tracklist id), NOT the incoming tracklist page URL. The

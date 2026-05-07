@@ -3,19 +3,24 @@
 Logging:
     Logger: 'festival_organizer.tracklists.api'
     Key events:
-        - search.params (DEBUG): Search parameters sent to API
-        - search.response (DEBUG): Search response status and size
-        - search.no_results (DEBUG): HTML returned but zero results parsed
-        - export.genres (INFO): Genres extracted from tracklist page
-        - export.cached_source (INFO): Source page metadata cached
-        - export.cached_dj (INFO): DJ profile cached
-        - export.dj_artwork (INFO): DJ artwork URL found
-        - session.validation_failed (DEBUG): Session validation request failed
+        - identify.search.params (DEBUG): Search parameters sent to API
+        - identify.search.response (DEBUG): Search response status and size
+        - identify.export.decode_failed (DEBUG): Export JSON parse failure
+        - identify.export.genres (INFO): Genres extracted from tracklist page
+        - identify.cache.source (INFO): Source page metadata cached
+        - identify.cache.dj (INFO): DJ profile cached
+        - identify.export.dj_artwork (INFO): DJ artwork URL found
+        - identify.canary.suppressed (DEBUG): Duplicate canary breakage suppressed
+        - identify.dj.fetch_failed (DEBUG): DJ profile page request failed
+        - session.validate_failed (DEBUG): Session validation request failed
         - session.cookie_save_failed (DEBUG): Could not persist cookies
         - session.cookie_restore_failed (DEBUG): Could not load cached cookies
         - session.cookie_not_found (DEBUG): Cookie file does not exist at path
         - session.cookie_restored (DEBUG): Session cookies restored from path
-        - dj.fetch_failed (DEBUG): DJ profile page request failed
+        - session.cookie_chmod_failed (DEBUG): Could not chmod cookie file
+        - session.rate_limit (DEBUG): 429 rate limit, retrying
+        - session.http_error (DEBUG): Transient HTTP error, retrying
+        - session.network_error (DEBUG): Network error, retrying
     See docs/logging.md for full guidelines.
 """
 import html as html_mod
@@ -303,7 +308,7 @@ class TracklistSession:
         key = (page_type, frozenset(missing))
         if key in self._canary_seen:
             logger.debug(
-                "Canary: suppressed duplicate %s breakage at %s",
+                "identify.canary.suppressed: page_type=%s url=%s",
                 page_type, url,
             )
             return
@@ -378,12 +383,16 @@ class TracklistSession:
             data["startDate"] = f"{year}-01-01"
             data["endDate"] = f"{year}-12-31"
 
-        logger.debug("Search params: %s", {k: v for k, v in data.items() if k != "main_search"})
+        logger.debug(
+            "identify.search.params: year=%s order=%s filter=%s",
+            data.get("startDate", ""), data.get("orderby", ""),
+            bool(data.get("filterObject")),
+        )
 
         resp = self._request("POST", f"{BASE_URL}/search/result.php", data=data,
                              headers={"Referer": f"{BASE_URL}/search/"})
 
-        logger.debug("Search response: status=%d, length=%d, has_bItm=%s", resp.status_code, len(resp.text), "bItm" in resp.text)
+        logger.debug("identify.search.response: status=%d length=%d has_results=%s", resp.status_code, len(resp.text), "bItm" in resp.text)
 
         self._run_canary(
             "search results",
@@ -440,7 +449,7 @@ class TracklistSession:
             result = resp.json()
         except (json.JSONDecodeError, ValueError) as e:
             logger.debug(
-                "Export JSON decode failed for tracklist %s at %s: %s",
+                "identify.export.decode_failed: id=%s url=%s error=\"%s\"",
                 tracklist_id, resp.url, e,
             )
             raise ExportError("Invalid JSON response from export API")
@@ -465,7 +474,7 @@ class TracklistSession:
         # Extract enrichment metadata from page HTML
         genres = _extract_genres(page_soup)
         if genres:
-            logger.info("Genres: %s", genres)
+            logger.info("identify.export.genres: count=%d genres=%s", len(genres), "|".join(genres))
 
         # Parse structured h1 for stage, source, and DJ artist metadata
         h1_el = page_soup.find("h1")
@@ -493,7 +502,7 @@ class TracklistSession:
                         self.throttle()
                         info = self.fetch_source_info(sid, slug)
                         self._source_cache.put(sid, info)
-                        logger.info("Cached source: %s = %s (%s)", display_name, info["type"], info["country"])
+                        logger.info("identify.cache.source: name=\"%s\" type=\"%s\" country=%s", display_name, info["type"], info["country"])
 
                 sources_by_type = self._source_cache.group_by_type(
                     [s[0] for s in h1_info["sources"]]
@@ -529,10 +538,10 @@ class TracklistSession:
                     display_name = dj_name_map.get(dj_slug, dj_slug)
                     entry = {"name": display_name, **profile}
                     self._dj_cache.put(dj_slug, entry)
-                    logger.info("Cached DJ profile: %s", display_name)
+                    logger.info("identify.cache.dj: slug=%s name=\"%s\"", dj_slug, display_name)
             if i == 0 and profile.get("artwork_url"):
                 dj_artwork_url = profile["artwork_url"]
-                logger.info("DJ artwork: %s", dj_artwork_url)
+                logger.info("identify.export.dj_artwork: url=%s", dj_artwork_url)
 
         tracks = _parse_tracks(page_soup)
 
@@ -568,7 +577,7 @@ class TracklistSession:
                     if attempt < max_retries - 1:
                         wait = 30
                         logger.debug(
-                            "1001TL 429 rate limit; retry %d/%d in %.1fs",
+                            "session.rate_limit: retry=%d/%d wait=%.1fs",
                             attempt + 1, max_retries, wait,
                         )
                         time.sleep(wait)
@@ -580,7 +589,7 @@ class TracklistSession:
                     if attempt < max_retries - 1:
                         wait = min(2 ** attempt + random.uniform(0, 3), 30)
                         logger.debug(
-                            "1001TL HTTP %d; retry %d/%d in %.1fs",
+                            "session.http_error: status=%d retry=%d/%d wait=%.1fs",
                             resp.status_code, attempt + 1, max_retries, wait,
                         )
                         time.sleep(wait)
@@ -602,7 +611,7 @@ class TracklistSession:
                 if attempt < max_retries - 1:
                     wait = min(2 ** attempt + random.uniform(0, 3), 30)
                     logger.debug(
-                        "1001TL network %s; retry %d/%d in %.1fs",
+                        "session.network_error: error=\"%s\" retry=%d/%d wait=%.1fs",
                         e, attempt + 1, max_retries, wait,
                     )
                     time.sleep(wait)
@@ -707,7 +716,7 @@ class TracklistSession:
             )
             return _parse_dj_profile(resp.text)
         except TracklistError:
-            logger.debug("Failed to fetch DJ page for %s", dj_slug)
+            logger.debug("identify.dj.fetch_failed: slug=%s", dj_slug)
         return empty
 
     def _validate_session(self) -> bool:
@@ -722,7 +731,7 @@ class TracklistSession:
                 return True
             return False
         except (requests.RequestException, OSError) as e:
-            logger.debug("Session validation failed: %s", e)
+            logger.debug("session.validate_failed: error=\"%s\"", e)
             return False
 
     def _save_cookies(self, email: str) -> None:
@@ -751,15 +760,15 @@ class TracklistSession:
                 try:
                     os.chmod(self._cookie_path, 0o600)
                 except OSError as exc:
-                    logger.debug("Could not chmod cookie file: %s", exc)
+                    logger.debug("session.cookie_chmod_failed: error=\"%s\"", exc)
         except (OSError, TypeError) as e:
-            logger.debug("Cookie save failed: %s", e)
+            logger.debug("session.cookie_save_failed: error=\"%s\"", e)
 
     def _restore_cookies(self, email: str) -> bool:
         """Restore cookies from cache. Returns True if cache was valid."""
         try:
             if not self._cookie_path.exists():
-                logger.debug("Cookie file not found at %s", self._cookie_path)
+                logger.debug("session.cookie_not_found: path=%s", self._cookie_path)
                 return False
 
             cache = json.loads(self._cookie_path.read_text(encoding="utf-8"))
@@ -787,11 +796,11 @@ class TracklistSession:
             names = {c.name for c in self._session.cookies}
             valid = "sid" in names and "uid" in names
             if valid:
-                logger.debug("Restored session cookies from %s", self._cookie_path)
+                logger.debug("session.cookie_restored: path=%s", self._cookie_path)
             return valid
 
         except (OSError, json.JSONDecodeError, KeyError, TypeError) as e:
-            logger.debug("Cookie restore failed: %s", e)
+            logger.debug("session.cookie_restore_failed: error=\"%s\"", e)
             return False
 
 
