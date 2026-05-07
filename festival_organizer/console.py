@@ -10,6 +10,7 @@ import difflib
 import re
 import sys
 import threading
+from pathlib import Path
 
 from rich.console import Console
 from rich.live import Live
@@ -457,6 +458,114 @@ def verdict(
     if elapsed_s >= _ELAPSED_THRESHOLD_S:
         text.append("  .  ")
         text.append(f"{elapsed_s:.1f}s", style="dim")
+    return text
+
+
+def organize_verdict(
+    *,
+    status: str,
+    index: int,
+    total: int,
+    source: Path,
+    target: Path | None,
+    output_root: Path,
+    elapsed_s: float,
+    width: int | None = None,
+    detail: str = "",
+) -> Text:
+    """Build a verdict block for organize commands.
+
+    For preview/done: two-line from/to layout with color diff.
+    For up-to-date: single compact line (no detail).
+    For skipped/error: two-line layout with plain detail text.
+    """
+    if status in ("up-to-date",):
+        return verdict(
+            status=status, index=index, total=total,
+            filename=source.name, elapsed_s=elapsed_s, width=width,
+        )
+
+    if status in ("skipped", "error"):
+        return verdict(
+            status=status, index=index, total=total,
+            filename=source.name, detail_line=detail,
+            elapsed_s=elapsed_s, width=width,
+        )
+
+    # preview or done: build the from/to block
+    if status not in _VERDICT_STYLES:
+        raise ValueError(f"Unknown verdict status: {status}")
+    label, style = _VERDICT_STYLES[status]
+
+    iw = len(str(total))
+    counter = f"[{index:{iw}}/{total}] "
+    pad = _VERDICT_BADGE_WIDTH - len(label) - 2
+    if pad < 0:
+        pad = 0
+    badge_width = 2 + len(label) + pad
+
+    from_label = "from: "
+    to_label = "  to: "
+
+    # Build source relative path
+    try:
+        src_rel = source.relative_to(output_root)
+        src_folder = str(src_rel.parent)
+        if src_folder == ".":
+            src_path = "./" + source.name
+        else:
+            src_path = str(src_rel)
+    except ValueError:
+        src_path = source.name
+
+    # Build target relative path
+    assert target is not None
+    try:
+        tgt_rel = target.relative_to(output_root)
+        tgt_folder = str(tgt_rel.parent)
+        tgt_name = target.name
+    except ValueError:
+        tgt_folder = ""
+        tgt_name = target.name
+
+    # Line 1: badge + counter + from: + source path
+    text = Text()
+    text.append("  ")
+    text.append(label, style=style)
+    if pad > 0:
+        text.append(" " * pad)
+    text.append(counter)
+    text.append(from_label, style="dim")
+    text.append(src_path)
+
+    # Line 2: aligned to: + target path with color diff
+    text.append("\n")
+    text.append(" " * (badge_width + len(counter)))
+    text.append(to_label, style="dim")
+
+    # Color the folder if it changed
+    try:
+        src_rel_for_folder = source.relative_to(output_root)
+        src_folder_str = str(src_rel_for_folder.parent)
+    except ValueError:
+        src_folder_str = ""
+
+    if tgt_folder and tgt_folder != ".":
+        if src_folder_str != tgt_folder:
+            text.append(tgt_folder + "/", style="bold orange1")
+        else:
+            text.append(tgt_folder + "/")
+    elif tgt_folder == ".":
+        text.append("./", style="dim italic")
+
+    # Color the filename diff
+    diff_text = _diff_highlight(source.name, tgt_name)
+    text.append_text(diff_text)
+
+    if elapsed_s >= _ELAPSED_THRESHOLD_S:
+        text.append("  .  ")
+        text.append(f"{elapsed_s:.1f}s", style="dim")
+
     return text
 
 
