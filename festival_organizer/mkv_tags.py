@@ -494,7 +494,7 @@ def write_merged_tags(
     added, removed, changed = _count_tag_deltas(existing, new_tags)
     if added or removed or changed:
         logger.debug(
-            "Tags for %s: +%d -%d ~%d",
+            "tags.write: file=%s added=%d removed=%d changed=%d",
             filepath.name, added, removed, changed,
         )
 

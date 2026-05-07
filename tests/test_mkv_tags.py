@@ -731,7 +731,7 @@ def test_write_merged_tags_logs_diff_counts(tmp_path, caplog):
                 ok = write_merged_tags(video, new_tags, existing_root=existing_root)
     assert ok is True
     joined = "\n".join(r.message for r in caplog.records)
-    assert "Tags for test.mkv: +1 -1 ~1" in joined
+    assert "tags.write: file=test.mkv added=1 removed=1 changed=1" in joined
 
 
 def test_write_merged_tags_skips_debug_when_no_changes(tmp_path, caplog):
@@ -760,4 +760,4 @@ def test_write_merged_tags_skips_debug_when_no_changes(tmp_path, caplog):
                 ok = write_merged_tags(video, new_tags, existing_root=existing_root)
     assert ok is True
     joined = "\n".join(r.message for r in caplog.records)
-    assert "Tags for test.mkv" not in joined
+    assert "tags.write" not in joined
