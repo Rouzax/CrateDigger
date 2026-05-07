@@ -19,6 +19,7 @@ from festival_organizer.classifier import classify
 from festival_organizer.config import Config
 from festival_organizer.console import (
     StepProgress,
+    VERDICT_BADGE_WIDTH,
     escape,
     header_panel,
     identify_summary_panel,
@@ -100,7 +101,9 @@ _FRIENDLY_TAG_NAMES = {
 }
 
 
-def _print_tagged_metadata_from_stored(filepath: Path, console: Console) -> None:
+def _print_tagged_metadata_from_stored(
+    filepath: Path, console: Console, *, total: int = 0,
+) -> None:
     """Print per-file tagged metadata from stored tags (post-verdict, under --verbose).
 
     Reads tags with extract_stored_tracklist_info instead of consuming a live
@@ -120,7 +123,9 @@ def _print_tagged_metadata_from_stored(filepath: Path, console: Console) -> None
     if stored.get("stage"):
         parts.append(stored["stage"])
     if parts:
-        console.print(f"  [dim]Tagged: {escape(', '.join(parts))}[/dim]")
+        iw = len(str(total)) if total else 1
+        indent = VERDICT_BADGE_WIDTH + 2 * iw + 4
+        console.print(f"{' ' * indent}[dim]Tagged: {escape(', '.join(parts))}[/dim]")
 
 
 def run_identify(args, config: Config, console: Console | None = None) -> int:
@@ -282,7 +287,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 width=console_width,
             ))
             if info_enabled and stat_key in ("added", "updated"):
-                _print_tagged_metadata_from_stored(filepath, con)
+                _print_tagged_metadata_from_stored(filepath, con, total=len(files))
 
         if aborted:
             spinner.stop()

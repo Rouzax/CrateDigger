@@ -324,7 +324,7 @@ _VERDICT_STYLES = {
     "error":      ("error",       "red"),
 }
 
-_VERDICT_BADGE_WIDTH = 14
+VERDICT_BADGE_WIDTH = 14
 _ELAPSED_THRESHOLD_S = 0.5
 
 
@@ -411,7 +411,7 @@ def verdict(
 
     iw = len(str(total))
     counter = f"[{index:{iw}}/{total}] "
-    pad = _VERDICT_BADGE_WIDTH - len(label) - 2
+    pad = VERDICT_BADGE_WIDTH - len(label) - 2
     if pad < 0:
         pad = 0
     fname_offset = 2 + len(label) + pad + len(counter)
@@ -440,7 +440,7 @@ def verdict(
 
     # Single-line mode (original behaviour)
     if width is not None:
-        budget = max(10, width - _VERDICT_BADGE_WIDTH - len(counter)
+        budget = max(10, width - VERDICT_BADGE_WIDTH - len(counter)
                      - len(" -> ") - len(detail) - 10)
         fname_display = _truncate_preserving_id(filename, budget)
 
@@ -499,7 +499,7 @@ def organize_verdict(
 
     iw = len(str(total))
     counter = f"[{index:{iw}}/{total}] "
-    pad = _VERDICT_BADGE_WIDTH - len(label) - 2
+    pad = VERDICT_BADGE_WIDTH - len(label) - 2
     if pad < 0:
         pad = 0
     badge_width = 2 + len(label) + pad
@@ -821,7 +821,7 @@ def library_sync_summary_line(
     text = Text()
     text.append("  ")
     text.append(label, style=style)
-    pad = _VERDICT_BADGE_WIDTH - len(label) - 2
+    pad = VERDICT_BADGE_WIDTH - len(label) - 2
     if pad > 0:
         text.append(" " * pad)
 
