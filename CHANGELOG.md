@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Identify verdict is now always "updated" when writing to a file. Previously it showed "done" for first-time embeds and "updated" for tag-only changes, which was inconsistent when chapter counts changed.
+
 ## [0.17.5] - 2026-05-08
 
 ### Added
