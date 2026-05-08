@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.4] - 2026-05-08
+
+### Fixed
+
+- Mashup rows with valid cue timestamps are no longer silently dropped during tracklist parsing. Previously, rows with the `con` CSS class were rejected regardless of their cue position, causing gaps in the chapter timeline for mashup-heavy sets.
+
 ## [0.17.3] - 2026-05-07
 
 ### Fixed
