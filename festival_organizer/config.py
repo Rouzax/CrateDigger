@@ -649,8 +649,11 @@ def load_config(
         legacy_json = library_config_dir / "config.json"
         if legacy_json.is_file():
             logger.warning(
-                "config.legacy: path=%s",
+                "Legacy library config detected at %s. "
+                "This file is no longer read. Copy its default_layout value "
+                "into %s (same directory) or delete it.",
                 legacy_json,
+                library_config_dir / "config.toml",
             )
         lib_toml = library_config_dir / "config.toml"
         lib_loaded = _merge_toml(lib_toml)

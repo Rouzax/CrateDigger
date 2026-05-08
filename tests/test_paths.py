@@ -322,7 +322,7 @@ class TestWarnIfDataDirIsSourceCheckout:
             if r.name == "festival_organizer.paths" and r.levelname == "WARNING"
         ]
         assert len(warnings) == 1
-        assert "paths.source_checkout_warning:" in warnings[0].getMessage()
+        assert "CRATEDIGGER_DATA_DIR" in warnings[0].getMessage()
         assert str(checkout) in warnings[0].getMessage()
 
     def test_silent_for_plain_dir(self, tmp_path: Path, caplog, monkeypatch):

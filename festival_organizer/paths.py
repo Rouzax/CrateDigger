@@ -262,7 +262,9 @@ def warn_if_legacy_paths_exist(home: Path | None = None) -> None:
     logger = logging.getLogger("festival_organizer.paths")
     pretty = "\n  - ".join(str(p) for p in legacy)
     logger.warning(
-        "paths.legacy_warning: paths=\"%s\"",
+        "Legacy CrateDigger files detected at old locations:\n  - %s\n"
+        "These are no longer read. Move contents to the new platformdirs "
+        "locations (see docs/configuration.md) or delete them.",
         pretty,
     )
     _write_legacy_stamp()
@@ -355,7 +357,11 @@ def warn_if_data_dir_is_source_checkout() -> None:
     _warned_source_checkout = True
     logger = logging.getLogger("festival_organizer.paths")
     logger.warning(
-        "paths.source_checkout_warning: dir=%s",
+        "Data directory %s looks like a CrateDigger source checkout "
+        "(pyproject.toml found with project name 'cratedigger'). Files "
+        "placed at the repo root may be read as curated user data. "
+        "Set CRATEDIGGER_DATA_DIR to a dedicated user-data folder to "
+        "silence this warning.",
         resolved,
     )
 
