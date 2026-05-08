@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.5] - 2026-05-08
+
+### Added
+
+- Chapters are now supplemented from HTML-parsed mashup main rows when the export API omits them. Mashup transitions that previously created gaps in the chapter timeline (e.g. "Offshore vs. Greyhound vs. Fine Day vs. Touch Me" on the SHM @ Ultra set) now appear as chapters with full per-chapter metadata.
+
 ## [0.17.4] - 2026-05-08
 
 ### Fixed
