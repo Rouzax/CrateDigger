@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-05-08
+
+### Added
+
+- Per-file attribution in log files: each log record now includes `[filename.mkv]` when a file is being processed, making batch-run logs easier to read.
+- `CRATEDIGGER_LOG_LEVEL` environment variable overrides the console log level without affecting the log file. Accepts standard Python level names (`DEBUG`, `INFO`, `WARNING`, `ERROR`). Invalid values fall back to the flag-derived default.
+
+### Fixed
+
+- Third-party loggers (`urllib3`, `PIL`) pinned to INFO so their DEBUG output no longer floods the log file.
+- FAQ sync troubleshooting now points at the log file instead of suggesting `--debug`.
+
 ## [0.18.0] - 2026-05-08
 
 ### Added
