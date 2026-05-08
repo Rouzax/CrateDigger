@@ -86,6 +86,11 @@ def setup_logging(
     logger.handlers.clear()
 
     console_level = logging.DEBUG if debug else logging.INFO if verbose else logging.WARNING
+    env_level = os.environ.get("CRATEDIGGER_LOG_LEVEL", "").strip().upper()
+    if env_level:
+        numeric = getattr(logging, env_level, None)
+        if isinstance(numeric, int):
+            console_level = numeric
     # The logger itself must accept the most verbose level any handler wants.
     logger.setLevel(logging.DEBUG)
 

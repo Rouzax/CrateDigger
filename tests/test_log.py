@@ -99,3 +99,40 @@ def test_pil_logger_pinned_to_info(tmp_path):
         assert logging.getLogger("PIL").level == logging.INFO
     finally:
         ctx.__exit__(None, None, None)
+
+
+def test_env_override_sets_console_level(tmp_path, monkeypatch):
+    """CRATEDIGGER_LOG_LEVEL overrides the flag-derived console level."""
+    monkeypatch.setenv("CRATEDIGGER_LOG_LEVEL", "DEBUG")
+    ctx, mp = _mock_paths(tmp_path)
+    try:
+        _reset_logger()
+        setup_logging(verbose=False, debug=False)
+        assert _console_handler().level == logging.DEBUG
+    finally:
+        ctx.__exit__(None, None, None)
+
+
+def test_env_override_bad_value_falls_back(tmp_path, monkeypatch):
+    """Invalid CRATEDIGGER_LOG_LEVEL falls back to the flag-derived default."""
+    monkeypatch.setenv("CRATEDIGGER_LOG_LEVEL", "BOGUS")
+    ctx, mp = _mock_paths(tmp_path)
+    try:
+        _reset_logger()
+        setup_logging(verbose=True)
+        assert _console_handler().level == logging.INFO
+    finally:
+        ctx.__exit__(None, None, None)
+
+
+def test_env_override_does_not_affect_file_handler(tmp_path, monkeypatch):
+    """CRATEDIGGER_LOG_LEVEL must not change the file handler level."""
+    monkeypatch.setenv("CRATEDIGGER_LOG_LEVEL", "ERROR")
+    ctx, mp = _mock_paths(tmp_path)
+    try:
+        _reset_logger()
+        setup_logging()
+        from tests.test_log_file_handler import _find_file_handler
+        assert _find_file_handler().level == logging.DEBUG
+    finally:
+        ctx.__exit__(None, None, None)
