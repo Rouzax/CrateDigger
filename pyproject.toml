@@ -1,6 +1,6 @@
 [project]
 name = "cratedigger"
-version = "0.17.9"
+version = "0.18.0"
 description = "Festival set & concert library manager"
 requires-python = ">=3.11"
 dependencies = [

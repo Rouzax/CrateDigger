@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-05-08
+
+### Added
+
+- NFO staleness detection: `enrich` now regenerates `.nfo` files when the underlying metadata has changed, not only when the file is missing. Covers changes to artists, genres, stage, edition, title, DJ cache group members, and config display names. The original `dateadded` timestamp is preserved on regeneration so Kodi's "date added" sorting stays correct. Use `--enrich-force` to regenerate unconditionally as before.
+
+### Changed
+
+- `generate_nfo` refactored: XML building extracted into `generate_nfo_xml()` which returns the XML string without writing to disk, enabling in-memory content comparison.
+
 ## [0.17.9] - 2026-05-08
 
 ### Fixed
