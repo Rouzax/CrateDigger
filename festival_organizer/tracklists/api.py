@@ -138,10 +138,13 @@ def _parse_tracks(html) -> list["Track"]:
     Accepts raw HTML or an already-parsed BeautifulSoup so export_tracklist
     can share one parse with the other tracklist-page parsers.
 
-    Only rows with class 'tlpTog' and NOT 'con' and NOT 'tlpSubTog' are
-    included; the page also contains mashup-component sub-rows that do not
-    correspond to chapter atoms. Returns Track objects in page order with
-    start_ms taken from the row's cue_seconds input (float seconds * 1000).
+    Rows with class 'tlpSubTog' are mashup sub-components and always
+    skipped. Rows with class 'con' are concurrent overlays; they are
+    skipped only when their cue is zero (component acappellas/samples
+    with no independent chapter position). Con rows with a non-zero cue
+    are mashup main rows that represent real chapters in the set.
+    Returns Track objects in page order with start_ms taken from the
+    row's cue_seconds input (float seconds * 1000).
     """
     from bs4 import BeautifulSoup
     soup = _to_soup(html)
@@ -150,7 +153,7 @@ def _parse_tracks(html) -> list["Track"]:
         classes = set(row.get("class", []))
         if "tlpTog" not in classes:
             continue
-        if "con" in classes or "tlpSubTog" in classes:
+        if "tlpSubTog" in classes:
             continue
         cue_el = row.select_one("input[id$='_cue_seconds']")
         if cue_el is None:
@@ -158,6 +161,8 @@ def _parse_tracks(html) -> list["Track"]:
         try:
             start_ms = int(float(cue_el.get("value", "0")) * 1000)
         except ValueError:
+            continue
+        if "con" in classes and start_ms == 0:
             continue
         from festival_organizer.normalization import fix_mojibake
         name_meta = row.select_one('meta[itemprop="name"]')
