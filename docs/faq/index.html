@@ -1858,10 +1858,10 @@
 <p>If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds and retries. If the retry also fails, it stops with a message asking you to solve a captcha at <a href="https://www.1001tracklists.com">1001tracklists.com</a> in your browser. After solving the captcha, re-run identify.</p>
 <p>Increase the delay between files to reduce the chance of hitting rate limits: set <code>tracklists.delay_seconds</code> in your config (default: 5 seconds).</p>
 <h3 id="identify-updated-but-enrich-still-shows-old-metadata">identify updated but enrich still shows old metadata</h3>
-<p>After re-running <code>identify</code> to pick up updated tracklist data, run <code>enrich</code> again to apply the new metadata to your NFO files, tags, and posters:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--regenerate
+<p>After re-running <code>identify</code> to pick up updated tracklist data, run <code>enrich</code> again:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
 </code></pre></div>
-<p><code>--regenerate</code> forces enrich to overwrite existing artifacts with the newly embedded data.</p>
+<p>NFO files are automatically regenerated when metadata changes, so no extra flag is needed for tags and NFOs. If you also want to rebuild posters and artwork, which use existence-only checks, add <code>--regenerate</code> to force those files to be overwritten as well.</p>
 <hr />
 <h2 id="organize">organize</h2>
 <h3 id="-dry-run-and-move-cannot-be-used-together">"--dry-run and --move cannot be used together"</h3>

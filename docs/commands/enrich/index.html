@@ -1519,7 +1519,7 @@ genre, year, and artwork references. CrateDigger follows the Kodi musicvideo NFO
 <li>Stage or venue</li>
 <li>References to the thumbnail, poster, and fanart images</li>
 </ul>
-<p><strong>Skipped if:</strong> <code>{name}.nfo</code> already exists (unless <code>--regenerate</code>).</p>
+<p><strong>Skipped if:</strong> an existing NFO already reflects the current metadata. If any of the following have changed since the NFO was last written, it is regenerated automatically: artist, genre, stage, edition, title, or DJ group members. The original <code>dateadded</code> timestamp is preserved when regenerating. Use <code>--regenerate</code> to force regeneration regardless of whether the metadata has changed.</p>
 <h3 id="tags-mkv-metadata-tags">tags: MKV metadata tags</h3>
 <p>Writes structured metadata tags into each MKV file at the file level. These are the
 tags that general media players and tag editors read, covering artist, title, date, and
@@ -1642,11 +1642,12 @@ first, then rerun the full enrich. See the <a href="../../faq/">FAQ</a> for more
 <h2 id="re-running-enrich-after-identify">Re-running enrich after identify</h2>
 <p>If you re-run <a href="../identify/"><code>identify</code></a> on your library to pick up updated tracklist data
 from the 1001Tracklists community, run <code>enrich</code> again afterward to apply the new metadata
-to your NFO files, MKV tags, and posters:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--regenerate
+to your MKV tags and posters:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
 </code></pre></div>
-<p>Updated artist names, genres, stage information, and other tracklist fields are picked up
-from the newly embedded tags.</p>
+<p>NFO files are updated automatically whenever the underlying metadata has changed, so you
+do not need <code>--regenerate</code> for that. Updated artist names, genres, stage information, and
+other tracklist fields are picked up from the newly embedded tags.</p>
 <h2 id="optional-curated-festival-logos">Optional: curated festival logos</h2>
 <p>Festival folder posters use a curated logo if one is available, and fall back to a color
 gradient if not. Adding a logo for a festival upgrades its folder poster from a plain
