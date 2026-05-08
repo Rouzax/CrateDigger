@@ -336,4 +336,4 @@ See [Kodi integration: path mapping](kodi-integration.md#path-mapping) for detai
 
 ### Sync runs but nothing changes in Kodi
 
-CrateDigger only sends a refresh for files that had actual changes in that run. If all artifacts were already up to date (skipped), no sync request is sent. Use `--regenerate` to force re-creation of artifacts, which will trigger a sync. Run with `--debug` to confirm whether the sync pathway fired.
+CrateDigger only sends a refresh for files that had actual changes in that run. If all artifacts were already up to date (skipped), no sync request is sent. Use `--regenerate` to force re-creation of artifacts, which will trigger a sync. Check the log file for that run to confirm whether the sync pathway fired (see [Where are my logs?](#where-are-my-logs) above).
