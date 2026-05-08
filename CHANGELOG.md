@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.6] - 2026-05-08
+
 ### Changed
 
 - Identify verdict is now always "updated" when writing to a file. Previously it showed "done" for first-time embeds and "updated" for tag-only changes, which was inconsistent when chapter counts changed.
+
+### Fixed
+
+- Tracklist page canary no longer warns on pages without `@` in the h1 (aftermovies, compilations, radio shows). Now only flags when the h1 element is entirely missing.
 
 ## [0.17.5] - 2026-05-08
 
