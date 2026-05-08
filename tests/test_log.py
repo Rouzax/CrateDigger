@@ -77,3 +77,25 @@ def test_setup_logging_has_handlers(tmp_path):
         assert any(isinstance(h, logging.handlers.MemoryHandler) for h in handlers)
     finally:
         ctx.__exit__(None, None, None)
+
+
+def test_urllib3_logger_pinned_to_info(tmp_path):
+    """urllib3 DEBUG must not flood the file handler."""
+    ctx, mp = _mock_paths(tmp_path)
+    try:
+        _reset_logger()
+        setup_logging(debug=True)
+        assert logging.getLogger("urllib3").level == logging.INFO
+    finally:
+        ctx.__exit__(None, None, None)
+
+
+def test_pil_logger_pinned_to_info(tmp_path):
+    """PIL DEBUG must not flood the file handler."""
+    ctx, mp = _mock_paths(tmp_path)
+    try:
+        _reset_logger()
+        setup_logging(debug=True)
+        assert logging.getLogger("PIL").level == logging.INFO
+    finally:
+        ctx.__exit__(None, None, None)

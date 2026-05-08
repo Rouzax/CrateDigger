@@ -89,6 +89,10 @@ def setup_logging(
     # The logger itself must accept the most verbose level any handler wants.
     logger.setLevel(logging.DEBUG)
 
+    # Pin noisy third-party loggers so they never flood the file handler.
+    logging.getLogger("urllib3").setLevel(logging.INFO)
+    logging.getLogger("PIL").setLevel(logging.INFO)
+
     if console:
         handler = RichHandler(
             console=console,
