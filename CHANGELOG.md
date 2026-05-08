@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.9] - 2026-05-08
+
+### Fixed
+
+- User-facing guidance warnings (legacy paths, source checkout, legacy library config) reverted to readable prose. Structured key=value format is for diagnostic events; actionable warnings that tell the user what to do need to be human-readable.
+
 ## [0.17.8] - 2026-05-08
 
 ### Changed
