@@ -531,7 +531,8 @@ def test_in_place_layout_switch_migrates_sidecars_and_folder_artefacts(tmp_path)
     )
     # First organize lands the file in artist_flat layout: inbox/<artist>/<stem>.mkv
     subprocess.run(
-        ["cratedigger", "organize", *cfg_arg, "--yes", str(inbox)],
+        ["cratedigger", "organize", *cfg_arg,
+         "--layout", "artist_flat", "--yes", str(inbox)],
         check=True, timeout=300,
     )
 
@@ -755,7 +756,7 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
           pinned name),
       (c) the pinned artist's lowercase key must NOT appear in
           mbid_cache.json: overrides are never promoted into the cache,
-      (d) any unresolved artists are surfaced at WARNING.
+      (d) any unresolved artists are surfaced at INFO.
     """
     from festival_organizer.fanart import (
         ArtistMbidOverrides,
@@ -813,9 +814,9 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
     def resolver(name: str) -> str | None:
         return lookup_mbid(name, cache, overrides=overrides)
 
-    # Step 3: compute + write MBIDs, capturing WARNING logs for assertion (d).
+    # Step 3: compute + write MBIDs, capturing INFO logs for assertion (d).
     caplog.clear()
-    with caplog.at_level(logging.WARNING, logger="festival_organizer.fanart"):
+    with caplog.at_level(logging.INFO, logger="festival_organizer.fanart"):
         new_tags = compute_chapter_mbid_tags(existing, resolver)
         merged: dict[int, dict[str, str]] = {}
         for uid, block in existing.items():
@@ -883,7 +884,7 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
     # checking our tmp home for the expected shape.
     assert (home / "artist_mbids.json").exists()
 
-    # (d) any unresolved artists are logged at WARNING. When every artist
+    # (d) any unresolved artists are logged at INFO. When every artist
     # resolves, there are simply no warnings, which is also valid: so we
     # only assert the shape IF there is at least one empty MBID slot.
     had_miss = any(
@@ -948,7 +949,8 @@ def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
     - No mojibake in chapter titles or tag values.
     - No legacy ARTIST / ARTIST_SLUGS tag names at chapter scope.
     - Every TTV=30 tag references a real ChapterUID.
-    - No empty Name or String in any TTV=30 Simple element (silent blanking bug).
+    - No empty Name or String in any TTV=30 Simple element (silent blanking bug),
+      except MUSICBRAINZ_ARTISTIDS whose alignment contract permits empty values.
     - PERFORMER_NAMES and ARTIST_SLUGS have equal pipe-count when both present.
     - Consecutive ChapterAtoms with ChapterTimeStart are strictly increasing.
     """
@@ -979,7 +981,9 @@ def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
         uid_el = tag.find("Targets/ChapterUID")
         assert uid_el is not None and uid_el.text in atom_uids
 
-    # No-empty invariant: every TTV=30 Simple must have non-empty Name and String.
+    # No-empty invariant: every TTV=30 Simple must have non-empty Name and String,
+    # except MUSICBRAINZ_ARTISTIDS (alignment contract permits empty slots for
+    # single-performer chapters with unresolvable MBIDs).
     for tag in ttv30:
         for simple in tag.findall("Simple"):
             n_el = simple.find("Name")
@@ -987,7 +991,8 @@ def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
             name = (n_el.text if n_el is not None else "") or ""
             value = (s_el.text if s_el is not None else "") or ""
             assert name, f"empty Name in TTV=30 Simple (value={value!r})"
-            assert value, f"empty String in TTV=30 Simple (name={name!r})"
+            if name != "MUSICBRAINZ_ARTISTIDS":
+                assert value, f"empty String in TTV=30 Simple (name={name!r})"
 
     # Pipe-count alignment between PERFORMER_NAMES and ARTIST_SLUGS per chapter.
     for tag in ttv30:
