@@ -50,6 +50,14 @@ def _timestamp_to_seconds(ts: str) -> float:
     return h * 3600 + m * 60 + s + millis / 1000
 
 
+def _ms_to_timestamp(ms: int) -> str:
+    """Convert integer milliseconds to HH:MM:SS.mmm timestamp."""
+    total_seconds, millis = divmod(ms, 1000)
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{millis:03d}"
+
+
 MASHUP_THRESHOLD_SECONDS = 5
 
 
@@ -160,6 +168,53 @@ def trim_chapters_to_duration(
             dropped, duration_s,
         )
     return kept
+
+
+def supplement_chapters_from_tracks(
+    chapters: list[Chapter],
+    tracks: list["Track"],
+    language: str = "eng",
+) -> list[Chapter]:
+    """Add chapters for mashup main rows the export missed.
+
+    The 1001TL export API omits mashup main rows (they appear as w/ lines
+    without timestamps). The HTML page carries valid cue times for these
+    rows, and _parse_tracks() already extracts them with is_mashup=True.
+    This function fills the gaps by creating Chapter entries from those
+    tracks when their position does not collide with an existing chapter.
+    """
+    existing_seconds = {_timestamp_to_seconds(ch.timestamp) for ch in chapters}
+    existing_list = sorted(existing_seconds)
+    seen_ms: set[int] = set()
+    supplemented: list[Chapter] = []
+
+    for track in tracks:
+        if not track.is_mashup or track.start_ms <= 0:
+            continue
+        if track.start_ms in seen_ms:
+            continue
+        seen_ms.add(track.start_ms)
+        track_s = track.start_ms / 1000.0
+        if track_s in existing_seconds:
+            continue
+        if any(abs(track_s - es) < MASHUP_THRESHOLD_SECONDS for es in existing_list):
+            continue
+        supplemented.append(Chapter(
+            timestamp=_ms_to_timestamp(track.start_ms),
+            title=track.raw_text,
+            language=language,
+        ))
+
+    if supplemented:
+        logger.info(
+            "chapters.supplement: count=%d titles=%s",
+            len(supplemented),
+            [ch.timestamp[:8] for ch in supplemented],
+        )
+        merged = list(chapters) + supplemented
+        merged.sort(key=lambda ch: _timestamp_to_seconds(ch.timestamp))
+        return merged
+    return chapters
 
 
 @overload

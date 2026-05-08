@@ -90,6 +90,7 @@ class Track:
     artist_names: list[str] = field(default_factory=list)
     title: str = ""
     label: str = ""
+    is_mashup: bool = False
 
 
 @dataclass
@@ -275,6 +276,7 @@ def _parse_tracks(html) -> list["Track"]:
                 artist_names=names,
                 title=title,
                 label=label,
+                is_mashup="subPosTog" in classes,
             )
         )
     return tracks
