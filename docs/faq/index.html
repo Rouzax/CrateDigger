@@ -1985,7 +1985,7 @@
 </code></pre></div>
 <p>See <a href="../kodi-integration/#path-mapping">Kodi integration: path mapping</a> for details.</p>
 <h3 id="sync-runs-but-nothing-changes-in-kodi">Sync runs but nothing changes in Kodi</h3>
-<p>CrateDigger only sends a refresh for files that had actual changes in that run. If all artifacts were already up to date (skipped), no sync request is sent. Use <code>--regenerate</code> to force re-creation of artifacts, which will trigger a sync. Run with <code>--debug</code> to confirm whether the sync pathway fired.</p>
+<p>CrateDigger only sends a refresh for files that had actual changes in that run. If all artifacts were already up to date (skipped), no sync request is sent. Use <code>--regenerate</code> to force re-creation of artifacts, which will trigger a sync. Check the log file for that run to confirm whether the sync pathway fired (see <a href="#where-are-my-logs">Where are my logs?</a> above).</p>
 
 
 
