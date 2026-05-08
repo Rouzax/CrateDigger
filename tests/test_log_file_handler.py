@@ -233,6 +233,50 @@ def test_memory_handler_capacity_and_flush_level(tmp_path):
         ctx.__exit__(None, None, None)
 
 
+def test_file_attribution_appears_in_log_output(tmp_path):
+    """ContextVar-based file attribution shows up in the file handler output."""
+    from festival_organizer.log import _file_var
+    ctx, mock_paths = _patch_paths(tmp_path)
+    try:
+        _reset_logger()
+        log_path = setup_logging(verbose=False, debug=False, command="organize")
+
+        _file_var.set("my-set-recording.mkv")
+        logger = logging.getLogger("festival_organizer.sample")
+        logger.warning("test-marker")
+
+        for handler in logging.getLogger("festival_organizer").handlers:
+            handler.flush()
+
+        contents = Path(log_path).read_text(encoding="utf-8")
+        assert "[my-set-recording.mkv]" in contents
+    finally:
+        _file_var.set("")
+        ctx.__exit__(None, None, None)
+
+
+def test_file_attribution_empty_when_unset(tmp_path):
+    """When no file context is active, the bracket field is absent."""
+    from festival_organizer.log import _file_var
+    ctx, mock_paths = _patch_paths(tmp_path)
+    try:
+        _reset_logger()
+        _file_var.set("")
+        log_path = setup_logging(verbose=False, debug=False, command="organize")
+
+        logger = logging.getLogger("festival_organizer.sample")
+        logger.warning("no-file-marker")
+
+        for handler in logging.getLogger("festival_organizer").handlers:
+            handler.flush()
+
+        contents = Path(log_path).read_text(encoding="utf-8")
+        assert "no-file-marker" in contents
+        assert "[]" not in contents
+    finally:
+        ctx.__exit__(None, None, None)
+
+
 class TestCleanupOldLogs:
     def test_deletes_old_log_files(self, tmp_path: Path):
         old_file = tmp_path / "identify-2026-04-01T10-00-00-abcd.log"

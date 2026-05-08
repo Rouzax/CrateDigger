@@ -29,6 +29,7 @@ from rich.console import Console
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import Config
+from festival_organizer.log import _file_var
 from festival_organizer.console import (
     StepProgress,
     VERDICT_BADGE_WIDTH,
@@ -232,6 +233,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         # adds no extra wait before the next file starts.
         prev_file_start: float | None = None
         for i, filepath in enumerate(files):
+            _file_var.set(filepath.name)
             if prev_file_start is not None and not preview:
                 remaining = delay - (time.monotonic() - prev_file_start)
                 if remaining > 0:

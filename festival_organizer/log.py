@@ -13,6 +13,7 @@ import logging.handlers
 import os
 import sys
 import time
+from contextvars import ContextVar
 from datetime import datetime
 
 from rich.console import Console
@@ -20,6 +21,15 @@ from rich.highlighter import NullHighlighter
 from rich.logging import RichHandler
 
 from festival_organizer import paths
+
+_file_var: ContextVar[str] = ContextVar("_file_var", default="")
+
+
+class _FileAttributionFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        val = _file_var.get()
+        record.file = f" [{val}]" if val else ""  # type: ignore[attr-defined]
+        return True
 
 
 def _cleanup_old_logs(log_directory: os.PathLike, max_age_days: int = 7) -> None:
@@ -140,8 +150,9 @@ def setup_logging(
             delay=True,
         )
         file_handler.setLevel(logging.DEBUG)
+        file_handler.addFilter(_FileAttributionFilter())
         file_handler.setFormatter(logging.Formatter(
-            "%(asctime)s %(levelname)s %(name)s: %(message)s"
+            "%(asctime)s %(levelname)s %(name)s%(file)s: %(message)s"
         ))
 
         memory_handler = logging.handlers.MemoryHandler(
