@@ -361,3 +361,16 @@ def test_parse_tracks_afrojack_con_mashups_included():
     start_times = {t.start_ms for t in tracks}
     assert 2225000 in start_times, "con row at 2225s (Virtual Riot) was dropped"
     assert 2389000 in start_times, "con row at 2389s was dropped"
+
+
+def test_parse_tracks_sets_is_mashup_on_subPosTog_rows():
+    """Rows with subPosTog class (mashup main rows) get is_mashup=True."""
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    mashups = [t for t in tracks if t.is_mashup]
+    assert mashups, "expected at least one mashup track in Afrojack EDC fixture"
+    non_mashups = [t for t in tracks if not t.is_mashup]
+    assert non_mashups, "expected non-mashup tracks too"
+    for t in mashups:
+        assert "vs." in t.raw_text.lower() or "mashup" in t.raw_text.lower(), (
+            f"mashup track doesn't look like a mashup: {t.raw_text}"
+        )

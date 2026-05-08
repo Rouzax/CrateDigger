@@ -7,6 +7,7 @@ from unittest.mock import patch, MagicMock
 from festival_organizer.tracklists.chapters import (
     normalize_timestamp,
     _timestamp_to_seconds,
+    _ms_to_timestamp,
     parse_tracklist_lines,
     build_chapter_xml,
     build_1001tl_tags,
@@ -14,8 +15,10 @@ from festival_organizer.tracklists.chapters import (
     extract_existing_chapters,
     embed_chapters,
     trim_chapters_to_duration,
+    supplement_chapters_from_tracks,
     Chapter,
 )
+from festival_organizer.tracklists.api import Track
 from festival_organizer.mkv_tags import CLEAR_TAG
 import pytest
 
@@ -598,3 +601,148 @@ def test_build_tags_sets_all_positive_tags():
     assert tags["CRATEDIGGER_ALBUMARTIST_DISPLAY"] == "FISHER"
     assert tags.get("CRATEDIGGER_1001TL_LOCATION") is CLEAR_TAG
     assert tags.get("CRATEDIGGER_1001TL_VENUE") is CLEAR_TAG
+
+
+# --- _ms_to_timestamp ---
+
+def test_ms_to_timestamp_zero():
+    assert _ms_to_timestamp(0) == "00:00:00.000"
+
+
+def test_ms_to_timestamp_seconds():
+    assert _ms_to_timestamp(45000) == "00:00:45.000"
+
+
+def test_ms_to_timestamp_minutes():
+    assert _ms_to_timestamp(225000) == "00:03:45.000"
+
+
+def test_ms_to_timestamp_hours():
+    assert _ms_to_timestamp(5400000) == "01:30:00.000"
+
+
+def test_ms_to_timestamp_with_millis():
+    assert _ms_to_timestamp(1500) == "00:00:01.500"
+
+
+def test_ms_to_timestamp_round_trip():
+    for ms in [0, 1500, 60000, 3634000, 3949000, 4193000]:
+        ts = _ms_to_timestamp(ms)
+        assert int(_timestamp_to_seconds(ts) * 1000) == ms
+
+
+# --- supplement_chapters_from_tracks ---
+
+def test_supplement_adds_missing_mashup_tracks():
+    chapters = _chs(0, 60, 120)
+    tracks = [
+        Track(start_ms=90000, raw_text="A vs. B - Alpha vs. Beta (Mashup)", artist_slugs=[], genres=[], is_mashup=True),
+    ]
+    result = supplement_chapters_from_tracks(chapters, tracks)
+    assert len(result) == 4
+    assert result[2].title == "A vs. B - Alpha vs. Beta (Mashup)"
+    assert result[2].timestamp == "00:01:30.000"
+
+
+def test_supplement_skips_non_mashup_tracks():
+    chapters = _chs(0, 60, 120)
+    tracks = [
+        Track(start_ms=90000, raw_text="Overlay Track", artist_slugs=[], genres=[], is_mashup=False),
+    ]
+    result = supplement_chapters_from_tracks(chapters, tracks)
+    assert len(result) == 3
+
+
+def test_supplement_skips_zero_start_ms():
+    chapters = _chs(60, 120)
+    tracks = [
+        Track(start_ms=0, raw_text="Should Skip", artist_slugs=[], genres=[], is_mashup=True),
+    ]
+    result = supplement_chapters_from_tracks(chapters, tracks)
+    assert len(result) == 2
+
+
+def test_supplement_skips_matching_timestamp():
+    chapters = _chs(0, 60, 120)
+    tracks = [
+        Track(start_ms=60000, raw_text="Already Exists", artist_slugs=[], genres=[], is_mashup=True),
+    ]
+    result = supplement_chapters_from_tracks(chapters, tracks)
+    assert len(result) == 3
+
+
+def test_supplement_skips_within_threshold():
+    chapters = _chs(0, 60, 120)
+    tracks = [
+        Track(start_ms=63000, raw_text="Too Close", artist_slugs=[], genres=[], is_mashup=True),
+    ]
+    result = supplement_chapters_from_tracks(chapters, tracks)
+    assert len(result) == 3
+
+
+def test_supplement_keeps_at_threshold():
+    chapters = _chs(0, 60, 120)
+    tracks = [
+        Track(start_ms=65000, raw_text="At Threshold", artist_slugs=[], genres=[], is_mashup=True),
+    ]
+    result = supplement_chapters_from_tracks(chapters, tracks)
+    assert len(result) == 4
+
+
+def test_supplement_first_track_wins_duplicate_start_ms():
+    chapters = _chs(0, 60)
+    tracks = [
+        Track(start_ms=90000, raw_text="First", artist_slugs=[], genres=[], is_mashup=True),
+        Track(start_ms=90000, raw_text="Second", artist_slugs=[], genres=[], is_mashup=True),
+    ]
+    result = supplement_chapters_from_tracks(chapters, tracks)
+    assert len(result) == 3
+    assert result[2].title == "First"
+
+
+def test_supplement_result_sorted():
+    chapters = _chs(0, 120, 240)
+    tracks = [
+        Track(start_ms=180000, raw_text="Middle", artist_slugs=[], genres=[], is_mashup=True),
+        Track(start_ms=60000, raw_text="Early", artist_slugs=[], genres=[], is_mashup=True),
+    ]
+    result = supplement_chapters_from_tracks(chapters, tracks)
+    times = [_timestamp_to_seconds(ch.timestamp) for ch in result]
+    assert times == sorted(times)
+    assert len(result) == 5
+
+
+def test_supplement_empty_tracks():
+    chapters = _chs(0, 60, 120)
+    result = supplement_chapters_from_tracks(chapters, [])
+    assert result is chapters
+
+
+def test_supplement_respects_language():
+    chapters = _chs(0, 60)
+    tracks = [
+        Track(start_ms=120000, raw_text="Track", artist_slugs=[], genres=[], is_mashup=True),
+    ]
+    result = supplement_chapters_from_tracks(chapters, tracks, language="dut")
+    assert result[2].language == "dut"
+
+
+def test_supplement_logs_when_adding(caplog):
+    chapters = _chs(0, 60)
+    tracks = [
+        Track(start_ms=120000, raw_text="New", artist_slugs=[], genres=[], is_mashup=True),
+    ]
+    with caplog.at_level(logging.INFO, logger="festival_organizer.tracklists.chapters"):
+        supplement_chapters_from_tracks(chapters, tracks)
+    assert "chapters.supplement" in caplog.text
+    assert "count=1" in caplog.text
+
+
+def test_supplement_no_log_when_nothing_added(caplog):
+    chapters = _chs(0, 60, 120)
+    tracks = [
+        Track(start_ms=60000, raw_text="Exists", artist_slugs=[], genres=[], is_mashup=True),
+    ]
+    with caplog.at_level(logging.INFO, logger="festival_organizer.tracklists.chapters"):
+        supplement_chapters_from_tracks(chapters, tracks)
+    assert "chapters.supplement" not in caplog.text
