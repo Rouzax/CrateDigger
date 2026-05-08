@@ -2,27 +2,6 @@
 
 Downloads HD ClearLOGOs and artist backgrounds from fanart.tv.
 Artist images provided by fanart.tv (https://fanart.tv).
-
-Logging:
-    Logger: 'festival_organizer.fanart'
-    Key events:
-        - mbid.lookup (INFO): MusicBrainz artist lookup and result
-        - mbid.found (INFO): MBID resolved for artist
-        - mbid.miss (INFO): No MusicBrainz match for artist
-        - mbid.cache_hit (DEBUG): MBID found in local cache
-        - mbid.cache_negative (DEBUG): Negative cache hit (previously not found)
-        - download.success (INFO): Image downloaded successfully
-        - download.fail (WARNING): Image download failed
-        - fanart.retry (DEBUG): fanart.tv 5xx retry
-        - musicbrainz.retry (DEBUG): MusicBrainz 503 retry
-        - theaudiodb.fallback (DEBUG): Trying TheAudioDB as fallback
-        - theaudiodb.fail (DEBUG): TheAudioDB lookup failed
-        - attribution (INFO): Required attribution notice
-        - mbid.cache_loaded (DEBUG): MBID cache loaded from path with entry count
-        - mbid.cache_not_found (DEBUG): MBID cache file does not exist yet
-        - mbid.overrides_loaded (DEBUG): artist_mbids.json loaded with override count
-        - mbid.overrides_not_found (DEBUG): artist_mbids.json not found at path
-    See docs/logging.md for full guidelines.
 """
 import json
 import logging
@@ -82,16 +61,16 @@ class MBIDCache:
             try:
                 raw = json.loads(self._path.read_text(encoding="utf-8"))
             except (json.JSONDecodeError, OSError) as e:
-                logger.warning("Could not load MBID cache: %s", e)
+                logger.warning("fanart.mbid_cache: status=load_error error=\"%s\"", e)
                 return
             for key, value in raw.items():
                 if isinstance(value, dict) and "ts" in value:
                     self._data[key] = value
                 else:
                     self._data[key] = {"mbid": value, "ts": 0}
-            logger.debug("Loaded MBID cache from %s (%d entries)", self._path, len(self._data))
+            logger.debug("fanart.mbid_cache: status=loaded path=%s entries=%d", self._path, len(self._data))
         else:
-            logger.debug("MBID cache not found at %s", self._path)
+            logger.debug("fanart.mbid_cache: status=not_found path=%s", self._path)
 
     def _save(self) -> None:
         paths.ensure_parent(self._path)
@@ -148,22 +127,22 @@ class ArtistMbidOverrides:
 
     def _load(self) -> None:
         if not self._path.exists():
-            logger.debug("artist_mbids.json not found at %s", self._path)
+            logger.debug("fanart.overrides: status=not_found path=%s", self._path)
             return
         try:
             raw = json.loads(self._path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError) as e:
-            logger.warning("Could not load artist_mbids.json: %s", e)
+            logger.warning("fanart.overrides: status=load_error error=\"%s\"", e)
             return
         if not isinstance(raw, dict):
-            logger.warning("artist_mbids.json must be a JSON object; ignoring")
+            logger.warning("fanart.overrides: status=invalid_format expected=dict")
             return
         self._data = {
             k.lower(): v
             for k, v in raw.items()
             if isinstance(v, str) and v
         }
-        logger.debug("Loaded artist_mbids.json from %s (%d overrides)", self._path, len(self._data))
+        logger.debug("fanart.overrides: status=loaded path=%s entries=%d", self._path, len(self._data))
 
     def get(self, artist_name: str) -> str | None:
         """Return the pinned MBID for an artist, or None when not pinned."""
@@ -203,24 +182,22 @@ def lookup_mbid(
     if overrides is not None:
         pinned = overrides.get(artist_name)
         if pinned:
-            logger.debug("MBID override hit: %s -> %s", artist_name, pinned)
+            logger.debug("fanart.mbid: source=override artist=\"%s\" mbid=%s", artist_name, pinned)
             return pinned
 
     if cache.has(artist_name):
         mbid = cache.get(artist_name)
-        if mbid:
-            logger.debug("MBID cache hit: %s -> %s", artist_name, mbid)
-        else:
-            logger.debug("MBID cache hit (negative): %s", artist_name)
+        if not mbid:
+            logger.debug("fanart.mbid: source=cache_negative artist=\"%s\"", artist_name)
         return mbid
 
-    logger.info("Looking up MusicBrainz ID for: %s", artist_name)
+    logger.info("fanart.mbid_lookup: artist=\"%s\" status=searching", artist_name)
     mbid = _mb_search(artist_name)
     cache.put(artist_name, mbid)
     if mbid:
-        logger.info("Found MBID: %s -> %s", artist_name, mbid)
+        logger.info("fanart.mbid_lookup: artist=\"%s\" status=found mbid=%s", artist_name, mbid)
     else:
-        logger.info("No MusicBrainz match for: %s", artist_name)
+        logger.info("fanart.mbid_lookup: artist=\"%s\" status=not_found", artist_name)
     return mbid
 
 
@@ -253,7 +230,7 @@ def _mb_search(artist_name: str) -> str | None:
             resp = requests.get(url, params=params, headers=headers, timeout=30)
             if resp.status_code == 503:
                 wait = 2 ** attempt + 1
-                logger.debug("MusicBrainz 503, retrying in %ds", wait)
+                logger.debug("fanart.mb_retry: code=503 wait=%ds", wait)
                 time.sleep(wait)
                 continue
             resp.raise_for_status()
@@ -269,31 +246,31 @@ def _mb_search(artist_name: str) -> str | None:
                 and (a.get("type") or "") not in non_artist_types
             ]
             if not candidates:
-                logger.debug("Best match score %d < 80 for '%s'",
+                logger.debug("fanart.mb_search: status=low_score best=%d artist=\"%s\"",
                              artists[0].get("score", 0), artist_name)
                 return None
 
             # Tier 1: exact case match
             for a in candidates:
                 if a.get("name") == artist_name:
-                    logger.debug("MBID exact match: '%s' -> %s", a["name"], a["id"])
+                    logger.debug("fanart.mb_match: artist=\"%s\" mbid=%s tier=exact", a["name"], a["id"])
                     return a["id"]
 
             # Tier 2: case-insensitive match
             query_lower = artist_name.lower()
             for a in candidates:
                 if a.get("name", "").lower() == query_lower:
-                    logger.debug("MBID case-insensitive match: '%s' -> %s", a["name"], a["id"])
+                    logger.debug("fanart.mb_match: artist=\"%s\" mbid=%s tier=case_insensitive", a["name"], a["id"])
                     return a["id"]
 
             # Tier 3: diacritics-insensitive match
             query_stripped = strip_diacritics(artist_name).lower()
             for a in candidates:
                 if strip_diacritics(a.get("name", "")).lower() == query_stripped:
-                    logger.debug("MBID diacritics match: '%s' -> %s", a["name"], a["id"])
+                    logger.debug("fanart.mb_match: artist=\"%s\" mbid=%s tier=diacritics", a["name"], a["id"])
                     return a["id"]
 
-            logger.debug("No name match in %d candidates for '%s'",
+            logger.debug("fanart.mb_search: status=no_match candidates=%d artist=\"%s\"",
                          len(candidates), artist_name)
             return None
         except requests.RequestException as e:
@@ -322,7 +299,7 @@ def fetch_artist_images(
                 return None
             if resp.status_code >= 500:
                 wait = 2 ** attempt + 1
-                logger.debug("fanart.tv %d, retrying in %ds", resp.status_code, wait)
+                logger.debug("fanart.api: source=fanart_tv status=retry code=%d wait=%ds", resp.status_code, wait)
                 time.sleep(wait)
                 continue
             resp.raise_for_status()
@@ -331,7 +308,7 @@ def fetch_artist_images(
             if attempt < 2:
                 wait = 2 ** attempt + 1
                 logger.debug(
-                    "fanart.tv request failed (attempt %d/3): %s; retry in %ds",
+                    "fanart.api: source=fanart_tv status=failed attempt=%d error=\"%s\" wait=%ds",
                     attempt + 1, e, wait,
                 )
                 time.sleep(wait)
@@ -382,7 +359,7 @@ def fetch_audiodb_artist(mbid: str) -> dict | None:
             return artists[0]
         return None
     except requests.RequestException as e:
-        logger.debug("TheAudioDB lookup failed for MBID %s: %s", mbid, e)
+        logger.debug("fanart.audiodb: status=failed mbid=%s error=\"%s\"", mbid, e)
         return None
 
 
@@ -414,10 +391,10 @@ def _download_image(url: str, output_path: Path) -> bool:
         with open(output_path, "wb") as f:
             for chunk in resp.iter_content(chunk_size=8192):
                 f.write(chunk)
-        logger.info("Downloaded: %s -> %s", url, output_path)
+        logger.info("fanart.download: url=%s target=%s", url, output_path)
         return True
     except requests.RequestException as e:
-        logger.warning("Failed to download %s: %s", url, e)
+        logger.warning("fanart.download: url=%s status=failed error=\"%s\"", url, e)
         return False
 
 
@@ -516,7 +493,7 @@ def download_artist_images(
     still_need_bg = need_bg and not bg_ok
 
     if still_need_logo or still_need_bg:
-        logger.debug("Trying TheAudioDB fallback for %s", artist_name)
+        logger.debug("fanart.audiodb_fallback: artist=\"%s\"", artist_name)
         audiodb = fetch_audiodb_artist(mbid)
         if audiodb:
             if still_need_logo:
@@ -540,7 +517,7 @@ def resolve_mbids_aligned(
 
     Resolver is called at most once per unique name. Missing MBIDs become
     empty strings so pipe-joined output stays slot-aligned with `names`.
-    Unresolved names are logged once at WARNING, not once per occurrence.
+    Unresolved names are logged once at INFO, not once per occurrence.
 
     Used by `compute_chapter_mbid_tags` (per-chapter
     CRATEDIGGER_TRACK_PERFORMER_NAMES) and by AlbumArtistMbidsOperation
@@ -554,7 +531,7 @@ def resolve_mbids_aligned(
     for name, mbid in unique.items():
         if mbid is None:
             logger.info(
-                "No MBID resolved for artist: %r (add to %s)",
+                "fanart.mbid_unresolved: artist=\"%s\" overrides_path=%s",
                 name,
                 paths.artist_mbids_file(),
             )

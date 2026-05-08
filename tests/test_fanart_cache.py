@@ -34,7 +34,7 @@ def test_mbid_cache_load_logs_not_found(tmp_path, caplog):
     import logging
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.fanart"):
         MBIDCache(cache_dir=tmp_path / "empty")
-    assert any("MBID cache not found" in msg for msg in caplog.messages)
+    assert any("fanart.mbid_cache: status=not_found" in msg for msg in caplog.messages)
 
 
 def test_mbid_cache_load_logs_entry_count(tmp_path, caplog):
@@ -45,4 +45,4 @@ def test_mbid_cache_load_logs_entry_count(tmp_path, caplog):
     }))
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.fanart"):
         MBIDCache(cache_dir=tmp_path)
-    assert any("Loaded MBID cache from" in msg and "1 entr" in msg for msg in caplog.messages)
+    assert any("fanart.mbid_cache: status=loaded" in msg and "entries=1" in msg for msg in caplog.messages)

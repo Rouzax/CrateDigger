@@ -390,9 +390,10 @@ def test_fetch_artist_images_logs_request_exception_retry(mock_get, _sleep, capl
     with caplog.at_level(_logging.DEBUG, logger="festival_organizer.fanart"):
         fetch_artist_images("abc-123", "project-key")
     joined = "\n".join(r.message for r in caplog.records)
-    assert "fanart.tv request failed" in joined
+    assert "fanart.api:" in joined
+    assert "status=failed" in joined
     assert "conn reset" in joined
-    assert "attempt 1/3" in joined
+    assert "attempt=1" in joined
 
 
 # --- FanartOperation tests ---

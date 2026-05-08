@@ -38,7 +38,7 @@ def test_malformed_json_does_not_raise(tmp_path, caplog):
     (tmp_path / "artist_mbids.json").write_text("{not json")
     overrides = ArtistMbidOverrides(overrides_dir=tmp_path)
     assert overrides.get("Afrojack") is None
-    assert any("artist_mbids.json" in rec.message.lower() for rec in caplog.records)
+    assert any("fanart.overrides: status=load_error" in rec.message for rec in caplog.records)
 
 
 def test_non_dict_top_level_does_not_raise(tmp_path):
@@ -76,7 +76,7 @@ def test_overrides_load_logs_not_found(tmp_path, caplog):
     import logging
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.fanart"):
         ArtistMbidOverrides(overrides_dir=tmp_path)
-    assert any("artist_mbids.json not found" in msg for msg in caplog.messages)
+    assert any("fanart.overrides: status=not_found" in msg for msg in caplog.messages)
 
 
 def test_overrides_load_logs_count(tmp_path, caplog):
@@ -87,4 +87,4 @@ def test_overrides_load_logs_count(tmp_path, caplog):
     }))
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.fanart"):
         ArtistMbidOverrides(overrides_dir=tmp_path)
-    assert any("Loaded artist_mbids.json from" in msg and "1 override" in msg for msg in caplog.messages)
+    assert any("fanart.overrides: status=loaded" in msg and "entries=1" in msg for msg in caplog.messages)

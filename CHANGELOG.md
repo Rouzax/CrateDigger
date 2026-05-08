@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.7] - 2026-05-08
+
+### Changed
+
+- All debug logging in `fanart.py` now uses structured `fanart.*: key=value` format, completing the structured logging migration started in 0.15.1.
+- Removed per-artist MBID cache hit log lines. Positive cache hits produced thousands of lines per run with no diagnostic value. Negative hits and override hits are preserved.
+- MBIDCache and ArtistMbidOverrides are now shared across FanartOperation, ChapterArtistMbidsOperation, and AlbumArtistMbidsOperation, eliminating hundreds of redundant cache loads per run.
+- Pipeline runner now emits a per-file operation summary (`enrich.file: file=... nfo=skipped art=done ...`) so the debug log can answer "what happened to each file?"
+- Migrated remaining freeform debug messages in `operations.py` and `cli.py` (Kodi sync, enrich artwork/poster events) to structured format.
+
 ## [0.17.6] - 2026-05-08
 
 ### Changed

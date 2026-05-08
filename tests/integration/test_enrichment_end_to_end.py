@@ -892,12 +892,12 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
         for block in after.values()
     )
     if had_miss:
-        warning_messages = [
-            r.getMessage() for r in caplog.records if r.levelno == logging.WARNING
+        info_messages = [
+            r.getMessage() for r in caplog.records if r.levelno == logging.INFO
         ]
-        assert any("No MBID resolved for artist" in m for m in warning_messages), (
-            "expected a WARNING for unresolved artists, got: "
-            f"{warning_messages!r}"
+        assert any("fanart.mbid_unresolved:" in m for m in info_messages), (
+            "expected an INFO for unresolved artists, got: "
+            f"{info_messages!r}"
         )
 
 

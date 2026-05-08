@@ -1,12 +1,15 @@
 """Pipeline runner: executes operations per file with live progress."""
 from __future__ import annotations
 
+import logging
 import time
 from pathlib import Path
 
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import Operation, OperationResult
 from festival_organizer.progress import OrganizeContractProgress, EnrichContractProgress, OrganizeEnrichProgress
+
+logger = logging.getLogger(__name__)
 
 
 def run_pipeline(
@@ -57,6 +60,15 @@ def run_pipeline(
             file_results.append(result)
 
         elapsed = time.perf_counter() - file_start_time
+
+        has_organize = any(r.name == "organize" for r in file_results)
+        prefix = "organize.file" if has_organize and not any(
+            r.name != "organize" for r in file_results
+        ) else "enrich.file"
+        parts = " ".join(
+            f"{r.display_name or r.name}={r.status}" for r in file_results
+        )
+        logger.debug("%s: file=%s %s", prefix, current_path.name, parts)
 
         if is_dual:
             # Dual mode: emit organize verdict, then enrich verdict

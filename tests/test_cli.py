@@ -338,7 +338,7 @@ def test_run_kodi_sync_empty_logs_debug_and_skips_sync(tmp_path, caplog):
 
     mock_sync.assert_not_called()
     assert any(
-        "no kodi-affecting changes" in rec.getMessage()
+        "kodi.sync: status=skipped" in rec.getMessage()
         for rec in caplog.records
         if rec.name == "festival_organizer.kodi"
     )

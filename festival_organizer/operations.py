@@ -368,7 +368,7 @@ class AlbumPosterOperation(Operation):
             if age_days <= effective_ttl:
                 return cached
             cached.unlink()
-            logger.debug("Stale artwork cache (%d days, ttl %.1f): %s",
+            logger.debug("enrich.artwork_cache: status=stale age_days=%d ttl=%.1f file=%s",
                          int(age_days), effective_ttl, cached.name)
         try:
             resp = requests.get(url, timeout=15)
@@ -386,7 +386,7 @@ class AlbumPosterOperation(Operation):
             logger.info("Downloaded artwork: %s -> %s", url, cached.name)
             return cached
         except (requests.RequestException, OSError) as e:
-            logger.debug("Artwork download failed: %s", e)
+            logger.debug("enrich.artwork_download: status=failed error=\"%s\"", e)
             return None
 
     def _download_dj_artwork(self, url: str, artist: str) -> Path | None:
@@ -401,7 +401,7 @@ class AlbumPosterOperation(Operation):
             if age_days <= effective_ttl:
                 return cached
             cached.unlink()
-            logger.debug("Stale DJ artwork cache (%d days, ttl %.1f): %s",
+            logger.debug("enrich.dj_artwork_cache: status=stale age_days=%d ttl=%.1f artist=%s",
                          int(age_days), effective_ttl, artist)
         try:
             resp = requests.get(url, timeout=15)
@@ -417,16 +417,16 @@ class AlbumPosterOperation(Operation):
                     left = (w - side) // 2
                     top = (h - side) // 2
                     img = img.crop((left, top, left + side, top + side))
-                    logger.debug("DJ artwork: center-cropped %dx%d -> %dx%d", w, h, side, side)
+                    logger.debug("enrich.dj_artwork: action=crop from=%dx%d to=%dx%d", w, h, side, side)
                 max_side = 550
                 if img.width > max_side:
                     img = img.resize((max_side, max_side), Image.LANCZOS)
-                    logger.debug("DJ artwork: resized -> %dx%d", max_side, max_side)
+                    logger.debug("enrich.dj_artwork: action=resize to=%dx%d", max_side, max_side)
                 img.save(cached, "JPEG", quality=90)
             logger.info("Downloaded DJ artwork: %s -> %s", artist, cached)
             return cached
         except (requests.RequestException, OSError) as e:
-            logger.debug("DJ artwork download failed for %s: %s", artist, e)
+            logger.debug("enrich.dj_artwork_download: status=failed artist=%s error=\"%s\"", artist, e)
             return None
 
     def _find_curated_logo(self, place: str, edition: str = "") -> Path | None:
@@ -469,7 +469,7 @@ class AlbumPosterOperation(Operation):
         for video in folder.iterdir():
             if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
                 mf = analyse_file(video, folder, self.config)
-                logger.debug("Album poster: dj_artwork_url=%s", mf.dj_artwork_url or "(empty)")
+                logger.debug("enrich.dj_artwork: url=%s", mf.dj_artwork_url or "(empty)")
                 if mf.dj_artwork_url and mf.artist:
                     result = self._download_dj_artwork(mf.dj_artwork_url, mf.artist)
                     if result:
@@ -502,7 +502,7 @@ class AlbumPosterOperation(Operation):
         try:
             email, password = self.config.tracklists_credentials
             if not email or not password:
-                logger.debug("No 1001TL credentials, skipping DJ artwork fallback")
+                logger.debug("enrich.dj_artwork_fallback: status=skipped reason=no_credentials")
                 return None
 
             from festival_organizer.tracklists.api import TracklistSession, _extract_dj_slugs
@@ -517,18 +517,18 @@ class AlbumPosterOperation(Operation):
             )
             slugs = _extract_dj_slugs(resp.text)
             if not slugs:
-                logger.debug("No DJ slugs found on tracklist page")
+                logger.debug("enrich.dj_artwork_fallback: status=skipped reason=no_slugs")
                 return None
 
             profile = api._fetch_dj_profile(slugs[0])
             dj_artwork_url = profile["artwork_url"]
             if not dj_artwork_url:
-                logger.debug("No DJ artwork found for slug %s", slugs[0])
+                logger.debug("enrich.dj_artwork_fallback: status=skipped reason=no_artwork slug=%s", slugs[0])
                 return None
 
             return self._download_dj_artwork(dj_artwork_url, artist)
         except Exception as e:
-            logger.debug("DJ artwork fallback failed: %s", e)
+            logger.debug("enrich.dj_artwork_fallback: status=failed error=\"%s\"", e)
             return None
 
     def _resolve_background(self, priority: list[str], folder: Path,
@@ -546,7 +546,7 @@ class AlbumPosterOperation(Operation):
             if bg:
                 logger.info("Album poster: using %s", source)
                 return bg, source
-            logger.debug("Album poster: %s not available", source)
+            logger.debug("enrich.album_poster: source=%s status=unavailable", source)
         if tried_curated and media_file.place:
             display = self.config.get_place_display(
                 media_file.place, media_file.edition)
@@ -601,7 +601,7 @@ class AlbumPosterOperation(Operation):
 
             # Determine poster type from layout template
             poster_type = self._get_folder_poster_type(mf)
-            logger.debug("Album poster: type=%s (from layout template)", poster_type)
+            logger.debug("enrich.album_poster: type=%s source=layout_template", poster_type)
 
             # Walk configurable background priority chain
             priority = self._get_priority_chain_for_poster_type(poster_type)
@@ -677,13 +677,13 @@ class FanartOperation(Operation):
     name = "fanart"
 
     def __init__(self, config: Config, library_root: Path, force: bool = False,
-                 ttl_days: int = 90):
+                 ttl_days: int = 90, mbid_cache=None):
         self.config = config
         self.library_root = library_root
         self.force = force
         self._ttl_days = ttl_days
         self._completed_artists: set[str] = set()
-        self._cache = None
+        self._cache = mbid_cache
 
     def _get_cache(self):
         if self._cache is None:
@@ -860,11 +860,12 @@ class ChapterArtistMbidsOperation(Operation):
     name = "chapter_artist_mbids"
     display_name = "chapter_artist_mbids"
 
-    def __init__(self, config=None, force: bool = False):
+    def __init__(self, config=None, force: bool = False,
+                 mbid_cache=None, mbid_overrides=None):
         self.config = config
         self.force = force
-        self._cache = None
-        self._overrides = None
+        self._cache = mbid_cache
+        self._overrides = mbid_overrides
 
     def _get_cache(self):
         if self._cache is None:
@@ -946,11 +947,12 @@ class AlbumArtistMbidsOperation(Operation):
     name = "album_artist_mbids"
     display_name = "album_artist_mbids"
 
-    def __init__(self, config=None, force: bool = False):
+    def __init__(self, config=None, force: bool = False,
+                 mbid_cache=None, mbid_overrides=None):
         self.config = config
         self.force = force
-        self._cache = None
-        self._overrides = None
+        self._cache = mbid_cache
+        self._overrides = mbid_overrides
 
     def _get_cache(self):
         if self._cache is None:

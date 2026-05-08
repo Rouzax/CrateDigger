@@ -860,13 +860,20 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # Shared operation instances (deduplicate across files)
     fanart_op = None
     album_poster_op = None
+    mbid_cache = None
+    mbid_overrides = None
     if args.command in ("enrich", "organize"):
+        from festival_organizer.fanart import MBIDCache, ArtistMbidOverrides
+        mbid_ttl = config.cache_ttl.get("mbid_days", 90)
+        mbid_cache = MBIDCache(ttl_days=mbid_ttl)
+        mbid_overrides = ArtistMbidOverrides()
+
         should_fanart = (args.command == "enrich" and (not only or "fanart" in only)) or \
                         (args.command == "organize" and getattr(args, "enrich", False))
         if should_fanart and config.fanart_enabled and config.fanart_project_api_key:
             images_ttl = config.cache_ttl.get("images_days", 90)
             fanart_op = FanartOperation(config, library_root=output, force=force,
-                                        ttl_days=images_ttl)
+                                        ttl_days=images_ttl, mbid_cache=mbid_cache)
         should_album_poster = (args.command == "enrich" and (not only or "posters" in only)) or \
                               (args.command == "organize" and getattr(args, "enrich", False))
         if should_album_poster:
@@ -941,8 +948,10 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 if album_poster_op:
                     ops.append(album_poster_op)
                 ops.append(TagsOperation())
-                ops.append(ChapterArtistMbidsOperation(config=config, force=force))
-                ops.append(AlbumArtistMbidsOperation(config=config, force=force))
+                ops.append(ChapterArtistMbidsOperation(config=config, force=force,
+                                                       mbid_cache=mbid_cache, mbid_overrides=mbid_overrides))
+                ops.append(AlbumArtistMbidsOperation(config=config, force=force,
+                                                     mbid_cache=mbid_cache, mbid_overrides=mbid_overrides))
 
         elif args.command == "enrich":
             if not only or "nfo" in only:
@@ -958,9 +967,11 @@ def _run_command(args: types.SimpleNamespace) -> int:
             if not only or "tags" in only:
                 ops.append(TagsOperation(force=force))
             if not only or "chapter_artist_mbids" in only:
-                ops.append(ChapterArtistMbidsOperation(config=config, force=force))
+                ops.append(ChapterArtistMbidsOperation(config=config, force=force,
+                                                       mbid_cache=mbid_cache, mbid_overrides=mbid_overrides))
             if not only or "album_artist_mbids" in only:
-                ops.append(AlbumArtistMbidsOperation(config=config, force=force))
+                ops.append(AlbumArtistMbidsOperation(config=config, force=force,
+                                                     mbid_cache=mbid_cache, mbid_overrides=mbid_overrides))
 
         pipeline_files.append((fp, mf, ops))
 
@@ -1104,8 +1115,7 @@ def _run_kodi_sync(
 
     if not changed_paths:
         kodi_logger.debug(
-            "Kodi sync: no kodi-affecting changes (%d files processed, "
-            "all skipped or non-relevant); nothing to refresh",
+            "kodi.sync: status=skipped files=%d reason=no_changes",
             len(pipeline_files),
         )
         return
