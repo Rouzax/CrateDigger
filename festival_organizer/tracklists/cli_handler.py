@@ -54,6 +54,7 @@ from festival_organizer.tracklists.source_cache import SourceCache
 from festival_organizer.tracklists.chapters import (
     build_1001tl_tags,
     parse_tracklist_lines,
+    supplement_chapters_from_tracks,
     extract_existing_chapters,
     extract_stored_tracklist_info,
     chapters_are_identical,
@@ -566,6 +567,7 @@ def _fetch_and_embed(
 
     try:
         chapters = parse_tracklist_lines(export.lines, language=language)
+        chapters = supplement_chapters_from_tracks(chapters, export.tracks, language=language)
         chapters = trim_chapters_to_duration(chapters, duration_seconds)
     except ValueError:
         logger.debug("identify.skip: file=%s reason=parse_failed", filepath.name)

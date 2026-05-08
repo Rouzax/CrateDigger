@@ -6,6 +6,7 @@ Logging:
     Logger: 'festival_organizer.tracklists.chapters'
     Key events:
         - chapters.drop_mashup (INFO): Mashup chapter dropped during parsing
+        - chapters.supplement (INFO): Chapters supplemented from HTML-parsed mashup tracks
         - chapters.trim (INFO): Chapters trimmed to video duration
         - chapters.extract_failed (DEBUG): Chapter extraction from MKV failed
         - chapters.embed_failed (DEBUG): Chapter or tag embedding failed
