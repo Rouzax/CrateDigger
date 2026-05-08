@@ -147,6 +147,7 @@ def _parse_tracks(html) -> list["Track"]:
     row's cue_seconds input (float seconds * 1000).
     """
     from bs4 import BeautifulSoup
+    from festival_organizer.normalization import fix_mojibake
     soup = _to_soup(html)
     tracks: list[Track] = []
     for row in soup.select("div.tlpItem"):
@@ -162,9 +163,9 @@ def _parse_tracks(html) -> list["Track"]:
             start_ms = int(float(cue_el.get("value", "0")) * 1000)
         except ValueError:
             continue
+        # con at cue=0 are component overlays (acappellas, samples), not chapters.
         if "con" in classes and start_ms == 0:
             continue
-        from festival_organizer.normalization import fix_mojibake
         name_meta = row.select_one('meta[itemprop="name"]')
         raw_text = fix_mojibake(name_meta.get("content", "")) if name_meta else ""
         genres = [
