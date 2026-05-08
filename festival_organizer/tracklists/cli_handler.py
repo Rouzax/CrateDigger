@@ -217,7 +217,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         source_name_set |= {n.lower() for n in config.known_places}
 
         # Process files
-        stats = {"added": 0, "updated": 0, "up_to_date": 0, "skipped": 0,
+        stats = {"updated": 0, "up_to_date": 0, "skipped": 0,
                  "error": 0, "previewed": 0}
         tagged_festivals: dict[str, int] = {}
         unmatched_files: list[str] = []
@@ -277,7 +277,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
             elapsed = time.perf_counter() - file_start
             stats[stat_key] = stats.get(stat_key, 0) + 1
 
-            if stat_key in ("added", "updated", "up_to_date", "previewed"):
+            if stat_key in ("updated", "up_to_date", "previewed"):
                 tagged_count += 1
                 stored = extract_stored_tracklist_info(filepath)
                 fest = stored.get("festival", "") if stored else ""
@@ -298,7 +298,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 elapsed_s=elapsed,
                 width=console_width,
             ))
-            if info_enabled and stat_key in ("added", "updated"):
+            if info_enabled and stat_key == "updated":
                 _print_tagged_metadata_from_stored(filepath, con, total=len(files))
 
         if aborted:
@@ -716,7 +716,7 @@ def _fetch_and_embed(
         )
     success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=effective_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
     if success:
-        return ("added", "done", f"{export.title} . {len(chapters)} chapters")
+        return ("updated", "updated", f"{export.title} . {len(chapters)} chapters")
     return ("error", "error", "mkvpropedit failed")
 
 
