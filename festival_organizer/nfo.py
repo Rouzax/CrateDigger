@@ -134,7 +134,7 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
     try:
         nfo_path.write_text(xml_str.strip() + "\n", encoding="utf-8")
     except OSError as e:
-        logger.warning("NFO write failed for %s: %s", nfo_path, e)
+        logger.warning("nfo.write: status=failed file=%s error=\"%s\"", nfo_path, e)
         raise
     return nfo_path
 

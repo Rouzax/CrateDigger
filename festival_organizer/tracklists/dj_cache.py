@@ -154,10 +154,10 @@ class DjCache:
             try:
                 entry = fetcher(slug)
             except Exception as exc:
-                logger.warning("Artist fetch failed for slug '%s': %s", slug, exc)
+                logger.warning("dj_cache.fetch: status=failed slug=%s error=\"%s\"", slug, exc)
                 continue
             if entry is None:
-                logger.warning("Artist fetch returned no data for slug '%s'", slug)
+                logger.warning("dj_cache.fetch: status=empty slug=%s", slug)
                 continue
             self.put(slug, entry)
             resolved[slug] = entry

@@ -225,7 +225,7 @@ def _extract_mediainfo(filepath: Path) -> dict:
         _override_title_from_mkv_tags(filepath, meta)
         return meta
     except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as e:
-        logger.debug("mediainfo failed for %s: %s", filepath, e)
+        logger.debug("metadata.mediainfo: status=failed file=%s error=\"%s\"", filepath, e)
         return {}
 
 
@@ -281,7 +281,7 @@ def _extract_ffprobe(filepath: Path) -> dict:
 
         return _fix_string_values(result_dict)
     except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as e:
-        logger.debug("ffprobe failed for %s: %s", filepath, e)
+        logger.debug("metadata.ffprobe: status=failed file=%s error=\"%s\"", filepath, e)
         return {}
 
 

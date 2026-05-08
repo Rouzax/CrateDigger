@@ -381,6 +381,6 @@ def test_generate_nfo_logs_warning_on_write_failure(tmp_path, caplog):
             except OSError:
                 pass  # expected — re-raised
     joined = "\n".join(r.message for r in caplog.records)
-    assert "NFO write failed" in joined
+    assert "nfo.write: status=failed" in joined
     assert "disk full" in joined
     assert "test.nfo" in joined

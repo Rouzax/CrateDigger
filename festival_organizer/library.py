@@ -90,18 +90,20 @@ def migrate_folder_artefacts(
                 if tgt.exists():
                     src.unlink()
                     logger.debug(
-                        "Folder artefact %s already present at target; "
-                        "removed source copy", name
+                        "library.artefact: status=skipped file=%s reason=exists",
+                        name,
                     )
                 else:
                     tgt_dir.mkdir(parents=True, exist_ok=True)
                     src.rename(tgt)
                     logger.debug(
-                        "Folder artefact moved: %s -> %s", src, tgt
+                        "library.artefact: status=moved source=%s target=%s",
+                        src, tgt,
                     )
             except OSError as exc:
                 logger.warning(
-                    "Could not migrate folder artefact %s: %s", src, exc
+                    "library.artefact: status=failed source=%s error=\"%s\"",
+                    src, exc,
                 )
 
 
@@ -200,9 +202,9 @@ def cleanup_empty_dirs(root: Path) -> None:
         try:
             _try_cleanup_dir(dirpath)
         except PermissionError as exc:
-            logger.warning("Cannot clean up %s: %s", dirpath, exc)
+            logger.warning("library.cleanup: status=permission_error dir=%s error=\"%s\"", dirpath, exc)
         except OSError as exc:
-            logger.warning("Error cleaning up %s: %s", dirpath, exc)
+            logger.warning("library.cleanup: status=failed dir=%s error=\"%s\"", dirpath, exc)
 
 
 def _try_cleanup_dir(dirpath: Path) -> None:
@@ -224,7 +226,7 @@ def _try_cleanup_dir(dirpath: Path) -> None:
     ]
     if unknown_hidden:
         logger.warning(
-            "Keeping %s: contains unknown hidden file(s): %s",
+            "library.cleanup: status=kept dir=%s reason=unknown_hidden files=%s",
             dirpath,
             ", ".join(sorted(unknown_hidden)),
         )
@@ -250,7 +252,7 @@ def _try_cleanup_dir(dirpath: Path) -> None:
     if remaining:
         remaining_names = [e.name for e in remaining]
         logger.debug(
-            "Not removing %s: still contains %s",
+            "library.cleanup: status=not_empty dir=%s entries=%s",
             dirpath,
             ", ".join(sorted(remaining_names)),
         )
@@ -258,4 +260,4 @@ def _try_cleanup_dir(dirpath: Path) -> None:
 
     # Directory is truly empty — remove it.
     dirpath.rmdir()
-    logger.debug("Removed empty directory: %s", dirpath)
+    logger.debug("library.cleanup: status=removed dir=%s", dirpath)

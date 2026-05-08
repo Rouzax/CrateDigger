@@ -145,7 +145,7 @@ def setup_logging(
     except OSError as exc:
         log_path = None
         logger.warning(
-            "Log file disabled (%s): %s",
+            "log.file_handler: status=disabled dir=%s error=\"%s\"",
             paths.log_dir(), exc,
         )
 

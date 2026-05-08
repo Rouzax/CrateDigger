@@ -101,7 +101,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
 
     if not target_path.exists() or target_path.suffix.lower() not in MATROSKA_EXTS:
         logger.warning(
-            "embed_tags skipped: target %s missing or not a Matroska file",
+            "embed_tags.skip: file=%s reason=not_matroska",
             target_path,
         )
         return "error"

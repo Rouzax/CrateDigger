@@ -216,6 +216,6 @@ def test_execute_actions_logs_warning_on_oserror(tmp_path, caplog):
     assert result[0].status == "error"
     assert "permission denied" in result[0].error
     joined = "\n".join(r.message for r in caplog.records)
-    assert "File action failed" in joined
+    assert "executor.action: status=failed" in joined
     assert "permission denied" in joined
     assert "test.mkv" in joined

@@ -193,12 +193,11 @@ def _migrate_legacy_paths() -> None:
             new_file.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(legacy_file, new_file)
             logger.info(
-                "Migrated festivals.json to places.json "
-                "(legacy file kept for backward compatibility)"
+                "paths.migrate: source=festivals.json target=places.json status=ok"
             )
         except OSError as e:
             logger.warning(
-                "Could not migrate festivals.json to places.json: %s", e
+                "paths.migrate: source=festivals.json target=places.json status=failed error=\"%s\"", e
             )
 
     legacy_dir = festivals_logo_dir()
@@ -216,18 +215,17 @@ def _migrate_legacy_paths() -> None:
                     shutil.copytree(entry, target)
                 except OSError as e:
                     logger.warning(
-                        "Could not migrate curated logo directory %s: %s",
+                        "paths.migrate: source=%s status=failed error=\"%s\"",
                         entry, e,
                     )
                     continue
                 logger.info(
-                    "Migrated curated logos: "
-                    ".cratedigger/festivals/%s/ to .cratedigger/places/%s/",
+                    "paths.migrate: type=curated_logos source=%s target=%s status=ok",
                     entry.name, entry.name,
                 )
         except OSError as e:
             logger.warning(
-                "Could not migrate curated logo directories: %s", e
+                "paths.migrate: type=curated_logos status=failed error=\"%s\"", e
             )
 
 
@@ -264,9 +262,7 @@ def warn_if_legacy_paths_exist(home: Path | None = None) -> None:
     logger = logging.getLogger("festival_organizer.paths")
     pretty = "\n  - ".join(str(p) for p in legacy)
     logger.warning(
-        "Legacy CrateDigger files detected at old locations:\n  - %s\n"
-        "These are no longer read. Move contents to the new platformdirs "
-        "locations (see docs/configuration.md) or delete them.",
+        "paths.legacy_warning: paths=\"%s\"",
         pretty,
     )
     _write_legacy_stamp()
@@ -311,7 +307,7 @@ def _write_legacy_stamp() -> None:
                 pass
             raise
     except OSError as e:
-        logger.debug("Failed to write legacy-warning stamp at %s: %s", target, e)
+        logger.debug("paths.legacy_stamp: status=failed path=%s error=\"%s\"", target, e)
 
 
 def _is_source_checkout_dir(path: Path) -> bool:
@@ -359,11 +355,7 @@ def warn_if_data_dir_is_source_checkout() -> None:
     _warned_source_checkout = True
     logger = logging.getLogger("festival_organizer.paths")
     logger.warning(
-        "Data directory %s looks like a CrateDigger source checkout "
-        "(pyproject.toml found with project name 'cratedigger'). Files "
-        "placed at the repo root may be read as curated user data. "
-        "Set CRATEDIGGER_DATA_DIR to a dedicated user-data folder to "
-        "silence this warning.",
+        "paths.source_checkout_warning: dir=%s",
         resolved,
     )
 

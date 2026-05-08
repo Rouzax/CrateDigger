@@ -323,7 +323,7 @@ class TracklistSession:
         self._canary_seen.add(key)
         extras_str = " ".join(extras)
         logger.warning(
-            "Scraping canary: %s missing selectors %s at %s %s",
+            "identify.canary.warning: page_type=%s missing=%s url=%s detail=%s",
             page_type, missing, url, extras_str,
         )
 

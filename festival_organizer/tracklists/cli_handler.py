@@ -694,7 +694,7 @@ def _fetch_and_embed(
             )
             if success:
                 return ("updated", "updated", f"{export.title} . {reason} . {len(chapters)} chapters")
-            logger.warning("Failed to re-tag %s", filepath)
+            logger.warning("identify.retag: status=failed file=%s", filepath)
             return ("error", "error", "mkvpropedit failed")
         else:
             logger.debug("identify.chapters_no_stored: file=%s existing=%d", filepath.name, len(existing) if existing else 0)

@@ -478,7 +478,7 @@ def test_search_fires_canary_on_missing_skeleton(caplog):
                              logger="festival_organizer.tracklists.api"):
             results = session.search("anything")
     assert results == []
-    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    canary_warnings = [r for r in caplog.records if "identify.canary.warning:" in r.message]
     assert len(canary_warnings) == 1
     msg = canary_warnings[0].message
     assert "search results" in msg
@@ -495,7 +495,7 @@ def test_fetch_source_info_fires_canary_on_broken_page(caplog):
         with caplog.at_level(logging.WARNING,
                              logger="festival_organizer.tracklists.api"):
             session.fetch_source_info("123", "some-venue")
-    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    canary_warnings = [r for r in caplog.records if "identify.canary.warning:" in r.message]
     assert len(canary_warnings) == 1
     msg = canary_warnings[0].message
     assert "source info" in msg
@@ -512,7 +512,7 @@ def test_fetch_dj_profile_fires_canary_on_broken_page(caplog):
         with caplog.at_level(logging.WARNING,
                              logger="festival_organizer.tracklists.api"):
             session._fetch_dj_profile("someone")
-    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    canary_warnings = [r for r in caplog.records if "identify.canary.warning:" in r.message]
     assert len(canary_warnings) == 1
     msg = canary_warnings[0].message
     assert "DJ profile" in msg
@@ -532,7 +532,7 @@ def test_search_does_not_fire_canary_on_zero_hits_with_skeleton(caplog):
                              logger="festival_organizer.tracklists.api"):
             results = session.search("noresults")
     assert results == []
-    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    canary_warnings = [r for r in caplog.records if "identify.canary.warning:" in r.message]
     assert canary_warnings == []
 
 
@@ -559,7 +559,7 @@ def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
                 except Exception:
                     pass
 
-    canary_warnings = [r for r in caplog.records if "Scraping canary" in r.message]
+    canary_warnings = [r for r in caplog.records if "identify.canary.warning:" in r.message]
     assert len(canary_warnings) >= 1
     msg = canary_warnings[0].message
     assert "tracklist page" in msg
@@ -583,7 +583,7 @@ def test_run_canary_emits_warning_on_missing_selectors(caplog):
         session._run_canary(
             "tracklist page", ["tlpItem row"], "https://example/t/1/"
         )
-    records = [r for r in caplog.records if "Scraping canary" in r.message]
+    records = [r for r in caplog.records if "identify.canary.warning:" in r.message]
     assert len(records) == 1
     msg = records[0].message
     assert "tracklist page" in msg
@@ -603,7 +603,7 @@ def test_run_canary_dedupes_by_page_type_and_missing_set(caplog):
 
     warnings_emitted = [
         r for r in caplog.records
-        if r.levelno == logging.WARNING and "Scraping canary" in r.message
+        if r.levelno == logging.WARNING and "identify.canary.warning:" in r.message
     ]
     debugs = [
         r for r in caplog.records
@@ -621,7 +621,7 @@ def test_run_canary_distinct_missing_sets_both_emit(caplog):
         session._run_canary("tracklist page", ["cue_seconds input"], "https://example/b/")
     warnings_emitted = [
         r for r in caplog.records
-        if r.levelno == logging.WARNING and "Scraping canary" in r.message
+        if r.levelno == logging.WARNING and "identify.canary.warning:" in r.message
     ]
     assert len(warnings_emitted) == 2
 

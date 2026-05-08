@@ -152,7 +152,7 @@ class OrganizeOperation(Operation):
                 logger.debug("organize.sidecar: action=%s source=%s target=%s", action, sidecar.name, new_path.name)
                 moved += 1
             except OSError as e:
-                logger.warning("Failed to %s sidecar %s: %s", action, sidecar.name, e)
+                logger.warning("organize.sidecar: status=failed action=%s file=%s error=\"%s\"", action, sidecar.name, e)
         return moved
 
 
@@ -341,15 +341,15 @@ class AlbumPosterOperation(Operation):
                 if parsed.get("artist"):
                     artists_in_folder.add(normalise_name(parsed["artist"]).lower())
                 if len(artists_in_folder) > 1:
-                    logger.info("Album poster: %d artists in folder -> festival style",
+                    logger.info("enrich.album_poster: artists_in_folder=%d style=festival",
                                 len(artists_in_folder))
                     return None  # Multi-artist folder, skip fanart background
 
         # Single artist (or couldn't determine); look for their fanart
         candidate = paths.artist_cache_dir(artist) / "fanart.jpg"
         result = candidate if candidate.exists() else None
-        logger.info("Album poster: 1 artist in folder -> %s",
-                    "artist style" if result else "festival style (no fanart)")
+        logger.info("enrich.album_poster: artists_in_folder=1 style=%s",
+                    "artist" if result else "festival")
         return result
 
     def _download_artwork(self, url: str, cache_subdir: str, max_width: int | None = None) -> Path | None:
@@ -383,7 +383,7 @@ class AlbumPosterOperation(Operation):
                         new_size = (max_width, int(img.height * ratio))
                         img = img.resize(new_size, Image.LANCZOS)
                         img.save(cached)
-            logger.info("Downloaded artwork: %s -> %s", url, cached.name)
+            logger.info("enrich.artwork_download: status=ok url=%s target=%s", url, cached.name)
             return cached
         except (requests.RequestException, OSError) as e:
             logger.debug("enrich.artwork_download: status=failed error=\"%s\"", e)
@@ -423,7 +423,7 @@ class AlbumPosterOperation(Operation):
                     img = img.resize((max_side, max_side), Image.LANCZOS)
                     logger.debug("enrich.dj_artwork: action=resize to=%dx%d", max_side, max_side)
                 img.save(cached, "JPEG", quality=90)
-            logger.info("Downloaded DJ artwork: %s -> %s", artist, cached)
+            logger.info("enrich.dj_artwork_download: status=ok artist=%s target=%s", artist, cached)
             return cached
         except (requests.RequestException, OSError) as e:
             logger.debug("enrich.dj_artwork_download: status=failed artist=%s error=\"%s\"", artist, e)
@@ -459,7 +459,7 @@ class AlbumPosterOperation(Operation):
                 for ext in ("jpg", "jpeg", "png", "webp"):
                     candidate = d / f"logo.{ext}"
                     if candidate.exists():
-                        logger.info("Curated logo: %s", candidate)
+                        logger.info("enrich.curated_logo: path=%s", candidate)
                         return candidate
         return None
 
@@ -544,7 +544,7 @@ class AlbumPosterOperation(Operation):
                         media_file.place, media_file.edition)
                     self._logo_hits[display] = bg
             if bg:
-                logger.info("Album poster: using %s", source)
+                logger.info("enrich.album_poster: source=%s status=selected", source)
                 return bg, source
             logger.debug("enrich.album_poster: source=%s status=unavailable", source)
         if tried_curated and media_file.place:

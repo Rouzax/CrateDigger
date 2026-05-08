@@ -25,7 +25,7 @@ def scan_folder(root: Path, config: Config) -> list[Path]:
     try:
         entries = sorted(root.rglob("*"))
     except OSError as e:
-        logger.warning("Could not scan %s: %s", root, e)
+        logger.warning("scanner.read: status=failed path=%s error=\"%s\"", root, e)
         return files
 
     for item in entries:

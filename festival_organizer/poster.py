@@ -512,7 +512,7 @@ def get_dominant_color_from_thumbs(thumb_paths: list[Path]) -> tuple[int, int, i
             all_h.append(arr[:, :, 0].ravel())
             all_s.append(arr[:, :, 1].ravel())
         except (OSError, ValueError) as e:
-            logger.debug("Could not read thumbnail %s: %s", path, e)
+            logger.debug("poster.thumb: status=read_failed path=%s error=\"%s\"", path, e)
             continue
 
     if not all_h:
@@ -664,7 +664,7 @@ def generate_album_poster(
 
             if is_small_source and hero_text is None:
                 # Festival layout: gradient + centered sharp logo
-                logger.info("Layout: festival gradient + logo")
+                logger.info("poster.layout: type=festival_gradient_logo")
                 max_display = 420
                 if has_alpha:
                     sharp, img_x, img_y = _center_sharp(frame_raw.convert("RGBA"), max_display)
@@ -678,8 +678,8 @@ def generate_album_poster(
 
             elif is_small_source:
                 # Artist layout: blurred overlay on gradient + centered sharp logo
-                logger.info("Layout: artist centered on blur")
-                logger.debug("Layout: source %dx%d from %s", frame_raw.width, frame_raw.height, background_source or "unknown")
+                logger.info("poster.layout: type=artist_centered_blur")
+                logger.debug("poster.layout: source=%dx%d origin=%s", frame_raw.width, frame_raw.height, background_source or "unknown")
                 blurred = frame_rgb.resize((POSTER_W, POSTER_H), Image.LANCZOS)
                 blurred = blurred.filter(ImageFilter.GaussianBlur(radius=40))
                 blurred = ImageEnhance.Brightness(blurred).enhance(0.18)
@@ -699,8 +699,8 @@ def generate_album_poster(
 
             else:
                 # Large source: sharp top on gradient, fade to dark
-                logger.info("Layout: large source with fade")
-                logger.debug("Layout: source %dx%d from %s", frame_raw.width, frame_raw.height, background_source or "unknown")
+                logger.info("poster.layout: type=large_source_fade")
+                logger.debug("poster.layout: source=%dx%d origin=%s", frame_raw.width, frame_raw.height, background_source or "unknown")
                 scale = POSTER_W / frame_raw.width
                 new_h = int(frame_raw.height * scale)
                 fade_mask = Image.new("L", (POSTER_W, new_h), 255)
@@ -734,12 +734,12 @@ def generate_album_poster(
                 dg.line([(0, y), (POSTER_W, y)], fill=(0, 0, 0, a))
             bg = Image.alpha_composite(bg.convert("RGBA"), gradient).convert("RGB")
         except (OSError, ValueError) as e:
-            logger.warning("Could not use background image %s: %s", background_image_path, e)
+            logger.warning("poster.background: status=failed path=%s error=\"%s\"", background_image_path, e)
             background_image_path = None  # fall through to gradient
 
     if not background_image_path or not background_image_path.exists():
         # Gradient fallback (no background image available)
-        logger.info("Layout: gradient fallback")
+        logger.info("poster.layout: type=gradient_fallback")
         if override_color:
             base_color = _darken_brand_color(override_color)
             accent = override_color

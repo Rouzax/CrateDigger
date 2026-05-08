@@ -77,7 +77,7 @@ def _extract_mkvattachment(source: Path, thumb_path: Path) -> bool:
         return thumb_path.exists()
 
     except (OSError, subprocess.SubprocessError) as e:
-        logger.debug("MKV attachment extraction failed for %s: %s", source, e)
+        logger.debug("artwork.extract: status=failed source=%s error=\"%s\"", source, e)
         return False
     finally:
         if temp_path.exists():
@@ -103,7 +103,7 @@ def _sample_frame_fallback(source: Path, thumb_path: Path) -> bool:
     except ImportError:
         return False
     except (OSError, subprocess.SubprocessError) as e:
-        logger.debug("Frame sampling failed for %s: %s", source, e)
+        logger.debug("artwork.frame_sample: status=failed source=%s error=\"%s\"", source, e)
         return False
 
 
@@ -121,5 +121,5 @@ def _gradient_thumb_fallback(thumb_path: Path) -> bool:
         bg.save(str(thumb_path), "JPEG", quality=95)
         return thumb_path.exists()
     except (OSError, ValueError) as e:
-        logger.debug("Gradient thumb fallback failed for %s: %s", thumb_path, e)
+        logger.debug("artwork.gradient_fallback: status=failed path=%s error=\"%s\"", thumb_path, e)
         return False

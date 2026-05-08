@@ -430,7 +430,7 @@ class TestDebugLogging:
         with patch("festival_organizer.update_check.urlopen", side_effect=URLError("dns")):
             with caplog.at_level(_logging.DEBUG, logger="festival_organizer.update_check"):
                 assert _fetch_latest_release() is None
-        assert any("Update check HTTP failed" in r.message for r in caplog.records)
+        assert any("update_check.fetch: status=failed" in r.message for r in caplog.records)
         assert any("dns" in r.message or "dns" in str(r.exc_info) for r in caplog.records)
 
     def test_is_suppressed_logs_env_var_reason(self, monkeypatch, caplog):
@@ -441,7 +441,7 @@ class TestDebugLogging:
         with caplog.at_level(_logging.DEBUG, logger="festival_organizer.update_check"):
             assert _is_suppressed()
         joined = "\n".join(r.message for r in caplog.records)
-        assert "env var" in joined.lower()
+        assert "update_check.suppressed: reason=env_var" in joined
 
     def test_is_suppressed_logs_non_tty_reason(self, monkeypatch, caplog):
         import logging as _logging
@@ -466,7 +466,7 @@ class TestDebugLogging:
         with caplog.at_level(_logging.DEBUG, logger="festival_organizer.update_check"):
             assert _is_suppressed()
         joined = "\n".join(r.message for r in caplog.records)
-        assert "isatty raised" in joined
+        assert "update_check.suppressed: reason=isatty_error" in joined
 
     def test_read_cache_silent_on_missing_file(self, tmp_path, mock_paths, caplog):
         import logging as _logging

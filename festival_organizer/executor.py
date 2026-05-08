@@ -74,7 +74,7 @@ def execute_actions(actions: list[FileAction]) -> list[FileAction]:
 
         except OSError as e:
             logger.warning(
-                "File action failed (%s -> %s): %s",
+                "executor.action: status=failed source=%s target=%s error=\"%s\"",
                 action.source, action.target, e,
             )
             action.status = "error"

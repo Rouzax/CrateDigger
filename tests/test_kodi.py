@@ -283,7 +283,7 @@ class TestSyncLibrary:
             sync_library(client, [video], console, suppressed=True)
 
         client.refresh_music_video.assert_not_called()
-        assert "Not in Kodi library" in caplog.text
+        assert "kodi.refresh: file=not_in_kodi.mkv status=not_found" in caplog.text
 
     def test_empty_changed_paths_is_noop(self):
         client = MagicMock(spec=KodiClient)

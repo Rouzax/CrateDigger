@@ -215,7 +215,7 @@ def test_setup_logging_survives_unwritable_log_dir(tmp_path, caplog):
     )
     # One WARNING about the disabled log file was emitted.
     assert any(
-        "log file" in rec.getMessage().lower()
+        "log.file_handler: status=disabled" in rec.getMessage()
         for rec in caplog.records
     )
 

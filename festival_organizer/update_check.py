@@ -71,7 +71,7 @@ def _read_cache() -> dict | None:
     except FileNotFoundError:
         return None
     except (json.JSONDecodeError, OSError) as e:
-        logger.debug("Update cache unreadable at %s: %s", p, e)
+        logger.debug("update_check.cache: status=unreadable path=%s error=\"%s\"", p, e)
         return None
     if not isinstance(data, dict) or data.get("schema") != SCHEMA_VERSION:
         return None
@@ -151,14 +151,14 @@ def format_freshness_line(
 def _is_suppressed() -> bool:
     """Return True if the update check should be skipped entirely."""
     if os.environ.get(ENV_VAR, "").strip().lower() in _TRUTHY:
-        logger.debug("Update check suppressed: env var %s set", ENV_VAR)
+        logger.debug("update_check.suppressed: reason=env_var var=%s", ENV_VAR)
         return True
     try:
         if not sys.stdout.isatty():
-            logger.debug("Update check suppressed: stdout is not a tty")
+            logger.debug("update_check.suppressed: reason=not_tty")
             return True
     except (AttributeError, ValueError) as e:
-        logger.debug("Update check suppressed: isatty raised: %s", e)
+        logger.debug("update_check.suppressed: reason=isatty_error error=\"%s\"", e)
         return True
     return False
 
@@ -171,7 +171,7 @@ def _is_suppressed_explicit() -> bool:
     --check, they want the answer even when piping output to a script or log file.
     """
     if os.environ.get(ENV_VAR, "").strip().lower() in _TRUTHY:
-        logger.debug("Update check suppressed: env var %s set", ENV_VAR)
+        logger.debug("update_check.suppressed: reason=env_var var=%s", ENV_VAR)
         return True
     return False
 
@@ -196,7 +196,7 @@ def _fetch_latest_release() -> str | None:
         with urlopen(req, timeout=_HTTP_TIMEOUT_SECONDS) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except Exception as e:
-        logger.debug("Update check HTTP failed: %s", e, exc_info=True)
+        logger.debug("update_check.fetch: status=failed error=\"%s\"", e, exc_info=True)
         return None
 
     tag = data.get("tag_name") if isinstance(data, dict) else None
@@ -238,7 +238,7 @@ def print_cached_update_notice(console) -> None:
         )
         console.print(f"  Upgrade: [cyan]{cmd}[/cyan]")
     except BaseException:
-        logger.debug("update-check notice failed", exc_info=True)
+        logger.debug("update_check.notice: status=failed", exc_info=True)
 
 
 def refresh_update_cache(force: bool = False) -> None:
@@ -268,4 +268,4 @@ def refresh_update_cache(force: bool = False) -> None:
         ttl = _SUCCESS_TTL_SECONDS if latest is not None else _FAILURE_TTL_SECONDS
         _write_cache(latest_version=latest, ttl_seconds=ttl)
     except BaseException:
-        logger.debug("update-check refresh failed", exc_info=True)
+        logger.debug("update_check.refresh: status=failed", exc_info=True)

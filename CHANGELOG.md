@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.17.8] - 2026-05-08
+
+### Changed
+
+- All remaining freeform log messages across the entire codebase now use structured `subsystem.event: key=value` format. Covers 82 messages across 19 modules (artwork, config, embed_tags, executor, frame_sampler, kodi, library, log, metadata, mkv_tags, nfo, operations, paths, poster, scanner, tracklists/api, tracklists/cli_handler, tracklists/dj_cache, update_check).
+
 ## [0.17.7] - 2026-05-08
 
 ### Changed

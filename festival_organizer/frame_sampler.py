@@ -37,12 +37,12 @@ def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | N
     video_path = Path(video_path)
 
     if not _HAS_CV2:
-        logger.debug("Frame sampler skipped: cv2/numpy not installed")
+        logger.debug("frame_sampler.skip: reason=dependencies_missing")
         return None
 
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
-        logger.warning("Frame sampler could not open video %s", video_path)
+        logger.warning("frame_sampler.open: status=failed file=%s", video_path)
         return None
 
     try:
@@ -51,7 +51,7 @@ def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | N
 
         if total_frames < 10 or fps <= 0:
             logger.warning(
-                "Frame sampler: %s too short or invalid (frames=%d fps=%s)",
+                "frame_sampler.skip: file=%s reason=invalid frames=%d fps=%s",
                 video_path, total_frames, fps,
             )
             return None
@@ -79,7 +79,7 @@ def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | N
         cap.release()
 
     if best_frame is None:
-        logger.warning("Frame sampler: no readable frames in %s", video_path)
+        logger.warning("frame_sampler.skip: file=%s reason=no_readable_frames", video_path)
         return None
 
     # Save as PNG next to the video

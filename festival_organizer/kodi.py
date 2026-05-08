@@ -52,7 +52,7 @@ class KodiClient:
         if params:
             payload["params"] = params
 
-        logger.debug("JSON-RPC -> %s %s", method, params or {})
+        logger.debug("kodi.rpc: direction=send method=%s params=%s", method, params or {})
 
         try:
             resp = self._session.post(self._url, json=payload, timeout=30)
@@ -69,7 +69,7 @@ class KodiClient:
             err = data["error"]
             raise KodiError(f"Kodi RPC error: {err.get('message', err)}")
 
-        logger.debug("JSON-RPC <- %s", data.get("result", ""))
+        logger.debug("kodi.rpc: direction=recv result=%s", data.get("result", ""))
         return data.get("result", {})
 
     def scan(self, directory: str = "") -> None:
@@ -77,7 +77,7 @@ class KodiClient:
         self._call("VideoLibrary.Scan", {
             "directory": directory,
         })
-        logger.info("Triggered Kodi library scan")
+        logger.info("kodi.sync: action=scan")
 
     def clean(self) -> None:
         """Clean library: remove entries for files that no longer exist."""
@@ -85,7 +85,7 @@ class KodiClient:
             "content": "musicvideos",
             "showdialogs": False,
         })
-        logger.info("Triggered Kodi library clean (musicvideos)")
+        logger.info("kodi.sync: action=clean type=musicvideos")
 
     def get_music_videos(self) -> dict[str, int]:
         """Fetch all music videos and return {file_path: musicvideoid}.
@@ -101,7 +101,7 @@ class KodiClient:
             mv_id = mv.get("musicvideoid")
             if file_path and mv_id is not None:
                 mapping[file_path] = mv_id
-        logger.debug("Kodi library contains %d music videos", len(mapping))
+        logger.debug("kodi.library: count=%d", len(mapping))
         return mapping
 
     def refresh_music_video(self, musicvideoid: int) -> None:
@@ -153,7 +153,7 @@ def _infer_path_mapping(
         local_prefix = str(Path(*local_parts[:len(local_parts) - common]))
         kodi_prefix = "/".join(kodi_parts[:len(kodi_parts) - common])
 
-        logger.info("Auto-detected path mapping: %s -> %s", local_prefix, kodi_prefix)
+        logger.info("kodi.path_mapping: source=auto local=%s kodi=%s", local_prefix, kodi_prefix)
         return (local_prefix, kodi_prefix)
 
     return None
@@ -203,7 +203,7 @@ def sync_library(
         StepProgress, library_sync_summary_line,
     )
 
-    logger.info("Syncing %d updated items with Kodi", len(changed_paths))
+    logger.info("kodi.sync: action=start items=%d", len(changed_paths))
     phase_start = time.perf_counter()
 
     if not quiet:
@@ -225,7 +225,7 @@ def sync_library(
             kodi_prefix = path_mapping.get("kodi", "")
             if local_prefix and kodi_prefix:
                 local_prefix = str(Path(local_prefix).resolve())
-                logger.info("Path mapping (config): %s -> %s", local_prefix, kodi_prefix)
+                logger.info("kodi.path_mapping: source=config local=%s kodi=%s", local_prefix, kodi_prefix)
 
         if not (local_prefix and kodi_prefix):
             inferred = _infer_path_mapping(changed_paths, kodi_videos)
@@ -266,15 +266,15 @@ def sync_library(
             if mv_id is None:
                 mv_id = filename_index.get(path.name.lower())
                 if mv_id is not None:
-                    logger.debug("Matched by filename: %s", path.name)
+                    logger.debug("kodi.match: strategy=filename file=%s", path.name)
 
             if mv_id is not None:
                 client.refresh_music_video(mv_id)
-                logger.info("Refreshed in Kodi: %s", path.name)
+                logger.info("kodi.refresh: file=%s status=ok", path.name)
                 refreshed += 1
             else:
                 logger.warning(
-                    "Not in Kodi library (will be picked up by scan): %s",
+                    "kodi.refresh: file=%s status=not_found",
                     path.name,
                 )
                 not_found += 1

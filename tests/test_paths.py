@@ -322,7 +322,7 @@ class TestWarnIfDataDirIsSourceCheckout:
             if r.name == "festival_organizer.paths" and r.levelname == "WARNING"
         ]
         assert len(warnings) == 1
-        assert "CRATEDIGGER_DATA_DIR" in warnings[0].getMessage()
+        assert "paths.source_checkout_warning:" in warnings[0].getMessage()
         assert str(checkout) in warnings[0].getMessage()
 
     def test_silent_for_plain_dir(self, tmp_path: Path, caplog, monkeypatch):
@@ -527,6 +527,6 @@ class TestMigrateLegacyPaths:
             if r.name == "festival_organizer.paths" and r.levelname == "INFO"
         ]
         file_msgs = [r for r in info_records if "places.json" in r.getMessage()]
-        logo_msgs = [r for r in info_records if "Migrated curated logos" in r.getMessage()]
+        logo_msgs = [r for r in info_records if "paths.migrate: type=curated_logos" in r.getMessage()]
         assert len(file_msgs) == 1
         assert len(logo_msgs) == 1

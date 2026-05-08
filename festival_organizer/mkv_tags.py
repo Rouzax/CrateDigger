@@ -71,11 +71,11 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
 
         if result.returncode >= 2:
             detail = result.stderr.strip() or f"exit code {result.returncode}"
-            logger.warning("Tag extraction failed for %s: %s", filepath, detail)
+            logger.warning("mkv_tags.extract: status=failed file=%s error=\"%s\"", filepath, detail)
             return None
 
         if result.returncode == 1:
-            logger.debug("mkvextract warnings for %s: %s", filepath, result.stderr.strip())
+            logger.debug("mkv_tags.extract: status=warnings file=%s stderr=\"%s\"", filepath, result.stderr.strip())
 
         # mkvextract writes an empty file when there are no tags
         content = Path(tag_file).read_text(encoding="utf-8").strip()
@@ -85,10 +85,10 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
         return ET.fromstring(content)
 
     except (OSError, subprocess.SubprocessError) as e:
-        logger.warning("Tag extraction failed for %s: %s", filepath, e)
+        logger.warning("mkv_tags.extract: status=failed file=%s error=\"%s\"", filepath, e)
         return None
     except ET.ParseError as e:
-        logger.warning("Tag XML parse failed for %s: %s", filepath, e)
+        logger.warning("mkv_tags.parse: status=failed file=%s error=\"%s\"", filepath, e)
         return None
     finally:
         if tag_file:
@@ -521,13 +521,13 @@ def write_merged_tags(
 
         if result.returncode != 0:
             detail = result.stderr.strip() or f"exit code {result.returncode}"
-            logger.warning("Tag writing failed for %s: %s", filepath, detail)
+            logger.warning("mkv_tags.write: status=failed file=%s error=\"%s\"", filepath, detail)
             return False
 
         return True
 
     except (OSError, subprocess.SubprocessError) as e:
-        logger.warning("Tag writing failed for %s: %s", filepath, e)
+        logger.warning("mkv_tags.write: status=failed file=%s error=\"%s\"", filepath, e)
         return False
     finally:
         if tag_file:

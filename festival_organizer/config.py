@@ -153,14 +153,14 @@ def _invert_alias_map(grouped: dict) -> dict[str, str]:
             # Flat format: {alias: canonical}, already inverted
             flat[key] = value
         else:
-            logger.warning("Skipping alias entry '%s': expected str or list, got %s",
+            logger.warning("config.alias: status=skipped key=%s error=\"expected str or list, got %s\"",
                            key, type(value).__name__)
             continue
     # Detect circular flat references
     for key, value in flat.items():
         if value in flat and flat[value] != value and flat[value] == key:
-            logger.warning("Circular alias: '%s' <-> '%s'. "
-                           "One should be canonical (pointing to itself).", key, value)
+            logger.warning("config.alias: status=circular key=%s target=%s",
+                           key, value)
     return flat
 
 
@@ -220,7 +220,7 @@ class Config:
                     self._ext_cache[filename] = data
                     return data
                 except (json.JSONDecodeError, OSError) as e:
-                    logger.warning("Skipped %s: %s", path, e)
+                    logger.warning("config.load: status=skipped file=%s error=\"%s\"", path, e)
 
         logger.debug("config.not_found: file=%s", filename)
         self._ext_cache[filename] = defaults
@@ -552,7 +552,7 @@ class Config:
             try:
                 return int(env_port)
             except ValueError:
-                logger.warning("Invalid KODI_PORT '%s', using config default", env_port)
+                logger.warning("config.env_override: var=KODI_PORT value=%s status=invalid", env_port)
         return self.kodi_settings.get("port", 8080)
 
     @property
@@ -627,7 +627,7 @@ def load_config(
             _deep_merge(data, layer)
             return True
         except (tomllib.TOMLDecodeError, OSError) as e:
-            logger.warning("Could not read %s: %s", path, e)
+            logger.warning("config.read: status=failed file=%s error=\"%s\"", path, e)
             return False
 
     if config_path is not None:
@@ -649,11 +649,8 @@ def load_config(
         legacy_json = library_config_dir / "config.json"
         if legacy_json.is_file():
             logger.warning(
-                "Legacy library config detected at %s. "
-                "This file is no longer read. Copy its default_layout value "
-                "into %s (same directory) or delete it.",
+                "config.legacy: path=%s",
                 legacy_json,
-                library_config_dir / "config.toml",
             )
         lib_toml = library_config_dir / "config.toml"
         lib_loaded = _merge_toml(lib_toml)

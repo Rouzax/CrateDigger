@@ -650,7 +650,7 @@ class TestTomlConfigLoading:
             mock_paths.config_file.return_value = user_dir / "config.toml"
             with caplog.at_level("WARNING", logger="festival_organizer.config"):
                 cfg = load_config()
-        assert any("could not read" in r.getMessage().lower() for r in caplog.records)
+        assert any("config.read: status=failed" in r.getMessage() for r in caplog.records)
         assert cfg is not None
 
 
@@ -671,8 +671,8 @@ def test_legacy_library_config_json_logs_warning(tmp_path, caplog):
 
     messages = [r.getMessage() for r in caplog.records
                 if r.name == "festival_organizer.config"]
-    assert any("config.json" in m and "config.toml" in m for m in messages), (
-        f"expected a WARNING mentioning both config.json and config.toml, got: {messages}"
+    assert any("config.legacy:" in m and "config.json" in m for m in messages), (
+        f"expected a WARNING for legacy config.json, got: {messages}"
     )
 
 
