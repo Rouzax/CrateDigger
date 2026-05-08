@@ -43,13 +43,14 @@ def test_nfo_operation_generates_for_existing_file():
 
 
 def test_nfo_operation_skipped_when_exists():
-    """NFO operation skipped when .nfo already exists."""
+    """NFO operation skipped when .nfo content matches current MediaFile."""
     with tempfile.TemporaryDirectory() as tmp:
         video = Path(tmp) / "test.mkv"
         video.write_text("fake video")
-        video.with_suffix(".nfo").write_text("<musicvideo/>")
         mf = _make_media_file(video)
         config = load_config()
+        from festival_organizer.nfo import generate_nfo
+        generate_nfo(mf, video, config)
 
         op = NfoOperation(config)
         assert op.is_needed(video, mf) is False

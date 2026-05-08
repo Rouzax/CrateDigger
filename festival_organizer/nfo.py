@@ -11,31 +11,27 @@ from festival_organizer.models import MediaFile, build_display_title
 logger = logging.getLogger(__name__)
 
 
-def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
-                 dj_cache=None) -> Path:
-    """Generate a Kodi-compatible musicvideo NFO file alongside a video file.
+def generate_nfo_xml(media_file: MediaFile, video_path: Path, config: Config,
+                     dj_cache=None, dateadded: str | None = None) -> str:
+    """Build a Kodi-compatible musicvideo NFO XML string.
 
-    Follows the Kodi v20+ spec: https://kodi.wiki/view/NFO_files/Music_videos
-    Returns the path to the generated .nfo file.
+    When *dateadded* is provided it is used verbatim; otherwise ``datetime.now()``
+    is stamped.  Returns the pretty-printed XML without an XML declaration.
     """
-    nfo_path = video_path.with_suffix(".nfo")
     mf = media_file
     nfo_settings = config.nfo_settings
 
     root = ET.Element("musicvideo")
 
-    # Title — must stand alone in Kodi browse views (only label shown)
     title = build_display_title(mf, config)
     _add(root, "title", title)
 
-    # Artist(s): one element per artist from 1001TL; fallback to primary
     if mf.artists:
         for a in mf.artists:
             _add(root, "artist", a)
     else:
         _add(root, "artist", mf.artist or "Unknown Artist")
 
-    # Album — grouping key: festival + year
     if mf.content_type == "festival_set":
         album_parts = []
         festival_display = mf.festival
@@ -51,13 +47,11 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
     if album:
         _add(root, "album", album)
 
-    # Premiered (replaces deprecated year tag)
     if mf.date:
         _add(root, "premiered", mf.date)
     elif mf.year:
         _add(root, "premiered", f"{mf.year}-01-01")
 
-    # Genre — use extracted genres when available, fall back to static config
     if mf.genres:
         for genre in mf.genres:
             _add(root, "genre", genre)
@@ -66,7 +60,6 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
     else:
         _add(root, "genre", nfo_settings.get("genre_concert", "Live"))
 
-    # Tags: for Kodi smart playlists (deduplicated, case-insensitive)
     existing_tags: set[str] = set()
     if mf.content_type:
         _add(root, "tag", mf.content_type)
@@ -78,24 +71,20 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
         _add(root, "tag", mf.edition)
         existing_tags.add(mf.edition.lower())
 
-    # Artist tags (deduplicated against existing tags)
     if mf.artists:
         group_members = dj_cache.derive_group_members() if dj_cache else {}
         for artist_name in mf.artists:
             if artist_name.lower() not in existing_tags:
                 _add(root, "tag", artist_name)
                 existing_tags.add(artist_name.lower())
-            # Expand group members
             for member in group_members.get(artist_name, []):
                 if member.lower() not in existing_tags:
                     _add(root, "tag", member)
                     existing_tags.add(member.lower())
 
-    # Studio — stage name for sets, venue for concerts
     if mf.stage:
         _add(root, "studio", mf.stage)
 
-    # Plot — rich description without 1001TL URL
     plot_parts = []
     if mf.stage:
         plot_parts.append(f"Stage: {mf.stage}")
@@ -106,12 +95,10 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
     if plot_parts:
         _add(root, "plot", "\n".join(plot_parts))
 
-    # Runtime (minutes)
     if mf.duration_seconds:
         runtime_min = int(mf.duration_seconds) // 60
         _add(root, "runtime", str(runtime_min))
 
-    # Thumbnails — thumb, poster, and fanart references
     thumb = ET.SubElement(root, "thumb", aspect="thumb")
     thumb.text = f"{video_path.stem}-thumb.jpg"
     poster = ET.SubElement(root, "thumb", aspect="poster")
@@ -120,10 +107,9 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
     fanart_thumb = ET.SubElement(fanart_elem, "thumb")
     fanart_thumb.text = f"{video_path.stem}-fanart.jpg"
 
-    # Date added
-    _add(root, "dateadded", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    _add(root, "dateadded",
+         dateadded or datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-    # Pretty-print without XML declaration
     xml_str = minidom.parseString(
         ET.tostring(root, encoding="unicode")
     ).toprettyxml(indent="  ")
@@ -131,8 +117,21 @@ def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
     if lines[0].startswith("<?xml"):
         xml_str = "\n".join(lines[1:])
 
+    return xml_str.strip() + "\n"
+
+
+def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
+                 dj_cache=None, dateadded: str | None = None) -> Path:
+    """Write a Kodi-compatible musicvideo NFO file alongside a video file.
+
+    Delegates to ``generate_nfo_xml`` for the XML content, then writes to disk.
+    Returns the path to the generated .nfo file.
+    """
+    nfo_path = video_path.with_suffix(".nfo")
+    xml_str = generate_nfo_xml(media_file, video_path, config,
+                               dj_cache=dj_cache, dateadded=dateadded)
     try:
-        nfo_path.write_text(xml_str.strip() + "\n", encoding="utf-8")
+        nfo_path.write_text(xml_str, encoding="utf-8")
     except OSError as e:
         logger.warning("nfo.write: status=failed file=%s error=\"%s\"", nfo_path, e)
         raise

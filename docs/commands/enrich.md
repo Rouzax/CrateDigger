@@ -119,7 +119,7 @@ The NFO includes:
 - Stage or venue
 - References to the thumbnail, poster, and fanart images
 
-**Skipped if:** `{name}.nfo` already exists (unless `--regenerate`).
+**Skipped if:** an existing NFO already reflects the current metadata. If any of the following have changed since the NFO was last written, it is regenerated automatically: artist, genre, stage, edition, title, or DJ group members. The original `dateadded` timestamp is preserved when regenerating. Use `--regenerate` to force regeneration regardless of whether the metadata has changed.
 
 ### tags: MKV metadata tags
 
@@ -277,14 +277,15 @@ first, then rerun the full enrich. See the [FAQ](../faq.md) for more fanart trou
 
 If you re-run [`identify`](identify.md) on your library to pick up updated tracklist data
 from the 1001Tracklists community, run `enrich` again afterward to apply the new metadata
-to your NFO files, MKV tags, and posters:
+to your MKV tags and posters:
 
 ```bash
-cratedigger enrich ~/Music/Library/ --regenerate
+cratedigger enrich ~/Music/Library/
 ```
 
-Updated artist names, genres, stage information, and other tracklist fields are picked up
-from the newly embedded tags.
+NFO files are updated automatically whenever the underlying metadata has changed, so you
+do not need `--regenerate` for that. Updated artist names, genres, stage information, and
+other tracklist fields are picked up from the newly embedded tags.
 
 ## Optional: curated festival logos
 

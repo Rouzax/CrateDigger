@@ -167,15 +167,55 @@ class NfoOperation(Operation):
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         if self.force:
             return True
-        return not file_path.with_suffix(".nfo").exists()
+        nfo_path = file_path.with_suffix(".nfo")
+        if not nfo_path.exists():
+            return True
+        return self._content_changed(nfo_path, file_path, media_file)
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.nfo import generate_nfo
         try:
-            generate_nfo(media_file, file_path, self.config, dj_cache=self.dj_cache)
+            dateadded = self._read_dateadded(file_path.with_suffix(".nfo"))
+            generate_nfo(media_file, file_path, self.config,
+                         dj_cache=self.dj_cache, dateadded=dateadded)
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))
+
+    def _content_changed(self, nfo_path: Path, file_path: Path,
+                         media_file: MediaFile) -> bool:
+        from festival_organizer.nfo import generate_nfo_xml
+        try:
+            existing = nfo_path.read_text(encoding="utf-8")
+        except OSError:
+            return True
+        dateadded = _extract_dateadded(existing)
+        expected = generate_nfo_xml(
+            media_file, file_path, self.config,
+            dj_cache=self.dj_cache, dateadded=dateadded,
+        )
+        if existing.strip() != expected.strip():
+            logger.info("nfo.stale: file=%s reason=content_changed",
+                        file_path.name)
+            return True
+        return False
+
+    @staticmethod
+    def _read_dateadded(nfo_path: Path) -> str | None:
+        try:
+            return _extract_dateadded(nfo_path.read_text(encoding="utf-8"))
+        except OSError:
+            return None
+
+
+def _extract_dateadded(nfo_text: str) -> str | None:
+    import xml.etree.ElementTree as ET
+    try:
+        root = ET.fromstring(nfo_text)
+        elem = root.find("dateadded")
+        return elem.text if elem is not None else None
+    except ET.ParseError:
+        return None
 
 
 class ArtOperation(Operation):

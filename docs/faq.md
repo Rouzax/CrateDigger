@@ -137,13 +137,13 @@ Increase the delay between files to reduce the chance of hitting rate limits: se
 
 ### identify updated but enrich still shows old metadata
 
-After re-running `identify` to pick up updated tracklist data, run `enrich` again to apply the new metadata to your NFO files, tags, and posters:
+After re-running `identify` to pick up updated tracklist data, run `enrich` again:
 
 ```bash
-cratedigger enrich ~/Music/Library/ --regenerate
+cratedigger enrich ~/Music/Library/
 ```
 
-`--regenerate` forces enrich to overwrite existing artifacts with the newly embedded data.
+NFO files are automatically regenerated when metadata changes, so no extra flag is needed for tags and NFOs. If you also want to rebuild posters and artwork, which use existence-only checks, add `--regenerate` to force those files to be overwritten as well.
 
 ---
 

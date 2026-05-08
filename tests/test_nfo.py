@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from festival_organizer.models import MediaFile
 from festival_organizer.config import load_config
-from festival_organizer.nfo import generate_nfo
+from festival_organizer.nfo import generate_nfo, generate_nfo_xml
 from tests.conftest import make_mediafile
 
 
@@ -384,3 +384,40 @@ def test_generate_nfo_logs_warning_on_write_failure(tmp_path, caplog):
     assert "nfo.write: status=failed" in joined
     assert "disk full" in joined
     assert "test.nfo" in joined
+
+
+def test_generate_nfo_xml_returns_string(tmp_path):
+    """generate_nfo_xml returns XML string without writing to disk."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   festival="TML", year="2024", content_type="festival_set")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    result = generate_nfo_xml(mf, video, load_config())
+    assert isinstance(result, str)
+    assert "<musicvideo>" in result
+    assert not video.with_suffix(".nfo").exists()
+
+
+def test_generate_nfo_xml_uses_provided_dateadded(tmp_path):
+    """generate_nfo_xml stamps the provided dateadded value."""
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   festival="TML", year="2024", content_type="festival_set")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    result = generate_nfo_xml(mf, video, load_config(),
+                              dateadded="2024-01-15 12:00:00")
+    root = ET.fromstring(result)
+    assert root.find("dateadded").text == "2024-01-15 12:00:00"
+
+
+def test_generate_nfo_xml_falls_back_to_now(tmp_path):
+    """generate_nfo_xml uses current time when dateadded is None."""
+    from datetime import datetime
+    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
+                   festival="TML", year="2024", content_type="festival_set")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    before = datetime.now().strftime("%Y-%m-%d")
+    result = generate_nfo_xml(mf, video, load_config())
+    root = ET.fromstring(result)
+    assert root.find("dateadded").text.startswith(before)

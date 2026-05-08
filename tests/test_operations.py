@@ -32,20 +32,111 @@ def test_nfo_op_needed_when_missing(tmp_path):
 
 
 def test_nfo_op_not_needed_when_exists(tmp_path):
-    """NFO operation not needed when .nfo file exists."""
+    """NFO operation not needed when .nfo content matches current MediaFile."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
-    (tmp_path / "test.nfo").write_text("<musicvideo/>")
-    op = NfoOperation(load_config())
-    assert op.is_needed(video, _make_mf()) is False
+    mf = _make_mf()
+    config = load_config()
+    from festival_organizer.nfo import generate_nfo
+    generate_nfo(mf, video, config)
+    op = NfoOperation(config)
+    assert op.is_needed(video, mf) is False
 
 
 def test_nfo_op_needed_when_forced(tmp_path):
     """NFO operation needed when forced, even if .nfo exists."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
-    (tmp_path / "test.nfo").write_text("<musicvideo/>")
-    op = NfoOperation(load_config(), force=True)
+    mf = _make_mf()
+    config = load_config()
+    from festival_organizer.nfo import generate_nfo
+    generate_nfo(mf, video, config)
+    op = NfoOperation(config, force=True)
+    assert op.is_needed(video, mf) is True
+
+
+def test_nfo_op_needed_when_artist_changed(tmp_path):
+    """NFO regenerated when artist list changes."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    config = load_config()
+    from festival_organizer.nfo import generate_nfo
+    generate_nfo(_make_mf(artists=["Artist A"]), video, config)
+    op = NfoOperation(config)
+    assert op.is_needed(video, _make_mf(artists=["Artist B"])) is True
+
+
+def test_nfo_op_needed_when_genre_added(tmp_path):
+    """NFO regenerated when genres change."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    config = load_config()
+    from festival_organizer.nfo import generate_nfo
+    generate_nfo(_make_mf(), video, config)
+    op = NfoOperation(config)
+    assert op.is_needed(video, _make_mf(genres=["Techno"])) is True
+
+
+def test_nfo_op_needed_when_stage_changed(tmp_path):
+    """NFO regenerated when stage changes."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    config = load_config()
+    from festival_organizer.nfo import generate_nfo
+    generate_nfo(_make_mf(stage="Mainstage"), video, config)
+    op = NfoOperation(config)
+    assert op.is_needed(video, _make_mf(stage="Freedom")) is True
+
+
+def test_nfo_op_skipped_when_only_dateadded_differs(tmp_path):
+    """NFO not regenerated when only dateadded timestamp differs."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    mf = _make_mf()
+    config = load_config()
+    from festival_organizer.nfo import generate_nfo
+    generate_nfo(mf, video, config, dateadded="2020-01-01 00:00:00")
+    op = NfoOperation(config)
+    assert op.is_needed(video, mf) is False
+
+
+def test_nfo_op_needed_when_dj_cache_adds_group_member(tmp_path):
+    """NFO regenerated when DJ cache introduces new group member tags."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    config = load_config()
+    mf = _make_mf(artists=["Gaia"])
+    from festival_organizer.nfo import generate_nfo
+    generate_nfo(mf, video, config)
+
+    dj_cache = MagicMock()
+    dj_cache.derive_group_members.return_value = {"Gaia": ["Armin van Buuren", "Benno de Goeij"]}
+    op = NfoOperation(config, dj_cache=dj_cache)
+    assert op.is_needed(video, mf) is True
+
+
+def test_nfo_op_preserves_dateadded_on_regen(tmp_path):
+    """Regenerated NFO keeps the original dateadded timestamp."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    config = load_config()
+    original_ts = "2023-06-15 14:30:00"
+    from festival_organizer.nfo import generate_nfo
+    import xml.etree.ElementTree as ET
+    generate_nfo(_make_mf(stage="Mainstage"), video, config,
+                 dateadded=original_ts)
+    op = NfoOperation(config)
+    op.execute(video, _make_mf(stage="Freedom"))
+    root = ET.fromstring((tmp_path / "test.nfo").read_text(encoding="utf-8"))
+    assert root.find("dateadded").text == original_ts
+
+
+def test_nfo_op_needed_when_nfo_is_corrupt(tmp_path):
+    """Corrupt NFO file triggers regeneration."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    (tmp_path / "test.nfo").write_text("<<<not xml>>>")
+    op = NfoOperation(load_config())
     assert op.is_needed(video, _make_mf()) is True
 
 
