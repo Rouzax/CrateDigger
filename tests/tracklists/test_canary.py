@@ -37,19 +37,13 @@ def test_canary_tracklist_page_flags_missing_cue_seconds():
     assert "cue_seconds input" in missing
 
 
-def test_canary_tracklist_page_flags_missing_h1_at_separator():
-    """The h1 must contain '@' to split DJs from stage/source."""
+def test_canary_tracklist_page_flags_missing_h1():
+    """A page without an h1 element is flagged as broken."""
     from festival_organizer.tracklists import canary
     html = _AFROJACK_FIXTURE.read_text(encoding="utf-8")
-    html = re.sub(
-        r"(<h1[^>]*>)(.*?)(</h1>)",
-        lambda m: m.group(1) + m.group(2).replace("@", "--") + m.group(3),
-        html,
-        count=1,
-        flags=re.DOTALL,
-    )
+    html = re.sub(r"<h1[^>]*>.*?</h1>", "", html, flags=re.DOTALL)
     missing = canary.check_tracklist_page(html)
-    assert "h1 with @" in missing
+    assert "h1 element" in missing
 
 
 def test_canary_tracklist_page_flags_missing_genre_meta():

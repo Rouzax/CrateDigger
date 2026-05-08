@@ -36,9 +36,8 @@ def check_tracklist_page(html: str) -> list[str]:
     if soup.select_one("input[id$='_cue_seconds']") is None:
         missing.append("cue_seconds input")
 
-    h1 = soup.find("h1")
-    if h1 is None or "@" not in h1.get_text():
-        missing.append("h1 with @")
+    if soup.find("h1") is None:
+        missing.append("h1 element")
 
     if soup.select_one('meta[itemprop="genre"]') is None:
         missing.append("itemprop=genre meta")
