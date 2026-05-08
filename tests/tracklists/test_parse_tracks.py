@@ -311,3 +311,53 @@ def test_artist_names_real_fixture_still_clean():
         or (n.startswith("(") and n.endswith(")"))
     ]
     assert not polluted, f"trackValue pollution leaked: {polluted}"
+
+
+def test_parse_tracks_includes_con_row_with_valid_cue():
+    """A row with class 'con' and a non-zero cue is a mashup main row,
+    not a component overlay. It should be included as a chapter track."""
+    html = """<div id="tlTab">
+<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="100">
+<meta itemprop="name" content="Artist A - Track One">
+</div>
+<div class="tlpItem tlpTog trRow2 con">
+<input id="tlp2_cue_seconds" value="200">
+<meta itemprop="name" content="Artist B vs. Artist C - Alpha vs. Beta (Mashup)">
+</div>
+<div class="tlpItem tlpTog trRow3">
+<input id="tlp3_cue_seconds" value="400">
+<meta itemprop="name" content="Artist D - Track Three">
+</div>
+</div>"""
+    tracks = _parse_tracks(html)
+    titles = [t.title for t in tracks]
+    assert len(tracks) == 3
+    assert "Alpha vs. Beta (Mashup)" in titles
+
+
+def test_parse_tracks_excludes_con_row_with_zero_cue():
+    """A row with class 'con' and cue=0 is a mashup component overlay
+    (acappella, sample). It has no chapter position and must stay filtered."""
+    html = """<div id="tlTab">
+<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="100">
+<meta itemprop="name" content="Artist A - Track One">
+</div>
+<div class="tlpItem tlpTog trRow1 con">
+<input id="tlp2_cue_seconds" value="0">
+<meta itemprop="name" content="Classic Track - Vocals (Acappella)">
+</div>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert len(tracks) == 1
+    assert tracks[0].title == "Track One"
+
+
+def test_parse_tracks_afrojack_con_mashups_included():
+    """The Afrojack EDC fixture has two con rows with valid cue times
+    (2225s 'Virtual Riot' and 2389s unnamed) that must appear in output."""
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    start_times = {t.start_ms for t in tracks}
+    assert 2225000 in start_times, "con row at 2225s (Virtual Riot) was dropped"
+    assert 2389000 in start_times, "con row at 2389s was dropped"
