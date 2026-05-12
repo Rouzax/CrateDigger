@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-05-12
+
+### Fixed
+
+- `identify` search: strip "LIVE FROM" from search queries. This YouTube title pattern polluted 1001TL search results, causing files like "FISHER LIVE FROM EDC LAS VEGAS 2025" to miss the correct tracklist match.
+
+### Dependencies
+
+- Bump minimum `opencv-python-headless` to >=4.13.0.92
+- Bump minimum `typer` to >=0.25.1
+- Bump minimum `platformdirs` to >=4.9.6
+
 ## [0.18.1] - 2026-05-08
 
 ### Added

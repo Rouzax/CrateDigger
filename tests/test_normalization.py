@@ -88,6 +88,15 @@ def test_strip_noise_words_strips_live_before_at_sign():
     assert "LIVE" not in result
 
 
+def test_strip_noise_words_strips_live_from():
+    """'LIVE FROM' is a YouTube title pattern that pollutes 1001TL search."""
+    result = strip_noise_words("FISHER LIVE FROM EDC LAS VEGAS 2025")
+    assert "LIVE" not in result
+    assert "FROM" not in result
+    assert "FISHER" in result
+    assert "EDC" in result
+
+
 def test_extract_youtube_id():
     stem, yt_id = extract_youtube_id("Armin van Buuren live at EDC Las Vegas 2025 [Dp7AwrAKckQ]")
     assert yt_id == "Dp7AwrAKckQ"

@@ -36,6 +36,7 @@ YT_ID_PATTERN = re.compile(r"\s*\[([A-Za-z0-9_-]{11})\]\s*")
 NOISE_WORDS = re.compile(
     r"\b(Full\s+Set|Live\s+Set|Full\s+DJ\s+Set|DJ\s+Set|Official|"
     r"HD|HQ|4K\s+HD|Preview|US\s+Debut|Hardstyle\s+Exclusive|"
+    r"Live\s+From|"
     r"LIVE(?=\s+[@|]|\s*$))\b",
     re.IGNORECASE,
 )
