@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-05-12
+
+### Added
+
+- `cratedigger --check` now shows the log directory path and file count.
+
+### Changed
+
+- Bug report issue template asks for the automatic log file instead of `--debug` output.
+- Kodi integration docs point at the per-run log file instead of suggesting `--debug`.
+
 ## [0.18.2] - 2026-05-12
 
 ### Fixed

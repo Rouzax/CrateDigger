@@ -57,10 +57,13 @@ body:
       required: false
 
   - type: textarea
-    id: debug-output
+    id: debug-log
     attributes:
-      label: Debug output
-      description: Output from running with the --debug flag
+      label: Log file
+      description: >
+        Each run writes a debug log automatically. The path is shown in the
+        summary panel at the end of a run and in `cratedigger --check` under
+        Log directory. Paste the contents of that file here.
       render: text
     validations:
       required: false

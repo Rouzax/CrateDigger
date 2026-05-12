@@ -328,6 +328,15 @@ def _run_check_impl(con: "Console") -> int:
             con.print(f"  [red]\u2717[/red] {pkg:<20} not found")
             errors += 1
 
+    # --- Log directory ---
+    con.print("\n[bold]Log directory[/bold]")
+    log_directory = paths.log_dir()
+    if log_directory.is_dir():
+        log_count = sum(1 for f in log_directory.iterdir() if f.suffix == ".log")
+        con.print(f"  [green]✓[/green] {log_directory} ({log_count} file(s))")
+    else:
+        con.print(f"  [dim]~[/dim] {log_directory} (not yet created)")
+
     # --- Summary ---
     con.print()
     if errors == 0 and warnings == 0:

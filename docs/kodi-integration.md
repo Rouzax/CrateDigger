@@ -49,7 +49,7 @@ After the `organize` or `enrich` pipeline completes, CrateDigger checks which fi
 - Per-video poster (`{stem}-poster.jpg`) generated
 - Album poster (`folder.jpg`) changed; when this happens, every video in that folder is refreshed so Kodi picks up the new folder artwork
 
-If nothing changed (for example, a re-enrich run where all artifacts were already up to date), no sync request is sent. Run with `--debug` to confirm whether the sync pathway fired.
+If nothing changed (for example, a re-enrich run where all artifacts were already up to date), no sync request is sent. To confirm whether the sync pathway fired, check the log file written every run at DEBUG level; its path is shown in the summary panel at the end of the run.
 
 ## Path mapping
 
