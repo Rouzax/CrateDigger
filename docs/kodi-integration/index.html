@@ -1202,7 +1202,7 @@
 <li>Per-video poster (<code>{stem}-poster.jpg</code>) generated</li>
 <li>Album poster (<code>folder.jpg</code>) changed; when this happens, every video in that folder is refreshed so Kodi picks up the new folder artwork</li>
 </ul>
-<p>If nothing changed (for example, a re-enrich run where all artifacts were already up to date), no sync request is sent. Run with <code>--debug</code> to confirm whether the sync pathway fired.</p>
+<p>If nothing changed (for example, a re-enrich run where all artifacts were already up to date), no sync request is sent. To confirm whether the sync pathway fired, check the log file written every run at DEBUG level; its path is shown in the summary panel at the end of the run.</p>
 <h2 id="path-mapping">Path mapping</h2>
 <p>If CrateDigger and Kodi access the same library through different paths (for example, CrateDigger uses a local path while Kodi uses a network share), CrateDigger needs to translate between them.</p>
 <p><strong>Auto-detection (default):</strong> CrateDigger compares the filenames it just changed against Kodi's video index and infers the path prefix pair automatically. This works for most setups without any configuration.</p>
