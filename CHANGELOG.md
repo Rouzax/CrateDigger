@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.18.4] - 2026-05-14
+
 ### Added
 
 - Add [UNVRS] Ibiza venue to `places.example.json`.
+
+### Fixed
+
+- Search scoring: all-caps artist names in mixed-case queries (like "MARTIN GARRIX Americas Tour") are now matched as keywords instead of being misclassified as abbreviations. Also fixes post-expansion queries where alias substitution introduced mixed case.
+- Search scoring: raised the all-keyword-match bonus and keyword score cap so that a correct result with good duration and year match reliably reaches the "+" confidence band.
 
 ## [0.18.3] - 2026-05-12
 

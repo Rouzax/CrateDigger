@@ -74,8 +74,9 @@ def test_parse_query_strips_youtube_id():
 
 def test_parse_query_no_short_words():
     parts = parse_query("DJ at an AMF", {})
-    # "DJ" and "AMF" → abbreviations; "at", "an" are ≤2 chars → excluded
-    assert len(parts.keywords) == 0
+    # "DJ" (2 chars) → excluded; "at", "an" (≤2 chars) → excluded
+    # "AMF" is not a known alias → keyword (3 chars passes filter)
+    assert parts.keywords == ["amf"]
 
 
 def test_parse_query_all_caps_produces_keywords():
@@ -122,6 +123,39 @@ def test_parse_query_mixed_case_unchanged():
     assert "amf" not in parts.keywords
 
 
+def test_parse_query_mixed_case_unknown_caps_become_keywords():
+    """Unknown all-caps words in mixed-case queries should be keywords, not abbreviations."""
+    aliases = {"edc": "Electric Daisy Carnival"}
+    parts = parse_query("MARTIN GARRIX Americas Tour 2026", aliases)
+    assert "martin" in parts.keywords
+    assert "garrix" in parts.keywords
+    assert "americas" in parts.keywords
+    assert "tour" in parts.keywords
+    assert "MARTIN" not in parts.abbreviations
+    assert "GARRIX" not in parts.abbreviations
+
+
+def test_parse_query_post_expansion_caps_become_keywords():
+    """After alias expansion introduces mixed case, remaining caps words should be keywords."""
+    aliases = {"edc": "Electric Daisy Carnival"}
+    parts = parse_query("FISHER Electric Daisy Carnival LAS VEGAS 2025", aliases)
+    assert "fisher" in parts.keywords
+    assert "las" in parts.keywords
+    assert "vegas" in parts.keywords
+    assert "electric" in parts.keywords
+    assert "daisy" in parts.keywords
+    assert "carnival" in parts.keywords
+
+
+def test_parse_query_mixed_case_known_alias_stays_abbreviation():
+    """Known aliases in mixed-case queries remain abbreviations (not keywords)."""
+    aliases = {"amf": "Amsterdam Music Festival"}
+    parts = parse_query("Fisher AMF 2025", aliases)
+    assert "AMF" in parts.abbreviations
+    assert "amf" not in parts.keywords
+    assert "fisher" in parts.keywords
+
+
 # --- score_results ---
 
 def test_score_keywords_proportional():
@@ -135,6 +169,16 @@ def test_score_keywords_proportional():
     assert len(scored) == 1  # zero-keyword match filtered out
     assert scored[0].id == "1"
     assert scored[0].score > 0
+
+
+def test_score_all_keywords_good_duration_reaches_plus():
+    """All keywords matched + duration within 5m + year match should score 250+."""
+    results = [
+        SearchResult(id="1", title="Swedish House Mafia @ Creamfields 2025", url="", duration_mins=63, date="2025-07-25"),
+    ]
+    parts = QueryParts(keywords=["swedish", "house", "mafia", "creamfields"], year="2025")
+    scored = score_results(results, parts, video_duration_minutes=60)
+    assert scored[0].score >= 250, f"Perfect match with good duration should reach '+' (got {scored[0].score:.0f})"
 
 
 def test_score_abbreviation_direct():
@@ -212,13 +256,12 @@ def test_score_event_pattern_correct_weekend():
 
 
 def test_score_event_pattern_wrong_weekend():
-    results = [
-        SearchResult(id="1", title="Artist @ Tomorrowland Weekend 2 2025", url=""),
-    ]
-    parts = QueryParts(keywords=["artist"], event_patterns=[{"type": "Weekend", "number": "1"}])
-    scored = score_results(results, parts)
-    # Gets -30 for wrong weekend, so lower than without pattern match
-    assert scored[0].score < 150
+    wrong = [SearchResult(id="1", title="Artist @ Tomorrowland Weekend 2 2025", url="")]
+    correct = [SearchResult(id="2", title="Artist @ Tomorrowland Weekend 1 2025", url="")]
+    parts = QueryParts(keywords=["artist", "tomorrowland"], event_patterns=[{"type": "Weekend", "number": "1"}])
+    wrong_scored = score_results(wrong, parts)
+    correct_scored = score_results(correct, parts)
+    assert wrong_scored[0].score < correct_scored[0].score
 
 
 def test_filter_zero_keyword_matches():

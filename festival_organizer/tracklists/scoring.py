@@ -108,10 +108,11 @@ def parse_query(query: str, aliases: dict[str, str]) -> QueryParts:
                 remaining.append(word)
                 continue
             else:
-                # Mixed-case query: existing behavior, all uppercase words are abbreviations
-                parts.abbreviations.append(word)
                 if is_known_alias:
+                    parts.abbreviations.append(word)
                     parts.resolved_aliases.append({"alias": word, "target": aliases[lower]})
+                else:
+                    remaining.append(word)
                 continue
 
         # Alias check (case-insensitive)
@@ -200,15 +201,15 @@ def _compute_score(
     # --- Content score ---
     content_score = 0.0
 
-    # 1. Keywords (0-120)
+    # 1. Keywords
     total_keywords = len(query_parts.keywords)
     if total_keywords > 0:
         matched = sum(1 for kw in query_parts.keywords if kw in title_normalized)
         result.matched_keyword_count = matched
         keyword_score = (matched / total_keywords) * 100
         if matched == total_keywords:
-            keyword_score += 50  # All-match bonus
-        content_score += min(keyword_score, 170)
+            keyword_score += 80
+        content_score += min(keyword_score, 200)
 
     # 2. Abbreviations (+35 each)
     for abbrev in query_parts.abbreviations:
