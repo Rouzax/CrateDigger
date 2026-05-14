@@ -252,7 +252,7 @@ CrateDigger picks up new entries on the next run.
 
 ## What the example file includes
 
-`places.example.json` covers major electronic music festivals including Tomorrowland, Ultra Music Festival, EDC, ASOT, AMF, Dreamstate, and more. It is a good starting point for most libraries. Add your own entries for any festivals, venues, or clubs it does not cover.
+`places.example.json` covers major electronic music festivals including Tomorrowland, Ultra Music Festival, EDC, ASOT, AMF, Dreamstate, and more, plus selected venues such as [UNVRS] Ibiza and Red Rocks Amphitheatre. It is a good starting point for most libraries. Add your own entries for any festivals, venues, or clubs it does not cover.
 
 ## Curated assets: logos and artwork
 

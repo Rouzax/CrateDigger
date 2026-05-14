@@ -80,6 +80,10 @@
         },
         "color": "#0693E3"
     },
+    "[UNVRS] Ibiza": {
+        "aliases": ["UNVRS Ibiza", "UNVRS"],
+        "color": "#fd780a"
+    },
     "Untold": {},
     "We Belong Here": {
         "editions": {

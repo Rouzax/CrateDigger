@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Add [UNVRS] Ibiza venue to `places.example.json`.
+
 ## [0.18.3] - 2026-05-12
 
 ### Added
