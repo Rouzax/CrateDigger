@@ -212,35 +212,21 @@ def _filter_venue_parts(venue: str, detail: str) -> list[str]:
 
 # --- Drawing helpers ---
 
-def _draw_centered(draw, y, text, font, fill, letter_spacing=0):
-    """Draw centered text with optional letter spacing and drop shadow."""
+def _draw_centered(draw, y, text, font, fill, letter_spacing=0, stroke_width=0, stroke_fill=None):
+    """Draw centered text with optional letter spacing and stroke outline."""
+    sw_kwargs = {}
+    if stroke_width and stroke_fill:
+        sw_kwargs = {"stroke_width": stroke_width, "stroke_fill": stroke_fill}
     if letter_spacing == 0:
         w = measure_w(font, text)
         x = (POSTER_W - w) // 2
-        draw.text((x + 2, y + 3), text, fill=(0, 0, 0, 160), font=font)
-        draw.text((x, y), text, fill=fill, font=font)
+        draw.text((x, y), text, fill=fill, font=font, **sw_kwargs)
     else:
         total_w = sum(measure_w(font, c) for c in text) + letter_spacing * (len(text) - 1)
         x = (POSTER_W - total_w) // 2
         for c in text:
             cw = measure_w(font, c)
-            draw.text((x + 2, y + 3), c, fill=(0, 0, 0, 140), font=font)
-            draw.text((x, y), c, fill=fill, font=font)
-            x += cw + letter_spacing
-
-
-def _draw_centered_no_shadow(draw, y, text, font, fill, letter_spacing=0):
-    """Draw centered text without drop shadow (for album posters)."""
-    if letter_spacing == 0:
-        w = measure_w(font, text)
-        x = (POSTER_W - w) // 2
-        draw.text((x, y), text, fill=fill, font=font)
-    else:
-        total_w = sum(measure_w(font, c) for c in text) + letter_spacing * (len(text) - 1)
-        x = (POSTER_W - total_w) // 2
-        for c in text:
-            cw = measure_w(font, c)
-            draw.text((x, y), c, fill=fill, font=font)
+            draw.text((x, y), c, fill=fill, font=font, **sw_kwargs)
             x += cw + letter_spacing
 
 
@@ -465,14 +451,14 @@ def generate_set_poster(
 
     # Festival name (plain colored text, no glow)
     fest_h = font_visual_height(font_fest)
-    _draw_centered_no_shadow(draw, ty, festival.upper(), font_fest, accent)
+    _draw_centered(draw, ty, festival.upper(), font_fest, accent)
     ty += fest_h + PAD_FEST_TO_YEAR
 
     # Date/Year line — white, no effects for TV readability
     date_display = format_date_display(date, year)
     if date_display:
         year_h = font_visual_height(font_year)
-        _draw_centered_no_shadow(draw, ty, date_display, font_year, "white")
+        _draw_centered(draw, ty, date_display, font_year, "white")
         ty += year_h + PAD_YEAR_TO_DETAIL
 
     # Detail lines — split on comma, auto-fit each line
@@ -480,7 +466,7 @@ def generate_set_poster(
         for part in [p.strip() for p in detail.split(",") if p.strip()]:
             font_d, _ = auto_fit(part, "semilight", max_w, start=44, minimum=28)
             dh = font_visual_height(font_d)
-            _draw_centered_no_shadow(draw, ty, part, font_d, "white")
+            _draw_centered(draw, ty, part, font_d, "white")
             ty += dh + PAD_DETAIL_LINES
 
     # Venue lines — deduplicate against detail, split on comma
@@ -488,7 +474,7 @@ def generate_set_poster(
         for part in _filter_venue_parts(venue, detail or ""):
             font_v, _ = auto_fit(part, "semilight", max_w, start=38, minimum=24)
             vh = font_visual_height(font_v)
-            _draw_centered_no_shadow(draw, ty, part, font_v, (200, 200, 200))
+            _draw_centered(draw, ty, part, font_v, (200, 200, 200))
             ty += vh + PAD_DETAIL_LINES
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -767,13 +753,13 @@ def generate_album_poster(
         pad_between = 12
         total_block = hero_h + pad_between + edition_h
         hero_y = LINE_Y - PAD_LINE_TO_FEST - total_block
-        _draw_centered_no_shadow(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
+        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
         edition_y = hero_y + hero_h + pad_between
-        _draw_centered_no_shadow(draw, edition_y, edition, font_edition, "white")
+        _draw_centered(draw, edition_y, edition, font_edition, "white")
     else:
         # Single line: festival name (or artist name)
         hero_y = LINE_Y - PAD_LINE_TO_FEST - hero_h
-        _draw_centered_no_shadow(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
+        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
 
     # Accent line with glow
     bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=16)

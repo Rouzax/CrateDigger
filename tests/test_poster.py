@@ -528,3 +528,17 @@ def test_make_gradient_bg_defaults_to_poster_size():
 
     bg = _make_gradient_bg((60, 90, 140))
     assert bg.size == (POSTER_W, POSTER_H)
+
+
+def test_draw_centered_accepts_stroke_params(tmp_path):
+    """_draw_centered renders text with stroke without error."""
+    from festival_organizer.poster import _draw_centered, POSTER_W, POSTER_H, get_font
+    from PIL import Image, ImageDraw
+
+    bg = Image.new("RGB", (POSTER_W, POSTER_H), (0, 0, 0))
+    draw = ImageDraw.Draw(bg)
+    font = get_font("bold", 80)
+    _draw_centered(draw, 500, "TEST", font, "white", stroke_width=2, stroke_fill=(100, 50, 200))
+    import numpy as np
+    arr = np.array(bg)
+    assert arr.max() > 0, "Nothing was drawn"
