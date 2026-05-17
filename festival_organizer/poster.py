@@ -432,7 +432,6 @@ def generate_set_poster(
     font_artist = get_font("bold", shared_size)
 
     font_fest, _ = auto_fit(festival.upper(), "bold", max_w, start=68, minimum=36)
-    font_year = get_font("semilight", 62)
     # BUILD UP from accent line — stack lines bottom-to-top
     line_h = font_visual_height(font_artist)
     cursor_y = LINE_Y - PAD_LINE_TO_ARTIST
@@ -458,6 +457,7 @@ def generate_set_poster(
     # Date/Year line — white, no effects for TV readability
     date_display = format_date_display(date, year)
     if date_display:
+        font_year, _ = auto_fit(date_display, "semilight", max_w, start=62, minimum=28)
         year_h = font_visual_height(font_year)
         _draw_centered(draw, ty, date_display, font_year, "white")
         ty += year_h + PAD_YEAR_TO_DETAIL
@@ -465,7 +465,7 @@ def generate_set_poster(
     # Detail lines — split on comma, auto-fit each line
     if detail:
         for part in [p.strip() for p in detail.split(",") if p.strip()]:
-            font_d, _ = auto_fit(part, "semilight", max_w, start=44, minimum=28)
+            font_d, _ = auto_fit(part, "semilight", max_w, start=62, minimum=28)
             dh = font_visual_height(font_d)
             _draw_centered(draw, ty, part, font_d, "white")
             ty += dh + PAD_DETAIL_LINES
@@ -473,7 +473,7 @@ def generate_set_poster(
     # Venue lines — deduplicate against detail, split on comma
     if venue:
         for part in _filter_venue_parts(venue, detail or ""):
-            font_v, _ = auto_fit(part, "semilight", max_w, start=38, minimum=24)
+            font_v, _ = auto_fit(part, "semilight", max_w, start=62, minimum=28)
             vh = font_visual_height(font_v)
             _draw_centered(draw, ty, part, font_v, (200, 200, 200))
             ty += vh + PAD_DETAIL_LINES
@@ -747,26 +747,20 @@ def generate_album_poster(
     hero_h = font_visual_height(font_hero)
     spacing = max(2, min(14, (max_w - measure_w(font_hero, display_text)) // max(len(display_text), 1)))
 
-    if not is_artist_poster and edition:
-        # Two lines: festival name + edition above accent line
-        font_edition = get_font("semilight", 48)
-        edition_h = font_visual_height(font_edition)
-        pad_between = 12
-        total_block = hero_h + pad_between + edition_h
-        hero_y = LINE_Y - PAD_LINE_TO_FEST - total_block
-        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing,
-                       stroke_width=2, stroke_fill=accent)
-        edition_y = hero_y + hero_h + pad_between
-        _draw_centered(draw, edition_y, edition, font_edition, "white")
-    else:
-        # Single line: festival name (or artist name)
-        hero_y = LINE_Y - PAD_LINE_TO_FEST - hero_h
-        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing,
-                       stroke_width=2, stroke_fill=accent)
+    # Hero text above accent line (single line, all poster types)
+    hero_y = LINE_Y - PAD_LINE_TO_FEST - hero_h
+    _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing,
+                   stroke_width=2, stroke_fill=accent)
 
     # Accent line with glow
     bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=16)
     draw = ImageDraw.Draw(bg)
+
+    # Edition below accent line (festival posters only)
+    if not is_artist_poster and edition:
+        font_edition, _ = auto_fit(edition.upper(), "bold", max_w, start=68, minimum=36)
+        ty = LINE_Y + LINE_H + PAD_LINE_TO_FEST
+        _draw_centered(draw, ty, edition.upper(), font_edition, accent)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     bg.save(str(output_path), quality=95)

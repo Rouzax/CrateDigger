@@ -478,7 +478,7 @@ def test_extract_logo_color_white_raises():
 
 
 def test_generate_album_poster_edition_text_layout(tmp_path):
-    """Festival poster with edition has nothing below accent line."""
+    """Festival poster with edition renders edition below accent line."""
     logo = tmp_path / "logo.png"
     img = Image.new("RGBA", (500, 500), (0, 0, 0, 0))
     from PIL import ImageDraw
@@ -499,10 +499,9 @@ def test_generate_album_poster_edition_text_layout(tmp_path):
         assert result.size == (POSTER_W, POSTER_H)
         import numpy as np
         arr = np.array(result)
-        # Below the accent line area should be mostly dark (no text)
-        bottom_strip = arr[LINE_Y + 50:, :]
-        mean_bottom = bottom_strip.mean()
-        assert mean_bottom < 40, f"Bottom area too bright ({mean_bottom:.1f}), text may be below accent line"
+        below_line_strip = arr[LINE_Y + 20:LINE_Y + 80, 300:700]
+        max_brightness = below_line_strip.max()
+        assert max_brightness > 50, "Edition text not visible below accent line"
 
 
 def test_generate_album_poster_brand_color_darkened(tmp_path):
