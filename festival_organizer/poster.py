@@ -439,7 +439,8 @@ def generate_set_poster(
     for line in reversed(artist_lines):
         cursor_y -= line_h
         sp = max(2, min(14, (max_w - measure_w(font_artist, line)) // max(len(line), 1)))
-        _draw_centered(draw, cursor_y, line, font_artist, "white", letter_spacing=sp)
+        _draw_centered(draw, cursor_y, line, font_artist, "white", letter_spacing=sp,
+                       stroke_width=2, stroke_fill=accent)
         cursor_y -= PAD_ARTIST_LINES
 
     # ACCENT LINE with glow
@@ -753,13 +754,15 @@ def generate_album_poster(
         pad_between = 12
         total_block = hero_h + pad_between + edition_h
         hero_y = LINE_Y - PAD_LINE_TO_FEST - total_block
-        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
+        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing,
+                       stroke_width=2, stroke_fill=accent)
         edition_y = hero_y + hero_h + pad_between
         _draw_centered(draw, edition_y, edition, font_edition, "white")
     else:
         # Single line: festival name (or artist name)
         hero_y = LINE_Y - PAD_LINE_TO_FEST - hero_h
-        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
+        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing,
+                       stroke_width=2, stroke_fill=accent)
 
     # Accent line with glow
     bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=16)

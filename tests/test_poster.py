@@ -544,6 +544,27 @@ def test_make_gradient_bg_defaults_to_poster_size():
     assert bg.size == (POSTER_W, POSTER_H)
 
 
+def test_set_poster_hero_has_accent_stroke(tmp_path):
+    """Set poster hero text renders with accent-colored pixels (stroke)."""
+    src = tmp_path / "source.png"
+    Image.new("RGB", (1280, 720), (100, 50, 200)).save(str(src))
+    output = tmp_path / "poster.jpg"
+    generate_set_poster(
+        source_image_path=src,
+        output_path=output,
+        artist="Test",
+        festival="Fest",
+        year="2025",
+    )
+    assert output.exists()
+    with Image.open(output) as img:
+        import numpy as np
+        arr = np.array(img)
+        hero_strip = arr[LINE_Y - 120:LINE_Y - 30, 200:800]
+        max_channel = hero_strip.max(axis=(0, 1))
+        assert max_channel.sum() > 300, "Hero area has no colored pixels (stroke missing)"
+
+
 def test_draw_centered_accepts_stroke_params(tmp_path):
     """_draw_centered renders text with stroke without error."""
     from festival_organizer.poster import _draw_centered, POSTER_W, POSTER_H, get_font
