@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.4] - 2026-05-17
+
+### Fixed
+
+- Kodi sync: clear folder.jpg texture cache when album posters change. Previously only per-video artwork was cleared; folder-level posters stayed stale.
+- Kodi sync: suppress debug logging for high-volume texture operations (GetTextures, RemoveTexture). Reduces debug log from ~2200 to ~200 lines for a typical run.
+
 ## [0.19.3] - 2026-05-17
 
 ### Fixed

@@ -107,7 +107,7 @@ class TestKodiClient:
 
         mock_call.assert_called_once_with("Textures.RemoveTexture", {
             "textureid": 101,
-        })
+        }, quiet=True)
 
     def test_refresh_music_video_calls_rpc(self):
         client = KodiClient("localhost", 8080, "kodi", "pass")
@@ -424,3 +424,31 @@ class TestSyncLibrary:
         assert client.refresh_music_video.call_count == 2
         assert client.get_textures.call_count == 1
         client.remove_texture.assert_called_once_with(50)
+
+    def test_clears_folder_jpg_texture_cache(self, tmp_path):
+        """folder.jpg textures are cleared when album_poster_folders is provided."""
+        festival_dir = tmp_path / "Festivals" / "Tomorrowland"
+        festival_dir.mkdir(parents=True)
+        video = festival_dir / "video.mkv"
+        video.touch()
+        (festival_dir / "folder.jpg").touch()
+
+        client = self._make_client({
+            "smb://HOST/Festivals/Tomorrowland/video.mkv": self._entry(1),
+        })
+        client.get_textures.return_value = [{"textureid": 200}]
+        console = MagicMock()
+
+        sync_library(
+            client, [video], console, suppressed=True,
+            path_mapping={"local": str(tmp_path), "kodi": "smb://HOST"},
+            album_poster_folders={festival_dir},
+        )
+
+        # Should have queried for folder.jpg texture
+        folder_jpg_calls = [
+            c for c in client.get_textures.call_args_list
+            if "folder.jpg" in str(c)
+        ]
+        assert len(folder_jpg_calls) == 1
+        client.remove_texture.assert_called_with(200)

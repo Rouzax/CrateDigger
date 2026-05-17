@@ -42,7 +42,7 @@ class KodiClient:
         self._session.auth = HTTPBasicAuth(username, password)
         self._request_id = 0
 
-    def _call(self, method: str, params: dict | None = None) -> dict:
+    def _call(self, method: str, params: dict | None = None, quiet: bool = False) -> dict:
         """Send a JSON-RPC 2.0 request and return the result."""
         self._request_id += 1
         payload = {
@@ -53,7 +53,8 @@ class KodiClient:
         if params:
             payload["params"] = params
 
-        logger.debug("kodi.rpc: direction=send method=%s params=%s", method, params or {})
+        if not quiet:
+            logger.debug("kodi.rpc: direction=send method=%s params=%s", method, params or {})
 
         try:
             resp = self._session.post(self._url, json=payload, timeout=30)
@@ -70,7 +71,8 @@ class KodiClient:
             err = data["error"]
             raise KodiError(f"Kodi RPC error: {err.get('message', err)}")
 
-        logger.debug("kodi.rpc: direction=recv result=%s", data.get("result", ""))
+        if not quiet:
+            logger.debug("kodi.rpc: direction=recv result=%s", data.get("result", ""))
         return data.get("result", {})
 
     def scan(self, directory: str = "") -> None:
@@ -124,14 +126,14 @@ class KodiClient:
                 "operator": "contains",
                 "value": url,
             },
-        })
+        }, quiet=True)
         return result.get("textures", [])
 
     def remove_texture(self, texture_id: int) -> None:
         """Hard-delete a cached texture (DB record + file on disk)."""
         self._call("Textures.RemoveTexture", {
             "textureid": texture_id,
-        })
+        }, quiet=True)
 
 
 def _infer_path_mapping(
@@ -216,12 +218,16 @@ def sync_library(
     path_mapping: dict | None = None,
     suppressed: bool = False,
     art_changed_paths: set[Path] | None = None,
+    album_poster_folders: set[Path] | None = None,
 ) -> None:
     """Sync changed files with Kodi: refresh existing, scan for new, clean stale.
 
     When art_changed_paths is provided, texture cache clearing only runs for
     items in that set (artwork actually changed). Otherwise all items get
     texture clearing as a safe default.
+
+    When album_poster_folders is provided, folder.jpg texture cache entries
+    are hard-deleted for those folders.
     """
     if not changed_paths:
         return
@@ -306,13 +312,10 @@ def sync_library(
                 needs_texture_clear = art_changed_paths is None or path in art_changed_paths
                 if needs_texture_clear:
                     for art_url in entry.get("art", {}).values():
-                        textures = client.get_textures(art_url)
-                        logger.debug("kodi.texture: action=lookup url=%s found=%d", art_url, len(textures))
-                        for tex in textures:
+                        for tex in client.get_textures(art_url):
                             tex_id = tex.get("textureid")
                             if tex_id is not None:
                                 client.remove_texture(tex_id)
-                                logger.debug("kodi.texture: action=clear id=%d", tex_id)
                                 textures_cleared += 1
 
                 client.refresh_music_video(mv_id)
@@ -325,6 +328,20 @@ def sync_library(
                     path.name,
                 )
                 not_found += 1
+
+        # Clear folder.jpg texture cache for folders with changed album posters
+        if album_poster_folders and local_prefix and kodi_prefix:
+            for folder in album_poster_folders:
+                folder_jpg = folder / "folder.jpg"
+                resolved = str(folder_jpg.resolve())
+                if resolved.lower().startswith(local_prefix.lower()):
+                    relative = resolved[len(local_prefix):].replace("\\", "/").lstrip("/")
+                    kodi_folder_path = f"{kodi_prefix}/{relative}"
+                    for tex in client.get_textures(kodi_folder_path):
+                        tex_id = tex.get("textureid")
+                        if tex_id is not None:
+                            client.remove_texture(tex_id)
+                            textures_cleared += 1
 
         if textures_cleared:
             logger.info("kodi.texture: action=cleared count=%d", textures_cleared)

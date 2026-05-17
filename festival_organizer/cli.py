@@ -1145,7 +1145,8 @@ def _run_kodi_sync(
         suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
         sync_library(client, changed_paths, console, quiet,
                      path_mapping=path_mapping, suppressed=suppressed,
-                     art_changed_paths=art_changed_paths)
+                     art_changed_paths=art_changed_paths,
+                     album_poster_folders=album_poster_folders)
     except Exception as e:
         logging.getLogger("festival_organizer.kodi").warning(
             "Kodi sync failed: %s", e
