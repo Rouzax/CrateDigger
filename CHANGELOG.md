@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.3] - 2026-05-17
+
+### Fixed
+
+- Kodi sync: texture cache clearing now only runs for items where artwork actually changed (art, posters, fanart, folder.jpg). Items with only NFO updates skip the texture lookup/delete calls.
+
 ## [0.19.2] - 2026-05-17
 
 ### Fixed
