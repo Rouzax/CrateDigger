@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-05-17
+
+### Changed
+
+- Poster layout harmonized across set posters, album festival posters, and album artist posters for visual consistency.
+- Hero text on all poster types now uses accent color stroke outline instead of drop shadow.
+- Hero auto-fit range unified to 130-50px across all poster types (was 110-50 for set, 130-60 for album).
+- Letter spacing cap unified to 14px across all poster types (was 8 for set, 14 for album).
+- Accent line glow radius unified to 16 across all poster types (was 14 for set).
+- Padding from accent line unified to 30px in both directions (was 28px above).
+- Below-line text uses a two-tier hierarchy: tier 1 (festival name or edition) is bold 68-36px in accent color; tier 2 (year, stage, venue) is semilight 62-28px auto-fit.
+- Festival album poster edition text moved from above the accent line to below it, rendered in bold at accent color.
+
 ## [0.18.4] - 2026-05-14
 
 ### Added
