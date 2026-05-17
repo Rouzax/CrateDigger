@@ -78,13 +78,27 @@ def test_format_date_no_data():
 # --- auto_fit tests ---
 
 def test_auto_fit_short_name():
-    font, size = auto_fit("HI", "bold", 900, start=110, minimum=50)
-    assert size == 110  # short text fits at max size
+    font, size = auto_fit("HI", "bold", 900, start=130, minimum=50)
+    assert size == 130  # short text fits at max size
 
 
 def test_auto_fit_long_name():
-    font, size = auto_fit("A" * 50, "bold", 900, start=110, minimum=50)
-    assert size <= 110  # long text should be smaller
+    font, size = auto_fit("A" * 50, "bold", 900, start=130, minimum=50)
+    assert size <= 130  # long text should be smaller
+
+
+def test_pad_line_to_artist_matches_fest():
+    """Padding from accent line should be symmetric."""
+    from festival_organizer.poster import PAD_LINE_TO_ARTIST, PAD_LINE_TO_FEST
+    assert PAD_LINE_TO_ARTIST == PAD_LINE_TO_FEST == 30
+
+
+def test_auto_fit_hero_range_unified():
+    """Hero auto-fit uses 130-50 range for both short and long text."""
+    font_short, size_short = auto_fit("AMF", "bold", 900, start=130, minimum=50)
+    assert size_short == 130
+    font_long, size_long = auto_fit("A" * 50, "bold", 900, start=130, minimum=50)
+    assert size_long == 50
 
 
 # --- generate_set_poster tests ---

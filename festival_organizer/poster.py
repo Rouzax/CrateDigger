@@ -30,7 +30,7 @@ POSTER_W, POSTER_H = 1000, 1500
 LINE_Y = int(POSTER_H * 0.67)  # accent line at 2/3
 LINE_H = 4
 
-PAD_LINE_TO_ARTIST = 28
+PAD_LINE_TO_ARTIST = 30
 PAD_ARTIST_LINES = 6
 PAD_LINE_TO_FEST = 30
 PAD_FEST_TO_YEAR = 22
@@ -426,7 +426,7 @@ def generate_set_poster(
     # Auto-fit fonts — uniform size across all lines (driven by the longest)
     sizes = []
     for line in artist_lines:
-        _, size = auto_fit(line, "bold", max_w, start=110, minimum=50)
+        _, size = auto_fit(line, "bold", max_w, start=130, minimum=50)
         sizes.append(size)
     shared_size = min(sizes)
     font_artist = get_font("bold", shared_size)
@@ -438,12 +438,12 @@ def generate_set_poster(
     cursor_y = LINE_Y - PAD_LINE_TO_ARTIST
     for line in reversed(artist_lines):
         cursor_y -= line_h
-        sp = max(2, min(8, (max_w - measure_w(font_artist, line)) // max(len(line), 1)))
+        sp = max(2, min(14, (max_w - measure_w(font_artist, line)) // max(len(line), 1)))
         _draw_centered(draw, cursor_y, line, font_artist, "white", letter_spacing=sp)
         cursor_y -= PAD_ARTIST_LINES
 
     # ACCENT LINE with glow
-    bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=14)
+    bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=16)
     draw = ImageDraw.Draw(bg)
 
     # BUILD DOWN from accent line
@@ -740,7 +740,7 @@ def generate_album_poster(
     display_text = (hero_text or festival).upper()
     is_artist_poster = hero_text is not None
 
-    font_hero, _ = auto_fit(display_text, "bold", max_w, start=130, minimum=60)
+    font_hero, _ = auto_fit(display_text, "bold", max_w, start=130, minimum=50)
 
     # Hero text above line
     hero_h = font_visual_height(font_hero)
