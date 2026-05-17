@@ -400,3 +400,27 @@ class TestSyncLibrary:
 
         client.get_textures.assert_not_called()
         client.remove_texture.assert_not_called()
+
+    def test_texture_clear_only_for_art_changed_paths(self, tmp_path):
+        """Only items in art_changed_paths get texture cache clearing."""
+        nfo_only = tmp_path / "nfo_only.mkv"
+        art_changed = tmp_path / "art_changed.mkv"
+        nfo_only.touch()
+        art_changed.touch()
+
+        art = {"poster": "image://poster.jpg/"}
+        client = self._make_client({
+            "smb://HOST/nfo_only.mkv": self._entry(1, art),
+            "smb://HOST/art_changed.mkv": self._entry(2, art),
+        })
+        client.get_textures.return_value = [{"textureid": 50}]
+        console = MagicMock()
+
+        sync_library(
+            client, [nfo_only, art_changed], console, suppressed=True,
+            art_changed_paths={art_changed},
+        )
+
+        assert client.refresh_music_video.call_count == 2
+        assert client.get_textures.call_count == 1
+        client.remove_texture.assert_called_once_with(50)

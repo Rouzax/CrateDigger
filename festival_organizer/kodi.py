@@ -215,8 +215,14 @@ def sync_library(
     quiet: bool = False,
     path_mapping: dict | None = None,
     suppressed: bool = False,
+    art_changed_paths: set[Path] | None = None,
 ) -> None:
-    """Sync changed files with Kodi: refresh existing, scan for new, clean stale."""
+    """Sync changed files with Kodi: refresh existing, scan for new, clean stale.
+
+    When art_changed_paths is provided, texture cache clearing only runs for
+    items in that set (artwork actually changed). Otherwise all items get
+    texture clearing as a safe default.
+    """
     if not changed_paths:
         return
 
@@ -296,16 +302,18 @@ def sync_library(
             if entry is not None:
                 mv_id = entry["id"]
 
-                # Hard-delete texture cache for this item's artwork
-                for art_url in entry.get("art", {}).values():
-                    textures = client.get_textures(art_url)
-                    logger.debug("kodi.texture: action=lookup url=%s found=%d", art_url, len(textures))
-                    for tex in textures:
-                        tex_id = tex.get("textureid")
-                        if tex_id is not None:
-                            client.remove_texture(tex_id)
-                            logger.debug("kodi.texture: action=clear id=%d", tex_id)
-                            textures_cleared += 1
+                # Hard-delete texture cache only for items with artwork changes
+                needs_texture_clear = art_changed_paths is None or path in art_changed_paths
+                if needs_texture_clear:
+                    for art_url in entry.get("art", {}).values():
+                        textures = client.get_textures(art_url)
+                        logger.debug("kodi.texture: action=lookup url=%s found=%d", art_url, len(textures))
+                        for tex in textures:
+                            tex_id = tex.get("textureid")
+                            if tex_id is not None:
+                                client.remove_texture(tex_id)
+                                logger.debug("kodi.texture: action=clear id=%d", tex_id)
+                                textures_cleared += 1
 
                 client.refresh_music_video(mv_id)
                 logger.info("kodi.refresh: file=%s status=ok", path.name)

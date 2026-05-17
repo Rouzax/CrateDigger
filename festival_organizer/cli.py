@@ -1096,8 +1096,10 @@ def _run_kodi_sync(
     from festival_organizer.kodi import KodiClient, sync_library
 
     RELEVANT_OPS = {"nfo", "art", "posters", "fanart"}
+    ART_OPS = {"art", "posters", "fanart"}
     video_exts = config.video_extensions
     changed_paths: list[Path] = []
+    art_changed_paths: set[Path] = set()
     album_poster_folders: set[Path] = set()
     kodi_logger = logging.getLogger("festival_organizer.kodi")
 
@@ -1111,16 +1113,18 @@ def _run_kodi_sync(
             if r.status != "done":
                 continue
             if r.display_name == "album_poster":
-                # folder.jpg changed; all videos in that folder need refresh
                 album_poster_folders.add(final_path.parent)
             elif r.name in RELEVANT_OPS:
                 changed_paths.append(final_path)
+                if r.name in ART_OPS:
+                    art_changed_paths.add(final_path)
 
-    # Expand album_poster folders: add all video files in affected folders
+    # Expand album_poster folders: all videos in that folder need refresh + texture clear
     for folder in album_poster_folders:
         for sibling in folder.iterdir():
             if sibling.is_file() and sibling.suffix.lower() in video_exts:
                 changed_paths.append(sibling)
+                art_changed_paths.add(sibling)
 
     if not changed_paths:
         kodi_logger.debug(
@@ -1140,7 +1144,8 @@ def _run_kodi_sync(
         from festival_organizer.console import suppression_enabled
         suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
         sync_library(client, changed_paths, console, quiet,
-                     path_mapping=path_mapping, suppressed=suppressed)
+                     path_mapping=path_mapping, suppressed=suppressed,
+                     art_changed_paths=art_changed_paths)
     except Exception as e:
         logging.getLogger("festival_organizer.kodi").warning(
             "Kodi sync failed: %s", e
