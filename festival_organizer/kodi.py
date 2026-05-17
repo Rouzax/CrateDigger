@@ -4,8 +4,9 @@ After enrichment, notifies Kodi to re-read NFO files and artwork for
 items that were updated. Uses VideoLibrary.Scan for new files and
 VideoLibrary.RefreshMusicVideo for existing items.
 
-Kodi queues RefreshMusicVideo calls internally via CVideoLibraryQueue,
-so rapid sequential calls are safe; each refresh is processed in order.
+Refresh calls are throttled (100ms between each) to avoid overwhelming
+Kodi's internal queue. Texture cache entries are hard-deleted before
+refresh so Kodi re-fetches artwork immediately.
 
 Logging:
     Logger: 'festival_organizer.kodi'
@@ -87,20 +88,23 @@ class KodiClient:
         })
         logger.info("kodi.sync: action=clean type=musicvideos")
 
-    def get_music_videos(self) -> dict[str, int]:
-        """Fetch all music videos and return {file_path: musicvideoid}.
+    def get_music_videos(self) -> dict[str, dict]:
+        """Fetch all music videos with artwork: {path: {"id": int, "art": dict}}.
 
         Paths are stored exactly as Kodi reports them (e.g. SMB URLs).
         """
         result = self._call("VideoLibrary.GetMusicVideos", {
-            "properties": ["file"],
+            "properties": ["file", "art"],
         })
-        mapping: dict[str, int] = {}
+        mapping: dict[str, dict] = {}
         for mv in result.get("musicvideos", []):
             file_path = mv.get("file", "")
             mv_id = mv.get("musicvideoid")
             if file_path and mv_id is not None:
-                mapping[file_path] = mv_id
+                mapping[file_path] = {
+                    "id": mv_id,
+                    "art": mv.get("art", {}),
+                }
         logger.debug("kodi.library: count=%d", len(mapping))
         return mapping
 
@@ -111,10 +115,28 @@ class KodiClient:
             "ignorenfo": False,
         })
 
+    def get_textures(self, url: str) -> list[dict]:
+        """Find cached textures matching a URL."""
+        result = self._call("Textures.GetTextures", {
+            "properties": ["url"],
+            "filter": {
+                "field": "url",
+                "operator": "contains",
+                "value": url,
+            },
+        })
+        return result.get("textures", [])
+
+    def remove_texture(self, texture_id: int) -> None:
+        """Hard-delete a cached texture (DB record + file on disk)."""
+        self._call("Textures.RemoveTexture", {
+            "textureid": texture_id,
+        })
+
 
 def _infer_path_mapping(
     local_paths: list[Path],
-    kodi_videos: dict[str, int],
+    kodi_videos: dict[str, dict],
 ) -> tuple[str, str] | None:
     """Auto-detect the local->kodi prefix mapping by matching filenames.
 
@@ -232,17 +254,20 @@ def sync_library(
             if inferred:
                 local_prefix, kodi_prefix = inferred
 
-        # Build a filename-to-ID index as last-resort fallback (case-insensitive)
-        filename_index: dict[str, int] = {}
-        for kodi_path, mv_id in kodi_videos.items():
+        # Build a filename-to-entry index as last-resort fallback (case-insensitive)
+        filename_index: dict[str, dict] = {}
+        for kodi_path, entry in kodi_videos.items():
             name = kodi_path.rsplit("/", 1)[-1] if "/" in kodi_path else kodi_path
-            filename_index[name.lower()] = mv_id
+            filename_index[name.lower()] = entry
 
         # Deduplicate paths (album_poster expansion may add duplicates)
         unique_paths = list(dict.fromkeys(changed_paths))
 
         refreshed = 0
         not_found = 0
+        textures_cleared = 0
+
+        logger.debug("kodi.sync: action=throttle delay_ms=100")
 
         for i, path in enumerate(unique_paths):
             sp.update(
@@ -250,28 +275,42 @@ def sync_library(
                 filename=path.name,
             )
 
-            mv_id = None
+            entry = None
 
             # Strategy 1: prefix mapping (case-insensitive)
             if local_prefix and kodi_prefix:
                 kodi_path = _translate_path(path, local_prefix, kodi_prefix, kodi_lower)
                 if kodi_path:
-                    mv_id = kodi_videos.get(kodi_path)
+                    entry = kodi_videos.get(kodi_path)
 
             # Strategy 2: exact path match (same filesystem)
-            if mv_id is None:
-                mv_id = kodi_videos.get(str(path.resolve()))
+            if entry is None:
+                entry = kodi_videos.get(str(path.resolve()))
 
             # Strategy 3: filename match (case-insensitive fallback)
-            if mv_id is None:
-                mv_id = filename_index.get(path.name.lower())
-                if mv_id is not None:
+            if entry is None:
+                entry = filename_index.get(path.name.lower())
+                if entry is not None:
                     logger.debug("kodi.match: strategy=filename file=%s", path.name)
 
-            if mv_id is not None:
+            if entry is not None:
+                mv_id = entry["id"]
+
+                # Hard-delete texture cache for this item's artwork
+                for art_url in entry.get("art", {}).values():
+                    textures = client.get_textures(art_url)
+                    logger.debug("kodi.texture: action=lookup url=%s found=%d", art_url, len(textures))
+                    for tex in textures:
+                        tex_id = tex.get("textureid")
+                        if tex_id is not None:
+                            client.remove_texture(tex_id)
+                            logger.debug("kodi.texture: action=clear id=%d", tex_id)
+                            textures_cleared += 1
+
                 client.refresh_music_video(mv_id)
                 logger.info("kodi.refresh: file=%s status=ok", path.name)
                 refreshed += 1
+                time.sleep(0.1)
             else:
                 logger.warning(
                     "kodi.refresh: file=%s status=not_found",
@@ -279,8 +318,16 @@ def sync_library(
                 )
                 not_found += 1
 
+        if textures_cleared:
+            logger.info("kodi.texture: action=cleared count=%d", textures_cleared)
+
+        sp.update("Waiting for Kodi to process refreshes...")
+        time.sleep(2)
+
         sp.update("Scanning for new files...")
         client.scan()
+
+        time.sleep(2)
 
         sp.update("Cleaning stale entries...")
         client.clean()
@@ -289,6 +336,8 @@ def sync_library(
 
     if not quiet:
         stats: dict[str, int] = {"refreshed": refreshed}
+        if textures_cleared:
+            stats["textures cleared"] = textures_cleared
         if not_found:
             stats["not yet in library"] = not_found
         console.print(library_sync_summary_line("Kodi", stats, elapsed))

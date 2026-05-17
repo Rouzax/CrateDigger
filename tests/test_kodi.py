@@ -50,16 +50,18 @@ class TestKodiClient:
             with pytest.raises(KodiError, match="RPC error"):
                 client._call("Bogus.Method")
 
-    def test_get_music_videos_stores_paths_as_is(self):
-        """Kodi paths (including SMB URLs) are stored verbatim."""
+    def test_get_music_videos_stores_paths_and_art(self):
+        """Kodi paths (including SMB URLs) are stored with artwork."""
         client = KodiClient("localhost", 8080, "kodi", "pass")
         rpc_result = {
             "musicvideos": [
                 {"musicvideoid": 10,
                  "file": "smb://HYPERV/Data/Concerts/Artist/video1.mkv",
+                 "art": {"poster": "image://poster1/"},
                  "label": "v1"},
                 {"musicvideoid": 20,
                  "file": "smb://HYPERV/Data/Concerts/Artist/video2.mkv",
+                 "art": {},
                  "label": "v2"},
             ],
         }
@@ -68,8 +70,9 @@ class TestKodiClient:
             mapping = client.get_music_videos()
 
         assert len(mapping) == 2
-        assert mapping["smb://HYPERV/Data/Concerts/Artist/video1.mkv"] == 10
-        assert mapping["smb://HYPERV/Data/Concerts/Artist/video2.mkv"] == 20
+        assert mapping["smb://HYPERV/Data/Concerts/Artist/video1.mkv"]["id"] == 10
+        assert mapping["smb://HYPERV/Data/Concerts/Artist/video1.mkv"]["art"] == {"poster": "image://poster1/"}
+        assert mapping["smb://HYPERV/Data/Concerts/Artist/video2.mkv"]["id"] == 20
 
     def test_get_music_videos_empty_library(self):
         client = KodiClient("localhost", 8080, "kodi", "pass")
@@ -78,6 +81,33 @@ class TestKodiClient:
             mapping = client.get_music_videos()
 
         assert mapping == {}
+
+    def test_get_textures_filters_by_url(self):
+        client = KodiClient("localhost", 8080, "kodi", "pass")
+        rpc_result = {
+            "textures": [
+                {"textureid": 101, "url": "image://poster.jpg/"},
+            ],
+        }
+
+        with patch.object(client, "_call", return_value=rpc_result) as mock_call:
+            result = client.get_textures("poster.jpg")
+
+        assert len(result) == 1
+        assert result[0]["textureid"] == 101
+        call_params = mock_call.call_args[0][1]
+        assert call_params["filter"]["field"] == "url"
+        assert call_params["filter"]["operator"] == "contains"
+
+    def test_remove_texture_calls_rpc(self):
+        client = KodiClient("localhost", 8080, "kodi", "pass")
+
+        with patch.object(client, "_call", return_value="OK") as mock_call:
+            client.remove_texture(101)
+
+        mock_call.assert_called_once_with("Textures.RemoveTexture", {
+            "textureid": 101,
+        })
 
     def test_refresh_music_video_calls_rpc(self):
         client = KodiClient("localhost", 8080, "kodi", "pass")
@@ -111,7 +141,7 @@ class TestInferPathMapping:
         video.touch()
 
         kodi_videos = {
-            "smb://HYPERV/Data/Concerts/ALOK/2025 - TML - ALOK.mkv": 10,
+            "smb://HYPERV/Data/Concerts/ALOK/2025 - TML - ALOK.mkv": {"id": 10, "art": {}},
         }
 
         result = _infer_path_mapping([video], kodi_videos)
@@ -127,13 +157,12 @@ class TestInferPathMapping:
         video.touch()
 
         kodi_videos = {
-            "smb://HOST/Concerts/AFROJACK/video.mkv": 10,
+            "smb://HOST/Concerts/AFROJACK/video.mkv": {"id": 10, "art": {}},
         }
 
         result = _infer_path_mapping([video], kodi_videos)
         assert result is not None
         local_prefix, kodi_prefix = result
-        # "Concerts", "Afrojack/AFROJACK", "video.mkv" all match case-insensitive
         assert local_prefix == str(tmp_path.resolve())
         assert kodi_prefix == "smb://HOST"
 
@@ -141,12 +170,12 @@ class TestInferPathMapping:
         video = tmp_path / "unique_file.mkv"
         video.touch()
 
-        result = _infer_path_mapping([video], {"smb://X/other.mkv": 1})
+        result = _infer_path_mapping([video], {"smb://X/other.mkv": {"id": 1, "art": {}}})
         assert result is None
 
     def test_returns_none_for_empty_inputs(self):
         assert _infer_path_mapping([], {}) is None
-        assert _infer_path_mapping([], {"smb://X/f.mkv": 1}) is None
+        assert _infer_path_mapping([], {"smb://X/f.mkv": {"id": 1, "art": {}}}) is None
 
 
 class TestTranslatePath:
@@ -200,11 +229,16 @@ class TestTranslatePath:
 
 class TestSyncLibrary:
 
-    def _make_client(self, kodi_files: dict[str, int]):
-        """Create a mock KodiClient with given file->id mapping."""
+    def _make_client(self, kodi_files: dict[str, dict]):
+        """Create a mock KodiClient with given file->entry mapping."""
         client = MagicMock(spec=KodiClient)
         client.get_music_videos.return_value = kodi_files
+        client.get_textures.return_value = []
         return client
+
+    def _entry(self, mv_id: int, art: dict | None = None) -> dict:
+        """Build a Kodi music video entry."""
+        return {"id": mv_id, "art": art or {}}
 
     def test_auto_infers_mapping_and_refreshes(self, tmp_path):
         """Without explicit path_mapping, auto-detects from filenames."""
@@ -213,7 +247,7 @@ class TestSyncLibrary:
         video.touch()
 
         smb_path = "smb://HYPERV/Data/Concerts/ALOK/video.mkv"
-        client = self._make_client({smb_path: 42})
+        client = self._make_client({smb_path: self._entry(42)})
         console = MagicMock()
 
         sync_library(client, [video], console, suppressed=True)
@@ -230,8 +264,8 @@ class TestSyncLibrary:
         video2.touch()
 
         kodi_files = {
-            "smb://HOST/Concerts/AFROJACK/video1.mkv": 10,
-            "smb://HOST/Concerts/Agents Of Time/video2.mkv": 20,
+            "smb://HOST/Concerts/AFROJACK/video1.mkv": self._entry(10),
+            "smb://HOST/Concerts/Agents Of Time/video2.mkv": self._entry(20),
         }
         client = self._make_client(kodi_files)
         console = MagicMock()
@@ -247,7 +281,7 @@ class TestSyncLibrary:
         video.touch()
 
         smb_path = "smb://HOST/share/Artist/video.mkv"
-        client = self._make_client({smb_path: 7})
+        client = self._make_client({smb_path: self._entry(7)})
         console = MagicMock()
 
         sync_library(
@@ -264,7 +298,7 @@ class TestSyncLibrary:
         video.touch()
 
         smb_path = "smb://HYPERV/Data/Concerts/Artist/video.mkv"
-        client = self._make_client({smb_path: 10})
+        client = self._make_client({smb_path: self._entry(10)})
         console = MagicMock()
 
         sync_library(client, [video], console, suppressed=True)
@@ -299,7 +333,7 @@ class TestSyncLibrary:
         video = tmp_path / "video.mkv"
         video.touch()
 
-        client = self._make_client({"smb://HOST/video.mkv": 1})
+        client = self._make_client({"smb://HOST/video.mkv": self._entry(1)})
         console = MagicMock()
         call_order = []
         client.refresh_music_video.side_effect = lambda *a: call_order.append("refresh")
@@ -315,7 +349,7 @@ class TestSyncLibrary:
         video = tmp_path / "video.mkv"
         video.touch()
 
-        client = self._make_client({"smb://HOST/video.mkv": 1})
+        client = self._make_client({"smb://HOST/video.mkv": self._entry(1)})
         console = MagicMock()
 
         sync_library(client, [video, video, video], console, suppressed=True)
@@ -326,9 +360,43 @@ class TestSyncLibrary:
         video = tmp_path / "video.mkv"
         video.touch()
 
-        client = self._make_client({"smb://HOST/video.mkv": 1})
+        client = self._make_client({"smb://HOST/video.mkv": self._entry(1)})
         console = MagicMock()
 
         sync_library(client, [video], console, quiet=True, suppressed=True)
 
         console.print.assert_not_called()
+
+    def test_clears_texture_cache_before_refresh(self, tmp_path):
+        """Artwork textures are hard-deleted before refreshing the item."""
+        video = tmp_path / "video.mkv"
+        video.touch()
+
+        art = {"poster": "image://poster.jpg/", "fanart": "image://fanart.jpg/"}
+        client = self._make_client({"smb://HOST/video.mkv": self._entry(1, art)})
+        client.get_textures.return_value = [{"textureid": 99, "url": "image://poster.jpg/"}]
+        console = MagicMock()
+
+        call_order = []
+        client.remove_texture.side_effect = lambda *a: call_order.append("remove_tex")
+        client.refresh_music_video.side_effect = lambda *a: call_order.append("refresh")
+
+        sync_library(client, [video], console, suppressed=True)
+
+        assert client.get_textures.call_count == 2
+        client.remove_texture.assert_called_with(99)
+        assert call_order[0] == "remove_tex"
+        assert "refresh" in call_order
+
+    def test_no_texture_clear_when_no_art(self, tmp_path):
+        """Items without artwork skip texture clearing."""
+        video = tmp_path / "video.mkv"
+        video.touch()
+
+        client = self._make_client({"smb://HOST/video.mkv": self._entry(1)})
+        console = MagicMock()
+
+        sync_library(client, [video], console, suppressed=True)
+
+        client.get_textures.assert_not_called()
+        client.remove_texture.assert_not_called()

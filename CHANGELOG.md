@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-05-17
+
+### Fixed
+
+- Kodi sync: throttle refresh calls (100ms between each) and add phase delays to prevent Kodi crashes during large batch updates.
+- Kodi sync: hard-delete texture cache entries for changed artwork before refreshing, so Kodi displays updated posters immediately instead of showing stale cached images.
+
 ## [0.19.1] - 2026-05-17
 
 ### Fixed
