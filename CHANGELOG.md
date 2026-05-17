@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-05-17
+
+### Fixed
+
+- Set poster: venue line no longer duplicates the festival name when both are identical (e.g. club venues like [UNVRS] Ibiza).
+
 ## [0.19.0] - 2026-05-17
 
 ### Changed

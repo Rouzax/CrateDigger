@@ -431,6 +431,16 @@ def test_filter_venue_parts_empty_venue():
     assert _filter_venue_parts("", "Mainstage") == []
 
 
+def test_filter_venue_parts_festival_duplicate():
+    """Venue matching festival name is filtered out."""
+    assert _filter_venue_parts("[UNVRS] Ibiza", "Galactic Circus", "[UNVRS] Ibiza") == []
+
+
+def test_filter_venue_parts_festival_no_false_positive():
+    """Unrelated venue is not filtered by festival name."""
+    assert _filter_venue_parts("Ahoy Rotterdam", "Mainstage", "ASOT") == ["Ahoy Rotterdam"]
+
+
 # --- hex parsing tests ---
 
 def test_hex_to_rgb_with_hash():

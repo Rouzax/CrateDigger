@@ -196,15 +196,16 @@ def format_date_display(date: str, year: str) -> str:
     return year or ""
 
 
-def _filter_venue_parts(venue: str, detail: str) -> list[str]:
-    """Return venue parts not already covered by a detail part (substring match)."""
+def _filter_venue_parts(venue: str, detail: str, festival: str = "") -> list[str]:
+    """Return venue parts not already covered by a detail or festival part."""
     if not venue:
         return []
-    detail_parts_lower = [p.strip().lower() for p in detail.split(",") if p.strip()]
+    known_lower = [p.strip().lower() for p in detail.split(",") if p.strip()]
+    known_lower += [p.strip().lower() for p in festival.split(",") if p.strip()]
     result = []
     for part in [p.strip() for p in venue.split(",") if p.strip()]:
         part_lower = part.lower()
-        if any(part_lower in d or d in part_lower for d in detail_parts_lower):
+        if any(part_lower in k or k in part_lower for k in known_lower):
             continue
         result.append(part)
     return result
@@ -472,7 +473,7 @@ def generate_set_poster(
 
     # Venue lines — deduplicate against detail, split on comma
     if venue:
-        for part in _filter_venue_parts(venue, detail or ""):
+        for part in _filter_venue_parts(venue, detail or "", festival):
             font_v, _ = auto_fit(part, "semilight", max_w, start=62, minimum=28)
             vh = font_visual_height(font_v)
             _draw_centered(draw, ty, part, font_v, (200, 200, 200))
