@@ -539,6 +539,27 @@ def test_score_alias_group_triggers_all_keywords_bonus():
     assert scored[0].score > scored[1].score + 50  # decisive gap from +80 bonus
 
 
+def test_zedd_outscores_hardwell_with_expanded_edc():
+    """Regression: Zedd should rank above Hardwell when query expands EDC.
+
+    The original bug: expand_aliases_in_query turns 'EDC' into 'Electric Daisy Carnival',
+    creating 3 phantom keywords that never match 1001TL titles (which use 'EDC').
+    This diluted keyword ratios and let cache bonuses flip the correct ordering.
+    """
+    aliases = {"edc": "Electric Daisy Carnival"}
+    query = "ZEDD @ Electric Daisy Carnival Las Vegas 2026 kineticFIELD 2K"
+    parts = parse_query(query, aliases)
+
+    results = [
+        SearchResult(id="hardwell", title="Hardwell @ kineticFIELD, EDC Las Vegas, United States", url="", duration_mins=68, date="2026-05-16"),
+        SearchResult(id="zedd", title="Zedd @ kineticFIELD, EDC Las Vegas, United States", url="", duration_mins=68, date="2026-05-17"),
+    ]
+
+    scored = score_results(results, parts, video_duration_minutes=67)
+    assert scored[0].id == "zedd", f"Zedd should rank #1 but got {scored[0].id} (scores: {scored[0].score:.0f} vs {scored[1].score:.0f})"
+    assert scored[0].score > scored[1].score + 20, "Zedd should have a decisive lead"
+
+
 def test_auto_select_threshold_separates_good_from_bad():
     """Auto-select requires both minimum score AND minimum gap to #2."""
     from festival_organizer.tracklists.cli_handler import AUTO_SELECT_MIN_SCORE, AUTO_SELECT_MIN_GAP
