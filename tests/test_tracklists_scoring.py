@@ -1,5 +1,6 @@
 """Tests for tracklist search result scoring."""
 from festival_organizer.tracklists.scoring import (
+    AliasGroup,
     parse_query,
     score_results,
     remove_diacritics,
@@ -154,6 +155,70 @@ def test_parse_query_mixed_case_known_alias_stays_abbreviation():
     assert "AMF" in parts.abbreviations
     assert "amf" not in parts.keywords
     assert "fisher" in parts.keywords
+
+
+# --- parse_query alias groups ---
+
+def test_parse_query_detects_alias_group_from_expansion():
+    """Expanded 'Electric Daisy Carnival' should become an alias group, not 3 keywords."""
+    aliases = {"edc": "Electric Daisy Carnival"}
+    parts = parse_query("ZEDD @ Electric Daisy Carnival Las Vegas 2026 kineticFIELD 2K", aliases)
+    assert parts.year == "2026"
+    assert len(parts.alias_groups) == 1
+    assert parts.alias_groups[0].abbreviation == "edc"
+    assert parts.alias_groups[0].full_name == "Electric Daisy Carnival"
+    assert parts.alias_groups[0].keywords == ["electric", "daisy", "carnival"]
+    assert "electric" not in parts.keywords
+    assert "daisy" not in parts.keywords
+    assert "carnival" not in parts.keywords
+    assert "zedd" in parts.keywords
+    assert "las" in parts.keywords
+    assert "vegas" in parts.keywords
+    assert "kineticfield" in parts.keywords
+
+
+def test_parse_query_detects_alias_group_all_caps():
+    """Full alias name in ALL-CAPS query should be detected as alias group."""
+    aliases = {"umf": "Ultra Music Festival"}
+    parts = parse_query("AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026", aliases)
+    assert len(parts.alias_groups) == 1
+    assert parts.alias_groups[0].abbreviation == "umf"
+    assert parts.alias_groups[0].keywords == ["ultra", "music", "festival"]
+    assert "ultra" not in parts.keywords
+    assert "music" not in parts.keywords
+    assert "festival" not in parts.keywords
+    assert "afrojack" in parts.keywords
+    assert "miami" in parts.keywords
+
+
+def test_parse_query_skips_single_word_alias_values():
+    """Single-word alias values should NOT produce alias groups."""
+    aliases = {"tml": "Tomorrowland"}
+    parts = parse_query("Hardwell Tomorrowland 2025", aliases)
+    assert len(parts.alias_groups) == 0
+    assert "tomorrowland" in parts.keywords
+
+
+def test_parse_query_no_alias_group_when_no_match():
+    """Alias values not present in query should not produce alias groups."""
+    aliases = {"edc": "Electric Daisy Carnival"}
+    parts = parse_query("Hardwell Tomorrowland 2025", aliases)
+    assert len(parts.alias_groups) == 0
+    assert "hardwell" in parts.keywords
+    assert "tomorrowland" in parts.keywords
+
+
+def test_parse_query_alias_group_longest_match_first():
+    """When two aliases overlap, the longest should be matched first."""
+    aliases = {
+        "umf": "Ultra Music Festival",
+        "umfm": "Ultra Music Festival Miami",
+    }
+    parts = parse_query("Zedd Ultra Music Festival Miami 2026", aliases)
+    assert len(parts.alias_groups) == 1
+    assert parts.alias_groups[0].abbreviation == "umfm"
+    assert parts.alias_groups[0].keywords == ["ultra", "music", "festival", "miami"]
+    assert "miami" not in parts.keywords
 
 
 # --- score_results ---

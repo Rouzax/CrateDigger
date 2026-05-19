@@ -60,6 +60,49 @@ def get_abbreviation(text: str) -> str | None:
     return None
 
 
+def _detect_alias_groups(
+    remaining: list[str],
+    aliases: dict[str, str],
+    parts: QueryParts,
+) -> list[str]:
+    """Detect multi-word alias values in remaining words, record as alias groups.
+
+    Returns remaining with alias group words removed.
+    """
+    reverse: dict[str, tuple[str, str]] = {}
+    for abbrev, full_name in aliases.items():
+        normalized = remove_diacritics(full_name).lower()
+        value_words = normalized.split()
+        if len(value_words) < 2:
+            continue
+        reverse[normalized] = (abbrev, full_name)
+
+    if not reverse:
+        return remaining
+
+    sorted_entries = sorted(reverse.items(), key=lambda x: len(x[0]), reverse=True)
+    remaining_normalized = [remove_diacritics(w).lower() for w in remaining]
+    consumed: set[int] = set()
+
+    for full_normalized, (abbrev, full_original) in sorted_entries:
+        target_words = full_normalized.split()
+        target_len = len(target_words)
+
+        for i in range(len(remaining_normalized) - target_len + 1):
+            if any(j in consumed for j in range(i, i + target_len)):
+                continue
+            if remaining_normalized[i:i + target_len] == target_words:
+                parts.alias_groups.append(AliasGroup(
+                    abbreviation=abbrev,
+                    full_name=full_original,
+                    keywords=list(target_words),
+                ))
+                consumed.update(range(i, i + target_len))
+                break
+
+    return [w for i, w in enumerate(remaining) if i not in consumed]
+
+
 def parse_query(query: str, aliases: dict[str, str]) -> QueryParts:
     """Parse a search query into components for scoring.
 
@@ -130,6 +173,9 @@ def parse_query(query: str, aliases: dict[str, str]) -> QueryParts:
             parts.resolved_aliases.append({"alias": word, "target": aliases[lower]})
 
         remaining.append(word)
+
+    # Detect alias groups before keyword conversion
+    remaining = _detect_alias_groups(remaining, aliases, parts)
 
     # Keywords: words > 2 chars, lowercased, with diacritics removed
     for word in remaining:
