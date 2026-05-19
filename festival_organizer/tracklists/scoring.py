@@ -10,6 +10,14 @@ from datetime import datetime
 
 
 @dataclass
+class AliasGroup:
+    """A detected alias whose multi-word form appeared in the query."""
+    abbreviation: str       # e.g. "edc" (lowercase)
+    full_name: str          # e.g. "Electric Daisy Carnival" (original case from alias map)
+    keywords: list[str]     # e.g. ["electric", "daisy", "carnival"] (normalized)
+
+
+@dataclass
 class QueryParts:
     """Parsed components of a search query."""
     year: str | None = None
@@ -17,6 +25,7 @@ class QueryParts:
     abbreviations: list[str] = field(default_factory=list)    # uppercase 2+ chars
     event_patterns: list[dict] = field(default_factory=list)  # [{"type": "Weekend"|"Day", "number": str}]
     resolved_aliases: list[dict] = field(default_factory=list) # [{"alias": str, "target": str}]
+    alias_groups: list[AliasGroup] = field(default_factory=list)
 
 
 @dataclass
