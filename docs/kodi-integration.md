@@ -89,6 +89,14 @@ kodi = "smb://server/music/Library/"
 
 **Plex** can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run.
 
+## Chapter Notify
+
+[Chapter Notify](https://github.com/Rouzax/service.chapternotify) is a Kodi service addon that complements CrateDigger's chapter markers. When you play a CrateDigger video in Kodi, Chapter Notify watches for chapter changes and displays a brief on-screen notification showing the artist name, track title, and label for the set you are watching.
+
+It reads the chapter markers and MKV tags that CrateDigger already writes, so it works without any extra metadata preparation. You can configure it to trigger automatically on chapter changes, on a manual keypress, or both.
+
+Install it as a Kodi addon from the [Chapter Notify GitHub repository](https://github.com/Rouzax/service.chapternotify). The repository README covers installation steps and all available settings.
+
 ## Common problems
 
 **"Kodi sync failed: connection refused"**

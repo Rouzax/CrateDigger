@@ -55,6 +55,8 @@ See [Getting Started](getting-started.md) for required tools, upgrade commands, 
 
 **[TrackSplit](https://rouzax.github.io/TrackSplit/)** is a sibling CLI that extracts chapter-based audio from your CrateDigger library into gapless, tagged FLAC albums for music servers like Jellyfin and Lyrion. TrackSplit reads CrateDigger's festival and artist config so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries. See the [TrackSplit documentation](https://rouzax.github.io/TrackSplit/docs/) or [source on GitHub](https://github.com/Rouzax/TrackSplit).
 
+**[Chapter Notify](https://github.com/Rouzax/service.chapternotify)** is a Kodi service addon that displays a styled overlay notification at the start of each chapter during playback, showing the artist, track title, and label. It reads the chapter markers and MKV tags that CrateDigger embeds, so no extra setup is needed beyond installing the addon. See the [Chapter Notify repository](https://github.com/Rouzax/service.chapternotify) for installation instructions and trigger mode options.
+
 ## Documentation
 
 | | |
