@@ -948,6 +948,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chapter-notify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chapter Notify
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#common-problems" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1125,6 +1136,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chapter-notify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chapter Notify
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#common-problems" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1249,6 +1271,10 @@
 <h2 id="jellyfin-and-plex">Jellyfin and Plex</h2>
 <p><strong>Jellyfin</strong> reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, album grouping, posters, thumbs, and fanart from the sidecar files automatically.</p>
 <p><strong>Plex</strong> can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run.</p>
+<h2 id="chapter-notify">Chapter Notify</h2>
+<p><a href="https://github.com/Rouzax/service.chapternotify">Chapter Notify</a> is a Kodi service addon that complements CrateDigger's chapter markers. When you play a CrateDigger video in Kodi, Chapter Notify watches for chapter changes and displays a brief on-screen notification showing the artist name, track title, and label for the set you are watching.</p>
+<p>It reads the chapter markers and MKV tags that CrateDigger already writes, so it works without any extra metadata preparation. You can configure it to trigger automatically on chapter changes, on a manual keypress, or both.</p>
+<p>Install it as a Kodi addon from the <a href="https://github.com/Rouzax/service.chapternotify">Chapter Notify GitHub repository</a>. The repository README covers installation steps and all available settings.</p>
 <h2 id="common-problems">Common problems</h2>
 <p><strong>"Kodi sync failed: connection refused"</strong></p>
 <p>Kodi is not running, or its web server is not enabled. Verify the JSON-RPC settings in Kodi and check that the host and port in your config match.</p>
