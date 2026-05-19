@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.5] - 2026-05-19
+
+### Fixed
+
+- Search scoring: alias-expanded festival names (e.g. "EDC" expanded to "Electric Daisy Carnival") no longer create phantom keywords that dilute match ratios. The scoring engine now detects multi-word alias values in queries and matches them bidirectionally against result titles (both the abbreviation and full name). This fixes cases where the wrong artist ranked first because 3 unmatchable keywords skewed the keyword ratio.
+- Search filtering: queries containing alias-expanded festival names now correctly trigger the stricter event-context filter, removing low-relevance results that only match a single generic keyword.
+
 ## [0.19.4] - 2026-05-17
 
 ### Fixed
