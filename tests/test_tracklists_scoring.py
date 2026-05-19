@@ -81,16 +81,19 @@ def test_parse_query_no_short_words():
 
 
 def test_parse_query_all_caps_produces_keywords():
-    """ALL-CAPS queries (YouTube titles) should produce keywords, not just abbreviations."""
+    """ALL-CAPS queries: non-alias words become keywords; alias-value words become alias groups."""
     aliases = {"umf": "Ultra Music Festival"}
     parts = parse_query("AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026", aliases)
     assert parts.year == "2026"
-    # All-caps words should become keywords, not abbreviations
+    # Non-alias words should become keywords
     assert "afrojack" in parts.keywords
     assert "live" in parts.keywords
-    assert "ultra" in parts.keywords
-    assert "festival" in parts.keywords
     assert "miami" in parts.keywords
+    # Alias-value words should be in alias_groups, not keywords
+    assert "ultra" not in parts.keywords
+    assert "festival" not in parts.keywords
+    assert len(parts.alias_groups) == 1
+    assert parts.alias_groups[0].abbreviation == "umf"
     # Should NOT have spurious abbreviations from regular words
     assert "AFROJACK" not in parts.abbreviations
     assert "FESTIVAL" not in parts.abbreviations
@@ -137,15 +140,18 @@ def test_parse_query_mixed_case_unknown_caps_become_keywords():
 
 
 def test_parse_query_post_expansion_caps_become_keywords():
-    """After alias expansion introduces mixed case, remaining caps words should be keywords."""
+    """After alias expansion, alias-value words become an alias group; remaining caps are keywords."""
     aliases = {"edc": "Electric Daisy Carnival"}
     parts = parse_query("FISHER Electric Daisy Carnival LAS VEGAS 2025", aliases)
     assert "fisher" in parts.keywords
     assert "las" in parts.keywords
     assert "vegas" in parts.keywords
-    assert "electric" in parts.keywords
-    assert "daisy" in parts.keywords
-    assert "carnival" in parts.keywords
+    # Alias value words are now in alias_groups, not keywords
+    assert "electric" not in parts.keywords
+    assert "daisy" not in parts.keywords
+    assert "carnival" not in parts.keywords
+    assert len(parts.alias_groups) == 1
+    assert parts.alias_groups[0].abbreviation == "edc"
 
 
 def test_parse_query_mixed_case_known_alias_stays_abbreviation():
