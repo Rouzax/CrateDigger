@@ -224,7 +224,7 @@ def score_results(
         _compute_score(r, query_parts, video_duration_minutes, min_date, date_range_days, dj_names, source_names)
 
     # Filter
-    has_event_context = bool(query_parts.abbreviations or query_parts.resolved_aliases)
+    has_event_context = bool(query_parts.abbreviations or query_parts.resolved_aliases or query_parts.alias_groups)
 
     filtered = []
     for r in results:

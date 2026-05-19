@@ -514,12 +514,12 @@ def test_score_alias_group_no_match():
     """Alias group should not match when title has neither form."""
     result = SearchResult(id="1", title="Zedd @ Tomorrowland Mainstage", url="")
     parts = QueryParts(
-        keywords=["zedd"],
+        keywords=["zedd", "tomorrowland"],
         alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
     )
     scored = score_results([result], parts)
     assert scored[0].has_event_match is False
-    assert scored[0].matched_keyword_count == 1  # only "zedd"
+    assert scored[0].matched_keyword_count == 2  # "zedd" + "tomorrowland", no alias contribution
 
 
 def test_score_alias_group_triggers_all_keywords_bonus():
@@ -558,6 +558,24 @@ def test_zedd_outscores_hardwell_with_expanded_edc():
     scored = score_results(results, parts, video_duration_minutes=67)
     assert scored[0].id == "zedd", f"Zedd should rank #1 but got {scored[0].id} (scores: {scored[0].score:.0f} vs {scored[1].score:.0f})"
     assert scored[0].score > scored[1].score + 20, "Zedd should have a decisive lead"
+
+
+def test_filter_with_alias_group_event_context():
+    """Alias groups should enable has_event_context, filtering low-relevance results."""
+    results = [
+        SearchResult(id="1", title="Zedd @ kineticFIELD, EDC Las Vegas, United States", url=""),
+        SearchResult(id="2", title="Random Vegas DJ Mix 2026", url=""),
+    ]
+    parts = QueryParts(
+        keywords=["zedd", "las", "vegas", "kineticfield"],
+        alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
+    )
+    scored = score_results(results, parts)
+    result_ids = [r.id for r in scored]
+    assert "1" in result_ids
+    # Result 2 matches only "vegas" (1 keyword) with no event match
+    # With has_event_context from alias_groups, it should be filtered
+    assert "2" not in result_ids, "Low-relevance result should be filtered with alias group event context"
 
 
 def test_auto_select_threshold_separates_good_from_bad():
