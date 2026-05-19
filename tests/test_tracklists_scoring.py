@@ -483,6 +483,62 @@ def test_score_results_without_cache_unchanged():
     assert result1.score == result2.score
 
 
+# --- alias group scoring ---
+
+def test_score_alias_group_matches_abbreviation_in_title():
+    """Alias group should match when title contains the abbreviation."""
+    result = SearchResult(id="1", title="Zedd @ kineticFIELD, EDC Las Vegas", url="", duration_mins=68, date="2026-05-17")
+    parts = QueryParts(
+        keywords=["zedd", "las", "vegas", "kineticfield"],
+        alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
+        year="2026",
+    )
+    scored = score_results([result], parts, video_duration_minutes=67)
+    assert scored[0].has_event_match is True
+    assert scored[0].matched_keyword_count == 7  # 4 regular + 3 alias
+
+
+def test_score_alias_group_matches_full_name_in_title():
+    """Alias group should match when title contains the full name."""
+    result = SearchResult(id="1", title="Zedd @ kineticFIELD, Electric Daisy Carnival Las Vegas", url="")
+    parts = QueryParts(
+        keywords=["zedd", "las", "vegas", "kineticfield"],
+        alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
+    )
+    scored = score_results([result], parts)
+    assert scored[0].has_event_match is True
+    assert scored[0].matched_keyword_count == 7
+
+
+def test_score_alias_group_no_match():
+    """Alias group should not match when title has neither form."""
+    result = SearchResult(id="1", title="Zedd @ Tomorrowland Mainstage", url="")
+    parts = QueryParts(
+        keywords=["zedd"],
+        alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
+    )
+    scored = score_results([result], parts)
+    assert scored[0].has_event_match is False
+    assert scored[0].matched_keyword_count == 1  # only "zedd"
+
+
+def test_score_alias_group_triggers_all_keywords_bonus():
+    """When all regular keywords AND alias group match, the all-keywords bonus should trigger."""
+    all_match = SearchResult(id="full", title="Zedd @ kineticFIELD, EDC Las Vegas, United States", url="", duration_mins=68)
+    partial_match = SearchResult(id="partial", title="Hardwell @ kineticFIELD, EDC Las Vegas, United States", url="", duration_mins=68)
+
+    parts = QueryParts(
+        keywords=["zedd", "las", "vegas", "kineticfield"],
+        alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
+    )
+    scored = score_results([all_match, partial_match], parts, video_duration_minutes=67)
+
+    assert scored[0].id == "full"
+    assert scored[0].matched_keyword_count == 7  # all keywords + alias = all-match bonus
+    assert scored[1].matched_keyword_count == 6  # 3 regular + 3 alias = no all-match bonus
+    assert scored[0].score > scored[1].score + 50  # decisive gap from +80 bonus
+
+
 def test_auto_select_threshold_separates_good_from_bad():
     """Auto-select requires both minimum score AND minimum gap to #2."""
     from festival_organizer.tracklists.cli_handler import AUTO_SELECT_MIN_SCORE, AUTO_SELECT_MIN_GAP

@@ -256,10 +256,24 @@ def _compute_score(
     # --- Content score ---
     content_score = 0.0
 
-    # 1. Keywords
-    total_keywords = len(query_parts.keywords)
+    # 1a. Alias group bidirectional matching
+    alias_kw_matched = 0
+    alias_kw_total = 0
+    for ag in query_parts.alias_groups:
+        alias_kw_total += len(ag.keywords)
+        abbrev_lower = ag.abbreviation.lower()
+        full_lower = remove_diacritics(ag.full_name).lower()
+        if (re.search(r"\b" + re.escape(abbrev_lower) + r"\b", title_normalized)
+                or full_lower in title_normalized):
+            alias_kw_matched += len(ag.keywords)
+            content_score += 35
+            result.has_event_match = True
+
+    # 1b. Keywords (incorporating alias group contribution)
+    total_keywords = len(query_parts.keywords) + alias_kw_total
     if total_keywords > 0:
-        matched = sum(1 for kw in query_parts.keywords if kw in title_normalized)
+        regular_matched = sum(1 for kw in query_parts.keywords if kw in title_normalized)
+        matched = regular_matched + alias_kw_matched
         result.matched_keyword_count = matched
         keyword_score = (matched / total_keywords) * 100
         if matched == total_keywords:
