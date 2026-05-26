@@ -531,6 +531,58 @@ def test_has_album_artist_display_tags_ignores_chapter_scoped_name(monkeypatch):
     assert has_album_artist_display_tags(Path("/x.mkv")) is False
 
 
+def test_has_legacy_chapter_title_true_when_unprefixed_title(monkeypatch):
+    """TTV=30 block with bare TITLE (pre-0.19.6): True, triggers self-heal."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.mkv_tags import has_legacy_chapter_title
+    import festival_organizer.mkv_tags as mod
+    xml = """<Tags>
+<Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
+<Simple><Name>CRATEDIGGER_TRACK_PERFORMER</Name><String>y</String></Simple>
+<Simple><Name>TITLE</Name><String>Some Track</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+    from pathlib import Path
+    assert has_legacy_chapter_title(Path("/x.mkv")) is True
+
+
+def test_has_legacy_chapter_title_false_when_prefixed(monkeypatch):
+    """TTV=30 block with CRATEDIGGER_TRACK_TITLE (current contract): False."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.mkv_tags import has_legacy_chapter_title
+    import festival_organizer.mkv_tags as mod
+    xml = """<Tags>
+<Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
+<Simple><Name>CRATEDIGGER_TRACK_PERFORMER</Name><String>y</String></Simple>
+<Simple><Name>CRATEDIGGER_TRACK_TITLE</Name><String>Some Track</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+    from pathlib import Path
+    assert has_legacy_chapter_title(Path("/x.mkv")) is False
+
+
+def test_has_legacy_chapter_title_false_when_no_chapter_tags(tmp_path, monkeypatch):
+    """No TTV=30 blocks at all: False (nothing to self-heal)."""
+    from festival_organizer.mkv_tags import has_legacy_chapter_title
+    import festival_organizer.mkv_tags as mod
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: None)
+    assert has_legacy_chapter_title(tmp_path / "x.mkv") is False
+
+
+def test_has_legacy_chapter_title_ignores_ttv50_title(monkeypatch):
+    """TITLE at TTV=50 (file-level) is not a legacy chapter title."""
+    import xml.etree.ElementTree as ET
+    from festival_organizer.mkv_tags import has_legacy_chapter_title
+    import festival_organizer.mkv_tags as mod
+    xml = """<Tags>
+<Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+<Simple><Name>TITLE</Name><String>Set Title</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+    from pathlib import Path
+    assert has_legacy_chapter_title(Path("/x.mkv")) is False
+
+
 def test_tag_values_from_root_reads_targetless_block_as_ttv50():
     """Tag block with no <Targets> element is surfaced at TTV=50 (spec default)."""
     xml = """<Tags>

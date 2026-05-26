@@ -50,7 +50,7 @@ from festival_organizer.tracklists.api import (
     ExportError,
     top_genres_by_frequency,
 )
-from festival_organizer.mkv_tags import CLEAR_TAG, has_album_artist_display_tags, has_chapter_tags
+from festival_organizer.mkv_tags import CLEAR_TAG, has_album_artist_display_tags, has_chapter_tags, has_legacy_chapter_title
 from festival_organizer.tracklists.source_cache import SourceCache
 from festival_organizer.tracklists.chapters import (
     build_1001tl_tags,
@@ -653,12 +653,16 @@ def _fetch_and_embed(
             # user doesn't have to --regenerate (which would re-search 1001TL
             # and risk rebinding to a different tracklist).
             missing_album_tags = bool(export.dj_artists) and not has_album_artist_display_tags(filepath)
+            legacy_chapter_title = has_legacy_chapter_title(filepath)
             if missing_chapter_tags:
                 logger.debug("identify.self_heal: file=%s reason=missing_chapter_tags", filepath.name)
             elif missing_album_tags:
                 logger.debug("identify.self_heal: file=%s reason=missing_album_tags", filepath.name)
+            elif legacy_chapter_title:
+                logger.debug("identify.self_heal: file=%s reason=legacy_chapter_title", filepath.name)
             if (not tags_to_update and not missing_chapter_tags
-                    and not missing_album_tags and not regenerate):
+                    and not missing_album_tags and not legacy_chapter_title
+                    and not regenerate):
                 return ("up_to_date", "up-to-date", "")
             # Otherwise route through embed_chapters: it writes TTV=70 +
             # per-chapter TTV=30 + folds any duplicate global Tag blocks.
@@ -667,6 +671,8 @@ def _fetch_and_embed(
                 reason = "populated per-chapter tags"
             elif missing_album_tags:
                 reason = "populated album-artist tags"
+            elif legacy_chapter_title:
+                reason = "renamed legacy TITLE to CRATEDIGGER_TRACK_TITLE"
             elif tags_to_update:
                 friendly = ", ".join(
                     _FRIENDLY_TAG_NAMES.get(k, k) for k in tags_to_update

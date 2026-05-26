@@ -172,6 +172,31 @@ def has_chapter_tags(filepath: Path) -> bool:
     return False
 
 
+def has_legacy_chapter_title(filepath: Path) -> bool:
+    """Return True if any TTV=30 block carries an unprefixed TITLE tag.
+
+    Files enriched before 0.19.6 used the standard Matroska TITLE name
+    at TTV=30. VLC and MediaInfo flatten that into the file-level title
+    display. When this returns True, identify self-heals by re-embedding
+    all TTV=30 blocks with the prefixed CRATEDIGGER_TRACK_TITLE name.
+    """
+    root = extract_all_tags(filepath)
+    if root is None:
+        return False
+    for tag in root.findall("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            continue
+        ttv_el = targets.find("TargetTypeValue")
+        if ttv_el is None or ttv_el.text != "30":
+            continue
+        for simple in tag.iter("Simple"):
+            name_el = simple.find("Name")
+            if name_el is not None and name_el.text == "TITLE":
+                return True
+    return False
+
+
 def has_album_artist_display_tags(filepath: Path) -> bool:
     """Return True if the MKV file carries the album-level display/slug tags.
 
