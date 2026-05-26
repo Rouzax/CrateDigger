@@ -181,6 +181,37 @@ def split_artist(name: str) -> list[str]:
     return lines
 
 
+def _balanced_word_split(text: str) -> list[str] | None:
+    """Split text at the word boundary closest to equal line widths."""
+    words = text.split()
+    if len(words) < 2:
+        return None
+    best: tuple[int, list[str]] | None = None
+    for i in range(1, len(words)):
+        a = " ".join(words[:i])
+        b = " ".join(words[i:])
+        diff = abs(len(a) - len(b))
+        if best is None or diff < best[0]:
+            best = (diff, [a, b])
+    return best[1] if best else None
+
+
+def _word_wrap_lines(lines: list[str], max_width: int, min_size: int) -> list[str]:
+    """Re-split any line that doesn't fit at min_size."""
+    result: list[str] = []
+    for line in lines:
+        font = get_font("bold", min_size)
+        if measure_w(font, line) <= max_width:
+            result.append(line)
+            continue
+        wrapped = _balanced_word_split(line)
+        if wrapped is None:
+            result.append(line)
+            continue
+        result.extend(wrapped)
+    return result
+
+
 def format_date_display(date: str, year: str) -> str:
     """Format date for display. Full date -> '28 March 2025', year only -> '2025'."""
     if date and len(date) == 10:
@@ -421,8 +452,9 @@ def generate_set_poster(
     draw = ImageDraw.Draw(bg)
     max_w = POSTER_W - 100
 
-    # Split artist name into lines
+    # Split artist name into lines, word-wrap any that don't fit
     artist_lines = [line.upper() for line in split_artist(artist)]
+    artist_lines = _word_wrap_lines(artist_lines, max_w, min_size=50)
 
     # Auto-fit fonts — uniform size across all lines (driven by the longest)
     sizes = []
@@ -439,8 +471,7 @@ def generate_set_poster(
     for line in reversed(artist_lines):
         cursor_y -= line_h
         sp = max(2, min(14, (max_w - measure_w(font_artist, line)) // max(len(line), 1)))
-        _draw_centered(draw, cursor_y, line, font_artist, "white", letter_spacing=sp,
-                       stroke_width=2, stroke_fill=accent)
+        _draw_centered(draw, cursor_y, line, font_artist, "white", letter_spacing=sp)
         cursor_y -= PAD_ARTIST_LINES
 
     # ACCENT LINE with glow
@@ -739,19 +770,31 @@ def generate_album_poster(
     max_w = POSTER_W - 100
 
     # Determine hero text: artist name for artist folders, festival for festival folders
-    display_text = (hero_text or festival).upper()
     is_artist_poster = hero_text is not None
 
-    font_hero, _ = auto_fit(display_text, "bold", max_w, start=130, minimum=50)
-
-    # Hero text above line
-    hero_h = font_visual_height(font_hero)
-    spacing = max(2, min(14, (max_w - measure_w(font_hero, display_text)) // max(len(display_text), 1)))
-
-    # Hero text above accent line (single line, all poster types)
-    hero_y = LINE_Y - PAD_LINE_TO_FEST - hero_h
-    _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing,
-                   stroke_width=2, stroke_fill=accent)
+    if is_artist_poster:
+        hero_lines = [line.upper() for line in split_artist(hero_text)]
+        hero_lines = _word_wrap_lines(hero_lines, max_w, min_size=50)
+        sizes = []
+        for line in hero_lines:
+            _, size = auto_fit(line, "bold", max_w, start=130, minimum=50)
+            sizes.append(size)
+        shared_size = min(sizes)
+        font_hero = get_font("bold", shared_size)
+        line_h = font_visual_height(font_hero)
+        cursor_y = LINE_Y - PAD_LINE_TO_ARTIST
+        for line in reversed(hero_lines):
+            cursor_y -= line_h
+            sp = max(2, min(14, (max_w - measure_w(font_hero, line)) // max(len(line), 1)))
+            _draw_centered(draw, cursor_y, line, font_hero, "white", letter_spacing=sp)
+            cursor_y -= PAD_ARTIST_LINES
+    else:
+        display_text = festival.upper()
+        font_hero, _ = auto_fit(display_text, "bold", max_w, start=130, minimum=50)
+        hero_h = font_visual_height(font_hero)
+        spacing = max(2, min(14, (max_w - measure_w(font_hero, display_text)) // max(len(display_text), 1)))
+        hero_y = LINE_Y - PAD_LINE_TO_FEST - hero_h
+        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
 
     # Accent line with glow
     bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=16)

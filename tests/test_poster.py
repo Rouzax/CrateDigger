@@ -7,6 +7,8 @@ from PIL import Image
 from festival_organizer.fonts import get_font_path
 from festival_organizer.poster import (
     split_artist,
+    _balanced_word_split,
+    _word_wrap_lines,
     get_accent_color,
     auto_fit,
     format_date_display,
@@ -49,6 +51,28 @@ def test_split_artist_no_split():
 def test_split_artist_single_name():
     lines = split_artist("Hardwell")
     assert lines == ["Hardwell"]
+
+
+# --- word-wrap tests ---
+
+def test_balanced_word_split_even():
+    result = _balanced_word_split("SWEDISH HOUSE MAFIA")
+    assert result == ["SWEDISH", "HOUSE MAFIA"]
+
+
+def test_balanced_word_split_single_word():
+    assert _balanced_word_split("TIESTO") is None
+
+
+def test_word_wrap_lines_short_lines_unchanged():
+    result = _word_wrap_lines(["TIESTO", "HARDWELL"], 900, min_size=50)
+    assert result == ["TIESTO", "HARDWELL"]
+
+
+def test_word_wrap_lines_long_line_splits():
+    result = _word_wrap_lines(["EXTREMELY LONG ARTIST NAME HERE"], 900, min_size=50)
+    assert len(result) == 2
+    assert " ".join(result) == "EXTREMELY LONG ARTIST NAME HERE"
 
 
 # --- accent color tests ---
@@ -553,8 +577,8 @@ def test_make_gradient_bg_defaults_to_poster_size():
     assert bg.size == (POSTER_W, POSTER_H)
 
 
-def test_set_poster_hero_has_accent_stroke(tmp_path):
-    """Set poster hero text renders with accent-colored pixels (stroke)."""
+def test_set_poster_hero_has_no_accent_stroke(tmp_path):
+    """Set poster hero text is plain white with no accent-colored stroke."""
     src = tmp_path / "source.png"
     Image.new("RGB", (1280, 720), (100, 50, 200)).save(str(src))
     output = tmp_path / "poster.jpg"
@@ -570,8 +594,12 @@ def test_set_poster_hero_has_accent_stroke(tmp_path):
         import numpy as np
         arr = np.array(img)
         hero_strip = arr[LINE_Y - 120:LINE_Y - 30, 200:800]
-        max_channel = hero_strip.max(axis=(0, 1))
-        assert max_channel.sum() > 300, "Hero area has no colored pixels (stroke missing)"
+        bright = hero_strip[hero_strip.max(axis=2) > 200]
+        if len(bright) > 0:
+            r, g, b = bright.mean(axis=0)
+            assert abs(r - g) < 30 and abs(r - b) < 30, (
+                f"Hero text has colored pixels (mean RGB {r:.0f},{g:.0f},{b:.0f}), expected white"
+            )
 
 
 def test_draw_centered_accepts_stroke_params(tmp_path):

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Poster hero text: removed accent-colored stroke outline. Plain white text is cleaner at thumbnail sizes.
+- Poster hero text: long single-artist names (e.g. "Swedish House Mafia") now word-wrap at a balanced boundary instead of shrinking to fit on one line. Also applies to album/artist poster hero text.
+
 ### Fixed
 
 - Per-chapter TITLE tag renamed to CRATEDIGGER_TRACK_TITLE. VLC and MediaInfo flatten the last chapter's TTV=30 TITLE into the file-level display, overriding the set title (e.g. showing "Sunrise (Here I Am) (Tiesto Remix)" instead of "Tiesto @ circuitGROUNDS, EDC Las Vegas"). Same class of bug previously fixed for PERFORMER/LABEL/GENRE. Existing files self-heal on next `identify` run.
