@@ -875,7 +875,7 @@ def write_chapter_mbid_tags(
     IMPORTANT: write_merged_tags replaces existing TTV=30 blocks wholesale
     when chapter_tags is provided. The `merged_chapter_tags` argument here
     must therefore already contain every tag that should remain on each
-    chapter (PERFORMER, TITLE, LABEL, GENRE, etc.) plus the new
+    chapter (CRATEDIGGER_TRACK_PERFORMER, CRATEDIGGER_TRACK_TITLE, etc.) plus the new
     MUSICBRAINZ_ARTISTIDS. Callers that pass only the MBID dict will wipe
     the file's existing per-chapter metadata.
     """
@@ -892,7 +892,7 @@ class ChapterArtistMbidsOperation(Operation):
     cache and network), and writes pipe-joined MBIDs with empty slots for
     misses so downstream consumers can zip SLUGS / NAMES / MBIDS by index.
 
-    Existing per-chapter tags (CRATEDIGGER_TRACK_PERFORMER, TITLE,
+    Existing per-chapter tags (CRATEDIGGER_TRACK_PERFORMER, CRATEDIGGER_TRACK_TITLE,
     CRATEDIGGER_TRACK_LABEL, CRATEDIGGER_TRACK_GENRE,
     CRATEDIGGER_TRACK_PERFORMER_SLUGS, CRATEDIGGER_TRACK_PERFORMER_NAMES)
     are preserved; only MBIDs are added or updated.
@@ -959,7 +959,7 @@ class ChapterArtistMbidsOperation(Operation):
                 return OperationResult(self.name, "skipped", "MBIDs already current")
 
         # Merge new MBIDs INTO a copy of the existing chapter blocks so
-        # write_merged_tags does not wipe PERFORMER / TITLE / etc.
+        # write_merged_tags does not wipe CRATEDIGGER_TRACK_PERFORMER / CRATEDIGGER_TRACK_TITLE / etc.
         merged: dict[int, dict[str, str]] = {}
         for uid, block in existing.items():
             merged_block = dict(block)

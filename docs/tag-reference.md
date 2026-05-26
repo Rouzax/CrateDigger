@@ -91,11 +91,11 @@ Written by `identify`, except `MUSICBRAINZ_ARTISTIDS` which is written by `enric
 | `CRATEDIGGER_TRACK_PERFORMER_SLUGS` | identify | Pipe-separated 1001Tracklists slugs for every artist on the track | `afrojack\|oliver-heldens` |
 | `CRATEDIGGER_TRACK_PERFORMER_NAMES` | identify | Pipe-separated display names for every artist, aligned with `CRATEDIGGER_TRACK_PERFORMER_SLUGS` | `Afrojack\|Oliver Heldens` |
 | `MUSICBRAINZ_ARTISTIDS` | enrich | Pipe-separated MusicBrainz artist IDs, aligned with `CRATEDIGGER_TRACK_PERFORMER_NAMES`. Empty slot `""` for unresolved names. | `<afrojack-mbid>\|<heldens-mbid>` |
-| `TITLE` | identify | Track title with the artist prefix stripped | `Take Over Control` |
+| `CRATEDIGGER_TRACK_TITLE` | identify | Track title with the artist prefix stripped | `Take Over Control` |
 | `CRATEDIGGER_TRACK_LABEL` | identify | Record label | `WALL` |
 | `CRATEDIGGER_TRACK_GENRE` | identify | Pipe-separated per-track genres | `Big Room\|Electro House` |
 
-The `CRATEDIGGER_TRACK_*` prefix is deliberate: it keeps these per-chapter tags out of mediainfo's flattened "General" section. Unprefixed standard Matroska names (`PERFORMER`, `LABEL`, `GENRE`) at TTV=30 get promoted into mediainfo's file-level display (last chapter wins), making files look like they carry the last chapter's values at file scope. The prefix avoids that without changing playback behaviour in Matroska-aware readers (Kodi uses the chapter's `ChapterString` for the title, not these tags).
+The `CRATEDIGGER_TRACK_*` prefix is deliberate: it keeps these per-chapter tags out of mediainfo's flattened "General" section. Unprefixed standard Matroska names (`PERFORMER`, `LABEL`, `GENRE`, `TITLE`) at TTV=30 get promoted into mediainfo's file-level display (last chapter wins), making files look like they carry the last chapter's values at file scope. The prefix avoids that without changing playback behaviour in Matroska-aware readers (Kodi uses the chapter's `ChapterString` for the title, not these tags).
 
 ---
 
@@ -138,7 +138,7 @@ CRATEDIGGER_ALBUMARTIST_DISPLAY=Armin van Buuren & KIKI
 
 # Per chapter (TTV=30):
 #   CRATEDIGGER_TRACK_PERFORMER, CRATEDIGGER_TRACK_PERFORMER_SLUGS,
-#   CRATEDIGGER_TRACK_PERFORMER_NAMES, TITLE,
+#   CRATEDIGGER_TRACK_PERFORMER_NAMES, CRATEDIGGER_TRACK_TITLE,
 #   CRATEDIGGER_TRACK_LABEL, CRATEDIGGER_TRACK_GENRE
 ```
 
