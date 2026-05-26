@@ -773,21 +773,12 @@ def generate_album_poster(
     is_artist_poster = hero_text is not None
 
     if is_artist_poster:
-        hero_lines = [line.upper() for line in split_artist(hero_text)]
-        hero_lines = _word_wrap_lines(hero_lines, max_w, min_size=80)
-        sizes = []
-        for line in hero_lines:
-            _, size = auto_fit(line, "bold", max_w, start=130, minimum=50)
-            sizes.append(size)
-        shared_size = min(sizes)
-        font_hero = get_font("bold", shared_size)
-        line_h = font_visual_height(font_hero)
-        cursor_y = LINE_Y - PAD_LINE_TO_ARTIST
-        for line in reversed(hero_lines):
-            cursor_y -= line_h
-            sp = max(2, min(14, (max_w - measure_w(font_hero, line)) // max(len(line), 1)))
-            _draw_centered(draw, cursor_y, line, font_hero, "white", letter_spacing=sp)
-            cursor_y -= PAD_ARTIST_LINES
+        display_text = hero_text.upper()
+        font_hero, _ = auto_fit(display_text, "bold", max_w, start=130, minimum=50)
+        hero_h = font_visual_height(font_hero)
+        spacing = max(2, min(14, (max_w - measure_w(font_hero, display_text)) // max(len(display_text), 1)))
+        hero_y = LINE_Y - PAD_LINE_TO_ARTIST - hero_h
+        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
     else:
         display_text = festival.upper()
         font_hero, _ = auto_fit(display_text, "bold", max_w, start=130, minimum=50)
