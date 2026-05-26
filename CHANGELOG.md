@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.7] - 2026-05-26
+
 ### Changed
 
 - Poster hero text: removed accent-colored stroke outline. Plain white text is cleaner at thumbnail sizes.
-- Poster hero text: long single-artist names (e.g. "Swedish House Mafia") now word-wrap at a balanced boundary instead of shrinking to fit on one line. Also applies to album/artist poster hero text.
+- Set poster: long single-artist names (e.g. "Swedish House Mafia") now word-wrap at a balanced boundary instead of shrinking to fit on one line. Album posters keep single-line auto-fit to avoid colliding with the centered artist image.
 
 ### Fixed
 
