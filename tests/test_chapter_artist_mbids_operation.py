@@ -40,7 +40,7 @@ def test_execute_writes_mbids_aligned_with_names(tmp_path):
             "CRATEDIGGER_TRACK_PERFORMER": "Afrojack & Oliver Heldens",
             "CRATEDIGGER_TRACK_PERFORMER_SLUGS": "afrojack|oliver-heldens",
             "CRATEDIGGER_TRACK_PERFORMER_NAMES": "Afrojack|Oliver Heldens",
-            "TITLE": "Happy",
+            "CRATEDIGGER_TRACK_TITLE": "Happy",
         },
         222: {
             "CRATEDIGGER_TRACK_PERFORMER": "Afrojack vs. Mystery ID vs. Tiësto",
@@ -73,7 +73,7 @@ def test_execute_writes_mbids_aligned_with_names(tmp_path):
     assert merged_chapter_tags[111]["CRATEDIGGER_TRACK_PERFORMER"] == "Afrojack & Oliver Heldens"
     assert merged_chapter_tags[111]["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Afrojack|Oliver Heldens"
     assert merged_chapter_tags[111]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "afrojack|oliver-heldens"
-    assert merged_chapter_tags[111]["TITLE"] == "Happy"
+    assert merged_chapter_tags[111]["CRATEDIGGER_TRACK_TITLE"] == "Happy"
     assert merged_chapter_tags[222]["CRATEDIGGER_TRACK_PERFORMER"] == "Afrojack vs. Mystery ID vs. Tiësto"
 
 

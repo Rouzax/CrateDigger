@@ -451,10 +451,7 @@ def _build_chapter_tags_map(
                 display = track.raw_text.strip() or track.artist_slugs[0]
             entry["CRATEDIGGER_TRACK_PERFORMER"] = display
         if track.title:
-            # TITLE is kept as-is: Matroska's standard per-chapter name and
-            # not subject to mediainfo's General-section flattening for
-            # video files (the ChapterString already drives chapter display).
-            entry["TITLE"] = track.title
+            entry["CRATEDIGGER_TRACK_TITLE"] = track.title
         if track.label:
             entry["CRATEDIGGER_TRACK_LABEL"] = track.label
         if track.genres:

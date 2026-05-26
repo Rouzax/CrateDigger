@@ -238,7 +238,7 @@ def test_performer_preserves_1001tl_display_form_not_alias():
 
 
 def test_chapter_tags_include_title_and_label():
-    """TITLE and LABEL are emitted when the track carries them."""
+    """CRATEDIGGER_TRACK_TITLE and CRATEDIGGER_TRACK_LABEL are emitted when the track carries them."""
     chapters = [Chapter(timestamp="00:00:00.000", title="x")]
     uids = [111]
     tracks = [Track(
@@ -250,12 +250,12 @@ def test_chapter_tags_include_title_and_label():
         label="WALL",
     )]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
-    assert result[111]["TITLE"] == "Take Over Control"
+    assert result[111]["CRATEDIGGER_TRACK_TITLE"] == "Take Over Control"
     assert result[111]["CRATEDIGGER_TRACK_LABEL"] == "WALL"
 
 
 def test_chapter_tags_omit_title_and_label_when_empty():
-    """TITLE and LABEL omitted when track fields are empty strings."""
+    """CRATEDIGGER_TRACK_TITLE and CRATEDIGGER_TRACK_LABEL omitted when track fields are empty strings."""
     chapters = [Chapter(timestamp="00:00:00.000", title="x")]
     uids = [111]
     tracks = [Track(
@@ -267,7 +267,7 @@ def test_chapter_tags_omit_title_and_label_when_empty():
         label="",
     )]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
-    assert "TITLE" not in result[111]
+    assert "CRATEDIGGER_TRACK_TITLE" not in result[111]
     assert "CRATEDIGGER_TRACK_LABEL" not in result[111]
 
 
