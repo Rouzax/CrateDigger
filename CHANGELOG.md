@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Per-chapter TITLE tag renamed to CRATEDIGGER_TRACK_TITLE. VLC and MediaInfo flatten the last chapter's TTV=30 TITLE into the file-level display, overriding the set title (e.g. showing "Sunrise (Here I Am) (Tiesto Remix)" instead of "Tiesto @ circuitGROUNDS, EDC Las Vegas"). Same class of bug previously fixed for PERFORMER/LABEL/GENRE. Existing files self-heal on next `identify` run.
+
 ## [0.19.5] - 2026-05-19
 
 ### Fixed
