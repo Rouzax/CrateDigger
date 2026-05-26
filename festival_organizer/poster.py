@@ -454,7 +454,7 @@ def generate_set_poster(
 
     # Split artist name into lines, word-wrap any that don't fit
     artist_lines = [line.upper() for line in split_artist(artist)]
-    artist_lines = _word_wrap_lines(artist_lines, max_w, min_size=50)
+    artist_lines = _word_wrap_lines(artist_lines, max_w, min_size=80)
 
     # Auto-fit fonts — uniform size across all lines (driven by the longest)
     sizes = []
@@ -774,7 +774,7 @@ def generate_album_poster(
 
     if is_artist_poster:
         hero_lines = [line.upper() for line in split_artist(hero_text)]
-        hero_lines = _word_wrap_lines(hero_lines, max_w, min_size=50)
+        hero_lines = _word_wrap_lines(hero_lines, max_w, min_size=80)
         sizes = []
         for line in hero_lines:
             _, size = auto_fit(line, "bold", max_w, start=130, minimum=50)
