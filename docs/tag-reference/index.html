@@ -1485,7 +1485,7 @@
 <td><code>&lt;afrojack-mbid&gt;\|&lt;heldens-mbid&gt;</code></td>
 </tr>
 <tr>
-<td><code>TITLE</code></td>
+<td><code>CRATEDIGGER_TRACK_TITLE</code></td>
 <td>identify</td>
 <td>Track title with the artist prefix stripped</td>
 <td><code>Take Over Control</code></td>
@@ -1504,7 +1504,7 @@
 </tr>
 </tbody>
 </table>
-<p>The <code>CRATEDIGGER_TRACK_*</code> prefix is deliberate: it keeps these per-chapter tags out of mediainfo's flattened "General" section. Unprefixed standard Matroska names (<code>PERFORMER</code>, <code>LABEL</code>, <code>GENRE</code>) at TTV=30 get promoted into mediainfo's file-level display (last chapter wins), making files look like they carry the last chapter's values at file scope. The prefix avoids that without changing playback behaviour in Matroska-aware readers (Kodi uses the chapter's <code>ChapterString</code> for the title, not these tags).</p>
+<p>The <code>CRATEDIGGER_TRACK_*</code> prefix is deliberate: it keeps these per-chapter tags out of mediainfo's flattened "General" section. Unprefixed standard Matroska names (<code>PERFORMER</code>, <code>LABEL</code>, <code>GENRE</code>, <code>TITLE</code>) at TTV=30 get promoted into mediainfo's file-level display (last chapter wins), making files look like they carry the last chapter's values at file scope. The prefix avoids that without changing playback behaviour in Matroska-aware readers (Kodi uses the chapter's <code>ChapterString</code> for the title, not these tags).</p>
 <hr />
 <h2 id="pipe-alignment">Pipe alignment</h2>
 <p>Two tag families use pipe-separated values that are positionally aligned. You can zip them by index to produce multi-value credits with MBIDs attached.</p>
@@ -1531,7 +1531,7 @@
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a># Per chapter (TTV=30):
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>#   CRATEDIGGER_TRACK_PERFORMER, CRATEDIGGER_TRACK_PERFORMER_SLUGS,
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>#   CRATEDIGGER_TRACK_PERFORMER_NAMES, TITLE,
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>#   CRATEDIGGER_TRACK_PERFORMER_NAMES, CRATEDIGGER_TRACK_TITLE,
 <a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>#   CRATEDIGGER_TRACK_LABEL, CRATEDIGGER_TRACK_GENRE
 </code></pre></div>
 <h3 id="after-enrich">After <code>enrich</code></h3>
