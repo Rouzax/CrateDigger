@@ -429,60 +429,6 @@ def test_multi_word_event_pattern():
     assert any(p["type"] == "Weekend" and p["number"] == "2" for p in qp.event_patterns)
 
 
-def test_score_dj_cache_boost():
-    """Results containing a known DJ name should get a score boost."""
-    result = SearchResult(id="t1", title="Armin van Buuren @ Tomorrowland", url="/t/", duration_mins=90)
-    query_parts = QueryParts(keywords=["armin", "van", "buuren", "tomorrowland"])
-
-    # Without cache
-    score_results([result], query_parts, video_duration_minutes=90)
-    score_without = result.score
-
-    # Reset
-    result.score = 0.0
-    result.matched_keyword_count = 0
-
-    # With cache
-    dj_names = {"armin van buuren"}
-    score_results([result], query_parts, video_duration_minutes=90, dj_names=dj_names)
-    score_with = result.score
-
-    assert score_with > score_without
-
-
-def test_score_source_cache_boost():
-    """Results containing a known source/festival name should get a score boost."""
-    result = SearchResult(id="t1", title="Hardwell @ Mainstage, Tomorrowland Weekend 1", url="/t/", duration_mins=90)
-    query_parts = QueryParts(keywords=["hardwell", "tomorrowland"])
-
-    # Without cache
-    score_results([result], query_parts, video_duration_minutes=90)
-    score_without = result.score
-
-    # Reset
-    result.score = 0.0
-    result.matched_keyword_count = 0
-
-    # With cache
-    source_names = {"tomorrowland"}
-    score_results([result], query_parts, video_duration_minutes=90, source_names=source_names)
-    score_with = result.score
-
-    assert score_with > score_without
-
-
-def test_score_results_without_cache_unchanged():
-    """Passing None for cache params should produce identical scores to no params."""
-    result1 = SearchResult(id="t1", title="Test @ Festival", url="/t/", duration_mins=60)
-    result2 = SearchResult(id="t2", title="Test @ Festival", url="/t/", duration_mins=60)
-    query_parts = QueryParts(keywords=["test", "festival"])
-
-    score_results([result1], query_parts, video_duration_minutes=60)
-    score_results([result2], query_parts, video_duration_minutes=60, dj_names=None, source_names=None)
-
-    assert result1.score == result2.score
-
-
 # --- alias group scoring ---
 
 def test_score_alias_group_matches_abbreviation_in_title():
@@ -544,7 +490,7 @@ def test_zedd_outscores_hardwell_with_expanded_edc():
 
     The original bug: expand_aliases_in_query turns 'EDC' into 'Electric Daisy Carnival',
     creating 3 phantom keywords that never match 1001TL titles (which use 'EDC').
-    This diluted keyword ratios and let cache bonuses flip the correct ordering.
+    This diluted keyword ratios and let scoring biases flip the correct ordering.
     """
     aliases = {"edc": "Electric Daisy Carnival"}
     query = "ZEDD @ Electric Daisy Carnival Las Vegas 2026 kineticFIELD 2K"
@@ -608,3 +554,26 @@ def test_auto_select_rejects_narrow_gap():
 
     gap = scored[0].score - scored[1].score
     assert gap < AUTO_SELECT_MIN_GAP, f"Near-identical results should have gap ({gap:.0f}) below threshold"
+
+
+def test_dj_cache_does_not_distort_ranking():
+    """A cached DJ name on a wrong result must not outrank the correct result.
+
+    Regression: Cosmic Gate query ranked Peggy Gou first when 'peggy gou'
+    was in the DJ cache but 'cosmic gate' was not, because the +25 cache
+    bonus (amplified by the duration multiplier) closed the keyword gap.
+    """
+    parts = parse_query(
+        "Cosmic Gate Live at Electric Daisy Carnival Las Vegas 2026",
+        {"edc": "Electric Daisy Carnival"},
+    )
+    correct = SearchResult(
+        id="cg", title="Cosmic Gate @ quantumVALLEY, EDC Las Vegas, United States",
+        url="/t/", duration_mins=59, date="2026-05-15",
+    )
+    wrong = SearchResult(
+        id="pg", title="Peggy Gou & KI/KI @ circuitGROUNDS, EDC Las Vegas, United States",
+        url="/t/", duration_mins=60, date="2026-05-16",
+    )
+    scored = score_results([wrong, correct], parts, video_duration_minutes=59)
+    assert scored[0].id == "cg"

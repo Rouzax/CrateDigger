@@ -100,6 +100,4 @@ class SourceCache:
                     break
         return groups
 
-    def all_names_lower(self) -> set[str]:
-        """Return lowercased set of all cached source names."""
-        return {entry["name"].lower() for entry in self._data.values() if entry.get("name")}
+

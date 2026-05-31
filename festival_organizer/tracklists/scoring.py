@@ -190,8 +190,6 @@ def score_results(
     results: list[SearchResult],
     query_parts: QueryParts,
     video_duration_minutes: int = 0,
-    dj_names: set[str] | None = None,
-    source_names: set[str] | None = None,
 ) -> list[SearchResult]:
     """Score, filter, and sort search results.
 
@@ -221,7 +219,7 @@ def score_results(
 
     # Score each result
     for r in results:
-        _compute_score(r, query_parts, video_duration_minutes, min_date, date_range_days, dj_names, source_names)
+        _compute_score(r, query_parts, video_duration_minutes, min_date, date_range_days)
 
     # Filter
     has_event_context = bool(query_parts.abbreviations or query_parts.resolved_aliases or query_parts.alias_groups)
@@ -247,8 +245,6 @@ def _compute_score(
     video_duration_minutes: int,
     min_date: datetime | None,
     date_range_days: float,
-    dj_names: set[str] | None = None,
-    source_names: set[str] | None = None,
 ) -> None:
     """Compute and set score fields on a single SearchResult."""
     title_normalized = remove_diacritics(result.title).lower()
@@ -324,15 +320,6 @@ def _compute_score(
                 result.has_event_match = True
             elif re.search(wrong_re, result.title):
                 content_score -= 30
-
-    # 5. Cache confirmation bonuses
-    if dj_names:
-        if any(name in title_normalized for name in dj_names if len(name) > 2):
-            content_score += 25
-
-    if source_names:
-        if any(name in title_normalized for name in source_names if len(name) > 2):
-            content_score += 20
 
     # --- Duration multiplier ---
     duration_mult = 1.0

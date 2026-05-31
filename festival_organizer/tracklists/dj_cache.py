@@ -165,10 +165,6 @@ class DjCache:
                 progress(slug, i, len(misses))
         return resolved
 
-    def all_names_lower(self) -> set[str]:
-        """Return lowercased set of all cached DJ canonical names."""
-        return {entry["name"].lower() for entry in self._data.values() if entry.get("name")}
-
     def canonical_name(self, slug: str, fallback: str | None = None) -> str:
         """Return the canonical name for a slug, or fallback/slug when unknown.
 

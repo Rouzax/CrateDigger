@@ -73,10 +73,9 @@ part of the search text.
 CrateDigger queries 1001Tracklists and scores each result based on:
 
 - How well the artist name matches
-- How well the festival or event name matches
+- How well the festival or event name matches (including alias expansion, e.g. EDC to Electric Daisy Carnival)
 - Whether the year matches
 - How close the tracklist duration is to your file duration
-- Whether artist or source names appear in CrateDigger's DJ cache
 
 Results are ranked by score, highest first. A higher score means a stronger match. The gap
 between the top result and second place matters more than the raw score; a large gap means

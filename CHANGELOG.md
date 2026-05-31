@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.8] - 2026-05-31
+
+### Fixed
+
+- Search scoring: removed DJ cache (+25) and source cache (+20) bonuses that distorted rankings. These bonuses were applied to content score before the duration multiplier, amplifying them up to 1.5x. When a cached DJ name appeared in a wrong result but not in the correct one (e.g. searching for Cosmic Gate, Peggy Gou ranked first because she was cached), the amplified bonus flipped the ordering. Keyword matching and duration matching are the real relevance signals; the cache bonuses added noise at festival events where every result mentions known DJs.
+
 ## [0.19.7] - 2026-05-26
 
 ### Changed

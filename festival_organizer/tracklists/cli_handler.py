@@ -209,14 +209,6 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         # Pre-compute search expansion and name sets (constant across all files)
         search_expansion = _build_search_expansion(config)
 
-        dj_name_set = dj_cache.all_names_lower() if dj_cache else set()
-        dj_name_set |= {n.lower() for n in config.artist_aliases.keys()}
-        dj_name_set |= {n.lower() for n in config.artist_aliases.values()}
-        dj_name_set |= {g.lower() for g in config.artist_groups}
-
-        source_name_set = source_cache.all_names_lower() if source_cache else set()
-        source_name_set |= {n.lower() for n in config.known_places}
-
         # Process files
         stats = {"updated": 0, "up_to_date": 0, "skipped": 0,
                  "error": 0, "previewed": 0}
@@ -252,8 +244,6 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                     session=session,
                     config=config,
                     search_expansion=search_expansion,
-                    dj_name_set=dj_name_set,
-                    source_name_set=source_name_set,
                     tracklist_input=tracklist_input,
                     auto_select=auto_select,
                     ignore_stored=ignore_stored,
@@ -327,8 +317,6 @@ def _process_file(
     session: TracklistSession,
     config: Config,
     search_expansion: dict[str, str],
-    dj_name_set: set[str],
-    source_name_set: set[str],
     tracklist_input: str | None,
     auto_select: bool,
     ignore_stored: bool,
@@ -451,8 +439,7 @@ def _process_file(
         return ("skipped", "skipped", "no results")
 
     query_parts = parse_query(query_str, search_expansion)
-    scored = score_results(results, query_parts, duration_mins,
-                           dj_names=dj_name_set or None, source_names=source_name_set or None)
+    scored = score_results(results, query_parts, duration_mins)
 
     if not scored:
         return ("skipped", "skipped", "no results")

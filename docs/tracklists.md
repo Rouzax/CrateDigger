@@ -99,7 +99,7 @@ If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds an
 
 Two local caches make subsequent runs faster:
 
-- **DJ cache:** canonical DJ names and aliases learned from tracklist pages. Used to standardize name casing and improve search scoring on later runs.
+- **DJ cache:** canonical DJ names and aliases learned from tracklist pages. Used to standardize name casing in tags and file names.
 - **Source cache:** festival, venue, radio, and conference names. Used to classify tracklists by source type.
 
 Each cache entry's actual lifetime jitters by ±20% around the configured base (see [Configuration: cache TTL](configuration.md#cache-ttl)), so a bulk first-run fill does not cause all entries to expire at the same time.
