@@ -1342,7 +1342,7 @@
 <p>If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds and retries. After the retry limit, it stops with a message asking you to solve a captcha on the 1001Tracklists website.</p>
 <p>Two local caches make subsequent runs faster:</p>
 <ul>
-<li><strong>DJ cache:</strong> canonical DJ names and aliases learned from tracklist pages. Used to standardize name casing and improve search scoring on later runs.</li>
+<li><strong>DJ cache:</strong> canonical DJ names and aliases learned from tracklist pages. Used to standardize name casing in tags and file names.</li>
 <li><strong>Source cache:</strong> festival, venue, radio, and conference names. Used to classify tracklists by source type.</li>
 </ul>
 <p>Each cache entry's actual lifetime jitters by ±20% around the configured base (see <a href="../configuration/#cache-ttl">Configuration: cache TTL</a>), so a bulk first-run fill does not cause all entries to expire at the same time.</p>
