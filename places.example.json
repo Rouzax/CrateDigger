@@ -1,5 +1,5 @@
 {
-    "_comment": "Festival configuration. One entry per festival.",
+    "_comment": "Place configuration. One entry per festival, club, or venue.",
     "ASOT": {
         "aliases": ["A State Of Trance Festival", "A State Of Trance"],
         "color": "#E63312"
@@ -47,6 +47,10 @@
         "aliases": ["EXIT"]
     },
     "Glastonbury": {},
+    "Laroc Club": {
+        "aliases": ["Laroc Club Sao Paulo", "Laroc Club São Paulo"],
+        "color": "#33058d"
+    },
     "Lollapalooza": {},
     "Mysteryland": {
         "color": "#FFFF7B"

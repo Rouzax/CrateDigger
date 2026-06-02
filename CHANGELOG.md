@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.9] - 2026-06-02
+
+### Changed
+
+- Example places file: added Laroc Club (Sao Paulo) with brand color. Updated file comment to reflect that the file covers festivals, clubs, and venues.
+
 ## [0.19.8] - 2026-05-31
 
 ### Fixed
