@@ -247,6 +247,101 @@ Kodi JSON-RPC connection settings for automatic library refresh after `enrich` o
 
 All Kodi settings can also be set via environment variables: `KODI_HOST`, `KODI_PORT`, `KODI_USERNAME`, `KODI_PASSWORD`.
 
+### Email notifications
+
+CrateDigger can send HTML run-summary emails after key commands. Emails are sent only when there is something to report; a run that changes nothing sends nothing (except possibly the throttled update reminder described below). Each message includes inline poster thumbnails and a plain-text fallback. No external dependencies are required; emails are sent using Python's standard library over SMTP.
+
+There are three independent channels. Each has its own recipient list and can be enabled or disabled separately.
+
+| Channel | Trigger | Typical recipients |
+|---------|---------|-------------------|
+| `new_sets` | After `organize`, when one or more sets were newly added to the library | You and anyone else who follows the collection |
+| `updated_sets` | After `identify`, when chapters were added or changed on one or more sets | You only |
+| `update_reminder` | After any command, when a newer CrateDigger version is available | You only |
+
+The `update_reminder` channel is throttled: you receive at most one email per new release, not one per run. When a content email (`new_sets` or `updated_sets`) goes out in the same run, the update banner is embedded in that email instead and the standalone reminder is suppressed.
+
+#### Prerequisites
+
+You need an SMTP server that accepts authenticated submissions. A local relay, a self-hosted mail server, or any provider that supports STARTTLS or SSL on port 587/465 works. Gmail, Fastmail, and similar providers work if you generate an app password.
+
+#### Configuration
+
+```toml
+[email]
+smtp_host = "mail.example.lan"
+smtp_port = 587
+smtp_security = "starttls"   # starttls | ssl | none
+smtp_user = "cratedigger"
+smtp_password = ""           # leave blank; use CRATEDIGGER_SMTP_PASSWORD instead
+from_address = "cratedigger@example.lan"
+thumbnail_width = 140
+
+[email.new_sets]
+enabled = true
+to = ["you@example.com", "other@example.com"]
+
+[email.updated_sets]
+enabled = true
+to = ["you@example.com"]
+
+[email.update_reminder]
+enabled = true
+to = ["you@example.com"]
+```
+
+| Key | Description | Default |
+|-----|-------------|---------|
+| `smtp_host` | SMTP server hostname or IP | (required) |
+| `smtp_port` | SMTP port | `587` |
+| `smtp_security` | Connection security: `"starttls"`, `"ssl"`, or `"none"` | `"starttls"` |
+| `smtp_user` | SMTP login username | (required) |
+| `smtp_password` | SMTP password (see env var note below) | `""` |
+| `from_address` | Sender address that appears in the From header | (required) |
+| `thumbnail_width` | Width in pixels of embedded poster thumbnails | `140` |
+
+Each channel sub-table (`[email.new_sets]`, `[email.updated_sets]`, `[email.update_reminder]`) has two keys:
+
+| Key | Description |
+|-----|-------------|
+| `enabled` | Set to `true` to enable this channel |
+| `to` | List of recipient addresses |
+
+#### SMTP password
+
+Set the password via the `CRATEDIGGER_SMTP_PASSWORD` environment variable rather than writing it into `config.toml`. The environment variable takes precedence over `smtp_password` in the config file and is never written to logs.
+
+=== "Linux / macOS"
+
+    ```bash
+    export CRATEDIGGER_SMTP_PASSWORD=your-app-password
+    ```
+
+=== "Windows (PowerShell)"
+
+    ```powershell
+    $env:CRATEDIGGER_SMTP_PASSWORD = "your-app-password"
+    ```
+
+#### Verifying delivery
+
+Run `organize` or `identify` with `--email-test` to send a sample email without waiting for real changes. The run continues normally after the test message is sent.
+
+```bash
+cratedigger organize ~/Music/Library/ --email-test
+```
+
+You can also force or suppress an email for a single run without changing your config:
+
+- `--email` on `organize` forces the `new_sets` email even if no sets were added.
+- `--no-email` on `organize` or `identify` suppresses the email for that run.
+
+See [organize options](commands/organize.md#options) and [identify options](commands/identify.md#options).
+
+#### Example
+
+![Example CrateDigger run-summary email](assets/example-email.png)
+
 ### NFO settings
 
 ```toml
@@ -380,3 +475,4 @@ See [enrich: chapter_artist_mbids](commands/enrich.md#chapter_artist_mbids-per-t
 | `KODI_PORT` | `kodi.port` |
 | `KODI_USERNAME` | `kodi.username` |
 | `KODI_PASSWORD` | `kodi.password` |
+| `CRATEDIGGER_SMTP_PASSWORD` | `email.smtp_password` (takes precedence; preferred over storing the password in the config file) |

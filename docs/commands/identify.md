@@ -49,6 +49,8 @@ cratedigger identify <folder_or_file> [options]
 | `--preview` | | off | Show the matched chapter list without embedding anything. Read-only. |
 | `--regenerate` / `--fresh` | | off | Ignore stored results and re-identify the file, even if chapters are already embedded |
 | `--delay <seconds>` | | 5 | Pause between files to avoid rate-limiting |
+| `--email` | | off | Force the updated-sets summary email for this run. Overrides config. |
+| `--no-email` | | off | Suppress the updated-sets summary email for this run. Overrides config. |
 | `--config <path>` | | (none) | Path to a config.toml file |
 | `--quiet` | `-q` | off | Suppress per-file progress output |
 | `--verbose` | `-v` | off | Show detailed progress and decisions |
