@@ -712,7 +712,7 @@ class TracklistSession:
         Returns dict with artwork_url, aliases, and member_of.
         On failure returns empty defaults.
         """
-        empty = {"artwork_url": "", "aliases": [], "member_of": []}
+        empty = {"artwork_url": "", "aliases": [], "member_of": [], "members": []}
         url = f"{BASE_URL}/dj/{dj_slug}/index.html"
         try:
             resp = self._request("GET", url, max_retries=2)
@@ -989,6 +989,7 @@ def _parse_dj_profile(html: str) -> dict:
         artwork_url: str, og:image URL (empty if placeholder)
         aliases: list of {"slug": str, "name": str}
         member_of: list of {"slug": str, "name": str}
+        members: list of {"slug": str, "name": str} (the group's lineup)
     """
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, "html.parser")
@@ -1037,6 +1038,7 @@ def _parse_dj_profile(html: str) -> dict:
         "artwork_url": artwork_url,
         "aliases": _extract_section("Aliases"),
         "member_of": _extract_section("Member Of"),
+        "members": _extract_section("Group Members"),
     }
 
 

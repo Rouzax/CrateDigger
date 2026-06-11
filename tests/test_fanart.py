@@ -429,10 +429,11 @@ def test_fanart_op_not_needed_when_images_exist(tmp_path):
     config = MagicMock()
     config.fanart_enabled = True
     config.fanart_project_api_key = "key"
+    config.dj_cache = None
     op = FanartOperation(config, library_root=tmp_path, force=False)
 
-    # Create existing images
-    artist_dir = tmp_path / "artists" / "Hardwell"
+    # Create existing images (folder key is the slugified artist name)
+    artist_dir = tmp_path / "artists" / "hardwell"
     artist_dir.mkdir(parents=True)
     (artist_dir / "clearlogo.png").write_bytes(b"fake")
     (artist_dir / "fanart.jpg").write_bytes(b"fake")

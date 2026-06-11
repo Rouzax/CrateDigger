@@ -799,7 +799,7 @@ def test_parse_dj_profile_survives_single_quoted_og_image():
 
 def test_parse_dj_profile_empty_when_no_markers():
     result = _parse_dj_profile("<html>nothing</html>")
-    assert result == {"artwork_url": "", "aliases": [], "member_of": []}
+    assert result == {"artwork_url": "", "aliases": [], "member_of": [], "members": []}
 
 
 def test_fetch_dj_profile_maximizes_squarespace_url():

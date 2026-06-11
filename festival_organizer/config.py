@@ -454,7 +454,7 @@ class Config:
 
     @cached_property
     def artist_groups(self) -> set[str]:
-        """Combined group set: manual config + external + DJ-cache derived.
+        """Combined don't-split set: manual config + external + DJ-cache groups + DJ-cache entry names.
 
         Same caching semantics as artist_aliases: DjCache is read once per
         Config instance.
@@ -467,10 +467,16 @@ class Config:
         groups.update(g.lower() for g in ext_groups)
         if self.dj_cache:
             groups.update(self.dj_cache.derive_artist_groups())
+            groups.update(self.dj_cache.derive_entry_names())
         return groups
 
     def resolve_artist(self, name: str) -> str:
-        """Resolve artist alias, then for B2Bs not in groups return first artist."""
+        """Resolve artist alias, then for B2Bs return the first artist.
+
+        Any name matching a known act (a manual/external group, a DJ-cache
+        member-of group, or a top-level 1001TL entry name) is kept whole and
+        never split on separators.
+        """
         original = name
         # 1. Resolve alias (exact, case-insensitive, then diacritics-insensitive)
         aliased = False

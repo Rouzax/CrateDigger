@@ -63,6 +63,29 @@ def strip_diacritics(text: str) -> str:
     return "".join(c for c in nfkd if not unicodedata.combining(c))
 
 
+def slugify(name: str) -> str:
+    """1001TL-style slug from a display name: ASCII-fold, '&'->'and', keep [a-z0-9].
+
+    Used as the deterministic fallback cache key for artists with no 1001TL slug,
+    and to normalise display names when matching them to cached slugs. Mirrors how
+    1001TL forms /dj/<slug>/ (lowercase, ampersand expanded, punctuation dropped).
+    TrackSplit must keep an identical implementation.
+    """
+    folded = strip_diacritics(name).lower()
+    folded = folded.replace("&", "and")
+    return re.sub(r"[^a-z0-9]", "", folded)
+
+
+def folder_slug(slug: str) -> str:
+    """Make a real 1001TL slug safe as a directory name.
+
+    Windows silently strips trailing dots/spaces, so a slug like 'fredagain..'
+    must become the folder 'fredagain'. Internal characters of a real slug are
+    already URL-safe, so only the trailing strip is needed.
+    """
+    return slug.rstrip(" .")
+
+
 def normalize_pipes(text: str) -> str:
     """Normalize fullwidth pipe (U+FF5C) to regular pipe.
 

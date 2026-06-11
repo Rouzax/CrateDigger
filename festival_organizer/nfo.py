@@ -73,11 +73,18 @@ def generate_nfo_xml(media_file: MediaFile, video_path: Path, config: Config,
 
     if mf.artists:
         group_members = dj_cache.derive_group_members() if dj_cache else {}
-        for artist_name in mf.artists:
+        slugs = mf.artist_slugs if len(mf.artist_slugs) == len(mf.artists) else []
+        for idx, artist_name in enumerate(mf.artists):
             if artist_name.lower() not in existing_tags:
                 _add(root, "tag", artist_name)
                 existing_tags.add(artist_name.lower())
-            for member in group_members.get(artist_name, []):
+            # derive_group_members() is keyed by group slug, so prefer the
+            # file's album-artist slug; fall back to the name key for older
+            # files with no slug tag.
+            members = group_members.get(slugs[idx]) if slugs else None
+            if members is None:
+                members = group_members.get(artist_name, [])
+            for member in members:
                 if member.lower() not in existing_tags:
                     _add(root, "tag", member)
                     existing_tags.add(member.lower())

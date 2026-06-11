@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 import shutil
 import sys
 import tempfile
@@ -39,8 +38,6 @@ from pathlib import Path
 import platformdirs
 
 APP_NAME = "CrateDigger"
-
-_SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9 _()&.\-]")
 
 _LEGACY_STAMP_NAME = "legacy-warning.stamp"
 
@@ -145,14 +142,30 @@ def cookies_file() -> Path:
     return state_dir() / "1001tl-cookies.json"
 
 
-def _safe_artist_name(name: str) -> str:
-    """Sanitize an artist name for use as a directory name."""
-    return _SAFE_NAME_RE.sub("_", name).strip() or "_"
+def artist_cache_folder_key(artist_name: str, slug: str | None = None, dj_cache=None) -> str:
+    """Resolve an artist to its canonical cache-dir name.
+
+    Priority: explicit 1001TL slug (off the file tag) -> name resolved via
+    dj_cache -> deterministic slugify() fallback. All paths run through
+    folder_slug so the result is Windows-safe.
+    """
+    from festival_organizer.normalization import folder_slug, slugify
+    if slug:
+        return folder_slug(slug)
+    if dj_cache is not None:
+        resolved = dj_cache.slug_for_name(artist_name)
+        if resolved:
+            return folder_slug(resolved)
+    return slugify(artist_name)
 
 
-def artist_cache_dir(artist_name: str) -> Path:
-    """Return the per-artist artwork cache directory under cache_dir()."""
-    return cache_dir() / "artists" / _safe_artist_name(artist_name)
+def artist_cache_dir(folder_key: str) -> Path:
+    """Return the per-artist artwork cache directory for a folder key.
+
+    The folder key is a canonical slug (see artist_cache_folder_key), not a
+    display name.
+    """
+    return cache_dir() / "artists" / folder_key
 
 
 def ensure_parent(path: Path) -> Path:

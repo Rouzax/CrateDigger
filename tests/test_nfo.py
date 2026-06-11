@@ -336,6 +336,7 @@ def test_nfo_group_members_as_tags(tmp_path):
         source_path=Path("test.mkv"),
         artist="Gaia",
         artists=["Gaia"],
+        artist_slugs=["gaia-nl"],
         festival="Tomorrowland", year="2024",
         content_type="festival_set",
     )

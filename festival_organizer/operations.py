@@ -386,7 +386,8 @@ class AlbumPosterOperation(Operation):
                     return None  # Multi-artist folder, skip fanart background
 
         # Single artist (or couldn't determine); look for their fanart
-        candidate = paths.artist_cache_dir(artist) / "fanart.jpg"
+        key = paths.artist_cache_folder_key(artist, dj_cache=self.config.dj_cache)
+        candidate = paths.artist_cache_dir(key) / "fanart.jpg"
         result = candidate if candidate.exists() else None
         logger.info("enrich.album_poster: artists_in_folder=1 style=%s",
                     "artist" if result else "festival")
@@ -429,11 +430,12 @@ class AlbumPosterOperation(Operation):
             logger.debug("enrich.artwork_download: status=failed error=\"%s\"", e)
             return None
 
-    def _download_dj_artwork(self, url: str, artist: str) -> Path | None:
+    def _download_dj_artwork(self, url: str, artist: str, slug: str | None = None) -> Path | None:
         """Download DJ artwork, convert to JPEG, crop/resize, save to artist dir."""
         if not url or not artist:
             return None
-        artist_dir = paths.artist_cache_dir(artist)
+        key = paths.artist_cache_folder_key(artist, slug=slug, dj_cache=self.config.dj_cache)
+        artist_dir = paths.artist_cache_dir(key)
         cached = artist_dir / "dj-artwork.jpg"
         if cached.exists():
             age_days = (time.time() - cached.stat().st_mtime) / 86400
@@ -511,7 +513,8 @@ class AlbumPosterOperation(Operation):
                 mf = analyse_file(video, folder, self.config)
                 logger.debug("enrich.dj_artwork: url=%s", mf.dj_artwork_url or "(empty)")
                 if mf.dj_artwork_url and mf.artist:
-                    result = self._download_dj_artwork(mf.dj_artwork_url, mf.artist)
+                    slug = mf.artist_slugs[0] if mf.artist_slugs else None
+                    result = self._download_dj_artwork(mf.dj_artwork_url, mf.artist, slug=slug)
                     if result:
                         return result
                 # Fallback: fetch DJ artwork from tracklist page
@@ -532,7 +535,8 @@ class AlbumPosterOperation(Operation):
                     continue
                 seen.add(mf.artist)
                 if mf.dj_artwork_url:
-                    self._download_dj_artwork(mf.dj_artwork_url, mf.artist)
+                    slug = mf.artist_slugs[0] if mf.artist_slugs else None
+                    self._download_dj_artwork(mf.dj_artwork_url, mf.artist, slug=slug)
 
     def _fetch_dj_artwork_from_tracklist(self, tracklist_url: str, artist: str) -> Path | None:
         """Fetch DJ artwork by scraping a 1001TL tracklist page for DJ slugs.
@@ -740,20 +744,36 @@ class FanartOperation(Operation):
         effective_ttl = self._ttl_days * hashed_jitter_factor(path.name)
         return age_days > effective_ttl
 
-    def _artist_dir(self, artist: str) -> Path:
-        """Resolve per-artist directory."""
-        return paths.artist_cache_dir(artist)
+    def _artist_dir(self, key: str) -> Path:
+        """Resolve per-artist cache directory from a folder key."""
+        return paths.artist_cache_dir(key)
+
+    def _artist_targets(self, media_file: MediaFile) -> list[tuple[str, str]]:
+        """Return (display_name, folder_key) per artist to fetch fanart for.
+
+        Prefers the 1001TL slug list; falls back to split_artists for files
+        with no slug tag (non-1001TL).
+        """
+        from festival_organizer.fanart import split_artists
+        if media_file.artist_slugs and len(media_file.artist_slugs) == len(media_file.artists):
+            return [
+                (name, paths.artist_cache_folder_key(name, slug=slug, dj_cache=self.config.dj_cache))
+                for name, slug in zip(media_file.artists, media_file.artist_slugs)
+            ]
+        return [
+            (name, paths.artist_cache_folder_key(name, dj_cache=self.config.dj_cache))
+            for name in split_artists(media_file.artist, groups=self.config.artist_groups)
+        ]
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         if not self.config.fanart_enabled or not self.config.fanart_project_api_key:
             return False
         if not media_file.artist:
             return False
-        from festival_organizer.fanart import split_artists
-        for artist in split_artists(media_file.artist, groups=self.config.artist_groups):
-            if artist in self._completed_artists:
+        for name, key in self._artist_targets(media_file):
+            if name in self._completed_artists:
                 continue
-            d = self._artist_dir(artist)
+            d = self._artist_dir(key)
             if self.force:
                 return True
             if self._is_stale(d / "clearlogo.png") or self._is_stale(d / "fanart.jpg"):
@@ -762,15 +782,14 @@ class FanartOperation(Operation):
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.fanart import (
-            split_artists, download_artist_images, lookup_mbid,
+            download_artist_images, lookup_mbid,
             fetch_artist_images, pick_best_logo, pick_best_background,
         )
-        artists = split_artists(media_file.artist, groups=self.config.artist_groups)
         fetched = []
-        for artist in artists:
+        for artist, key in self._artist_targets(media_file):
             if artist in self._completed_artists:
                 continue
-            d = self._artist_dir(artist)
+            d = self._artist_dir(key)
             try:
                 mbid = lookup_mbid(artist, self._get_cache())
 

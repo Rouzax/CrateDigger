@@ -1,4 +1,7 @@
-"""Plex tag embedding via mkvpropedit (opt-in via --embed-tags flag).
+"""Plex tag embedding via mkvpropedit.
+
+Runs as the `tags` enrichment operation; embed_tags() diffs desired vs existing
+tags and only writes when something changed.
 
 Embeds artist, title, and date into MKV file tags so Plex can read them.
 Only operates on destination files; never modifies source collection.

@@ -87,8 +87,8 @@ def test_dj_cache_derive_group_members(tmp_path):
         "aliases": [], "member_of": [{"slug": "gaia-nl", "name": "Gaia"}],
     })
     members = cache.derive_group_members()
-    assert "Gaia" in members
-    assert sorted(members["Gaia"]) == ["Armin van Buuren", "Rank 1"]
+    assert "gaia-nl" in members
+    assert sorted(members["gaia-nl"]) == ["Armin van Buuren", "Rank 1"]
 
 
 def test_dj_cache_derive_group_members_empty(tmp_path):
@@ -109,7 +109,7 @@ def test_dj_cache_derive_group_members_includes_expired(tmp_path):
         "aliases": [], "member_of": [{"slug": "gaia-nl", "name": "Gaia"}],
     })
     members = cache.derive_group_members()
-    assert members == {"Gaia": ["Armin van Buuren"]}
+    assert members == {"gaia-nl": ["Armin van Buuren"]}
 
 
 def test_dj_cache_derive_group_members_multi_group(tmp_path):
@@ -124,8 +124,8 @@ def test_dj_cache_derive_group_members_multi_group(tmp_path):
         ],
     })
     members = cache.derive_group_members()
-    assert members["Swedish House Mafia"] == ["Axwell"]
-    assert members["Axwell Ingrosso"] == ["Axwell"]
+    assert members["swedishhousemafia"] == ["Axwell"]
+    assert members["axwellandingrosso"] == ["Axwell"]
 
 
 def test_dj_cache_derive_aliases_includes_expired(tmp_path):

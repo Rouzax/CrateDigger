@@ -23,7 +23,7 @@ class DjCache:
     """Read-through cache for 1001TL DJ profile data with TTL-based expiry.
 
     Keyed by DJ slug (e.g. "tiesto", "arminvanbuuren"). Each entry stores
-    name, artwork_url, aliases, and member_of groups.
+    name, artwork_url, aliases, member_of groups, and group members.
     Persists under `paths.cache_dir()` (see `festival_organizer.paths`).
     """
 
@@ -67,6 +67,49 @@ class DjCache:
         self._data[slug] = entry
         self._save()
 
+    def slugs(self) -> set[str]:
+        """All cached slugs (dict keys), regardless of freshness."""
+        return set(self._data.keys())
+
+    def derive_entry_names(self) -> set[str]:
+        """Lowercased canonical names of every cached entry.
+
+        A single /dj/ entry means 1001TL treats the name as one act, so these
+        names form the 'do not split' guard (e.g. 'above & beyond').
+        """
+        from festival_organizer.normalization import fix_mojibake
+        names: set[str] = set()
+        for entry in self._data.values():
+            name = entry.get("name", "")
+            if name:
+                names.add(fix_mojibake(name).lower())
+        return names
+
+    def slug_for_name(self, name: str) -> str | None:
+        """Resolve a display name (or alias) to its cached slug, or None.
+
+        Matches on slugify() so diacritics, case, trailing dots and '&' spelling
+        do not matter ('Tiesto'/'Tiësto', 'Fred again'/'Fred again..').
+        """
+        from festival_organizer.normalization import slugify
+        if not name:
+            return None
+        index = self._name_index()
+        return index.get(slugify(name))
+
+    def _name_index(self) -> dict[str, str]:
+        from festival_organizer.normalization import slugify
+        index: dict[str, str] = {}
+        for slug, entry in self._data.items():
+            entry_name = entry.get("name", "")
+            if entry_name:
+                index.setdefault(slugify(entry_name), slug)
+            for alias in entry.get("aliases", []):
+                alias_name = alias.get("name", "")
+                if alias_name:
+                    index.setdefault(slugify(alias_name), slug)
+        return index
+
     def derive_artist_aliases(self) -> dict[str, str]:
         """Build alias_name -> canonical_name map from all cached DJ profiles.
 
@@ -96,21 +139,32 @@ class DjCache:
         return groups
 
     def derive_group_members(self) -> dict[str, list[str]]:
-        """Build group_name -> [member_name, ...] mapping from all cached DJ profiles.
+        """Map group SLUG -> [member name, ...], complete lineup.
 
-        Scans all cached DJs and reverses their member_of entries.
-        For example, if Armin van Buuren has member_of: [{name: "Gaia"}],
-        returns {"Gaia": ["Armin van Buuren"]}.
+        Combines each group entry's directly captured "Group Members"
+        (`members`) with the reverse-derivation of every cached DJ's
+        `member_of`. Directly-stored members complete lineups whose
+        individual members are not themselves cached (e.g. Above & Beyond).
+        Keyed by slug so callers can look up via the file's album-artist slugs.
         """
         groups: dict[str, list[str]] = {}
+        # (a) directly captured members on each group entry
+        for slug, entry in self._data.items():
+            for member in entry.get("members", []):
+                name = member.get("name", "")
+                if name:
+                    groups.setdefault(slug, []).append(name)
+        # (b) reverse-derive from member_of for groups without a captured list
+        name_to_slug = {e.get("name", ""): s for s, e in self._data.items()}
         for entry in self._data.values():
             member_name = entry.get("name", "")
             if not member_name:
                 continue
             for group in entry.get("member_of", []):
                 group_name = group.get("name", "")
-                if group_name:
-                    groups.setdefault(group_name, []).append(member_name)
+                group_slug = group.get("slug", "") or name_to_slug.get(group_name, "")
+                if group_slug and member_name not in groups.get(group_slug, []):
+                    groups.setdefault(group_slug, []).append(member_name)
         return groups
 
     def get_or_fetch_many(
