@@ -115,6 +115,18 @@ DEFAULT_CONFIG = {
         "password": "",
         "path_mapping": None,
     },
+    "email": {
+        "smtp_host": "",
+        "smtp_port": 587,
+        "smtp_security": "starttls",   # starttls | ssl | none
+        "smtp_user": "",
+        "smtp_password": "",
+        "from_address": "",
+        "thumbnail_width": 140,
+        "new_sets": {"enabled": False, "to": []},
+        "updated_sets": {"enabled": False, "to": []},
+        "update_reminder": {"enabled": False, "to": []},
+    },
     "cache_ttl": {
         # Base TTL in days for each cache. Actual per-entry lifetimes jitter
         # by +/- 20% around the base to avoid thundering-herd re-fetches after
@@ -564,6 +576,46 @@ class Config:
     def kodi_password(self) -> str:
         import os
         return os.environ.get("KODI_PASSWORD") or self.kodi_settings.get("password", "")
+
+    @property
+    def email_settings(self) -> dict:
+        return self._data.get("email", {})
+
+    @property
+    def email_smtp_host(self) -> str:
+        return self.email_settings.get("smtp_host", "")
+
+    @property
+    def email_smtp_port(self) -> int:
+        return self.email_settings.get("smtp_port", 587)
+
+    @property
+    def email_smtp_security(self) -> str:
+        return self.email_settings.get("smtp_security", "starttls")
+
+    @property
+    def email_smtp_user(self) -> str:
+        return self.email_settings.get("smtp_user", "")
+
+    @property
+    def email_smtp_password(self) -> str:
+        import os
+        return os.environ.get("CRATEDIGGER_SMTP_PASSWORD") or \
+            self.email_settings.get("smtp_password", "")
+
+    @property
+    def email_from_address(self) -> str:
+        return self.email_settings.get("from_address", "")
+
+    @property
+    def email_thumbnail_width(self) -> int:
+        return self.email_settings.get("thumbnail_width", 140)
+
+    def email_channel_enabled(self, channel: str) -> bool:
+        return bool(self.email_settings.get(channel, {}).get("enabled", False))
+
+    def email_channel_recipients(self, channel: str) -> list[str]:
+        return list(self.email_settings.get(channel, {}).get("to", []))
 
     @property
     def cache_ttl(self) -> dict:

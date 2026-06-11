@@ -85,6 +85,32 @@ port = 8080
 username = "kodi"
 password = ""
 
+# Email notifications. Three independent channels, each with its own recipients.
+# new_sets   -> sent after `organize` when sets were added (to you + others)
+# updated_sets -> sent after `identify` when chapters changed (to you)
+# update_reminder -> sent (any command) when a newer CrateDigger is available, once per version
+# The SMTP password may instead be set via the CRATEDIGGER_SMTP_PASSWORD env var (preferred).
+# [email]
+# smtp_host = "mail.example.lan"
+# smtp_port = 587
+# smtp_security = "starttls"   # starttls | ssl | none
+# smtp_user = "cratedigger"
+# smtp_password = ""
+# from_address = "cratedigger@example.lan"
+# thumbnail_width = 140
+#
+# [email.new_sets]
+# enabled = true
+# to = ["you@example.com", "other@example.com"]
+#
+# [email.updated_sets]
+# enabled = true
+# to = ["you@example.com"]
+#
+# [email.update_reminder]
+# enabled = true
+# to = ["you@example.com"]
+
 # Genre tags written into NFO files.
 [nfo_settings]
 genre_festival = "Electronic"

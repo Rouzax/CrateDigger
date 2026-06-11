@@ -18,7 +18,7 @@ EXAMPLE_PATH = Path(__file__).resolve().parent.parent / "config.example.toml"
 # Keys that are in DEFAULT_CONFIG but intentionally shown as commented-out
 # blocks in config.example.toml (so a fresh user copy does not inherit
 # possibly-wrong values). The reverse drift-detector below exempts them.
-INTENTIONALLY_COMMENTED_OUT = {"tool_paths"}
+INTENTIONALLY_COMMENTED_OUT = {"tool_paths", "email"}
 
 
 @pytest.fixture(scope="module")
