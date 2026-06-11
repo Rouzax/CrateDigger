@@ -1081,6 +1081,14 @@ def _run_command(args: types.SimpleNamespace) -> int:
         from festival_organizer.cache_maintenance import reconcile_artist_cache
         if dj_cache is not None:
             valid = {folder_slug(s) for s in dj_cache.slugs()}
+            # Also preserve folder keys for artists processed this run, so a
+            # non-1001TL artist's slugify(name) fallback dir is not churned.
+            for _fp, _mf, _ops in pipeline_files:
+                names = _mf.artists or ([_mf.artist] if _mf.artist else [])
+                slugs = _mf.artist_slugs if len(_mf.artist_slugs) == len(names) else []
+                for _i, _name in enumerate(names):
+                    _slug = slugs[_i] if slugs else None
+                    valid.add(_paths.artist_cache_folder_key(_name, slug=_slug, dj_cache=dj_cache))
             reconcile_artist_cache(_paths.cache_dir() / "artists", valid)
 
     # Pass unresolved artist names to enrich progress for summary

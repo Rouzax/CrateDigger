@@ -22,3 +22,15 @@ def test_reconcile_idempotent_on_clean_cache(tmp_path):
 
 def test_reconcile_missing_root_is_noop(tmp_path):
     assert reconcile_artist_cache(tmp_path / "nope", {"x"}) == []
+
+
+def test_reconcile_preserves_seen_fallback_dir(tmp_path):
+    root = tmp_path / "artists"
+    for name in ["aboveandbeyond", "somelocaldj", "Above"]:
+        (root / name).mkdir(parents=True)
+    # valid = dj_cache folder slugs + this-run fallback key for the non-1001TL artist
+    valid = {"aboveandbeyond", "somelocaldj"}
+    removed = reconcile_artist_cache(root, valid)
+    remaining = {p.name for p in root.iterdir()}
+    assert remaining == {"aboveandbeyond", "somelocaldj"}
+    assert {p.name for p in removed} == {"Above"}
