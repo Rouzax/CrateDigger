@@ -9,7 +9,7 @@ import logging
 from pathlib import Path
 
 from festival_organizer.notify import throttle
-from festival_organizer.notify.models import RunReport, SMTPSettings, UpdateInfo
+from festival_organizer.notify.models import RunReport, SMTPSettings
 from festival_organizer.notify.render import render
 from festival_organizer.notify.send import send_email
 from festival_organizer.notify.thumbnails import make_thumbnail
