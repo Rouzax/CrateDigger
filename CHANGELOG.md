@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-06-11
+
+### Fixed
+
+- Artist names that contain `&` (for example `Above & Beyond`) or that end in dots (for example `Fred again..`) are no longer truncated. Previously the primary `ARTIST` tag, and the artwork cache directory, could collapse `Above & Beyond` to `Above` and `Fred again..` to `Fred again`. The primary artist is now taken from the canonical 1001Tracklists name resolved via the album-artist slug, so it stays intact. Existing files self-heal: the next `enrich` run re-derives and rewrites the corrected `ARTIST` tag.
+
+### Changed
+
+- The per-artist artwork cache (`cache/artists/`) is now keyed by the canonical 1001Tracklists slug instead of a sanitized display name. This collapses the case, Unicode/mojibake, and truncation duplicate directories that the old sanitizer produced (for example `Afrojack` plus `AFROJACK`, or `Tiesto` plus a mojibake variant) into one deterministic, OS-independent directory per artist. Slugs are read from the `CRATEDIGGER_ALBUMARTIST_SLUGS` tag already written to every identified file. Compatibility note: companion tools that read this cache by directory name (TrackSplit) must resolve artwork by the same slug to keep finding it.
+- The artwork cache is reconciled on every `enrich` run: directories that do not match a known artist slug (orphans left by the old display-name keying) are removed, and the canonical slug directories are re-populated in the same run. This keeps `cache/artists/` structurally clean rather than accumulating stale directories.
+
+### Added
+
+- NFO files now list the complete lineup of a group act as `<tag>` entries. The members of a group (for example Jono Grant and Tony McGuinness for Above & Beyond, or all three members of Swedish House Mafia) are captured from the 1001Tracklists "Group Members" section and stored in the DJ cache, so the lineup is complete even when the individual members do not have their own sets in the library. Previously only members who happened to have their own cached profile were listed.
+
 ## [0.20.4] - 2026-06-11
 
 ### Changed
