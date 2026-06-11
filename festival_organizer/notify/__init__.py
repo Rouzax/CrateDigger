@@ -6,9 +6,12 @@ never fails because of email.
 from __future__ import annotations
 
 import logging
+import socket
+from datetime import datetime
 from pathlib import Path
 
 from festival_organizer.notify import throttle
+from festival_organizer.notify.collect import collect_new_sets, collect_updated_sets
 from festival_organizer.notify.models import RunReport, SMTPSettings
 from festival_organizer.notify.render import render
 from festival_organizer.notify.send import send_email
@@ -98,3 +101,55 @@ def maybe_send_update_reminder(config, *, content_email_sent: bool,
         _log.info("email.sent: channel=update_reminder version=%s", update.latest)
     except Exception as e:
         _log.warning("email.failed: channel=update_reminder error=\"%s\"", e)
+
+
+def _host() -> str:
+    try:
+        return socket.gethostname()
+    except Exception:
+        return "unknown"
+
+
+def _now() -> str:
+    return datetime.now().strftime("%d %b %Y, %H:%M")
+
+
+def notify_new_sets(config, *, pipeline_files, all_results, stats, flag,
+                    count_chapters, marker_path=None) -> None:
+    """End-of-organize hook: send the new-sets email (if warranted), then the
+    standalone update reminder (suppressed if a content email went out)."""
+    content_sent = False
+    if _should_send(config, "new_sets", flag=flag):
+        try:
+            update = get_cached_update_status()
+        except Exception:
+            update = None
+        report = collect_new_sets(
+            pipeline_files, all_results,
+            update=update, stats=stats, host=_host(), timestamp=_now(),
+            count_chapters=count_chapters,
+        )
+        content_sent = _send_report(config, report,
+                                    thumbnail_width=config.email_thumbnail_width)
+    maybe_send_update_reminder(config, content_email_sent=content_sent,
+                               marker_path=marker_path)
+
+
+def notify_updated_sets(config, *, updated_paths, analyse, count_chapters, flag,
+                        marker_path=None) -> None:
+    """End-of-identify hook: send the updated-sets email (if warranted), then the
+    standalone update reminder (suppressed if a content email went out)."""
+    content_sent = False
+    if _should_send(config, "updated_sets", flag=flag):
+        try:
+            update = get_cached_update_status()
+        except Exception:
+            update = None
+        report = collect_updated_sets(
+            updated_paths, analyse=analyse, count_chapters=count_chapters,
+            update=update, host=_host(), timestamp=_now(),
+        )
+        content_sent = _send_report(config, report,
+                                    thumbnail_width=config.email_thumbnail_width)
+    maybe_send_update_reminder(config, content_email_sent=content_sent,
+                               marker_path=marker_path)

@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import festival_organizer.notify as notify
 from festival_organizer.notify.models import EmailSet, RunReport, UpdateInfo, SMTPSettings
@@ -17,6 +18,8 @@ class _Cfg:
         self.email_thumbnail_width = 140
 
     def email_channel_enabled(self, ch):
+        if ch == "update_reminder":
+            return True
         return self._enabled
 
     def email_channel_recipients(self, ch):
@@ -88,3 +91,69 @@ def test_update_reminder_suppressed_when_content_sent(monkeypatch, tmp_path):
     notify.maybe_send_update_reminder(_Cfg(), content_email_sent=True,
                                       marker_path=tmp_path / "m.json")
     assert calls == []
+
+
+def test_notify_new_sets_sends_and_then_reminder(monkeypatch, tmp_path):
+    sent_channels = []
+    monkeypatch.setattr(notify, "send_email",
+                        lambda settings, rendered, *, to: sent_channels.append(rendered.subject))
+    monkeypatch.setattr(notify, "get_cached_update_status",
+                        lambda: UpdateInfo("0.19.9", "0.20.0", True))
+
+    def _op(name, target):
+        return SimpleNamespace(name=name, target=target)
+
+    def _res(name, status):
+        return SimpleNamespace(name=name, status=status, detail="", display_name=name)
+
+    from tests.conftest import make_mediafile
+    target = tmp_path / "v.mkv"
+    mf = make_mediafile(source_path=target, artist="A", festival="UMF Miami", year="2026",
+                        content_type="festival_set", duration_seconds=5400.0)
+    notify.notify_new_sets(
+        _Cfg(),
+        pipeline_files=[(target, mf, [_op("organize", target)])],
+        all_results=[[_res("organize", "done")]],
+        stats={"added": 1, "up_to_date": 0, "errors": 0},
+        flag=None,
+        count_chapters=lambda p: 19,
+        marker_path=tmp_path / "m.json",
+    )
+    assert len(sent_channels) == 1
+    assert "new set" in sent_channels[0]
+
+
+def test_notify_new_sets_disabled_still_sends_reminder(monkeypatch, tmp_path):
+    sent = []
+    monkeypatch.setattr(notify, "send_email",
+                        lambda settings, rendered, *, to: sent.append(rendered.subject))
+    monkeypatch.setattr(notify, "get_cached_update_status",
+                        lambda: UpdateInfo("0.19.9", "0.20.0", True))
+    cfg = _Cfg(enabled=False)
+    notify.notify_new_sets(
+        cfg, pipeline_files=[], all_results=[], stats={}, flag=None,
+        count_chapters=lambda p: None, marker_path=tmp_path / "m.json",
+    )
+    assert len(sent) == 1
+
+
+def test_notify_updated_sets_sends(monkeypatch, tmp_path):
+    sent = []
+    monkeypatch.setattr(notify, "send_email",
+                        lambda settings, rendered, *, to: sent.append(rendered.subject))
+    monkeypatch.setattr(notify, "get_cached_update_status",
+                        lambda: UpdateInfo("0.20.0", "0.20.0", False))
+    from tests.conftest import make_mediafile
+    path = tmp_path / "u.mkv"
+    mf = make_mediafile(source_path=path, artist="Armin van Buuren", festival="ASOT",
+                        year="2026", content_type="festival_set")
+    notify.notify_updated_sets(
+        _Cfg(),
+        updated_paths=[path],
+        analyse=lambda p: mf,
+        count_chapters=lambda p: 41,
+        flag=None,
+        marker_path=tmp_path / "m.json",
+    )
+    assert len(sent) == 1
+    assert "updated set" in sent[0]
