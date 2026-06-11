@@ -1074,6 +1074,15 @@ def _run_command(args: types.SimpleNamespace) -> int:
             elif root.resolve() != output.resolve():
                 cleanup_empty_dirs(root)
 
+    # Structural artwork-cache hygiene: keep cache/artists/ canonical every run.
+    if args.command == "enrich" or getattr(args, "enrich", False):
+        from festival_organizer import paths as _paths
+        from festival_organizer.normalization import folder_slug
+        from festival_organizer.cache_maintenance import reconcile_artist_cache
+        if dj_cache is not None:
+            valid = {folder_slug(s) for s in dj_cache.slugs()}
+            reconcile_artist_cache(_paths.cache_dir() / "artists", valid)
+
     # Pass unresolved artist names to enrich progress for summary
     if isinstance(progress, EnrichContractProgress):
         from festival_organizer.fanart import unresolved_artist_names
