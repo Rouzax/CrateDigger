@@ -427,9 +427,7 @@ Place it in the folder above (`~/CrateDigger/artists.json` on Linux or macOS, `D
 
 **`aliases`:** maps a canonical artist name to a list of aliases. When CrateDigger encounters an alias in a filename or tag, it substitutes the canonical name. Matching is case-insensitive and diacritics-insensitive.
 
-**`groups`:** a list of act names that should be kept as-is even when they contain `&`, `B2B`, `vs.`, or similar separators. Without a group entry, CrateDigger splits multi-artist names and uses only the first artist as the folder name. Add an act here when the full name is the canonical identity (for example, `"Swedish House Mafia"` or `"W&W"`).
-
-Note: CrateDigger automatically discovers artist aliases and group memberships from 1001Tracklists profiles via the DJ cache. You only need entries in `artists.json` for corrections that the DJ cache gets wrong, or for artists with no 1001Tracklists profile.
+**`groups`:** a manual list of act names that should be kept as-is even when they contain `&`, `B2B`, `vs.`, or `x` separators. As of v0.21.0, any act with a 1001Tracklists profile is kept whole automatically (resolved to its canonical name via the DJ cache), so you do not need a manual entry for those acts. This includes single acts whose name contains `&` (for example, "Above & Beyond") and named groups (for example, "Swedish House Mafia"). Manual entries are mainly useful for acts with no 1001Tracklists profile (for example, `"W&W"` if it has no profile) or to correct a name the DJ cache gets wrong. When an act is neither in `groups` nor known to 1001Tracklists, CrateDigger splits on the separator and uses only the first artist as the folder name.
 
 ## Artist MBID override file
 
