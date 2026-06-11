@@ -129,3 +129,20 @@ def test_render_poster_column_is_proportional_not_fixed():
     assert 'width="25%"' in out.html   # proportional poster column scales with width
     assert 'width="75%"' in out.html   # text column
     assert "140px" not in out.html     # no fixed-pixel poster width remains
+
+
+def test_render_row_repeats_event_on_card():
+    # The event/place should appear on the card line itself, not only the group header.
+    out = render(_report([_fest("Eric Prydz", "UMF Miami", "2026", ["Techno"], "19 tracks")]),
+                 thumbs={})
+    # "<event> &middot; " only appears as the row's metadata prefix; the group
+    # header renders "UMF Miami" followed by a count span, not a middot.
+    assert "UMF Miami &middot; " in out.html
+
+
+def test_render_footer_muted_color_is_wcag_aa():
+    # The tertiary text color (footer tally, event count) must be the AA-compliant
+    # value, not the old #555570 which failed WCAG AA at 2.81:1.
+    out = render(_report([_fest("A", "E", "2026", [], "")]), thumbs={})
+    assert "#7a7a93" in out.html
+    assert "#555570" not in out.html

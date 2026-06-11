@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.20.3] - 2026-06-11
+
+### Changed
+
+- Each set card in the email now repeats its event/place name (for example, "UMF Miami &middot; 2026 &middot; Mainstage"), so a row is self-describing instead of relying on the event group header above it.
+
+### Fixed
+
+- Email tertiary text (the footer tally and the per-event set count) used a grey, `#555570`, that only reached 2.81:1 contrast against the dark background, below the WCAG AA minimum of 4.5:1. It is now `#7a7a93` (4.84:1), which passes WCAG AA. All other email text was already AA or better.
+
 ## [0.20.2] - 2026-06-11
 
 ### Changed

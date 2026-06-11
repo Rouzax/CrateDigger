@@ -15,7 +15,7 @@ CARD = "#101019"
 BORDER = "#1b1b27"
 TEXT = "#f0f0f5"
 MUTED = "#8888a0"
-MUTED2 = "#555570"
+MUTED2 = "#7a7a93"  # tertiary text (footer tally, event set-count); 4.84:1 on BG, WCAG AA
 FONT = "'Outfit',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 MONO = "'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace"
 
@@ -51,6 +51,8 @@ def _row(s, thumb_cid: str | None) -> str:
     else:
         img = (f'<div style="width:100%;padding-bottom:56%;border-radius:7px;'
                f'background:{CARD};border:1px solid {BORDER};"></div>')
+    # Repeat the event/place on the card so a row is self-describing inside its group.
+    event = f'{escape(s.event)} &middot; ' if s.event else ""
     note = f' &middot; <span style="color:{ACCENT}">{escape(s.note)}</span>' if s.note else ""
     meta = (f'<div style="font-size:12px;color:{MUTED};margin-top:9px;">{escape(s.metric)}</div>'
             if s.metric else "")
@@ -60,7 +62,7 @@ def _row(s, thumb_cid: str | None) -> str:
         f'<td valign="top" width="75%" style="padding:2px 0 0 16px;">'
         f'<div style="font-size:16px;color:{TEXT};font-weight:700;line-height:1.25;">{escape(s.artist)}</div>'
         f'<div style="font-size:13px;color:{MUTED};margin-top:4px;">'
-        f'<span style="font-family:{MONO};">{escape(s.year)}</span>{note}</div>'
+        f'{event}<span style="font-family:{MONO};">{escape(s.year)}</span>{note}</div>'
         f'<div style="margin-top:9px;">{_pills(s.genres)}</div>'
         f'{meta}</td></tr></table>'
     )
