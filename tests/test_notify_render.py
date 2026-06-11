@@ -141,8 +141,9 @@ def test_render_row_repeats_event_on_card():
 
 
 def test_render_footer_muted_color_is_wcag_aa():
-    # The tertiary text color (footer tally, event count) must be the AA-compliant
-    # value, not the old #555570 which failed WCAG AA at 2.81:1.
+    # The tertiary text color (footer tally, event count) must be the canonical
+    # AA muted value, not the old #555570 (2.81:1) or the interim #7a7a93.
     out = render(_report([_fest("A", "E", "2026", [], "")]), thumbs={})
-    assert "#7a7a93" in out.html
+    assert "#80809a" in out.html
     assert "#555570" not in out.html
+    assert "#7a7a93" not in out.html

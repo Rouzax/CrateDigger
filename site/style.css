@@ -3,6 +3,27 @@
    Dark festival-stage aesthetic
    ============================================ */
 
+/* ============================================
+   CANONICAL HOUSE-STYLE PALETTE (source of truth)
+   --------------------------------------------
+   This :root block is the reference palette. It is mirrored, by hand, in two
+   other places; keep them in sync when changing a color:
+     - Email:  festival_organizer/notify/render.py  (BG/TEXT/MUTED/ACCENT/... constants)
+     - Docs:   docs/stylesheets/extra.css           (Material primary overrides)
+
+   Colors and their WCAG AA status on the dark backgrounds:
+     --text-primary  #f0f0f5  17.8:1  AAA
+     --text-secondary #8888a0  5.4-5.9:1  AA
+     --text-muted    #80809a  4.9-5.3:1  AA   (was #555570 = 2.8:1, failed AA)
+     --accent        #e8734a  6.7:1   AA   (as TEXT on dark only)
+     --accent-soft   #d4845e  6.5-7.0:1  AA
+
+   White-on-coral rule: never place white/light text on a SOLID #e8734a fill
+   (only 3.0:1). Use dark text (#06060c) on coral surfaces (buttons), or, where
+   white is required (the docs Material header bar), use the darker coral
+   #b04d2c (white = 5.3:1). The accent stays #e8734a for text and tints.
+   ============================================ */
+
 :root {
   --bg-deep: #06060c;
   --bg-dark: #0a0a14;
@@ -13,7 +34,7 @@
 
   --text-primary: #f0f0f5;
   --text-secondary: #8888a0;
-  --text-muted: #555570;
+  --text-muted: #80809a;
 
   --accent: #e8734a;
   --accent-glow: rgba(232, 115, 74, 0.15);
@@ -221,12 +242,12 @@ img { display: block; max-width: 100%; }
 
 .btn-primary {
   background: var(--accent);
-  color: #fff;
+  color: #06060c;
   box-shadow: 0 0 30px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.3);
 }
 .btn-primary:hover {
   background: #f08058;
-  color: #fff;
+  color: #06060c;
   box-shadow: 0 0 50px rgba(232, 115, 74, 0.25), 0 6px 20px rgba(0,0,0,0.4);
   transform: translateY(-1px);
 }

@@ -6,7 +6,9 @@ from html import escape
 
 from festival_organizer.notify.models import RenderedEmail, RunReport
 
-# House style (mirrors site/style.css)
+# House style. These mirror the canonical palette in site/style.css (:root) by
+# hand; keep them in sync. See that file for WCAG notes and the white-on-coral
+# rule. Email backgrounds are solid, so MUTED2 clears AA at #80809a.
 ACCENT = "#e8734a"
 ACCENT_SOFT = "#d4845e"
 BG = "#06060c"
@@ -15,7 +17,7 @@ CARD = "#101019"
 BORDER = "#1b1b27"
 TEXT = "#f0f0f5"
 MUTED = "#8888a0"
-MUTED2 = "#7a7a93"  # tertiary text (footer tally, event set-count); 4.84:1 on BG, WCAG AA
+MUTED2 = "#80809a"  # tertiary text (footer tally, event set-count); 5.27:1 on BG, WCAG AA
 FONT = "'Outfit',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 MONO = "'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace"
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.20.4] - 2026-06-11
+
+### Changed
+
+- Unified the email's tertiary text color (footer tally, event count) with the landing page and docs at `#80809a`, so the house-style "muted" grey is a single value across email, site, and docs. The previous email value and this one both pass WCAG AA; this only removes a tiny inconsistency. The canonical palette is now documented in `site/style.css`, mirrored by `festival_organizer/notify/render.py` and `docs/stylesheets/extra.css`.
+
 ## [0.20.3] - 2026-06-11
 
 ### Changed
