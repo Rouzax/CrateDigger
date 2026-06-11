@@ -56,7 +56,6 @@ def collect_new_sets(
     *,
     update: UpdateInfo | None,
     stats: dict,
-    host: str,
     timestamp: str,
     count_chapters: Callable[[Path], int | None],
 ) -> RunReport:
@@ -72,7 +71,7 @@ def collect_new_sets(
         chapters = count_chapters(final_path)
         sets.append(_email_set(mf, final_path, metric=_new_metric(mf, chapters)))
     return RunReport(channel="new_sets", sets=sets, update=update,
-                     stats=stats, host=host, timestamp=timestamp)
+                     stats=stats, timestamp=timestamp)
 
 
 def collect_updated_sets(
@@ -81,8 +80,8 @@ def collect_updated_sets(
     analyse: Callable[[Path], object],
     count_chapters: Callable[[Path], int | None],
     update: UpdateInfo | None,
-    host: str,
     timestamp: str,
+    stats: dict | None = None,
 ) -> RunReport:
     """Collect sets whose chapters changed this identify run."""
     sets: list[EmailSet] = []
@@ -93,7 +92,13 @@ def collect_updated_sets(
             _log.warning("notify.analyse_failed: file=%s error=\"%s\"", path, e)
             continue
         chapters = count_chapters(path)
-        metric = f"{chapters} chapters" if chapters else ""
+        parts = []
+        if chapters:
+            parts.append(f"{chapters} chapters")
+        dur = format_duration(getattr(mf, "duration_seconds", None))
+        if dur:
+            parts.append(dur)
+        metric = " · ".join(parts)
         sets.append(_email_set(mf, path, metric=metric))
     return RunReport(channel="updated_sets", sets=sets, update=update,
-                     stats={}, host=host, timestamp=timestamp)
+                     stats=stats or {}, timestamp=timestamp)

@@ -50,7 +50,7 @@ def main() -> int:
         channel="new_sets", sets=sets,
         update=UpdateInfo("0.19.9", "0.20.0", True),
         stats={"added": len(sets), "up_to_date": 12, "errors": 0},
-        host="mediabox", timestamp="11 Jun 2026, 22:14",
+        timestamp="11 Jun 2026, 22:14",
     )
 
     thumbs = {}

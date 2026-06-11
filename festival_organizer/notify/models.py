@@ -31,7 +31,6 @@ class RunReport:
     sets: list[EmailSet]
     update: UpdateInfo | None
     stats: dict                        # {"added": int, "up_to_date": int, "errors": int}
-    host: str
     timestamp: str
 
 

@@ -6,7 +6,6 @@ never fails because of email.
 from __future__ import annotations
 
 import logging
-import socket
 from datetime import datetime
 from pathlib import Path
 
@@ -95,7 +94,7 @@ def maybe_send_update_reminder(config, *, content_email_sent: bool,
     if throttle.already_notified(update.latest, marker_path=marker_path):
         return
     report = RunReport(channel="update_reminder", sets=[], update=update,
-                       stats={}, host="", timestamp="")
+                       stats={}, timestamp="")
     try:
         rendered = render(report, thumbs={})
         send_email(_smtp_settings(config), rendered, to=to)
@@ -103,13 +102,6 @@ def maybe_send_update_reminder(config, *, content_email_sent: bool,
         _log.info("email.sent: channel=update_reminder version=%s", update.latest)
     except Exception as e:
         _log.warning("email.failed: channel=update_reminder error=\"%s\"", e)
-
-
-def _host() -> str:
-    try:
-        return socket.gethostname()
-    except Exception:
-        return "unknown"
 
 
 def _now() -> str:
@@ -128,7 +120,7 @@ def notify_new_sets(config, *, pipeline_files, all_results, stats, flag,
             update = None
         report = collect_new_sets(
             pipeline_files, all_results,
-            update=update, stats=stats, host=_host(), timestamp=_now(),
+            update=update, stats=stats, timestamp=_now(),
             count_chapters=count_chapters,
         )
         content_sent = _send_report(config, report,
@@ -149,7 +141,7 @@ def _sample_report() -> RunReport:
     return RunReport(channel="new_sets", sets=sets,
                      update=UpdateInfo("0.19.9", "0.20.0", True),
                      stats={"added": 2, "up_to_date": 5, "errors": 0},
-                     host=_host(), timestamp=_now())
+                     timestamp=_now())
 
 
 def notify_test(config) -> list[str]:
@@ -174,7 +166,7 @@ def notify_test(config) -> list[str]:
 
 
 def notify_updated_sets(config, *, updated_paths, analyse, count_chapters, flag,
-                        marker_path=None) -> None:
+                        run_stats=None, marker_path=None) -> None:
     """End-of-identify hook: send the updated-sets email (if warranted), then the
     standalone update reminder (suppressed if a content email went out)."""
     content_sent = False
@@ -185,7 +177,7 @@ def notify_updated_sets(config, *, updated_paths, analyse, count_chapters, flag,
             update = None
         report = collect_updated_sets(
             updated_paths, analyse=analyse, count_chapters=count_chapters,
-            update=update, host=_host(), timestamp=_now(),
+            update=update, timestamp=_now(), stats=run_stats,
         )
         content_sent = _send_report(config, report,
                                     thumbnail_width=config.email_thumbnail_width)

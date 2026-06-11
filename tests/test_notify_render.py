@@ -13,7 +13,7 @@ def _fest(artist, event, year, genres, metric):
 def _report(sets, update=None):
     return RunReport(channel="new_sets", sets=sets, update=update,
                      stats={"added": len(sets), "up_to_date": 0, "errors": 0},
-                     host="mediabox", timestamp="11 Jun 2026, 22:14")
+                     timestamp="11 Jun 2026, 22:14")
 
 
 def test_render_groups_by_event_and_includes_metric():
@@ -57,7 +57,7 @@ def test_render_embeds_thumbnail_cid_and_returns_image():
 def test_render_updated_channel_header():
     report = RunReport(channel="updated_sets",
                        sets=[_fest("Armin", "ASOT", "2026", [], "41 chapters")],
-                       update=None, stats={}, host="mediabox", timestamp="t")
+                       update=None, stats={}, timestamp="t")
     out = render(report, thumbs={})
     assert "updated" in out.subject.lower()
     assert "41 chapters" in out.html
@@ -100,3 +100,32 @@ def test_render_escapes_user_fields():
     assert "<script>x</script>" not in out.html
     assert "&lt;script&gt;" in out.html
     assert "UMF &amp; Friends" in out.html   # event escaped at call site
+
+
+def test_render_updated_footer_uses_identify_stats():
+    report = RunReport(channel="updated_sets",
+                       sets=[_fest("A", "ASOT", "2026", [], "41 chapters")],
+                       update=None,
+                       stats={"updated": 1, "up_to_date": 5, "skipped": 2, "error": 1},
+                       timestamp="t")
+    out = render(report, thumbs={})
+    assert "1 updated" in out.html
+    assert "5 unchanged" in out.html
+    assert "3 skipped" in out.html        # skipped + error combined
+    assert "added" not in out.html        # no organize tally on the updated channel
+    assert "mediabox" not in out.html     # hostname removed
+
+
+def test_render_has_full_width_dark_wrapper_and_no_host():
+    out = render(_report([_fest("A", "E", "2026", [], "")]), thumbs={})
+    assert 'bgcolor="#05060a"' in out.html   # full-width dark page background
+    assert "mediabox" not in out.html        # host removed from header
+    assert "mediabox" not in out.text        # and from the text part
+
+
+def test_render_poster_column_is_proportional_not_fixed():
+    out = render(_report([_fest("A", "E", "2026", [], "19 tracks")]),
+                 thumbs={0: ("poster0", b"x")})
+    assert 'width="25%"' in out.html   # proportional poster column scales with width
+    assert 'width="75%"' in out.html   # text column
+    assert "140px" not in out.html     # no fixed-pixel poster width remains

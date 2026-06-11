@@ -19,7 +19,6 @@ def test_run_report_groups_and_update():
         sets=[],
         update=UpdateInfo(installed="0.19.9", latest="0.20.0", behind=True),
         stats={"added": 1, "up_to_date": 2, "errors": 0},
-        host="mediabox",
         timestamp="11 Jun 2026, 22:14",
     )
     assert report.channel == "new_sets"

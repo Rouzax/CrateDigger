@@ -48,7 +48,7 @@ def test_collect_new_sets_picks_only_done(tmp_path):
         pipeline_files, all_results,
         update=UpdateInfo("0.19.9", "0.20.0", True),
         stats={"added": 1, "up_to_date": 1, "errors": 0},
-        host="mediabox", timestamp="11 Jun 2026",
+        timestamp="11 Jun 2026",
         count_chapters=lambda p: 19,
     )
     assert report.channel == "new_sets"
@@ -68,7 +68,7 @@ def test_collect_new_sets_missing_poster_sets_none(tmp_path):
     report = collect_new_sets(
         [(target, mf, [_op("organize", target)])],
         [[_res("organize", "done")]],
-        update=None, stats={}, host="h", timestamp="t",
+        update=None, stats={}, timestamp="t",
         count_chapters=lambda p: None,
     )
     assert report.sets[0].poster_path is None
@@ -87,7 +87,7 @@ def test_collect_updated_sets(tmp_path):
         [path],
         analyse=lambda p: mf,
         count_chapters=lambda p: 41,
-        update=None, host="mediabox", timestamp="11 Jun 2026",
+        update=None, timestamp="11 Jun 2026",
     )
     assert report.channel == "updated_sets"
     assert len(report.sets) == 1
@@ -105,6 +105,19 @@ def test_collect_updated_sets_skips_analyse_failures(tmp_path):
         [tmp_path / "broken.mkv"],
         analyse=boom,
         count_chapters=lambda p: 10,
-        update=None, host="h", timestamp="t",
+        update=None, timestamp="t",
     )
     assert report.sets == []
+
+
+def test_collect_updated_sets_includes_duration_and_stats(tmp_path):
+    path = tmp_path / "x.mkv"
+    mf = make_mediafile(source_path=path, artist="A", festival="ASOT", year="2026",
+                        content_type="festival_set", duration_seconds=5400.0)
+    report = collect_updated_sets(
+        [path], analyse=lambda p: mf, count_chapters=lambda p: 41,
+        update=None, timestamp="t",
+        stats={"updated": 1, "up_to_date": 3, "skipped": 0, "error": 0},
+    )
+    assert report.sets[0].metric == "41 chapters · 1h 30m"
+    assert report.stats == {"updated": 1, "up_to_date": 3, "skipped": 0, "error": 0}

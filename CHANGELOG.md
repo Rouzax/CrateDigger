@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-06-11
+
+### Changed
+
+- Updated-sets emails (sent after `identify`) now show the set duration next to the chapter count (for example, "41 chapters &middot; 1h 30m"), matching the new-sets emails.
+- The email footer is now channel-aware. After `identify` it reads "N updated &middot; M unchanged &middot; K skipped" instead of the organize-only "added / up to date / errors" tally, which always showed zeros on identify runs.
+- The entire email background is now dark (a full-width wrapper), not just the content card, so mail clients no longer show light gutters around the message.
+- Poster thumbnails in email rows now use a proportional column width instead of a fixed 140px, so they scale with the client width (smaller on phones, full size on desktop) and no longer push the text into a cramped column on mobile (notably Gmail on Android, which ignores media queries).
+- The CrateDigger wordmark in the email header now uses the landing-page two-tone logo style (Crate in white, Digger in the accent color).
+
+### Removed
+
+- Emails no longer include the machine hostname (it added little for most readers), and the now-unused host plumbing was removed.
+
 ## [0.20.1] - 2026-06-11
 
 ### Changed

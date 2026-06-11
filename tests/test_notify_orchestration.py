@@ -30,7 +30,7 @@ def _report(channel="new_sets", n=1, update=None):
     sets = [EmailSet(f"Artist{i}", "UMF Miami", "2026", "", [], "19 tracks",
                      None, "festival_set") for i in range(n)]
     return RunReport(channel=channel, sets=sets, update=update,
-                     stats={}, host="h", timestamp="t")
+                     stats={}, timestamp="t")
 
 
 def test_resolve_should_send_flag_overrides():
@@ -166,7 +166,7 @@ def test_build_thumbs_capped(monkeypatch, tmp_path):
     Image.new("RGB", (1920, 1080), (40, 40, 60)).save(poster, "JPEG")
     sets = [EmailSet(f"A{i}", "E", "2026", "", [], "", poster, "festival_set")
             for i in range(MAX_SETS + 10)]
-    report = RunReport(channel="new_sets", sets=sets, update=None, stats={}, host="h", timestamp="t")
+    report = RunReport(channel="new_sets", sets=sets, update=None, stats={}, timestamp="t")
     thumbs = notify._build_thumbs(report, 140)
     assert len(thumbs) == MAX_SETS    # capped, not MAX_SETS+10
 

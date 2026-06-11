@@ -10,6 +10,7 @@ from festival_organizer.notify.models import RenderedEmail, RunReport
 ACCENT = "#e8734a"
 ACCENT_SOFT = "#d4845e"
 BG = "#06060c"
+OUTER = "#05060a"  # full-width page background behind the card (slightly darker than BG)
 CARD = "#101019"
 BORDER = "#1b1b27"
 TEXT = "#f0f0f5"
@@ -39,20 +40,24 @@ def _pills(genres) -> str:
 
 
 def _row(s, thumb_cid: str | None) -> str:
+    # The poster is a proportional column (25%), so it scales with whatever width
+    # the client renders the email at (~85px on a phone, ~143px on desktop) without
+    # squeezing the text on narrow screens. Gmail on Android ignores media queries,
+    # so a percentage column is the reliable way to stay responsive.
     if thumb_cid:
-        img = (f'<img src="cid:{thumb_cid}" width="140" '
-               f'style="display:block;width:140px;height:auto;border-radius:7px;'
+        img = (f'<img src="cid:{thumb_cid}" '
+               f'style="display:block;width:100%;height:auto;border-radius:7px;'
                f'border:1px solid {BORDER};">')
     else:
-        img = (f'<div style="width:140px;height:79px;border-radius:7px;'
+        img = (f'<div style="width:100%;padding-bottom:56%;border-radius:7px;'
                f'background:{CARD};border:1px solid {BORDER};"></div>')
     note = f' &middot; <span style="color:{ACCENT}">{escape(s.note)}</span>' if s.note else ""
     meta = (f'<div style="font-size:12px;color:{MUTED};margin-top:9px;">{escape(s.metric)}</div>'
             if s.metric else "")
     return (
         f'<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;"><tr>'
-        f'<td valign="top" width="140" style="padding:0;">{img}</td>'
-        f'<td valign="top" style="padding:2px 0 0 16px;">'
+        f'<td valign="top" width="25%" style="padding:0;">{img}</td>'
+        f'<td valign="top" width="75%" style="padding:2px 0 0 16px;">'
         f'<div style="font-size:16px;color:{TEXT};font-weight:700;line-height:1.25;">{escape(s.artist)}</div>'
         f'<div style="font-size:13px;color:{MUTED};margin-top:4px;">'
         f'<span style="font-family:{MONO};">{escape(s.year)}</span>{note}</div>'
@@ -145,24 +150,37 @@ def render(report: RunReport, thumbs: dict) -> RenderedEmail:
     header = (
         f'<div style="padding:30px 28px 20px 28px;border-bottom:1px solid {BORDER};'
         f'background:radial-gradient(ellipse at top left, rgba(232,115,74,0.12), transparent 60%);">'
-        f'<div style="font-size:11px;letter-spacing:.14em;color:{ACCENT};font-weight:700;">CRATEDIGGER</div>'
+        f'<div style="font-size:15px;font-weight:800;letter-spacing:-0.02em;">'
+        f'<span style="color:{TEXT};">Crate</span><span style="color:{ACCENT};">Digger</span></div>'
         f'<div style="font-size:26px;color:{TEXT};font-weight:700;margin-top:6px;">{escape(heading)}</div>'
-        f'<div style="font-size:13px;color:{MUTED};margin-top:5px;">{escape(report.host)} &middot; '
-        f'<span style="font-family:{MONO};">{escape(report.timestamp)}</span></div></div>'
+        f'<div style="font-size:13px;color:{MUTED};margin-top:5px;font-family:{MONO};">'
+        f'{escape(report.timestamp)}</div></div>'
     )
     stats = report.stats or {}
+    if report.channel == "updated_sets":
+        unchanged = stats.get("up_to_date", 0)
+        skipped = stats.get("skipped", 0) + stats.get("error", 0)
+        footer_inner = (f'{len(report.sets)} updated &middot; {unchanged} unchanged '
+                        f'&middot; {skipped} skipped')
+    else:
+        footer_inner = (f'{stats.get("added", 0)} added &middot; {stats.get("up_to_date", 0)} up to date '
+                        f'&middot; {stats.get("errors", 0)} errors')
     footer = (
         f'<div style="padding:18px 28px;border-top:1px solid {BORDER};color:{MUTED2};font-size:11px;">'
-        f'{stats.get("added", 0)} added &middot; {stats.get("up_to_date", 0)} up to date &middot; '
-        f'{stats.get("errors", 0)} errors</div>'
+        f'{footer_inner}</div>'
     )
-    html = (
+    card = (
         f'<div style="max-width:620px;margin:0 auto;background:{BG};border-radius:20px;'
         f'overflow:hidden;border:1px solid {BORDER};font-family:{FONT};">'
         f'{header}<div style="padding:20px 24px;">{"".join(body_parts)}</div>{footer}</div>'
     )
+    html = (
+        f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" '
+        f'bgcolor="{OUTER}" style="background:{OUTER};margin:0;padding:0;width:100%;">'
+        f'<tr><td align="center" style="padding:24px 12px;">{card}</td></tr></table>'
+    )
 
-    text = f"{heading} on {report.host} ({report.timestamp})\n" + "\n".join(text_lines)
+    text = f"{heading} ({report.timestamp})\n" + "\n".join(text_lines)
     if report.update and report.update.behind:
         text += f"\n\nCrateDigger update available: {report.update.installed} -> {report.update.latest}"
 
