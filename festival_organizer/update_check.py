@@ -6,6 +6,7 @@ Keep in sync when editing. Only PACKAGE_NAME, ENV_VAR, and REPO_URL differ.
 from __future__ import annotations
 
 import importlib.metadata
+from importlib.metadata import version
 import json
 import logging
 import os
@@ -269,3 +270,18 @@ def refresh_update_cache(force: bool = False) -> None:
         _write_cache(latest_version=latest, ttl_seconds=ttl)
     except BaseException:
         logger.debug("update_check.refresh: status=failed", exc_info=True)
+
+
+def get_cached_update_status() -> "UpdateInfo":
+    """Build an UpdateInfo from the installed version and the cached latest version.
+
+    Reads only the on-disk update-check cache; performs no network I/O. `latest`
+    is None when no cache entry exists.
+    """
+    from festival_organizer.notify.models import UpdateInfo
+
+    installed = version(PACKAGE_NAME)
+    cache = _read_cache()
+    latest = cache.get("latest_version") if cache else None
+    behind = bool(latest) and _is_newer(installed=installed, candidate=latest)
+    return UpdateInfo(installed=installed, latest=latest, behind=behind)
