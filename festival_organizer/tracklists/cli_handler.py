@@ -214,6 +214,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                  "error": 0, "previewed": 0}
         tagged_festivals: dict[str, int] = {}
         unmatched_files: list[str] = []
+        updated_paths: list[Path] = []
         tagged_count = 0
         info_enabled = logger.isEnabledFor(logging.INFO)
 
@@ -269,6 +270,9 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
             elapsed = time.perf_counter() - file_start
             stats[stat_key] = stats.get(stat_key, 0) + 1
 
+            if stat_key == "updated":
+                updated_paths.append(filepath)
+
             if stat_key in ("updated", "up_to_date", "previewed"):
                 tagged_count += 1
                 stored = extract_stored_tracklist_info(filepath)
@@ -307,6 +311,26 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         unmatched=unmatched_files,
         elapsed_s=total_elapsed,
     ))
+
+    from festival_organizer import notify
+
+    def _count_chapters(path):
+        try:
+            chapters = extract_existing_chapters(path)
+            return len(chapters) if chapters else None
+        except Exception:
+            return None
+
+    def _analyse(path):
+        return analyse_file(path, scan_root, config)
+
+    notify.notify_updated_sets(
+        config,
+        updated_paths=updated_paths,
+        analyse=_analyse,
+        count_chapters=_count_chapters,
+        flag=getattr(args, "email", None),
+    )
 
     return 0
 

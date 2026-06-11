@@ -413,6 +413,7 @@ def identify(
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
+    email: Annotated[Optional[bool], typer.Option("--email/--no-email", help="Force or suppress the updated-sets email for this run (overrides config)")] = None,
 ) -> int:
     """Match files on 1001Tracklists; embed metadata and chapters."""
     return _dispatch("identify", locals())
@@ -432,6 +433,8 @@ def organize(
     enrich: Annotated[bool, typer.Option("--enrich", help="Run all enrichment after organizing (use enrich command for selective operations)")] = False,
     yes: Annotated[bool, typer.Option("--yes", "-y", help="Skip confirmation prompts")] = False,
     kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
+    email: Annotated[Optional[bool], typer.Option("--email/--no-email", help="Force or suppress the new-sets summary email for this run (overrides config)")] = None,
+    email_test: Annotated[bool, typer.Option("--email-test", help="Send a sample email to verify SMTP + rendering, then continue")] = False,
 ) -> int:
     """Organize files into the library layout.
 
@@ -653,6 +656,10 @@ def _run_command(args: types.SimpleNamespace) -> int:
         library_config_dir=library_config_dir,
     )
     configure_tools(config)
+
+    if getattr(args, "email_test", False):
+        from festival_organizer import notify
+        notify.notify_test(config)
 
     verbose = getattr(args, "verbose", False)
     debug = getattr(args, "debug", False)
@@ -1079,6 +1086,38 @@ def _run_command(args: types.SimpleNamespace) -> int:
     if not quiet and not use_contract:
         elapsed = time.monotonic() - start_time
         console.print(f"[dim]Completed in {elapsed:.1f}s[/dim]")
+
+    # Post-pipeline: run-summary email
+    if args.command == "organize":
+        from festival_organizer import notify
+        from festival_organizer.tracklists.chapters import extract_existing_chapters
+
+        def _count_chapters(path):
+            try:
+                chapters = extract_existing_chapters(path)
+                return len(chapters) if chapters else None
+            except Exception:
+                return None
+
+        organize_stats = (
+            progress.organize._stats if isinstance(progress, OrganizeEnrichProgress)
+            else getattr(progress, "_stats", {})
+        )
+        notify.notify_new_sets(
+            config,
+            pipeline_files=pipeline_files,
+            all_results=all_results,
+            stats={
+                "added": organize_stats.get("done", 0),
+                "up_to_date": organize_stats.get("up_to_date", 0),
+                "errors": organize_stats.get("error", 0),
+            },
+            flag=getattr(args, "email", None),
+            count_chapters=_count_chapters,
+        )
+    elif args.command == "enrich":
+        from festival_organizer import notify
+        notify.maybe_send_update_reminder(config, content_email_sent=False)
 
     return 0
 
