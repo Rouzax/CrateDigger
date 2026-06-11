@@ -83,6 +83,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     metadata_source = "filename"
     tracklists_artists_raw = meta.get("tracklists_artists", "")
     artists_list = [a.strip() for a in tracklists_artists_raw.split("|") if a.strip()] if tracklists_artists_raw else []
+    artist_slugs_raw = meta.get("tracklists_artist_slugs", "")
+    artist_slugs = [s.strip() for s in artist_slugs_raw.split("|") if s.strip()] if artist_slugs_raw else []
     if artists_list:
         info["artist"] = artists_list[0]
         metadata_source = "1001tracklists"
@@ -142,13 +144,22 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
             display_artist = display_artist.title()
 
     # Normalise
-    artist = normalise_name(info.get("artist", ""))
+    if artist_slugs and config.dj_cache:
+        # Authoritative, untruncated canonical name straight from the slug.
+        artist = config.dj_cache.canonical_name(
+            artist_slugs[0], fallback=normalise_name(info.get("artist", "")))
+    else:
+        artist = normalise_name(info.get("artist", ""))
     if artist:
         artist = config.resolve_artist(artist)
 
     # Build resolved artists list from 1001TL pipe-separated tag
     resolved_artists: list[str] = []
-    if artists_list:
+    if artist_slugs and len(artist_slugs) == len(artists_list) and config.dj_cache:
+        for slug, a in zip(artist_slugs, artists_list):
+            resolved_artists.append(
+                config.dj_cache.canonical_name(slug, fallback=config.resolve_artist(normalise_name(a))))
+    elif artists_list:
         for a in artists_list:
             resolved = config.resolve_artist(normalise_name(a))
             resolved_artists.append(resolved if resolved else normalise_name(a))
@@ -192,6 +203,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         artist=artist,
         display_artist=display_artist,
         artists=resolved_artists,
+        artist_slugs=artist_slugs,
         festival=festival,
         festival_full=meta.get("tracklists_festival", ""),
         year=info.get("year", "").strip(),
