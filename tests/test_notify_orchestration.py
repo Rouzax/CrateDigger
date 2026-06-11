@@ -159,6 +159,18 @@ def test_notify_updated_sets_sends(monkeypatch, tmp_path):
     assert "updated set" in sent[0]
 
 
+def test_build_thumbs_capped(monkeypatch, tmp_path):
+    from festival_organizer.notify.render import MAX_SETS
+    poster = tmp_path / "p-poster.jpg"
+    from PIL import Image
+    Image.new("RGB", (1920, 1080), (40, 40, 60)).save(poster, "JPEG")
+    sets = [EmailSet(f"A{i}", "E", "2026", "", [], "", poster, "festival_set")
+            for i in range(MAX_SETS + 10)]
+    report = RunReport(channel="new_sets", sets=sets, update=None, stats={}, host="h", timestamp="t")
+    thumbs = notify._build_thumbs(report, 140)
+    assert len(thumbs) == MAX_SETS    # capped, not MAX_SETS+10
+
+
 def test_notify_test_sends_sample(monkeypatch):
     captured = {}
     monkeypatch.setattr(notify, "send_email",

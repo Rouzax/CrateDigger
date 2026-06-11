@@ -79,3 +79,24 @@ def test_render_subject_event_pluralization():
         _fest("B", "Coachella", "2026", [], ""),
     ])
     assert "across 2 events" in render(two_events, thumbs={}).subject
+
+
+def test_render_caps_sets_and_shows_overflow():
+    from festival_organizer.notify.render import MAX_SETS
+    sets = [_fest(f"Artist{i}", "UMF Miami", "2026", [], "") for i in range(MAX_SETS + 5)]
+    out = render(_report(sets), thumbs={})
+    # heading shows true total
+    assert f"{MAX_SETS + 5} new set" in out.html
+    # overflow indicator present
+    assert "5 more" in out.html
+    # only MAX_SETS rows rendered: count the row tables (each row is one <table ... margin-bottom:12px)
+    assert out.html.count("margin-bottom:12px") == MAX_SETS
+
+
+def test_render_escapes_user_fields():
+    s = EmailSet("<script>x</script>", "UMF & Friends", "2026", "a<b",
+                 ["<i>g</i>"], "1 & 2", None, "festival_set")
+    out = render(_report([s]), thumbs={})
+    assert "<script>x</script>" not in out.html
+    assert "&lt;script&gt;" in out.html
+    assert "UMF &amp; Friends" in out.html   # event escaped at call site

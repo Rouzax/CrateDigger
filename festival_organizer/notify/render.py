@@ -18,6 +18,11 @@ MUTED2 = "#555570"
 FONT = "'Outfit',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 MONO = "'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace"
 
+# Cap the number of sets rendered in detail so a bulk import can't produce a
+# multi-MB / hundreds-of-images email that SMTP servers reject. The header still
+# shows the true total; sets beyond the cap are summarised as an overflow line.
+MAX_SETS = 60
+
 
 def _is_concert(s) -> bool:
     return s.kind == "concert_film" or not s.event
@@ -85,8 +90,11 @@ def _update_banner(update) -> str:
 
 def render(report: RunReport, thumbs: dict) -> RenderedEmail:
     """Render the report. `thumbs` maps set index -> (cid, jpeg bytes)."""
+    n = len(report.sets)
+    overflow = max(0, n - MAX_SETS)
+
     festival_sets, concert_sets = [], []
-    for idx, s in enumerate(report.sets):
+    for idx, s in enumerate(report.sets[:MAX_SETS]):
         (concert_sets if _is_concert(s) else festival_sets).append((idx, s))
 
     body_parts = [_update_banner(report.update)]
@@ -117,7 +125,13 @@ def render(report: RunReport, thumbs: dict) -> RenderedEmail:
             body_parts.append(_row(s, cid))
             text_lines.append(f"  - {s.artist} ({s.year}) {s.metric}".rstrip())
 
-    n = len(report.sets)
+    if overflow:
+        body_parts.append(
+            f'<div style="color:{MUTED2};font-size:12px;margin-top:14px;">'
+            f'...and {overflow} more set{"s" if overflow != 1 else ""} not shown</div>'
+        )
+        text_lines.append(f"\n...and {overflow} more not shown")
+
     events = len({s.event for _i, s in festival_sets if s.event})
     if report.channel == "updated_sets":
         heading = f"{n} updated set{'s' if n != 1 else ''}"

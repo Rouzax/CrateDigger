@@ -13,7 +13,7 @@ from pathlib import Path
 from festival_organizer.notify import throttle
 from festival_organizer.notify.collect import collect_new_sets, collect_updated_sets
 from festival_organizer.notify.models import EmailSet, RunReport, SMTPSettings, UpdateInfo
-from festival_organizer.notify.render import render
+from festival_organizer.notify.render import render, MAX_SETS
 from festival_organizer.notify.send import send_email
 from festival_organizer.notify.thumbnails import make_thumbnail
 from festival_organizer.update_check import get_cached_update_status
@@ -42,6 +42,8 @@ def _smtp_settings(config) -> SMTPSettings:
 def _build_thumbs(report: RunReport, width: int) -> dict:
     thumbs = {}
     for idx, s in enumerate(report.sets):
+        if idx >= MAX_SETS:
+            break
         if not s.poster_path:
             continue
         try:

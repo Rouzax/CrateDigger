@@ -657,14 +657,17 @@ def _run_command(args: types.SimpleNamespace) -> int:
     )
     configure_tools(config)
 
-    if getattr(args, "email_test", False):
-        from festival_organizer import notify
-        notify.notify_test(config)
-
     verbose = getattr(args, "verbose", False)
     debug = getattr(args, "debug", False)
     console = make_console()
     log_path = setup_logging(verbose=verbose, debug=debug, console=console, command=args.command)
+
+    # Run the email self-test after logging is set up so its result is visible,
+    # but before any file-scanning work so it still runs early.
+    if getattr(args, "email_test", False):
+        from festival_organizer import notify
+        notify.notify_test(config)
+
     config.log_load_summary()
     paths.warn_if_legacy_paths_exist()
     paths.warn_if_data_dir_is_source_checkout()

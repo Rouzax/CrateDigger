@@ -325,7 +325,7 @@ Set the password via the `CRATEDIGGER_SMTP_PASSWORD` environment variable rather
 
 #### Verifying delivery
 
-Run `organize` or `identify` with `--email-test` to send a sample email without waiting for real changes. The run continues normally after the test message is sent.
+Run `organize` with `--email-test` to send a sample email without waiting for real changes. The run continues normally after the test message is sent.
 
 ```bash
 cratedigger organize ~/Music/Library/ --email-test
