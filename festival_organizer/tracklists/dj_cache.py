@@ -67,6 +67,49 @@ class DjCache:
         self._data[slug] = entry
         self._save()
 
+    def slugs(self) -> set[str]:
+        """All cached slugs (dict keys), regardless of freshness."""
+        return set(self._data.keys())
+
+    def derive_entry_names(self) -> set[str]:
+        """Lowercased canonical names of every cached entry.
+
+        A single /dj/ entry means 1001TL treats the name as one act, so these
+        names form the 'do not split' guard (e.g. 'above & beyond').
+        """
+        from festival_organizer.normalization import fix_mojibake
+        names: set[str] = set()
+        for entry in self._data.values():
+            name = entry.get("name", "")
+            if name:
+                names.add(fix_mojibake(name).lower())
+        return names
+
+    def slug_for_name(self, name: str) -> str | None:
+        """Resolve a display name (or alias) to its cached slug, or None.
+
+        Matches on slugify() so diacritics, case, trailing dots and '&' spelling
+        do not matter ('Tiesto'/'Tiësto', 'Fred again'/'Fred again..').
+        """
+        from festival_organizer.normalization import slugify
+        if not name:
+            return None
+        index = self._name_index()
+        return index.get(slugify(name))
+
+    def _name_index(self) -> dict[str, str]:
+        from festival_organizer.normalization import slugify
+        index: dict[str, str] = {}
+        for slug, entry in self._data.items():
+            entry_name = entry.get("name", "")
+            if entry_name:
+                index.setdefault(slugify(entry_name), slug)
+            for alias in entry.get("aliases", []):
+                alias_name = alias.get("name", "")
+                if alias_name:
+                    index.setdefault(slugify(alias_name), slug)
+        return index
+
     def derive_artist_aliases(self) -> dict[str, str]:
         """Build alias_name -> canonical_name map from all cached DJ profiles.
 
