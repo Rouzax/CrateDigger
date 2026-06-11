@@ -1,6 +1,5 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
-import pytest
 from festival_organizer.models import MediaFile
 from festival_organizer.config import load_config
 from festival_organizer.nfo import generate_nfo, generate_nfo_xml
@@ -325,7 +324,6 @@ def test_nfo_artist_tags_deduplicated(tmp_path):
     assert tags.count("Tomorrowland") == 1
 
 
-@pytest.mark.xfail(reason="nfo.py rewires to slug-keyed group member lookup in Task 9 (needs MediaFile.artist_slugs)", strict=False)
 def test_nfo_group_members_as_tags(tmp_path):
     """Group members from DJ cache appear as <tag> elements."""
     from festival_organizer.tracklists.dj_cache import DjCache
@@ -338,6 +336,7 @@ def test_nfo_group_members_as_tags(tmp_path):
         source_path=Path("test.mkv"),
         artist="Gaia",
         artists=["Gaia"],
+        artist_slugs=["gaia-nl"],
         festival="Tomorrowland", year="2024",
         content_type="festival_set",
     )
