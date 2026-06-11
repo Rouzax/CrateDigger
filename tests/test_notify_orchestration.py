@@ -157,3 +157,14 @@ def test_notify_updated_sets_sends(monkeypatch, tmp_path):
     )
     assert len(sent) == 1
     assert "updated set" in sent[0]
+
+
+def test_notify_test_sends_sample(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(notify, "send_email",
+                        lambda settings, rendered, *, to: captured.update(
+                            to=to, subject=rendered.subject, html=rendered.html))
+    notify.notify_test(_Cfg(to=["me@x"]))
+    assert captured["to"] == ["me@x"]
+    assert "CrateDigger" in captured["subject"]
+    assert "Sample" in captured["html"]

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from festival_organizer.notify import throttle
 from festival_organizer.notify.collect import collect_new_sets, collect_updated_sets
-from festival_organizer.notify.models import RunReport, SMTPSettings
+from festival_organizer.notify.models import EmailSet, RunReport, SMTPSettings, UpdateInfo
 from festival_organizer.notify.render import render
 from festival_organizer.notify.send import send_email
 from festival_organizer.notify.thumbnails import make_thumbnail
@@ -133,6 +133,37 @@ def notify_new_sets(config, *, pipeline_files, all_results, stats, flag,
                                     thumbnail_width=config.email_thumbnail_width)
     maybe_send_update_reminder(config, content_email_sent=content_sent,
                                marker_path=marker_path)
+
+
+def _sample_report() -> RunReport:
+    fixture = Path(__file__).resolve().parent / "fixtures" / "sample-poster.jpg"
+    poster = fixture if fixture.exists() else None
+    sets = [
+        EmailSet("Sample Artist One", "UMF Miami", "2026", "Mainstage",
+                 ["Techno"], "19 tracks · 1h 30m", poster, "festival_set"),
+        EmailSet("Sample Artist Two", "Coachella", "2026", "",
+                 ["House"], "22 tracks · 1h 12m", poster, "festival_set"),
+    ]
+    return RunReport(channel="new_sets", sets=sets,
+                     update=UpdateInfo("0.19.9", "0.20.0", True),
+                     stats={"added": 2, "up_to_date": 5, "errors": 0},
+                     host=_host(), timestamp=_now())
+
+
+def notify_test(config) -> None:
+    """Send a sample email to the new-sets recipient list to verify SMTP + rendering."""
+    to = config.email_channel_recipients("new_sets")
+    if not to:
+        _log.warning("email.test_skipped: reason=no_new_sets_recipients")
+        return
+    report = _sample_report()
+    try:
+        thumbs = _build_thumbs(report, config.email_thumbnail_width)
+        rendered = render(report, thumbs)
+        send_email(_smtp_settings(config), rendered, to=to)
+        _log.info("email.test_sent: recipients=%d", len(to))
+    except Exception as e:
+        _log.warning("email.test_failed: error=\"%s\"", e)
 
 
 def notify_updated_sets(config, *, updated_paths, analyse, count_chapters, flag,

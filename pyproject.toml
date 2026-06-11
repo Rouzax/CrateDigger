@@ -31,6 +31,7 @@ include = ["festival_organizer*"]
 
 [tool.setuptools.package-data]
 "festival_organizer" = ["fonts/*.ttf"]
+"festival_organizer.notify" = ["fixtures/*.jpg"]
 
 [project.scripts]
 cratedigger = "festival_organizer.cli:run"
