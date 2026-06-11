@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-06-11
+
+### Added
+
+- Run-summary emails. CrateDigger can send a styled HTML email at the end of a run, with inline poster thumbnails, so you can see what changed in your library at a glance. There are three independent channels, each with its own on/off switch and recipient list:
+  - New sets: sent after an `organize` run when one or more sets were newly added to the library.
+  - Updated sets: sent after an `identify` run when chapters were added or changed on one or more sets.
+  - Update reminder: sent when a newer CrateDigger release is available, throttled to once per version so you are not nagged on every run. It is suppressed when a content email already went out that run, since that email carries the same update banner.
+
+  Emails are sent only when there is something to report; a run that changes nothing sends nothing. Each email is multipart HTML with a plain-text fallback, and poster thumbnails are embedded inline (no external hosting). Very large runs are capped so a bulk first import cannot produce an oversized message.
+- Email configuration. A new `[email]` section in `config.toml` holds the shared SMTP settings (`smtp_host`, `smtp_port`, `smtp_security`, `smtp_user`, `smtp_password`, `from_address`, `thumbnail_width`) plus per-channel `[email.new_sets]`, `[email.updated_sets]`, and `[email.update_reminder]` tables with `enabled` and `to`. The SMTP password can be supplied via the `CRATEDIGGER_SMTP_PASSWORD` environment variable instead of the file. Sending uses the Python standard library, so no new dependencies are required. See the Email notifications section in the configuration docs for setup.
+- New CLI options. `organize` gains `--email` / `--no-email` (force or suppress the new-sets email for this run, overriding config) and `--email-test` (send a sample email to verify SMTP and rendering, then continue). `identify` gains `--email` / `--no-email` (force or suppress the updated-sets email).
+
 ## [0.19.9] - 2026-06-02
 
 ### Changed
