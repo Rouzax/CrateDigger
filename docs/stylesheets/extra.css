@@ -1,5 +1,9 @@
 :root {
-  --md-primary-fg-color: #e8734a;
+  /* Canonical palette lives in site/style.css (:root); keep in sync.
+     The brand accent is #e8734a, but the Material header puts white text on a
+     solid primary fill, so primary is darkened to #b04d2c here so white clears
+     WCAG AA (5.3:1). #e8734a stays the accent for links/text elsewhere. */
+  --md-primary-fg-color: #b04d2c;
   --md-primary-fg-color--light: #f09070;
-  --md-primary-fg-color--dark: #c05a34;
+  --md-primary-fg-color--dark: #8a3c21;
 }
