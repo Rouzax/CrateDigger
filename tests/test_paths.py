@@ -124,12 +124,12 @@ class TestArtistCacheDir:
             result = paths.artist_cache_dir("tiesto")
             assert result == tmp_path / "artists" / "tiesto"
 
-    def test_sanitizes_tricky_artist_names(self, tmp_path: Path):
+    def test_folder_key_is_joined_verbatim(self, tmp_path: Path):
+        # artist_cache_dir receives an already-canonical folder key.
         with patch("festival_organizer.paths.cache_dir", return_value=tmp_path):
-            result = paths.artist_cache_dir("AC/DC: The Band")
-            # No path separators leaking; parent dir is "artists"
+            result = paths.artist_cache_dir("acdc")
+            assert result == tmp_path / "artists" / "acdc"
             assert result.parent == tmp_path / "artists"
-            assert "/" not in result.name and "\\" not in result.name
 
 
 class TestEnsureParent:
