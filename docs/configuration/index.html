@@ -2018,8 +2018,8 @@
 </div>
 </div>
 <h4 id="verifying-delivery">Verifying delivery</h4>
-<p>Run <code>organize</code> with <code>--email-test</code> to send a sample email without waiting for real changes. The run continues normally after the test message is sent.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Music/Library/<span class="w"> </span>--email-test
+<p>Run <code>cratedigger --email-test</code> to send a sample email and confirm your SMTP settings and rendering work. It takes no path, does not touch your library, and reports whether the message was sent or why it failed (for example, no recipients configured, or a connection error). It sends to the <code>[email.new_sets]</code> recipient list and works even while that channel is disabled, so you can test before turning it on.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>cratedigger<span class="w"> </span>--email-test
 </code></pre></div>
 <p>You can also force or suppress an email for a single run without changing your config:</p>
 <ul>
