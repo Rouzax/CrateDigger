@@ -126,7 +126,7 @@ def render(report: RunReport, thumbs: dict) -> RenderedEmail:
         heading = f"{n} new set{'s' if n != 1 else ''}"
         subject = f"CrateDigger: {n} new set{'s' if n != 1 else ''}"
         if events:
-            subject += f" across {events} event{'s' if n != 1 else ''}"
+            subject += f" across {events} event{'s' if events != 1 else ''}"
 
     header = (
         f'<div style="padding:30px 28px 20px 28px;border-bottom:1px solid {BORDER};'

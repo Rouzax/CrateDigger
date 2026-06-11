@@ -61,3 +61,21 @@ def test_render_updated_channel_header():
     out = render(report, thumbs={})
     assert "updated" in out.subject.lower()
     assert "41 chapters" in out.html
+
+
+def test_render_subject_event_pluralization():
+    # 3 sets across 1 event -> "1 event" (singular), not "1 events"
+    one_event = _report([
+        _fest("A", "UMF Miami", "2026", [], ""),
+        _fest("B", "UMF Miami", "2026", [], ""),
+        _fest("C", "UMF Miami", "2026", [], ""),
+    ])
+    assert "across 1 event" in render(one_event, thumbs={}).subject
+    assert "1 events" not in render(one_event, thumbs={}).subject
+
+    # 2 sets across 2 events -> "2 events" (plural)
+    two_events = _report([
+        _fest("A", "UMF Miami", "2026", [], ""),
+        _fest("B", "Coachella", "2026", [], ""),
+    ])
+    assert "across 2 events" in render(two_events, thumbs={}).subject
