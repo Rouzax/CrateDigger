@@ -1,7 +1,11 @@
 from pathlib import Path
 from types import SimpleNamespace
 
-from festival_organizer.notify.collect import collect_new_sets, format_duration
+from festival_organizer.notify.collect import (
+    collect_new_sets,
+    collect_updated_sets,
+    format_duration,
+)
 from festival_organizer.notify.models import UpdateInfo
 from tests.conftest import make_mediafile
 
@@ -69,3 +73,38 @@ def test_collect_new_sets_missing_poster_sets_none(tmp_path):
     )
     assert report.sets[0].poster_path is None
     assert report.sets[0].metric == ""   # no chapters, no duration
+
+
+def test_collect_updated_sets(tmp_path):
+    poster = tmp_path / "2026 - Armin van Buuren - ASOT-poster.jpg"
+    poster.write_bytes(b"x")
+    path = tmp_path / "2026 - Armin van Buuren - ASOT.mkv"
+
+    mf = make_mediafile(source_path=path, artist="Armin van Buuren", festival="ASOT",
+                        year="2026", genres=["Trance"], content_type="festival_set")
+
+    report = collect_updated_sets(
+        [path],
+        analyse=lambda p: mf,
+        count_chapters=lambda p: 41,
+        update=None, host="mediabox", timestamp="11 Jun 2026",
+    )
+    assert report.channel == "updated_sets"
+    assert len(report.sets) == 1
+    s = report.sets[0]
+    assert s.artist == "Armin van Buuren"
+    assert s.metric == "41 chapters"
+    assert s.poster_path == poster
+
+
+def test_collect_updated_sets_skips_analyse_failures(tmp_path):
+    def boom(_p):
+        raise ValueError("cannot analyse")
+
+    report = collect_updated_sets(
+        [tmp_path / "broken.mkv"],
+        analyse=boom,
+        count_chapters=lambda p: 10,
+        update=None, host="h", timestamp="t",
+    )
+    assert report.sets == []

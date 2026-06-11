@@ -1,10 +1,13 @@
 """Build RunReport models from run results (pure, dependency-injected I/O)."""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Callable
 
 from festival_organizer.notify.models import EmailSet, RunReport, UpdateInfo
+
+_log = logging.getLogger("festival_organizer.notify")
 
 
 def format_duration(seconds: float | None) -> str:
@@ -70,3 +73,27 @@ def collect_new_sets(
         sets.append(_email_set(mf, final_path, metric=_new_metric(mf, chapters)))
     return RunReport(channel="new_sets", sets=sets, update=update,
                      stats=stats, host=host, timestamp=timestamp)
+
+
+def collect_updated_sets(
+    updated_paths,
+    *,
+    analyse: Callable[[Path], object],
+    count_chapters: Callable[[Path], int | None],
+    update: UpdateInfo | None,
+    host: str,
+    timestamp: str,
+) -> RunReport:
+    """Collect sets whose chapters changed this identify run."""
+    sets: list[EmailSet] = []
+    for path in updated_paths:
+        try:
+            mf = analyse(path)
+        except Exception as e:  # best-effort: never break the run for one file
+            _log.warning("notify.analyse_failed: file=%s error=\"%s\"", path, e)
+            continue
+        chapters = count_chapters(path)
+        metric = f"{chapters} chapters" if chapters else ""
+        sets.append(_email_set(mf, path, metric=metric))
+    return RunReport(channel="updated_sets", sets=sets, update=update,
+                     stats={}, host=host, timestamp=timestamp)
