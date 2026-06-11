@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-06-11
+
+### Changed
+
+- The email self-test is now a standalone top-level command, `cratedigger --email-test`, alongside `--check`. It takes no path, does not touch your library, and prints whether the sample was sent (and to whom) or why it failed. Previously this was an `organize --email-test` flag, which forced you to pass a library path and trigger a run just to send a test message.
+
+### Removed
+
+- The `--email-test` flag on the `organize` command (replaced by the top-level `cratedigger --email-test`).
+
 ## [0.20.0] - 2026-06-11
 
 ### Added

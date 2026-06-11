@@ -35,7 +35,6 @@ recognized media files and processes each one.
 | `--kodi-sync` | | off | Notify Kodi to refresh updated items after organizing |
 | `--email` | | off | Force the new-sets summary email for this run, even if no sets were added. Overrides config. |
 | `--no-email` | | off | Suppress the new-sets summary email for this run. Overrides config. |
-| `--email-test` | | off | Send a sample email to verify SMTP and rendering, then continue the run normally. |
 | `--config <path>` | | (none) | Path to a config.toml file |
 | `--quiet` | `-q` | off | Suppress per-file progress output |
 | `--verbose` | `-v` | off | Show detailed decisions |

@@ -169,6 +169,24 @@ def _pick_version_line(output: str) -> str:
     return lines[0] if lines else ""
 
 
+def _run_email_test_impl(con: "Console") -> int:
+    """Send a sample email and report the outcome. Returns a process exit code."""
+    from festival_organizer import notify
+    from festival_organizer.config import load_config
+
+    config = load_config()
+    try:
+        recipients = notify.notify_test(config)
+    except ValueError as e:
+        con.print(f"[red]✗[/red] Email not configured: {e}")
+        return 1
+    except Exception as e:
+        con.print(f"[red]✗[/red] Email test failed: {e}")
+        return 1
+    con.print(f"[green]✓[/green] Test email sent to {', '.join(recipients)}")
+    return 0
+
+
 def _run_check_impl(con: "Console") -> int:
     import subprocess
     from festival_organizer import metadata
@@ -365,6 +383,11 @@ def main(
         "--check",
         help="Verify tools, config, credentials, and Python packages, then exit.",
     ),
+    email_test_flag: bool = typer.Option(
+        False,
+        "--email-test",
+        help="Send a sample email to verify SMTP and rendering, then exit.",
+    ),
 ):
     """CrateDigger: Festival set & concert library manager."""
     if version_flag:
@@ -378,6 +401,11 @@ def main(
         console = make_console()
         setup_logging(verbose=False, debug=False, console=console)
         raise typer.Exit(code=_run_check_impl(console))
+    if email_test_flag:
+        from festival_organizer.log import setup_logging
+        console = make_console()
+        setup_logging(verbose=False, debug=False, console=console)
+        raise typer.Exit(code=_run_email_test_impl(console))
     if ctx.invoked_subcommand is None:
         typer.echo(ctx.get_help())
         raise SystemExit(1)
@@ -434,7 +462,6 @@ def organize(
     yes: Annotated[bool, typer.Option("--yes", "-y", help="Skip confirmation prompts")] = False,
     kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
     email: Annotated[Optional[bool], typer.Option("--email/--no-email", help="Force or suppress the new-sets summary email for this run (overrides config)")] = None,
-    email_test: Annotated[bool, typer.Option("--email-test", help="Send a sample email to verify SMTP + rendering, then continue")] = False,
 ) -> int:
     """Organize files into the library layout.
 
@@ -661,12 +688,6 @@ def _run_command(args: types.SimpleNamespace) -> int:
     debug = getattr(args, "debug", False)
     console = make_console()
     log_path = setup_logging(verbose=verbose, debug=debug, console=console, command=args.command)
-
-    # Run the email self-test after logging is set up so its result is visible,
-    # but before any file-scanning work so it still runs early.
-    if getattr(args, "email_test", False):
-        from festival_organizer import notify
-        notify.notify_test(config)
 
     config.log_load_summary()
     paths.warn_if_legacy_paths_exist()

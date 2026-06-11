@@ -176,7 +176,33 @@ def test_notify_test_sends_sample(monkeypatch):
     monkeypatch.setattr(notify, "send_email",
                         lambda settings, rendered, *, to: captured.update(
                             to=to, subject=rendered.subject, html=rendered.html))
-    notify.notify_test(_Cfg(to=["me@x"]))
+    recipients = notify.notify_test(_Cfg(to=["me@x"]))
+    assert recipients == ["me@x"]
     assert captured["to"] == ["me@x"]
     assert "CrateDigger" in captured["subject"]
     assert "Sample" in captured["html"]
+
+
+def test_notify_test_raises_without_recipients():
+    import pytest
+    with pytest.raises(ValueError, match="recipients"):
+        notify.notify_test(_Cfg(to=[]))
+
+
+def test_notify_test_raises_without_smtp_host():
+    import pytest
+    cfg = _Cfg(to=["me@x"])
+    cfg.email_smtp_host = ""
+    with pytest.raises(ValueError, match="smtp_host"):
+        notify.notify_test(cfg)
+
+
+def test_notify_test_propagates_transport_error(monkeypatch):
+    import pytest
+
+    def boom(*a, **k):
+        raise OSError("smtp down")
+
+    monkeypatch.setattr(notify, "send_email", boom)
+    with pytest.raises(OSError):
+        notify.notify_test(_Cfg(to=["me@x"]))

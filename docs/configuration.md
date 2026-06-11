@@ -325,10 +325,10 @@ Set the password via the `CRATEDIGGER_SMTP_PASSWORD` environment variable rather
 
 #### Verifying delivery
 
-Run `organize` with `--email-test` to send a sample email without waiting for real changes. The run continues normally after the test message is sent.
+Run `cratedigger --email-test` to send a sample email and confirm your SMTP settings and rendering work. It takes no path, does not touch your library, and reports whether the message was sent or why it failed (for example, no recipients configured, or a connection error). It sends to the `[email.new_sets]` recipient list and works even while that channel is disabled, so you can test before turning it on.
 
 ```bash
-cratedigger organize ~/Music/Library/ --email-test
+cratedigger --email-test
 ```
 
 You can also force or suppress an email for a single run without changing your config:

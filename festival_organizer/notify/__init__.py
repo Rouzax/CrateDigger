@@ -152,20 +152,25 @@ def _sample_report() -> RunReport:
                      host=_host(), timestamp=_now())
 
 
-def notify_test(config) -> None:
-    """Send a sample email to the new-sets recipient list to verify SMTP + rendering."""
+def notify_test(config) -> list[str]:
+    """Send a sample email to the new-sets recipients to verify SMTP + rendering.
+
+    Returns the list of recipients it sent to. Unlike the end-of-run hooks, this
+    does NOT swallow errors: it raises ValueError when email is not configured
+    (no recipients, or no SMTP host), and lets transport errors propagate, so the
+    standalone `--email-test` command can report success or failure to the user.
+    """
     to = config.email_channel_recipients("new_sets")
     if not to:
-        _log.warning("email.test_skipped: reason=no_new_sets_recipients")
-        return
+        raise ValueError("no recipients configured under [email.new_sets].to")
+    if not config.email_smtp_host:
+        raise ValueError("smtp_host is not set under [email]")
     report = _sample_report()
-    try:
-        thumbs = _build_thumbs(report, config.email_thumbnail_width)
-        rendered = render(report, thumbs)
-        send_email(_smtp_settings(config), rendered, to=to)
-        _log.info("email.test_sent: recipients=%d", len(to))
-    except Exception as e:
-        _log.warning("email.test_failed: error=\"%s\"", e)
+    thumbs = _build_thumbs(report, config.email_thumbnail_width)
+    rendered = render(report, thumbs)
+    send_email(_smtp_settings(config), rendered, to=to)
+    _log.info("email.test_sent: recipients=%d", len(to))
+    return to
 
 
 def notify_updated_sets(config, *, updated_paths, analyse, count_chapters, flag,
