@@ -891,6 +891,78 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#email-notifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Email notifications
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Email notifications">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smtp-password" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SMTP password
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verifying-delivery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying delivery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#nfo-settings" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1358,6 +1430,78 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#email-notifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Email notifications
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Email notifications">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smtp-password" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SMTP password
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verifying-delivery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying delivery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#nfo-settings" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1740,27 +1884,172 @@
 </tbody>
 </table>
 <p>All Kodi settings can also be set via environment variables: <code>KODI_HOST</code>, <code>KODI_PORT</code>, <code>KODI_USERNAME</code>, <code>KODI_PASSWORD</code>.</p>
+<h3 id="email-notifications">Email notifications</h3>
+<p>CrateDigger can send HTML run-summary emails after key commands. Emails are sent only when there is something to report; a run that changes nothing sends nothing (except possibly the throttled update reminder described below). Each message includes inline poster thumbnails and a plain-text fallback. No external dependencies are required; emails are sent using Python's standard library over SMTP.</p>
+<p>There are three independent channels. Each has its own recipient list and can be enabled or disabled separately.</p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Trigger</th>
+<th>Typical recipients</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>new_sets</code></td>
+<td>After <code>organize</code>, when one or more sets were newly added to the library</td>
+<td>You and anyone else who follows the collection</td>
+</tr>
+<tr>
+<td><code>updated_sets</code></td>
+<td>After <code>identify</code>, when chapters were added or changed on one or more sets</td>
+<td>You only</td>
+</tr>
+<tr>
+<td><code>update_reminder</code></td>
+<td>After any command, when a newer CrateDigger version is available</td>
+<td>You only</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>update_reminder</code> channel is throttled: you receive at most one email per new release, not one per run. When a content email (<code>new_sets</code> or <code>updated_sets</code>) goes out in the same run, the update banner is embedded in that email instead and the standalone reminder is suppressed.</p>
+<h4 id="prerequisites">Prerequisites</h4>
+<p>You need an SMTP server that accepts authenticated submissions. A local relay, a self-hosted mail server, or any provider that supports STARTTLS or SSL on port 587/465 works. Gmail, Fastmail, and similar providers work if you generate an app password.</p>
+<h4 id="configuration_1">Configuration</h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">[email]</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">smtp_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mail.example.lan&quot;</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">smtp_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">587</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">smtp_security</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;starttls&quot;</span><span class="w">   </span><span class="c1"># starttls | ssl | none</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">smtp_user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cratedigger&quot;</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="n">smtp_password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w">           </span><span class="c1"># leave blank; use CRATEDIGGER_SMTP_PASSWORD instead</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="n">from_address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cratedigger@example.lan&quot;</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="n">thumbnail_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">140</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="k">[email.new_sets]</span>
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;other@example.com&quot;</span><span class="p">]</span>
+<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>
+<a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="k">[email.updated_sets]</span>
+<a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">]</span>
+<a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>
+<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a><span class="k">[email.update_reminder]</span>
+<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">]</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>smtp_host</code></td>
+<td>SMTP server hostname or IP</td>
+<td>(required)</td>
+</tr>
+<tr>
+<td><code>smtp_port</code></td>
+<td>SMTP port</td>
+<td><code>587</code></td>
+</tr>
+<tr>
+<td><code>smtp_security</code></td>
+<td>Connection security: <code>"starttls"</code>, <code>"ssl"</code>, or <code>"none"</code></td>
+<td><code>"starttls"</code></td>
+</tr>
+<tr>
+<td><code>smtp_user</code></td>
+<td>SMTP login username</td>
+<td>(required)</td>
+</tr>
+<tr>
+<td><code>smtp_password</code></td>
+<td>SMTP password (see env var note below)</td>
+<td><code>""</code></td>
+</tr>
+<tr>
+<td><code>from_address</code></td>
+<td>Sender address that appears in the From header</td>
+<td>(required)</td>
+</tr>
+<tr>
+<td><code>thumbnail_width</code></td>
+<td>Width in pixels of embedded poster thumbnails</td>
+<td><code>140</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each channel sub-table (<code>[email.new_sets]</code>, <code>[email.updated_sets]</code>, <code>[email.update_reminder]</code>) has two keys:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>enabled</code></td>
+<td>Set to <code>true</code> to enable this channel</td>
+</tr>
+<tr>
+<td><code>to</code></td>
+<td>List of recipient addresses</td>
+</tr>
+</tbody>
+</table>
+<h4 id="smtp-password">SMTP password</h4>
+<p>Set the password via the <code>CRATEDIGGER_SMTP_PASSWORD</code> environment variable rather than writing it into <code>config.toml</code>. The environment variable takes precedence over <code>smtp_password</code> in the config file and is never written to logs.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Linux / macOS</label><label for="__tabbed_4_2">Windows (PowerShell)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CRATEDIGGER_SMTP_PASSWORD</span><span class="o">=</span>your-app-password
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nv">$env:CRATEDIGGER_SMTP_PASSWORD</span> <span class="p">=</span> <span class="s2">&quot;your-app-password&quot;</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h4 id="verifying-delivery">Verifying delivery</h4>
+<p>Run <code>organize</code> with <code>--email-test</code> to send a sample email without waiting for real changes. The run continues normally after the test message is sent.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Music/Library/<span class="w"> </span>--email-test
+</code></pre></div>
+<p>You can also force or suppress an email for a single run without changing your config:</p>
+<ul>
+<li><code>--email</code> on <code>organize</code> forces the <code>new_sets</code> email even if no sets were added.</li>
+<li><code>--no-email</code> on <code>organize</code> or <code>identify</code> suppresses the email for that run.</li>
+</ul>
+<p>See <a href="../commands/organize/#options">organize options</a> and <a href="../commands/identify/#options">identify options</a>.</p>
+<h4 id="example">Example</h4>
+<p><img alt="Example CrateDigger run-summary email" src="../assets/example-email.png" /></p>
 <h3 id="nfo-settings">NFO settings</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">[nfo_settings]</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">genre_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Electronic&quot;</span>
-<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">genre_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Live&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="k">[nfo_settings]</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">genre_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Electronic&quot;</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="n">genre_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Live&quot;</span>
 </code></pre></div>
 <p>Genre written into NFO files when no genre is available from 1001Tracklists metadata. <code>genre_festival</code> applies to festival sets; <code>genre_concert</code> applies to concert recordings.</p>
 <h3 id="tool-paths">Tool paths</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># [tool_paths]</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="c1"># mediainfo = &quot;C:/Program Files/MediaInfo/MediaInfo.exe&quot;</span>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="c1"># ffprobe = &quot;&quot;</span>
-<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># mkvextract = &quot;&quot;</span>
-<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="c1"># mkvpropedit = &quot;&quot;</span>
-<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="c1"># mkvmerge = &quot;&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># [tool_paths]</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="c1"># mediainfo = &quot;C:/Program Files/MediaInfo/MediaInfo.exe&quot;</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="c1"># ffprobe = &quot;&quot;</span>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># mkvextract = &quot;&quot;</span>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="c1"># mkvpropedit = &quot;&quot;</span>
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="c1"># mkvmerge = &quot;&quot;</span>
 </code></pre></div>
 <p>Explicit paths to external tools. Set these only if the tools are installed somewhere not on your system PATH. Omit a key (or leave an empty string) to let CrateDigger find them automatically via PATH.</p>
 <h3 id="cache-ttl">Cache TTL</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">[cache_ttl]</span>
-<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">mbid_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
-<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">dj_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
-<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="n">source_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">365</span>
-<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="n">images_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="k">[cache_ttl]</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">mbid_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="n">dj_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="n">source_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">365</span>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="n">images_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
 </code></pre></div>
 <p>Base lifetimes for CrateDigger's caches, in days. When a cache entry expires, CrateDigger refreshes it on the next lookup.</p>
 <table>
@@ -1826,18 +2115,18 @@
 <h3 id="artist-aliases">artists.json</h3>
 <p>Controls artist name aliases and B2B group definitions.</p>
 <p>Place it in the folder above (<code>~/CrateDigger/artists.json</code> on Linux or macOS, <code>Documents\CrateDigger\artists.json</code> on Windows). Example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="p">{</span>
-<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">    </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">        </span><span class="nt">&quot;Armin van Buuren&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Rising Star&quot;</span><span class="p">],</span>
-<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">        </span><span class="nt">&quot;Martin Garrix&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;GRX&quot;</span><span class="p">],</span>
-<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">        </span><span class="nt">&quot;Nicky Romero&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Monocule&quot;</span><span class="p">]</span>
-<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="w">    </span><span class="nt">&quot;groups&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">        </span><span class="s2">&quot;Above &amp; Beyond&quot;</span><span class="p">,</span>
-<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="w">        </span><span class="s2">&quot;Swedish House Mafia&quot;</span><span class="p">,</span>
-<a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="w">        </span><span class="s2">&quot;W&amp;W&quot;</span>
-<a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="w">    </span><span class="p">]</span>
-<a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="p">{</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="w">    </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">        </span><span class="nt">&quot;Armin van Buuren&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Rising Star&quot;</span><span class="p">],</span>
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">        </span><span class="nt">&quot;Martin Garrix&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;GRX&quot;</span><span class="p">],</span>
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="w">        </span><span class="nt">&quot;Nicky Romero&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Monocule&quot;</span><span class="p">]</span>
+<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="w">    </span><span class="nt">&quot;groups&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="w">        </span><span class="s2">&quot;Above &amp; Beyond&quot;</span><span class="p">,</span>
+<a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="w">        </span><span class="s2">&quot;Swedish House Mafia&quot;</span><span class="p">,</span>
+<a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a><span class="w">        </span><span class="s2">&quot;W&amp;W&quot;</span>
+<a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a><span class="w">    </span><span class="p">]</span>
+<a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong><code>aliases</code>:</strong> maps a canonical artist name to a list of aliases. When CrateDigger encounters an alias in a filename or tag, it substitutes the canonical name. Matching is case-insensitive and diacritics-insensitive.</p>
 <p><strong><code>groups</code>:</strong> a list of act names that should be kept as-is even when they contain <code>&amp;</code>, <code>B2B</code>, <code>vs.</code>, or similar separators. Without a group entry, CrateDigger splits multi-artist names and uses only the first artist as the folder name. Add an act here when the full name is the canonical identity (for example, <code>"Swedish House Mafia"</code> or <code>"W&amp;W"</code>).</p>
@@ -1867,10 +2156,10 @@
 </tbody>
 </table>
 <p>It is checked first by both the <code>chapter_artist_mbids</code> and <code>album_artist_mbids</code> enrich operations, before the auto cache and any live MusicBrainz search.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="p">{</span>
-<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span><span class="p">,</span>
-<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">    </span><span class="nt">&quot;Oliver Heldens&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6e7dde91-4c02-47ea-a2b4-2222222222bb&quot;</span>
-<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">{</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span><span class="p">,</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">    </span><span class="nt">&quot;Oliver Heldens&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6e7dde91-4c02-47ea-a2b4-2222222222bb&quot;</span>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="p">}</span>
 </code></pre></div>
 <table>
 <thead>
@@ -1948,6 +2237,10 @@
 <tr>
 <td><code>KODI_PASSWORD</code></td>
 <td><code>kodi.password</code></td>
+</tr>
+<tr>
+<td><code>CRATEDIGGER_SMTP_PASSWORD</code></td>
+<td><code>email.smtp_password</code> (takes precedence; preferred over storing the password in the config file)</td>
 </tr>
 </tbody>
 </table>
