@@ -1344,7 +1344,7 @@ clean library, then enriches them with artwork, track listings, and metadata.</p
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python3<span class="w"> </span>--version
 </code></pre></div>
 <h3 id="required-tools">Required tools</h3>
-<p>CrateDigger relies on three external programs. Install them before running CrateDigger.</p>
+<p>CrateDigger relies on two external programs. Install them before running CrateDigger.</p>
 <table>
 <thead>
 <tr>
@@ -1354,12 +1354,8 @@ clean library, then enriches them with artwork, track listings, and metadata.</p
 </thead>
 <tbody>
 <tr>
-<td><strong>MediaInfo</strong></td>
-<td>Reads video and audio file properties (duration, resolution, codec)</td>
-</tr>
-<tr>
 <td><strong>FFmpeg</strong> (includes ffprobe)</td>
-<td>Probes media files and extracts thumbnail images</td>
+<td>Reads media properties and tags, probes files, and extracts thumbnail images</td>
 </tr>
 <tr>
 <td><strong>MKVToolNix</strong> (mkvpropedit, mkvextract, mkvmerge)</td>
@@ -1370,21 +1366,20 @@ clean library, then enriches them with artwork, track listings, and metadata.</p
 <div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Ubuntu / Debian</label><label for="__tabbed_1_2">macOS (Homebrew)</label><label for="__tabbed_1_3">Windows (Scoop)</label><label for="__tabbed_1_4">Windows (manual)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>mediainfo<span class="w"> </span>ffmpeg<span class="w"> </span>mkvtoolnix
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ffmpeg<span class="w"> </span>mkvtoolnix
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>brew<span class="w"> </span>install<span class="w"> </span>media-info<span class="w"> </span>ffmpeg<span class="w"> </span>mkvtoolnix
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>brew<span class="w"> </span>install<span class="w"> </span>ffmpeg<span class="w"> </span>mkvtoolnix
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">scoop</span> <span class="n">install</span> <span class="n">mediainfo</span> <span class="n">ffmpeg</span> <span class="n">mkvtoolnix</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">scoop</span> <span class="n">install</span> <span class="n">ffmpeg</span> <span class="n">mkvtoolnix</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <p>Download and install each tool, then add their directories to your system PATH:</p>
 <ul>
-<li><a href="https://mediaarea.net/en/MediaInfo/Download">MediaInfo</a></li>
 <li><a href="https://ffmpeg.org/download.html">FFmpeg</a></li>
 <li><a href="https://mkvtoolnix.download/downloads.html">MKVToolNix</a></li>
 </ul>

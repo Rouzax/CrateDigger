@@ -945,6 +945,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#my-cratedigger-tags-dont-show-up-in-mediainfo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My CrateDigger tags don't show up in MediaInfo
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1378,6 +1389,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#my-cratedigger-tags-dont-show-up-in-mediainfo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My CrateDigger tags don't show up in MediaInfo
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1734,7 +1756,7 @@
 <hr />
 <h2 id="general">General</h2>
 <h3 id="a-required-tool-is-not-found">A required tool is not found</h3>
-<p>CrateDigger relies on three external tools. If any of them is missing or not on your system PATH, you will see an error on startup.</p>
+<p>CrateDigger relies on two external tools. If either is missing or not on your system PATH, you will see an error on startup.</p>
 <table>
 <thead>
 <tr>
@@ -1743,10 +1765,6 @@
 </tr>
 </thead>
 <tbody>
-<tr>
-<td><strong>MediaInfo</strong></td>
-<td><code>sudo apt install mediainfo</code> / <code>brew install media-info</code> / <code>scoop install mediainfo</code></td>
-</tr>
 <tr>
 <td><strong>FFmpeg</strong> (includes ffprobe)</td>
 <td><code>sudo apt install ffmpeg</code> / <code>brew install ffmpeg</code> / <code>scoop install ffmpeg</code></td>
@@ -1759,11 +1777,10 @@
 </table>
 <p>If the tools are installed but not on your PATH (for example, a custom install location), tell CrateDigger where to find them in your <code>config.toml</code> (<code>~/CrateDigger/config.toml</code> on Linux or macOS, <code>Documents\CrateDigger\config.toml</code> on Windows):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[tool_paths]</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">mediainfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mediainfo&quot;</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">ffprobe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/ffprobe&quot;</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">mkvpropedit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvpropedit&quot;</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">mkvextract</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvextract&quot;</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">mkvmerge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvmerge&quot;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">ffprobe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/ffprobe&quot;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">mkvpropedit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvpropedit&quot;</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">mkvextract</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvextract&quot;</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">mkvmerge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvmerge&quot;</span>
 </code></pre></div>
 <p>See <a href="../getting-started/#required-tools">getting started</a> for full installation instructions.</p>
 <h3 id="what-is-the-yellow-message-on-startup">What is the yellow "!" message on startup?</h3>
@@ -1811,25 +1828,35 @@
 </tbody>
 </table>
 <p>Files are named <code>{command}-{timestamp}-{hex}.log</code>, for example <code>identify-2026-05-07T13-44-01-a3f2.log</code>. Every file captures DEBUG-level detail regardless of whether you pass <code>--verbose</code> or <code>--debug</code> on the command line. Log files older than 7 days are deleted automatically at startup. Because each run gets its own file, concurrent runs never conflict or interleave.</p>
+<h3 id="my-cratedigger-tags-dont-show-up-in-mediainfo">My CrateDigger tags don't show up in MediaInfo</h3>
+<p>They are almost certainly still there. MediaInfo does a fast, partial scan and can miss the Matroska Tags element, which often ends up late in the file after CrateDigger writes tags and embeds cover attachments. When that happens, MediaInfo shows none of the <code>CRATEDIGGER_*</code> tags even though the file carries them. This is a MediaInfo display limitation, not missing data, and it is exactly why CrateDigger reads metadata with ffprobe instead.</p>
+<p>To see the tags reliably, use ffprobe or mkvextract:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># all container tags, including CRATEDIGGER_*</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>ffprobe<span class="w"> </span>-v<span class="w"> </span>error<span class="w"> </span>-show_entries<span class="w"> </span>format_tags<span class="w"> </span>-of<span class="w"> </span><span class="nv">default</span><span class="o">=</span><span class="nv">noprint_wrappers</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="s2">&quot;your-file.mkv&quot;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># or dump the raw Matroska tags to XML</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>mkvextract<span class="w"> </span><span class="s2">&quot;your-file.mkv&quot;</span><span class="w"> </span>tags<span class="w"> </span>tags.xml
+</code></pre></div>
+<p>(MediaInfo's full-parse mode, <code>mediainfo --ParseSpeed=1.0</code>, also finds them, but it reads most of the file and is slow on large videos.)</p>
 <hr />
 <h2 id="identify">identify</h2>
 <h3 id="error-credentials-required">"Error: credentials required"</h3>
 <p>Your 1001Tracklists email and password are not configured. Add them to your <code>config.toml</code> (<code>~/CrateDigger/config.toml</code> on Linux or macOS, <code>Documents\CrateDigger\config.toml</code> on Windows):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[tracklists]</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your@email.com&quot;</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-password&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[tracklists]</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your@email.com&quot;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-password&quot;</span>
 </code></pre></div>
 <p>Or set them as environment variables:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Linux / macOS</label><label for="__tabbed_1_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_EMAIL</span><span class="o">=</span><span class="s2">&quot;your@email.com&quot;</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_PASSWORD</span><span class="o">=</span><span class="s2">&quot;your-password&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_EMAIL</span><span class="o">=</span><span class="s2">&quot;your@email.com&quot;</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_PASSWORD</span><span class="o">=</span><span class="s2">&quot;your-password&quot;</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">$env:TRACKLISTS_EMAIL</span> <span class="p">=</span> <span class="s2">&quot;your@email.com&quot;</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">$env:TRACKLISTS_PASSWORD</span> <span class="p">=</span> <span class="s2">&quot;your-password&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">$env:TRACKLISTS_EMAIL</span> <span class="p">=</span> <span class="s2">&quot;your@email.com&quot;</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nv">$env:TRACKLISTS_PASSWORD</span> <span class="p">=</span> <span class="s2">&quot;your-password&quot;</span>
 </code></pre></div>
 </div>
 </div>
@@ -1844,7 +1871,7 @@
 <h3 id="a-file-is-skipped-in-auto-mode">A file is skipped in auto mode</h3>
 <p>Auto mode requires the top result to score 150 or higher and the gap to the second result to be at least 20. If either threshold is not met, the file is skipped rather than guessing.</p>
 <p>To handle skipped files, run the same folder interactively (without <code>--auto</code>) and pick manually:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
 </code></pre></div>
 <p>For files that are consistently hard to match automatically, use <code>--tracklist</code> to provide the URL directly.</p>
 <h3 id="chapters-are-not-embedding">Chapters are not embedding</h3>
@@ -1859,7 +1886,7 @@
 <p>Increase the delay between files to reduce the chance of hitting rate limits: set <code>tracklists.delay_seconds</code> in your config (default: 5 seconds).</p>
 <h3 id="identify-updated-but-enrich-still-shows-old-metadata">identify updated but enrich still shows old metadata</h3>
 <p>After re-running <code>identify</code> to pick up updated tracklist data, run <code>enrich</code> again:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
 </code></pre></div>
 <p>NFO files are automatically regenerated when metadata changes, so no extra flag is needed for tags and NFOs. If you also want to rebuild posters and artwork, which use existence-only checks, add <code>--regenerate</code> to force those files to be overwritten as well.</p>
 <hr />
@@ -1879,8 +1906,8 @@
 <h2 id="enrich">enrich</h2>
 <h3 id="not-a-cratedigger-library">"not a CrateDigger library"</h3>
 <p>The folder you passed to <code>enrich</code> does not have a <code>.cratedigger/</code> marker. Run <code>organize</code> on your library first:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
 </code></pre></div>
 <h3 id="no-thumbnail-is-produced-for-some-files">No thumbnail is produced for some files</h3>
 <p>CrateDigger tries three sources for cover art, in order:</p>
@@ -1891,26 +1918,26 @@
 </ol>
 <p>If you are getting gradient thumbnails and want actual artwork, either embed a thumbnail when downloading (see <a href="../getting-started/#preparing-your-recordings">getting started: preparing your recordings</a>) or install the <code>vision</code> extra:</p>
 <p><strong>pipx</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
 </code></pre></div></p>
 <p><strong>pip</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
 </code></pre></div></p>
 <h3 id="posters-are-not-generated-for-some-files">Posters are not generated for some files</h3>
 <p>The per-video poster (<code>{stem}-poster.jpg</code>) requires <code>{stem}-thumb.jpg</code> to exist first. If you ran <code>--only posters</code> without running <code>art</code> first, no thumb exists yet. Either run the full enrich (without <code>--only</code>) so <code>art</code> runs before <code>posters</code>, or run them in sequence:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>art
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>art
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters
 </code></pre></div>
 <h3 id="artist-artwork-from-fanarttv-is-not-downloading">Artist artwork from fanart.tv is not downloading</h3>
 <p>Fanart.tv artwork requires a MusicBrainz ID to be resolved for the artist. If <code>fanart</code> runs before <code>chapter_artist_mbids</code>, or if the artist's MBID has not been resolved yet, the lookup is skipped.</p>
 <p>Run <code>chapter_artist_mbids</code> first to resolve MBIDs, then rerun enrich:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
 </code></pre></div>
 <p>If the artist still has no MBID after that, they may not be in the MusicBrainz database or the search may be returning the wrong result. Add the correct MBID to <code>artist_mbids.json</code> manually (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">{</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="nt">&quot;Artist Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&quot;</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nt">&quot;Artist Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&quot;</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">}</span>
 </code></pre></div>
 <p>Find the correct MBID at <a href="https://musicbrainz.org">musicbrainz.org</a>.</p>
 <h3 id="musicbrainz-ids-are-not-resolving-for-some-artists">MusicBrainz IDs are not resolving for some artists</h3>
@@ -1919,14 +1946,14 @@
 <li>Check if the search is returning the wrong artist (a name collision). Run with <code>--verbose</code> to see what MusicBrainz returns.</li>
 <li>Look up the correct MBID at <a href="https://musicbrainz.org">musicbrainz.org</a> and add it to your override file:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="p">}</span>
 </code></pre></div>
 <ol>
 <li>Rerun (no <code>--regenerate</code> needed):</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids,album_artist_mbids
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids,album_artist_mbids
 </code></pre></div>
 <p>CrateDigger detects that the resolved ID has changed and writes the update automatically.</p>
 <p>See <a href="../configuration/#artist-mbid-override-file">Configuration: artist MBID override file</a> for details.</p>
@@ -1937,7 +1964,7 @@
 <li>Place a logo file at the path the command suggests (for example, <code>~/CrateDigger/places/Tomorrowland/logo.png</code> on Linux or macOS, <code>Documents\CrateDigger\places\Tomorrowland\logo.png</code> on Windows)</li>
 <li>Regenerate the folder posters:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
 </code></pre></div>
 <p>See <a href="../commands/audit-logos/">audit-logos</a> and <a href="../places/#curated-assets-logos-and-artwork">Places: curated assets</a> for supported formats and placement paths.</p>
 <hr />
@@ -1955,18 +1982,18 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Linux</label><label for="__tabbed_2_2">macOS</label><label for="__tabbed_2_3">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.cache/CrateDigger/artists/
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/Library/Caches/CrateDigger/artists/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.cache/CrateDigger/artists/
 <a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nb">Remove-Item</span> <span class="n">-Recurse</span> <span class="s2">&quot;$env:LOCALAPPDATA\CrateDigger\Cache\artists&quot;</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">cratedigger</span> <span class="n">enrich</span> <span class="p">~/</span><span class="n">Music</span><span class="p">/</span><span class="n">Library</span><span class="p">/</span> <span class="p">-</span><span class="n">-only</span> <span class="n">fanart</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/Library/Caches/CrateDigger/artists/
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">Remove-Item</span> <span class="n">-Recurse</span> <span class="s2">&quot;$env:LOCALAPPDATA\CrateDigger\Cache\artists&quot;</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">cratedigger</span> <span class="n">enrich</span> <span class="p">~/</span><span class="n">Music</span><span class="p">/</span><span class="n">Library</span><span class="p">/</span> <span class="p">-</span><span class="n">-only</span> <span class="n">fanart</span>
 </code></pre></div>
 </div>
 </div>
@@ -1979,9 +2006,9 @@
 <p>The username or password does not match Kodi's web server credentials. Check the <code>kodi.username</code> and <code>kodi.password</code> values in your config against the Kodi settings.</p>
 <h3 id="items-are-not-updating-in-kodi-after-a-sync">Items are not updating in Kodi after a sync</h3>
 <p>The library path that Kodi uses may not match the path CrateDigger is using. If they differ (for example, Kodi accesses the library over a network share while CrateDigger uses a local path), configure path mapping in your <code>kodi</code> config:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">[kodi.path_mapping]</span>
-<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/home/user/Music/Library/&quot;</span>
-<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">kodi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;smb://server/music/Library/&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">[kodi.path_mapping]</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/home/user/Music/Library/&quot;</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="n">kodi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;smb://server/music/Library/&quot;</span>
 </code></pre></div>
 <p>See <a href="../kodi-integration/#path-mapping">Kodi integration: path mapping</a> for details.</p>
 <h3 id="sync-runs-but-nothing-changes-in-kodi">Sync runs but nothing changes in Kodi</h3>
