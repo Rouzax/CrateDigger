@@ -118,9 +118,6 @@ def _run_propedit(target: Path, args: list[str]) -> bool:
             capture_output=True, text=True, timeout=60,
             encoding="utf-8", errors="replace",
         )
-        if result.returncode != 0:
-            logger.debug("attachments.write: status=failed target=%s args=%s rc=%s",
-                         target.name, args, result.returncode)
         return result.returncode == 0
     except (subprocess.SubprocessError, OSError) as e:
         logger.debug("attachments.write: status=failed target=%s error=\"%s\"", target.name, e)
