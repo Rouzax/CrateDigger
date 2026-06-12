@@ -2,6 +2,8 @@
 
 Festival set and concert library manager. CrateDigger organizes, enriches, and tags your DJ set and concert recordings into a clean, media-player-ready library.
 
+> Want to see it first? The [interactive library browser](https://rouzax.github.io/CrateDigger/#library-browser) lets you switch folder layouts and click through real sets, posters, NFO metadata, and tracklists.
+
 ## What you get
 
 After running CrateDigger on a folder of recordings:
