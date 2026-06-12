@@ -889,7 +889,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     only = set()
     if getattr(args, "only", None):
         only = {v.strip() for v in args.only.split(",")}
-        valid_ops = {"nfo", "art", "fanart", "posters", "tags", "chapter_artist_mbids", "album_artist_mbids"}
+        valid_ops = {"nfo", "art", "fanart", "posters", "cover", "tags", "chapter_artist_mbids", "album_artist_mbids"}
         unknown = only - valid_ops
         if unknown:
             print_error(f"unknown operation {', '.join(repr(u) for u in sorted(unknown))}. "
