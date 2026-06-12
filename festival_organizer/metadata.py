@@ -105,10 +105,10 @@ def _first_tag(*sources: dict, keys: list[str]) -> str:
 
 
 # Tag key lookup: maps output field to (new_name, old_name) pairs.
-# MediaInfo stores custom tags in both the general track and an "extra" sub-dict.
-# Old "1001TRACKLISTS_*" names are kept for backward compatibility with files
-# tagged before the CRATEDIGGER_ prefix was adopted.  The extra dict prefixes
-# old names with an underscore.
+# ffprobe exposes container tags in a flat namespace. Old "1001TRACKLISTS_*"
+# names are kept for backward compatibility with files tagged before the
+# CRATEDIGGER_ prefix was adopted; the leading-underscore variants are legacy
+# forms still seen on some older files.
 _1001TL_TAG_KEYS: dict[str, list[str]] = {
     "tracklists_title": ["CRATEDIGGER_1001TL_TITLE", "1001TRACKLISTS_TITLE", "_1001TRACKLISTS_TITLE"],
     "tracklists_url": ["CRATEDIGGER_1001TL_URL", "1001TRACKLISTS_URL", "_1001TRACKLISTS_URL"],

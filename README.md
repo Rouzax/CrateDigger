@@ -65,7 +65,6 @@ Interactive runs check GitHub for newer stable releases and print a one-line upg
 ### Prerequisites
 
 - [Python 3.11+](https://www.python.org/downloads/)
-- [MediaInfo](https://mediaarea.net/en/MediaInfo)
 - [FFmpeg](https://ffmpeg.org/download.html)
 - [MKVToolNix](https://mkvtoolnix.download/downloads.html)
 

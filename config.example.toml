@@ -120,8 +120,7 @@ genre_concert = "Live"
 # key (or leave an empty string) to auto-detect via PATH. The whole section
 # is optional, so it is commented out by default.
 # [tool_paths]
-# mediainfo = "C:/Program Files/MediaInfo/MediaInfo.exe"
-# ffprobe = ""
+# ffprobe = "C:/Program Files/ffmpeg/bin/ffprobe.exe"
 # mkvextract = ""
 # mkvpropedit = ""
 # mkvmerge = ""

@@ -47,7 +47,7 @@ def fix_mojibake(text: str) -> str:
 
     Idempotent: calling on already-clean text returns it unchanged. Safe on
     empty strings and non-Latin text. Applied at every external read boundary
-    (mkvextract XML, mediainfo/ffprobe JSON) so downstream code always sees
+    (mkvextract XML, ffprobe JSON) so downstream code always sees
     proper Unicode.
 
     Example: "KÃ¶lsch" -> "Kölsch", "Ã©dition" -> "édition".

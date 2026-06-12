@@ -1,7 +1,7 @@
 """Failure-logged wrapper around ``subprocess.run``.
 
-All ``festival_organizer`` subprocess invocations (mkvextract, mkvpropedit,
-mediainfo, ffprobe, tool version probes) route through :func:`tracked_run`
+All ``festival_organizer`` subprocess invocations (ffprobe, mkvextract,
+mkvpropedit, mkvmerge, tool version probes) route through :func:`tracked_run`
 so the rotating log file captures a post-mortem trail when something goes
 wrong: the argv command, the exit code, and a stderr tail on non-zero exits.
 
