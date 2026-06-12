@@ -771,6 +771,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#summary-email" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary email
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1368,6 +1379,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#summary-email" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary email
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1814,6 +1836,16 @@ line and the reason or error detail on the second.</p>
 <p>When <code>--kodi-sync</code> is active, a separate Kodi sync section appears after the summary. It
 shows transient progress while fetching the Kodi library and refreshing items, followed by
 a one-line summary of how many items were refreshed and how many are not yet in the library.</p>
+<h3 id="summary-email">Summary email</h3>
+<p>When the new-sets summary email is enabled (see
+<a href="../../configuration/#email-notifications">Configuration</a>), it is built and sent after
+the run finishes. This can take a while on large imports because it resizes a poster
+thumbnail for every new set. The console shows transient progress for those phases
+(resizing posters, sending), then a one-line verdict, for example
+<code>New-sets email -&gt; sent to 2 recipients</code>. Runs that change nothing, have no recipients,
+or have the channel disabled print no email line. Like all spinners, progress is hidden
+when output is piped or under <code>--quiet</code> / <code>--verbose</code> / <code>--debug</code>; the verdict still
+prints.</p>
 <h2 id="layouts">Layouts</h2>
 <p>CrateDigger supports four folder layouts, each with separate templates for festival sets
 and concert recordings.</p>

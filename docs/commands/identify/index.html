@@ -733,6 +733,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#summary-email" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary email
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#verbosity-and-piping" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1353,6 +1364,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#summary-email" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary email
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#verbosity-and-piping" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1773,6 +1795,14 @@ align in a terminal and stay grep-friendly in log files.</p>
 The <code>Unmatched</code> list includes both <code>skipped</code> files (with the reason, for example
 <code>low confidence (score 84)</code>) and <code>error</code> files (with the short error), so you can see at a
 glance which files still need attention.</p>
+<h3 id="summary-email">Summary email</h3>
+<p>When the updated-sets summary email is enabled (see
+<a href="../../configuration/#email-notifications">Configuration</a>), it is built and sent after the
+summary panel. The console shows transient progress while it re-analyses each updated set,
+resizes poster thumbnails, and sends, then a one-line verdict such as
+<code>Updated-sets email -&gt; sent to 2 recipients</code>. Runs that updated nothing, have no
+recipients, or have the channel disabled print no email line. The progress follows the
+same piping/verbosity rules as the per-file spinner; the verdict still prints.</p>
 <h3 id="verbosity-and-piping">Verbosity and piping</h3>
 <table>
 <thead>
