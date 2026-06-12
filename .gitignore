@@ -30,6 +30,7 @@ desktop.ini
 # Project-specific
 CLAUDE.md
 .claude/
+scripts/build-showcase-assets.py
 .worktrees/
 .superpowers/
 C:/

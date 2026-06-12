@@ -814,9 +814,253 @@ section {
   opacity: 1;
 }
 
-/* ---- Hero description typing cursor ---- */
-.hero-desc {
-  min-height: 1.6em;
+/* ---- Library browser ---- */
+.browser {
+  background: var(--bg-deep);
+}
+
+.browser-head {
+  max-width: 1200px;
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+
+.browser-head h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+
+.browser-head p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.browser-layout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.browser-layout select {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--accent-soft);
+  background: rgba(232, 115, 74, 0.06);
+  border: 1px solid rgba(232, 115, 74, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.browser-layout select:hover {
+  background: rgba(232, 115, 74, 0.1);
+  border-color: rgba(232, 115, 74, 0.35);
+}
+
+.browser-layout select:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.browser-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 320px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Shared card surface for the three panels */
+.browser-tree,
+.browser-stage,
+.browser-meta {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+}
+
+/* Tree */
+.browser-tree {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.browser-tree::-webkit-scrollbar,
+.browser-meta::-webkit-scrollbar,
+.tracklist::-webkit-scrollbar { width: 6px; }
+.browser-tree::-webkit-scrollbar-track,
+.browser-meta::-webkit-scrollbar-track,
+.tracklist::-webkit-scrollbar-track { background: transparent; }
+.browser-tree::-webkit-scrollbar-thumb,
+.browser-meta::-webkit-scrollbar-thumb,
+.tracklist::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 4px; }
+
+.tree-row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-row:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.tree-folder {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tree-set {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.tree-set:hover {
+  color: var(--accent);
+}
+
+/* Nesting */
+.tree-kids {
+  display: none;
+  margin-left: 0.9rem;
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--border);
+}
+
+.tree-kids.open {
+  display: block;
+}
+
+/* Stage */
+.browser-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: 1.5rem;
+}
+
+.browser-stage img {
+  max-height: min(60vh, 520px);
+  width: auto;
+  object-fit: contain;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* No src: hide the broken image and show a hint via the figure */
+.browser-stage img:not([src]) { display: none; }
+
+.browser-stage:has(img:not([src]))::after {
+  content: 'Select a set or folder to preview its poster';
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+  max-width: 220px;
+  line-height: 1.6;
+}
+
+/* Meta panel */
+.browser-meta {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.browser-meta h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+
+.browser-meta dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.browser-meta dt {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-top: 0.1em;
+}
+
+.browser-meta dd {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.browser-meta h4 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.tracklist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.tracklist li {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.tracklist .t {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-soft);
+  min-width: 3.5em;
 }
 
 /* ---- Responsive ---- */
@@ -841,6 +1085,14 @@ section {
   }
 
   .gallery-item { width: 160px; }
+
+  .browser-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .browser-tree { max-height: 320px; }
+  .browser-stage { min-height: 240px; }
+  .browser-meta { max-height: none; }
 
   .workflow-step { gap: 1rem; }
   .step-number { width: 36px; height: 36px; font-size: 0.95rem; }

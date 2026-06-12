@@ -1,0 +1,4083 @@
+{
+  "layouts": [
+    "artist_flat",
+    "place_flat",
+    "artist_nested",
+    "place_nested"
+  ],
+  "trees": {
+    "artist_flat": [
+      {
+        "type": "folder",
+        "label": "Anyma",
+        "poster": "artistfolder-anyma.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-anyma-tomorrowland-mainstage",
+            "label": "2025 - Anyma - Tomorrowland [Mainstage]",
+            "poster": "set-2025-anyma-tomorrowland-mainstage.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Armin van Buuren",
+        "poster": "artistfolder-armin-van-buuren.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-armin-van-buuren-tomorrowland-mainstage",
+            "label": "2025 - Armin van Buuren - Tomorrowland [Mainstage]",
+            "poster": "set-2025-armin-van-buuren-tomorrowland-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-armin-van-buuren-tomorrowland-freedom-stage",
+            "label": "2025 - Armin van Buuren - Tomorrowland [Freedom Stage]",
+            "poster": "set-2025-armin-van-buuren-tomorrowland-freedom-stage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-armin-van-buuren-edc-las-vegas-kineticfield",
+            "label": "2025 - Armin van Buuren - EDC Las Vegas [kineticFIELD]",
+            "poster": "set-2025-armin-van-buuren-edc-las-vegas-kineticfield.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-armin-van-buuren-amf",
+            "label": "2025 - Armin van Buuren - AMF",
+            "poster": "set-2025-armin-van-buuren-amf.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-armin-van-buuren-tomorrowland-brasil-mainstage",
+            "label": "2025 - Armin van Buuren - Tomorrowland Brasil [Mainstage]",
+            "poster": "set-2025-armin-van-buuren-tomorrowland-brasil-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2026-armin-van-buuren-umf-miami-mainstage",
+            "label": "2026 - Armin van Buuren - UMF Miami [Mainstage]",
+            "poster": "set-2026-armin-van-buuren-umf-miami-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2026-armin-van-buuren-asot-area-one",
+            "label": "2026 - Armin van Buuren - ASOT [Area One]",
+            "poster": "set-2026-armin-van-buuren-asot-area-one.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "David Guetta",
+        "poster": "artistfolder-david-guetta.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-david-guetta-tomorrowland-mainstage",
+            "label": "2025 - David Guetta - Tomorrowland [Mainstage]",
+            "poster": "set-2025-david-guetta-tomorrowland-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-david-guetta-unvrs-ibiza-galactic-circus",
+            "label": "2025 - David Guetta - [UNVRS] Ibiza [Galactic Circus]",
+            "poster": "set-2025-david-guetta-unvrs-ibiza-galactic-circus.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Martin Garrix",
+        "poster": "artistfolder-martin-garrix.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2024-martin-garrix-amf",
+            "label": "2024 - Martin Garrix - AMF",
+            "poster": "set-2024-martin-garrix-amf.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-martin-garrix-tomorrowland-mainstage",
+            "label": "2025 - Martin Garrix - Tomorrowland [Mainstage]",
+            "poster": "set-2025-martin-garrix-tomorrowland-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-martin-garrix-edc-las-vegas-kineticfield",
+            "label": "2025 - Martin Garrix - EDC Las Vegas [kineticFIELD]",
+            "poster": "set-2025-martin-garrix-edc-las-vegas-kineticfield.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-martin-garrix-red-rocks",
+            "label": "2025 - Martin Garrix - Red Rocks",
+            "poster": "set-2025-martin-garrix-red-rocks.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Swedish House Mafia",
+        "poster": "artistfolder-swedish-house-mafia.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-swedish-house-mafia-tomorrowland-mainstage",
+            "label": "2025 - Swedish House Mafia - Tomorrowland [Mainstage]",
+            "poster": "set-2025-swedish-house-mafia-tomorrowland-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-swedish-house-mafia-creamfields-arc-stage",
+            "label": "2025 - Swedish House Mafia - Creamfields [ARC Stage]",
+            "poster": "set-2025-swedish-house-mafia-creamfields-arc-stage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2026-swedish-house-mafia-umf-miami-mainstage",
+            "label": "2026 - Swedish House Mafia - UMF Miami [Mainstage]",
+            "poster": "set-2026-swedish-house-mafia-umf-miami-mainstage.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Tiesto",
+        "poster": "artistfolder-tiesto.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2024-tiesto-amf",
+            "label": "2024 - Tiesto - AMF",
+            "poster": "set-2024-tiesto-amf.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-tiesto-edc-las-vegas-circuitgrounds",
+            "label": "2025 - Tiesto - EDC Las Vegas [circuitGROUNDS]",
+            "poster": "set-2025-tiesto-edc-las-vegas-circuitgrounds.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2026-tiesto-we-belong-here",
+            "label": "2026 - Tiesto - We Belong Here",
+            "poster": "set-2026-tiesto-we-belong-here.jpg"
+          }
+        ]
+      }
+    ],
+    "place_flat": [
+      {
+        "type": "folder",
+        "label": "AMF",
+        "poster": "festfolder-amf.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-armin-van-buuren-amf",
+            "label": "2025 - Armin van Buuren - AMF",
+            "poster": "set-2025-armin-van-buuren-amf.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2024-martin-garrix-amf",
+            "label": "2024 - Martin Garrix - AMF",
+            "poster": "set-2024-martin-garrix-amf.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2024-tiesto-amf",
+            "label": "2024 - Tiesto - AMF",
+            "poster": "set-2024-tiesto-amf.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "ASOT",
+        "poster": "festfolder-asot.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2026-armin-van-buuren-asot-area-one",
+            "label": "2026 - Armin van Buuren - ASOT [Area One]",
+            "poster": "set-2026-armin-van-buuren-asot-area-one.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Creamfields",
+        "poster": "festfolder-creamfields.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-swedish-house-mafia-creamfields-arc-stage",
+            "label": "2025 - Swedish House Mafia - Creamfields [ARC Stage]",
+            "poster": "set-2025-swedish-house-mafia-creamfields-arc-stage.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "EDC Las Vegas",
+        "poster": "festfolder-edc-las-vegas.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-armin-van-buuren-edc-las-vegas-kineticfield",
+            "label": "2025 - Armin van Buuren - EDC Las Vegas [kineticFIELD]",
+            "poster": "set-2025-armin-van-buuren-edc-las-vegas-kineticfield.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-martin-garrix-edc-las-vegas-kineticfield",
+            "label": "2025 - Martin Garrix - EDC Las Vegas [kineticFIELD]",
+            "poster": "set-2025-martin-garrix-edc-las-vegas-kineticfield.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-tiesto-edc-las-vegas-circuitgrounds",
+            "label": "2025 - Tiesto - EDC Las Vegas [circuitGROUNDS]",
+            "poster": "set-2025-tiesto-edc-las-vegas-circuitgrounds.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Red Rocks",
+        "poster": "festfolder-red-rocks.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-martin-garrix-red-rocks",
+            "label": "2025 - Martin Garrix - Red Rocks",
+            "poster": "set-2025-martin-garrix-red-rocks.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Tomorrowland",
+        "poster": "festfolder-tomorrowland.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-armin-van-buuren-tomorrowland-mainstage",
+            "label": "2025 - Armin van Buuren - Tomorrowland [Mainstage]",
+            "poster": "set-2025-armin-van-buuren-tomorrowland-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-armin-van-buuren-tomorrowland-freedom-stage",
+            "label": "2025 - Armin van Buuren - Tomorrowland [Freedom Stage]",
+            "poster": "set-2025-armin-van-buuren-tomorrowland-freedom-stage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-martin-garrix-tomorrowland-mainstage",
+            "label": "2025 - Martin Garrix - Tomorrowland [Mainstage]",
+            "poster": "set-2025-martin-garrix-tomorrowland-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-swedish-house-mafia-tomorrowland-mainstage",
+            "label": "2025 - Swedish House Mafia - Tomorrowland [Mainstage]",
+            "poster": "set-2025-swedish-house-mafia-tomorrowland-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-david-guetta-tomorrowland-mainstage",
+            "label": "2025 - David Guetta - Tomorrowland [Mainstage]",
+            "poster": "set-2025-david-guetta-tomorrowland-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2025-anyma-tomorrowland-mainstage",
+            "label": "2025 - Anyma - Tomorrowland [Mainstage]",
+            "poster": "set-2025-anyma-tomorrowland-mainstage.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Tomorrowland Brasil",
+        "poster": "festfolder-tomorrowland-brasil.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-armin-van-buuren-tomorrowland-brasil-mainstage",
+            "label": "2025 - Armin van Buuren - Tomorrowland Brasil [Mainstage]",
+            "poster": "set-2025-armin-van-buuren-tomorrowland-brasil-mainstage.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "UMF Miami",
+        "poster": "festfolder-umf-miami.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2026-armin-van-buuren-umf-miami-mainstage",
+            "label": "2026 - Armin van Buuren - UMF Miami [Mainstage]",
+            "poster": "set-2026-armin-van-buuren-umf-miami-mainstage.jpg"
+          },
+          {
+            "type": "set",
+            "id": "2026-swedish-house-mafia-umf-miami-mainstage",
+            "label": "2026 - Swedish House Mafia - UMF Miami [Mainstage]",
+            "poster": "set-2026-swedish-house-mafia-umf-miami-mainstage.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "We Belong Here",
+        "poster": "festfolder-we-belong-here.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2026-tiesto-we-belong-here",
+            "label": "2026 - Tiesto - We Belong Here",
+            "poster": "set-2026-tiesto-we-belong-here.jpg"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "[UNVRS] Ibiza",
+        "poster": "festfolder-unvrs-ibiza.jpg",
+        "children": [
+          {
+            "type": "set",
+            "id": "2025-david-guetta-unvrs-ibiza-galactic-circus",
+            "label": "2025 - David Guetta - [UNVRS] Ibiza [Galactic Circus]",
+            "poster": "set-2025-david-guetta-unvrs-ibiza-galactic-circus.jpg"
+          }
+        ]
+      }
+    ],
+    "artist_nested": [
+      {
+        "type": "folder",
+        "label": "Anyma",
+        "poster": "artistfolder-anyma.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-artist-anyma-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-anyma-tomorrowland-mainstage",
+                "label": "2025 - Anyma - Tomorrowland [Mainstage]",
+                "poster": "set-2025-anyma-tomorrowland-mainstage.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Armin van Buuren",
+        "poster": "artistfolder-armin-van-buuren.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-artist-armin-van-buuren-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-armin-van-buuren-tomorrowland-mainstage",
+                "label": "2025 - Armin van Buuren - Tomorrowland [Mainstage]",
+                "poster": "set-2025-armin-van-buuren-tomorrowland-mainstage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-armin-van-buuren-tomorrowland-freedom-stage",
+                "label": "2025 - Armin van Buuren - Tomorrowland [Freedom Stage]",
+                "poster": "set-2025-armin-van-buuren-tomorrowland-freedom-stage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-armin-van-buuren-edc-las-vegas-kineticfield",
+                "label": "2025 - Armin van Buuren - EDC Las Vegas [kineticFIELD]",
+                "poster": "set-2025-armin-van-buuren-edc-las-vegas-kineticfield.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-armin-van-buuren-amf",
+                "label": "2025 - Armin van Buuren - AMF",
+                "poster": "set-2025-armin-van-buuren-amf.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-armin-van-buuren-tomorrowland-brasil-mainstage",
+                "label": "2025 - Armin van Buuren - Tomorrowland Brasil [Mainstage]",
+                "poster": "set-2025-armin-van-buuren-tomorrowland-brasil-mainstage.jpg"
+              }
+            ]
+          },
+          {
+            "type": "folder",
+            "label": "2026",
+            "poster": "yearfolder-artist-armin-van-buuren-2026.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2026-armin-van-buuren-umf-miami-mainstage",
+                "label": "2026 - Armin van Buuren - UMF Miami [Mainstage]",
+                "poster": "set-2026-armin-van-buuren-umf-miami-mainstage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2026-armin-van-buuren-asot-area-one",
+                "label": "2026 - Armin van Buuren - ASOT [Area One]",
+                "poster": "set-2026-armin-van-buuren-asot-area-one.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "David Guetta",
+        "poster": "artistfolder-david-guetta.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-artist-david-guetta-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-david-guetta-tomorrowland-mainstage",
+                "label": "2025 - David Guetta - Tomorrowland [Mainstage]",
+                "poster": "set-2025-david-guetta-tomorrowland-mainstage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-david-guetta-unvrs-ibiza-galactic-circus",
+                "label": "2025 - David Guetta - [UNVRS] Ibiza [Galactic Circus]",
+                "poster": "set-2025-david-guetta-unvrs-ibiza-galactic-circus.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Martin Garrix",
+        "poster": "artistfolder-martin-garrix.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2024",
+            "poster": "yearfolder-artist-martin-garrix-2024.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2024-martin-garrix-amf",
+                "label": "2024 - Martin Garrix - AMF",
+                "poster": "set-2024-martin-garrix-amf.jpg"
+              }
+            ]
+          },
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-artist-martin-garrix-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-martin-garrix-tomorrowland-mainstage",
+                "label": "2025 - Martin Garrix - Tomorrowland [Mainstage]",
+                "poster": "set-2025-martin-garrix-tomorrowland-mainstage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-martin-garrix-edc-las-vegas-kineticfield",
+                "label": "2025 - Martin Garrix - EDC Las Vegas [kineticFIELD]",
+                "poster": "set-2025-martin-garrix-edc-las-vegas-kineticfield.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-martin-garrix-red-rocks",
+                "label": "2025 - Martin Garrix - Red Rocks",
+                "poster": "set-2025-martin-garrix-red-rocks.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Swedish House Mafia",
+        "poster": "artistfolder-swedish-house-mafia.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-artist-swedish-house-mafia-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-swedish-house-mafia-tomorrowland-mainstage",
+                "label": "2025 - Swedish House Mafia - Tomorrowland [Mainstage]",
+                "poster": "set-2025-swedish-house-mafia-tomorrowland-mainstage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-swedish-house-mafia-creamfields-arc-stage",
+                "label": "2025 - Swedish House Mafia - Creamfields [ARC Stage]",
+                "poster": "set-2025-swedish-house-mafia-creamfields-arc-stage.jpg"
+              }
+            ]
+          },
+          {
+            "type": "folder",
+            "label": "2026",
+            "poster": "yearfolder-artist-swedish-house-mafia-2026.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2026-swedish-house-mafia-umf-miami-mainstage",
+                "label": "2026 - Swedish House Mafia - UMF Miami [Mainstage]",
+                "poster": "set-2026-swedish-house-mafia-umf-miami-mainstage.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Tiesto",
+        "poster": "artistfolder-tiesto.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2024",
+            "poster": "yearfolder-artist-tiesto-2024.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2024-tiesto-amf",
+                "label": "2024 - Tiesto - AMF",
+                "poster": "set-2024-tiesto-amf.jpg"
+              }
+            ]
+          },
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-artist-tiesto-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-tiesto-edc-las-vegas-circuitgrounds",
+                "label": "2025 - Tiesto - EDC Las Vegas [circuitGROUNDS]",
+                "poster": "set-2025-tiesto-edc-las-vegas-circuitgrounds.jpg"
+              }
+            ]
+          },
+          {
+            "type": "folder",
+            "label": "2026",
+            "poster": "yearfolder-artist-tiesto-2026.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2026-tiesto-we-belong-here",
+                "label": "2026 - Tiesto - We Belong Here",
+                "poster": "set-2026-tiesto-we-belong-here.jpg"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "place_nested": [
+      {
+        "type": "folder",
+        "label": "AMF",
+        "poster": "festfolder-amf.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2024",
+            "poster": "yearfolder-place-amf-2024.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2024-martin-garrix-amf",
+                "label": "2024 - Martin Garrix - AMF",
+                "poster": "set-2024-martin-garrix-amf.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2024-tiesto-amf",
+                "label": "2024 - Tiesto - AMF",
+                "poster": "set-2024-tiesto-amf.jpg"
+              }
+            ]
+          },
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-place-amf-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-armin-van-buuren-amf",
+                "label": "2025 - Armin van Buuren - AMF",
+                "poster": "set-2025-armin-van-buuren-amf.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "ASOT",
+        "poster": "festfolder-asot.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2026",
+            "poster": "yearfolder-place-asot-2026.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2026-armin-van-buuren-asot-area-one",
+                "label": "2026 - Armin van Buuren - ASOT [Area One]",
+                "poster": "set-2026-armin-van-buuren-asot-area-one.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Creamfields",
+        "poster": "festfolder-creamfields.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-place-creamfields-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-swedish-house-mafia-creamfields-arc-stage",
+                "label": "2025 - Swedish House Mafia - Creamfields [ARC Stage]",
+                "poster": "set-2025-swedish-house-mafia-creamfields-arc-stage.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "EDC Las Vegas",
+        "poster": "festfolder-edc-las-vegas.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-place-edc-las-vegas-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-armin-van-buuren-edc-las-vegas-kineticfield",
+                "label": "2025 - Armin van Buuren - EDC Las Vegas [kineticFIELD]",
+                "poster": "set-2025-armin-van-buuren-edc-las-vegas-kineticfield.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-martin-garrix-edc-las-vegas-kineticfield",
+                "label": "2025 - Martin Garrix - EDC Las Vegas [kineticFIELD]",
+                "poster": "set-2025-martin-garrix-edc-las-vegas-kineticfield.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-tiesto-edc-las-vegas-circuitgrounds",
+                "label": "2025 - Tiesto - EDC Las Vegas [circuitGROUNDS]",
+                "poster": "set-2025-tiesto-edc-las-vegas-circuitgrounds.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Red Rocks",
+        "poster": "festfolder-red-rocks.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-place-red-rocks-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-martin-garrix-red-rocks",
+                "label": "2025 - Martin Garrix - Red Rocks",
+                "poster": "set-2025-martin-garrix-red-rocks.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Tomorrowland",
+        "poster": "festfolder-tomorrowland.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-place-tomorrowland-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-armin-van-buuren-tomorrowland-mainstage",
+                "label": "2025 - Armin van Buuren - Tomorrowland [Mainstage]",
+                "poster": "set-2025-armin-van-buuren-tomorrowland-mainstage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-armin-van-buuren-tomorrowland-freedom-stage",
+                "label": "2025 - Armin van Buuren - Tomorrowland [Freedom Stage]",
+                "poster": "set-2025-armin-van-buuren-tomorrowland-freedom-stage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-martin-garrix-tomorrowland-mainstage",
+                "label": "2025 - Martin Garrix - Tomorrowland [Mainstage]",
+                "poster": "set-2025-martin-garrix-tomorrowland-mainstage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-swedish-house-mafia-tomorrowland-mainstage",
+                "label": "2025 - Swedish House Mafia - Tomorrowland [Mainstage]",
+                "poster": "set-2025-swedish-house-mafia-tomorrowland-mainstage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-david-guetta-tomorrowland-mainstage",
+                "label": "2025 - David Guetta - Tomorrowland [Mainstage]",
+                "poster": "set-2025-david-guetta-tomorrowland-mainstage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2025-anyma-tomorrowland-mainstage",
+                "label": "2025 - Anyma - Tomorrowland [Mainstage]",
+                "poster": "set-2025-anyma-tomorrowland-mainstage.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "Tomorrowland Brasil",
+        "poster": "festfolder-tomorrowland-brasil.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-place-tomorrowland-brasil-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-armin-van-buuren-tomorrowland-brasil-mainstage",
+                "label": "2025 - Armin van Buuren - Tomorrowland Brasil [Mainstage]",
+                "poster": "set-2025-armin-van-buuren-tomorrowland-brasil-mainstage.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "UMF Miami",
+        "poster": "festfolder-umf-miami.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2026",
+            "poster": "yearfolder-place-umf-miami-2026.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2026-armin-van-buuren-umf-miami-mainstage",
+                "label": "2026 - Armin van Buuren - UMF Miami [Mainstage]",
+                "poster": "set-2026-armin-van-buuren-umf-miami-mainstage.jpg"
+              },
+              {
+                "type": "set",
+                "id": "2026-swedish-house-mafia-umf-miami-mainstage",
+                "label": "2026 - Swedish House Mafia - UMF Miami [Mainstage]",
+                "poster": "set-2026-swedish-house-mafia-umf-miami-mainstage.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "We Belong Here",
+        "poster": "festfolder-we-belong-here.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2026",
+            "poster": "yearfolder-place-we-belong-here-2026.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2026-tiesto-we-belong-here",
+                "label": "2026 - Tiesto - We Belong Here",
+                "poster": "set-2026-tiesto-we-belong-here.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "label": "[UNVRS] Ibiza",
+        "poster": "festfolder-unvrs-ibiza.jpg",
+        "children": [
+          {
+            "type": "folder",
+            "label": "2025",
+            "poster": "yearfolder-place-unvrs-ibiza-2025.jpg",
+            "children": [
+              {
+                "type": "set",
+                "id": "2025-david-guetta-unvrs-ibiza-galactic-circus",
+                "label": "2025 - David Guetta - [UNVRS] Ibiza [Galactic Circus]",
+                "poster": "set-2025-david-guetta-unvrs-ibiza-galactic-circus.jpg"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "sets": {
+    "2025-armin-van-buuren-tomorrowland-mainstage": {
+      "title": "Armin van Buuren @ Mainstage, Tomorrowland",
+      "artists": [
+        "Armin van Buuren"
+      ],
+      "album": "Tomorrowland 2025",
+      "premiered": "2025-07-25",
+      "genres": [
+        "Trance",
+        "Techno",
+        "Melodic House/Techno",
+        "Tech House"
+      ],
+      "tags": [
+        "festival_set",
+        "Tomorrowland",
+        "Armin van Buuren"
+      ],
+      "studio": "Mainstage",
+      "runtime": "59",
+      "stage": "Mainstage",
+      "set_poster": "set-2025-armin-van-buuren-tomorrowland-mainstage.jpg",
+      "chapters": [
+        {
+          "time": "00:12",
+          "title": "Armin van Buuren & JOA - Heavy (Intro Edit) [ARMADA]"
+        },
+        {
+          "time": "04:02",
+          "title": "Hel:sløwed & Nina de Koning vs. Dada Life - Give It To Me vs. Kick Out The Epic Motherfucker (Armin van Buuren Mashup) [SO MUCH DADA/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "06:39",
+          "title": "Laidback Luke & Vion Konger vs. Armin van Buuren & Vini Vici & Hilight Tribe - Rocking With The Best vs. Great Spirit (Armin van Buuren Mashup) [ARMIND (ARMADA)/SMASH THE HOUSE]"
+        },
+        {
+          "time": "08:32",
+          "title": "Armin van Buuren & Martin Garrix ft. Libby Whitehouse - Sleepless Nights [ARMADA/STMPD]"
+        },
+        {
+          "time": "11:40",
+          "title": "Armin van Buuren ft. JAI RYU - Let It Be For Love (138 Mix) [ARMADA]"
+        },
+        {
+          "time": "14:06",
+          "title": "Travis Scott & Playboi Carti vs. Armin van Buuren & Omnia - FE!N vs. Love (Fafaq Edit) [CACTUS JACK/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "15:50",
+          "title": "Avancada vs. Darius & Finlay - Xplode (Yoel Lewis & Graham Bell Remix / Andrew Rayel Rework) [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "17:45",
+          "title": "Armin van Buuren & Adam Beyer vs. D-Shake - Techno Trance [DRUMCODE/ARMADA]"
+        },
+        {
+          "time": "21:00",
+          "title": "Armin van Buuren - Ring Ring [ARMADA]"
+        },
+        {
+          "time": "24:00",
+          "title": "Armin van Buuren ft. SACHA - Set Me Free (Rising Star Remix) [ARMADA]"
+        },
+        {
+          "time": "28:11",
+          "title": "Alice Deejay - Better Off Alone (Olly James Techno Rework)"
+        },
+        {
+          "time": "29:34",
+          "title": "Armin van Buuren & Richard Durand & Dicosis - Always You (ASOT 2026 ELEVATION Anthem) [ASOT (ARMADA)]"
+        },
+        {
+          "time": "32:55",
+          "title": "Argy & Omnya - Aria (onTune & Indecent Noise Remix) [AFTERLIFE]"
+        },
+        {
+          "time": "34:47",
+          "title": "Armin van Buuren & Alle Farben ft. ROSY - Lost In Time [ARMADA]"
+        },
+        {
+          "time": "38:09",
+          "title": "MK ft. CHRYSTAL - Dior (Bassjackers Remix) [FREE]"
+        },
+        {
+          "time": "40:16",
+          "title": "Storm - Time To Burn (David Forbes Remix) [BLACK HOLE]"
+        },
+        {
+          "time": "41:35",
+          "title": "Fatboy Slim - Rockafeller Skank (onTune & Indecent Noise Bootleg)"
+        },
+        {
+          "time": "44:11",
+          "title": "The Rocketman & Push - Strange World [ARMADA]"
+        },
+        {
+          "time": "46:28",
+          "title": "Armin van Buuren ft. Mary Jensen - Go All Night [ARMADA]"
+        },
+        {
+          "time": "48:45",
+          "title": "Armin van Buuren & Maddix ft. Caroline Roxy - Mouth Go LaLa [ARMADA]"
+        },
+        {
+          "time": "52:16",
+          "title": "W&W & Armin van Buuren vs. Wolfpack & Warp Brothers - Ready To Phatt Bass (Warp Brothers Mashup) [SMASH THE HOUSE/RAVE CULTURE]"
+        },
+        {
+          "time": "54:00",
+          "title": "Armin van Buuren - Blah Blah Blah (Lilly Palmer Remix) [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "56:12",
+          "title": "Armin van Buuren ft. Trevor Guthrie - This Is What It Feels Like (Benwal Remix) [ARMIND (ARMADA)]"
+        }
+      ]
+    },
+    "2025-armin-van-buuren-tomorrowland-freedom-stage": {
+      "title": "Armin van Buuren @ Freedom Stage, Tomorrowland",
+      "artists": [
+        "Armin van Buuren"
+      ],
+      "album": "Tomorrowland 2025",
+      "premiered": "2025-07-19",
+      "genres": [
+        "Trance",
+        "Techno",
+        "Melodic House/Techno",
+        "Dance/Electro Pop",
+        "Electronica"
+      ],
+      "tags": [
+        "festival_set",
+        "Tomorrowland",
+        "Armin van Buuren"
+      ],
+      "studio": "Freedom Stage",
+      "runtime": "156",
+      "stage": "Freedom Stage",
+      "set_poster": "set-2025-armin-van-buuren-tomorrowland-freedom-stage.jpg",
+      "chapters": [
+        {
+          "time": "00:12",
+          "title": "Armin van Buuren ft. JAI RYU - Let It Be For Love (Intro Edit) [ARMADA]"
+        },
+        {
+          "time": "06:17",
+          "title": "Travis Scott & Playboi Carti vs. Armin van Buuren & Omnia - FE!N vs. Love (Fafaq Edit) [CACTUS JACK/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "10:16",
+          "title": "Armin van Buuren & The Stickmen Project - No Fun (Armin van Buuren Club Mix) [ARMADA]"
+        },
+        {
+          "time": "12:25",
+          "title": "DIM3NSION & Kadett - Turning [ASOT (ARMADA)]"
+        },
+        {
+          "time": "14:08",
+          "title": "Armin van Buuren & Innellea - Purpose"
+        },
+        {
+          "time": "18:20",
+          "title": "NWYR vs. Armin van Buuren & Anne Gudrun - Venom vs. Love Is A Drug (Armin van Buuren Mashup) [RAVE CULTURE/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "20:35",
+          "title": "Armin van Buuren & JOA - Heavy [ARMADA]"
+        },
+        {
+          "time": "24:16",
+          "title": "Hel:sløwed & Nina de Koning vs. Dada Life - Give It To Me vs. Kick Out The Epic Motherfucker (Armin van Buuren Mashup) [SO MUCH DADA/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "27:13",
+          "title": "Northern Project - Falling Down (Eugenio Tokarev Remix) [ELPIDA MUSIC (BLACK HOLE)]"
+        },
+        {
+          "time": "30:27",
+          "title": "ARTBAT - Galaxy [MAHOOL]"
+        },
+        {
+          "time": "34:05",
+          "title": "Adam Beyer & Chris Avantgarde - Desolate Lands [DRUMCODE]"
+        },
+        {
+          "time": "37:18",
+          "title": "ARTBAT & Armin van Buuren - Take Off [ARMADA/UPPERGROUND]"
+        },
+        {
+          "time": "41:02",
+          "title": "OTTAGON - We Are Free [ARMADA]"
+        },
+        {
+          "time": "45:18",
+          "title": "Beatz from L.E. - Take Off [BEMIND]"
+        },
+        {
+          "time": "47:40",
+          "title": "Chocolate Puma - Let Your Mind Be Free [ARMADA]"
+        },
+        {
+          "time": "51:06",
+          "title": "Armin van Buuren & Punctual ft. Alika - On & On (JOA Remix) [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "53:52",
+          "title": "Adam Beyer - Taking Back Control [DRUMCODE]"
+        },
+        {
+          "time": "56:19",
+          "title": "ARTBAT & JOA - The Spot [UPPERGROUND]"
+        },
+        {
+          "time": "59:20",
+          "title": "Armin van Buuren & Vion Konger - Bam Baya [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "01:03:03",
+          "title": "Argy & MEDUZA ft. PollyAnna - Melodia [AETERNA]"
+        },
+        {
+          "time": "01:06:28",
+          "title": "Armin van Buuren - We Own The Night [ASOT (ARMADA)]"
+        },
+        {
+          "time": "01:09:34",
+          "title": "Armin van Buuren & Alle Farben ft. ROSY - Lost In Time [ARMADA]"
+        },
+        {
+          "time": "01:13:18",
+          "title": "TELYKAST & Oaks - Super Powers (Giuseppe Ottaviani Remix) [ARMADA]"
+        },
+        {
+          "time": "01:16:02",
+          "title": "Gareth Emery ft. Christina Novelli - Concrete Angel (Daxson Remix) [GARUDA]"
+        },
+        {
+          "time": "01:19:52",
+          "title": "Armin van Buuren & Adam Beyer vs. D-Shake - Techno Trance [DRUMCODE/ARMADA]"
+        },
+        {
+          "time": "01:23:40",
+          "title": "Armin van Buuren - Ring Ring [ARMADA]"
+        },
+        {
+          "time": "01:27:08",
+          "title": "Armin van Buuren & Andrew Bayer - Need You By My Side [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "01:29:47",
+          "title": "Armin van Buuren & BLR - Bach To The Future [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "01:32:45",
+          "title": "Armin van Buuren ft. SACHA - Set Me Free (Rising Star Remix) [ARMADA]"
+        },
+        {
+          "time": "01:35:18",
+          "title": "Alice Deejay - Better Off Alone (Olly James Techno Rework)"
+        },
+        {
+          "time": "01:37:07",
+          "title": "Armin van Buuren & Richard Durand & Dicosis - Always You (ASOT 2026 ELEVATION Anthem) [ASOT (ARMADA)]"
+        },
+        {
+          "time": "01:40:30",
+          "title": "Armin van Buuren & Gryffin - What Took You So Long [ARMADA]"
+        },
+        {
+          "time": "01:43:37",
+          "title": "Armin van Buuren & Hannah Laing & Wippenberg - U Got 2 Know [ARMADA]"
+        },
+        {
+          "time": "01:45:40",
+          "title": "Armin van Buuren & Martin Garrix ft. Libby Whitehouse - Sleepless Nights (Armin van Buuren Trance Remix) [ARMADA/STMPD]"
+        },
+        {
+          "time": "01:49:55",
+          "title": "onTune - Adagio For Strings [WHO'S AFRAID OF 138/ARMADA]"
+        },
+        {
+          "time": "01:52:35",
+          "title": "Ben Gold - How You Feelin' [BEBÉ]"
+        },
+        {
+          "time": "01:55:44",
+          "title": "Armin van Buuren - Blue Fear (Steve Dekay Remix) [ASOT (ARMADA)]"
+        },
+        {
+          "time": "01:58:08",
+          "title": "The Rocketman & Push - Strange World [ARMADA]"
+        },
+        {
+          "time": "02:00:20",
+          "title": "Anyma & Argy & Son Of Son - Voices In My Head (Nifra Remix) [ARTS]"
+        },
+        {
+          "time": "02:02:35",
+          "title": "Storm - Time To Burn (David Forbes Remix) [BLACK HOLE]"
+        },
+        {
+          "time": "02:04:15",
+          "title": "Dan Cooper vs. Tiesto vs. John Summit & HAYLA - Recuperation 303 vs. Lethal Industry vs. Where You Are (Armin van Buuren Mashup) [MAGIK MUZIK (BLACK HOLE)/EXPERTS ONLY/DARKROOM REC./NOCTURNAL KNIGHTS FUSION]"
+        },
+        {
+          "time": "02:06:40",
+          "title": "ID - ID"
+        },
+        {
+          "time": "02:09:26",
+          "title": "Armin van Buuren ft. Mary Jensen - Go All Night [ARMADA]"
+        },
+        {
+          "time": "02:13:07",
+          "title": "Fatboy Slim - Rockafeller Skank (onTune & Indecent Noise Bootleg)"
+        },
+        {
+          "time": "02:16:23",
+          "title": "Armin van Buuren & Maddix ft. Caroline Roxy - Mouth Go LaLa [ARMADA]"
+        },
+        {
+          "time": "02:20:25",
+          "title": "Armin van Buuren vs. Cosmic Gate vs. Susana - Space Case vs. Exploration Of Space vs. Shivers (Armin van Buuren Mashup) [WAKE YOUR MIND (BLACK HOLE)/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "02:23:30",
+          "title": "David Forbes vs. Scooter & Giuseppe Ottaviani - Techno Is My Only Drug vs. Hyper Hyper (Armin van Buuren Mashup) [SHEFFIELD TUNES/ZEITGEIST/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "02:26:25",
+          "title": "Hi Profile vs. Armin van Buuren vs. Vini Vici ft. Hilight Tribe - The Ghost vs. Great Spirit (Vini Vici Mashup) [IBOGA/ARMIND (ARMADA)/ALTEZA (SMASH THE HOUSE)]"
+        },
+        {
+          "time": "02:28:53",
+          "title": "Faithless & Ben Nicky & Luke Bond vs. Paul Denton - Insomnia vs. Siren (Armin van Buuren Mashup) [SONY BMG/DREAMSTATE]"
+        },
+        {
+          "time": "02:32:00",
+          "title": "Armin van Buuren & ALOK & Norma Jean Martine & LAWRENT - Euphoria (Sound Rush Remix) [ARMADA/B1]"
+        }
+      ]
+    },
+    "2025-armin-van-buuren-edc-las-vegas-kineticfield": {
+      "title": "Armin van Buuren @ kineticFIELD, EDC Las Vegas",
+      "artists": [
+        "Armin van Buuren"
+      ],
+      "album": "EDC Las Vegas 2025",
+      "premiered": "2025-05-18",
+      "genres": [
+        "Trance",
+        "Techno",
+        "Mainstage",
+        "Tech House",
+        "Melodic House/Techno"
+      ],
+      "tags": [
+        "festival_set",
+        "EDC",
+        "Las Vegas",
+        "Armin van Buuren"
+      ],
+      "studio": "kineticFIELD",
+      "runtime": "75",
+      "stage": "kineticFIELD",
+      "set_poster": "set-2025-armin-van-buuren-edc-las-vegas-kineticfield.jpg",
+      "chapters": [
+        {
+          "time": "06:20",
+          "title": "Armin van Buuren & Omnia - Love (138 Psy Mix) [ARMADA]"
+        },
+        {
+          "time": "08:06",
+          "title": "Travis Scott & Playboi Carti vs. Armin van Buuren & Omnia - FE!N vs. Love (Fafaq Edit)"
+        },
+        {
+          "time": "10:05",
+          "title": "Armin van Buuren & Andrew Bayer - Need You By My Side [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "12:45",
+          "title": "Armin van Buuren & BLR - Bach To The Future [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "15:32",
+          "title": "Armin van Buuren & Adam Beyer vs. D-Shake - Techno Trance [DRUMCODE/ARMADA]"
+        },
+        {
+          "time": "18:33",
+          "title": "Adam Port & Stryv ft. Malachiii - Move (Bassjackers Remix)"
+        },
+        {
+          "time": "21:16",
+          "title": "Armin van Buuren ft. Sylvia Tosun - Song In My Heart"
+        },
+        {
+          "time": "24:57",
+          "title": "Armin van Buuren ft. SACHA - Set Me Free (Rising Star Remix) [ARMADA]"
+        },
+        {
+          "time": "27:26",
+          "title": "Alice Deejay - Better Off Alone (Olly James Techno Rework)"
+        },
+        {
+          "time": "29:03",
+          "title": "Armin van Buuren & Richard Durand & Dicosis - Always You (ASOT 2026 ELEVATION Anthem) [ASOT (ARMADA)]"
+        },
+        {
+          "time": "32:23",
+          "title": "Armin van Buuren & Hardwell - Follow The Light [REVEALED]"
+        },
+        {
+          "time": "35:44",
+          "title": "Dom Dolla ft. Daya - Dreamin (Olly James Rework) [FREE]"
+        },
+        {
+          "time": "37:12",
+          "title": "Armin van Buuren & Seth Hills ft. Alessia Labate - Gimme The Love [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "40:25",
+          "title": "Armin van Buuren & KI/KI - Put Your Bassline [ARMADA]"
+        },
+        {
+          "time": "43:01",
+          "title": "Armin van Buuren & Gryffin - What Took You So Long [ARMADA]"
+        },
+        {
+          "time": "45:42",
+          "title": "Armin van Buuren & Maddix vs. Sharon Den Adel vs. David Forbes - Computers Take Over The World vs. In And Out Of Love vs. Sidewinder (Armin van Buuren Mashup) [ARMADA/ARMIND/WHO'S AFRAID OF 138]"
+        },
+        {
+          "time": "48:15",
+          "title": "Armin van Buuren & JOA - Heavy [ARMADA]"
+        },
+        {
+          "time": "51:00",
+          "title": "Eli Brown - Wavey [INSOMNIAC]"
+        },
+        {
+          "time": "52:22",
+          "title": "Kay D. Smith & Marc Tall & Ben Gold vs. Cloonee & InntRaw & Young M.A - Hoipolloi vs. Stephanie (Armin van Buuren Mashup) [HIGH CONTRAST (BE YOURSELF)/HELLBENT]"
+        },
+        {
+          "time": "54:17",
+          "title": "Armin van Buuren ft. Mary Jensen - Go All Night [ARMADA]"
+        },
+        {
+          "time": "57:43",
+          "title": "Armin van Buuren & Maddix ft. Caroline Roxy - Mouth Go LaLa [ARMADA]"
+        },
+        {
+          "time": "01:01:56",
+          "title": "Brennan Heart & HI-LO & Project Zeitgeist - Adagio For Strings [HILOMATIK]"
+        },
+        {
+          "time": "01:04:06",
+          "title": "Armin van Buuren & W&W - Late Checkout (Will Atkinson Remix) [ARMADA]"
+        },
+        {
+          "time": "01:07:01",
+          "title": "Faithless & Ben Nicky & Luke Bond vs. Paul Denton - Insomnia vs. Siren (Armin van Buuren Mashup) [SONY BMG/DREAMSTATE]"
+        },
+        {
+          "time": "01:09:10",
+          "title": "Armin van Buuren - Blah Blah Blah (Lilly Palmer Remix) [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "01:11:36",
+          "title": "Armin van Buuren & ALOK & Norma Jean Martine & LAWRENT - Euphoria (Sound Rush Remix) [ARMADA/B1]"
+        }
+      ]
+    },
+    "2025-armin-van-buuren-amf": {
+      "title": "Armin van Buuren @ AMF",
+      "artists": [
+        "Armin van Buuren"
+      ],
+      "album": "AMF 2025",
+      "premiered": "2025-10-25",
+      "genres": [
+        "Trance",
+        "Techno",
+        "Dance/Electro Pop",
+        "Melodic House/Techno"
+      ],
+      "tags": [
+        "festival_set",
+        "AMF",
+        "Armin van Buuren"
+      ],
+      "studio": "",
+      "runtime": "76",
+      "stage": "",
+      "set_poster": "set-2025-armin-van-buuren-amf.jpg",
+      "chapters": [
+        {
+          "time": "00:00",
+          "title": "Armin van Buuren & Alle Farben ft. ROSY - Lost In Time (Intro Edit) [ARMADA]"
+        },
+        {
+          "time": "07:15",
+          "title": "Armin van Buuren & JOA - Heavy (DJ KUBA & NEITAN Remix) [ARMADA]"
+        },
+        {
+          "time": "09:27",
+          "title": "Armin van Buuren & R3HAB - Amsterdam [ARMADA]"
+        },
+        {
+          "time": "13:00",
+          "title": "Armin van Buuren & Adam Beyer vs. D-Shake - Techno Trance [DRUMCODE/ARMADA]"
+        },
+        {
+          "time": "16:20",
+          "title": "Armin van Buuren - Ring Ring [ARMADA]"
+        },
+        {
+          "time": "18:55",
+          "title": "Cassian & YOTTO & Da Hool - Love Parade [AFTERLIFE]"
+        },
+        {
+          "time": "20:57",
+          "title": "ID - ID"
+        },
+        {
+          "time": "24:41",
+          "title": "Armin van Buuren - Sonic Samba (Rising Star Remix) [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "28:37",
+          "title": "Avancada vs. Darius & Finlay - Xplode (Yoel Lewis & Graham Bell Remix / Andrew Rayel Rework) [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "29:50",
+          "title": "Armin van Buuren ft. SACHA - Set Me Free (Rising Star Remix) (Live) [ARMADA]"
+        },
+        {
+          "time": "34:10",
+          "title": "Alice Deejay - Better Off Alone (Olly James Techno Rework)"
+        },
+        {
+          "time": "35:47",
+          "title": "Armin van Buuren & Richard Durand & Dicosis - Always You (ASOT 2026 ELEVATION Anthem) [ASOT (ARMADA)]"
+        },
+        {
+          "time": "39:20",
+          "title": "Ahmed Helmy & Doppenberg pres. HEL:BRG vs. Argy & Omnya vs. Armin van Buuren - Who We'd Become vs. Aria vs. Communication (Armin van Buuren Mashup) [ARMIND (ARMADA)/AFTERLIFE/REVEALED]"
+        },
+        {
+          "time": "41:54",
+          "title": "Kesha - DELUSIONAL. (Armin van Buuren Remix) [KESHA]"
+        },
+        {
+          "time": "45:14",
+          "title": "Hi-Gate - Pitchin' (In Every Direction) (Shugz & Trance Wax Remix) [ALL WAYS DANCE]"
+        },
+        {
+          "time": "48:20",
+          "title": "Giuseppe Ottaviani & Ultra Shock - The Sound Of E [ARMADA]"
+        },
+        {
+          "time": "50:38",
+          "title": "Armin van Buuren & Maddix ft. Caroline Roxy - Mouth Go LaLa [ARMADA]"
+        },
+        {
+          "time": "53:20",
+          "title": "Cosmic Gate - Exploration Of Space (Olly James Remix) [FREE]"
+        },
+        {
+          "time": "55:50",
+          "title": "Darude & Skytech vs. Dada Life - Sandstorm vs. Kick Out The Epic Motherfucker (Armin van Buuren Mashup) [SO MUCH DADA/ACTUATION]"
+        },
+        {
+          "time": "59:45",
+          "title": "Armin van Buuren & Lilly Palmer - Dopamine Machine [ARMADA]"
+        },
+        {
+          "time": "01:02:00",
+          "title": "Storm - Time To Burn (David Forbes Remix) [BLACK HOLE]"
+        },
+        {
+          "time": "01:03:50",
+          "title": "Armin van Buuren & DIØN - Burn It Up"
+        },
+        {
+          "time": "01:08:00",
+          "title": "DIØN - Taka Tribe [ARMADA]"
+        },
+        {
+          "time": "01:10:03",
+          "title": "Armin van Buuren - Blah Blah Blah (Lilly Palmer Remix) [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "01:13:07",
+          "title": "Armin van Buuren ft. Trevor Guthrie - This Is What It Feels Like (Benwal Remix) (Live) [ARMIND (ARMADA)]"
+        }
+      ]
+    },
+    "2025-armin-van-buuren-tomorrowland-brasil-mainstage": {
+      "title": "Armin van Buuren @ Mainstage, Tomorrowland Brasil",
+      "artists": [
+        "Armin van Buuren"
+      ],
+      "album": "Tomorrowland Brasil 2025",
+      "premiered": "2025-10-10",
+      "genres": [
+        "Dance/Electro Pop",
+        "Trance",
+        "Techno",
+        "Melodic House/Techno"
+      ],
+      "tags": [
+        "festival_set",
+        "Tomorrowland",
+        "Brasil",
+        "Armin van Buuren"
+      ],
+      "studio": "Mainstage",
+      "runtime": "58",
+      "stage": "Mainstage",
+      "set_poster": "set-2025-armin-van-buuren-tomorrowland-brasil-mainstage.jpg",
+      "chapters": [
+        {
+          "time": "00:12",
+          "title": "Armin van Buuren ft. JAI RYU - Let It Be For Love (Intro Edit) [ARMADA]"
+        },
+        {
+          "time": "04:34",
+          "title": "Travis Scott & Playboi Carti vs. Armin van Buuren & Omnia - FE!N vs. Love (Fafaq Edit) [CACTUS JACK/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "06:40",
+          "title": "Armin van Buuren & Pete Tong ft. Poppy Baskcomb - Toca's Miracle [MINISTRY OF SOUND]"
+        },
+        {
+          "time": "10:23",
+          "title": "Armin van Buuren & Glockenbach - Sun Shines On Me [ARMADA]"
+        },
+        {
+          "time": "13:56",
+          "title": "Armin van Buuren & JOA - Heavy [ARMADA]"
+        },
+        {
+          "time": "17:15",
+          "title": "Hel:sløwed & Nina de Koning vs. Dada Life - Give It To Me vs. Kick Out The Epic Motherfucker (Armin van Buuren Mashup) [SO MUCH DADA/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "19:19",
+          "title": "Martin Garrix & R3HAB & Skytech vs. Empire Of The Sun - Voodoo vs. Walking On A Dream (Martin Garrix Mashup) [SOUKSONIC/STMPD]"
+        },
+        {
+          "time": "20:35",
+          "title": "Armin van Buuren & Sharon Den Adel vs. OTTAGON - In And Out Of Love vs. Fathers And Sons (Armin van Buuren Mashup) [ARMADA/ASOT]"
+        },
+        {
+          "time": "24:23",
+          "title": "Armin van Buuren & Alle Farben ft. ROSY - Lost In Time [ARMADA]"
+        },
+        {
+          "time": "28:24",
+          "title": "Armin van Buuren & Adam Beyer vs. D-Shake - Techno Trance [DRUMCODE/ARMADA]"
+        },
+        {
+          "time": "31:42",
+          "title": "Avancada vs. Darius & Finlay - Xplode (Yoel Lewis & Graham Bell Remix / Andrew Rayel Rework) [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "33:35",
+          "title": "Armin van Buuren ft. SACHA - Set Me Free (Rising Star Remix) [ARMADA]"
+        },
+        {
+          "time": "37:59",
+          "title": "Alice Deejay - Better Off Alone (Olly James Techno Rework)"
+        },
+        {
+          "time": "39:21",
+          "title": "Armin van Buuren & Richard Durand & Dicosis - Always You (ASOT 2026 ELEVATION Anthem) [ASOT (ARMADA)]"
+        },
+        {
+          "time": "42:42",
+          "title": "Argy & Omnya - Aria (onTune & Indecent Noise Remix) [AFTERLIFE]"
+        },
+        {
+          "time": "44:13",
+          "title": "Kesha - DELUSIONAL. (Armin van Buuren Remix) [KESHA]"
+        },
+        {
+          "time": "47:31",
+          "title": "Skytech - Sandstorm [ACTUATION]"
+        },
+        {
+          "time": "49:44",
+          "title": "DIØN - Taka Tribe [ARMADA]"
+        },
+        {
+          "time": "51:28",
+          "title": "Armin van Buuren - Blah Blah Blah (Lilly Palmer Remix) [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "54:28",
+          "title": "Armin van Buuren ft. Trevor Guthrie - This Is What It Feels Like (Benwal Remix) (SACHA Live Vocals) [ARMIND (ARMADA)]"
+        }
+      ]
+    },
+    "2026-armin-van-buuren-umf-miami-mainstage": {
+      "title": "Armin van Buuren @ Mainstage, UMF Miami",
+      "artists": [
+        "Armin van Buuren"
+      ],
+      "album": "UMF Miami 2026",
+      "premiered": "2026-03-28",
+      "genres": [
+        "Trance",
+        "Techno",
+        "House",
+        "Melodic House/Techno"
+      ],
+      "tags": [
+        "festival_set",
+        "UMF",
+        "Miami",
+        "Armin van Buuren"
+      ],
+      "studio": "Mainstage",
+      "runtime": "60",
+      "stage": "Mainstage",
+      "set_poster": "set-2026-armin-van-buuren-umf-miami-mainstage.jpg",
+      "chapters": [
+        {
+          "time": "00:10",
+          "title": "Armin van Buuren - Awake (Intro Edit) [ARMADA]"
+        },
+        {
+          "time": "07:00",
+          "title": "Armin van Buuren ft. SACHA - Set Me Free (Rising Star Remix) [ARMADA]"
+        },
+        {
+          "time": "10:40",
+          "title": "Armin van Buuren & Eli Brown - Silence [ARMADA]"
+        },
+        {
+          "time": "14:06",
+          "title": "Armin van Buuren - ID (Love Is The Final Word)"
+        },
+        {
+          "time": "16:10",
+          "title": "Armin van Buuren & Alle Farben ft. ROSY - Lost In Time [ARMADA]"
+        },
+        {
+          "time": "19:57",
+          "title": "Armin van Buuren & JOA - Heavy (DJ KUBA & NEITAN Remix) [ARMADA]"
+        },
+        {
+          "time": "22:08",
+          "title": "Armin van Buuren & R3HAB - Amsterdam (Miami Edit) [ARMADA]"
+        },
+        {
+          "time": "23:41",
+          "title": "Armin van Buuren & Silver Panda - Here In My Arms (Enjoy The Silence) [ARMADA]"
+        },
+        {
+          "time": "26:20",
+          "title": "ID - ID"
+        },
+        {
+          "time": "29:44",
+          "title": "Armin van Buuren & Argy ft. Marlo Rex - Like A Child [ARMADA]"
+        },
+        {
+          "time": "32:47",
+          "title": "Armin van Buuren & Skytech - She A Freak [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "35:17",
+          "title": "Armin van Buuren & Adam Beyer - No Mercy"
+        },
+        {
+          "time": "37:55",
+          "title": "HI-LO vs. Armin van Buuren & Martin Garrix & Libby Whitehouse vs. Ørjan Nilsen - United In Trance vs. Sleepless Nights vs. Amsterdam (Armin van Buuren Mashup) [ARMIND (ARMADA)/STMPD/HILOMATIK]"
+        },
+        {
+          "time": "41:11",
+          "title": "Rising Star - ID"
+        },
+        {
+          "time": "44:23",
+          "title": "Armin van Buuren & Richard Durand & Dicosis - Always You (ASOT 2026 ELEVATION Anthem) [ASOT (ARMADA)]"
+        },
+        {
+          "time": "48:06",
+          "title": "Armin van Buuren ft. Mary Jensen - Go All Night [ARMADA]"
+        },
+        {
+          "time": "51:41",
+          "title": "Armin van Buuren & Olive Anguz - Vem Comigo [ARMADA]"
+        },
+        {
+          "time": "54:41",
+          "title": "MaRLo - ID"
+        },
+        {
+          "time": "57:02",
+          "title": "Armin van Buuren ft. Trevor Guthrie - This Is What It Feels Like (Benwal Remix) [ARMIND (ARMADA)]"
+        }
+      ]
+    },
+    "2026-armin-van-buuren-asot-area-one": {
+      "title": "Armin van Buuren @ Area One, ASOT",
+      "artists": [
+        "Armin van Buuren"
+      ],
+      "album": "ASOT 2026",
+      "premiered": "2026-02-28",
+      "genres": [
+        "Trance",
+        "Techno",
+        "Dance/Electro Pop",
+        "Melodic House/Techno",
+        "Hard Dance"
+      ],
+      "tags": [
+        "festival_set",
+        "ASOT",
+        "Armin van Buuren"
+      ],
+      "studio": "Area One",
+      "runtime": "89",
+      "stage": "Area One",
+      "set_poster": "set-2026-armin-van-buuren-asot-area-one.jpg",
+      "chapters": [
+        {
+          "time": "00:10",
+          "title": "Armin van Buuren & Richard Durand & Dicosis - Always You (ASOT 2026 ELEVATION Anthem) [ASOT (ARMADA)]"
+        },
+        {
+          "time": "04:47",
+          "title": "Armin van Buuren & Glockenbach - Sun Shines On Me (Rising Star Remix) [ARMADA]"
+        },
+        {
+          "time": "07:56",
+          "title": "Armin van Buuren & JOA - Heavy (DJ KUBA & NEITAN Remix) [ARMADA]"
+        },
+        {
+          "time": "10:07",
+          "title": "LUSSO - Control [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "12:20",
+          "title": "Armin van Buuren & Alle Farben ft. ROSY - Lost In Time [ARMADA]"
+        },
+        {
+          "time": "16:10",
+          "title": "Armin van Buuren & Eli Brown - Silence [ARMADA]"
+        },
+        {
+          "time": "20:08",
+          "title": "Armin van Buuren - ID (Love Is The Final Word)"
+        },
+        {
+          "time": "23:22",
+          "title": "Armin van Buuren & Argy ft. Marlo Rex - Like A Child [ARMADA]"
+        },
+        {
+          "time": "26:23",
+          "title": "Armin van Buuren & Arkham Knights vs. Alex M.O.R.P.H. vs. Luky Lou - Communication vs. Running For Peace vs. Sweet Escape (Armin van Buuren Mashup) [VANDIT/ARMADA]"
+        },
+        {
+          "time": "30:21",
+          "title": "David Forbes & Jardin - Offshore"
+        },
+        {
+          "time": "32:30",
+          "title": "Enrico Sangiuliano - Order In Chaos (Reactive Mix) [NINETOZERO]"
+        },
+        {
+          "time": "36:35",
+          "title": "nilsix - Outta My Head [ASOT (ARMADA)]"
+        },
+        {
+          "time": "39:53",
+          "title": "Argy & Omnya - Aria (onTune & Indecent Noise Remix) [AFTERLIFE]"
+        },
+        {
+          "time": "42:12",
+          "title": "Kesha - DELUSIONAL. (Armin van Buuren Remix) [KESHA]"
+        },
+        {
+          "time": "45:56",
+          "title": "Armin van Buuren & Hannah Laing & Wippenberg - U Got 2 Know [ARMADA]"
+        },
+        {
+          "time": "48:12",
+          "title": "Hi-Gate - Pitchin' (In Every Direction) (Shugz & Trance Wax Remix) [ALL WAYS DANCE]"
+        },
+        {
+          "time": "51:06",
+          "title": "DIM3NSION - Zarabanda [BEMIND]"
+        },
+        {
+          "time": "53:53",
+          "title": "Armin van Buuren ft. SACHA - Set Me Free (Rising Star Remix) [ARMADA]"
+        },
+        {
+          "time": "58:42",
+          "title": "Shogun ft. Melissa Loretta - Skyfire (Steve Allen & Devon Colombage Remix) [WHO'S AFRAID OF 138 (ARMADA)]"
+        },
+        {
+          "time": "01:01:55",
+          "title": "Armin van Buuren - Control Freak (Ed Lynam Remix) [ARMIND (ARMADA)]"
+        },
+        {
+          "time": "01:05:08",
+          "title": "ID - ID"
+        },
+        {
+          "time": "01:07:35",
+          "title": "Darude & Skytech vs. Dada Life - Sandstorm vs. Kick Out The Epic Motherfucker (Armin van Buuren Mashup) [SO MUCH DADA/ACTUATION]"
+        },
+        {
+          "time": "01:11:20",
+          "title": "Armin van Buuren & Olive Anguz - Vem Comigo [ARMADA]"
+        },
+        {
+          "time": "01:14:52",
+          "title": "Showtek pres. SHOWTEKNO & SURAYA - Toda La Noche [BE YOURSELF]"
+        },
+        {
+          "time": "01:18:36",
+          "title": "David Forbes - Diskotek [WHO'S AFRAID OF 138 (ARMADA)]"
+        },
+        {
+          "time": "01:21:10",
+          "title": "onTune - Flying Circus [DOOF]"
+        },
+        {
+          "time": "01:22:50",
+          "title": "Dimitri Vegas & Like Mike & Maddix & Da Hool ft. Kiki Solvej - Meet Her At The Love Parade [SMASH THE HOUSE]"
+        },
+        {
+          "time": "01:24:58",
+          "title": "Armin van Buuren vs. Cosmic Gate vs. Susana - Space Case vs. Exploration Of Space vs. Shivers (Armin van Buuren Mashup) [WAKE YOUR MIND (BLACK HOLE)/ARMIND (ARMADA)]"
+        }
+      ]
+    },
+    "2024-martin-garrix-amf": {
+      "title": "Martin Garrix @ AMF",
+      "artists": [
+        "Martin Garrix"
+      ],
+      "album": "AMF 2024",
+      "premiered": "2024-10-19",
+      "genres": [
+        "Mainstage",
+        "Dance/Electro Pop",
+        "House",
+        "Tech House",
+        "Bass House"
+      ],
+      "tags": [
+        "festival_set",
+        "AMF",
+        "Martin Garrix"
+      ],
+      "studio": "",
+      "runtime": "120",
+      "stage": "",
+      "set_poster": "set-2024-martin-garrix-amf.jpg",
+      "chapters": [
+        {
+          "time": "00:00",
+          "title": "Martin Garrix & Sem Vox ft. Jaimes - Gravity (Intro Edit) [STMPD]"
+        },
+        {
+          "time": "04:48",
+          "title": "Martin Garrix & Blinders ft. Ilsey Juber - Breach (Walk Alone) [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "06:02",
+          "title": "Matisse & Sadko - ID"
+        },
+        {
+          "time": "08:02",
+          "title": "Martin Garrix - Animals (Botnek Edit) [STMPD]"
+        },
+        {
+          "time": "09:38",
+          "title": "Justin Mylo & Ryos & Alessia Labate vs. Ivan Gough & Feenixpawl & Georgi Kay - Out Of Time vs. In My Mind (Martin Garrix Mashup) [AXTONE/STMPD]"
+        },
+        {
+          "time": "11:11",
+          "title": "Martin Garrix & Matisse & Sadko & BARBZ vs. Sander van Doorn & DVBBS & Aleesia - Butterflies vs. Gold Skies (Martin Garrix Mashup) [SPINNIN'/STMPD]"
+        },
+        {
+          "time": "12:56",
+          "title": "Martin Garrix & JVKE & DubVision vs. Kx5 & Hayla & John Summit - Hero vs. Escape (DubVision Mashup) [STMPD/ARKADE/MAU5TRAP]"
+        },
+        {
+          "time": "15:40",
+          "title": "Merow vs. Alesso & Tove Lo - ILY vs. Heroes (Martin Garrix Mashup) [REFUNE/STMPD]"
+        },
+        {
+          "time": "17:02",
+          "title": "Bassjackers vs. AFROJACK & Martin Garrix - Like That vs. Turn Up The Speakers (Martin Garrix Mashup) [SPINNIN'/SMASH THE HOUSE]"
+        },
+        {
+          "time": "18:48",
+          "title": "AFROJACK & Martin Garrix & David Guetta & Amél vs. Coldplay - Our Time vs. A Sky Full Of Stars (AFROJACK Mashup) [PARLOPHONE (WARNER MUSIC)/SPINNIN']"
+        },
+        {
+          "time": "21:15",
+          "title": "Martin Garrix & Sentinel vs. Avicii & Andreas Moe - Hurricane vs. Fade Into Darkness (Martin Garrix Mashup) [STMPD/LE7ELS/TOMORROWLAND]"
+        },
+        {
+          "time": "24:09",
+          "title": "R3HAB & Skytech - Hypnotising [STMPD]"
+        },
+        {
+          "time": "25:23",
+          "title": "Martin Garrix & Seth Hills vs. Armand van Helden & Ape Rave Club - Biochemical vs. I Want Your Soul (Martin Garrix Mashup) [STMPD/SOUTHERN FRIED]"
+        },
+        {
+          "time": "28:08",
+          "title": "Lewis Capaldi - Someone You Loved (Martin Garrix & Matisse & Sadko Remix) [VIRGIN]"
+        },
+        {
+          "time": "32:13",
+          "title": "Martin Garrix & Third ≡ Party ft. Oaks & Declan J Donovan - Carry You [STMPD]"
+        },
+        {
+          "time": "35:01",
+          "title": "Matisse & Sadko - Himalaya [STMPD]"
+        },
+        {
+          "time": "37:01",
+          "title": "Martin Garrix & DubVision ft. Shaun Farrugia - Wherever You Are [STMPD]"
+        },
+        {
+          "time": "38:51",
+          "title": "Third ≡ Party & Romeo Blanco vs. Imagine Dragons - Paradise vs. Demons (Third ≡ Party Mashup) [INTERSCOPE/STMPD]"
+        },
+        {
+          "time": "41:23",
+          "title": "Martin Garrix & Third ≡ Party ft. Max McElligott - Lions In The Wild [STMPD/RELEASE]"
+        },
+        {
+          "time": "43:16",
+          "title": "DubVision vs. The Chemical Brothers & ARTBAT - Run vs. Hey Boy, Hey Girl (DubVision Mashup) [STMPD/POSITIVA/VIRGIN]"
+        },
+        {
+          "time": "45:48",
+          "title": "Martin Garrix vs. Bassjackers & Brooks - Crackin vs. Byte (Martin Garrix Mashup) [EPIC AMSTERDAM/SPINNIN'/STMPD]"
+        },
+        {
+          "time": "46:58",
+          "title": "Martin Garrix & DallasK ft. Sasha Alex Sloan - Loop [STMPD/ASTRALWERKS]"
+        },
+        {
+          "time": "48:27",
+          "title": "NOME. ft. Kris Kiss - Arsonist [STMPD]"
+        },
+        {
+          "time": "50:41",
+          "title": "Mike Williams & Brooks - Drop The Pressure [STORYLINES]"
+        },
+        {
+          "time": "53:10",
+          "title": "Martin Garrix & Bebe Rexha - In The Name Of Love [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "54:25",
+          "title": "Martin Garrix & Blinders vs. Bebe Rexha - Aurora vs. In The Name Of Love (Martin Garrix Mashup)"
+        },
+        {
+          "time": "56:07",
+          "title": "Nicky Romero & Teamworx vs. Mightyfools vs. Martin Garrix & Jay Hardway - Champion Sound vs. Footrocker vs. Spotless (Martin Garrix Mashup) [REVEALED/EPIC AMSTERDAM/STMPD/PROTOCOL]"
+        },
+        {
+          "time": "57:08",
+          "title": "RetroVision - Can You Feel It [STMPD]"
+        },
+        {
+          "time": "58:38",
+          "title": "070 Shake - Cocoon (Martin Garrix & Space Ducks Remix) [GETTING OUT OUR DREAMS/DEF JAM]"
+        },
+        {
+          "time": "59:36",
+          "title": "DubVision vs. Tove Lo - I'll Be There vs. Habits (DubVision Mashup) [UMG/STMPD]"
+        },
+        {
+          "time": "01:01:07",
+          "title": "Martin Garrix & Matisse & Sadko ft. Alex Aris - Mistaken [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "01:03:49",
+          "title": "Martin Garrix & Jex - Told You So [STMPD/VIRGIN]"
+        },
+        {
+          "time": "01:06:56",
+          "title": "Martin Garrix ft. Bonn - High On Life [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "01:10:59",
+          "title": "Martin Garrix ft. Carolina Liar - Smile [STMPD/EPIC AMSTERDAM]"
+        },
+        {
+          "time": "01:12:36",
+          "title": "Martin Garrix & Brooks vs. Icona Pop & Charli XCX - Quantum vs. I Love It (Martin Garrix Mashup) [STMPD/BIG BEAT (ATLANTIC)]"
+        },
+        {
+          "time": "01:15:30",
+          "title": "Alesso & John Alto - Lonely Heart [BODY HI]"
+        },
+        {
+          "time": "01:18:28",
+          "title": "Avicii ft. Simon Aldred - Waiting For Love [PRMD/UMG]"
+        },
+        {
+          "time": "01:20:02",
+          "title": "Martin Garrix vs. Dimitri Vegas & Like Mike vs. Avicii ft. Simon Aldred - Tremor vs. Waiting For Love (Martin Garrix Mashup)"
+        },
+        {
+          "time": "01:22:00",
+          "title": "David Guetta vs. Benny Benassi - Satisfaction [SPINNIN']"
+        },
+        {
+          "time": "01:24:37",
+          "title": "Martin Garrix & Mesto ft. WILHELM - Breakaway [STMPD]"
+        },
+        {
+          "time": "01:27:06",
+          "title": "Sebastian Ingrosso & Alesso & Ryan Tedder vs. Martin Garrix & Dua Lipa - Calling vs. Scared To Be Lonely (Martin Garrix Mashup) [REFUNE/STMPD]"
+        },
+        {
+          "time": "01:29:39",
+          "title": "ALOK & The Chainsmokers & Arcando vs. Martin Garrix & Dua Lipa - Jungle vs. Scared To Be Lonely (Martin Garrix Mashup) [STMPD/COLUMBIA (SONY)]"
+        },
+        {
+          "time": "01:32:12",
+          "title": "Martin Garrix & DubVision ft. Jaimes - Empty [STMPD]"
+        },
+        {
+          "time": "01:33:27",
+          "title": "Matisse & Sadko & Sentinel - Once Again [STMPD]"
+        },
+        {
+          "time": "01:34:24",
+          "title": "Martin Garrix & MOTi ft. Jenny Wahlström - Virus (How About Now) [SPINNIN']"
+        },
+        {
+          "time": "01:36:36",
+          "title": "Dyro vs. Martin Garrix & MOTi & Jenny Wahlström vs. LOOPERS - Bring It Down vs. Virus vs. Game Over (Martin Garrix Mashup) [SPINNIN'/EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "01:38:06",
+          "title": "Julian Jordan & Nouni - NEVER STOPPIN' [STMPD]"
+        },
+        {
+          "time": "01:40:24",
+          "title": "DubVision vs. Jaymes Young - Take My Mind vs. Infinity (DubVision Mashup) [STMPD/ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "01:43:07",
+          "title": "Martin Garrix & Zedd ft. Emily Warren - Follow [STMPD]"
+        },
+        {
+          "time": "01:44:52",
+          "title": "DubVision vs. Martin Garrix & Matisse & Sadko - Turn It Around vs. Break Through The Silence (Martin Garrix Mashup) [SPINNIN']"
+        },
+        {
+          "time": "01:48:38",
+          "title": "Martin Garrix & DubVision ft. Jordan Grace - Oxygen [STMPD]"
+        },
+        {
+          "time": "01:50:08",
+          "title": "Martin Garrix & Matisse & Sadko - Dragon [SPINNIN']"
+        },
+        {
+          "time": "01:51:54",
+          "title": "jaakob - Mind CNTRL [STMPD]"
+        },
+        {
+          "time": "01:53:39",
+          "title": "Martin Garrix - Poison [STMPD/FREE]"
+        },
+        {
+          "time": "01:55:10",
+          "title": "Martin Garrix & DubVision ft. Shaun Farrugia - Starlight (Keep Me Afloat) (Outro Edit) [STMPD]"
+        }
+      ]
+    },
+    "2025-martin-garrix-tomorrowland-mainstage": {
+      "title": "Martin Garrix @ Mainstage, Tomorrowland",
+      "artists": [
+        "Martin Garrix"
+      ],
+      "album": "Tomorrowland 2025",
+      "premiered": "2025-07-27",
+      "genres": [
+        "Mainstage",
+        "Dance/Electro Pop",
+        "Bass House",
+        "Trance"
+      ],
+      "tags": [
+        "festival_set",
+        "Tomorrowland",
+        "Martin Garrix"
+      ],
+      "studio": "Mainstage",
+      "runtime": "58",
+      "stage": "Mainstage",
+      "set_poster": "set-2025-martin-garrix-tomorrowland-mainstage.jpg",
+      "chapters": [
+        {
+          "time": "00:12",
+          "title": "Martin Garrix & Saksham ft. Scott Quinn - Ain't Letting You Down (Intro Edit) [STMPD]"
+        },
+        {
+          "time": "02:44",
+          "title": "Martin Garrix & Third ≡ Party ft. Oaks & Declan J Donovan - Carry You [STMPD]"
+        },
+        {
+          "time": "05:45",
+          "title": "Martin Garrix & DubVision ft. Shaun Farrugia - Wherever You Are [STMPD]"
+        },
+        {
+          "time": "07:01",
+          "title": "Sebastian Ingrosso & Alesso & Ryan Tedder vs. Martin Garrix & Dua Lipa - Calling vs. Scared To Be Lonely (Martin Garrix Mashup) [REFUNE/STMPD]"
+        },
+        {
+          "time": "09:29",
+          "title": "Third ≡ Party & Arias vs. Martin Garrix & Matisse & Sadko & John Martin vs. Calvin Harris & Ellie Goulding vs. Sebastian Ingrosso & Alesso - Nation vs. Won't Let You Go vs. Miracle vs. Calling (Third ≡ Party Mashup) [REFUNE/SIZE/STMPD/COLUMBIA (SONY)]"
+        },
+        {
+          "time": "11:28",
+          "title": "Martin Garrix & DubVision ft. Jaimes - Empty [STMPD]"
+        },
+        {
+          "time": "12:45",
+          "title": "Martin Garrix & Matisse & Sadko ft. BARBZ - Butterflies [STMPD]"
+        },
+        {
+          "time": "16:09",
+          "title": "AFROJACK & Martin Garrix & David Guetta & Amél vs. Coldplay - Our Time vs. A Sky Full Of Stars (AFROJACK Mashup) [PARLOPHONE (WARNER MUSIC)/SPINNIN']"
+        },
+        {
+          "time": "18:15",
+          "title": "Martin Garrix & Sentinel vs. Avicii & Andreas Moe - Hurricane vs. Fade Into Darkness (Martin Garrix Mashup) [STMPD/LE7ELS/TOMORROWLAND]"
+        },
+        {
+          "time": "19:43",
+          "title": "Mesto - Caramelle [STMPD]"
+        },
+        {
+          "time": "20:57",
+          "title": "Martin Garrix & Citadelle - Peace Of Mind [STMPD]"
+        },
+        {
+          "time": "22:40",
+          "title": "Martin Garrix & R3HAB & Skytech vs. Empire Of The Sun - Voodoo vs. Walking On A Dream (Martin Garrix Mashup) [SOUKSONIC/STMPD]"
+        },
+        {
+          "time": "25:37",
+          "title": "Martin Garrix - Animals [STMPD]"
+        },
+        {
+          "time": "28:23",
+          "title": "Armin van Buuren & Martin Garrix ft. Libby Whitehouse - Sleepless Nights [ARMADA/STMPD]"
+        },
+        {
+          "time": "31:35",
+          "title": "Martin Garrix & Mesto ft. WILHELM - Breakaway [STMPD]"
+        },
+        {
+          "time": "34:16",
+          "title": "Martin Garrix & MOTi ft. Jenny Wahlström - Virus (How About Now) [SPINNIN']"
+        },
+        {
+          "time": "36:06",
+          "title": "Martin Garrix & Sem Vox ft. Jaimes - Gravity [STMPD]"
+        },
+        {
+          "time": "38:31",
+          "title": "Dimitri Vegas & Like Mike & Martin Garrix - Tremor (Sensation 2014 Anthem) [SPINNIN']"
+        },
+        {
+          "time": "39:59",
+          "title": "Martin Garrix & Brooks vs. Macklemore & Patrick Stump of Fall Out Boy - Quantum vs. Summer Days (Martin Garrix Mashup) [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "41:36",
+          "title": "Martin Garrix & DubVision vs. Avicii & Simon Aldred - Starlight vs. Waiting For Love (Martin Garrix Mashup) [PRMD/STMPD]"
+        },
+        {
+          "time": "45:07",
+          "title": "Martin Garrix & Lauv - MAD (Matt Pridgyn Remix) [VIRGIN/CASABLANCA/STMPD]"
+        },
+        {
+          "time": "47:04",
+          "title": "Martin Garrix ft. Bonn - High On Life [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "51:30",
+          "title": "DubVision vs. Martin Garrix & Bebe Rexha - Rise Again vs. In The Name Of Love (DubVision Mashup) [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "53:00",
+          "title": "Martin Garrix & Blinders vs. Bebe Rexha - Aurora vs. In The Name Of Love (Martin Garrix Mashup)"
+        },
+        {
+          "time": "54:49",
+          "title": "Martin Garrix & Alesso ft. Shaun Farrugia - Inside Our Hearts (Outro Edit) [STMPD]"
+        }
+      ]
+    },
+    "2025-martin-garrix-edc-las-vegas-kineticfield": {
+      "title": "Martin Garrix @ kineticFIELD, EDC Las Vegas",
+      "artists": [
+        "Martin Garrix"
+      ],
+      "album": "EDC Las Vegas 2025",
+      "premiered": "2025-05-18",
+      "genres": [
+        "Mainstage",
+        "Dance/Electro Pop",
+        "House",
+        "Trance",
+        "Progressive House"
+      ],
+      "tags": [
+        "festival_set",
+        "EDC",
+        "Las Vegas",
+        "Martin Garrix"
+      ],
+      "studio": "kineticFIELD",
+      "runtime": "88",
+      "stage": "kineticFIELD",
+      "set_poster": "set-2025-martin-garrix-edc-las-vegas-kineticfield.jpg",
+      "chapters": [
+        {
+          "time": "00:00",
+          "title": "Martin Garrix & Sem Vox ft. Jaimes - Gravity (Intro Edit) [STMPD]"
+        },
+        {
+          "time": "04:00",
+          "title": "Martin Garrix & Dyro - Latency [STMPD]"
+        },
+        {
+          "time": "05:30",
+          "title": "ROB49 - WTHELLY (Julian Jordan Remix) [FREE]"
+        },
+        {
+          "time": "07:45",
+          "title": "Martin Garrix & Third ≡ Party ft. Oaks & Declan J Donovan - Carry You [STMPD]"
+        },
+        {
+          "time": "10:45",
+          "title": "Martin Garrix & DubVision ft. Shaun Farrugia - Wherever You Are [STMPD]"
+        },
+        {
+          "time": "11:50",
+          "title": "Martin Garrix - Animals [STMPD]"
+        },
+        {
+          "time": "15:45",
+          "title": "Julian Jordan vs. Cloonee & InntRaw & Young M.A & HNTR - Something To Believe In vs. Stephanie (Martin Garrix Mashup) [HELLBENT/STMPD]"
+        },
+        {
+          "time": "18:15",
+          "title": "Martin Garrix & Breathe Carolina vs. Justin Mylo & Dewain Whitmore - Something vs. Burn Out (Martin Garrix Mashup) [STMPD/EPIC AMSTERDAM/TOMORROWLAND]"
+        },
+        {
+          "time": "19:30",
+          "title": "Martin Garrix & Citadelle - Peace Of Mind [STMPD]"
+        },
+        {
+          "time": "21:45",
+          "title": "Julian Jordan & Martin Garrix ft. Tinie Tempah - Diamonds [STMPD]"
+        },
+        {
+          "time": "23:00",
+          "title": "AFROJACK & Martin Garrix & David Guetta & Amél vs. Coldplay - Our Time vs. A Sky Full Of Stars (AFROJACK Mashup) [PARLOPHONE (WARNER MUSIC)/SPINNIN']"
+        },
+        {
+          "time": "26:52",
+          "title": "Martin Garrix & Sentinel vs. Avicii & Andreas Moe - Hurricane vs. Fade Into Darkness (Martin Garrix Mashup) [STMPD/LE7ELS/TOMORROWLAND]"
+        },
+        {
+          "time": "28:23",
+          "title": "DubVision vs. Martin Garrix & Bebe Rexha - Rise Again vs. In The Name Of Love (DubVision Mashup) [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "29:58",
+          "title": "Martin Garrix & Blinders vs. Bebe Rexha - Aurora vs. In The Name Of Love (Martin Garrix Mashup)"
+        },
+        {
+          "time": "31:44",
+          "title": "Lewis Capaldi - Someone You Loved (Martin Garrix & Matisse & Sadko Remix) [VIRGIN]"
+        },
+        {
+          "time": "35:15",
+          "title": "Armin van Buuren & Martin Garrix ft. Libby Whitehouse - Sleepless Nights [ARMADA/STMPD]"
+        },
+        {
+          "time": "38:46",
+          "title": "Martin Garrix & Mesto ft. WILHELM - Breakaway [STMPD]"
+        },
+        {
+          "time": "41:33",
+          "title": "ID - ID"
+        },
+        {
+          "time": "42:33",
+          "title": "Faithless vs. Florence + The Machine vs. Matisse & Sadko & Arsnøvä vs. The Temper Trap & Axwell & Dirty South - Insomnia vs. Spectrum (Say My Name) vs. Into The Fire vs. Sweet Disposition (Matisse & Sadko Mashup) [CHEEKY/INFECTIOUS/LIBERATION/ISLAND (UMG)/MONOMARK]"
+        },
+        {
+          "time": "45:42",
+          "title": "Martin Garrix & Zedd ft. Emily Warren - Follow [STMPD]"
+        },
+        {
+          "time": "47:40",
+          "title": "Martin Garrix & Brooks vs. Macklemore & Patrick Stump of Fall Out Boy - Quantum vs. Summer Days (Martin Garrix Mashup) [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "49:15",
+          "title": "Martin Garrix & Jex - Told You So (Brooks Remix) [STMPD]"
+        },
+        {
+          "time": "51:57",
+          "title": "Martin Garrix ft. Bonn - High On Life [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "55:50",
+          "title": "Martin Garrix & Lauv - MAD [VIRGIN/CASABLANCA/STMPD]"
+        },
+        {
+          "time": "59:05",
+          "title": "Avicii ft. Simon Aldred - Waiting For Love [PRMD/UMG]"
+        },
+        {
+          "time": "59:50",
+          "title": "Martin Garrix vs. Dimitri Vegas & Like Mike vs. Avicii ft. Simon Aldred - Tremor vs. Waiting For Love (Martin Garrix Mashup)"
+        },
+        {
+          "time": "01:02:03",
+          "title": "Martin Garrix & Mesto vs. Dua Lipa - Limitless vs. Scared To Be Lonely (Martin Garrix Mashup) [STMPD]"
+        },
+        {
+          "time": "01:03:15",
+          "title": "Martin Garrix & Mesto & Arcando vs. Dua Lipa vs. Pirapus - Limitless vs. Scared To Be Lonely vs. Ultrasound (Martin Garrix Mashup)"
+        },
+        {
+          "time": "01:04:30",
+          "title": "Martin Garrix & Arcando ft. Bonn - Set Me Free [STMPD]"
+        },
+        {
+          "time": "01:07:15",
+          "title": "Martin Garrix & DubVision ft. Jaimes - Empty [STMPD]"
+        },
+        {
+          "time": "01:08:40",
+          "title": "Martin Garrix & Third ≡ Party ft. Max McElligott - Lions In The Wild [STMPD/RELEASE]"
+        },
+        {
+          "time": "01:10:20",
+          "title": "Martin Garrix vs. Bonn - Poison vs. No Sleep (Martin Garrix Mashup) [STMPD/FREE/EPIC AMSTERDAM]"
+        },
+        {
+          "time": "01:12:19",
+          "title": "Martin Garrix & Brooks vs. Yeah Yeah Yeahs & A-Trak - Byte vs. Heads Will Roll (Martin Garrix Mashup) [DGC/EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "01:13:48",
+          "title": "Martin Garrix & Florian Picasso vs. Julian Jordan - Make Up Your Mind vs. Glitch (Martin Garrix Mashup) [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "01:14:47",
+          "title": "Joy Orbison - flight fm [XL]"
+        },
+        {
+          "time": "01:16:00",
+          "title": "Martin Garrix & Matisse & Sadko & Michel Zitron vs. Gala - Hold On vs. Freed From Desire (Matisse & Sadko Mashup) [DO IT YOURSELF/STMPD/EPIC AMSTERDAM]"
+        },
+        {
+          "time": "01:18:15",
+          "title": "070 Shake - Cocoon (Martin Garrix & Space Ducks Remix) [GETTING OUT OUR DREAMS/DEF JAM]"
+        },
+        {
+          "time": "01:19:00",
+          "title": "Bassjackers vs. AFROJACK & Martin Garrix - Like That vs. Turn Up The Speakers (Martin Garrix Mashup) [SPINNIN'/SMASH THE HOUSE]"
+        },
+        {
+          "time": "01:20:00",
+          "title": "Martin Garrix & MOTi ft. Jenny Wahlström - Virus (How About Now) [SPINNIN']"
+        },
+        {
+          "time": "01:22:05",
+          "title": "Martin Garrix & Matisse & Sadko vs. Usher - Butterflies vs. Don't Look Down (Martin Garrix Mashup) [SPINNIN'/RCA/STMPD]"
+        },
+        {
+          "time": "01:24:25",
+          "title": "Martin Garrix & DubVision ft. Shaun Farrugia - Starlight (Keep Me Afloat) (Outro Edit) [STMPD]"
+        }
+      ]
+    },
+    "2025-martin-garrix-red-rocks": {
+      "title": "Martin Garrix @ Red Rocks",
+      "artists": [
+        "Martin Garrix"
+      ],
+      "album": "2025",
+      "premiered": "2025-10-23",
+      "genres": [
+        "Mainstage",
+        "Dance/Electro Pop",
+        "Progressive House",
+        "House",
+        "Rock"
+      ],
+      "tags": [
+        "festival_set",
+        "Martin Garrix"
+      ],
+      "studio": "",
+      "runtime": "119",
+      "stage": "",
+      "set_poster": "set-2025-martin-garrix-red-rocks.jpg",
+      "chapters": [
+        {
+          "time": "00:00",
+          "title": "Martin Garrix & R3HAB & Skytech vs. Empire Of The Sun - Voodoo vs. Walking On A Dream (Martin Garrix Mashup) (Intro Edit) [SOUKSONIC/STMPD]"
+        },
+        {
+          "time": "03:44",
+          "title": "Martin Garrix & Dyro - Latency [STMPD]"
+        },
+        {
+          "time": "04:43",
+          "title": "Matisse & Sadko & Vion Konger ft. Scrufizzer - Pull Up [STMPD]"
+        },
+        {
+          "time": "07:33",
+          "title": "Martin Garrix & Florian Picasso vs. Julian Jordan - Make Up Your Mind vs. Glitch (Martin Garrix Mashup) [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "09:46",
+          "title": "Joy Orbison - flight fm [XL]"
+        },
+        {
+          "time": "11:58",
+          "title": "Martin Garrix & Matisse & Sadko ft. John Martin - Won't Let You Go (Eleganto Remix) [STMPD]"
+        },
+        {
+          "time": "14:40",
+          "title": "Martin Garrix & Matisse & Sadko & Michel Zitron vs. Gala - Hold On vs. Freed From Desire (Matisse & Sadko Mashup) [DO IT YOURSELF/STMPD/EPIC AMSTERDAM]"
+        },
+        {
+          "time": "16:40",
+          "title": "Gotye ft. Kimbra - Somebody That I Used To Know (SIDEPIECE Treat) [INTERSCOPE]"
+        },
+        {
+          "time": "19:37",
+          "title": "Julian Jordan vs. Cloonee & InntRaw & Young M.A & HNTR - Something To Believe In vs. Stephanie (Martin Garrix Mashup) [HELLBENT/STMPD]"
+        },
+        {
+          "time": "21:50",
+          "title": "Martin Garrix & Citadelle - Peace Of Mind [STMPD]"
+        },
+        {
+          "time": "24:02",
+          "title": "Martin Garrix & Breathe Carolina vs. Justin Mylo & Dewain Whitmore - Something vs. Burn Out (Martin Garrix Mashup) [STMPD/EPIC AMSTERDAM/TOMORROWLAND]"
+        },
+        {
+          "time": "25:18",
+          "title": "Sebastian Ingrosso & Alesso & Ryan Tedder vs. Martin Garrix & Dua Lipa - Calling vs. Scared To Be Lonely (Martin Garrix Mashup) [REFUNE/STMPD]"
+        },
+        {
+          "time": "27:32",
+          "title": "ALOK & The Chainsmokers & Arcando vs. Martin Garrix & Dua Lipa - Jungle vs. Scared To Be Lonely (Martin Garrix Mashup)"
+        },
+        {
+          "time": "29:08",
+          "title": "Martin Garrix & Arcando ft. Bonn - Set Me Free [STMPD]"
+        },
+        {
+          "time": "31:46",
+          "title": "Martin Garrix & Mesto - Limitless [STMPD]"
+        },
+        {
+          "time": "34:02",
+          "title": "Martin Garrix & Mesto ft. WILHELM - Breakaway [STMPD]"
+        },
+        {
+          "time": "36:30",
+          "title": "Mesto vs. Swedish House Mafia & Knife Party & ADL - Caramelle vs. Antidote (Mesto Mashup) [VIRGIN/STMPD]"
+        },
+        {
+          "time": "38:36",
+          "title": "Julian Jordan & Martin Garrix ft. Tinie Tempah - Diamonds [STMPD]"
+        },
+        {
+          "time": "39:50",
+          "title": "Martin Garrix ft. Macklemore & Patrick Stump of Fall Out Boy - Summer Days [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "46:10",
+          "title": "Martin Garrix & Blinders ft. Ilsey Juber - Breach (Walk Alone) [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "47:24",
+          "title": "Martin Garrix & Third ≡ Party ft. Oaks & Declan J Donovan - Carry You [STMPD]"
+        },
+        {
+          "time": "50:11",
+          "title": "Third ≡ Party & Max McElligott vs. Timbaland & OneRepublic - Live Forever vs. Apologize (Third ≡ Party Mashup) [INTERSCOPE/RELEASE]"
+        },
+        {
+          "time": "52:37",
+          "title": "Martin Garrix & DubVision ft. Shaun Farrugia - Wherever You Are [STMPD]"
+        },
+        {
+          "time": "53:52",
+          "title": "Martin Garrix & Third ≡ Party ft. Max McElligott - Lions In The Wild [STMPD/RELEASE]"
+        },
+        {
+          "time": "55:28",
+          "title": "Pryda vs. Martin Garrix & Matisse & Sadko - Allein vs. Dragon (Matisse & Sadko Mashup) [VIRGIN/SPINNIN']"
+        },
+        {
+          "time": "58:39",
+          "title": "DubVision - Run [STMPD]"
+        },
+        {
+          "time": "59:39",
+          "title": "Martin Garrix - Proxy [SPINNIN'/FREE]"
+        },
+        {
+          "time": "01:02:58",
+          "title": "Martin Garrix & DallasK ft. Sasha Alex Sloan - Loop [STMPD/ASTRALWERKS]"
+        },
+        {
+          "time": "01:04:27",
+          "title": "YTRAM & Citadelle - Alive [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "01:06:32",
+          "title": "Matisse & Sadko & Sentinel - Once Again [STMPD]"
+        },
+        {
+          "time": "01:09:14",
+          "title": "Avicii ft. Simon Aldred - Waiting For Love [PRMD/UMG]"
+        },
+        {
+          "time": "01:11:49",
+          "title": "Martin Garrix vs. Dimitri Vegas & Like Mike vs. Avicii ft. Simon Aldred - Tremor vs. Waiting For Love (Martin Garrix Mashup)"
+        },
+        {
+          "time": "01:14:04",
+          "title": "Martin Garrix & Jex - Told You So (jeonghyeon & Wwings Remix)"
+        },
+        {
+          "time": "01:17:00",
+          "title": "Bassjackers vs. AFROJACK & Martin Garrix - Like That vs. Turn Up The Speakers (Martin Garrix Mashup) [SPINNIN'/SMASH THE HOUSE]"
+        },
+        {
+          "time": "01:18:42",
+          "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix) [DGC]"
+        },
+        {
+          "time": "01:20:48",
+          "title": "AFROJACK & Martin Garrix & David Guetta & Amél vs. Coldplay - Our Time vs. A Sky Full Of Stars (AFROJACK Mashup) [PARLOPHONE (WARNER MUSIC)/SPINNIN']"
+        },
+        {
+          "time": "01:25:06",
+          "title": "Martin Garrix & Sentinel vs. Avicii & Andreas Moe - Hurricane vs. Fade Into Darkness (Martin Garrix Mashup) [STMPD/LE7ELS/TOMORROWLAND]"
+        },
+        {
+          "time": "01:26:34",
+          "title": "Martin Garrix & Saksham ft. Scott Quinn - Ain't Letting You Down [STMPD]"
+        },
+        {
+          "time": "01:30:50",
+          "title": "Lewis Capaldi - Someone You Loved (Martin Garrix & Matisse & Sadko Remix) [VIRGIN]"
+        },
+        {
+          "time": "01:34:21",
+          "title": "Martin Garrix & Seth Hills vs. Armand van Helden & Ape Rave Club - Biochemical vs. I Want Your Soul (Martin Garrix Mashup) [STMPD/SOUTHERN FRIED]"
+        },
+        {
+          "time": "01:37:14",
+          "title": "Martin Garrix ft. John Martin - Higher Ground [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "01:38:31",
+          "title": "DubVision vs. Martin Garrix & Bebe Rexha - Rise Again vs. In The Name Of Love (DubVision Mashup) [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "01:40:05",
+          "title": "Martin Garrix & Blinders vs. Bebe Rexha - Aurora vs. In The Name Of Love (Martin Garrix Mashup)"
+        },
+        {
+          "time": "01:41:55",
+          "title": "Martin Garrix & DubVision ft. Shaun Farrugia - Starlight (Keep Me Afloat) [STMPD]"
+        },
+        {
+          "time": "01:43:31",
+          "title": "Martin Garrix ft. Bonn - High On Life [EPIC AMSTERDAM/STMPD]"
+        },
+        {
+          "time": "01:47:53",
+          "title": "Martin Garrix & Brooks vs. Icona Pop & Charli XCX - Quantum vs. I Love It (Martin Garrix Mashup) [STMPD/BIG BEAT (ATLANTIC)]"
+        },
+        {
+          "time": "01:49:12",
+          "title": "Martin Garrix & Zedd ft. Emily Warren - Follow [STMPD]"
+        },
+        {
+          "time": "01:50:54",
+          "title": "DubVision vs. Martin Garrix & Matisse & Sadko - Turn It Around vs. Break Through The Silence (Martin Garrix Mashup) [SPINNIN']"
+        },
+        {
+          "time": "01:52:22",
+          "title": "Martin Garrix & Matisse & Sadko & BARBZ vs. Sander van Doorn & DVBBS & Aleesia - Butterflies vs. Gold Skies (Martin Garrix Mashup) [SPINNIN'/STMPD]"
+        },
+        {
+          "time": "01:55:33",
+          "title": "Martin Garrix & Alesso ft. Shaun Farrugia - Inside Our Hearts (Outro Edit) [STMPD]"
+        }
+      ]
+    },
+    "2025-swedish-house-mafia-tomorrowland-mainstage": {
+      "title": "Swedish House Mafia @ Mainstage, Tomorrowland",
+      "artists": [
+        "Swedish House Mafia"
+      ],
+      "album": "Tomorrowland 2025",
+      "premiered": "2025-07-25",
+      "genres": [
+        "Dance/Electro Pop",
+        "Melodic House/Techno",
+        "House",
+        "Mainstage",
+        "Bassline/Garage/Grime"
+      ],
+      "tags": [
+        "festival_set",
+        "Tomorrowland",
+        "Swedish House Mafia",
+        "Axwell",
+        "Steve Angello",
+        "Sebastian Ingrosso"
+      ],
+      "studio": "Mainstage",
+      "runtime": "59",
+      "stage": "Mainstage",
+      "set_poster": "set-2025-swedish-house-mafia-tomorrowland-mainstage.jpg",
+      "chapters": [
+        {
+          "time": "00:12",
+          "title": "Swedish House Mafia & Knife Party ft. ADL - Antidote (Belgium Edit) (Intro Edit) [POPHOUSE]"
+        },
+        {
+          "time": "04:38",
+          "title": "Steve Angello vs. Swedish House Mafia & A$AP Rocky - Hooligans vs. Frankenstein (Axwell Mashup) [SSA (REPUBLIC)/SIZE]"
+        },
+        {
+          "time": "07:36",
+          "title": "Steve Angello & Laidback Luke & Rowetta - Be vs. Show Me Love vs. Knas (Swedish House Mafia Mashup) [MIXMASH/SIZE]"
+        },
+        {
+          "time": "10:04",
+          "title": "Swedish House Mafia ft. Tinie Tempah - Miami 2 Ibiza (Paradise Again Edit) [POPHOUSE]"
+        },
+        {
+          "time": "12:36",
+          "title": "Cirez D - On Off (Kapuchon Edit)"
+        },
+        {
+          "time": "16:40",
+          "title": "Swedish House Mafia - Ray Of Solar [SSA (REPUBLIC)]"
+        },
+        {
+          "time": "18:53",
+          "title": "Supermode - Tell Me Why (MEDUZA Remix) [AXTONE]"
+        },
+        {
+          "time": "21:38",
+          "title": "Sebastian Ingrosso ft. Céline Dion - A New Day [SUPERHUMAN]"
+        },
+        {
+          "time": "24:50",
+          "title": "RÜFÜS DU SOL vs. Steve Angello & Dimitri Vangelis & Wyman - Innerbloom vs. Payback (Steve Angello Mashup) [COLUMBIA/SIZE/SWEAT IT OUT!]"
+        },
+        {
+          "time": "28:04",
+          "title": "Steve Angello & Dimitri Vangelis & Wyman vs. Axwell Λ Ingrosso & Kristoffer Fogelmark - Payback vs. More Than You Know (Swedish House Mafia Mashup)"
+        },
+        {
+          "time": "29:35",
+          "title": "Booka Shade vs. Ivan Gough & Feenixpawl & Axwell ft. Georgi Kay - Love Inc vs. In My Mind (Axwell Mashup) [AXTONE/BLAUFIELD]"
+        },
+        {
+          "time": "31:20",
+          "title": "Swedish House Mafia vs. Matt Caseli & Danny Freakazoid - Greyhound vs. Raise Your Hands (Axwell Mashup) [AXTONE/EMI]"
+        },
+        {
+          "time": "35:23",
+          "title": "Swedish House Mafia ft. John Martin - Save The World (NC Edit) [VIRGIN]"
+        },
+        {
+          "time": "36:55",
+          "title": "Sebastian Ingrosso & Tommy Trash & John Martin vs. Green Velvet & Nicky Romero - Reload vs. Flash (Axwell Λ Ingrosso Mashup)"
+        },
+        {
+          "time": "39:40",
+          "title": "Swedish House Mafia ft. 070 Shake - Another Minute (Yaro Rework)"
+        },
+        {
+          "time": "41:40",
+          "title": "Swedish House Mafia & The Weeknd - Moth To A Flame (Swedish House Mafia Rework)"
+        },
+        {
+          "time": "45:01",
+          "title": "Swedish House Mafia ft. John Martin - Don't You Worry Child [POPHOUSE]"
+        },
+        {
+          "time": "48:20",
+          "title": "Swedish House Mafia - Wait So Long (Why Do I Have To) [SUPERHUMAN]"
+        },
+        {
+          "time": "52:15",
+          "title": "Swedish House Mafia & Connie Constance - Heaven Takes You Home (Swedish House Mafia Remake) [SSA (REPUBLIC)]"
+        },
+        {
+          "time": "54:23",
+          "title": "Sebastian Ingrosso vs. Alesso & Ryan Tedder vs. Candi Staton vs. Whitney Houston - Laktos is Calling vs. You Got The Love vs. I Wanna Dance With Somebody (Sebastian Ingrosso Re-Edit) [REFUNE/ARISTA/ZYX]"
+        }
+      ]
+    },
+    "2025-swedish-house-mafia-creamfields-arc-stage": {
+      "title": "Swedish House Mafia @ ARC Stage, Creamfields",
+      "artists": [
+        "Swedish House Mafia"
+      ],
+      "album": "Creamfields 2025",
+      "premiered": "2025-08-23",
+      "genres": [
+        "Dance/Electro Pop",
+        "Melodic House/Techno",
+        "Dubstep",
+        "Mainstage",
+        "Progressive House"
+      ],
+      "tags": [
+        "festival_set",
+        "Creamfields",
+        "Swedish House Mafia",
+        "Axwell",
+        "Steve Angello",
+        "Sebastian Ingrosso"
+      ],
+      "studio": "ARC Stage",
+      "runtime": "89",
+      "stage": "ARC Stage",
+      "set_poster": "set-2025-swedish-house-mafia-creamfields-arc-stage.jpg",
+      "chapters": [
+        {
+          "time": "00:00",
+          "title": "Swedish House Mafia & Knife Party ft. ADL - Antidote (Belgium Edit) (Intro Edit) [POPHOUSE]"
+        },
+        {
+          "time": "02:40",
+          "title": "Steve Angello vs. Swedish House Mafia & A$AP Rocky - Hooligans vs. Frankenstein (Axwell Mashup) [SSA (REPUBLIC)/SIZE]"
+        },
+        {
+          "time": "05:30",
+          "title": "Yaro vs. Travis Scott & Kendrick Lamar vs. Zombie Nation & James Hype - Deep vs. Goosebumps vs. Kernkraft 400 (Axwell Mashup) [EPIC (SONY BMG)/EPM/SUPERHUMAN]"
+        },
+        {
+          "time": "07:00",
+          "title": "Swedish House Mafia ft. Tinie Tempah - Miami 2 Ibiza (Paradise Again Edit) [POPHOUSE]"
+        },
+        {
+          "time": "09:30",
+          "title": "Cassian & YOTTO & Da Hool - Love Parade [AFTERLIFE]"
+        },
+        {
+          "time": "11:20",
+          "title": "MORTEN & Nari & Milani - Atom [SIZE]"
+        },
+        {
+          "time": "14:00",
+          "title": "Steve Angello & Laidback Luke & Rowetta - Be vs. Show Me Love vs. Knas (Swedish House Mafia Mashup) [MIXMASH/SIZE]"
+        },
+        {
+          "time": "15:50",
+          "title": "Fred again.. & Skepta & PlaqueBoyMax - Victory Lap (ID Remix) [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "17:20",
+          "title": "Corey James & MORGANJ & Tyoz - Jungle [SIZE]"
+        },
+        {
+          "time": "21:00",
+          "title": "Martin Garrix & Citadelle & Sebastian Ingrosso - Peace Of Flood [SUPERHUMAN/STMPD]"
+        },
+        {
+          "time": "24:30",
+          "title": "Steve Angello & Sebastian Ingrosso - Tear The Club Up [SUPERHUMAN]"
+        },
+        {
+          "time": "26:50",
+          "title": "Cirez D - On Off (Kapuchon Edit)"
+        },
+        {
+          "time": "30:15",
+          "title": "Supermode - Tell Me Why (MEDUZA Remix) [AXTONE]"
+        },
+        {
+          "time": "33:20",
+          "title": "Chicane & Axwell vs. Swedish House Mafia vs. Opus III vs. Rui Da Silva & Cassandra Fox - Offshore vs. Greyhound vs. Fine Day vs. Touch Me (Swedish House Mafia Mashup) [KISMET/EMI/PWL/MODENA (ARMADA)]"
+        },
+        {
+          "time": "38:20",
+          "title": "Eric Prydz - Pjanoo (LAWZ Remix) [PRYDA]"
+        },
+        {
+          "time": "39:40",
+          "title": "RÜFÜS DU SOL vs. Steve Angello & Dimitri Vangelis & Wyman - Innerbloom vs. Payback (Steve Angello Mashup) [COLUMBIA/SIZE/SWEAT IT OUT!]"
+        },
+        {
+          "time": "44:10",
+          "title": "Booka Shade vs. Ivan Gough & Feenixpawl & Axwell ft. Georgi Kay - Love Inc vs. In My Mind (Axwell Mashup) [AXTONE/BLAUFIELD]"
+        },
+        {
+          "time": "46:00",
+          "title": "Swedish House Mafia ft. John Martin - Save The World (NC Edit) [VIRGIN]"
+        },
+        {
+          "time": "50:20",
+          "title": "Sebastian Ingrosso ft. Céline Dion - A New Day [SUPERHUMAN]"
+        },
+        {
+          "time": "53:43",
+          "title": "Swedish House Mafia - Ray Of Solar [SSA (REPUBLIC)]"
+        },
+        {
+          "time": "57:20",
+          "title": "Swedish House Mafia - ID"
+        },
+        {
+          "time": "59:20",
+          "title": "Wiwek & Emy Perez vs. Gala vs. Darude - TUCUTU vs. Freed From Desire vs. Sandstorm (Axwell Mashup) [NEO RECORDS/ROBBINS/DO IT YOURSELF/AXTONE]"
+        },
+        {
+          "time": "01:01:50",
+          "title": "Faithless - Insomnia (ID Remix) [CHEEKY]"
+        },
+        {
+          "time": "01:04:00",
+          "title": "Pryda - Allein [VIRGIN]"
+        },
+        {
+          "time": "01:06:00",
+          "title": "KETTAMA - It Gets Better (Forever Mix) [STEEL CITY DANCE DISCS]"
+        },
+        {
+          "time": "01:08:50",
+          "title": "M83 - Midnight City (Reezer & Driver Of The Future Remix) [FREE]"
+        },
+        {
+          "time": "01:11:00",
+          "title": "Swedish House Mafia & The Weeknd - Moth To A Flame (Swedish House Mafia Rework)"
+        },
+        {
+          "time": "01:14:49",
+          "title": "Swedish House Mafia ft. John Martin - Don't You Worry Child [POPHOUSE]"
+        },
+        {
+          "time": "01:17:15",
+          "title": "Swedish House Mafia - Wait So Long (Why Do I Have To) [SUPERHUMAN]"
+        },
+        {
+          "time": "01:20:50",
+          "title": "Swedish House Mafia & Connie Constance - Heaven Takes You Home (Swedish House Mafia Remake) [SSA (REPUBLIC)]"
+        },
+        {
+          "time": "01:23:10",
+          "title": "Sebastian Ingrosso vs. The Source & Candi Staton vs. Alesso & Ryan Tedder vs. Gotye & Kimbra - Laktos vs. You Got The Love vs. Calling vs. Somebody That I Used To Know (Axwell Λ Ingrosso Mashup) [REFUNE/POSITIVA/INTERSCOPE]"
+        }
+      ]
+    },
+    "2026-swedish-house-mafia-umf-miami-mainstage": {
+      "title": "Swedish House Mafia @ Mainstage, UMF Miami",
+      "artists": [
+        "Swedish House Mafia"
+      ],
+      "album": "UMF Miami 2026",
+      "premiered": "2026-03-28",
+      "genres": [
+        "House",
+        "Progressive House",
+        "Bassline/Garage/Grime",
+        "Dance/Electro Pop",
+        "Bass House"
+      ],
+      "tags": [
+        "festival_set",
+        "UMF",
+        "Miami",
+        "Swedish House Mafia",
+        "Axwell",
+        "Steve Angello",
+        "Sebastian Ingrosso"
+      ],
+      "studio": "Mainstage",
+      "runtime": "79",
+      "stage": "Mainstage",
+      "set_poster": "set-2026-swedish-house-mafia-umf-miami-mainstage.jpg",
+      "chapters": [
+        {
+          "time": "00:11",
+          "title": "Swedish House Mafia ft. Tinie Tempah - Miami 2 Ibiza (Intro Edit) [POPHOUSE/EMI]"
+        },
+        {
+          "time": "02:50",
+          "title": "MPH ft. Æ (US) - Flex It [BLACK BOOK]"
+        },
+        {
+          "time": "04:31",
+          "title": "Calvin Harris - I'm Not Alone (MPH Remix) [ULTRA/COLUMBIA]"
+        },
+        {
+          "time": "06:32",
+          "title": "Swedish House Mafia & Knife Party ft. ADL - Antidote (MPH Remix) [POPHOUSE]"
+        },
+        {
+          "time": "08:35",
+          "title": "MPH - Raw [BLACK BOOK]"
+        },
+        {
+          "time": "10:18",
+          "title": "Basement Jaxx - Where's Your Head At? (Steve Angello Remix) [XL]"
+        },
+        {
+          "time": "11:36",
+          "title": "Boys Noize - ID"
+        },
+        {
+          "time": "13:54",
+          "title": "PARISI x Sebastian Ingrosso x Steve Angello - U Ok? (Boys Noize Remix) [FFRR]"
+        },
+        {
+          "time": "15:54",
+          "title": "Boys Noize - FVKVRVND [HARD RECS (INSOMNIAC)]"
+        },
+        {
+          "time": "17:18",
+          "title": "Skrillex & Boys Noize ft. Opus III - Fine Day Anthem (Boys Noize Remix) [OWSLA]"
+        },
+        {
+          "time": "18:21",
+          "title": "Skrillex & Boys Noize ft. Opus III - Fine Day Anthem [OWSLA/ATLANTIC]"
+        },
+        {
+          "time": "20:21",
+          "title": "Daniel Avery - Drone Logic (Harvey McKay Re-Edit) [PHANTASY SOUND]"
+        },
+        {
+          "time": "22:25",
+          "title": "Kelly Lee Owens - Melt! [SMALLTOWN SUPERSOUND]"
+        },
+        {
+          "time": "23:33",
+          "title": "Gigamesh & ELOHIM & Thomas Adagio - Everything In Its Right Place [INFINITE GAME]"
+        },
+        {
+          "time": "26:48",
+          "title": "Major Lazer ft. Vybz Kartel - Pon De Floor (Afrojack Version) [MAD DECENT]"
+        },
+        {
+          "time": "29:20",
+          "title": "Steve Angello & Laidback Luke ft. Robin S - Show Me Love [MIXMASH]"
+        },
+        {
+          "time": "34:11",
+          "title": "Dizzee Rascal & Armand van Helden - Bonkers [DIRTEE STANK]"
+        },
+        {
+          "time": "36:11",
+          "title": "Armand van Helden - My My My (AVH Rework) [SOUTHERN FRIED]"
+        },
+        {
+          "time": "37:31",
+          "title": "Armand van Helden ft. Duane Harden - You Don't Know Me [FFRR (PARLOPHONE)]"
+        },
+        {
+          "time": "39:13",
+          "title": "Armand van Helden - I Want Your Soul (Armand van Helden Rework) [SOUTHERN FRIED]"
+        },
+        {
+          "time": "41:33",
+          "title": "Fred again.. & Swedish House Mafia ft. Future - Turn On The Lights Again.. [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "46:54",
+          "title": "Swedish House Mafia - It Gets Better (Stockholm Version) [SSA (REPUBLIC)]"
+        },
+        {
+          "time": "48:07",
+          "title": "Sebastian Ingrosso - Flood [SUPERHUMAN]"
+        },
+        {
+          "time": "50:33",
+          "title": "Pryda - Allein [VIRGIN]"
+        },
+        {
+          "time": "52:27",
+          "title": "Cirez D vs. Green Velvet & Harvard Bass - On Off Lazer Beams (Eric Prydz Edit) [MOUSEVILLE/RELIEF]"
+        },
+        {
+          "time": "55:52",
+          "title": "M83 - Midnight City (Eric Prydz Private Remix) [MUTE]"
+        },
+        {
+          "time": "59:41",
+          "title": "Pryda - The Return [PRYDA]"
+        },
+        {
+          "time": "01:00:34",
+          "title": "Chicane & Axwell vs. Swedish House Mafia vs. Opus III vs. Rui Da Silva & Cassandra Fox - Offshore vs. Greyhound vs. Fine Day vs. Touch Me (Swedish House Mafia Mashup)"
+        },
+        {
+          "time": "01:04:52",
+          "title": "Swedish House Mafia ft. John Martin - Save The World (NC Edit) [VIRGIN]"
+        },
+        {
+          "time": "01:05:49",
+          "title": "Sebastian Ingrosso & Tommy Trash & John Martin vs. Green Velvet & Nicky Romero - Reload vs. Flash (Axwell Λ Ingrosso Mashup)"
+        },
+        {
+          "time": "01:07:34",
+          "title": "Swedish House Mafia ft. John Martin - Don't You Worry Child [POPHOUSE]"
+        },
+        {
+          "time": "01:09:53",
+          "title": "Swedish House Mafia & John Martin vs. Avicii & Aloe Blacc - Don't You Worry Child vs. Wake Me Up (Axwell Λ Ingrosso Mashup)"
+        },
+        {
+          "time": "01:13:08",
+          "title": "Swedish House Mafia & Connie Constance - Heaven Takes You Home (Swedish House Mafia Remake) [SSA (REPUBLIC)]"
+        },
+        {
+          "time": "01:15:03",
+          "title": "Sebastian Ingrosso vs. Alesso & Ryan Tedder vs. Candi Staton vs. Whitney Houston - Laktos is Calling vs. You Got The Love vs. I Wanna Dance With Somebody (Sebastian Ingrosso Re-Edit) [REFUNE/ARISTA/ZYX]"
+        }
+      ]
+    },
+    "2024-tiesto-amf": {
+      "title": "Tiësto @ AMF",
+      "artists": [
+        "Tiësto"
+      ],
+      "album": "AMF 2024",
+      "premiered": "2024-10-19",
+      "genres": [
+        "Dance/Electro Pop",
+        "Mainstage",
+        "Techno",
+        "Trance",
+        "Afro House"
+      ],
+      "tags": [
+        "festival_set",
+        "AMF",
+        "Tiësto"
+      ],
+      "studio": "",
+      "runtime": "60",
+      "stage": "",
+      "set_poster": "set-2024-tiesto-amf.jpg",
+      "chapters": [
+        {
+          "time": "00:04",
+          "title": "Tiësto - Dance Life Control Dreams (AMF Intro) [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "03:20",
+          "title": "Loofy - Last Night (Tiësto Remix) [NERVOUS]"
+        },
+        {
+          "time": "06:00",
+          "title": "Tiësto & Goldcher & Irina Rimes - Dudada [MUSICAL FREEDOM/FUNKSHWAY]"
+        },
+        {
+          "time": "08:30",
+          "title": "Tiësto ft. Soaky Siren - Tantalizing [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "12:09",
+          "title": "Tiësto ft. Oaks - I Follow Rivers [ATLANTIC/MUSICAL FREEDOM]"
+        },
+        {
+          "time": "13:15",
+          "title": "La Fuente vs. Mau P - I Want U In Amsterdam (Tiësto Mashup) [FULL COLOUR/REPOPULATE MARS]"
+        },
+        {
+          "time": "14:30",
+          "title": "Tiësto & Sexyy Red - OMG! (From F1® The Movie) [ATLANTIC/MUSICAL FREEDOM]"
+        },
+        {
+          "time": "17:02",
+          "title": "Sevdaliza & Pabllo Vittar & Yseult - Alibi (Tiësto Remix) [TWISTED ELEGANCE]"
+        },
+        {
+          "time": "18:00",
+          "title": "Tiësto & Lucas & Steve & Silent Child & Sān-Z - ZENLESS (Instrumental) [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "19:00",
+          "title": "Tiësto & Lucas & Steve - Free Your Mind [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "21:45",
+          "title": "Tiësto & Tate McRae vs. NLW & R3HAB & MC Ambush - 10:35 vs. Let Me See Those Hands (Tiësto Mashup) [WALL/UMG/ATLANTIC/MUSICAL FREEDOM]"
+        },
+        {
+          "time": "22:50",
+          "title": "Tiësto & DallasK - Show Me [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "24:45",
+          "title": "Fred again.. & Swedish House Mafia ft. Future - Turn On The Lights Again.. (GORDO Remix / Tiësto Edit) [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "28:40",
+          "title": "Tiësto & Mathame - Everlight [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "32:18",
+          "title": "Sebastian Ingrosso vs. Kendrick Lamar - Flood vs. United In Grief (Tiësto Mashup) [TOP DAWG/SUPERHUMAN]"
+        },
+        {
+          "time": "36:00",
+          "title": "Tiësto - Lethal Industry (Rose Ringed Remix) [MUSICAL FREEDOM/MAGIK MUZIK]"
+        },
+        {
+          "time": "38:30",
+          "title": "Delerium ft. Sarah McLachlan - Silence (Tiësto 2022 Remix) [NETTWERK]"
+        },
+        {
+          "time": "41:30",
+          "title": "Push - Universal Nation (Tiësto Techrave Mix) [BONZAI]"
+        },
+        {
+          "time": "42:00",
+          "title": "Tiësto vs. John Summit & HAYLA - Suburban Train vs. Shiver (Tiësto Mashup) [EXPERTS ONLY/MAGIK MUZIK (BLACK HOLE)]"
+        },
+        {
+          "time": "45:24",
+          "title": "MGMT & Tiësto vs. Hozier - Kids vs. Too Sweet (Tiësto Mashup) [SONY/COLUMBIA]"
+        },
+        {
+          "time": "48:50",
+          "title": "Tiësto & Michel Zitron vs. Showtek & Justin Prime - Red Lights vs. Cannonball (Tiësto Mashup) [PM:AM (UMG)/2DUTCH]"
+        },
+        {
+          "time": "50:58",
+          "title": "Axwell Λ Ingrosso & Kristoffer Fogelmark vs. Noisecontrollers & Showtek & Tiësto - More Than You Know vs. Get Loose (Tiësto Mashup) [2DUTCH/EMI]"
+        },
+        {
+          "time": "52:20",
+          "title": "Tiësto vs. Da Hool vs. Green Velvet & Harvard Bass - Meet Her vs. Lazer Beams (Tiësto Mashup) [RELIEF/NITRON (SONY)]"
+        },
+        {
+          "time": "54:40",
+          "title": "Beltran - Smack Yo' (HAWK. VIP Mix) [SOLID GROOVES RAW]"
+        },
+        {
+          "time": "56:05",
+          "title": "Dave & Central Cee - Sprinter (Tiësto Remix)"
+        },
+        {
+          "time": "59:00",
+          "title": "Yves Deruyter - Feel Free (Tiësto Edit) [BONZAI]"
+        }
+      ]
+    },
+    "2025-tiesto-edc-las-vegas-circuitgrounds": {
+      "title": "Tiësto @ circuitGROUNDS, EDC Las Vegas",
+      "artists": [
+        "Tiësto"
+      ],
+      "album": "EDC Las Vegas 2025",
+      "premiered": "2025-05-16",
+      "genres": [
+        "House",
+        "Dance/Electro Pop",
+        "Techno",
+        "Trance",
+        "Tech House"
+      ],
+      "tags": [
+        "festival_set",
+        "EDC",
+        "Las Vegas",
+        "Tiësto"
+      ],
+      "studio": "circuitGROUNDS",
+      "runtime": "91",
+      "stage": "circuitGROUNDS",
+      "set_poster": "set-2025-tiesto-edc-las-vegas-circuitgrounds.jpg",
+      "chapters": [
+        {
+          "time": "00:00",
+          "title": "Tiësto - ID"
+        },
+        {
+          "time": "02:13",
+          "title": "Matt Sassari & CHRSTPHR ft. Barbatuques - Baiana [CR2]"
+        },
+        {
+          "time": "03:43",
+          "title": "A$AP Rocky - Lord Pretty Flacko Jodye 2 (LPFJ2) (HNTR Edit)"
+        },
+        {
+          "time": "06:45",
+          "title": "Tiësto & Sexyy Red - OMG! (From F1® The Movie) [ATLANTIC/MUSICAL FREEDOM]"
+        },
+        {
+          "time": "09:00",
+          "title": "SIDEPIECE & Westend - Take Your Places [LIP SERVICE]"
+        },
+        {
+          "time": "10:45",
+          "title": "Anyma & Argy & Son Of Son - Voices In My Head (Luis Torres Remix) [THE END OF GENESYS/INTERSCOPE]"
+        },
+        {
+          "time": "13:07",
+          "title": "DIEGO SAN DIEGO & Alec Monopoly - TEQUILA [KONTOR/PAPER ROCKET]"
+        },
+        {
+          "time": "14:30",
+          "title": "G-POL - Renegade Master (Don Diablo Edit) [HEXAGON]"
+        },
+        {
+          "time": "15:45",
+          "title": "Chris Lorenzo & COBRAH vs. Christian Nielsen - MAMI vs. Losing My Mind (Tiësto Mashup) [LATE CHECKOUT/SPECTRUM]"
+        },
+        {
+          "time": "17:05",
+          "title": "Ugo Banchi - Dance With Ibiza (Linska Remix) [FREE]"
+        },
+        {
+          "time": "19:18",
+          "title": "Luis Torres - Love At The Rave [CONFESSION]"
+        },
+        {
+          "time": "20:15",
+          "title": "Tiësto & Swimming Paul - VHS Rave [MUSICAL FREEDOM/HEADROOM]"
+        },
+        {
+          "time": "22:50",
+          "title": "Lola Young - Messy (David Puentez VIP Edit) [FREE]"
+        },
+        {
+          "time": "24:50",
+          "title": "Innellea & TH;EN & Carlo Whale - Inside Your Mind [BELONGING]"
+        },
+        {
+          "time": "26:40",
+          "title": "Gotye & Kimbra & SIDEPIECE vs. Marshmello & Bastille - Somebody That I Used To Know vs. Happier (Tiësto Mashup) [ASTRALWERKS/JOYTIME COLLECTIVE/INTERSCOPE]"
+        },
+        {
+          "time": "29:36",
+          "title": "RÜFÜS DU SOL - Innerbloom (RUMPUS Edit)"
+        },
+        {
+          "time": "32:04",
+          "title": "Notre Dame & Tiësto vs. Kendrick Lamar & SZA - Yumi vs. All The Stars (Tiësto Mashup) [TOP DAWG/THREE SIX ZERO]"
+        },
+        {
+          "time": "35:55",
+          "title": "Cannons - Fire For You (Tiësto VIP Remix) [COLUMBIA (SONY)]"
+        },
+        {
+          "time": "39:43",
+          "title": "Tiësto & David Puentez - M83 (Tiësto Birthday Treatment Remix) [FREE]"
+        },
+        {
+          "time": "42:35",
+          "title": "Einmusik & Solee - We Talk About Dreams [EINMUSIKA]"
+        },
+        {
+          "time": "45:32",
+          "title": "Tiësto & Poppy Baskcomb - Drifting [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "47:35",
+          "title": "CHRYSTAL - The Days (NOTION Remix) [POLYDOR/CHAOS]"
+        },
+        {
+          "time": "49:50",
+          "title": "John Summit ft. Inéz - light years [EXPERTS ONLY/DARKROOM REC.]"
+        },
+        {
+          "time": "52:00",
+          "title": "Teriyaki Boyz vs. Gwen Stefani - Tokio Drift vs. Hollaback Girl (Macon 148 BPM Remix) [SMASH THE HOUSE/INTERSCOPE/UMG]"
+        },
+        {
+          "time": "53:50",
+          "title": "Onlynumbers ft. Lucie Hart - Euphoric Night (Tiësto Remix) [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "56:15",
+          "title": "Dimitri Vegas & Like Mike & Tiësto & W&W ft. Dido - Thank You (Not So Bad) [SONY]"
+        },
+        {
+          "time": "01:00:00",
+          "title": "Storm - Time To Burn (David Forbes Remix) [BLACK HOLE]"
+        },
+        {
+          "time": "01:00:50",
+          "title": "KlangKuenstler & Sant - Toter Schmetterling (Tiësto Edit) [OUTWORLD]"
+        },
+        {
+          "time": "01:02:35",
+          "title": "Deorro - Five Hours [LE7ELS/ULTRA]"
+        },
+        {
+          "time": "01:03:55",
+          "title": "Tiësto - RVN (Raven) [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "01:07:04",
+          "title": "Tiësto & Odd Mob & GOODBOYS - Won't Be Possible [ATLANTIC/MUSICAL FREEDOM]"
+        },
+        {
+          "time": "01:09:40",
+          "title": "Anyma & Solomun ft. Claudia Valentina - Till I Die [DIYNAMIC]"
+        },
+        {
+          "time": "01:11:30",
+          "title": "Tiësto - Lethal Industry (Rose Ringed Remix) [MUSICAL FREEDOM/MAGIK MUZIK]"
+        },
+        {
+          "time": "01:14:13",
+          "title": "Cygnus X & Ummet Ozcan vs. Rozalla vs. Odd Mob & OMNOM - Free Control (Tiësto Edit) [EPIC (SONY BMG)/XTRAVAGANZA/EXPERTS ONLY]"
+        },
+        {
+          "time": "01:15:45",
+          "title": "MOGUAI - Ready Steady Go [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "01:18:18",
+          "title": "Tiësto vs. Da Hool - Meet Her [NITRON (SONY)]"
+        },
+        {
+          "time": "01:19:35",
+          "title": "Da Hool - Meet Her At The Love Parade (James Hype Edit)"
+        },
+        {
+          "time": "01:21:10",
+          "title": "Tiësto & Oscar L - Flex [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "01:23:08",
+          "title": "Playboi Carti - EVIL J0RDAN (HILLS Remix) [INTERSCOPE]"
+        },
+        {
+          "time": "01:24:00",
+          "title": "ID - ID"
+        },
+        {
+          "time": "01:26:35",
+          "title": "Yeah Yeah Yeahs - Heads Will Roll (Tiësto 2025 Remix)"
+        },
+        {
+          "time": "01:29:24",
+          "title": "Tiësto - ID"
+        }
+      ]
+    },
+    "2026-tiesto-we-belong-here": {
+      "title": "Tiësto @ We Belong Here",
+      "artists": [
+        "Tiësto"
+      ],
+      "album": "We Belong Here 2026",
+      "premiered": "2026-03-01",
+      "genres": [
+        "Trance",
+        "Dance/Electro Pop",
+        "Techno",
+        "Electronica"
+      ],
+      "tags": [
+        "festival_set",
+        "We Belong Here",
+        "Tiësto"
+      ],
+      "studio": "",
+      "runtime": "126",
+      "stage": "",
+      "set_poster": "set-2026-tiesto-we-belong-here.jpg",
+      "chapters": [
+        {
+          "time": "00:01",
+          "title": "Tiësto & Brieanna Grace - Beautiful Places [MUSICAL FREEDOM/ATLANTIC]"
+        },
+        {
+          "time": "01:16",
+          "title": "Fred again.. & Jamie T - Lights Burn Dimmer (Tiësto Remix) [ATLANTIC]"
+        },
+        {
+          "time": "03:35",
+          "title": "Aaron Hibell - Desert Rain [ASTRALWERKS/ALL TIME HIGH]"
+        },
+        {
+          "time": "06:11",
+          "title": "Santigold - Disparate Youth (Tiësto Remix) [SONY]"
+        },
+        {
+          "time": "09:48",
+          "title": "Tiësto ft. Tegan & Sara - Feel It In My Bones [ULTRA]"
+        },
+        {
+          "time": "16:32",
+          "title": "Tiësto - Echo Sax [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "19:28",
+          "title": "Tiësto - Moons Orbit [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "22:20",
+          "title": "Daxson - Manifesto [PERFECTO FLUORO]"
+        },
+        {
+          "time": "25:37",
+          "title": "Alex Di Stefano - Split [SKULLDUGGERY (BLACK HOLE)]"
+        },
+        {
+          "time": "31:08",
+          "title": "Monzilla - Sincere [EASTERIA (ABORA)]"
+        },
+        {
+          "time": "34:09",
+          "title": "Saltwater & Alphazone vs. Gladys Knight & The Pips - The Legacy vs. The Way We Were / Try To Remember (Tiësto Mashup) [ZENITH]"
+        },
+        {
+          "time": "38:12",
+          "title": "M.I.K.E. pres. Push - Strange World (Tiësto Remix) [BONZAI]"
+        },
+        {
+          "time": "40:10",
+          "title": "Motorcycle - As The Rush Comes (Tiësto 2025 Remix)"
+        },
+        {
+          "time": "43:52",
+          "title": "Delerium ft. Sarah McLachlan - Silence (Tiësto In Search Of Sunrise 2025 Remix) [JOYTIME COLLECTIVE]"
+        },
+        {
+          "time": "48:07",
+          "title": "Tiësto - Nyana [BLACK HOLE]"
+        },
+        {
+          "time": "51:19",
+          "title": "Reflekt ft. Delline Bass - Need To Feel Loved (Tiësto Remix)"
+        },
+        {
+          "time": "54:17",
+          "title": "CIElll - Paradise Lost (Balearic Mix) [SELF RELEASED]"
+        },
+        {
+          "time": "58:24",
+          "title": "Robbie Doherty & FOLEY (UK) - Sunday Sunrise"
+        },
+        {
+          "time": "01:01:01",
+          "title": "dj try & Pagan - Thinking Of You [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "01:05:36",
+          "title": "Gusta - Let You In (Eternity Mix) [NGRECORDS]"
+        },
+        {
+          "time": "01:09:14",
+          "title": "S3PPA - LIKE A WOMAN [SELF RELEASED]"
+        },
+        {
+          "time": "01:12:40",
+          "title": "Armand van Helden - I Want Your Soul (BURNR Edit)"
+        },
+        {
+          "time": "01:16:12",
+          "title": "Lostly - Alone [LOSTLY MUSIC]"
+        },
+        {
+          "time": "01:22:49",
+          "title": "Ryan Case - IT'S YOU IT'S ME [FREE]"
+        },
+        {
+          "time": "01:24:25",
+          "title": "ROSALÍA & Björk & Yves Tumor vs. Tiësto - Berghain vs. Traffic (Tiësto Mashup) [MAGIK MUZIK (BLACK HOLE)/COLUMBIA (SONY)]"
+        },
+        {
+          "time": "01:26:57",
+          "title": "EsDeeKid - 4 Raws (Tiësto Remix)"
+        },
+        {
+          "time": "01:30:34",
+          "title": "Stoked & Axis Of Time - Rampage [BITONAL]"
+        },
+        {
+          "time": "01:33:27",
+          "title": "Tiësto - Adagio For Strings [MAGIK MUZIK (BLACK HOLE)]"
+        },
+        {
+          "time": "01:37:31",
+          "title": "Ratty - Sunrise (Here I Am) (Tiësto Remix) [SHEFFIELD TUNES (KONTOR)]"
+        },
+        {
+          "time": "01:40:37",
+          "title": "Marie Vaunt - That Acid [EXTATIC (REVEALED)]"
+        },
+        {
+          "time": "01:42:46",
+          "title": "Tiësto - House Of Eternity"
+        },
+        {
+          "time": "01:45:10",
+          "title": "Domastic - Born Free [JUNIOR BOY'S OWN/STRICTLY RHYTHM]"
+        },
+        {
+          "time": "01:48:28",
+          "title": "AEREA - Monsters (Tiësto Remix) [FUTURE TRANCE]"
+        },
+        {
+          "time": "01:51:08",
+          "title": "Gusta - Let You In (Eternity Mix) [NGRECORDS]"
+        },
+        {
+          "time": "01:53:03",
+          "title": "Pegassi - MOAA [SWEET NOTHING]"
+        },
+        {
+          "time": "01:54:46",
+          "title": "THEBOYBENNIE & Parsa Nani - Feel Good [FREE]"
+        },
+        {
+          "time": "01:57:13",
+          "title": "Joji - Last Of A Dying Breed (Tiësto Remix)"
+        },
+        {
+          "time": "01:59:08",
+          "title": "KUKO - Voicemail (Tiësto Remix) [INNERGATE]"
+        },
+        {
+          "time": "02:02:28",
+          "title": "Daniel Lopatin - I Love You, Tokyo (Tiësto Rework)"
+        }
+      ]
+    },
+    "2025-david-guetta-tomorrowland-mainstage": {
+      "title": "David Guetta @ Mainstage, Tomorrowland",
+      "artists": [
+        "David Guetta"
+      ],
+      "album": "Tomorrowland 2025",
+      "premiered": "2025-07-20",
+      "genres": [
+        "Dance/Electro Pop",
+        "Mainstage",
+        "Melodic House/Techno"
+      ],
+      "tags": [
+        "festival_set",
+        "Tomorrowland",
+        "David Guetta"
+      ],
+      "studio": "Mainstage",
+      "runtime": "74",
+      "stage": "Mainstage",
+      "set_poster": "set-2025-david-guetta-tomorrowland-mainstage.jpg",
+      "chapters": [
+        {
+          "time": "00:12",
+          "title": "David Guetta ft. Bebe Rexha - I'm Good (Blue) (Cedric Gervais Remix) [PARLOPHONE (WARNER MUSIC)]"
+        },
+        {
+          "time": "05:03",
+          "title": "David Guetta ft. Sia - Titanium (David Guetta & MORTEN Future Rave Remix) [FFRR (PARLOPHONE)]"
+        },
+        {
+          "time": "09:40",
+          "title": "Hel:sløwed & Nina de Koning vs. Dada Life - Give It To Me vs. Kick Out The Epic Motherfucker (Armin van Buuren Mashup) [SO MUCH DADA/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "13:35",
+          "title": "Armin van Buuren & JOA - Heavy [ARMADA]"
+        },
+        {
+          "time": "14:55",
+          "title": "Travis Scott & Playboi Carti vs. MORTEN & David Guetta & Fedde Le Grand - FE!N vs. Night In Detroit (DJs From Mars Bootleg) [CACTUS JACK/FUTURE RAVE]"
+        },
+        {
+          "time": "18:04",
+          "title": "Flo Rida ft. David Guetta - Club Can't Handle Me (From The Step Up 3D Soundtrack) (David Guetta & DJs From Mars Bootleg) [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "19:48",
+          "title": "David Guetta & Audio Bullys & DJs From Mars - Things I Haven't Told You [SPINNIN']"
+        },
+        {
+          "time": "21:34",
+          "title": "KRS-One - Sound Of Da Police (David Guetta Remix) [JIVE]"
+        },
+        {
+          "time": "23:33",
+          "title": "David Guetta & Kid Cudi vs. Benny Benassi - Memories vs. Satisfaction (David Guetta & DJs From Mars Mashup) [PARLOPHONE (WARNER MUSIC)/SPINNIN']"
+        },
+        {
+          "time": "27:29",
+          "title": "MORTEN & David Guetta - Lucky [FUTURE RAVE]"
+        },
+        {
+          "time": "30:26",
+          "title": "David Guetta & Cedric Gervais - A Better World (Cedric Gervais & Alexander Orue Remix) [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "33:27",
+          "title": "David Guetta & Chris Willis vs. Volaris vs. Adele - Love Is Gone vs. Don't You Know vs. Set Fire To The Rain (DJs From Mars Bootleg) [FMIF/XL/MAU5TRAP]"
+        },
+        {
+          "time": "37:09",
+          "title": "Jaden Bojsen & David Guetta ft. Sami Brielle - Let's Go [SPINNIN'/ALT:VISION]"
+        },
+        {
+          "time": "40:02",
+          "title": "David Guetta ft. Ne-Yo & Akon - Play Hard (David Guetta & MORTEN Future Rave Remix) [FFRR (PARLOPHONE)]"
+        },
+        {
+          "time": "41:59",
+          "title": "David Guetta & MARTEN HØRGER pres. Men Machine - The Past, The Present, The Future [SPINNIN']"
+        },
+        {
+          "time": "45:31",
+          "title": "David Guetta & MARTEN HØRGER pres. Men Machine ft. Vitalic - Engage [SPINNIN']"
+        },
+        {
+          "time": "47:45",
+          "title": "David Guetta ft. Akon - Sexy Bitch [PARLOPHONE (WARNER MUSIC)]"
+        },
+        {
+          "time": "51:03",
+          "title": "David Guetta & OneRepublic - I Don't Wanna Wait (DJs From Mars Remix) [PARLOPHONE (WARNER MUSIC)]"
+        },
+        {
+          "time": "52:23",
+          "title": "David Guetta & Alphaville & Ava Max - Forever Young [PARLOPHONE (WARNER MUSIC)]"
+        },
+        {
+          "time": "54:57",
+          "title": "AFROJACK & Martin Garrix & David Guetta & Amél ft. Zack Hall - Our Time [SPINNIN']"
+        },
+        {
+          "time": "58:18",
+          "title": "Snoop Dogg vs. David Guetta - Sweat (David Guetta & MORTEN Remix) [WHAT A MUSIC]"
+        },
+        {
+          "time": "01:01:40",
+          "title": "Shouse & David Guetta vs. Pitbull & Ne-Yo & AFROJACK & Nayer vs. Argy & Omnya - Love Tonight vs. Give Me Everything vs. Aria (AFROJACK Mashup) [MR. 305/HELL BEACH/AFTERLIFE]"
+        },
+        {
+          "time": "01:04:07",
+          "title": "Lola Young - Messy (AFROJACK Remix) [ISLAND (UMG)]"
+        },
+        {
+          "time": "01:07:38",
+          "title": "Hypaton & David Guetta - Walked Away [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "01:11:16",
+          "title": "Hypaton & David Guetta ft. Bonnie Tyler - Together [ATLANTIC (WARNER MUSIC)]"
+        }
+      ]
+    },
+    "2025-david-guetta-unvrs-ibiza-galactic-circus": {
+      "title": "David Guetta @ Galactic Circus, [UNVRS] Ibiza",
+      "artists": [
+        "David Guetta"
+      ],
+      "album": "2025",
+      "premiered": "2025-08-15",
+      "genres": [
+        "Dance/Electro Pop",
+        "House",
+        "Mainstage",
+        "Techno",
+        "Melodic House/Techno"
+      ],
+      "tags": [
+        "festival_set",
+        "David Guetta"
+      ],
+      "studio": "Galactic Circus",
+      "runtime": "211",
+      "stage": "Galactic Circus",
+      "set_poster": "set-2025-david-guetta-unvrs-ibiza-galactic-circus.jpg",
+      "chapters": [
+        {
+          "time": "00:00",
+          "title": "David Guetta ft. Bebe Rexha - I'm Good (Blue) (Cedric Gervais Remix) [PARLOPHONE (WARNER MUSIC)]"
+        },
+        {
+          "time": "06:06",
+          "title": "Flo Rida ft. David Guetta - Club Can't Handle Me (From The Step Up 3D Soundtrack) (David Guetta & DJs From Mars Bootleg) [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "07:52",
+          "title": "David Guetta & Audio Bullys & DJs From Mars - Things I Haven't Told You [SPINNIN']"
+        },
+        {
+          "time": "09:38",
+          "title": "Hel:sløwed & Nina de Koning vs. Dada Life - Give It To Me vs. Kick Out The Epic Motherfucker (Armin van Buuren Mashup) [SO MUCH DADA/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "12:20",
+          "title": "David Guetta & Kid Cudi vs. Benny Benassi - Memories vs. Satisfaction (David Guetta & DJs From Mars Mashup) [PARLOPHONE (WARNER MUSIC)/SPINNIN']"
+        },
+        {
+          "time": "16:30",
+          "title": "Jaden Bojsen & David Guetta ft. Sami Brielle - Let's Go [SPINNIN'/ALT:VISION]"
+        },
+        {
+          "time": "19:48",
+          "title": "Toman - Verano en NY (David Guetta Remix) [SOLID GROOVES]"
+        },
+        {
+          "time": "22:50",
+          "title": "Matt Sassari & CHRSTPHR ft. Barbatuques - Baiana [CR2]"
+        },
+        {
+          "time": "25:27",
+          "title": "Lady GaGa ft. Colby O'Donis - Just Dance (ACRAZE Remix) [INTERSCOPE]"
+        },
+        {
+          "time": "27:38",
+          "title": "MORTEN & David Guetta - Lucky [FUTURE RAVE]"
+        },
+        {
+          "time": "30:21",
+          "title": "David Guetta & Anne-Marie & Coi Leray vs. MORTEN & Lanie Gardner - Baby Don't Hurt Me vs. Dreams (David Guetta Mashup) [PARLOPHONE (WARNER MUSIC)]"
+        },
+        {
+          "time": "32:04",
+          "title": "David Guetta ft. Ne-Yo & Akon - Play Hard (David Guetta & MORTEN Future Rave Remix) [FFRR (PARLOPHONE)]"
+        },
+        {
+          "time": "35:18",
+          "title": "David Guetta & OneRepublic - I Don't Wanna Wait (DJs From Mars Remix) [PARLOPHONE (WARNER MUSIC)]"
+        },
+        {
+          "time": "38:30",
+          "title": "David Guetta & Alphaville & Ava Max - Forever Young [PARLOPHONE (WARNER MUSIC)]"
+        },
+        {
+          "time": "41:35",
+          "title": "David Guetta - ID"
+        },
+        {
+          "time": "44:20",
+          "title": "Amy Winehouse vs. Orjan Nilsen & Mark Sixma & nilsix - Bring The Techno Back To Black (DJs From Mars Bootleg) [ISLAND (UMG)/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "46:36",
+          "title": "Fatboy Slim & Daniel Steinberg - Bus Stop Please (David Guetta & MORTEN Future Rave Remix) [SOUTHERN FRIED]"
+        },
+        {
+          "time": "49:38",
+          "title": "Joshlane - System Overload [AFTERLIFE]"
+        },
+        {
+          "time": "53:04",
+          "title": "David Guetta ft. Akon - Sexy Bitch [PARLOPHONE (WARNER MUSIC)]"
+        },
+        {
+          "time": "56:24",
+          "title": "Drake - NOKIA (David Guetta Remix) [OVO]"
+        },
+        {
+          "time": "58:00",
+          "title": "SIDEPIECE & Bobby Shmurda - CASH OUT [LIP SERVICE]"
+        },
+        {
+          "time": "01:00:58",
+          "title": "House Of Pain - Jump Around [TOMMY BOY]"
+        },
+        {
+          "time": "01:04:01",
+          "title": "David Guetta & Chris Willis vs. Volaris vs. Adele - Love Is Gone vs. Don't You Know vs. Set Fire To The Rain (DJs From Mars Bootleg) [FMIF/XL/MAU5TRAP]"
+        },
+        {
+          "time": "01:07:30",
+          "title": "David Guetta & Kelly Rowland & MORTEN vs. Bruno Mars vs. JustLuke - When Love Takes Over vs. Just The Way You Are vs. Turn It Off (David Guetta Mashup) [ATLANTIC (WARNER MUSIC)/EMI/HYSTERIA]"
+        },
+        {
+          "time": "01:10:51",
+          "title": "David Guetta & Sia vs. Sebastian Ingrosso & Alesso - Calling Titanium (David Guetta & DJs From Mars Mashup) [PARLOPHONE/REFUNE (WARNER MUSIC)]"
+        },
+        {
+          "time": "01:14:58",
+          "title": "Lola Young - Messy (AFROJACK Remix) [ISLAND (UMG)]"
+        },
+        {
+          "time": "01:18:19",
+          "title": "Calvin Harris ft. Clementine Douglas - Blessings (Cassian Remix) [COLUMBIA (SONY)]"
+        },
+        {
+          "time": "01:22:20",
+          "title": "Cassian & YOTTO & Da Hool - Love Parade [AFTERLIFE]"
+        },
+        {
+          "time": "01:24:30",
+          "title": "Green Velvet ft. Walter Philips - Shake And Pop (John Summit Remix) [EXPERTS ONLY]"
+        },
+        {
+          "time": "01:28:06",
+          "title": "Snoop Dogg vs. David Guetta - Sweat (David Guetta & MORTEN Remix) [WHAT A MUSIC]"
+        },
+        {
+          "time": "01:31:46",
+          "title": "David Guetta ft. Flo Rida & Nicki Minaj - Where Them Girls At (David Guetta & MORTEN Remix) [PARLOPHONE (WARNER MUSIC)]"
+        },
+        {
+          "time": "01:35:02",
+          "title": "David Guetta & MORTEN - Permanence [MUSICAL FREEDOM]"
+        },
+        {
+          "time": "01:38:47",
+          "title": "David Guetta & Kiko & Olivier Giacomotto - Prayer [SPINNIN']"
+        },
+        {
+          "time": "01:42:00",
+          "title": "Shouse & David Guetta vs. Pitbull & Ne-Yo & AFROJACK & Nayer vs. Argy & Omnya - Love Tonight vs. Give Me Everything vs. Aria (AFROJACK Mashup) [MR. 305/HELL BEACH/AFTERLIFE]"
+        },
+        {
+          "time": "01:45:22",
+          "title": "Swedish House Mafia ft. John Martin - Don't You Worry Child (David Guetta Remix) [POPHOUSE]"
+        },
+        {
+          "time": "01:49:00",
+          "title": "Eric Prydz - Call On Me [DATA REC. (MINISTRY OF SOUND)]"
+        },
+        {
+          "time": "01:53:37",
+          "title": "ZHU - Faded (Blacklizt Version / HNTR Remix) [BROKE/BLACKLIZT SOUND SYNDICATE]"
+        },
+        {
+          "time": "01:57:00",
+          "title": "A$AP Rocky - Lord Pretty Flacko Jodye 2 (LPFJ2) (HNTR Edit)"
+        },
+        {
+          "time": "01:59:39",
+          "title": "Black Eyed Peas vs. Armin van Buuren & Anne Gudrun vs. Rihanna & Calvin Harris - I Gotta Feeling vs. Love Is A Drug vs. We Found Love (David Guetta Mashup) [INTERSCOPE/DEF JAM/ARMIND (ARMADA)]"
+        },
+        {
+          "time": "02:03:24",
+          "title": "Doechii - Anxiety (David Guetta Remix) [TOP DAWG]"
+        },
+        {
+          "time": "02:06:45",
+          "title": "Avicii vs. Journey - Levels vs. Don't Stop Believin' (David Guetta Mashup) [LE7ELS/UMG/COLUMBIA (SONY)]"
+        },
+        {
+          "time": "02:13:11",
+          "title": "Sgt Slick - Gimme! Gimme! Gimme! (Sgt Slick Melbourne Recut) [VICIOUS]"
+        },
+        {
+          "time": "02:17:37",
+          "title": "David Guetta ft. Usher - Without You [PARLOPHONE/WHAT A MUSIC]"
+        },
+        {
+          "time": "02:21:59",
+          "title": "Bebe Rexha & David Guetta - Sad Girls [EMPIRE]"
+        },
+        {
+          "time": "02:24:33",
+          "title": "David Guetta & Cedric Gervais - A Better World (Cedric Gervais & Alexander Orue Remix) [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "02:27:35",
+          "title": "Travis Scott & Playboi Carti vs. MORTEN & David Guetta & Fedde Le Grand - FE!N vs. Night In Detroit (DJs From Mars Bootleg) [CACTUS JACK/FUTURE RAVE]"
+        },
+        {
+          "time": "02:30:14",
+          "title": "Steve Angello vs. Swedish House Mafia & A$AP Rocky - Hooligans vs. Frankenstein (Axwell Mashup) [SSA (REPUBLIC)/SIZE]"
+        },
+        {
+          "time": "02:31:57",
+          "title": "David Guetta vs. The Egg ft. Chris Willis - Love Don't Let Me Go (Walking Away) [VIRGIN]"
+        },
+        {
+          "time": "02:35:04",
+          "title": "David Guetta & MARTEN HØRGER pres. Men Machine - The Past, The Present, The Future [SPINNIN']"
+        },
+        {
+          "time": "02:38:23",
+          "title": "David Guetta & MARTEN HØRGER pres. Men Machine ft. Vitalic - Engage [SPINNIN']"
+        },
+        {
+          "time": "02:40:57",
+          "title": "David Guetta & MARTEN HØRGER pres. Men Machine - Hey You [SPINNIN']"
+        },
+        {
+          "time": "02:42:15",
+          "title": "Eurythmics - Sweet Dreams (Are Made of This) (Antiyu Remix) [BIG MACHINE/RCA]"
+        },
+        {
+          "time": "02:44:12",
+          "title": "Cassius ft. Steve Edwards - The Sound Of Violence (David Guetta Remix) [CASSIUS]"
+        },
+        {
+          "time": "02:45:32",
+          "title": "Bob Sinclar ft. Steve Edwards - World, Hold On (Children Of The Sky) (David Guetta Remix) [DEFECTED]"
+        },
+        {
+          "time": "02:47:11",
+          "title": "Mind Against & Sideral vs. Crystal Waters - Colossal vs. Gypsy Woman (She's Homeless) (David Guetta Mashup)"
+        },
+        {
+          "time": "02:48:58",
+          "title": "DJ Yasmin - Missing [INTERPLAY]"
+        },
+        {
+          "time": "02:50:48",
+          "title": "Ultra Naté - Free (David Guetta Remix) [STRICTLY RHYTHM]"
+        },
+        {
+          "time": "02:52:43",
+          "title": "DumitrEscu - Sitting In The Sun (Walking In The Rain) [CHAOS]"
+        },
+        {
+          "time": "02:55:10",
+          "title": "MK ft. CHRYSTAL - Dior (David Guetta Remix) [COLUMBIA (SONY)]"
+        },
+        {
+          "time": "02:58:20",
+          "title": "DJ Deeon vs. Lee Walker ft. Katy B & MNEK - Freak Like Me (Ben Kim Remix) [DEFECTED]"
+        },
+        {
+          "time": "03:01:23",
+          "title": "Calvin Harris - Summer (MBP & Rivo Edit)"
+        },
+        {
+          "time": "03:04:10",
+          "title": "Argy vs. Coldplay - Collision vs. A Sky Full Of Stars (Rivo Mashup)"
+        },
+        {
+          "time": "03:07:06",
+          "title": "Disclosure ft. Eliza Doolittle - You & Me (Rivo Remix) [ISLAND (UMG)]"
+        },
+        {
+          "time": "03:11:12",
+          "title": "Da Capo & Moojo vs. Metro Boomin & The Weeknd & 21 Savage - Secret ID vs. Creepin' (Rivo Mashup) [BOOMINATI WORLDWIDE/CALAMAR]"
+        },
+        {
+          "time": "03:13:17",
+          "title": "Swanky Tunes & Shapov - Favela [SPINNIN']"
+        },
+        {
+          "time": "03:17:02",
+          "title": "Toman - Verano en NY (David Guetta Remix) [SOLID GROOVES]"
+        },
+        {
+          "time": "03:20:35",
+          "title": "Hypaton & David Guetta - Walked Away [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "03:23:38",
+          "title": "Hypaton & David Guetta ft. Bonnie Tyler - Together [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "03:27:49",
+          "title": "Hypaton & David Guetta - The Best [ATLANTIC (WARNER MUSIC)]"
+        }
+      ]
+    },
+    "2025-anyma-tomorrowland-mainstage": {
+      "title": "Anyma @ Mainstage, Tomorrowland",
+      "artists": [
+        "Anyma"
+      ],
+      "album": "Tomorrowland 2025",
+      "premiered": "2025-07-26",
+      "genres": [
+        "Melodic House/Techno",
+        "Techno",
+        "Dance/Electro Pop",
+        "Indie Dance",
+        "Goa/Psy-Trance"
+      ],
+      "tags": [
+        "festival_set",
+        "Tomorrowland",
+        "Anyma"
+      ],
+      "studio": "Mainstage",
+      "runtime": "59",
+      "stage": "Mainstage",
+      "set_poster": "set-2025-anyma-tomorrowland-mainstage.jpg",
+      "chapters": [
+        {
+          "time": "00:12",
+          "title": "Cassian & SCRIPT & Belladonna - Where I'm From (Intro Edit) [TSZR]"
+        },
+        {
+          "time": "03:20",
+          "title": "Kevin de Vries & Jast - Born Like That [AFTERLIFE]"
+        },
+        {
+          "time": "06:00",
+          "title": "Anyma & Argy & Son Of Son - Voices In My Head [THE END OF GENESYS/INTERSCOPE]"
+        },
+        {
+          "time": "09:00",
+          "title": "GENESI - Hyper (DJ KUBA & NEITAN Remix) [DIYNAMIC]"
+        },
+        {
+          "time": "12:00",
+          "title": "Massano - Cash Is King [DIYNAMIC]"
+        },
+        {
+          "time": "14:50",
+          "title": "TH;EN & SLVR - Gangs [FUTURE RAVE]"
+        },
+        {
+          "time": "17:00",
+          "title": "Duke Dumont ft. Shaun Ross - Red Light, Green Light (Jast Remix) [BLASE BOYS CLUB (VIRGIN EMI)]"
+        },
+        {
+          "time": "19:15",
+          "title": "Armin van Buuren & JOA - Heavy [ARMADA]"
+        },
+        {
+          "time": "22:20",
+          "title": "Joshlane - System Overload [AFTERLIFE]"
+        },
+        {
+          "time": "24:50",
+          "title": "Anyma - Pictures Of You (Cassian Remix) [AFTERLIFE/INTERSCOPE]"
+        },
+        {
+          "time": "26:45",
+          "title": "Massano - The Feeling (2025 Private Edit) [RUNNING CLOUDS]"
+        },
+        {
+          "time": "30:20",
+          "title": "M83 - Midnight City (Reezer & Driver Of The Future Remix) [FREE]"
+        },
+        {
+          "time": "32:50",
+          "title": "Fred again.. & Swedish House Mafia ft. Future - Turn On The Lights Again.. (Anyma Remix) [ATLANTIC (WARNER MUSIC)]"
+        },
+        {
+          "time": "36:00",
+          "title": "Seth Hills & DAMEN - Losing My Mind [TOMORROWLAND]"
+        },
+        {
+          "time": "38:30",
+          "title": "Adam Port & Stryv ft. Malachiii - Move (Anyma & Cassian Remix) [KEINEMUSIK]"
+        },
+        {
+          "time": "41:50",
+          "title": "Loofy - Last Night (Anyma & Layton Giordani Remix) [NERVOUS]"
+        },
+        {
+          "time": "44:35",
+          "title": "Tiësto - Traffic (Anyma & Stylo Remix) [MAGIK MUZIK (BLACK HOLE)]"
+        },
+        {
+          "time": "47:40",
+          "title": "Anyma ft. EJAE - Out Of My Body [THE END OF GENESYS/INTERSCOPE]"
+        },
+        {
+          "time": "50:40",
+          "title": "Zombie Nation - Kernkraft 400 (Brigado Crew Re-Interpretation)"
+        },
+        {
+          "time": "54:04",
+          "title": "Anyma & Rebūke - Syren (Adam Sellouk Remix) [AFTERLIFE/INTERSCOPE]"
+        },
+        {
+          "time": "55:25",
+          "title": "Anyma & Chris Avantgarde - Consciousness (Omiki Remix) [FREE]"
+        },
+        {
+          "time": "57:19",
+          "title": "The Weeknd - Blinding Lights (Anyma & Mike Dean Remix) [XO (REPUBLIC)]"
+        }
+      ]
+    }
+  }
+}
