@@ -22,6 +22,7 @@
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#gallery">Gallery</a>
+      <a href="#library-browser">Demo</a>
       <a href="#workflow">Workflow</a>
       <a href="#install">Install</a>
       <a href="docs/">Docs</a>
@@ -48,13 +49,36 @@
       </div>
     </div>
     <div class="hero-posters">
-      <div class="hero-poster" style="--delay: 0.1s"><img src="assets/martin-garrix-red-rocks.jpg" alt="Martin Garrix at Red Rocks poster" loading="lazy"></div>
-      <div class="hero-poster" style="--delay: 0.2s"><img src="assets/tomorrowland-album.jpg" alt="Tomorrowland album poster" loading="lazy"></div>
-      <div class="hero-poster" style="--delay: 0.3s"><img src="assets/swedish-house-mafia-umf.jpg" alt="Swedish House Mafia at UMF poster" loading="lazy"></div>
-      <div class="hero-poster" style="--delay: 0.15s"><img src="assets/edc-las-vegas-album.jpg" alt="EDC Las Vegas album poster" loading="lazy"></div>
-      <div class="hero-poster" style="--delay: 0.25s"><img src="assets/tiesto-edc-las-vegas.jpg" alt="Tiesto at EDC Las Vegas poster" loading="lazy"></div>
+      <div class="hero-poster" style="--delay: 0.1s"><img src="assets/festfolder-tomorrowland.jpg" alt="Tomorrowland festival folder poster" loading="lazy"></div>
+      <div class="hero-poster" style="--delay: 0.15s"><img src="assets/set-2025-martin-garrix-red-rocks.jpg" alt="Martin Garrix at Red Rocks set poster" loading="lazy"></div>
+      <div class="hero-poster" style="--delay: 0.2s"><img src="assets/set-2025-armin-van-buuren-tomorrowland-mainstage.jpg" alt="Armin van Buuren at Tomorrowland set poster" loading="lazy"></div>
+      <div class="hero-poster" style="--delay: 0.25s"><img src="assets/set-2026-tiesto-we-belong-here.jpg" alt="Tiesto at We Belong Here set poster" loading="lazy"></div>
+      <div class="hero-poster" style="--delay: 0.3s"><img src="assets/artistfolder-swedish-house-mafia.jpg" alt="Swedish House Mafia artist folder poster" loading="lazy"></div>
     </div>
   </section>
+
+  <!-- Library browser -->
+  <section id="library-browser" class="browser">
+    <div class="browser-head">
+      <h2>Browse a CrateDigger library</h2>
+      <p>Switch the folder layout and click through real enriched sets.</p>
+      <label class="browser-layout">
+        Layout:
+        <select id="browser-layout">
+          <option value="artist_flat">artist_flat</option>
+          <option value="place_flat">place_flat</option>
+          <option value="artist_nested">artist_nested</option>
+          <option value="place_nested">place_nested</option>
+        </select>
+      </label>
+    </div>
+    <div class="browser-grid">
+      <nav id="browser-tree" class="browser-tree" aria-label="Library folders"></nav>
+      <figure class="browser-stage"><img id="browser-poster" alt="" loading="lazy"></figure>
+      <aside id="browser-meta" class="browser-meta" hidden></aside>
+    </div>
+  </section>
+  <script src="assets/browser.js" defer></script>
 
   <!-- Features -->
   <section class="features reveal" id="features">
@@ -99,24 +123,24 @@
     <div class="section-header">
       <span class="section-label">Generated artwork</span>
       <h2>Posters that look the part</h2>
-      <p class="section-desc">CrateDigger generates two poster styles: <strong>set posters</strong> using video frames with artist and event metadata, and <strong>album posters</strong> with festival branding and color-matched gradients.</p>
+      <p class="section-desc">CrateDigger generates <strong>set posters</strong> using video frames with artist and event metadata, plus per-folder <strong>album posters</strong> in three layouts chosen by folder type: <strong>festival</strong> (curated logo), <strong>artist</strong> (DJ or fanart background), and <strong>year</strong> (color-matched gradient).</p>
     </div>
     <div class="gallery-row">
       <div class="gallery-group">
         <span class="gallery-label">Set Posters</span>
         <div class="gallery-items">
-          <div class="gallery-item"><img src="assets/martin-garrix-red-rocks.jpg" alt="Martin Garrix - Red Rocks" loading="lazy"></div>
-          <div class="gallery-item"><img src="assets/swedish-house-mafia-umf.jpg" alt="Swedish House Mafia - UMF Miami" loading="lazy"></div>
-          <div class="gallery-item"><img src="assets/tiesto-edc-las-vegas.jpg" alt="Tiesto - EDC Las Vegas" loading="lazy"></div>
-          <div class="gallery-item"><img src="assets/armin-van-buuren-tomorrowland.jpg" alt="Armin van Buuren - Tomorrowland Brasil" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/set-2025-martin-garrix-red-rocks.jpg" alt="Martin Garrix - Red Rocks" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/set-2025-swedish-house-mafia-tomorrowland-mainstage.jpg" alt="Swedish House Mafia - Tomorrowland" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/set-2025-tiesto-edc-las-vegas-circuitgrounds.jpg" alt="Tiesto - EDC Las Vegas" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/set-2025-armin-van-buuren-tomorrowland-mainstage.jpg" alt="Armin van Buuren - Tomorrowland" loading="lazy"></div>
         </div>
       </div>
       <div class="gallery-group">
-        <span class="gallery-label">Album Posters</span>
+        <span class="gallery-label">Folder Posters: festival, artist, year</span>
         <div class="gallery-items">
-          <div class="gallery-item"><img src="assets/tomorrowland-album.jpg" alt="Tomorrowland" loading="lazy"></div>
-          <div class="gallery-item"><img src="assets/edc-las-vegas-album.jpg" alt="EDC Las Vegas" loading="lazy"></div>
-          <div class="gallery-item"><img src="assets/amf-album.jpg" alt="AMF" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/festfolder-tomorrowland.jpg" alt="Tomorrowland festival folder poster" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/artistfolder-armin-van-buuren.jpg" alt="Armin van Buuren artist folder poster" loading="lazy"></div>
+          <div class="gallery-item"><img src="assets/yearfolder-place-edc-las-vegas-2025.jpg" alt="EDC Las Vegas year folder poster" loading="lazy"></div>
         </div>
       </div>
     </div>
@@ -307,21 +331,6 @@
     window.addEventListener('scroll', () => {
       nav.classList.toggle('nav-scrolled', window.scrollY > 40);
     }, { passive: true });
-
-    /* ---- Typing effect on hero subtitle ---- */
-    const heroDesc = document.querySelector('.hero-desc');
-    const fullText = heroDesc.textContent;
-    heroDesc.textContent = '';
-    heroDesc.style.opacity = '1';
-    let charIndex = 0;
-    function typeChar() {
-      if (charIndex < fullText.length) {
-        heroDesc.textContent += fullText[charIndex];
-        charIndex++;
-        setTimeout(typeChar, 18);
-      }
-    }
-    setTimeout(typeChar, 1200);
 
     /* ---- Smooth counter for step numbers ---- */
     const stepObserver = new IntersectionObserver((entries) => {
