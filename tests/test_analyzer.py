@@ -25,7 +25,6 @@ def test_analyse_with_1001tl_overrides_filename():
         "audio_format": "Opus",
         "audio_bitrate": "125000",
         "overall_bitrate": "13500000",
-        "has_cover": True,
         "artist_tag": "",
         "date_tag": "",
         "description": "",
@@ -44,7 +43,6 @@ def test_analyse_with_1001tl_overrides_filename():
     assert mf.year == "2024"
     assert mf.date == "2024-10-19"
     assert mf.metadata_source == "1001tracklists"
-    assert mf.has_cover is True
 
 
 def test_analyser_surfaces_location_from_metadata():
@@ -70,7 +68,6 @@ def test_analyser_surfaces_location_from_metadata():
         "audio_format": "",
         "audio_bitrate": "",
         "overall_bitrate": "",
-        "has_cover": False,
         "artist_tag": "",
         "date_tag": "",
         "description": "",
@@ -111,7 +108,6 @@ def test_analyse_identified_file_ignores_filename_set_title():
         "width": 1920, "height": 1080,
         "video_format": "", "audio_format": "",
         "audio_bitrate": "", "overall_bitrate": "",
-        "has_cover": True,
         "description": "", "comment": "", "purl": "",
     }
     # Pre-organize YouTube-style filename — current code derives
@@ -190,7 +186,6 @@ def test_analyse_embedded_artist_tag():
         "audio_format": "Opus",
         "audio_bitrate": "",
         "overall_bitrate": "",
-        "has_cover": True,
         "description": "",
         "comment": "",
         "purl": "",
@@ -223,7 +218,6 @@ def test_analyse_maps_enrichment_fields():
         "audio_format": "",
         "audio_bitrate": "",
         "overall_bitrate": "",
-        "has_cover": False,
         "description": "",
         "comment": "",
         "purl": "",
@@ -244,7 +238,7 @@ def test_analyse_normalizes_genre_spacing_from_tag():
         "tracklists_genres": "Melodic House/Techno|Dance / Electro Pop|Minimal / Deep Tech|House",
         "duration_seconds": None, "width": None, "height": None,
         "video_format": "", "audio_format": "", "audio_bitrate": "",
-        "overall_bitrate": "", "has_cover": False,
+        "overall_bitrate": "",
         "description": "", "comment": "", "purl": "",
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
@@ -258,7 +252,7 @@ def _identified_meta(**overrides):
         "artist_tag": "Test", "date_tag": "",
         "duration_seconds": None, "width": None, "height": None,
         "video_format": "", "audio_format": "", "audio_bitrate": "",
-        "overall_bitrate": "", "has_cover": False,
+        "overall_bitrate": "",
         "description": "", "comment": "", "purl": "",
     }
     base.update(overrides)
@@ -313,7 +307,7 @@ def test_display_artist_from_1001tl_b2b():
         "duration_seconds": 3600.0, "width": 1920, "height": 1080,
         "video_format": "VP9", "audio_format": "Opus",
         "audio_bitrate": "", "overall_bitrate": "",
-        "has_cover": True, "description": "", "comment": "", "purl": "",
+        "description": "", "comment": "", "purl": "",
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(
@@ -337,7 +331,7 @@ def test_display_artist_solo_matches_artist():
         "duration_seconds": 7200.0, "width": 3840, "height": 2160,
         "video_format": "VP9", "audio_format": "Opus",
         "audio_bitrate": "125000", "overall_bitrate": "13500000",
-        "has_cover": True, "description": "", "comment": "", "purl": "",
+        "description": "", "comment": "", "purl": "",
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(
@@ -358,7 +352,7 @@ def test_display_artist_ignores_artist_tag():
         "width": None, "height": None,
         "video_format": "", "audio_format": "",
         "audio_bitrate": "", "overall_bitrate": "",
-        "has_cover": False, "description": "", "comment": "", "purl": "",
+        "description": "", "comment": "", "purl": "",
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(
@@ -602,7 +596,6 @@ def test_analyse_standalone_set_clears_festival():
         "audio_format": "AAC",
         "audio_bitrate": "",
         "overall_bitrate": "9243000",
-        "has_cover": True,
         "description": "",
         "comment": "https://www.youtube.com/watch?v=2dBfvEhwe2Q",
         "purl": "https://www.youtube.com/watch?v=2dBfvEhwe2Q",
@@ -656,7 +649,7 @@ def test_analyse_standalone_set_reparse_after_organize():
         "width": 1920, "height": 1080,
         "video_format": "AVC", "audio_format": "AAC",
         "audio_bitrate": "", "overall_bitrate": "9243000",
-        "has_cover": True, "description": "", "comment": "", "purl": "",
+        "description": "", "comment": "", "purl": "",
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(

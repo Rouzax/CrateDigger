@@ -243,7 +243,6 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         audio_format=meta.get("audio_format", ""),
         audio_bitrate=meta.get("audio_bitrate", ""),
         overall_bitrate=meta.get("overall_bitrate", ""),
-        has_cover=meta.get("has_cover", False),
     )
     mf.place, mf.place_kind = config.resolve_place_for_media(mf)
     if mf.stage and mf.stage == mf.place:

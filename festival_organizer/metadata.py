@@ -172,7 +172,6 @@ def _extract_ffprobe(filepath: Path) -> dict:
             "audio_bitrate": audio.get("bit_rate", ""),
             "audio_channels": audio.get("channels", ""),
             "audio_sampling_rate": audio.get("sample_rate", ""),
-            "has_cover": False,  # ffprobe doesn't easily report attachments
         }
 
         # 1001Tracklists tags (ffprobe uses flat tag namespace)

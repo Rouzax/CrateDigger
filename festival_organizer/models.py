@@ -53,7 +53,6 @@ class MediaFile:
     audio_format: str = ""
     audio_bitrate: str = ""
     overall_bitrate: str = ""
-    has_cover: bool = False
 
     @property
     def resolution(self) -> str:
