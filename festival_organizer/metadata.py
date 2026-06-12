@@ -1,10 +1,10 @@
-"""Metadata extraction via MediaInfo CLI and ffprobe fallback.
+"""Metadata extraction via ffprobe.
 
 Logging:
     Logger: 'festival_organizer.metadata'
     Key events:
-        - mediainfo.fail (DEBUG): mediainfo CLI call failed
         - ffprobe.fail (DEBUG): ffprobe CLI call failed
+        - metadata.unreadable (WARNING): ffprobe returned no metadata for a file
     See docs/logging.md for full guidelines.
 """
 import json
@@ -31,7 +31,6 @@ def _fix_string_values(d: dict) -> dict:
 
 # Package → tool names for install hints
 _INSTALL_PACKAGES = {
-    "mediainfo": {"brew": "mediainfo", "apt": "mediainfo", "winget": "MediaArea.MediaInfo.CLI"},
     "ffprobe": {"brew": "ffmpeg", "apt": "ffmpeg", "winget": "Gyan.FFmpeg"},
     "mkvextract": {"brew": "mkvtoolnix", "apt": "mkvtoolnix", "winget": "MKVToolNix.MKVToolNix"},
     "mkvpropedit": {"brew": "mkvtoolnix", "apt": "mkvtoolnix", "winget": "MKVToolNix.MKVToolNix"},
@@ -79,7 +78,6 @@ def get_install_hint(tool_name: str) -> str:
 
 
 # Resolved at import time (no config); reconfigured via configure_tools()
-MEDIAINFO_PATH = find_tool("mediainfo")
 FFPROBE_PATH = find_tool("ffprobe")
 MKVEXTRACT_PATH = find_tool("mkvextract")
 MKVPROPEDIT_PATH = find_tool("mkvpropedit")
@@ -88,9 +86,8 @@ MKVMERGE_PATH = find_tool("mkvmerge")
 
 def configure_tools(config: object) -> None:
     """Re-resolve tool paths using config-provided overrides."""
-    global MEDIAINFO_PATH, FFPROBE_PATH, MKVEXTRACT_PATH, MKVPROPEDIT_PATH, MKVMERGE_PATH
+    global FFPROBE_PATH, MKVEXTRACT_PATH, MKVPROPEDIT_PATH, MKVMERGE_PATH
     tool_paths = config.tool_paths if hasattr(config, "tool_paths") else {}
-    MEDIAINFO_PATH = find_tool("mediainfo", configured_path=tool_paths.get("mediainfo"))
     FFPROBE_PATH = find_tool("ffprobe", configured_path=tool_paths.get("ffprobe"))
     MKVEXTRACT_PATH = find_tool("mkvextract", configured_path=tool_paths.get("mkvextract"))
     MKVPROPEDIT_PATH = find_tool("mkvpropedit", configured_path=tool_paths.get("mkvpropedit"))
@@ -134,100 +131,6 @@ _ENRICHMENT_TAG_KEYS: dict[str, str] = {
     "clearlogo_url": "CRATEDIGGER_CLEARLOGO_URL",
     "enriched_at": "CRATEDIGGER_ENRICHED_AT",
 }
-
-
-def parse_mediainfo_json(data: dict) -> dict:
-    """Parse MediaInfo JSON output into a flat metadata dict."""
-    tracks = data.get("media", {}).get("track", [])
-    if not tracks:
-        return {}
-
-    general = tracks[0]
-    video = next((t for t in tracks if t.get("@type") == "Video"), {})
-    audio = next((t for t in tracks if t.get("@type") == "Audio"), {})
-    extra = general.get("extra", {})
-
-    result = {
-        "title": general.get("Title", ""),
-        "duration_seconds": _parse_duration(general.get("Duration", "")),
-        "overall_bitrate": general.get("OverallBitRate", ""),
-        "format": general.get("Format", ""),
-        "encoded_date": general.get("Encoded_Date", ""),
-        # yt-dlp / custom tags
-        "artist_tag": general.get("ARTIST", "") or extra.get("ARTIST", ""),
-        "date_tag": general.get("DATE", "") or extra.get("DATE", ""),
-        "description": general.get("Description", ""),
-        "comment": general.get("Comment", ""),
-        "purl": general.get("PURL", "") or extra.get("PURL", ""),
-        # Video
-        "video_format": video.get("Format", ""),
-        "width": _int_or_none(video.get("Width", "")),
-        "height": _int_or_none(video.get("Height", "")),
-        "video_bitrate": video.get("BitRate", ""),
-        "framerate": video.get("FrameRate", ""),
-        # Audio
-        "audio_format": audio.get("Format", ""),
-        "audio_bitrate": audio.get("BitRate", ""),
-        "audio_channels": audio.get("Channels", ""),
-        "audio_sampling_rate": audio.get("SamplingRate", ""),
-        # Cover art
-        "has_cover": bool(general.get("Attachments", "")),
-    }
-
-    # 1001Tracklists tags (new name first, fall back to old; check extra for both)
-    for field, tag_keys in _1001TL_TAG_KEYS.items():
-        result[field] = _first_tag(general, extra, keys=tag_keys)
-
-    # Enrichment tags
-    for field, tag_key in _ENRICHMENT_TAG_KEYS.items():
-        result[field] = general.get(tag_key, "") or extra.get(tag_key, "")
-
-    return _fix_string_values(result)
-
-
-def _override_title_from_mkv_tags(filepath: Path, meta: dict) -> None:
-    """Replace meta['title'] with the scope-authoritative global TITLE for MKVs.
-
-    MediaInfo's General.Title flattens multi-scope TITLE tags into a single
-    field, in practice picking the last per-chapter TITLE on files that also
-    carry CrateDigger's identify-written chapter tags. The spec-correct global
-    title lives at TTV=50 (or at a <Tag> without a TargetTypeValue, which the
-    Matroska spec defaults to 50). Read scope-aware via mkv_tags and override.
-
-    No-op when the file has no Matroska tags at all (fresh files where
-    General.Title comes from SegmentInfo.Title, which is single-scope and
-    safe). No-op for non-MKV formats.
-    """
-    if filepath.suffix.lower() != ".mkv":
-        return
-    # Lazy import: mkv_tags imports from this module for MKVEXTRACT_PATH.
-    from festival_organizer import mkv_tags
-
-    tag_values = mkv_tags.extract_tag_values(filepath)
-    if not tag_values:
-        return
-    meta["title"] = tag_values.get(50, {}).get("TITLE", "")
-
-
-def _extract_mediainfo(filepath: Path) -> dict:
-    """Run MediaInfo CLI and return parsed metadata."""
-    if not MEDIAINFO_PATH:
-        return {}
-    try:
-        result = tracked_run(
-            [MEDIAINFO_PATH, "--Output=JSON", str(filepath)],
-            capture_output=True, text=True, timeout=30,
-            encoding="utf-8", errors="replace",
-        )
-        if result.returncode != 0:
-            return {}
-        data = json.loads(result.stdout)
-        meta = parse_mediainfo_json(data)
-        _override_title_from_mkv_tags(filepath, meta)
-        return meta
-    except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as e:
-        logger.debug("metadata.mediainfo: status=failed file=%s error=\"%s\"", filepath, e)
-        return {}
 
 
 def _extract_ffprobe(filepath: Path) -> dict:
