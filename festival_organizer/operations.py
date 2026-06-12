@@ -279,7 +279,11 @@ class PosterOperation(Operation):
         if self.force:
             return True
         poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
-        return not poster.exists()
+        if not poster.exists():
+            return True
+        from festival_organizer.poster import build_cover_stamp, read_poster_stamp
+        current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config))
+        return read_poster_stamp(poster) != current
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.poster import generate_set_poster

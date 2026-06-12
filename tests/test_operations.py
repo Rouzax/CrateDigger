@@ -2,6 +2,8 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch, MagicMock
 
+from PIL import Image
+
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
     NfoOperation, ArtOperation, PosterOperation,
@@ -167,14 +169,39 @@ def test_poster_op_needed_when_thumb_exists_but_poster_missing(tmp_path):
     assert op.is_needed(video, _make_mf()) is True
 
 
-def test_poster_op_not_needed_when_poster_exists(tmp_path):
-    """Poster operation not needed when poster exists."""
-    video = tmp_path / "test.mkv"
-    video.write_bytes(b"")
+def test_poster_op_not_needed_when_stamp_matches(tmp_path):
+    """Skip when the sidecar stamp equals the current resolved inputs."""
+    from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+    video = tmp_path / "test.mkv"; video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
-    (tmp_path / "test-poster.jpg").write_bytes(b"\xff\xd8")
-    op = PosterOperation(load_config())
-    assert op.is_needed(video, _make_mf()) is False
+    poster = tmp_path / "test-poster.jpg"
+    Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
+    cfg = load_config()
+    op = PosterOperation(cfg)
+    mf = _make_mf()
+    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(mf, cfg)))
+    assert op.is_needed(video, mf) is False
+
+
+def test_poster_op_needed_when_stamp_absent(tmp_path):
+    """Poster exists but carries no stamp (older CrateDigger) -> re-render."""
+    video = tmp_path / "test.mkv"; video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    poster = tmp_path / "test-poster.jpg"
+    Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
+    assert PosterOperation(load_config()).is_needed(video, _make_mf()) is True
+
+
+def test_poster_op_needed_when_field_changes(tmp_path):
+    from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+    video = tmp_path / "test.mkv"; video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    poster = tmp_path / "test-poster.jpg"
+    Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
+    cfg = load_config()
+    old = _resolve_poster_fields(_make_mf(artist="Old"), cfg)
+    inject_poster_stamp(poster, build_cover_stamp(**old))
+    assert PosterOperation(cfg).is_needed(video, _make_mf(artist="New")) is True
 
 
 def test_poster_op_not_needed_when_no_thumb(tmp_path):
