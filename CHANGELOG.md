@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-06-12
+
 ### Added
 
 - The set poster is now embedded as the MKV's primary `cover.jpg` attachment (portrait, 1000x1500), so video players such as Plex show a real poster thumbnail instead of a landscape video frame. The original landscape thumbnail is preserved as a second `cover_land.<ext>` attachment (and remains as the `{stem}-thumb.jpg`/`-fanart.jpg` sidecars), following the Matroska cover-art convention. A new `cover` enrichment operation (run automatically after posters, or selectable with `enrich --only cover`) performs the embedding. The embedded cover and the poster sidecar refresh automatically when the poster's inputs or layout change; `--regenerate` re-embeds. Kodi is unaffected (it keeps reading the `{stem}-poster.jpg` sidecar via the NFO). No new MKV tags are introduced.
