@@ -48,7 +48,7 @@ Written by `identify`.
 | `CRATEDIGGER_1001TL_TITLE` | Tracklist title as shown on 1001Tracklists | `Armin van Buuren & KIKI @ Two Is One, AMF 2025` |
 | `CRATEDIGGER_1001TL_ID` | Numeric tracklist ID | `1hv3n1nt` |
 | `CRATEDIGGER_1001TL_DATE` | Event date from 1001Tracklists | `2025-10-25` |
-| `CRATEDIGGER_1001TL_GENRES` | Top 5 most frequent per-track genres, pipe-separated | `Techno\|Trance\|Hard Dance` |
+| `CRATEDIGGER_1001TL_GENRES` | Top 5 most frequent per-track genres, pipe-separated. Compound 1001Tracklists labels are normalized to a compact slash (`Dance/Electro Pop`, not `Dance / Electro Pop`); they are single genres, never split. | `Techno\|Trance\|Hard Dance` |
 | `CRATEDIGGER_1001TL_DJ_ARTWORK` | URL to the DJ photo on the tracklist page | `https://...` |
 | `CRATEDIGGER_1001TL_STAGE` | Stage name if listed | `Two Is One` |
 | `CRATEDIGGER_1001TL_FESTIVAL` | Festival display name when the source is a festival | `Amsterdam Music Festival` |
