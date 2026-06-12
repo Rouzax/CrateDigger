@@ -327,6 +327,9 @@ class CoverEmbedOperation(Operation):
         current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config))
         # The stamp is written only after a successful embed, so a match means the
         # embedded cover is already current. Mismatch/absent -> (re-)embed.
+        # The sidecar stamp is a proxy for the MKV embed being current (they are
+        # separate files); use --force to re-embed if the embedded cover is altered
+        # outside CrateDigger.
         return read_poster_stamp(poster) != current
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:

@@ -1505,6 +1505,21 @@ def test_cover_op_not_needed_when_no_poster(tmp_path):
     assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is False
 
 
+def test_cover_op_force_overrides_stamp_match(tmp_path):
+    from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+    cfg = load_config()
+    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg)))
+    assert CoverEmbedOperation(cfg, force=True).is_needed(video, _make_mf()) is True
+
+
+def test_cover_op_not_needed_for_non_matroska_suffix(tmp_path):
+    video = tmp_path / "t.mp4"; video.write_bytes(b"")
+    _portrait(tmp_path / "t-poster.jpg")  # poster present, so the False comes from the suffix gate
+    assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is False
+
+
 def test_cover_op_execute_converges_and_stamps(tmp_path):
     from festival_organizer.poster import read_poster_stamp, build_cover_stamp
     video = tmp_path / "t.mkv"; video.write_bytes(b"")
