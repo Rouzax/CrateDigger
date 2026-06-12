@@ -46,6 +46,30 @@ def test_get_place_display_rejects_unknown_edition():
     assert cfg.get_place_display("Dreamstate", "SoCal") == "Dreamstate SoCal"
 
 
+def test_resolve_place_with_edition_country_fallback():
+    cfg = Config(TEST_CONFIG)
+    # Name yields no edition (all Dreamstate sources are named just "Dreamstate"),
+    # so the scraped country selects the edition.
+    assert cfg.resolve_place_with_edition("Dreamstate", "Australia") == ("Dreamstate", "Australia")
+    assert cfg.resolve_place_with_edition("Dreamstate", "Mexico") == ("Dreamstate", "Mexico")
+    # Case-insensitive country match.
+    assert cfg.resolve_place_with_edition("Dreamstate", "australia") == ("Dreamstate", "Australia")
+    # Name-resolved edition is never overridden by country (Winter's country is France).
+    assert cfg.resolve_place_with_edition("Tomorrowland Winter", "France") == ("Tomorrowland", "Winter")
+    # Main edition: host country is not an edition -> stays editionless.
+    assert cfg.resolve_place_with_edition("Tomorrowland", "Belgium") == ("Tomorrowland", "")
+    # Worldwide / unknown country matches nothing -> no edition.
+    assert cfg.resolve_place_with_edition("Dreamstate", "Worldwide") == ("Dreamstate", "")
+    # Region edition (not a country name) is not matched by country.
+    assert cfg.resolve_place_with_edition("Dreamstate", "United States") == ("Dreamstate", "")
+    # Backward compatible: no country argument behaves exactly as before.
+    assert cfg.resolve_place_with_edition("Dreamstate") == ("Dreamstate", "")
+    # Country can also match an edition's alias (e.g. an English country spelling
+    # mapped to a non-English edition name).
+    cfg2 = Config({"place_config": {"Foo": {"editions": {"Brasil": {"aliases": ["Brazil"]}}}}})
+    assert cfg2.resolve_place_with_edition("Foo", "Brazil") == ("Foo", "Brasil")
+
+
 def test_resolve_place_with_edition():
     cfg = Config(TEST_CONFIG)
     # Edition decomposition (no alias needed)

@@ -252,6 +252,46 @@ def test_analyse_normalizes_genre_spacing_from_tag():
     assert mf.genres == ["Melodic House/Techno", "Dance/Electro Pop", "Minimal/Deep Tech", "House"]
 
 
+def _identified_meta(**overrides):
+    base = {
+        "title": "", "tracklists_title": "", "tracklists_url": "https://1001.tl/x",
+        "artist_tag": "Test", "date_tag": "",
+        "duration_seconds": None, "width": None, "height": None,
+        "video_format": "", "audio_format": "", "audio_bitrate": "",
+        "overall_bitrate": "", "has_cover": False,
+        "description": "", "comment": "", "purl": "",
+    }
+    base.update(overrides)
+    return base
+
+
+def test_analyse_edition_from_country_when_name_has_none():
+    """Festival 'Dreamstate' + country 'Australia' resolves the Australia edition."""
+    meta = _identified_meta(tracklists_festival="Dreamstate", tracklists_country="Australia")
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=meta):
+        mf = analyse_file(Path("/tmp/test/file.mkv"), Path("/tmp/test"), CFG)
+    assert mf.festival == "Dreamstate"
+    assert mf.edition == "Australia"
+
+
+def test_analyse_name_edition_wins_over_country():
+    """Festival 'Tomorrowland Winter' keeps the name edition even with country France."""
+    meta = _identified_meta(tracklists_festival="Tomorrowland Winter", tracklists_country="France")
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=meta):
+        mf = analyse_file(Path("/tmp/test/file.mkv"), Path("/tmp/test"), CFG)
+    assert mf.festival == "Tomorrowland"
+    assert mf.edition == "Winter"
+
+
+def test_analyse_main_edition_stays_editionless():
+    """Festival 'Tomorrowland' + country 'Belgium' stays the main (no edition)."""
+    meta = _identified_meta(tracklists_festival="Tomorrowland", tracklists_country="Belgium")
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=meta):
+        mf = analyse_file(Path("/tmp/test/file.mkv"), Path("/tmp/test"), CFG)
+    assert mf.festival == "Tomorrowland"
+    assert mf.edition == ""
+
+
 def test_analyse_enrichment_fields_default_empty():
     """Enrichment fields default to empty when not in metadata."""
     with patch("festival_organizer.analyzer.extract_metadata", return_value={}):

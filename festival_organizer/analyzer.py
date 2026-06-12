@@ -107,7 +107,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # source cache). Authoritative for festival + edition.
     if meta.get("tracklists_festival"):
         fest, ed = config.resolve_place_with_edition(
-            meta["tracklists_festival"]
+            meta["tracklists_festival"], meta.get("tracklists_country", "")
         )
         info["festival"] = fest
         if ed:
