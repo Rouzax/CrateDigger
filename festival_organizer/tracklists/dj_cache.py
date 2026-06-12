@@ -71,6 +71,19 @@ class DjCache:
         """All cached slugs (dict keys), regardless of freshness."""
         return set(self._data.keys())
 
+    def all_artwork_urls(self) -> dict[str, str]:
+        """Map slug -> artwork_url for every cached entry that has one.
+
+        Freshness-agnostic (same source set as :meth:`slugs`): the stored URL is
+        the best available, and identify refreshes each entry on its own TTL.
+        Used to warm the per-artist image cache directly from the DJ cache.
+        """
+        return {
+            slug: entry["artwork_url"]
+            for slug, entry in self._data.items()
+            if entry.get("artwork_url")
+        }
+
     def derive_entry_names(self) -> set[str]:
         """Lowercased canonical names of every cached entry.
 

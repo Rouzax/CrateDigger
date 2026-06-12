@@ -1079,8 +1079,18 @@ def _run_command(args: types.SimpleNamespace) -> int:
     if args.command == "enrich" or getattr(args, "enrich", False):
         from festival_organizer import paths as _paths
         from festival_organizer.normalization import folder_slug
-        from festival_organizer.cache_maintenance import reconcile_artist_cache
+        from festival_organizer.cache_maintenance import (
+            reconcile_artist_cache,
+            warm_artist_cache_from_dj_cache,
+        )
         if dj_cache is not None:
+            # Create the canonical per-artist dirs for every cached DJ that has
+            # artwork (the CREATE counterpart to reconcile below). This makes the
+            # cache self-healing: DJs identified after the last enrich, or whose
+            # set resolves to a different artist via aliasing, still get a folder.
+            _artists_root = _paths.cache_dir() / "artists"
+            _images_ttl = config.cache_ttl.get("images_days", 90)
+            warm_artist_cache_from_dj_cache(_artists_root, dj_cache, _images_ttl)
             valid = {folder_slug(s) for s in dj_cache.slugs()}
             # Also preserve folder keys for artists processed this run, so a
             # non-1001TL artist's slugify(name) fallback dir is not churned.
@@ -1090,7 +1100,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 for _i, _name in enumerate(names):
                     _slug = slugs[_i] if slugs else None
                     valid.add(_paths.artist_cache_folder_key(_name, slug=_slug, dj_cache=dj_cache))
-            reconcile_artist_cache(_paths.cache_dir() / "artists", valid)
+            reconcile_artist_cache(_artists_root, valid)
 
     # Pass unresolved artist names to enrich progress for summary
     if isinstance(progress, EnrichContractProgress):

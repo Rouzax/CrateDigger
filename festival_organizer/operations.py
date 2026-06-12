@@ -13,6 +13,7 @@ import requests
 
 from festival_organizer import paths
 from festival_organizer.paths import same_library_path
+from festival_organizer.cache_maintenance import cache_dj_artwork
 from festival_organizer.cache_ttl import hashed_jitter_factor
 from festival_organizer.config import Config
 from festival_organizer.fanart import lookup_mbid
@@ -500,45 +501,18 @@ class AlbumPosterOperation(Operation):
             return None
 
     def _download_dj_artwork(self, url: str, artist: str, slug: str | None = None) -> Path | None:
-        """Download DJ artwork, convert to JPEG, crop/resize, save to artist dir."""
+        """Download DJ artwork, convert to JPEG, crop/resize, save to artist dir.
+
+        Resolves the canonical artist cache key, then delegates the
+        download/crop/resize/TTL work to :func:`cache_dj_artwork` (shared with the
+        dj_cache-driven warm step), routing log events through this module's logger
+        so per-file enrich output is unchanged.
+        """
         if not url or not artist:
             return None
         key = paths.artist_cache_folder_key(artist, slug=slug, dj_cache=self.config.dj_cache)
-        artist_dir = paths.artist_cache_dir(key)
-        cached = artist_dir / "dj-artwork.jpg"
-        if cached.exists():
-            age_days = (time.time() - cached.stat().st_mtime) / 86400
-            effective_ttl = self._ttl_days * hashed_jitter_factor(cached.name)
-            if age_days <= effective_ttl:
-                return cached
-            cached.unlink()
-            logger.debug("enrich.dj_artwork_cache: status=stale age_days=%d ttl=%.1f artist=%s",
-                         int(age_days), effective_ttl, artist)
-        try:
-            resp = requests.get(url, timeout=15)
-            resp.raise_for_status()
-            artist_dir.mkdir(parents=True, exist_ok=True)
-            from PIL import Image
-            import io
-            with Image.open(io.BytesIO(resp.content)) as img:
-                img = img.convert("RGB")
-                w, h = img.size
-                if w != h:
-                    side = min(w, h)
-                    left = (w - side) // 2
-                    top = (h - side) // 2
-                    img = img.crop((left, top, left + side, top + side))
-                    logger.debug("enrich.dj_artwork: action=crop from=%dx%d to=%dx%d", w, h, side, side)
-                max_side = 550
-                if img.width > max_side:
-                    img = img.resize((max_side, max_side), Image.LANCZOS)
-                    logger.debug("enrich.dj_artwork: action=resize to=%dx%d", max_side, max_side)
-                img.save(cached, "JPEG", quality=90)
-            logger.info("enrich.dj_artwork_download: status=ok artist=%s target=%s", artist, cached)
-            return cached
-        except (requests.RequestException, OSError) as e:
-            logger.debug("enrich.dj_artwork_download: status=failed artist=%s error=\"%s\"", artist, e)
-            return None
+        cached = paths.artist_cache_dir(key) / "dj-artwork.jpg"
+        return cache_dj_artwork(url, cached, self._ttl_days, artist_label=artist, log=logger)
 
     def _find_curated_logo(self, place: str, edition: str = "") -> Path | None:
         """Find curated logo for a place from library or user-level folders.

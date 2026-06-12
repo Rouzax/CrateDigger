@@ -59,6 +59,31 @@ def test_dj_cache_empty(tmp_path):
     assert cache.derive_artist_groups() == set()
 
 
+def test_dj_cache_all_artwork_urls(tmp_path):
+    cache = DjCache(tmp_path / "dj_cache.json")
+    cache.put("tiesto", {"name": "Tiesto", "artwork_url": "https://x/tiesto.jpg",
+                         "aliases": [], "member_of": []})
+    cache.put("nourl", {"name": "No URL", "artwork_url": "", "aliases": [], "member_of": []})
+    cache.put("kevindevries", {"name": "Kevin de Vries", "artwork_url": "https://x/kdv.jpg",
+                               "aliases": [], "member_of": []})
+    urls = cache.all_artwork_urls()
+    assert urls == {
+        "tiesto": "https://x/tiesto.jpg",
+        "kevindevries": "https://x/kdv.jpg",
+    }
+
+
+def test_dj_cache_all_artwork_urls_includes_stale(tmp_path):
+    """Freshness-agnostic: a stale entry's URL is still returned for warming."""
+    cache = DjCache(tmp_path / "dj_cache.json", ttl_days=90)
+    cache.put("romanmesser", {"name": "Roman Messer", "artwork_url": "https://x/rm.jpg",
+                              "aliases": [], "member_of": []})
+    # Force the entry stale: get() would now return None, but the URL must remain visible.
+    cache._data["romanmesser"]["ts"] = 0
+    assert cache.get("romanmesser") is None
+    assert cache.all_artwork_urls() == {"romanmesser": "https://x/rm.jpg"}
+
+
 def test_dj_cache_expired_entry_is_miss(tmp_path):
     """Expired entry should return None on get()."""
     cache = DjCache(tmp_path / "dj_cache.json", ttl_days=0)

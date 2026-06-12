@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-06-12
+
+### Fixed
+
+- Headline DJs that were identified after their folder's last enrich, or whose set resolves to a different artist via an alias, now reliably get a per-artist image folder. Enrich warms `cache/artists/<slug>/dj-artwork.jpg` directly from the DJ cache for every cached DJ that has profile artwork, instead of only for the headline artist of files physically present at poster time. This is the create counterpart to the existing artist-cache reconcile step (which only pruned orphan folders, never created the canonical ones); downloads are TTL-gated, so repeat runs stay cheap.
+
 ## [0.24.0] - 2026-06-12
 
 ### Fixed
