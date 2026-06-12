@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-06-12
+
 ### Added
 
 - Interactive library browser on the landing page. Visitors can switch the folder layout (`artist_flat`, `place_flat`, `artist_nested`, `place_nested`) and click through real enriched sets to see the per-folder `folder.jpg`, the set poster, and the set's NFO metadata and tracklist. This is a documentation/site change only; CrateDigger's behaviour is unchanged.
+- App icons and favicons for the landing page and docs: a split-monogram mark (off-white `C` + coral `D`) on a dark rounded square, wired into the site `<head>` and as the MkDocs favicon and header logo.
 
 ### Changed
 
