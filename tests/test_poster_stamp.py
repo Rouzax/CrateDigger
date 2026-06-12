@@ -35,3 +35,24 @@ def test_inject_and_read_round_trip(tmp_path):
 
 def test_read_poster_stamp_missing_file(tmp_path):
     assert read_poster_stamp(tmp_path / "nope.jpg") is None
+
+
+def test_read_poster_stamp_non_jpeg(tmp_path):
+    p = tmp_path / "not.jpg"
+    p.write_bytes(b"PNG-ish bytes, definitely not a jpeg")
+    assert read_poster_stamp(p) is None
+
+
+def test_inject_is_idempotent_no_accumulation(tmp_path):
+    p = tmp_path / "x-poster.jpg"
+    _make_jpeg(p)
+    s1 = build_cover_stamp(artist="A", festival="F", date="d", year="y", stage="s", venue="v")
+    inject_poster_stamp(p, s1)
+    size_after_first = p.stat().st_size
+    s2 = build_cover_stamp(artist="B", festival="F", date="d", year="y", stage="s", venue="v")
+    inject_poster_stamp(p, s2)
+    # read returns the latest stamp, and the file did not grow by a second marker
+    assert read_poster_stamp(p) == s2
+    assert p.stat().st_size == size_after_first  # same stamp length -> identical size, no accumulation
+    with Image.open(p) as im:
+        assert im.size == (1000, 1500)

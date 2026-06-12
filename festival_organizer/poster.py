@@ -68,12 +68,21 @@ def read_poster_stamp(path: Path) -> bytes | None:
 
 
 def inject_poster_stamp(path: Path, stamp: bytes) -> None:
-    """Splice a JPEG COM marker carrying the stamp right after SOI (no re-encode)."""
+    """Splice a JPEG COM marker carrying the stamp right after SOI (no re-encode).
+
+    Idempotent: any existing COM markers immediately following SOI are removed
+    first, so re-stamping a previously stamped poster does not accumulate markers.
+    """
     data = Path(path).read_bytes()
     if data[:2] != b"\xff\xd8":
         raise ValueError(f"not a JPEG: {path}")
+    body = data[2:]
+    # Drop existing COM markers at the SOI position (idempotent re-stamp).
+    while len(body) >= 4 and body[:2] == b"\xff\xfe":
+        seg_len = int.from_bytes(body[2:4], "big")
+        body = body[2 + seg_len:]
     segment = b"\xff\xfe" + (len(stamp) + 2).to_bytes(2, "big") + stamp
-    Path(path).write_bytes(data[:2] + segment + data[2:])
+    Path(path).write_bytes(data[:2] + segment + body)
 
 
 # Layout constants (tuned through ~15 iterations)
