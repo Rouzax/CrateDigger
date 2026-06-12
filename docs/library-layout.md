@@ -77,6 +77,8 @@ Background image tried in order: DJ artwork from 1001Tracklists, then fanart.tv 
 
 The album poster layout is selected automatically based on what images are available and what type of folder it is:
 
+> See the [interactive library browser](https://rouzax.github.io/CrateDigger/#library-browser) to switch folder layouts and click through real enriched sets, posters, and tracklists.
+
 | Situation | Layout |
 |-----------|--------|
 | Festival folder with a curated logo | Gradient base derived from the logo's colors; logo centered; festival name below |

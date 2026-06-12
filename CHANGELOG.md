@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Interactive library browser on the landing page. Visitors can switch the folder layout (`artist_flat`, `place_flat`, `artist_nested`, `place_nested`) and click through real enriched sets to see the per-folder `folder.jpg`, the set poster, and the set's NFO metadata and tracklist. This is a documentation/site change only; CrateDigger's behaviour is unchanged.
+
+### Changed
+
+- Refreshed the showcase artwork (README gallery, landing-page hero and gallery, hero and social banners) from the current poster pipeline. The galleries now show all three folder-poster layouts (festival, artist, year) instead of festival-only examples, and the README version badge was corrected from the stale `v0.15.0`.
+
 ## [0.26.0] - 2026-06-12
 
 ### Fixed

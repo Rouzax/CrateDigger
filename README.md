@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="GPL-3.0">
-  <img src="https://img.shields.io/badge/version-v0.15.0-orange" alt="v0.15.0">
+  <img src="https://img.shields.io/badge/version-v0.26.0-orange" alt="v0.26.0">
 </p>
 
 <p align="center"><em>Festival set & concert library manager. Organize, enrich, and curate your collection with professional artwork, metadata, and chapter markers.</em></p>
@@ -17,24 +17,24 @@ CrateDigger is a Python CLI tool for managing festival set and concert recording
 
 ## Poster Gallery
 
-**Set Posters**
+**Set posters:** one per recording, with artist, festival, date, and stage.
 
 <table>
   <tr>
-    <td><img src="docs/assets/posters/martin-garrix-red-rocks.jpg" width="200"></td>
-    <td><img src="docs/assets/posters/swedish-house-mafia-umf.jpg" width="200"></td>
-    <td><img src="docs/assets/posters/tiesto-edc-las-vegas.jpg" width="200"></td>
-    <td><img src="docs/assets/posters/armin-van-buuren-tomorrowland.jpg" width="200"></td>
+    <td><img src="docs/assets/posters/set-2025-martin-garrix-red-rocks.jpg" width="200"></td>
+    <td><img src="docs/assets/posters/set-2025-swedish-house-mafia-tomorrowland-mainstage.jpg" width="200"></td>
+    <td><img src="docs/assets/posters/set-2025-tiesto-edc-las-vegas-circuitgrounds.jpg" width="200"></td>
+    <td><img src="docs/assets/posters/set-2025-armin-van-buuren-tomorrowland-mainstage.jpg" width="200"></td>
   </tr>
 </table>
 
-**Album Posters**
+**Folder posters:** `folder.jpg` per folder, in three layouts chosen by folder type.
 
 <table>
   <tr>
-    <td><img src="docs/assets/posters/tomorrowland-album.jpg" width="200"></td>
-    <td><img src="docs/assets/posters/edc-las-vegas-album.jpg" width="200"></td>
-    <td><img src="docs/assets/posters/amf-album.jpg" width="200"></td>
+    <td align="center"><img src="docs/assets/posters/festfolder-tomorrowland.jpg" width="200"><br><sub>Festival folder</sub></td>
+    <td align="center"><img src="docs/assets/posters/artistfolder-armin-van-buuren.jpg" width="200"><br><sub>Artist folder</sub></td>
+    <td align="center"><img src="docs/assets/posters/yearfolder-place-edc-las-vegas-2025.jpg" width="200"><br><sub>Year folder</sub></td>
   </tr>
 </table>
 
