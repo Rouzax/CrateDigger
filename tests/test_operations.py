@@ -6,7 +6,7 @@ from PIL import Image
 
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
-    NfoOperation, ArtOperation, PosterOperation,
+    NfoOperation, ArtOperation, PosterOperation, CoverEmbedOperation,
     OrganizeOperation, AlbumPosterOperation, FanartOperation,
     _resolve_poster_fields,
 )
@@ -1479,3 +1479,61 @@ def test_classify_segment_year_token():
 
 def test_classify_segment_default_to_artist():
     assert AlbumPosterOperation._classify_segment("literal_text_no_tokens") == "artist"
+
+
+def _portrait(path):
+    Image.new("RGB", (1000, 1500), (10, 10, 20)).save(str(path), "JPEG", quality=95)
+
+
+def test_cover_op_needed_when_stamp_absent(tmp_path):
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    _portrait(tmp_path / "t-poster.jpg")
+    assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is True
+
+
+def test_cover_op_not_needed_when_stamp_matches(tmp_path):
+    from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+    cfg = load_config()
+    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg)))
+    assert CoverEmbedOperation(cfg).is_needed(video, _make_mf()) is False
+
+
+def test_cover_op_not_needed_when_no_poster(tmp_path):
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is False
+
+
+def test_cover_op_execute_converges_and_stamps(tmp_path):
+    from festival_organizer.poster import read_poster_stamp, build_cover_stamp
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+    thumb = tmp_path / "t-thumb.jpg"; thumb.write_bytes(b"\xff\xd8")
+    cfg = load_config()
+    with patch("festival_organizer.cover_embed.converge_cover_attachments", return_value=True) as conv:
+        result = CoverEmbedOperation(cfg).execute(video, _make_mf())
+    conv.assert_called_once_with(video, poster, thumb)
+    assert result.status == "done"
+    assert read_poster_stamp(poster) == build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg))
+
+
+def test_cover_op_execute_no_stamp_when_converge_fails(tmp_path):
+    from festival_organizer.poster import read_poster_stamp
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+    (tmp_path / "t-thumb.jpg").write_bytes(b"\xff\xd8")
+    with patch("festival_organizer.cover_embed.converge_cover_attachments", return_value=False):
+        result = CoverEmbedOperation(load_config()).execute(video, _make_mf())
+    assert result.status == "error"
+    assert read_poster_stamp(poster) is None  # not stamped on failed embed
+
+
+def test_cover_op_execute_refuses_non_portrait_poster(tmp_path):
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"
+    Image.new("RGB", (1600, 900), (10, 10, 20)).save(str(poster), "JPEG")  # landscape!
+    with patch("festival_organizer.cover_embed.converge_cover_attachments") as conv:
+        result = CoverEmbedOperation(load_config()).execute(video, _make_mf())
+    conv.assert_not_called()
+    assert result.status == "error"
