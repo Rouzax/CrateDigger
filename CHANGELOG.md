@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Identified files no longer become invisible to enrichment/organize after an MKV rewrite. Metadata is now read with ffprobe first (MediaInfo as a fallback): MediaInfo's default partial parse can miss a Tags element positioned late in the file, which happens after an `mkvpropedit` attachment or tag write relocates it, and that silently dropped the embedded `CRATEDIGGER_1001TL_*` tags. Affected files looked unidentified and fell back to filename parsing. The tags were never lost (ffprobe, mkvextract, and a full MediaInfo parse always read them); ffprobe reads them reliably regardless of position and is faster.
+- The filename parser no longer swaps artist and place when re-reading organize's own `YYYY - Artist - Place [stage]` output. The `YYYY - A - B` pattern previously assumed `Festival - Artist` order; it now uses known-place detection (and strips a trailing `[stage]`) to keep the artist and place in the right fields for unidentified files. A filename-parsed festival also now defers to an authoritative 1001Tracklists venue/location tag, so venue sets are not mis-routed as festivals.
+
 ## [0.23.0] - 2026-06-12
 
 ### Added

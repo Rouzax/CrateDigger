@@ -489,3 +489,33 @@ def test_extract_mediainfo_leaves_mp4_title_untouched():
 
     assert result["title"] == "MP4 Title"
     mock_extract.assert_not_called()
+
+
+# --- extract_metadata reader preference (ffprobe primary) ---
+
+def test_extract_metadata_prefers_ffprobe():
+    """ffprobe is primary: it reads MKV tags reliably regardless of position.
+
+    Regression: mediainfo's default partial parse can miss a Tags element
+    positioned late in the file (after an mkvpropedit rewrite), silently
+    dropping the CrateDigger tags and making an identified file look
+    unidentified.
+    """
+    from festival_organizer.metadata import extract_metadata
+    with patch("festival_organizer.metadata._extract_ffprobe",
+               return_value={"tracklists_url": "from_ffprobe"}) as ff, \
+         patch("festival_organizer.metadata._extract_mediainfo") as mi:
+        result = extract_metadata(Path("/x/file.mkv"))
+    assert result == {"tracklists_url": "from_ffprobe"}
+    ff.assert_called_once()
+    mi.assert_not_called()
+
+
+def test_extract_metadata_falls_back_to_mediainfo_when_ffprobe_empty():
+    from festival_organizer.metadata import extract_metadata
+    with patch("festival_organizer.metadata._extract_ffprobe", return_value={}), \
+         patch("festival_organizer.metadata._extract_mediainfo",
+               return_value={"tracklists_url": "from_mediainfo"}) as mi:
+        result = extract_metadata(Path("/x/file.mkv"))
+    assert result == {"tracklists_url": "from_mediainfo"}
+    mi.assert_called_once()

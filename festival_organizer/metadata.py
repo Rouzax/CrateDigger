@@ -287,10 +287,19 @@ def _extract_ffprobe(filepath: Path) -> dict:
 
 
 def extract_metadata(filepath: Path) -> dict:
-    """Extract metadata from a file. Tries MediaInfo first, ffprobe fallback."""
-    meta = _extract_mediainfo(filepath)
+    """Extract metadata from a file. Prefers ffprobe, MediaInfo as fallback.
+
+    ffprobe is primary because it reads MKV tags reliably regardless of where
+    the Tags element sits in the file. MediaInfo's default partial parse can
+    miss a Tags element positioned late in the file (e.g. after an mkvpropedit
+    attachment/tag rewrite relocates it), which silently drops the embedded
+    CrateDigger tags and makes an identified file look unidentified. ffprobe
+    returns the same fields and is faster, so it leads; MediaInfo only runs if
+    ffprobe yields nothing.
+    """
+    meta = _extract_ffprobe(filepath)
     if not meta:
-        meta = _extract_ffprobe(filepath)
+        meta = _extract_mediainfo(filepath)
     return meta
 
 
