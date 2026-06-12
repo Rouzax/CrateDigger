@@ -28,7 +28,7 @@ from festival_organizer.log import setup_logging
 from festival_organizer.metadata import configure_tools
 from festival_organizer.operations import (
     OrganizeOperation, NfoOperation, ArtOperation, FanartOperation,
-    PosterOperation, AlbumPosterOperation, TagsOperation,
+    PosterOperation, AlbumPosterOperation, CoverEmbedOperation, TagsOperation,
     AlbumArtistMbidsOperation,
     ChapterArtistMbidsOperation,
 )
@@ -483,7 +483,7 @@ def enrich(
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
-    only: Annotated[Optional[str], typer.Option("--only", help="Comma-separated operations to run (nfo, art, fanart, posters, tags, chapter_artist_mbids, album_artist_mbids)")] = None,
+    only: Annotated[Optional[str], typer.Option("--only", help="Comma-separated operations to run (nfo, art, fanart, posters, cover, tags, chapter_artist_mbids, album_artist_mbids)")] = None,
     regenerate: Annotated[bool, typer.Option("--regenerate", help="Regenerate even if artifacts exist")] = False,
     kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
 ) -> int:
@@ -889,7 +889,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     only = set()
     if getattr(args, "only", None):
         only = {v.strip() for v in args.only.split(",")}
-        valid_ops = {"nfo", "art", "fanart", "posters", "tags", "chapter_artist_mbids", "album_artist_mbids"}
+        valid_ops = {"nfo", "art", "fanart", "posters", "cover", "tags", "chapter_artist_mbids", "album_artist_mbids"}
         unknown = only - valid_ops
         if unknown:
             print_error(f"unknown operation {', '.join(repr(u) for u in sorted(unknown))}. "
@@ -985,6 +985,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 if fanart_op:
                     ops.append(fanart_op)
                 ops.append(PosterOperation(config))
+                ops.append(CoverEmbedOperation(config))
                 if album_poster_op:
                     ops.append(album_poster_op)
                 ops.append(TagsOperation())
@@ -1004,6 +1005,8 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 ops.append(PosterOperation(config, force=force))
                 if album_poster_op:
                     ops.append(album_poster_op)
+            if not only or "cover" in only:
+                ops.append(CoverEmbedOperation(config, force=force))
             if not only or "tags" in only:
                 ops.append(TagsOperation(force=force))
             if not only or "chapter_artist_mbids" in only:

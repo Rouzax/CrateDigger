@@ -2,10 +2,13 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch, MagicMock
 
+from PIL import Image
+
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
-    NfoOperation, ArtOperation, PosterOperation,
+    NfoOperation, ArtOperation, PosterOperation, CoverEmbedOperation,
     OrganizeOperation, AlbumPosterOperation, FanartOperation,
+    _resolve_poster_fields,
 )
 from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
 
@@ -166,14 +169,49 @@ def test_poster_op_needed_when_thumb_exists_but_poster_missing(tmp_path):
     assert op.is_needed(video, _make_mf()) is True
 
 
-def test_poster_op_not_needed_when_poster_exists(tmp_path):
-    """Poster operation not needed when poster exists."""
-    video = tmp_path / "test.mkv"
-    video.write_bytes(b"")
+def test_poster_op_not_needed_when_stamp_matches(tmp_path):
+    """Skip when the sidecar stamp equals the current resolved inputs."""
+    from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+    video = tmp_path / "test.mkv"; video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
-    (tmp_path / "test-poster.jpg").write_bytes(b"\xff\xd8")
-    op = PosterOperation(load_config())
-    assert op.is_needed(video, _make_mf()) is False
+    poster = tmp_path / "test-poster.jpg"
+    Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
+    cfg = load_config()
+    op = PosterOperation(cfg)
+    mf = _make_mf()
+    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(mf, cfg)))
+    assert op.is_needed(video, mf) is False
+
+
+def test_poster_op_needed_when_stamp_absent(tmp_path):
+    """Poster exists but carries no stamp (older CrateDigger) -> re-render."""
+    video = tmp_path / "test.mkv"; video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    poster = tmp_path / "test-poster.jpg"
+    Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
+    assert PosterOperation(load_config()).is_needed(video, _make_mf()) is True
+
+
+def test_poster_op_not_needed_for_non_matroska_when_poster_exists(tmp_path):
+    """Non-Matroska files have no stamp (no cover embed); exists-gate prevents
+    re-rendering every run."""
+    video = tmp_path / "test.mp4"; video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    poster = tmp_path / "test-poster.jpg"
+    Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")  # no stamp
+    assert PosterOperation(load_config()).is_needed(video, _make_mf()) is False
+
+
+def test_poster_op_needed_when_field_changes(tmp_path):
+    from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+    video = tmp_path / "test.mkv"; video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    poster = tmp_path / "test-poster.jpg"
+    Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
+    cfg = load_config()
+    old = _resolve_poster_fields(_make_mf(artist="Old"), cfg)
+    inject_poster_stamp(poster, build_cover_stamp(**old))
+    assert PosterOperation(cfg).is_needed(video, _make_mf(artist="New")) is True
 
 
 def test_poster_op_not_needed_when_no_thumb(tmp_path):
@@ -200,6 +238,24 @@ def _run_poster_and_capture_kwargs(tmp_path, mf):
     with patch("festival_organizer.poster.generate_set_poster") as gen:
         PosterOperation(load_config()).execute(video, mf)
     return gen.call_args.kwargs
+
+
+def test_resolve_poster_fields_uses_display_artist_and_edition_slot():
+    cfg = load_config()
+    mf = _make_mf(artist="afrojack", display_artist="AFROJACK",
+                  place="UMF", edition="", stage="Mainstage", date="2026-03-29", year="2026")
+    f = _resolve_poster_fields(mf, cfg)
+    assert f["artist"] == "AFROJACK"
+    assert f["stage"] == "Mainstage"
+    assert f["date"] == "2026-03-29"
+    assert f["year"] == "2026"
+    assert "venue" in f and "festival" in f
+
+
+def test_resolve_poster_fields_drops_venue_when_place_is_venue():
+    cfg = load_config()
+    mf = _make_mf(place="Some Club", place_kind="venue", venue="Some Club")
+    assert _resolve_poster_fields(mf, cfg)["venue"] == ""
 
 
 def test_poster_festival_slot_uses_place_for_festival(tmp_path):
@@ -1433,3 +1489,76 @@ def test_classify_segment_year_token():
 
 def test_classify_segment_default_to_artist():
     assert AlbumPosterOperation._classify_segment("literal_text_no_tokens") == "artist"
+
+
+def _portrait(path):
+    Image.new("RGB", (1000, 1500), (10, 10, 20)).save(str(path), "JPEG", quality=95)
+
+
+def test_cover_op_needed_when_stamp_absent(tmp_path):
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    _portrait(tmp_path / "t-poster.jpg")
+    assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is True
+
+
+def test_cover_op_not_needed_when_stamp_matches(tmp_path):
+    from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+    cfg = load_config()
+    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg)))
+    assert CoverEmbedOperation(cfg).is_needed(video, _make_mf()) is False
+
+
+def test_cover_op_not_needed_when_no_poster(tmp_path):
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is False
+
+
+def test_cover_op_force_overrides_stamp_match(tmp_path):
+    from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+    cfg = load_config()
+    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg)))
+    assert CoverEmbedOperation(cfg, force=True).is_needed(video, _make_mf()) is True
+
+
+def test_cover_op_not_needed_for_non_matroska_suffix(tmp_path):
+    video = tmp_path / "t.mp4"; video.write_bytes(b"")
+    _portrait(tmp_path / "t-poster.jpg")  # poster present, so the False comes from the suffix gate
+    assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is False
+
+
+def test_cover_op_execute_converges_and_stamps(tmp_path):
+    from festival_organizer.poster import read_poster_stamp, build_cover_stamp
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+    thumb = tmp_path / "t-thumb.jpg"; thumb.write_bytes(b"\xff\xd8")
+    cfg = load_config()
+    with patch("festival_organizer.cover_embed.converge_cover_attachments", return_value=True) as conv:
+        result = CoverEmbedOperation(cfg).execute(video, _make_mf())
+    conv.assert_called_once_with(video, poster, thumb)
+    assert result.status == "done"
+    assert read_poster_stamp(poster) == build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg))
+
+
+def test_cover_op_execute_no_stamp_when_converge_fails(tmp_path):
+    from festival_organizer.poster import read_poster_stamp
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+    (tmp_path / "t-thumb.jpg").write_bytes(b"\xff\xd8")
+    with patch("festival_organizer.cover_embed.converge_cover_attachments", return_value=False):
+        result = CoverEmbedOperation(load_config()).execute(video, _make_mf())
+    assert result.status == "error"
+    assert read_poster_stamp(poster) is None  # not stamped on failed embed
+
+
+def test_cover_op_execute_refuses_non_portrait_poster(tmp_path):
+    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"
+    Image.new("RGB", (1600, 900), (10, 10, 20)).save(str(poster), "JPEG")  # landscape!
+    with patch("festival_organizer.cover_embed.converge_cover_attachments") as conv:
+        result = CoverEmbedOperation(load_config()).execute(video, _make_mf())
+    conv.assert_not_called()
+    assert result.status == "error"

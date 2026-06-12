@@ -25,6 +25,66 @@ from festival_organizer.fonts import get_font_path
 
 logger = logging.getLogger(__name__)
 
+# --- Cover sidecar stamp (staleness tracking; see plans/2026-06-12-mkv-cover-attachment-naming.md) ---
+# Bump COVER_POSTER_VERSION whenever the set-poster composition changes so existing
+# posters are re-rendered and re-embedded on the next enrich run.
+COVER_POSTER_VERSION = 1
+
+_STAMP_PREFIX = "CDPOSTER"
+_STAMP_SEP = "\x1f"  # unit separator: never appears in the resolved field values
+
+
+def build_cover_stamp(*, artist: str, festival: str, date: str, year: str,
+                      stage: str, venue: str) -> bytes:
+    """Build the staleness stamp from the resolved fields passed to generate_set_poster."""
+    fields = [f"{_STAMP_PREFIX}{COVER_POSTER_VERSION}",
+              artist or "", festival or "", date or "", year or "", stage or "", venue or ""]
+    return _STAMP_SEP.join(fields).encode("utf-8")
+
+
+def read_poster_stamp(path: Path) -> bytes | None:
+    """Return the first JPEG COM marker payload from a poster sidecar, or None."""
+    try:
+        data = Path(path).read_bytes()
+    except OSError:
+        return None
+    if data[:2] != b"\xff\xd8":  # not a JPEG
+        return None
+    i, n = 2, len(data)
+    while i + 4 <= n and data[i] == 0xFF:
+        marker = data[i + 1]
+        if marker == 0xD9:  # EOI
+            break
+        if 0xD0 <= marker <= 0xD7:  # RSTn: no length
+            i += 2
+            continue
+        seg_len = int.from_bytes(data[i + 2:i + 4], "big")
+        if marker == 0xFE:  # COM
+            return data[i + 4:i + 2 + seg_len]
+        if marker == 0xDA:  # SOS: image scan begins
+            break
+        i += 2 + seg_len
+    return None
+
+
+def inject_poster_stamp(path: Path, stamp: bytes) -> None:
+    """Splice a JPEG COM marker carrying the stamp right after SOI (no re-encode).
+
+    Idempotent: any existing COM markers immediately following SOI are removed
+    first, so re-stamping a previously stamped poster does not accumulate markers.
+    """
+    data = Path(path).read_bytes()
+    if data[:2] != b"\xff\xd8":
+        raise ValueError(f"not a JPEG: {path}")
+    body = data[2:]
+    # Drop existing COM markers at the SOI position (idempotent re-stamp).
+    while len(body) >= 4 and body[:2] == b"\xff\xfe":
+        seg_len = int.from_bytes(body[2:4], "big")
+        body = body[2 + seg_len:]
+    segment = b"\xff\xfe" + (len(stamp) + 2).to_bytes(2, "big") + stamp
+    Path(path).write_bytes(data[:2] + segment + body)
+
+
 # Layout constants (tuned through ~15 iterations)
 POSTER_W, POSTER_H = 1000, 1500
 LINE_Y = int(POSTER_H * 0.67)  # accent line at 2/3

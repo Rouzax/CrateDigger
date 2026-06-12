@@ -83,11 +83,53 @@ kodi = "smb://server/music/Library/"
 | `KODI_USERNAME` | `kodi.username` |
 | `KODI_PASSWORD` | `kodi.password` |
 
+## Embedded MKV cover attachments
+
+CrateDigger embeds the set poster directly into each MKV or WEBM file as a named cover attachment. This lets video players that read embedded cover art show a proper portrait poster instead of a landscape video frame.
+
+### What is embedded and where it comes from
+
+After the `posters` operation generates `{stem}-poster.jpg`, the `cover` operation embeds it into the MKV as the primary `cover.jpg` attachment (portrait, 1000x1500 pixels). This is the same image as the `{stem}-poster.jpg` sidecar on disk.
+
+The original landscape thumbnail that yt-dlp embeds (a YouTube video thumbnail) is moved to a second attachment named `cover_land.<ext>`, preserving the original bytes. The extension matches what yt-dlp wrote (for example `cover_land.png`). This follows the Matroska cover-art convention: primary `cover` is portrait, `cover_land` is landscape.
+
+### What is not changed
+
+- The `{stem}-poster.jpg` sidecar on disk is unchanged. Kodi reads the poster via the `<thumb aspect="poster">` reference in the NFO and is not affected by the embedded attachment at all.
+- The `{stem}-thumb.jpg` and `{stem}-fanart.jpg` sidecars are unchanged. These are extracted from the landscape thumbnail before the cover operation runs.
+- No new MKV tags are introduced. Staleness is tracked by a small marker inside the poster sidecar JPEG itself, not by a new tag.
+
+### The landscape thumbnail is never lost
+
+CrateDigger preserves the original landscape thumbnail in two places before touching the cover attachment:
+
+1. As `{stem}-thumb.jpg` and `{stem}-fanart.jpg` on disk (written by the `art` operation before `cover` runs).
+2. As the `cover_land.<ext>` attachment inside the MKV (its original bytes are kept intact).
+
+The cover slot is not overwritten until the landscape has been saved to both locations.
+
+### Refresh behavior
+
+The embedded cover and the `{stem}-poster.jpg` sidecar refresh automatically when any of the poster's inputs change (for example, a re-`identify` run that changes the artist, festival, date, stage, or venue, or an internal change to the poster layout). To re-embed unconditionally, run:
+
+```bash
+cratedigger enrich ~/Music/Library/ --only cover --regenerate
+```
+
+### What each player reads
+
+| Player or tool | What it uses |
+|----------------|-------------|
+| **Kodi** | `{stem}-poster.jpg` sidecar via the `<thumb aspect="poster">` reference in the NFO. Unaffected by the embedded attachment. |
+| **Jellyfin** | NFO sidecar references, same as Kodi. |
+| **Plex** and generic players | The embedded `cover.jpg` attachment. These players now get a portrait poster instead of a landscape video frame. |
+| **TrackSplit** | The embedded `cover_land.<ext>` attachment, which it reads as the background for the square music covers it builds. |
+
 ## Jellyfin and Plex
 
 **Jellyfin** reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, album grouping, posters, thumbs, and fanart from the sidecar files automatically.
 
-**Plex** can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run.
+**Plex** can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run. With the embedded `cover.jpg` attachment in place, Plex shows the portrait set poster as the thumbnail.
 
 ## Chapter Notify
 

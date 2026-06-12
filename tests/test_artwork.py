@@ -2,8 +2,50 @@ import logging
 import subprocess as subprocess_mod
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-from festival_organizer.artwork import extract_cover
+from PIL import Image as _Image
+from festival_organizer.artwork import extract_cover, _extract_mkvattachment
 from festival_organizer.metadata import find_tool
+
+
+def _save(path, size):
+    _Image.new("RGB", size, (30, 30, 30)).save(str(path), "JPEG", quality=90)
+
+
+def test_extract_prefers_cover_land_over_portrait_cover(tmp_path):
+    source = tmp_path / "s.mkv"; source.touch()
+    thumb = tmp_path / "s-thumb.jpg"
+    atts = [
+        {"id": 1, "file_name": "cover.jpg", "content_type": "image/jpeg"},      # portrait poster
+        {"id": 2, "file_name": "cover_land.png", "content_type": "image/png"},  # landscape thumb
+    ]
+
+    def fake_extract(src, att_id, dest):
+        _save(Path(dest), (1280, 720) if att_id == 2 else (1000, 1500))
+        return True
+
+    with patch("festival_organizer.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"), \
+         patch("festival_organizer.artwork.list_image_attachments", return_value=atts), \
+         patch("festival_organizer.artwork.extract_attachment", side_effect=fake_extract):
+        ok = _extract_mkvattachment(source, thumb)
+    assert ok and thumb.exists()
+    with _Image.open(thumb) as im:
+        assert im.size[0] > im.size[1]  # landscape, not the portrait poster
+
+
+def test_extract_returns_false_when_only_portrait_cover(tmp_path):
+    """A processed file whose only cover.* is portrait: do not feed the poster to itself."""
+    source = tmp_path / "s.mkv"; source.touch()
+    thumb = tmp_path / "s-thumb.jpg"
+    atts = [{"id": 1, "file_name": "cover.jpg", "content_type": "image/jpeg"}]
+
+    def fake_extract(src, att_id, dest):
+        _save(Path(dest), (1000, 1500))  # portrait
+        return True
+
+    with patch("festival_organizer.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"), \
+         patch("festival_organizer.artwork.list_image_attachments", return_value=atts), \
+         patch("festival_organizer.artwork.extract_attachment", side_effect=fake_extract):
+        assert _extract_mkvattachment(source, thumb) is False
 
 
 def test_find_mkvextract():
@@ -30,7 +72,7 @@ def test_extract_cover_no_tool(tmp_path):
 
 
 def test_extract_cover_success(tmp_path):
-    """Should call mkvextract and return thumb path on success."""
+    """Should extract the landscape attachment and return the thumb path on success."""
     source = tmp_path / "source.mkv"
     source.touch()
     target_dir = tmp_path / "output"
@@ -38,31 +80,18 @@ def test_extract_cover_success(tmp_path):
 
     thumb_path = target_dir / "source-thumb.jpg"
 
-    mock_result = MagicMock()
-    mock_result.returncode = 0
+    atts = [{"id": 1, "file_name": "cover.png", "content_type": "image/png"}]
 
-    mock_img = MagicMock()
-    mock_img.__enter__ = MagicMock(return_value=mock_img)
-    mock_img.__exit__ = MagicMock(return_value=False)
-    mock_img.convert.return_value = mock_img
+    def fake_extract(src, att_id, dest):
+        _save(Path(dest), (1280, 720))  # landscape
+        return True
 
-    def fake_subprocess_run(*args, **kwargs):
-        # Simulate mkvextract creating the temp file
-        temp_path = thumb_path.with_suffix(".tmp.png")
-        temp_path.touch()
-        return mock_result
-
-    def fake_img_save(path, fmt, **kwargs):
-        Path(path).touch()
-
-    mock_img.save = fake_img_save
-
-    with patch("festival_organizer.metadata.MKVEXTRACT_PATH", "mkvextract"):
-        with patch("subprocess.run", side_effect=fake_subprocess_run) as mock_run:
-            with patch("festival_organizer.artwork.Image.open", return_value=mock_img):
-                result = extract_cover(source, target_dir)
-                assert result == thumb_path
-                mock_run.assert_called_once()
+    with patch("festival_organizer.metadata.MKVEXTRACT_PATH", "mkvextract"), \
+         patch("festival_organizer.artwork.list_image_attachments", return_value=atts), \
+         patch("festival_organizer.artwork.extract_attachment", side_effect=fake_extract):
+        result = extract_cover(source, target_dir)
+        assert result == thumb_path
+        assert thumb_path.exists()
 
 
 def test_extract_cover_no_attachment(tmp_path):
@@ -152,17 +181,18 @@ def test_extract_cover_frame_sampler_fallback_direct(tmp_path):
 
 def test_mkvextract_failure_logged(tmp_path, caplog):
     """MKV extraction failure is logged at debug level."""
-    from festival_organizer.artwork import _extract_mkvattachment
-
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     thumb = tmp_path / "test-thumb.jpg"
 
+    atts = [{"id": 1, "file_name": "cover.png", "content_type": "image/png"}]
+
     with patch("festival_organizer.artwork.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
-        with patch("festival_organizer.artwork.tracked_run",
-                   side_effect=subprocess_mod.SubprocessError("fail")):
-            with caplog.at_level(logging.DEBUG, logger="festival_organizer.artwork"):
-                result = _extract_mkvattachment(video, thumb)
+        with patch("festival_organizer.artwork.list_image_attachments", return_value=atts):
+            with patch("festival_organizer.artwork.extract_attachment",
+                       side_effect=subprocess_mod.SubprocessError("fail")):
+                with caplog.at_level(logging.DEBUG, logger="festival_organizer.artwork"):
+                    result = _extract_mkvattachment(video, thumb)
     assert result is False
     assert "fail" in caplog.text
 

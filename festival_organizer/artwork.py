@@ -14,7 +14,11 @@ from pathlib import Path
 from PIL import Image
 
 from festival_organizer import metadata
-from festival_organizer.subprocess_utils import tracked_run
+from festival_organizer.mkv_attachments import (
+    extract_attachment,
+    image_ratio_class,
+    list_image_attachments,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,34 +58,39 @@ def extract_cover(source: Path, target_dir: Path) -> Path | None:
 
 
 def _extract_mkvattachment(source: Path, thumb_path: Path) -> bool:
-    """Extract first MKV attachment and save as thumb JPG."""
+    """Extract the landscape thumbnail attachment and save it as the thumb JPG.
+
+    Prefers cover_land.*, then any landscape cover.*; never a portrait cover.* (that
+    is CrateDigger's own embedded poster, and using it would build a poster from a
+    poster). Returns False if no landscape attachment is available.
+    """
     if not metadata.MKVEXTRACT_PATH:
         return False
 
-    # Extract to temp file first (mkvextract saves in original format)
-    temp_path = thumb_path.with_suffix(".tmp.png")
+    atts = list_image_attachments(source)
+    if not atts:
+        return False
 
+    # cover_land.* first, then everything else (so a landscape cover.* is tried too).
+    ordered = sorted(atts, key=lambda a: 0 if a["file_name"].lower().startswith("cover_land") else 1)
+
+    temp_path = thumb_path.with_suffix(".tmp.img")
     try:
-        result = tracked_run(
-            [metadata.MKVEXTRACT_PATH, str(source), "attachments", f"1:{temp_path}"],
-            capture_output=True, text=True, timeout=30,
-            encoding="utf-8", errors="replace",
-        )
-        if result.returncode != 0 or not temp_path.exists():
-            return False
-
-        # Convert to JPG
-        with Image.open(temp_path) as img:
-            img.convert("RGB").save(str(thumb_path), "JPEG", quality=95)
-
-        return thumb_path.exists()
-
+        for a in ordered:
+            if not extract_attachment(source, a["id"], temp_path):
+                continue
+            if image_ratio_class(temp_path) != "landscape":
+                temp_path.unlink(missing_ok=True)
+                continue
+            with Image.open(temp_path) as img:
+                img.convert("RGB").save(str(thumb_path), "JPEG", quality=95)
+            return thumb_path.exists()
+        return False
     except (OSError, subprocess.SubprocessError) as e:
         logger.debug("artwork.extract: status=failed source=%s error=\"%s\"", source, e)
         return False
     finally:
-        if temp_path.exists():
-            temp_path.unlink(missing_ok=True)
+        temp_path.unlink(missing_ok=True)
 
 
 def _sample_frame_fallback(source: Path, thumb_path: Path) -> bool:

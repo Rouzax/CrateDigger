@@ -106,6 +106,37 @@ Both the per-video poster and the folder poster fall back to a color gradient if
 background image is available, so every recording and every folder gets a poster regardless
 of whether a thumbnail exists. Use `--regenerate` to rebuild existing posters.
 
+### cover: embedded MKV cover attachment
+
+Embeds the set poster into each MKV or WEBM file as the primary `cover.jpg` attachment
+(portrait, 1000x1500), so video players that read embedded cover art show a portrait poster
+instead of a landscape video frame.
+
+Before embedding, `cover` preserves the original landscape thumbnail (the YouTube thumbnail
+embedded by yt-dlp) as a second attachment named `cover_land.<ext>`, keeping the original
+bytes intact (for example `cover_land.png`). This follows the Matroska cover-art convention:
+primary `cover` is portrait, `cover_land` is landscape.
+
+The landscape thumbnail is never lost: it is already saved as `{name}-thumb.jpg` and
+`{name}-fanart.jpg` by the `art` operation, and it also lives in the `cover_land` attachment.
+
+The `{name}-poster.jpg` sidecar and its `<thumb aspect="poster">` reference in the NFO are
+unchanged. Kodi reads the sidecar poster via the NFO and is not affected.
+
+**Refresh behavior:** the embedded cover refreshes automatically when the poster's inputs
+change (for example, a re-`identify` that changes the artist, festival, date, stage, or
+venue, or an internal change to the poster layout). Use `--regenerate` to re-embed
+unconditionally:
+
+```bash
+cratedigger enrich ~/Music/Library/ --only cover --regenerate
+```
+
+**Only applies to Matroska files** (`.mkv` and `.webm`) that have a generated poster. Files
+without a poster are skipped.
+
+No new MKV tags are introduced by this operation.
+
 ### nfo: metadata files
 
 Writes an NFO file alongside each video. An NFO file is a small XML file that media
@@ -182,13 +213,15 @@ An entry in that file fixes the ID everywhere, per-chapter and album-level alike
 
 For each video, `enrich` may create or update:
 
-| File | Created by |
-|------|-----------|
+| File or location | Created by |
+|-----------------|-----------|
 | `{name}-thumb.jpg` | `art` |
 | `{name}-fanart.jpg` | `art` (copy of thumb) |
 | `{name}-poster.jpg` | `posters` |
 | `{name}.nfo` | `nfo` |
 | `folder.jpg` | `posters` (one per folder; generated even without a thumbnail, using gradient fallback) |
+| `cover.jpg` attachment inside the MKV | `cover` (portrait set poster) |
+| `cover_land.<ext>` attachment inside the MKV | `cover` (original landscape thumbnail, preserved) |
 
 Artist artwork is cached to `~/.cache/CrateDigger/artists/{artist}/` (Linux), `~/Library/Caches/CrateDigger/artists/{artist}/` (macOS), or `$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\` (Windows) and reused across runs.
 MKV tag changes (`tags`, `chapter_artist_mbids`, `album_artist_mbids`) are written
@@ -218,6 +251,12 @@ cratedigger enrich ~/Music/Library/ --only nfo --regenerate
 
 ```bash
 cratedigger enrich ~/Music/Library/ --only chapter_artist_mbids,album_artist_mbids
+```
+
+**Re-embed cover attachments only (for example, after changing the poster layout):**
+
+```bash
+cratedigger enrich ~/Music/Library/ --only cover --regenerate
 ```
 
 **Enrich and notify Kodi when done:**

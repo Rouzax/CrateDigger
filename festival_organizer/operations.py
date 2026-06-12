@@ -246,6 +246,24 @@ class ArtOperation(Operation):
             return OperationResult(self.name, "error", str(e))
 
 
+def _resolve_poster_fields(media_file: MediaFile, config: Config) -> dict[str, str]:
+    """Resolve the exact fields passed to generate_set_poster (shared by poster + cover ops)."""
+    mf = media_file
+    festival_slot = mf.place
+    if mf.edition:
+        festival_slot = config.get_place_display(mf.place, mf.edition)
+    venue_used_in_slot = mf.place_kind in ("venue", "location")
+    venue = "" if venue_used_in_slot else (mf.venue or "")
+    return {
+        "artist": mf.display_artist or mf.artist or "Unknown",
+        "festival": festival_slot or "",
+        "date": mf.date or "",
+        "year": mf.year or "",
+        "stage": mf.stage or "",
+        "venue": venue,
+    }
+
+
 class PosterOperation(Operation):
     name = "posters"
     display_name = "poster"
@@ -261,31 +279,82 @@ class PosterOperation(Operation):
         if self.force:
             return True
         poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
-        return not poster.exists()
+        if not poster.exists():
+            return True
+        from festival_organizer.mkv_tags import MATROSKA_EXTS
+        if file_path.suffix.lower() not in MATROSKA_EXTS:
+            # Non-Matroska files get no cover embed, so the sidecar is never
+            # stamped. Keep the historical exists-gate to avoid re-rendering the
+            # poster on every run.
+            return False
+        from festival_organizer.poster import build_cover_stamp, read_poster_stamp
+        current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config))
+        return read_poster_stamp(poster) != current
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.poster import generate_set_poster
         try:
             thumb = file_path.with_name(f"{file_path.stem}-thumb.jpg")
             poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
-            mf = media_file
-            festival_slot = mf.place
-            if mf.edition:
-                festival_slot = self.config.get_place_display(mf.place, mf.edition)
-            venue_used_in_slot = mf.place_kind in ("venue", "location")
-            venue_for_subline = "" if venue_used_in_slot else (mf.venue or "")
+            f = _resolve_poster_fields(media_file, self.config)
             generate_set_poster(
                 source_image_path=thumb,
                 output_path=poster,
-                artist=mf.display_artist or mf.artist or "Unknown",
-                festival=festival_slot,
-                date=mf.date,
-                year=mf.year,
-                detail=mf.stage or "",
-                venue=venue_for_subline,
+                artist=f["artist"],
+                festival=f["festival"],
+                date=f["date"],
+                year=f["year"],
+                detail=f["stage"],
+                venue=f["venue"],
             )
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:
+            return OperationResult(self.name, "error", str(e))
+
+
+class CoverEmbedOperation(Operation):
+    name = "cover"
+    display_name = "cover"
+
+    def __init__(self, config: Config, force: bool = False):
+        self.config = config
+        self.force = force
+
+    def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
+        from festival_organizer.mkv_tags import MATROSKA_EXTS
+        if file_path.suffix.lower() not in MATROSKA_EXTS:
+            return False
+        poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
+        if not poster.exists():
+            return False  # nothing to embed
+        if self.force:
+            return True
+        from festival_organizer.poster import build_cover_stamp, read_poster_stamp
+        current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config))
+        # The stamp is written only after a successful embed, so a match means the
+        # embedded cover is already current. Mismatch/absent -> (re-)embed.
+        # The sidecar stamp is a proxy for the MKV embed being current (they are
+        # separate files); use --force to re-embed if the embedded cover is altered
+        # outside CrateDigger.
+        return read_poster_stamp(poster) != current
+
+    def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
+        from festival_organizer import cover_embed
+        from festival_organizer.mkv_attachments import image_ratio_class
+        from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+        poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
+        thumb = file_path.with_name(f"{file_path.stem}-thumb.jpg")
+        try:
+            if image_ratio_class(poster) != "portrait":
+                logger.warning("cover.skip: file=%s reason=poster_not_portrait", file_path.name)
+                return OperationResult(self.name, "error", "poster not portrait")
+            if not cover_embed.converge_cover_attachments(file_path, poster, thumb):
+                return OperationResult(self.name, "error", "cover convergence failed")
+            # Stamp the sidecar only after a successful embed.
+            stamp = build_cover_stamp(**_resolve_poster_fields(media_file, self.config))
+            inject_poster_stamp(poster, stamp)
+            return OperationResult(self.name, "done")
+        except (OSError, ValueError, subprocess.SubprocessError) as e:
             return OperationResult(self.name, "error", str(e))
 
 

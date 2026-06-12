@@ -7,7 +7,7 @@ Festival set and concert library manager. CrateDigger organizes, enriches, and t
 After running CrateDigger on a folder of recordings:
 
 - Consistent folder structure and filenames, organized by artist, festival, year, or any combination
-- Cover art and generated poster images for every recording and every folder
+- Cover art and generated poster images for every recording and every folder, with the set poster also embedded as the MKV's primary cover attachment so players like Plex display a portrait poster
 - NFO files that Kodi, Jellyfin, and Plex read to display title, artist, genre, and artwork
 - Structured MKV metadata tags for any tag-aware tool
 - Chapter markers (one per track) for navigation inside DJ sets, sourced from [1001Tracklists](https://www.1001tracklists.com/)
