@@ -148,7 +148,7 @@ def _parse_tracks(html) -> list["Track"]:
     row's cue_seconds input (float seconds * 1000).
     """
     from bs4 import BeautifulSoup
-    from festival_organizer.normalization import fix_mojibake
+    from festival_organizer.normalization import fix_mojibake, normalize_genre
     soup = _to_soup(html)
     tracks: list[Track] = []
     for row in soup.select("div.tlpItem"):
@@ -170,7 +170,7 @@ def _parse_tracks(html) -> list["Track"]:
         name_meta = row.select_one('meta[itemprop="name"]')
         raw_text = fix_mojibake(name_meta.get("content", "")) if name_meta else ""
         genres = [
-            fix_mojibake(m.get("content", ""))
+            normalize_genre(fix_mojibake(m.get("content", "")))
             for m in row.select('meta[itemprop="genre"]')
             if m.get("content")
         ]

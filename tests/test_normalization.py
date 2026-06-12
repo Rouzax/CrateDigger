@@ -6,7 +6,34 @@ from festival_organizer.normalization import (
     extract_youtube_id,
     scene_dots_to_spaces,
     fix_mojibake,
+    normalize_genre,
 )
+
+
+# --- normalize_genre ---
+
+def test_normalize_genre_collapses_spaced_slash():
+    assert normalize_genre("Dance / Electro Pop") == "Dance/Electro Pop"
+    assert normalize_genre("Minimal / Deep Tech") == "Minimal/Deep Tech"
+
+
+def test_normalize_genre_leaves_compact_slash_unchanged():
+    assert normalize_genre("Melodic House/Techno") == "Melodic House/Techno"
+
+
+def test_normalize_genre_no_slash_unchanged():
+    assert normalize_genre("House") == "House"
+    assert normalize_genre("Mainstage") == "Mainstage"
+
+
+def test_normalize_genre_handles_extra_whitespace_and_empty():
+    assert normalize_genre("  Minimal  /  Deep Tech  ") == "Minimal/Deep Tech"
+    assert normalize_genre("") == ""
+
+
+def test_normalize_genre_is_idempotent():
+    once = normalize_genre("Dance / Electro Pop")
+    assert normalize_genre(once) == once
 
 
 # --- fix_mojibake ---
