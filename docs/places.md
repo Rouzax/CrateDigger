@@ -128,6 +128,13 @@ Real examples from `places.example.json`:
 
 When CrateDigger encounters "EDC Las Vegas" in a filename, it resolves to place `"EDC"` with edition `"Las Vegas"`. The edition name appears in folder paths and filenames wherever `{edition}` is used in your templates.
 
+**How an edition is chosen.** CrateDigger picks the edition from the festival **name** first: a per-edition alias (for example `"EDC Las Vegas"`), or the name ending in the edition (for example `"Tomorrowland Winter"`). If the name yields no edition, it falls back to the scraped **country**: if the country matches one of that place's edition names (or an edition alias), that edition is used. This is what lets geographic editions resolve when 1001Tracklists names every variant the same. For example, every Dreamstate event's source is named just "Dreamstate", so a set in Australia resolves to place `"Dreamstate"`, edition `"Australia"` purely from its country.
+
+The name always wins, and the country is only matched against the resolved place's own editions. So `Tomorrowland Winter` (country France) stays edition `Winter` from its name, and the main `Tomorrowland` (country Belgium) stays editionless because there is no `Belgium` edition. Two consequences worth knowing:
+
+- The country fallback only helps editions whose name **is** a country (as 1001Tracklists spells it, in English), such as Dreamstate `Australia` or `Mexico`. Region or season editions like `SoCal`, `Europe`, or `Winter` are never matched by country; they still rely on the name or an alias. If a country uses a different spelling than your edition name (for example the country `Brazil` versus an edition named `Brasil`), add the country as an edition `alias`.
+- Do not name an edition after the main edition's host country, or the main edition's sets would route into it.
+
 **Do not create an edition for each year.** The year is always tracked separately via the `{year}` token. An entry like `"editions": { "2023": {}, "2024": {} }` creates an unnecessary folder level and defeats the purpose of the field.
 
 ### Venues and the editions block

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Editions can now be selected by the scraped event **country** when the festival name does not already carry one. 1001Tracklists names every geographic variant of some festivals the same (every Dreamstate event's source is just "Dreamstate"), so a set's edition was previously unrecoverable from the name alone. Now, if the name yields no edition, the country is matched against the resolved place's editions (by edition name or an edition alias, case-insensitive): a Dreamstate set in Australia lands in the `Australia` edition. The name still wins when it carries an edition (`Tomorrowland Winter` stays `Winter`), and a place's main edition stays editionless when its host country is not an edition (the main `Tomorrowland`, in Belgium, stays `Tomorrowland`). Only country-named editions are matched this way; region or season editions like `SoCal` or `Winter` continue to rely on the name or an alias.
+
 ## [0.22.0] - 2026-06-12
 
 ### Added

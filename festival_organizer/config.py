@@ -285,14 +285,47 @@ class Config:
             editions.update(pc.get("editions", {}).keys())
         return editions
 
-    def resolve_place_with_edition(self, name: str) -> tuple[str, str]:
+    def resolve_place_with_edition(self, name: str, country: str = "") -> tuple[str, str]:
         """Resolve alias and extract edition from the name if applicable.
 
         Returns (canonical_place, edition).
         "Dreamstate SoCal" -> ("Dreamstate", "SoCal")
         "Tomorrowland Winter" -> ("Tomorrowland", "Winter")
         "TML" -> ("Tomorrowland", "")
+
+        When the name yields no edition, fall back to matching the scraped
+        ``country`` against the resolved place's editions (1001Tracklists names
+        every Dreamstate source just "Dreamstate", so the geographic edition is
+        only recoverable from the country). The name always wins; the country is
+        consulted only as a fallback and only against the resolved place's own
+        editions.
         """
+        place, edition = self._resolve_place_edition_by_name(name)
+        if not edition and country:
+            edition = self._edition_for_country(place, country)
+        return place, edition
+
+    def _edition_for_country(self, place: str, country: str) -> str:
+        """Return the edition of ``place`` whose name or alias equals ``country``.
+
+        Case-insensitive. Returns "" when no edition matches. Region/season
+        editions (e.g. "SoCal", "Europe", "Winter") never match a country and so
+        are unaffected; only country-named editions (or editions with an explicit
+        country alias) resolve this way.
+        """
+        c = country.strip().lower()
+        if not c:
+            return ""
+        pc = self.place_config.get(place, {})
+        for ed_name, ed_conf in pc.get("editions", {}).items():
+            if ed_name.lower() == c:
+                return ed_name
+            if any(str(a).lower() == c for a in ed_conf.get("aliases", [])):
+                return ed_name
+        return ""
+
+    def _resolve_place_edition_by_name(self, name: str) -> tuple[str, str]:
+        """Resolve (canonical_place, edition) from a name string only."""
         canonical = self.resolve_place_alias(name)
 
         # Alias resolved to something different: check for edition suffix
