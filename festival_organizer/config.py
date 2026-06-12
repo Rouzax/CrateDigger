@@ -84,7 +84,6 @@ DEFAULT_CONFIG = {
         "genre_concert": "Live",
     },
     "tool_paths": {
-        "mediainfo": None,
         "ffprobe": None,
         "mkvextract": None,
         "mkvpropedit": None,
