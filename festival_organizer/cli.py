@@ -483,7 +483,7 @@ def enrich(
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
-    only: Annotated[Optional[str], typer.Option("--only", help="Comma-separated operations to run (nfo, art, fanart, posters, tags, chapter_artist_mbids, album_artist_mbids)")] = None,
+    only: Annotated[Optional[str], typer.Option("--only", help="Comma-separated operations to run (nfo, art, fanart, posters, cover, tags, chapter_artist_mbids, album_artist_mbids)")] = None,
     regenerate: Annotated[bool, typer.Option("--regenerate", help="Regenerate even if artifacts exist")] = False,
     kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
 ) -> int:
