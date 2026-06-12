@@ -192,6 +192,16 @@ def test_poster_op_needed_when_stamp_absent(tmp_path):
     assert PosterOperation(load_config()).is_needed(video, _make_mf()) is True
 
 
+def test_poster_op_not_needed_for_non_matroska_when_poster_exists(tmp_path):
+    """Non-Matroska files have no stamp (no cover embed); exists-gate prevents
+    re-rendering every run."""
+    video = tmp_path / "test.mp4"; video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    poster = tmp_path / "test-poster.jpg"
+    Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")  # no stamp
+    assert PosterOperation(load_config()).is_needed(video, _make_mf()) is False
+
+
 def test_poster_op_needed_when_field_changes(tmp_path):
     from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
     video = tmp_path / "test.mkv"; video.write_bytes(b"")

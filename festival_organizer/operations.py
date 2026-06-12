@@ -281,6 +281,12 @@ class PosterOperation(Operation):
         poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
         if not poster.exists():
             return True
+        from festival_organizer.mkv_tags import MATROSKA_EXTS
+        if file_path.suffix.lower() not in MATROSKA_EXTS:
+            # Non-Matroska files get no cover embed, so the sidecar is never
+            # stamped. Keep the historical exists-gate to avoid re-rendering the
+            # poster on every run.
+            return False
         from festival_organizer.poster import build_cover_stamp, read_poster_stamp
         current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config))
         return read_poster_stamp(poster) != current
