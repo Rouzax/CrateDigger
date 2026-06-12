@@ -12,6 +12,8 @@ site_dir: build/docs
 
 theme:
   name: material
+  favicon: assets/favicon.png
+  logo: assets/icon.png
   palette:
     scheme: slate
     primary: custom
