@@ -43,6 +43,15 @@ class RenderedEmail:
 
 
 @dataclass
+class SendResult:
+    """Outcome of a single email send attempt, for console reporting."""
+    sent: bool
+    outcome: str          # "sent" | "skipped" | "failed"
+    recipients: int = 0
+    error: str = ""       # exception class name when outcome == "failed"
+
+
+@dataclass
 class SMTPSettings:
     host: str
     port: int

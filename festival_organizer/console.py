@@ -254,7 +254,7 @@ class StepProgress:
             ...
     """
 
-    def __init__(self, console: Console, enabled: bool = True) -> None:
+    def __init__(self, console: Console | None, enabled: bool = True) -> None:
         self._console = console
         self._enabled = enabled
         self._lock = threading.Lock()
@@ -832,6 +832,42 @@ def library_sync_summary_line(
         text.append("  ->  ")
         parts = [f"{k} {v}" for k, v in non_zero]
         text.append(", ".join(parts))
+
+    if elapsed_s >= _ELAPSED_THRESHOLD_S:
+        text.append("  .  ")
+        text.append(f"{elapsed_s:.1f}s", style="dim")
+
+    return text
+
+
+def email_summary_line(
+    label: str,
+    detail: str,
+    elapsed_s: float,
+    *,
+    status: str = "done",
+) -> Text:
+    """One-line contract-styled verdict for the run-summary email step.
+
+    Shape: ``done  <label>  ->  <detail>  .  Ns`` (badge colour per status,
+    e.g. ``done`` green or ``error`` red). Unlike ``library_sync_summary_line``
+    this takes the label verbatim (no ``sync`` suffix).
+    """
+    if status not in _VERDICT_STYLES:
+        raise ValueError(f"Unknown verdict status: {status}")
+    badge, style = _VERDICT_STYLES[status]
+
+    text = Text()
+    text.append("  ")
+    text.append(badge, style=style)
+    pad = VERDICT_BADGE_WIDTH - len(badge) - 2
+    if pad > 0:
+        text.append(" " * pad)
+
+    text.append(label)
+    if detail:
+        text.append("  ->  ")
+        text.append(detail)
 
     if elapsed_s >= _ELAPSED_THRESHOLD_S:
         text.append("  .  ")

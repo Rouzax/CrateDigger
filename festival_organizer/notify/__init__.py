@@ -6,12 +6,16 @@ never fails because of email.
 from __future__ import annotations
 
 import logging
+import time
 from datetime import datetime
 from pathlib import Path
 
+from festival_organizer.console import StepProgress, email_summary_line
 from festival_organizer.notify import throttle
 from festival_organizer.notify.collect import collect_new_sets, collect_updated_sets
-from festival_organizer.notify.models import EmailSet, RunReport, SMTPSettings, UpdateInfo
+from festival_organizer.notify.models import (
+    EmailSet, RunReport, SendResult, SMTPSettings, UpdateInfo,
+)
 from festival_organizer.notify.render import render, MAX_SETS
 from festival_organizer.notify.send import send_email
 from festival_organizer.notify.thumbnails import make_thumbnail
@@ -38,13 +42,17 @@ def _smtp_settings(config) -> SMTPSettings:
     )
 
 
-def _build_thumbs(report: RunReport, width: int) -> dict:
+def _build_thumbs(report: RunReport, width: int, *, progress: StepProgress | None = None) -> dict:
     thumbs = {}
+    total = min(len(report.sets), MAX_SETS)
     for idx, s in enumerate(report.sets):
         if idx >= MAX_SETS:
             break
         if not s.poster_path:
             continue
+        if progress is not None:
+            progress.update("Resizing posters", filename=Path(s.poster_path).name,
+                            current=idx + 1, total=total)
         try:
             thumbs[idx] = (f"poster{idx}", make_thumbnail(s.poster_path, width))
         except Exception as e:
@@ -52,29 +60,55 @@ def _build_thumbs(report: RunReport, width: int) -> dict:
     return thumbs
 
 
-def _send_report(config, report: RunReport, *, thumbnail_width: int) -> bool:
-    """Render and send a report. Returns True if an email was actually sent."""
+def _send_report(config, report: RunReport, *, thumbnail_width: int,
+                 progress: StepProgress | None = None) -> SendResult:
+    """Render and send a report. Returns a SendResult describing the outcome."""
     if not report.sets:
         _log.info("email.skipped: channel=%s reason=no_changes", report.channel)
-        return False
+        return SendResult(sent=False, outcome="skipped")
     to = config.email_channel_recipients(report.channel)
     if not to:
         _log.info("email.skipped: channel=%s reason=no_recipients", report.channel)
-        return False
+        return SendResult(sent=False, outcome="skipped")
     try:
-        thumbs = _build_thumbs(report, thumbnail_width)
+        thumbs = _build_thumbs(report, thumbnail_width, progress=progress)
         rendered = render(report, thumbs)
+        if progress is not None:
+            progress.update("Sending email")
         send_email(_smtp_settings(config), rendered, to=to)
         _log.info("email.sent: channel=%s recipients=%d sets=%d",
                   report.channel, len(to), len(report.sets))
-        return True
+        return SendResult(sent=True, outcome="sent", recipients=len(to))
     except Exception as e:
         _log.warning("email.failed: channel=%s error=\"%s\"", report.channel, e)
-        return False
+        return SendResult(sent=False, outcome="failed", recipients=len(to),
+                          error=type(e).__name__)
+
+
+def _report_verdict(console, label: str, result: SendResult, elapsed: float) -> None:
+    """Print a one-line console verdict for an email attempt.
+
+    Silent when no console is wired (tests, the enrich path) and on skip
+    outcomes (no recipients / no changes / disabled). Never raises: a console
+    error must not fail the run.
+    """
+    if console is None or result.outcome == "skipped":
+        return
+    try:
+        if result.outcome == "sent":
+            n = result.recipients
+            detail = f"sent to {n} recipient{'s' if n != 1 else ''}"
+            console.print(email_summary_line(label, detail, elapsed, status="done"))
+        elif result.outcome == "failed":
+            detail = f"send failed ({result.error})" if result.error else "send failed"
+            console.print(email_summary_line(label, detail, elapsed, status="error"))
+    except Exception as e:
+        _log.warning("email.verdict_print_failed: error=\"%s\"", e)
 
 
 def maybe_send_update_reminder(config, *, content_email_sent: bool,
-                               marker_path: Path | None = None) -> None:
+                               marker_path: Path | None = None,
+                               console=None, suppressed: bool = False) -> None:
     """Send a standalone update reminder, throttled once per version, deduped
     against content emails (which already carry the banner)."""
     if content_email_sent:
@@ -95,13 +129,24 @@ def maybe_send_update_reminder(config, *, content_email_sent: bool,
         return
     report = RunReport(channel="update_reminder", sets=[], update=update,
                        stats={}, timestamp="")
+    sp = StepProgress(console, enabled=console is not None and not suppressed)
+    start = time.perf_counter()
     try:
-        rendered = render(report, thumbs={})
-        send_email(_smtp_settings(config), rendered, to=to)
+        with sp:
+            sp.update("Sending update reminder")
+            rendered = render(report, thumbs={})
+            send_email(_smtp_settings(config), rendered, to=to)
         throttle.record_notified(update.latest, marker_path=marker_path)
         _log.info("email.sent: channel=update_reminder version=%s", update.latest)
+        _report_verdict(console, "Update reminder",
+                        SendResult(sent=True, outcome="sent", recipients=len(to)),
+                        time.perf_counter() - start)
     except Exception as e:
         _log.warning("email.failed: channel=update_reminder error=\"%s\"", e)
+        _report_verdict(console, "Update reminder",
+                        SendResult(sent=False, outcome="failed", recipients=len(to),
+                                   error=type(e).__name__),
+                        time.perf_counter() - start)
 
 
 def _now() -> str:
@@ -109,24 +154,38 @@ def _now() -> str:
 
 
 def notify_new_sets(config, *, pipeline_files, all_results, stats, flag,
-                    count_chapters, marker_path=None) -> None:
+                    count_chapters, marker_path=None,
+                    console=None, suppressed: bool = False) -> None:
     """End-of-organize hook: send the new-sets email (if warranted), then the
-    standalone update reminder (suppressed if a content email went out)."""
+    standalone update reminder (suppressed if a content email went out).
+
+    When `console` is wired, a transient spinner reports the resize/send phases
+    and a one-line verdict prints afterwards; with `console=None` the function
+    is silent (logging only), exactly as before."""
     content_sent = False
     if _should_send(config, "new_sets", flag=flag):
         try:
             update = get_cached_update_status()
         except Exception:
             update = None
-        report = collect_new_sets(
-            pipeline_files, all_results,
-            update=update, stats=stats, timestamp=_now(),
-            count_chapters=count_chapters,
-        )
-        content_sent = _send_report(config, report,
-                                    thumbnail_width=config.email_thumbnail_width)
+        sp = StepProgress(console, enabled=console is not None and not suppressed)
+        start = time.perf_counter()
+        with sp:
+            sp.update("Building new-sets summary")
+            report = collect_new_sets(
+                pipeline_files, all_results,
+                update=update, stats=stats, timestamp=_now(),
+                count_chapters=count_chapters,
+                place_display=config.get_place_display,
+            )
+            result = _send_report(config, report,
+                                  thumbnail_width=config.email_thumbnail_width,
+                                  progress=sp)
+        _report_verdict(console, "New-sets email", result, time.perf_counter() - start)
+        content_sent = result.sent
     maybe_send_update_reminder(config, content_email_sent=content_sent,
-                               marker_path=marker_path)
+                               marker_path=marker_path,
+                               console=console, suppressed=suppressed)
 
 
 def _sample_report() -> RunReport:
@@ -166,20 +225,35 @@ def notify_test(config) -> list[str]:
 
 
 def notify_updated_sets(config, *, updated_paths, analyse, count_chapters, flag,
-                        run_stats=None, marker_path=None) -> None:
+                        run_stats=None, marker_path=None,
+                        console=None, suppressed: bool = False) -> None:
     """End-of-identify hook: send the updated-sets email (if warranted), then the
-    standalone update reminder (suppressed if a content email went out)."""
+    standalone update reminder (suppressed if a content email went out).
+
+    When `console` is wired, a transient spinner reports re-analysing each
+    updated set, resizing posters, and sending, with a one-line verdict
+    afterwards; with `console=None` the function is silent (logging only)."""
     content_sent = False
     if _should_send(config, "updated_sets", flag=flag):
         try:
             update = get_cached_update_status()
         except Exception:
             update = None
-        report = collect_updated_sets(
-            updated_paths, analyse=analyse, count_chapters=count_chapters,
-            update=update, timestamp=_now(), stats=run_stats,
-        )
-        content_sent = _send_report(config, report,
-                                    thumbnail_width=config.email_thumbnail_width)
+        sp = StepProgress(console, enabled=console is not None and not suppressed)
+        start = time.perf_counter()
+        with sp:
+            report = collect_updated_sets(
+                updated_paths, analyse=analyse, count_chapters=count_chapters,
+                update=update, timestamp=_now(), stats=run_stats,
+                on_item=lambda i, n, name: sp.update(
+                    "Re-analysing updated sets", filename=name, current=i, total=n),
+                place_display=config.get_place_display,
+            )
+            result = _send_report(config, report,
+                                  thumbnail_width=config.email_thumbnail_width,
+                                  progress=sp)
+        _report_verdict(console, "Updated-sets email", result, time.perf_counter() - start)
+        content_sent = result.sent
     maybe_send_update_reminder(config, content_email_sent=content_sent,
-                               marker_path=marker_path)
+                               marker_path=marker_path,
+                               console=console, suppressed=suppressed)

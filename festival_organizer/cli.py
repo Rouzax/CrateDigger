@@ -1142,6 +1142,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # Post-pipeline: run-summary email
     if args.command == "organize":
         from festival_organizer import notify
+        from festival_organizer.console import suppression_enabled
         from festival_organizer.tracklists.chapters import extract_existing_chapters
 
         def _count_chapters(path):
@@ -1155,6 +1156,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
             progress.organize._stats if isinstance(progress, OrganizeEnrichProgress)
             else getattr(progress, "_stats", {})
         )
+        suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
         notify.notify_new_sets(
             config,
             pipeline_files=pipeline_files,
@@ -1166,10 +1168,15 @@ def _run_command(args: types.SimpleNamespace) -> int:
             },
             flag=getattr(args, "email", None),
             count_chapters=_count_chapters,
+            console=console,
+            suppressed=suppressed,
         )
     elif args.command == "enrich":
         from festival_organizer import notify
-        notify.maybe_send_update_reminder(config, content_email_sent=False)
+        from festival_organizer.console import suppression_enabled
+        suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
+        notify.maybe_send_update_reminder(config, content_email_sent=False,
+                                          console=console, suppressed=suppressed)
 
     return 0
 

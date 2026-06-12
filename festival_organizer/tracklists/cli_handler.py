@@ -331,6 +331,8 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         count_chapters=_count_chapters,
         flag=getattr(args, "email", None),
         run_stats=stats,
+        console=con,
+        suppressed=suppressed,
     )
 
     return 0

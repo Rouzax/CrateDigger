@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-06-12
+
+### Fixed
+
+- Run-summary emails now show the event edition. The email grouped and labelled sets by the bare canonical place (`Dreamstate`, `UMF`), dropping the edition that the rest of the library (Kodi titles, NFOs, folder layout) renders via `Config.get_place_display`. Emails now build the event name the same way `build_display_title` does, folding in the edition for festival/venue/location places (`Dreamstate SoCal`, `Dreamstate Australia`), so different editions of the same festival are labelled and grouped separately. The place name itself was already resolved through `places.json`; only the edition was missing. Concerts/albums (artist-kind places) are unaffected.
+
+### Changed
+
+- The run-summary email step now reports progress on the console instead of working silently. After `organize` or `identify` finishes, building and sending the email can take a while on large imports because it resizes a poster thumbnail for every set (and `identify` re-analyses each updated file first). A transient spinner now shows those phases (re-analysing updated sets, resizing posters with an `i/N` counter, sending), followed by a one-line verdict: `New-sets email -> sent to N recipients` / `Updated-sets email -> ...` on success, or `Email -> send failed (...)` on failure. Runs that send nothing (no changes, no recipients, or the channel disabled) stay silent in normal mode, matching the previous behaviour. The spinner follows the standard suppression rules (hidden when output is piped or under `--quiet` / `--verbose` / `--debug`); the verdict still prints.
+
 ## [0.25.0] - 2026-06-12
 
 ### Fixed

@@ -191,6 +191,18 @@ When `--kodi-sync` is active, a separate Kodi sync section appears after the sum
 shows transient progress while fetching the Kodi library and refreshing items, followed by
 a one-line summary of how many items were refreshed and how many are not yet in the library.
 
+### Summary email
+
+When the new-sets summary email is enabled (see
+[Configuration](../configuration.md#email-notifications)), it is built and sent after
+the run finishes. This can take a while on large imports because it resizes a poster
+thumbnail for every new set. The console shows transient progress for those phases
+(resizing posters, sending), then a one-line verdict, for example
+`New-sets email -> sent to 2 recipients`. Runs that change nothing, have no recipients,
+or have the channel disabled print no email line. Like all spinners, progress is hidden
+when output is piped or under `--quiet` / `--verbose` / `--debug`; the verdict still
+prints.
+
 ## Layouts
 
 CrateDigger supports four folder layouts, each with separate templates for festival sets

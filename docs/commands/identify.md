@@ -168,6 +168,16 @@ The `Unmatched` list includes both `skipped` files (with the reason, for example
 `low confidence (score 84)`) and `error` files (with the short error), so you can see at a
 glance which files still need attention.
 
+### Summary email
+
+When the updated-sets summary email is enabled (see
+[Configuration](../configuration.md#email-notifications)), it is built and sent after the
+summary panel. The console shows transient progress while it re-analyses each updated set,
+resizes poster thumbnails, and sends, then a one-line verdict such as
+`Updated-sets email -> sent to 2 recipients`. Runs that updated nothing, have no
+recipients, or have the channel disabled print no email line. The progress follows the
+same piping/verbosity rules as the per-file spinner; the verdict still prints.
+
 ### Verbosity and piping
 
 | Mode | Verdict lines | Summary panel | Transient spinner | Extra output |

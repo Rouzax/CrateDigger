@@ -1,8 +1,33 @@
+import io
 from pathlib import Path
 from types import SimpleNamespace
 
 import festival_organizer.notify as notify
+from festival_organizer.console import make_console
 from festival_organizer.notify.models import EmailSet, RunReport, UpdateInfo, SMTPSettings
+
+
+def _op(name, target=None):
+    return SimpleNamespace(name=name, target=target)
+
+
+def _res(name, status):
+    return SimpleNamespace(name=name, status=status, detail="", display_name=name)
+
+
+def _console_buf():
+    """A console writing to an in-memory buffer (not a TTY, so spinners stay off)."""
+    buf = io.StringIO()
+    return make_console(file=buf), buf
+
+
+class _FakeProgress:
+    """Records StepProgress.update calls so tests can assert on counters."""
+    def __init__(self):
+        self.calls = []
+
+    def update(self, step, *, filename=None, current=0, total=0):
+        self.calls.append((step, current, total))
 
 
 class _Cfg:
@@ -24,6 +49,9 @@ class _Cfg:
 
     def email_channel_recipients(self, ch):
         return list(self._to)
+
+    def get_place_display(self, place, edition):
+        return f"{place} {edition}".strip() if edition else place
 
 
 def _report(channel="new_sets", n=1, update=None):
@@ -157,6 +185,83 @@ def test_notify_updated_sets_sends(monkeypatch, tmp_path):
     )
     assert len(sent) == 1
     assert "updated set" in sent[0]
+
+
+def test_build_thumbs_reports_progress(tmp_path):
+    from PIL import Image
+    posters = []
+    for i in range(3):
+        p = tmp_path / f"p{i}-poster.jpg"
+        Image.new("RGB", (200, 120), (10, 20, 30)).save(p, "JPEG")
+        posters.append(p)
+    sets = [EmailSet(f"A{i}", "E", "2026", "", [], "", posters[i], "festival_set")
+            for i in range(3)]
+    report = RunReport(channel="new_sets", sets=sets, update=None, stats={}, timestamp="t")
+    prog = _FakeProgress()
+    thumbs = notify._build_thumbs(report, 80, progress=prog)
+    assert len(thumbs) == 3
+    resize = [c for c in prog.calls if c[0] == "Resizing posters"]
+    assert [c[1] for c in resize] == [1, 2, 3]   # 1-based current
+    assert all(c[2] == 3 for c in resize)        # total
+
+
+def test_notify_new_sets_prints_sent_verdict(monkeypatch, tmp_path):
+    monkeypatch.setattr(notify, "send_email", lambda settings, rendered, *, to: None)
+    monkeypatch.setattr(notify, "get_cached_update_status",
+                        lambda: UpdateInfo("0.20.0", "0.20.0", False))
+    from tests.conftest import make_mediafile
+    target = tmp_path / "v.mkv"
+    mf = make_mediafile(source_path=target, artist="A", festival="UMF Miami", year="2026",
+                        content_type="festival_set", duration_seconds=5400.0)
+    con, buf = _console_buf()
+    notify.notify_new_sets(
+        _Cfg(to=["a@x", "b@x"]),
+        pipeline_files=[(target, mf, [_op("organize", target)])],
+        all_results=[[_res("organize", "done")]],
+        stats={"added": 1, "up_to_date": 0, "errors": 0},
+        flag=None, count_chapters=lambda p: 19, marker_path=tmp_path / "m.json",
+        console=con, suppressed=True,
+    )
+    out = buf.getvalue()
+    assert "New-sets email" in out
+    assert "sent to 2 recipients" in out
+
+
+def test_notify_updated_sets_prints_error_verdict(monkeypatch, tmp_path):
+    def boom(*a, **k):
+        raise OSError("smtp down")
+
+    monkeypatch.setattr(notify, "send_email", boom)
+    monkeypatch.setattr(notify, "get_cached_update_status",
+                        lambda: UpdateInfo("0.20.0", "0.20.0", False))
+    from tests.conftest import make_mediafile
+    path = tmp_path / "u.mkv"
+    mf = make_mediafile(source_path=path, artist="Armin van Buuren", festival="ASOT",
+                        year="2026", content_type="festival_set")
+    con, buf = _console_buf()
+    notify.notify_updated_sets(
+        _Cfg(), updated_paths=[path], analyse=lambda p: mf,
+        count_chapters=lambda p: 41, flag=None, marker_path=tmp_path / "m.json",
+        console=con, suppressed=True,
+    )
+    out = buf.getvalue()
+    assert "Updated-sets email" in out
+    assert "send failed" in out
+    assert "OSError" in out
+
+
+def test_notify_skip_is_silent_with_console(monkeypatch, tmp_path):
+    monkeypatch.setattr(notify, "send_email", lambda *a, **k: None)
+    monkeypatch.setattr(notify, "get_cached_update_status",
+                        lambda: UpdateInfo("0.20.0", "0.20.0", False))
+    con, buf = _console_buf()
+    # empty run -> no_changes -> skipped -> nothing printed
+    notify.notify_new_sets(
+        _Cfg(to=[]), pipeline_files=[], all_results=[], stats={}, flag=None,
+        count_chapters=lambda p: None, marker_path=tmp_path / "m.json",
+        console=con, suppressed=True,
+    )
+    assert buf.getvalue().strip() == ""
 
 
 def test_build_thumbs_capped(monkeypatch, tmp_path):

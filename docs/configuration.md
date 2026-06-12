@@ -261,6 +261,8 @@ There are three independent channels. Each has its own recipient list and can be
 
 The `update_reminder` channel is throttled: you receive at most one email per new release, not one per run. When a content email (`new_sets` or `updated_sets`) goes out in the same run, the update banner is embedded in that email instead and the standalone reminder is suppressed.
 
+The email step runs after the command finishes and reports its progress on the console: a spinner shows the slow phases (resizing a thumbnail for every set, sending), followed by a one-line verdict such as `New-sets email -> sent to 2 recipients` or, on failure, `Email -> send failed (...)`. Runs that send nothing stay silent in normal mode.
+
 #### Prerequisites
 
 You need an SMTP server that accepts authenticated submissions. A local relay, a self-hosted mail server, or any provider that supports STARTTLS or SSL on port 587/465 works. Gmail, Fastmail, and similar providers work if you generate an app password.
