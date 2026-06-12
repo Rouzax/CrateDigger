@@ -493,29 +493,26 @@ def test_extract_mediainfo_leaves_mp4_title_untouched():
 
 # --- extract_metadata reader preference (ffprobe primary) ---
 
-def test_extract_metadata_prefers_ffprobe():
-    """ffprobe is primary: it reads MKV tags reliably regardless of position.
+def test_extract_metadata_uses_ffprobe_only():
+    """ffprobe is the sole reader: it reads MKV tags reliably regardless of where
+    the Tags element sits in the file.
 
-    Regression: mediainfo's default partial parse can miss a Tags element
-    positioned late in the file (after an mkvpropedit rewrite), silently
-    dropping the CrateDigger tags and making an identified file look
-    unidentified.
+    Regression: MediaInfo's default partial parse can miss a Tags element
+    positioned late in the file (after an mkvpropedit rewrite), silently dropping
+    the CrateDigger tags and making an identified file look unidentified.
     """
     from festival_organizer.metadata import extract_metadata
     with patch("festival_organizer.metadata._extract_ffprobe",
-               return_value={"tracklists_url": "from_ffprobe"}) as ff, \
-         patch("festival_organizer.metadata._extract_mediainfo") as mi:
+               return_value={"tracklists_url": "from_ffprobe"}) as ff:
         result = extract_metadata(Path("/x/file.mkv"))
     assert result == {"tracklists_url": "from_ffprobe"}
     ff.assert_called_once()
-    mi.assert_not_called()
 
 
-def test_extract_metadata_falls_back_to_mediainfo_when_ffprobe_empty():
+def test_extract_metadata_warns_and_returns_empty_when_ffprobe_fails(caplog):
     from festival_organizer.metadata import extract_metadata
-    with patch("festival_organizer.metadata._extract_ffprobe", return_value={}), \
-         patch("festival_organizer.metadata._extract_mediainfo",
-               return_value={"tracklists_url": "from_mediainfo"}) as mi:
+    with caplog.at_level(logging.WARNING), \
+         patch("festival_organizer.metadata._extract_ffprobe", return_value={}):
         result = extract_metadata(Path("/x/file.mkv"))
-    assert result == {"tracklists_url": "from_mediainfo"}
-    mi.assert_called_once()
+    assert result == {}
+    assert any("metadata" in r.message.lower() for r in caplog.records)
