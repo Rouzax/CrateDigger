@@ -937,6 +937,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#embedded-mkv-cover-attachments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedded MKV cover attachments
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Embedded MKV cover attachments">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-embedded-and-where-it-comes-from" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is embedded and where it comes from
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-not-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is not changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-landscape-thumbnail-is-never-lost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The landscape thumbnail is never lost
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refresh-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refresh behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-each-player-reads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What each player reads
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#jellyfin-and-plex" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1125,6 +1197,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#embedded-mkv-cover-attachments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Embedded MKV cover attachments
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Embedded MKV cover attachments">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-embedded-and-where-it-comes-from" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is embedded and where it comes from
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-not-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is not changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-landscape-thumbnail-is-never-lost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The landscape thumbnail is never lost
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refresh-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refresh behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-each-player-reads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What each player reads
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#jellyfin-and-plex" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1268,9 +1412,58 @@
 </tr>
 </tbody>
 </table>
+<h2 id="embedded-mkv-cover-attachments">Embedded MKV cover attachments</h2>
+<p>CrateDigger embeds the set poster directly into each MKV or WEBM file as a named cover attachment. This lets video players that read embedded cover art show a proper portrait poster instead of a landscape video frame.</p>
+<h3 id="what-is-embedded-and-where-it-comes-from">What is embedded and where it comes from</h3>
+<p>After the <code>posters</code> operation generates <code>{stem}-poster.jpg</code>, the <code>cover</code> operation embeds it into the MKV as the primary <code>cover.jpg</code> attachment (portrait, 1000x1500 pixels). This is the same image as the <code>{stem}-poster.jpg</code> sidecar on disk.</p>
+<p>The original landscape thumbnail that yt-dlp embeds (a YouTube video thumbnail) is moved to a second attachment named <code>cover_land.&lt;ext&gt;</code>, preserving the original bytes. The extension matches what yt-dlp wrote (for example <code>cover_land.png</code>). This follows the Matroska cover-art convention: primary <code>cover</code> is portrait, <code>cover_land</code> is landscape.</p>
+<h3 id="what-is-not-changed">What is not changed</h3>
+<ul>
+<li>The <code>{stem}-poster.jpg</code> sidecar on disk is unchanged. Kodi reads the poster via the <code>&lt;thumb aspect="poster"&gt;</code> reference in the NFO and is not affected by the embedded attachment at all.</li>
+<li>The <code>{stem}-thumb.jpg</code> and <code>{stem}-fanart.jpg</code> sidecars are unchanged. These are extracted from the landscape thumbnail before the cover operation runs.</li>
+<li>No new MKV tags are introduced. Staleness is tracked by a small marker inside the poster sidecar JPEG itself, not by a new tag.</li>
+</ul>
+<h3 id="the-landscape-thumbnail-is-never-lost">The landscape thumbnail is never lost</h3>
+<p>CrateDigger preserves the original landscape thumbnail in two places before touching the cover attachment:</p>
+<ol>
+<li>As <code>{stem}-thumb.jpg</code> and <code>{stem}-fanart.jpg</code> on disk (written by the <code>art</code> operation before <code>cover</code> runs).</li>
+<li>As the <code>cover_land.&lt;ext&gt;</code> attachment inside the MKV (its original bytes are kept intact).</li>
+</ol>
+<p>The cover slot is not overwritten until the landscape has been saved to both locations.</p>
+<h3 id="refresh-behavior">Refresh behavior</h3>
+<p>The embedded cover and the <code>{stem}-poster.jpg</code> sidecar refresh automatically when any of the poster's inputs change (for example, a re-<code>identify</code> run that changes the artist, festival, date, stage, or venue, or an internal change to the poster layout). To re-embed unconditionally, run:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>cover<span class="w"> </span>--regenerate
+</code></pre></div>
+<h3 id="what-each-player-reads">What each player reads</h3>
+<table>
+<thead>
+<tr>
+<th>Player or tool</th>
+<th>What it uses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Kodi</strong></td>
+<td><code>{stem}-poster.jpg</code> sidecar via the <code>&lt;thumb aspect="poster"&gt;</code> reference in the NFO. Unaffected by the embedded attachment.</td>
+</tr>
+<tr>
+<td><strong>Jellyfin</strong></td>
+<td>NFO sidecar references, same as Kodi.</td>
+</tr>
+<tr>
+<td><strong>Plex</strong> and generic players</td>
+<td>The embedded <code>cover.jpg</code> attachment. These players now get a portrait poster instead of a landscape video frame.</td>
+</tr>
+<tr>
+<td><strong>TrackSplit</strong></td>
+<td>The embedded <code>cover_land.&lt;ext&gt;</code> attachment, which it reads as the background for the square music covers it builds.</td>
+</tr>
+</tbody>
+</table>
 <h2 id="jellyfin-and-plex">Jellyfin and Plex</h2>
 <p><strong>Jellyfin</strong> reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, album grouping, posters, thumbs, and fanart from the sidecar files automatically.</p>
-<p><strong>Plex</strong> can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run.</p>
+<p><strong>Plex</strong> can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run. With the embedded <code>cover.jpg</code> attachment in place, Plex shows the portrait set poster as the thumbnail.</p>
 <h2 id="chapter-notify">Chapter Notify</h2>
 <p><a href="https://github.com/Rouzax/service.chapternotify">Chapter Notify</a> is a Kodi service addon that complements CrateDigger's chapter markers. When you play a CrateDigger video in Kodi, Chapter Notify watches for chapter changes and displays a brief on-screen notification showing the artist name, track title, and label for the set you are watching.</p>
 <p>It reads the chapter markers and MKV tags that CrateDigger already writes, so it works without any extra metadata preparation. You can configure it to trigger automatically on chapter changes, on a manual keypress, or both.</p>

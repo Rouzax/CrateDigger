@@ -1642,6 +1642,9 @@ This marker is required before you can run <code>enrich</code>.</p>
 <li>Downloads artist artwork from <a href="https://fanart.tv">fanart.tv</a> (a community site with
   high-quality artist logos and backgrounds), if available</li>
 <li>Generates a poster image for each recording and each folder</li>
+<li>Embeds the set poster into each MKV as the primary <code>cover.jpg</code> attachment (portrait,
+  1000x1500), so players like Plex display a portrait thumbnail. The original landscape
+  thumbnail is preserved as a second <code>cover_land</code> attachment and as the sidecar files.</li>
 <li>Writes an NFO file alongside each video. An NFO is a small XML file that media players
   like <a href="https://kodi.tv">Kodi</a>, Plex, and Jellyfin read to display title, artist, genre,
   and artwork.</li>
