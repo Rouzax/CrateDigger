@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from PIL import Image
 from festival_organizer import cover_embed
 
@@ -66,3 +66,28 @@ def test_set_primary_cover_adds_when_no_cover(tmp_path):
         cover_embed.set_primary_cover(target, poster, [])
     add.assert_called_once_with(target, poster, "cover.jpg", "image/jpeg")
     rep.assert_not_called()
+
+
+def test_converge_calls_ensure_before_set(tmp_path):
+    target = tmp_path / "v.mkv"; target.touch()
+    poster = tmp_path / "v-poster.jpg"; _img(poster, (1000, 1500))
+    thumb = tmp_path / "v-thumb.jpg"; _img(thumb, (1280, 720))
+    calls = []
+    with patch.object(cover_embed, "list_image_attachments", return_value=[]), \
+         patch.object(cover_embed, "ensure_cover_land", side_effect=lambda *a: calls.append("ensure") or True), \
+         patch.object(cover_embed, "set_primary_cover", side_effect=lambda *a: calls.append("set") or True), \
+         patch.object(cover_embed, "delete_attachment"):
+        ok = cover_embed.converge_cover_attachments(target, poster, thumb)
+    assert calls == ["ensure", "set"]
+    assert ok is True
+
+
+def test_converge_aborts_when_landscape_not_preserved(tmp_path):
+    target = tmp_path / "v.mkv"; target.touch()
+    poster = tmp_path / "v-poster.jpg"; _img(poster, (1000, 1500))
+    with patch.object(cover_embed, "list_image_attachments", return_value=[]), \
+         patch.object(cover_embed, "ensure_cover_land", return_value=False), \
+         patch.object(cover_embed, "set_primary_cover") as setp:
+        ok = cover_embed.converge_cover_attachments(target, poster, tmp_path / "v-thumb.jpg")
+    setp.assert_not_called()
+    assert ok is False
