@@ -28,7 +28,7 @@ from festival_organizer.log import setup_logging
 from festival_organizer.metadata import configure_tools
 from festival_organizer.operations import (
     OrganizeOperation, NfoOperation, ArtOperation, FanartOperation,
-    PosterOperation, AlbumPosterOperation, TagsOperation,
+    PosterOperation, AlbumPosterOperation, CoverEmbedOperation, TagsOperation,
     AlbumArtistMbidsOperation,
     ChapterArtistMbidsOperation,
 )
@@ -985,6 +985,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 if fanart_op:
                     ops.append(fanart_op)
                 ops.append(PosterOperation(config))
+                ops.append(CoverEmbedOperation(config))
                 if album_poster_op:
                     ops.append(album_poster_op)
                 ops.append(TagsOperation())
@@ -1004,6 +1005,8 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 ops.append(PosterOperation(config, force=force))
                 if album_poster_op:
                     ops.append(album_poster_op)
+            if not only or "cover" in only:
+                ops.append(CoverEmbedOperation(config, force=force))
             if not only or "tags" in only:
                 ops.append(TagsOperation(force=force))
             if not only or "chapter_artist_mbids" in only:
