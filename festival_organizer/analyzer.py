@@ -182,6 +182,13 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
             festival = ""
         elif artist and festival.lower() == artist.lower():
             festival = ""
+    # Even a known-place filename guess defers to an authoritative 1001TL venue or
+    # location tag: when 1001TL names a venue/location but no festival, the set is
+    # venue/location-routed, so a festival parsed from the filename (often the same
+    # place name) must not override it.
+    if (festival and not meta.get("tracklists_festival")
+            and (meta.get("tracklists_venue") or meta.get("tracklists_location"))):
+        festival = ""
 
     ext = filepath.suffix.lower()
     file_type = "video" if ext in VIDEO_EXTS else "audio"
@@ -236,7 +243,6 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         audio_format=meta.get("audio_format", ""),
         audio_bitrate=meta.get("audio_bitrate", ""),
         overall_bitrate=meta.get("overall_bitrate", ""),
-        has_cover=meta.get("has_cover", False),
     )
     mf.place, mf.place_kind = config.resolve_place_for_media(mf)
     if mf.stage and mf.stage == mf.place:

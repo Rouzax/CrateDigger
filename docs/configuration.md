@@ -356,8 +356,7 @@ Genre written into NFO files when no genre is available from 1001Tracklists meta
 
 ```toml
 # [tool_paths]
-# mediainfo = "C:/Program Files/MediaInfo/MediaInfo.exe"
-# ffprobe = ""
+# ffprobe = "C:/Program Files/ffmpeg/bin/ffprobe.exe"
 # mkvextract = ""
 # mkvpropedit = ""
 # mkvmerge = ""

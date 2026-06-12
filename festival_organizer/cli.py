@@ -47,7 +47,6 @@ logger = logging.getLogger(__name__)
 _CD_TOOLS: list[tuple[str, str, bool]] = [
     # (metadata attr name, display name, required)
     ("FFPROBE_PATH",     "ffprobe",     True),
-    ("MEDIAINFO_PATH",   "mediainfo",   True),
     ("MKVEXTRACT_PATH",  "mkvextract",  True),
     ("MKVPROPEDIT_PATH", "mkvpropedit", True),
     ("MKVMERGE_PATH",    "mkvmerge",    True),
@@ -628,7 +627,7 @@ def _analyse_parallel(
     """Analyse and classify files using a thread pool.
 
     Returns list of (Path, MediaFile) tuples in the same order as input.
-    Spawns mediainfo/ffprobe subprocesses in parallel to overlap I/O.
+    Spawns ffprobe subprocesses in parallel to overlap I/O.
 
     If on_complete is provided, it is called (from the main thread) each
     time a file finishes. Useful for progress reporting.
@@ -812,7 +811,6 @@ def _run_command(args: types.SimpleNamespace) -> int:
         progress = ProgressPrinter(total=0, console=console, quiet=quiet, verbose=verbose)
     use_contract = isinstance(progress, (OrganizeContractProgress, EnrichContractProgress, OrganizeEnrichProgress))
     all_tools = {
-        "mediainfo": metadata.MEDIAINFO_PATH,
         "ffprobe": metadata.FFPROBE_PATH,
         "mkvextract": metadata.MKVEXTRACT_PATH,
         "mkvpropedit": metadata.MKVPROPEDIT_PATH,

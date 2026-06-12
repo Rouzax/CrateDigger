@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-06-12
+
+### Fixed
+
+- Identified files no longer become invisible to enrichment/organize after an MKV rewrite. CrateDigger now reads metadata with ffprobe, which reads embedded tags reliably regardless of where the Matroska Tags element sits in the file. The previous MediaInfo-based reader did a fast, partial scan that could miss a Tags element relocated late in the file (after an `mkvpropedit` attachment or tag write), silently dropping the embedded `CRATEDIGGER_1001TL_*` tags so the file looked unidentified and fell back to filename parsing. The tags were never lost (ffprobe and mkvextract always read them).
+- The filename parser no longer swaps artist and place when re-reading organize's own `YYYY - Artist - Place [stage]` output. The `YYYY - A - B` pattern previously assumed `Festival - Artist` order; it now uses known-place detection (and strips a trailing `[stage]`) to keep the artist and place in the right fields for unidentified files. A filename-parsed festival also now defers to an authoritative 1001Tracklists venue/location tag, so venue sets are not mis-routed as festivals.
+
+### Removed
+
+- MediaInfo is no longer used or required. ffprobe (already required for frame sampling, artwork extraction, and cover embedding) is now the single metadata reader. Removing the MediaInfo fallback also removes a silent-failure path: a partial MediaInfo read could return a non-empty but tagless result, which is the bug above. If ffprobe cannot read a file, CrateDigger now logs a warning instead of degrading quietly. If you inspect an MKV with MediaInfo and the `CRATEDIGGER_*` tags appear missing, that is a MediaInfo display limitation, not missing data; verify with `ffprobe` or `mkvextract` (see the FAQ).
+
 ## [0.23.0] - 2026-06-12
 
 ### Added

@@ -6,11 +6,10 @@
 
 ### A required tool is not found
 
-CrateDigger relies on three external tools. If any of them is missing or not on your system PATH, you will see an error on startup.
+CrateDigger relies on two external tools. If either is missing or not on your system PATH, you will see an error on startup.
 
 | Tool | Install |
 |------|---------|
-| **MediaInfo** | `sudo apt install mediainfo` / `brew install media-info` / `scoop install mediainfo` |
 | **FFmpeg** (includes ffprobe) | `sudo apt install ffmpeg` / `brew install ffmpeg` / `scoop install ffmpeg` |
 | **MKVToolNix** (mkvpropedit, mkvextract, mkvmerge) | `sudo apt install mkvtoolnix` / `brew install mkvtoolnix` / `scoop install mkvtoolnix` |
 
@@ -18,7 +17,6 @@ If the tools are installed but not on your PATH (for example, a custom install l
 
 ```toml
 [tool_paths]
-mediainfo = "/usr/local/bin/mediainfo"
 ffprobe = "/usr/local/bin/ffprobe"
 mkvpropedit = "/usr/local/bin/mkvpropedit"
 mkvextract = "/usr/local/bin/mkvextract"
@@ -70,6 +68,22 @@ Each CrateDigger invocation writes its own log file to a per-platform directory:
 | Windows | `$env:LOCALAPPDATA\CrateDigger\Logs\` |
 
 Files are named `{command}-{timestamp}-{hex}.log`, for example `identify-2026-05-07T13-44-01-a3f2.log`. Every file captures DEBUG-level detail regardless of whether you pass `--verbose` or `--debug` on the command line. Log files older than 7 days are deleted automatically at startup. Because each run gets its own file, concurrent runs never conflict or interleave.
+
+### My CrateDigger tags don't show up in MediaInfo
+
+They are almost certainly still there. MediaInfo does a fast, partial scan and can miss the Matroska Tags element, which often ends up late in the file after CrateDigger writes tags and embeds cover attachments. When that happens, MediaInfo shows none of the `CRATEDIGGER_*` tags even though the file carries them. This is a MediaInfo display limitation, not missing data, and it is exactly why CrateDigger reads metadata with ffprobe instead.
+
+To see the tags reliably, use ffprobe or mkvextract:
+
+```bash
+# all container tags, including CRATEDIGGER_*
+ffprobe -v error -show_entries format_tags -of default=noprint_wrappers=1 "your-file.mkv"
+
+# or dump the raw Matroska tags to XML
+mkvextract "your-file.mkv" tags tags.xml
+```
+
+(MediaInfo's full-parse mode, `mediainfo --ParseSpeed=1.0`, also finds them, but it reads most of the file and is slow on large videos.)
 
 ---
 

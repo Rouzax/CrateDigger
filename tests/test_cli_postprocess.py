@@ -23,7 +23,6 @@ def _make_media_file(path: Path) -> MediaFile:
         year="2024",
         content_type="festival_set",
         extension=".mkv",
-        has_cover=True,
     )
 
 
@@ -62,7 +61,6 @@ def test_art_operation_called_without_has_cover_gate():
         video = Path(tmp) / "test.mkv"
         video.write_text("fake video")
         mf = _make_media_file(video)
-        mf.has_cover = False  # No cover, but should still try
 
         op = ArtOperation()
         assert op.is_needed(video, mf) is True

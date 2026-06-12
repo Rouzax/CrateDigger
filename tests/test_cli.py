@@ -369,7 +369,7 @@ def test_run_check_impl_all_pass(monkeypatch, tmp_path):
     from festival_organizer import cli as cli_mod, metadata
 
     # Patch tool paths to non-None values
-    for attr in ("FFPROBE_PATH", "MEDIAINFO_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+    for attr in ("FFPROBE_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
         monkeypatch.setattr(metadata, attr, "/usr/bin/fake")
 
     # Patch subprocess to return a fake version line
@@ -437,7 +437,7 @@ def test_run_check_impl_required_tool_missing_exits_one(monkeypatch, tmp_path):
     from festival_organizer import cli as cli_mod, metadata
 
     # All tool paths None (missing)
-    for attr in ("FFPROBE_PATH", "MEDIAINFO_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+    for attr in ("FFPROBE_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
         monkeypatch.setattr(metadata, attr, None)
 
     monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", False)
@@ -465,7 +465,7 @@ def test_run_check_impl_required_tool_missing_exits_one(monkeypatch, tmp_path):
 def test_run_check_impl_shows_all_section_headers(monkeypatch, tmp_path):
     from festival_organizer import cli as cli_mod, metadata
 
-    for attr in ("FFPROBE_PATH", "MEDIAINFO_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+    for attr in ("FFPROBE_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
         monkeypatch.setattr(metadata, attr, "/usr/bin/fake")
 
     import subprocess
@@ -750,7 +750,7 @@ def test_check_clean_install_reports_all_passed(monkeypatch, tmp_path):
     from festival_organizer import cli, metadata, paths, update_check
 
     # Required tools all present
-    for attr in ("FFPROBE_PATH", "MEDIAINFO_PATH", "MKVEXTRACT_PATH",
+    for attr in ("FFPROBE_PATH", "MKVEXTRACT_PATH",
                  "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
         monkeypatch.setattr(metadata, attr, "/usr/bin/true")
     # cv2/numpy absent

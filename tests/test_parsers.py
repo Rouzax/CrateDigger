@@ -178,3 +178,38 @@ def test_parse_filename_no_debug_when_primary_pattern_matches(caplog):
         parse_filename(Path("Martin Garrix @ Tomorrowland 2024.mkv"), CFG)
     joined = "\n".join(r.message for r in caplog.records)
     assert "parsers.filename_fallback:" not in joined
+
+
+# --- Round-trip of organize's own output: "YYYY - Artist - Place [stage]" ---
+# Regression: the YYYY-A-B pattern assumed "Festival - Artist" order and swapped
+# artist/place when re-reading an unidentified file organize had produced.
+
+def test_filename_organize_output_artist_place_roundtrips():
+    r = parse_filename(Path("2025 - Armin van Buuren - Tomorrowland [Mainstage].mkv"), CFG)
+    assert r["year"] == "2025"
+    assert r["artist"] == "Armin van Buuren"
+    assert r["festival"] == "Tomorrowland"
+    assert r["stage"] == "Mainstage"
+
+
+def test_filename_organize_output_amf():
+    # The swap is fixed (artist stays the artist, festival stays the place), and
+    # the residual empty brackets left when noise-word stripping removes the stage
+    # ("Hardstyle Exclusive") are not glued onto the festival.
+    r = parse_filename(Path("2024 - Showtek - AMF [Hardstyle Exclusive].mkv"), CFG)
+    assert r["artist"] == "Showtek"
+    assert r["festival"] == "AMF"
+
+
+def test_filename_organize_output_edc_alias_with_compound_stage():
+    r = parse_filename(Path("2025 - Tiësto - EDC Las Vegas [In Search Of Sunrise, kineticFIELD].mkv"), CFG)
+    assert r["artist"] == "Tiësto"
+    assert r["festival"] == "EDC Las Vegas"
+    assert r["stage"] == "In Search Of Sunrise, kineticFIELD"
+
+
+def test_filename_legacy_festival_artist_order_preserved():
+    # part2 is a known place -> legacy "Festival - Artist" order unchanged.
+    r = parse_filename(Path("2025 - AMF - Armin van Buuren.mkv"), CFG)
+    assert r["festival"] == "AMF"
+    assert r["artist"] == "Armin van Buuren"

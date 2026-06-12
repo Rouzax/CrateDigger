@@ -17,37 +17,35 @@ python3 --version
 
 ### Required tools
 
-CrateDigger relies on three external programs. Install them before running CrateDigger.
+CrateDigger relies on two external programs. Install them before running CrateDigger.
 
 | Tool | What it does |
 |------|-------------|
-| **MediaInfo** | Reads video and audio file properties (duration, resolution, codec) |
-| **FFmpeg** (includes ffprobe) | Probes media files and extracts thumbnail images |
+| **FFmpeg** (includes ffprobe) | Reads media properties and tags, probes files, and extracts thumbnail images |
 | **MKVToolNix** (mkvpropedit, mkvextract, mkvmerge) | Reads and writes chapters and tags inside MKV video files |
 
 === "Ubuntu / Debian"
 
     ```bash
-    sudo apt install mediainfo ffmpeg mkvtoolnix
+    sudo apt install ffmpeg mkvtoolnix
     ```
 
 === "macOS (Homebrew)"
 
     ```bash
-    brew install media-info ffmpeg mkvtoolnix
+    brew install ffmpeg mkvtoolnix
     ```
 
 === "Windows (Scoop)"
 
     ```powershell
-    scoop install mediainfo ffmpeg mkvtoolnix
+    scoop install ffmpeg mkvtoolnix
     ```
 
 === "Windows (manual)"
 
     Download and install each tool, then add their directories to your system PATH:
 
-    - [MediaInfo](https://mediaarea.net/en/MediaInfo/Download)
     - [FFmpeg](https://ffmpeg.org/download.html)
     - [MKVToolNix](https://mkvtoolnix.download/downloads.html)
 

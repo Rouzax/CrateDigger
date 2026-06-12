@@ -84,7 +84,20 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         part2 = m.group(2).strip()
         part3 = m.group(3).strip()
         weekend = m.group(4)
-        # Part2 could be festival or edition; Part3 is artist
+        # Organize writes "YYYY - Artist - Place [stage]". If part2 is not a
+        # known place but part3 (minus a trailing [stage]) is, this is our own
+        # output: treat part2 as the artist and part3 as the place, so re-reading
+        # an unidentified file does not swap artist and festival.
+        p3_core, p3_stage = _split_trailing_stage(part3)
+        if not _is_known_place(part2, known_places) and _is_known_place(p3_core, known_places):
+            result.setdefault("artist", part2)
+            result.setdefault("festival", p3_core)
+            if p3_stage:
+                result.setdefault("stage", p3_stage)
+            if weekend:
+                result["set_title"] = weekend
+            return result
+        # Legacy "YYYY - Festival - Artist": Part2 is festival/edition, Part3 is artist
         if _is_known_place(part2, known_places):
             result.setdefault("festival", part2)
         else:
@@ -242,3 +255,16 @@ def _festival_in_text(fest: str, text: str) -> bool:
 def _is_known_place(name: str, known: set[str]) -> bool:
     """Check if name matches a known place (festival, venue, club, etc.)."""
     return any(_festival_in_text(f, name) for f in known)
+
+
+def _split_trailing_stage(text: str) -> tuple[str, str]:
+    """Split a trailing ``[stage]`` off a name. Returns ``(core, stage)``.
+
+    ``"Tomorrowland [Mainstage]"`` -> ``("Tomorrowland", "Mainstage")``.
+    Empty brackets (left by noise-word stripping) -> ``("AMF", "")``.
+    No trailing bracket -> ``(text, "")``.
+    """
+    m = re.search(r"\s*\[([^\]]*)\]\s*$", text)
+    if m:
+        return text[:m.start()].strip(), m.group(1).strip()
+    return text, ""
