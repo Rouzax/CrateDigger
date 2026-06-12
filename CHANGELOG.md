@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - The set poster is now embedded as the MKV's primary `cover.jpg` attachment (portrait, 1000x1500), so video players such as Plex show a real poster thumbnail instead of a landscape video frame. The original landscape thumbnail is preserved as a second `cover_land.<ext>` attachment (and remains as the `{stem}-thumb.jpg`/`-fanart.jpg` sidecars), following the Matroska cover-art convention. A new `cover` enrichment operation (run automatically after posters, or selectable with `enrich --only cover`) performs the embedding. The embedded cover and the poster sidecar refresh automatically when the poster's inputs or layout change; `--regenerate` re-embeds. Kodi is unaffected (it keeps reading the `{stem}-poster.jpg` sidecar via the NFO). No new MKV tags are introduced.
 
+### Changed
+
+- Genre labels from 1001Tracklists now use a uniform compact-slash spacing. 1001Tracklists emits compound genres with inconsistent spacing around the slash (for example `Melodic House/Techno` next to `Dance / Electro Pop`); these are now normalized to the compact form (`Dance/Electro Pop`, `Minimal/Deep Tech`). Each genre stays a single label (nothing is split into separate genres). The normalization is applied both when genres are scraped (so newly identified sets are written compact) and when they are read back from the `CRATEDIGGER_1001TL_GENRES` tag, so existing sets get the tidied genres in their NFO on the next `enrich`. The embedded `CRATEDIGGER_1001TL_GENRES` tag itself keeps its original spacing until the set is re-identified.
+
 ## [0.21.0] - 2026-06-11
 
 ### Fixed

@@ -57,6 +57,23 @@ def fix_mojibake(text: str) -> str:
     return ftfy.fix_text(text)
 
 
+_GENRE_SLASH = re.compile(r"\s*/\s*")
+
+
+def normalize_genre(genre: str) -> str:
+    """Normalize spacing in a genre label to a compact slash form.
+
+    1001Tracklists emits compound genre labels with inconsistent spacing around
+    the slash ("Melodic House/Techno" vs "Dance / Electro Pop"). Collapse any
+    surrounding whitespace so the slash form is uniform ("Dance/Electro Pop").
+    The slash is preserved: these are single genre labels, not two genres to
+    split. Idempotent; safe on empty strings and slash-free genres.
+    """
+    if not genre:
+        return genre
+    return _GENRE_SLASH.sub("/", genre).strip()
+
+
 def strip_diacritics(text: str) -> str:
     """Remove diacritics for fuzzy matching. 'Tiesto' matches 'Tiësto'."""
     nfkd = unicodedata.normalize("NFD", text)

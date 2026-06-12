@@ -235,6 +235,23 @@ def test_analyse_maps_enrichment_fields():
     assert mf.enriched_at == "2026-03-30T12:00:00"
 
 
+def test_analyse_normalizes_genre_spacing_from_tag():
+    """Genres read from the 1001TL tag get compact-slash normalization (retroactive
+    on enrich, no re-identify needed)."""
+    fake_meta = {
+        "title": "", "tracklists_title": "", "tracklists_url": "",
+        "artist_tag": "Test", "date_tag": "",
+        "tracklists_genres": "Melodic House/Techno|Dance / Electro Pop|Minimal / Deep Tech|House",
+        "duration_seconds": None, "width": None, "height": None,
+        "video_format": "", "audio_format": "", "audio_bitrate": "",
+        "overall_bitrate": "", "has_cover": False,
+        "description": "", "comment": "", "purl": "",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(Path("/tmp/test/file.mkv"), Path("/tmp/test"), CFG)
+    assert mf.genres == ["Melodic House/Techno", "Dance/Electro Pop", "Minimal/Deep Tech", "House"]
+
+
 def test_analyse_enrichment_fields_default_empty():
     """Enrichment fields default to empty when not in metadata."""
     with patch("festival_organizer.analyzer.extract_metadata", return_value={}):

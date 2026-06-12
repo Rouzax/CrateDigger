@@ -12,7 +12,7 @@ from pathlib import Path
 from festival_organizer.config import Config
 from festival_organizer.metadata import extract_metadata
 from festival_organizer.models import MediaFile
-from festival_organizer.normalization import normalise_name
+from festival_organizer.normalization import normalise_name, normalize_genre
 from festival_organizer.parsers import (
     parse_filename,
     parse_parent_dirs,
@@ -218,7 +218,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         youtube_id=info.get("youtube_id", ""),
         tracklists_url=meta.get("tracklists_url", ""),
         tracklists_title=meta.get("tracklists_title", ""),
-        genres=[g.strip() for g in meta.get("tracklists_genres", "").split("|") if g.strip()] if meta.get("tracklists_genres") else [],
+        genres=[normalize_genre(g) for g in meta.get("tracklists_genres", "").split("|") if g.strip()] if meta.get("tracklists_genres") else [],
         dj_artwork_url=meta.get("tracklists_dj_artwork", ""),
         country=meta.get("tracklists_country", ""),
         source_type=meta.get("tracklists_source_type", ""),

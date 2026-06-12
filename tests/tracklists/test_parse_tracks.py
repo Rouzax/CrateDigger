@@ -26,6 +26,13 @@ def test_parse_tracks_extracts_genres_from_chapter_rows():
     assert len(all_genres) >= 5
 
 
+def test_parse_tracks_normalizes_genre_slash_spacing():
+    """Parsed genres carry no whitespace around the slash (compact A/B form)."""
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    all_genres = [g for t in tracks for g in t.genres]
+    assert all(" /" not in g and "/ " not in g for g in all_genres)
+
+
 def test_parse_tracks_start_ms_monotonic():
     tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
     starts = [t.start_ms for t in tracks]
