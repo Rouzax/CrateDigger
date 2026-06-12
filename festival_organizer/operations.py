@@ -246,6 +246,24 @@ class ArtOperation(Operation):
             return OperationResult(self.name, "error", str(e))
 
 
+def _resolve_poster_fields(media_file: MediaFile, config: Config) -> dict[str, str]:
+    """Resolve the exact fields passed to generate_set_poster (shared by poster + cover ops)."""
+    mf = media_file
+    festival_slot = mf.place
+    if mf.edition:
+        festival_slot = config.get_place_display(mf.place, mf.edition)
+    venue_used_in_slot = mf.place_kind in ("venue", "location")
+    venue = "" if venue_used_in_slot else (mf.venue or "")
+    return {
+        "artist": mf.display_artist or mf.artist or "Unknown",
+        "festival": festival_slot or "",
+        "date": mf.date or "",
+        "year": mf.year or "",
+        "stage": mf.stage or "",
+        "venue": venue,
+    }
+
+
 class PosterOperation(Operation):
     name = "posters"
     display_name = "poster"
@@ -268,21 +286,16 @@ class PosterOperation(Operation):
         try:
             thumb = file_path.with_name(f"{file_path.stem}-thumb.jpg")
             poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
-            mf = media_file
-            festival_slot = mf.place
-            if mf.edition:
-                festival_slot = self.config.get_place_display(mf.place, mf.edition)
-            venue_used_in_slot = mf.place_kind in ("venue", "location")
-            venue_for_subline = "" if venue_used_in_slot else (mf.venue or "")
+            f = _resolve_poster_fields(media_file, self.config)
             generate_set_poster(
                 source_image_path=thumb,
                 output_path=poster,
-                artist=mf.display_artist or mf.artist or "Unknown",
-                festival=festival_slot,
-                date=mf.date,
-                year=mf.year,
-                detail=mf.stage or "",
-                venue=venue_for_subline,
+                artist=f["artist"],
+                festival=f["festival"],
+                date=f["date"],
+                year=f["year"],
+                detail=f["stage"],
+                venue=f["venue"],
             )
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:

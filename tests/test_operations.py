@@ -6,6 +6,7 @@ from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
     NfoOperation, ArtOperation, PosterOperation,
     OrganizeOperation, AlbumPosterOperation, FanartOperation,
+    _resolve_poster_fields,
 )
 from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
 
@@ -200,6 +201,24 @@ def _run_poster_and_capture_kwargs(tmp_path, mf):
     with patch("festival_organizer.poster.generate_set_poster") as gen:
         PosterOperation(load_config()).execute(video, mf)
     return gen.call_args.kwargs
+
+
+def test_resolve_poster_fields_uses_display_artist_and_edition_slot():
+    cfg = load_config()
+    mf = _make_mf(artist="afrojack", display_artist="AFROJACK",
+                  place="UMF", edition="", stage="Mainstage", date="2026-03-29", year="2026")
+    f = _resolve_poster_fields(mf, cfg)
+    assert f["artist"] == "AFROJACK"
+    assert f["stage"] == "Mainstage"
+    assert f["date"] == "2026-03-29"
+    assert f["year"] == "2026"
+    assert "venue" in f and "festival" in f
+
+
+def test_resolve_poster_fields_drops_venue_when_place_is_venue():
+    cfg = load_config()
+    mf = _make_mf(place="Some Club", place_kind="venue", venue="Some Club")
+    assert _resolve_poster_fields(mf, cfg)["venue"] == ""
 
 
 def test_poster_festival_slot_uses_place_for_festival(tmp_path):
