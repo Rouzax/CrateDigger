@@ -66,7 +66,7 @@ and expands known festival abbreviations. For example, "AMF" becomes
 "Amsterdam Music Festival" and "EDC" becomes "Electric Daisy Carnival". These expansions
 come from your [festivals.json](../festivals.md) aliases.
 
-The file's actual duration (read from the video stream via MediaInfo) and year (from an
+The file's actual duration (read from the video stream via ffprobe) and year (from an
 embedded date tag if present) are passed separately to help rank results. They are not
 part of the search text.
 
