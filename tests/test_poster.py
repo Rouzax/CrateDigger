@@ -658,3 +658,22 @@ def test_draw_centered_accepts_stroke_params(tmp_path):
     import numpy as np
     arr = np.array(bg)
     assert arr.max() > 0, "Nothing was drawn"
+
+
+def test_generate_set_poster_accepts_artists_1001tl_kwarg(tmp_path):
+    from PIL import Image
+    from festival_organizer.poster import generate_set_poster
+
+    src = tmp_path / "thumb.jpg"
+    Image.new("RGB", (1920, 1080), (40, 40, 40)).save(src)
+    out = tmp_path / "poster.jpg"
+
+    result = generate_set_poster(
+        source_image_path=src,
+        output_path=out,
+        artist="Dimitri Vegas & Like Mike & Martin Garrix",
+        festival="Tomorrowland",
+        year="2024",
+        artists_1001tl=["Dimitri Vegas & Like Mike", "Martin Garrix"],
+    )
+    assert result.exists()

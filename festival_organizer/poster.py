@@ -448,6 +448,7 @@ def generate_set_poster(
     year: str = "",
     detail: str = "",
     venue: str = "",
+    artists_1001tl: list[str] | None = None,
 ) -> Path:
     """Generate a set poster (per-video) using the v5b line-anchored layout.
 
@@ -460,6 +461,9 @@ def generate_set_poster(
         year: Year string as fallback
         detail: Optional detail line (stage name)
         venue: Optional venue/location (rendered in light gray)
+        artists_1001tl: Optional billed per-act 1001TL list; when set, drives the
+            artist lines directly (one act per line), otherwise falls back to
+            split_artist(artist). See _resolve_artist_lines.
 
     Returns:
         Path to the generated poster
@@ -533,7 +537,7 @@ def generate_set_poster(
     max_w = POSTER_W - 100
 
     # Split artist name into lines, word-wrap any that don't fit
-    artist_lines = [line.upper() for line in split_artist(artist)]
+    artist_lines = [line.upper() for line in _resolve_artist_lines(artists_1001tl, artist)]
     artist_lines = _word_wrap_lines(artist_lines, max_w, min_size=80)
 
     # Auto-fit fonts — uniform size across all lines (driven by the longest)
