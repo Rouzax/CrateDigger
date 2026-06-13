@@ -789,3 +789,34 @@ def test_analyzer_populates_place_for_artist_fallback():
     assert mf.location == ""
     assert mf.place == "Hardwell"
     assert mf.place_kind == "artist"
+
+
+def test_analyse_populates_artists_1001tl_billed_list():
+    """artists_1001tl is the raw pipe-split 1001TL list; a duo stays one element."""
+    fake_meta = {
+        "title": "DVLM B2B MARTIN GARRIX @ TML 2024",
+        "tracklists_title": "Dimitri Vegas & Like Mike B2B Martin Garrix @ Tomorrowland, Belgium 2024-07-19",
+        "tracklists_url": "https://www.1001tracklists.com/tracklist/abc/",
+        "tracklists_artists": "Dimitri Vegas & Like Mike|Martin Garrix",
+        "tracklists_festival": "Tomorrowland",
+        "tracklists_date": "2024-07-19",
+        "duration_seconds": 7200.0,
+        "width": 3840,
+        "height": 2160,
+        "video_format": "VP9",
+        "audio_format": "Opus",
+        "audio_bitrate": "125000",
+        "overall_bitrate": "13500000",
+        "artist_tag": "",
+        "date_tag": "",
+        "description": "",
+        "comment": "",
+        "purl": "",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("//hyperv/Data/Concerts/TML/2024 - TML/set.mkv"),
+            Path("//hyperv/Data/Concerts"),
+            CFG,
+        )
+    assert mf.artists_1001tl == ["Dimitri Vegas & Like Mike", "Martin Garrix"]

@@ -211,6 +211,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         display_artist=display_artist,
         artists=resolved_artists,
         artist_slugs=artist_slugs,
+        artists_1001tl=artists_list,
         festival=festival,
         festival_full=meta.get("tracklists_festival", ""),
         year=info.get("year", "").strip(),
