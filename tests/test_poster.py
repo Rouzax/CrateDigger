@@ -677,3 +677,8 @@ def test_generate_set_poster_accepts_artists_1001tl_kwarg(tmp_path):
         artists_1001tl=["Dimitri Vegas & Like Mike", "Martin Garrix"],
     )
     assert result.exists()
+
+
+def test_cover_poster_version_is_2():
+    from festival_organizer.poster import COVER_POSTER_VERSION
+    assert COVER_POSTER_VERSION == 2

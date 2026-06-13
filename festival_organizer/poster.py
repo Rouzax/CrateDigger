@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 # --- Cover sidecar stamp (staleness tracking; see plans/2026-06-12-mkv-cover-attachment-naming.md) ---
 # Bump COVER_POSTER_VERSION whenever the set-poster composition changes so existing
 # posters are re-rendered and re-embedded on the next enrich run.
-COVER_POSTER_VERSION = 1
+COVER_POSTER_VERSION = 2
 
 _STAMP_PREFIX = "CDPOSTER"
 _STAMP_SEP = "\x1f"  # unit separator: never appears in the resolved field values
