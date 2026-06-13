@@ -307,6 +307,7 @@ class PosterOperation(Operation):
                 year=f["year"],
                 detail=f["stage"],
                 venue=f["venue"],
+                artists_1001tl=media_file.artists_1001tl,
             )
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:

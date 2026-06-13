@@ -1562,3 +1562,14 @@ def test_cover_op_execute_refuses_non_portrait_poster(tmp_path):
         result = CoverEmbedOperation(load_config()).execute(video, _make_mf())
     conv.assert_not_called()
     assert result.status == "error"
+
+
+def test_poster_op_passes_billed_artists_not_resolved(tmp_path):
+    """PosterOperation must pass the billed list (alias), never the resolved one."""
+    mf = _make_mf(
+        artist="ALOK",
+        artists=["ALOK", "R3HAB"],                    # resolved canonical
+        artists_1001tl=["SOMETHING ELSE", "R3HAB"],   # billed alias
+    )
+    kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
+    assert kwargs["artists_1001tl"] == ["SOMETHING ELSE", "R3HAB"]
