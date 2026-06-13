@@ -241,6 +241,26 @@ def split_artist(name: str) -> list[str]:
     return lines
 
 
+def _resolve_artist_lines(artists_1001tl: list[str] | None, display: str) -> list[str]:
+    """Resolve set-poster artist lines from the billed per-act 1001TL list.
+
+    ``artists_1001tl`` is the raw, alias-preserving, billed-form per-act list
+    (``MediaFile.artists_1001tl`` / the ``CRATEDIGGER_1001TL_ARTISTS`` tag),
+    where a duo such as "Dimitri Vegas & Like Mike" is ONE element. Lines are
+    built from it directly: the first act as-is, each subsequent act prefixed
+    "& ". A single element yields one line, so an internal "&"/"with" in an act
+    name is never split. This matches TrackSplit's cover layout and shows the
+    alias (the 1001TL form), never the resolved canonical.
+
+    ``display`` is the fallback ONLY for non-1001TL files (empty list): they
+    keep the previous ``split_artist`` behaviour, including its parenthetical
+    handling.
+    """
+    if artists_1001tl:
+        return [artists_1001tl[0]] + [f"& {a}" for a in artists_1001tl[1:]]
+    return split_artist(display)
+
+
 def _balanced_word_split(text: str) -> list[str] | None:
     """Split text at the word boundary closest to equal line widths."""
     words = text.split()

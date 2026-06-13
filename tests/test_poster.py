@@ -7,6 +7,7 @@ from PIL import Image
 from festival_organizer.fonts import get_font_path
 from festival_organizer.poster import (
     split_artist,
+    _resolve_artist_lines,
     _balanced_word_split,
     _word_wrap_lines,
     get_accent_color,
@@ -51,6 +52,49 @@ def test_split_artist_no_split():
 def test_split_artist_single_name():
     lines = split_artist("Hardwell")
     assert lines == ["Hardwell"]
+
+
+# --- _resolve_artist_lines tests ---
+
+def test_resolve_artist_lines_single_act_one_line():
+    # A single act renders on one line; an internal "&" is never split.
+    assert _resolve_artist_lines(["Above & Beyond"], "ignored") == ["Above & Beyond"]
+
+
+def test_resolve_artist_lines_b2b_two_acts():
+    assert _resolve_artist_lines(
+        ["Martin Garrix", "Alesso"], "ignored"
+    ) == ["Martin Garrix", "& Alesso"]
+
+
+def test_resolve_artist_lines_b2b_three_acts():
+    assert _resolve_artist_lines(["A", "B", "C"], "ignored") == ["A", "& B", "& C"]
+
+
+def test_resolve_artist_lines_duo_in_b2b_keeps_duo_together():
+    # Left-field case: a duo (internal "&") inside a B2B stays one line.
+    assert _resolve_artist_lines(
+        ["Dimitri Vegas & Like Mike", "Martin Garrix"], "ignored"
+    ) == ["Dimitri Vegas & Like Mike", "& Martin Garrix"]
+
+
+def test_resolve_artist_lines_shows_alias_from_billed_list():
+    # Text comes from the billed list (the alias); display is ignored when a list is present.
+    assert _resolve_artist_lines(
+        ["SOMETHING ELSE", "R3HAB"], "WHATEVER"
+    ) == ["SOMETHING ELSE", "& R3HAB"]
+
+
+def test_resolve_artist_lines_single_act_ignores_title_enrichment():
+    # The billed list has no "(members)" enrichment; the enriched display is ignored.
+    assert _resolve_artist_lines(
+        ["Everything Always"], "Everything Always (Dom Dolla & John Summit)"
+    ) == ["Everything Always"]
+
+
+def test_resolve_artist_lines_no_list_falls_back_to_split_artist():
+    assert _resolve_artist_lines(None, "Some DJ") == ["Some DJ"]
+    assert _resolve_artist_lines([], "A & B") == ["A", "& B"]
 
 
 # --- word-wrap tests ---
