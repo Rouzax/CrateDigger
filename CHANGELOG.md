@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-06-13
+
+### Fixed
+
+- Set posters now build their artist lines from the billed per-act 1001TL list instead of string-splitting the joined name, so an act whose own name contains a separator is no longer mis-split. A single act such as "Above & Beyond" stays on one line, and a duo inside a B2B such as "Dimitri Vegas & Like Mike & Martin Garrix" renders as `Dimitri Vegas & Like Mike` / `& Martin Garrix` rather than three broken lines. Genuine back-to-back sets are unchanged, and the poster keeps showing the billed (alias) name, not the resolved canonical. This matches TrackSplit's cover layout. Existing posters regenerate and their covers re-embed on the next enrich run.
+
 ## [0.27.0] - 2026-06-12
 
 ### Added
