@@ -19,7 +19,7 @@ def test_build_cover_stamp_is_deterministic():
 
 def test_stamp_changes_when_a_field_changes():
     base = dict(artist="A", festival="F", date="d", year="y", stage="s", venue="v")
-    assert build_cover_stamp(**base) != build_cover_stamp(**{**base, "festival": "F2"})
+    assert build_cover_stamp(**base, artists_1001tl=None) != build_cover_stamp(**{**base, "festival": "F2"}, artists_1001tl=None)
 
 
 def test_inject_and_read_round_trip(tmp_path):
@@ -41,6 +41,31 @@ def test_read_poster_stamp_non_jpeg(tmp_path):
     p = tmp_path / "not.jpg"
     p.write_bytes(b"PNG-ish bytes, definitely not a jpeg")
     assert read_poster_stamp(p) is None
+
+
+def test_stamp_changes_when_billed_list_changes_same_display():
+    # B: rendered lines differ (2 acts vs 3) even though the display string is held constant.
+    base = dict(artist="ignored", festival="F", date="d", year="y", stage="s", venue="v")
+    two = build_cover_stamp(**base, artists_1001tl=["A", "B"])
+    three = build_cover_stamp(**base, artists_1001tl=["A", "B", "C"])
+    assert two != three
+
+
+def test_stamp_ignores_display_enrichment_when_billed_list_present():
+    # C: same billed list -> same rendered lines -> same stamp, regardless of display enrichment.
+    bare = build_cover_stamp(artist="Everything Always", festival="F", date="d",
+                             year="y", stage="s", venue="v",
+                             artists_1001tl=["Everything Always"])
+    enriched = build_cover_stamp(artist="Everything Always (Dom Dolla & John Summit)",
+                                 festival="F", date="d", year="y", stage="s", venue="v",
+                                 artists_1001tl=["Everything Always"])
+    assert bare == enriched
+
+
+def test_stamp_tracks_display_for_non_1001tl():
+    # Fallback: no billed list -> display still drives the stamp.
+    base = dict(festival="F", date="d", year="y", stage="s", venue="v")
+    assert build_cover_stamp(artist="DJ One", **base, artists_1001tl=None) != build_cover_stamp(artist="DJ Two", **base, artists_1001tl=None)
 
 
 def test_inject_is_idempotent_no_accumulation(tmp_path):

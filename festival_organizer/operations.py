@@ -289,7 +289,8 @@ class PosterOperation(Operation):
             # poster on every run.
             return False
         from festival_organizer.poster import build_cover_stamp, read_poster_stamp
-        current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config))
+        current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config),
+                                    artists_1001tl=media_file.artists_1001tl)
         return read_poster_stamp(poster) != current
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
@@ -332,7 +333,8 @@ class CoverEmbedOperation(Operation):
         if self.force:
             return True
         from festival_organizer.poster import build_cover_stamp, read_poster_stamp
-        current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config))
+        current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config),
+                                    artists_1001tl=media_file.artists_1001tl)
         # The stamp is written only after a successful embed, so a match means the
         # embedded cover is already current. Mismatch/absent -> (re-)embed.
         # The sidecar stamp is a proxy for the MKV embed being current (they are
@@ -353,7 +355,8 @@ class CoverEmbedOperation(Operation):
             if not cover_embed.converge_cover_attachments(file_path, poster, thumb):
                 return OperationResult(self.name, "error", "cover convergence failed")
             # Stamp the sidecar only after a successful embed.
-            stamp = build_cover_stamp(**_resolve_poster_fields(media_file, self.config))
+            stamp = build_cover_stamp(**_resolve_poster_fields(media_file, self.config),
+                                      artists_1001tl=media_file.artists_1001tl)
             inject_poster_stamp(poster, stamp)
             return OperationResult(self.name, "done")
         except (OSError, ValueError, subprocess.SubprocessError) as e:

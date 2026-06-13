@@ -32,13 +32,24 @@ COVER_POSTER_VERSION = 2
 
 _STAMP_PREFIX = "CDPOSTER"
 _STAMP_SEP = "\x1f"  # unit separator: never appears in the resolved field values
+_STAMP_LINE_SEP = "\x1e"  # record separator: joins the rendered artist lines within the stamp
 
 
 def build_cover_stamp(*, artist: str, festival: str, date: str, year: str,
-                      stage: str, venue: str) -> bytes:
-    """Build the staleness stamp from the resolved fields passed to generate_set_poster."""
+                      stage: str, venue: str,
+                      artists_1001tl: list[str] | None = None) -> bytes:
+    """Build the staleness stamp from the fields that determine the rendered poster.
+
+    The artist portion is stamped as the resolved render output
+    (``_resolve_artist_lines``), so the stamp changes exactly when the drawn
+    artist text changes, not merely when ``display_artist`` changes. For a
+    1001TL set the lines come from ``artists_1001tl``; for a non-1001TL set
+    they fall back to ``artist`` (display) via the helper.
+    """
+    artist_lines = _resolve_artist_lines(artists_1001tl, artist)
     fields = [f"{_STAMP_PREFIX}{COVER_POSTER_VERSION}",
-              artist or "", festival or "", date or "", year or "", stage or "", venue or ""]
+              _STAMP_LINE_SEP.join(artist_lines),
+              festival or "", date or "", year or "", stage or "", venue or ""]
     return _STAMP_SEP.join(fields).encode("utf-8")
 
 

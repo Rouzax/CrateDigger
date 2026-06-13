@@ -179,7 +179,8 @@ def test_poster_op_not_needed_when_stamp_matches(tmp_path):
     cfg = load_config()
     op = PosterOperation(cfg)
     mf = _make_mf()
-    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(mf, cfg)))
+    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(mf, cfg),
+                                                  artists_1001tl=mf.artists_1001tl))
     assert op.is_needed(video, mf) is False
 
 
@@ -210,7 +211,7 @@ def test_poster_op_needed_when_field_changes(tmp_path):
     Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
     cfg = load_config()
     old = _resolve_poster_fields(_make_mf(artist="Old"), cfg)
-    inject_poster_stamp(poster, build_cover_stamp(**old))
+    inject_poster_stamp(poster, build_cover_stamp(**old, artists_1001tl=[]))
     assert PosterOperation(cfg).is_needed(video, _make_mf(artist="New")) is True
 
 
@@ -1506,7 +1507,7 @@ def test_cover_op_not_needed_when_stamp_matches(tmp_path):
     video = tmp_path / "t.mkv"; video.write_bytes(b"")
     poster = tmp_path / "t-poster.jpg"; _portrait(poster)
     cfg = load_config()
-    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg)))
+    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg), artists_1001tl=[]))
     assert CoverEmbedOperation(cfg).is_needed(video, _make_mf()) is False
 
 
@@ -1520,7 +1521,7 @@ def test_cover_op_force_overrides_stamp_match(tmp_path):
     video = tmp_path / "t.mkv"; video.write_bytes(b"")
     poster = tmp_path / "t-poster.jpg"; _portrait(poster)
     cfg = load_config()
-    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg)))
+    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg), artists_1001tl=[]))
     assert CoverEmbedOperation(cfg, force=True).is_needed(video, _make_mf()) is True
 
 
@@ -1540,7 +1541,7 @@ def test_cover_op_execute_converges_and_stamps(tmp_path):
         result = CoverEmbedOperation(cfg).execute(video, _make_mf())
     conv.assert_called_once_with(video, poster, thumb)
     assert result.status == "done"
-    assert read_poster_stamp(poster) == build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg))
+    assert read_poster_stamp(poster) == build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg), artists_1001tl=[])
 
 
 def test_cover_op_execute_no_stamp_when_converge_fails(tmp_path):
