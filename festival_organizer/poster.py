@@ -60,21 +60,23 @@ FOLDER_POSTER_VERSION = 1
 _FOLDER_STAMP_PREFIX = "CDFOLDER"
 
 
-def build_folder_stamp(*, poster_type: str, name: str, year: str, edition: str) -> bytes:
+def build_folder_stamp(*, poster_type: str, name: str, year: str, edition: str,
+                       bg: str = "") -> bytes:
     """Build the staleness stamp for a folder poster (``folder.jpg``).
 
     Encodes the inputs that determine which folder poster is rendered: the poster
     type (``festival`` / ``artist`` / ``year``), the name shown above the line, the
-    year (for year badges), and the edition. A change to any of these, or a
-    ``FOLDER_POSTER_VERSION`` bump, makes the stamp differ from the one embedded in
-    an existing ``folder.jpg`` and triggers regeneration, this is how a layout
-    change (folder now represents a different type/name) self-heals. Color is
-    intentionally excluded (mirrors ``build_cover_stamp``) to avoid thrash from
-    thumbnail-derived colors. Reuses the same JPEG COM read/write as set posters
-    (``read_poster_stamp`` / ``inject_poster_stamp``).
+    year (for year badges), the edition, and ``bg`` (a cheap fingerprint of the
+    background image, so a refreshed artist photo or swapped curated logo also
+    regenerates the poster). A change to any of these, or a ``FOLDER_POSTER_VERSION``
+    bump, makes the stamp differ from the one embedded in an existing ``folder.jpg``
+    and triggers regeneration, this is how a layout change (folder now represents a
+    different type/name) self-heals. Derived gradient colors are intentionally
+    excluded (mirrors ``build_cover_stamp``) to avoid thrash. Reuses the same JPEG
+    COM read/write as set posters (``read_poster_stamp`` / ``inject_poster_stamp``).
     """
     fields = [f"{_FOLDER_STAMP_PREFIX}{FOLDER_POSTER_VERSION}",
-              poster_type or "", name or "", year or "", edition or ""]
+              poster_type or "", name or "", year or "", edition or "", bg or ""]
     return _STAMP_SEP.join(fields).encode("utf-8")
 
 

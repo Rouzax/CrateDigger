@@ -282,12 +282,6 @@ class PosterOperation(Operation):
         poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
         if not poster.exists():
             return True
-        from festival_organizer.mkv_tags import MATROSKA_EXTS
-        if file_path.suffix.lower() not in MATROSKA_EXTS:
-            # Non-Matroska files get no cover embed, so the sidecar is never
-            # stamped. Keep the historical exists-gate to avoid re-rendering the
-            # poster on every run.
-            return False
         from festival_organizer.poster import build_cover_stamp, read_poster_stamp
         current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config),
                                     artists_1001tl=media_file.artists_1001tl)
@@ -310,6 +304,14 @@ class PosterOperation(Operation):
                 venue=f["venue"],
                 artists_1001tl=media_file.artists_1001tl,
             )
+            # Matroska files are stamped by CoverEmbedOperation after the embed (the
+            # stamp means "embed is current"). Non-Matroska files have no embed step,
+            # so stamp the sidecar here to enable the same content-aware regeneration.
+            from festival_organizer.mkv_tags import MATROSKA_EXTS
+            if file_path.suffix.lower() not in MATROSKA_EXTS:
+                from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+                inject_poster_stamp(poster, build_cover_stamp(
+                    **f, artists_1001tl=media_file.artists_1001tl))
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))
@@ -460,7 +462,34 @@ class AlbumPosterOperation(Operation):
     def _level_stamp(self, folder: Path, ptype: str, parent: str | None, mf: MediaFile) -> bytes:
         from festival_organizer.poster import build_folder_stamp
         year = self._consensus_year(folder) if ptype == "year" else ""
-        return build_folder_stamp(**self._level_stamp_fields(ptype, parent, year, mf))
+        return build_folder_stamp(**self._level_stamp_fields(ptype, parent, year, mf),
+                                  bg=self._expected_bg_fingerprint(ptype, mf))
+
+    def _expected_bg_fingerprint(self, ptype: str, mf: MediaFile) -> str:
+        """Cheap, network-free fingerprint of the background image the poster uses.
+
+        Lets the stamp change (so the poster regenerates) when the underlying
+        artwork changes, e.g. refreshed DJ artwork for an artist folder or a swapped
+        curated logo for a place. Computed from the known cache/logo path with a
+        couple of stat()s, no download and no ffprobe. Year folders render a gradient
+        with no background image, so they have no fingerprint.
+        """
+        path: Path | None = None
+        if ptype == "festival":
+            path = self._find_curated_logo(mf.place, mf.edition)
+        elif ptype == "artist" and mf.artist:
+            slug = mf.artist_slugs[0] if mf.artist_slugs else None
+            key = paths.artist_cache_folder_key(mf.artist, slug=slug, dj_cache=self.config.dj_cache)
+            artist_dir = paths.artist_cache_dir(key)
+            for name in ("dj-artwork.jpg", "fanart.jpg"):
+                cand = artist_dir / name
+                if cand.exists():
+                    path = cand
+                    break
+        if path and path.exists():
+            st = path.stat()
+            return f"{path.name}:{int(st.st_mtime)}:{st.st_size}"
+        return ""
 
     def _expected_folder_stamp(self, mf: MediaFile, folder: Path) -> bytes:
         """Single-folder convenience (no library_root / tests): stamp for this folder."""

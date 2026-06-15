@@ -204,14 +204,38 @@ def test_poster_op_needed_when_stamp_absent(tmp_path):
     assert PosterOperation(load_config()).is_needed(video, _make_mf()) is True
 
 
-def test_poster_op_not_needed_for_non_matroska_when_poster_exists(tmp_path):
-    """Non-Matroska files have no stamp (no cover embed); exists-gate prevents
-    re-rendering every run."""
+def test_poster_op_non_matroska_needed_when_unstamped(tmp_path):
+    """Non-Matroska poster without a stamp now regenerates (to add the stamp)."""
     video = tmp_path / "test.mp4"; video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
     poster = tmp_path / "test-poster.jpg"
     Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")  # no stamp
-    assert PosterOperation(load_config()).is_needed(video, _make_mf()) is False
+    assert PosterOperation(load_config()).is_needed(video, _make_mf()) is True
+
+
+def test_poster_op_non_matroska_not_needed_when_stamp_matches(tmp_path):
+    """Non-Matroska poster carrying a matching stamp is up to date."""
+    from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+    video = tmp_path / "test.mp4"; video.write_bytes(b"")
+    (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
+    poster = tmp_path / "test-poster.jpg"
+    Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
+    cfg = load_config()
+    mf = _make_mf()
+    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(mf, cfg),
+                                                  artists_1001tl=mf.artists_1001tl))
+    assert PosterOperation(cfg).is_needed(video, mf) is False
+
+
+def test_poster_op_execute_stamps_non_matroska(tmp_path):
+    """execute() stamps a non-Matroska sidecar, so a second run is a no-op."""
+    video = tmp_path / "test.mp4"; video.write_bytes(b"")
+    Image.new("RGB", (1280, 720), (50, 60, 90)).save(str(tmp_path / "test-thumb.jpg"))
+    cfg = load_config()
+    op = PosterOperation(cfg)
+    mf = _make_mf()
+    assert op.execute(video, mf).status == "done"
+    assert op.is_needed(video, mf) is False
 
 
 def test_poster_op_needed_when_field_changes(tmp_path):
@@ -661,6 +685,35 @@ def test_year_level_stamp_name_place_vs_artist():
         "poster_type": "year", "name": "EDC", "year": "2025", "edition": "Winter"}
     assert op._level_stamp_fields("year", "artist", "2025", mf) == {
         "poster_type": "year", "name": "Tiesto", "year": "2025", "edition": ""}
+
+
+def test_album_poster_regenerates_on_artwork_change(tmp_path, monkeypatch):
+    """An artist folder poster regenerates when its DJ artwork changes (bg fingerprint)."""
+    from festival_organizer import paths as paths_mod
+    from festival_organizer.poster import inject_poster_stamp
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    folder_jpg = tmp_path / "folder.jpg"
+    folder_jpg.write_bytes(b"\xff\xd8\xff\xd9")
+    art_dir = tmp_path / "art"
+    art_dir.mkdir()
+    (art_dir / "dj-artwork.jpg").write_bytes(b"x" * 100)
+    monkeypatch.setattr(paths_mod, "artist_cache_dir", lambda key: art_dir)
+
+    op = AlbumPosterOperation(config=load_config())  # artist_flat default -> artist poster
+    mf = _make_mf()
+    inject_poster_stamp(folder_jpg, op._expected_folder_stamp(mf, tmp_path))
+    assert op.is_needed(video, mf) is False
+
+    # Refreshed artwork (different size) -> fingerprint changes -> regenerate.
+    (art_dir / "dj-artwork.jpg").write_bytes(b"x" * 200)
+    assert op.is_needed(video, mf) is True
+
+
+def test_bg_fingerprint_empty_for_year():
+    """Year folders render a gradient (no background image) -> no fingerprint overhead."""
+    op = AlbumPosterOperation(config=load_config())
+    assert op._expected_bg_fingerprint("year", _make_mf()) == ""
 
 
 def test_album_poster_type_place_nested_segments():
