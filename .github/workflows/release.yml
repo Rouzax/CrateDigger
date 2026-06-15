@@ -48,24 +48,15 @@ jobs:
             exit 1
           fi
 
-      - name: Verify pyproject.toml version matches
+      - name: Verify version is consistent everywhere
         env:
-          WANT: ${{ steps.validate.outputs.version }}
-        run: |
-          got=$(grep -E '^version = "[0-9]+\.[0-9]+\.[0-9]+"' pyproject.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
-          if [[ "$WANT" != "$got" ]]; then
-            echo "::error::pyproject.toml version ($got) does not match input version ($WANT)"
-            exit 1
-          fi
+          VERSION: ${{ steps.validate.outputs.version }}
+        run: scripts/check-versions.sh "$VERSION"
 
-      - name: Verify CHANGELOG has [X.Y.Z] section
+      - name: Extract release notes from CHANGELOG
         env:
           VERSION: ${{ steps.validate.outputs.version }}
         run: |
-          if ! grep -qE "^## \[$VERSION\]" CHANGELOG.md; then
-            echo "::error::CHANGELOG.md does not contain a ## [$VERSION] section"
-            exit 1
-          fi
           awk -v ver="$VERSION" '
             $0 ~ "^## \\["ver"\\]" { found=1; next }
             found && /^## \[/ { exit }
