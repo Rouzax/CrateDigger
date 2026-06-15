@@ -18,6 +18,9 @@ from festival_organizer.poster import (
     _filter_venue_parts,
     _hex_to_rgb,
     _extract_logo_color,
+    _make_year_badge,
+    _darken_for_white_text,
+    _wcag_contrast,
     POSTER_W,
     POSTER_H,
     LINE_Y,
@@ -148,11 +151,13 @@ def test_format_date_no_data():
 def test_auto_fit_short_name():
     font, size = auto_fit("HI", "bold", 900, start=130, minimum=50)
     assert size == 130  # short text fits at max size
+    assert font.size == size  # returned font matches the returned size
 
 
 def test_auto_fit_long_name():
     font, size = auto_fit("A" * 50, "bold", 900, start=130, minimum=50)
     assert size <= 130  # long text should be smaller
+    assert font.size == size
 
 
 def test_pad_line_to_artist_matches_fest():
@@ -165,8 +170,10 @@ def test_auto_fit_hero_range_unified():
     """Hero auto-fit uses 130-50 range for both short and long text."""
     font_short, size_short = auto_fit("AMF", "bold", 900, start=130, minimum=50)
     assert size_short == 130
+    assert font_short.size == size_short
     font_long, size_long = auto_fit("A" * 50, "bold", 900, start=130, minimum=50)
     assert size_long == 50
+    assert font_long.size == size_long
 
 
 # --- generate_set_poster tests ---
@@ -411,7 +418,7 @@ def test_get_font_path_config_override(tmp_path):
     assert path == str(fake_font)
 
 
-def test_get_font_path_config_override_missing_falls_back(tmp_path):
+def test_get_font_path_config_override_missing_falls_back():
     """Missing config override file falls back to bundled."""
     overrides = {"bold": "/nonexistent/font.ttf"}
     path = get_font_path("bold", overrides=overrides)
@@ -646,7 +653,7 @@ def test_set_poster_hero_has_no_accent_stroke(tmp_path):
             )
 
 
-def test_draw_centered_accepts_stroke_params(tmp_path):
+def test_draw_centered_accepts_stroke_params():
     """_draw_centered renders text with stroke without error."""
     from festival_organizer.poster import _draw_centered, POSTER_W, POSTER_H, get_font
     from PIL import Image, ImageDraw
@@ -682,3 +689,58 @@ def test_generate_set_poster_accepts_artists_1001tl_kwarg(tmp_path):
 def test_cover_poster_version_is_2():
     from festival_organizer.poster import COVER_POSTER_VERSION
     assert COVER_POSTER_VERSION == 2
+
+
+# --- year badge tests (Phase A) ---
+
+def test_year_badge_dimensions_and_rounding():
+    import numpy as np
+    badge = _make_year_badge("2025", (237, 56, 149), size=300)
+    assert badge.size == (300, 300)
+    assert badge.mode == "RGBA"
+    arr = np.array(badge)  # (h, w, 4)
+    assert arr[0, 0, 3] == 0        # rounded corner -> transparent
+    assert arr[150, 150, 3] == 255  # centre -> opaque
+
+
+def test_year_badge_full_draws_white_digits():
+    import numpy as np
+    arr = np.array(_make_year_badge("2025", (40, 80, 180), size=300))
+    band = arr[110:190, 40:260]
+    white = (band[:, :, 0] > 230) & (band[:, :, 1] > 230) & (band[:, :, 2] > 230) & (band[:, :, 3] > 0)
+    assert white.any(), "no white digit pixels found in badge centre band"
+
+
+def test_generate_album_poster_year_badge_smoke(tmp_path):
+    output = tmp_path / "folder.jpg"
+    result = generate_album_poster(
+        output_path=output,
+        festival="EDC Las Vegas",
+        date_or_year="2025",
+        override_color=(237, 56, 149),
+        hero_text=None,
+        year_badge="2025",
+    )
+    assert result == output
+    with Image.open(output) as img:
+        assert img.size == (POSTER_W, POSTER_H)
+
+
+# --- _darken_for_white_text (WCAG safeguard) tests (Phase A) ---
+
+def test_darken_for_white_text_darkens_light_color():
+    light = (245, 215, 110)
+    assert _wcag_contrast(255, 255, 255, bg=light) < 3.0  # precondition: too light for white
+    out = _darken_for_white_text(light)
+    assert _wcag_contrast(255, 255, 255, bg=out) >= 3.0
+
+
+def test_darken_for_white_text_keeps_dark_color():
+    dark = (20, 20, 40)
+    assert _darken_for_white_text(dark) == dark
+
+
+def test_darken_for_white_text_preserves_hue_family():
+    # Lowering value only: a light yellow stays yellow-ish after darkening.
+    r, g, b = _darken_for_white_text((245, 215, 110))
+    assert r >= b and g >= b

@@ -145,6 +145,11 @@ def measure_w(font: ImageFont.FreeTypeFont, text: str) -> int:
     return bbox[2] - bbox[0]
 
 
+# --- Color contrast (WCAG) ---
+# Shared primitive: _wcag_contrast(color, bg=...). Directional helpers build on it:
+#   _ensure_contrast        - brighten a color until it reads on a dark background
+#   _darken_for_white_text  - darken a fill until white text reads on it
+
 def _wcag_luminance(r: int, g: int, b: int) -> float:
     """Calculate WCAG relative luminance with proper sRGB linearization."""
     def _linearize(c: int) -> float:
@@ -166,6 +171,7 @@ def _ensure_contrast(r: int, g: int, b: int, min_ratio: float = 4.5) -> tuple[in
     if _wcag_contrast(r, g, b) >= min_ratio:
         return (r, g, b)
     h, s, v = rgb_to_hsv(r / 255, g / 255, b / 255)
+    ri, gi, bi = r, g, b  # bound before the loop (range(40) always runs; satisfies type check)
     for _ in range(40):
         v = min(v + 0.03, 1.0)
         s = max(s - 0.01, 0.3)  # slightly desaturate to gain luminance
@@ -174,6 +180,28 @@ def _ensure_contrast(r: int, g: int, b: int, min_ratio: float = 4.5) -> tuple[in
         if _wcag_contrast(ri, gi, bi) >= min_ratio:
             return (ri, gi, bi)
     return (ri, gi, bi)
+
+
+def _darken_for_white_text(color: tuple[int, int, int], min_ratio: float = 3.0) -> tuple[int, int, int]:
+    """Darken a fill color until white text on it meets WCAG contrast.
+
+    The inverse of :func:`_ensure_contrast` (which brightens a color to read on a
+    dark background); this darkens a colored fill so white text stays legible on
+    it. Both build on the shared :func:`_wcag_contrast` primitive. The default
+    ``min_ratio`` of 3.0 is the WCAG AA threshold for large text (the year digits
+    are large), so vivid brand colors are darkened only when genuinely too light.
+    """
+    if _wcag_contrast(255, 255, 255, bg=color) >= min_ratio:
+        return color
+    h, s, v = rgb_to_hsv(*[c / 255 for c in color])
+    ci = color
+    for _ in range(40):
+        v = max(v - 0.03, 0.0)
+        nr, ng, nb = hsv_to_rgb(h, s, v)
+        ci = (int(nr * 255), int(ng * 255), int(nb * 255))
+        if _wcag_contrast(255, 255, 255, bg=ci) >= min_ratio:
+            return ci
+    return ci
 
 
 def _circular_hue_mean(h_array, s_array, min_sat: int = 40) -> float:
@@ -720,6 +748,57 @@ def _rounded_edge_mask(w: int, h: int, corner_pct: float = 0.06) -> Image.Image:
     return mask.filter(ImageFilter.GaussianBlur(radius=2))
 
 
+def _draw_glyph_centered(draw, width, top, text, font, fill=(255, 255, 255, 255)) -> None:
+    """Draw text horizontally centered in `width` with its glyph box top at `top`.
+
+    Uses the glyph bounding box (not the font line box) so the visible digits are
+    centered within the badge tile.
+    """
+    bbox = font.getbbox(text)
+    w = bbox[2] - bbox[0]
+    x = (width - w) // 2 - bbox[0]
+    y = top - bbox[1]
+    draw.text((x, y), text, font=font, fill=fill)
+
+
+def _make_year_badge(
+    year: str,
+    color: tuple[int, int, int],
+    size: int = 420,
+) -> Image.Image:
+    """Render a colorful rounded-square badge holding the year.
+
+    Fills a square tile with a vertical brand gradient (a lighter tint at the top
+    fading to a deeper shade at the bottom), rounds the corners to match the
+    logo/photo tiles, and draws the year centered in white. Each gradient stop is
+    passed through :func:`_darken_for_white_text`, so light brand colors are
+    darkened just enough to keep the white year legible (no drop shadow needed).
+    Returns an RGBA tile (transparent outside the rounded square) ready to paste
+    into the logo slot.
+    """
+    h, s, v = rgb_to_hsv(*[c / 255 for c in color])
+    v = v or 0.6
+    top = hsv_to_rgb(h, max(0.0, s * 0.85), min(1.0, v * 1.18))
+    bot = hsv_to_rgb(h, min(1.0, s * 1.05), v * 0.70)
+    top_stop = _darken_for_white_text((int(top[0] * 255), int(top[1] * 255), int(top[2] * 255)))
+    bot_stop = _darken_for_white_text((int(bot[0] * 255), int(bot[1] * 255), int(bot[2] * 255)))
+    top_rgb = np.array(top_stop, dtype=float)
+    bot_rgb = np.array(bot_stop, dtype=float)
+    t = np.linspace(0.0, 1.0, size).reshape(size, 1)
+    rows = top_rgb * (1 - t) + bot_rgb * t          # (size, 3)
+    grad = np.repeat(rows[:, None, :], size, axis=1)  # (size, size, 3)
+    tile = Image.fromarray(np.clip(grad, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
+    tile.putalpha(_rounded_edge_mask(size, size))
+
+    draw = ImageDraw.Draw(tile)
+    usable = int(size * 0.68)
+    font, _ = auto_fit(year, "bold", usable, start=int(size * 0.5), minimum=40)
+    bbox = font.getbbox(year)
+    gh = bbox[3] - bbox[1]
+    _draw_glyph_centered(draw, size, (size - gh) // 2, year, font)
+    return tile
+
+
 def generate_album_poster(
     output_path: Path,
     festival: str,
@@ -731,6 +810,7 @@ def generate_album_poster(
     background_image_path: Path | None = None,
     background_source: str = "",
     hero_text: str | None = None,
+    year_badge: str = "",
 ) -> Path:
     """Generate an album poster.
 
@@ -751,6 +831,10 @@ def generate_album_poster(
         background_image_path: Optional background image (curated logo, fanart, DJ artwork)
         background_source: Name of the source that provided the background (for logging)
         hero_text: Override the hero text above the accent line (e.g. artist name)
+        year_badge: When set, render a colorful rounded-square year badge in the
+            logo slot (year folder posters). Pair with hero_text=None and
+            festival=<parent name> so the parent name is the hero and the edition
+            renders below the line.
 
     Returns:
         Path to the generated poster
@@ -861,6 +945,14 @@ def generate_album_poster(
             base_color = get_dominant_color_from_thumbs(thumb_paths or [])
             accent = _accent_from_base(base_color)
         bg = _make_gradient_bg(base_color)
+    if year_badge:
+        badge = _make_year_badge(year_badge, accent, size=420)
+        bx = (POSTER_W - badge.width) // 2
+        by = max(30, int(LINE_Y * 0.5) - badge.height // 2)
+        bg = bg.convert("RGBA")
+        bg.paste(badge, (bx, by), badge)
+        bg = bg.convert("RGB")
+
     draw = ImageDraw.Draw(bg)
     max_w = POSTER_W - 100
 
