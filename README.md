@@ -15,6 +15,8 @@ CrateDigger is a Python CLI tool for managing festival set and concert recording
 > **Pair it with [TrackSplit](https://rouzax.github.io/TrackSplit/):** a sibling CLI that extracts chapter-based audio from your video library into gapless, tagged FLAC albums for Jellyfin, Lyrion, and other music servers. TrackSplit reads CrateDigger's place and artist config, so canonical naming and MusicBrainz IDs stay consistent across your video and music libraries.
 > [Landing page](https://rouzax.github.io/TrackSplit/) · [Documentation](https://rouzax.github.io/TrackSplit/docs/) · [GitHub](https://github.com/Rouzax/TrackSplit)
 
+**Documentation:** [rouzax.github.io/CrateDigger/docs/](https://rouzax.github.io/CrateDigger/docs/) · [Landing page](https://rouzax.github.io/CrateDigger/)
+
 ## Poster Gallery
 
 **Set posters:** one per recording, with artist, festival, date, and stage.
@@ -61,6 +63,8 @@ Trigger library refreshes over JSON-RPC so Kodi picks up new content automatical
 Interactive runs check GitHub for newer stable releases and print a one-line upgrade hint. See [Update Check](#update-check-1) for the full reference.
 
 ## Quick Start
+
+New to CrateDigger? The [Getting Started guide](https://rouzax.github.io/CrateDigger/docs/getting-started/) walks through the identify, organize, and enrich workflow end to end.
 
 ### Prerequisites
 
@@ -123,10 +127,10 @@ cratedigger enrich /path/to/library
 
 | Command | Description |
 |---------|-------------|
-| `cratedigger identify` | Match recordings against 1001Tracklists and embed chapter markers |
-| `cratedigger organize` | Move or copy files into your library with smart layouts |
-| `cratedigger enrich` | Generate artwork, posters, NFO files, and embed tags |
-| `cratedigger audit-logos` | Check festival logo coverage in your library |
+| [`cratedigger identify`](https://rouzax.github.io/CrateDigger/docs/commands/identify/) | Match recordings against 1001Tracklists and embed chapter markers |
+| [`cratedigger organize`](https://rouzax.github.io/CrateDigger/docs/commands/organize/) | Move or copy files into your library with smart layouts |
+| [`cratedigger enrich`](https://rouzax.github.io/CrateDigger/docs/commands/enrich/) | Generate artwork, posters, NFO files, and embed tags |
+| [`cratedigger audit-logos`](https://rouzax.github.io/CrateDigger/docs/commands/audit-logos/) | Check festival logo coverage in your library |
 
 ## Configuration
 
@@ -140,7 +144,7 @@ CrateDigger reads settings from `config.toml` and supports library-level overrid
 
 Curated data files (`places.json`, `artists.json`, `artist_mbids.json`) live in the same folder as `config.toml`. The older filename `festivals.json` continues to work as a fallback when `places.json` is not present. Caches and logs go to platform-standard locations (`~/.cache/CrateDigger/` on Linux, `$env:LOCALAPPDATA\CrateDigger\` on Windows) and are managed automatically.
 
-A per-library override at `{library}/.cratedigger/config.toml` takes precedence over the user-level file. See the [docs](docs/) folder for a full configuration reference.
+A per-library override at `{library}/.cratedigger/config.toml` takes precedence over the user-level file. See the [configuration reference](https://rouzax.github.io/CrateDigger/docs/configuration/) for every available key.
 
 ## Update Check
 
@@ -156,7 +160,7 @@ The check uses a 2-second HTTP timeout, never delays your run, and is silent on 
 
 **Disable explicitly.** Set `CRATEDIGGER_NO_UPDATE_CHECK=1` before running. The values `true` and `yes` are also accepted, case-insensitively.
 
-No telemetry: the check is a read-only request to the GitHub Releases API. See the [FAQ](docs/faq.md#what-is-the-yellow--message-on-startup) for cache locations by platform and the full list of upgrade-command variants.
+No telemetry: the check is a read-only request to the GitHub Releases API. See the [FAQ](https://rouzax.github.io/CrateDigger/docs/faq/#what-is-the-yellow-message-on-startup) for cache locations by platform and the full list of upgrade-command variants.
 
 ## Disclaimer
 
