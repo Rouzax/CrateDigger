@@ -377,47 +377,94 @@ class AlbumPosterOperation(Operation):
         self._logo_hits: dict[str, Path] = {}   # place -> logo path
         self._logo_misses: set[str] = set()      # places without curated logo
 
+    @property
+    def generated_folders(self) -> set[Path]:
+        """Folders whose folder.jpg this op generated or refreshed this run.
+
+        With per-level generation a single file touches several levels (place,
+        year, artist); the Kodi sync uses this to clear textures for all of them,
+        not just the file's own folder.
+        """
+        return self._completed_folders
+
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         from festival_organizer.poster import read_poster_stamp
-        folder = file_path.parent
-        if folder in self._completed_folders:
-            return False
-        folder_jpg = folder / "folder.jpg"
-        if self.force:
-            return True
-        if not folder_jpg.exists():
-            return True
-        # Regenerate when the embedded stamp no longer matches what we would render
-        # (folder-poster composition, name/type/year/edition, or version changed).
-        return read_poster_stamp(folder_jpg) != self._expected_folder_stamp(media_file, folder)
+        for folder, ptype, parent in self._layout_levels(file_path, media_file):
+            if folder in self._completed_folders:
+                continue
+            if self.force:
+                return True
+            folder_jpg = folder / "folder.jpg"
+            if not folder_jpg.exists():
+                return True
+            # Regenerate when the embedded stamp no longer matches what we would
+            # render at this level (type/name/year/edition or version changed).
+            if read_poster_stamp(folder_jpg) != self._level_stamp(folder, ptype, parent, media_file):
+                return True
+        return False
 
     def _consensus_year(self, folder: Path) -> str:
-        """Single year shared by all videos in a folder, or '' if mixed/none."""
+        """Single year shared by all videos in a folder's subtree, or '' if mixed/none.
+
+        Scans the subtree (not just direct children) so a year folder whose videos
+        live one or more levels deeper (e.g. place_nested Place/Year/Artist) still
+        resolves its year for the badge and the stamp.
+        """
         from festival_organizer.parsers import parse_filename
         years: set[str] = set()
-        for video in folder.iterdir():
+        for video in folder.rglob("*"):
             if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
                 yr = parse_filename(video, self.config).get("year", "")
                 if yr:
                     years.add(yr)
         return years.pop() if len(years) == 1 else ""
 
-    def _folder_stamp_fields(self, mf: MediaFile, poster_type: str, year: str) -> dict:
-        """Identity fields for the folder-poster stamp at the given poster type."""
-        if poster_type == "artist":
+    def _layout_levels(self, file_path: Path, mf: MediaFile) -> list[tuple[Path, str, str | None]]:
+        """Folder levels to render for this file: (folder, poster_type, parent_type).
+
+        Walks from the shallowest folder under the library root down to the file's
+        own folder, typing each level by its layout segment (depth-aware via
+        _get_poster_type_for_folder). Without a library root, falls back to the
+        single deepest folder typed by the first segment. ``parent_type`` is the
+        type of the segment above (None at the top), used to name and color year
+        folders by their parent (place or artist).
+        """
+        folder = file_path.parent
+        if not self.library_root:
+            return [(folder, self._get_folder_poster_type(mf), None)]
+        root = self.library_root.resolve()
+        try:
+            parts = folder.resolve().relative_to(root).parts
+        except ValueError:
+            return [(folder, self._get_folder_poster_type(mf), None)]
+        levels: list[tuple[Path, str, str | None]] = []
+        for depth in range(len(parts)):
+            lvl = root.joinpath(*parts[:depth + 1])
+            ptype = self._get_poster_type_for_folder(lvl, mf)
+            parent = self._get_poster_type_for_folder(root.joinpath(*parts[:depth]), mf) if depth else None
+            levels.append((lvl, ptype, parent))
+        return levels
+
+    def _level_stamp_fields(self, ptype: str, parent: str | None, year: str, mf: MediaFile) -> dict:
+        """Identity fields for a folder-poster stamp at a given level."""
+        if ptype == "artist":
             return {"poster_type": "artist", "name": mf.artist or "", "year": "", "edition": ""}
-        if poster_type == "year":
-            return {"poster_type": "year", "name": mf.place or "",
-                    "year": year or "", "edition": mf.edition or ""}
-        return {"poster_type": poster_type, "name": mf.place or "",
-                "year": "", "edition": mf.edition or ""}
+        if ptype == "year":
+            parent_is_place = parent == "festival"
+            return {"poster_type": "year",
+                    "name": (mf.place if parent_is_place else mf.artist) or "",
+                    "year": year or "",
+                    "edition": (mf.edition or "") if parent_is_place else ""}
+        return {"poster_type": ptype, "name": mf.place or "", "year": "", "edition": mf.edition or ""}
+
+    def _level_stamp(self, folder: Path, ptype: str, parent: str | None, mf: MediaFile) -> bytes:
+        from festival_organizer.poster import build_folder_stamp
+        year = self._consensus_year(folder) if ptype == "year" else ""
+        return build_folder_stamp(**self._level_stamp_fields(ptype, parent, year, mf))
 
     def _expected_folder_stamp(self, mf: MediaFile, folder: Path) -> bytes:
-        """The folder-poster stamp this folder should carry, given mf and layout."""
-        from festival_organizer.poster import build_folder_stamp
-        poster_type = self._get_folder_poster_type(mf)
-        year = self._consensus_year(folder) if poster_type == "year" else ""
-        return build_folder_stamp(**self._folder_stamp_fields(mf, poster_type, year))
+        """Single-folder convenience (no library_root / tests): stamp for this folder."""
+        return self._level_stamp(folder, self._get_folder_poster_type(mf), None, mf)
 
     def _get_folder_poster_type(self, mf: MediaFile) -> str:
         """Determine poster type from the first segment of the layout template.
@@ -701,62 +748,75 @@ class AlbumPosterOperation(Operation):
                           ["curated_logo", "gradient"])
         return ps.get("year_background_priority", ["gradient"])
 
-    def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
-        from festival_organizer.poster import generate_album_poster
-        try:
-            folder_jpg = file_path.parent / "folder.jpg"
-            mf = media_file
-            # Determine year: single consensus year for the folder, omit if mixed
-            date_or_year = self._consensus_year(file_path.parent)
+    def _place_brand_color(self, mf: MediaFile) -> tuple[int, int, int] | None:
+        """Brand color for mf's place/edition from places.json, or None."""
+        from festival_organizer.poster import _hex_to_rgb
+        fc = self.config.place_config.get(mf.place, {})
+        color_hex = fc.get("editions", {}).get(mf.edition, {}).get("color") or fc.get("color")
+        return _hex_to_rgb(color_hex) if color_hex else None
 
-            # Collect existing thumbs in folder for color extraction
-            thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
+    def _warm_backgrounds(self, video_folder: Path, mf: MediaFile) -> None:
+        """Warm artwork caches once per run so every level can resolve its background."""
+        self._try_background_source("curated_logo", video_folder, mf)
+        self._try_background_source("fanart_tv", video_folder, mf)
+        self._warm_dj_artwork_cache(video_folder)
 
-            # Determine poster type from layout template
-            poster_type = self._get_folder_poster_type(mf)
-            logger.debug("enrich.album_poster: type=%s source=layout_template", poster_type)
+    def _render_level(self, folder: Path, ptype: str, parent: str | None,
+                      video_folder: Path, mf: MediaFile) -> None:
+        """Render and stamp the folder.jpg for one folder level."""
+        from festival_organizer.poster import generate_album_poster, inject_poster_stamp
+        folder_jpg = folder / "folder.jpg"
+        date_or_year = self._consensus_year(folder)
+        # Artwork/colour sources scan the video-bearing folder (the artist/place
+        # identity is consistent up the tree for this file); thumbs come from the
+        # subtree so an ancestor folder still gets a colour.
+        thumb_paths = list(folder.rglob("*-thumb.jpg"))
+        place_color = self._place_brand_color(mf)
+        logger.debug("enrich.album_poster: folder=%s type=%s parent=%s",
+                     folder.name, ptype, parent)
 
-            # Walk configurable background priority chain
-            priority = self._get_priority_chain_for_poster_type(poster_type)
-
-            bg_path, bg_source = self._resolve_background(priority, file_path.parent, mf)
-
-            # Warm caches for background sources not in this poster's priority chain
-            untried = {"curated_logo", "fanart_tv"} - set(priority)
-            for source in untried:
-                self._try_background_source(source, file_path.parent, mf)
-            # DJ artwork: always warm for ALL artists in folder, not just the first
-            self._warm_dj_artwork_cache(file_path.parent)
-
-            # Look up brand color keyed by canonical place
-            fc = self.config.place_config.get(mf.place, {})
-            color_hex = fc.get("editions", {}).get(mf.edition, {}).get("color") or fc.get("color")
-            if color_hex:
-                from festival_organizer.poster import _hex_to_rgb
-                override_color = _hex_to_rgb(color_hex)
-            else:
-                override_color = None
-
-            poster_festival = mf.place or "Unknown"
-            hero_text = mf.artist if poster_type == "artist" else (
-                date_or_year or mf.year if poster_type == "year" else None
-            )
-
+        if ptype == "artist":
+            priority = self._get_priority_chain_for_poster_type("artist")
+            bg_path, bg_source = self._resolve_background(priority, video_folder, mf)
             generate_album_poster(
-                output_path=folder_jpg,
-                festival=poster_festival,
-                date_or_year=date_or_year,
-                detail=mf.stage or "",
-                edition=mf.edition or "",
-                thumb_paths=thumb_paths if thumb_paths else None,
-                override_color=override_color,
-                background_image_path=bg_path,
-                background_source=bg_source,
-                hero_text=hero_text,
+                output_path=folder_jpg, festival=mf.artist or "Unknown",
+                date_or_year=date_or_year, detail=mf.stage or "", edition="",
+                thumb_paths=thumb_paths or None, override_color=None,
+                background_image_path=bg_path, background_source=bg_source,
+                hero_text=mf.artist or "",
             )
-            from festival_organizer.poster import inject_poster_stamp
-            inject_poster_stamp(folder_jpg, self._expected_folder_stamp(mf, file_path.parent))
-            self._completed_folders.add(file_path.parent)
+        elif ptype == "year":
+            parent_is_place = parent == "festival"
+            name = (mf.place if parent_is_place else mf.artist) or "Unknown"
+            generate_album_poster(
+                output_path=folder_jpg, festival=name, date_or_year=date_or_year,
+                detail="", edition=(mf.edition or "") if parent_is_place else "",
+                thumb_paths=thumb_paths or None,
+                override_color=place_color if parent_is_place else None,
+                background_image_path=None, background_source="",
+                hero_text=None, year_badge=date_or_year or mf.year,
+            )
+        else:  # festival / place
+            priority = self._get_priority_chain_for_poster_type("festival")
+            bg_path, bg_source = self._resolve_background(priority, video_folder, mf)
+            generate_album_poster(
+                output_path=folder_jpg, festival=mf.place or "Unknown",
+                date_or_year=date_or_year, detail=mf.stage or "", edition=mf.edition or "",
+                thumb_paths=thumb_paths or None, override_color=place_color,
+                background_image_path=bg_path, background_source=bg_source, hero_text=None,
+            )
+        inject_poster_stamp(folder_jpg, self._level_stamp(folder, ptype, parent, mf))
+
+    def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
+        try:
+            mf = media_file
+            video_folder = file_path.parent
+            self._warm_backgrounds(video_folder, mf)
+            for folder, ptype, parent in self._layout_levels(file_path, mf):
+                if folder in self._completed_folders:
+                    continue
+                self._render_level(folder, ptype, parent, video_folder, mf)
+                self._completed_folders.add(folder)
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))

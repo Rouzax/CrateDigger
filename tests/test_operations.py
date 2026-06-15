@@ -593,6 +593,76 @@ def test_album_poster_type_nested_segments():
     assert segments == ["artist", "festival", "year"]
 
 
+def _stamp_type(folder_jpg: Path):
+    from festival_organizer.poster import read_poster_stamp
+    raw = read_poster_stamp(folder_jpg)
+    return raw.decode().split("\x1f")[1] if raw else None
+
+
+def test_album_poster_layout_levels_place_nested(tmp_path):
+    """place_nested {place}/{year}/{artist}: each depth typed, parents tracked."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_nested"
+    artist = tmp_path / "EDC Las Vegas" / "2025" / "Tiesto"
+    artist.mkdir(parents=True)
+    video = artist / "2025 - EDC Las Vegas - Tiesto.mkv"
+    video.write_bytes(b"")
+    op = AlbumPosterOperation(config=config, library_root=tmp_path)
+    mf = _make_mf(place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025")
+    assert [(f.name, t, p) for f, t, p in op._layout_levels(video, mf)] == [
+        ("EDC Las Vegas", "festival", None),
+        ("2025", "year", "festival"),
+        ("Tiesto", "artist", "year"),
+    ]
+
+
+def test_album_poster_layout_levels_artist_nested(tmp_path):
+    """artist_nested {artist}/{place}/{year}: year's parent is the place."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "artist_nested"
+    year = tmp_path / "Tiesto" / "EDC Las Vegas" / "2025"
+    year.mkdir(parents=True)
+    video = year / "2025 - EDC Las Vegas - Tiesto.mkv"
+    video.write_bytes(b"")
+    op = AlbumPosterOperation(config=config, library_root=tmp_path)
+    mf = _make_mf(place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025")
+    assert [(f.name, t, p) for f, t, p in op._layout_levels(video, mf)] == [
+        ("Tiesto", "artist", None),
+        ("EDC Las Vegas", "festival", "artist"),
+        ("2025", "year", "festival"),
+    ]
+
+
+def test_album_poster_generates_all_levels(tmp_path):
+    """execute writes a stamped folder.jpg at every level with the right type."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_nested"
+    artist = tmp_path / "EDC Las Vegas" / "2025" / "Tiesto"
+    artist.mkdir(parents=True)
+    video = artist / "2025 - EDC Las Vegas - Tiesto.mkv"
+    video.write_bytes(b"")
+    op = AlbumPosterOperation(config=config, library_root=tmp_path)
+    mf = _make_mf(place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025")
+    with patch("festival_organizer.poster.generate_album_poster", side_effect=_stub_generate_album_poster):
+        assert op.execute(video, mf).status == "done"
+    levels = op._layout_levels(video, mf)
+    assert [t for _, t, _ in levels] == ["festival", "year", "artist"]
+    for folder, ptype, _ in levels:
+        fj = folder / "folder.jpg"
+        assert fj.exists(), f"missing {fj}"
+        assert _stamp_type(fj) == ptype
+
+
+def test_year_level_stamp_name_place_vs_artist():
+    """Year folder is named/edition'd by its parent: place -> place+edition, artist -> artist."""
+    op = AlbumPosterOperation(config=load_config())
+    mf = _make_mf(place="EDC", artist="Tiesto", edition="Winter")
+    assert op._level_stamp_fields("year", "festival", "2025", mf) == {
+        "poster_type": "year", "name": "EDC", "year": "2025", "edition": "Winter"}
+    assert op._level_stamp_fields("year", "artist", "2025", mf) == {
+        "poster_type": "year", "name": "Tiesto", "year": "2025", "edition": ""}
+
+
 def test_album_poster_type_place_nested_segments():
     """place_nested: {festival}/{year}/{artist} -> per-segment types."""
     from festival_organizer.config import Config, DEFAULT_CONFIG

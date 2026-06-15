@@ -1132,7 +1132,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     kodi_sync = getattr(args, "kodi_sync", False) or config.kodi_enabled
     if kodi_sync and args.command in ("enrich", "organize"):
         _run_kodi_sync(all_results, pipeline_files, config, console, quiet,
-                       verbose=verbose, debug=debug)
+                       verbose=verbose, debug=debug, album_poster_op=album_poster_op)
 
     # Completion signal
     if not quiet and not use_contract:
@@ -1189,6 +1189,7 @@ def _run_kodi_sync(
     quiet: bool,
     verbose: bool = False,
     debug: bool = False,
+    album_poster_op: "AlbumPosterOperation | None" = None,
 ) -> None:
     """Notify Kodi to refresh items that had changes affecting Kodi display."""
     from festival_organizer.kodi import KodiClient, sync_library
@@ -1216,6 +1217,11 @@ def _run_kodi_sync(
                 changed_paths.append(final_path)
                 if r.name in ART_OPS:
                     art_changed_paths.add(final_path)
+
+    # Per-level generation also (re)writes ancestor folder.jpg posters (place/year);
+    # include every folder the album-poster op produced so their textures clear too.
+    if album_poster_op is not None:
+        album_poster_folders |= album_poster_op.generated_folders
 
     # Expand album_poster folders: all videos in that folder need refresh + texture clear
     for folder in album_poster_folders:
