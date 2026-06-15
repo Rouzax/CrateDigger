@@ -1496,9 +1496,14 @@ prevents all cached items from expiring at the same time on large libraries.</p>
 <ul>
 <li><strong><code>{name}-poster.jpg</code></strong>: a per-video poster showing artist name, festival, date, and
   stage, overlaid on a background image</li>
-<li><strong><code>folder.jpg</code></strong>: an album-level poster for the folder, used by media players to
-  represent the whole event</li>
+<li><strong><code>folder.jpg</code></strong>: a per-folder poster, generated at <strong>every level</strong> of a nested layout
+  (place, artist, and year folders), used by media players to represent each folder. Year
+  folders show the year in a colorful rounded-square badge (the parent place's brand color,
+  or a color derived for an artist) with the parent name as the title.</li>
 </ul>
+<p>Folder posters carry an embedded stamp and regenerate when their content changes, including
+after a layout change (for example switching <code>place_nested</code> to <code>artist_nested</code>), not only
+when the file is missing.</p>
 <p>The background image used for each poster depends on the folder type:</p>
 <table>
 <thead>
@@ -1518,7 +1523,7 @@ prevents all cached items from expiring at the same time on large libraries.</p>
 </tr>
 <tr>
 <td>Year folder</td>
-<td>Gradient only</td>
+<td>Gradient + colorful year badge</td>
 </tr>
 </tbody>
 </table>
