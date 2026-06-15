@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-06-15
+
+### Added
+
+- Colorful year folder posters. A year folder's `folder.jpg` now shows the year in a brand-colored rounded-square badge (in the logo/photo slot used by festival and artist posters), with the parent place or artist name as the hero and, for editioned places (e.g. Tomorrowland Winter), the edition below the accent line. Previously a year folder showed only the year as plain text, or got no poster at all.
+- Depth-aware per-level folder posters. `enrich` now generates a `folder.jpg` at every folder level of a nested layout (place, year, artist), each typed by its depth, instead of only the deepest folder. The year poster in particular is now produced by the live pipeline for the standard nested layouts.
+- Folder-poster regeneration stamp. Each `folder.jpg` carries an embedded `CDFOLDER` stamp (poster type, name, year, edition, version), reusing the JPEG-comment mechanism set posters already use. Folder posters now regenerate when their content changes, including after a layout change (e.g. switching `place_nested` to `artist_nested`) or a `FOLDER_POSTER_VERSION` bump, instead of only when the file is missing.
+
+### Changed
+
+- Folder posters are typed by their depth in the layout rather than by the first layout segment. Some existing folder posters change type or content and regenerate once on the next `enrich`; the Kodi sync clears textures for every regenerated folder level.
+- The year badge stays legible on light brand colors via a WCAG contrast safeguard (`_darken_for_white_text`), the inverse of the existing accent-contrast helper.
+
 ## [0.27.1] - 2026-06-13
 
 ### Fixed

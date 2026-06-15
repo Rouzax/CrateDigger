@@ -83,7 +83,10 @@ The album poster layout is selected automatically based on what images are avail
 |-----------|--------|
 | Festival folder with a curated logo | Gradient base derived from the logo's colors; logo centered; festival name below |
 | Artist folder with fanart.tv or DJ artwork | Background image fading to dark; artist name overlaid |
+| Year folder | Gradient in the parent's brand color with the year in a colorful rounded-square badge; parent place or artist name as the title (edition below the line for editioned places) |
 | No background image available | Color gradient from metadata; artist or festival name overlaid |
+
+Folder posters are generated at **every level** of a nested layout (place, artist, and year folders), each typed by its depth, and regenerate when their content changes, including after a layout change.
 
 For multi-artist folders (multiple DJs sharing one directory), CrateDigger treats the folder as festival-style since there is no single artist to key on.
 
@@ -93,7 +96,7 @@ For multi-artist folders (multiple DJs sharing one directory), CrateDigger treat
 |-------------|----------------------|
 | Festival folder | Curated festival logo, then gradient |
 | Artist folder | DJ artwork from 1001Tracklists, then fanart.tv artist background, then gradient |
-| Year folder | Gradient only |
+| Year folder | Gradient + colorful year badge |
 
 The gradient color comes from the festival's `color` field in [`festivals.json`](festivals.md) if set, otherwise from the dominant color across the folder's thumb images.
 

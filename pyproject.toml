@@ -1,6 +1,6 @@
 [project]
 name = "cratedigger"
-version = "0.27.1"
+version = "0.28.0"
 description = "Festival set & concert library manager"
 readme = "README.md"
 license = { text = "GPL-3.0-only" }

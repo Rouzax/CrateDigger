@@ -87,8 +87,14 @@ Generates two types of poster image for each recording:
 
 - **`{name}-poster.jpg`**: a per-video poster showing artist name, festival, date, and
   stage, overlaid on a background image
-- **`folder.jpg`**: an album-level poster for the folder, used by media players to
-  represent the whole event
+- **`folder.jpg`**: a per-folder poster, generated at **every level** of a nested layout
+  (place, artist, and year folders), used by media players to represent each folder. Year
+  folders show the year in a colorful rounded-square badge (the parent place's brand color,
+  or a color derived for an artist) with the parent name as the title.
+
+Folder posters carry an embedded stamp and regenerate when their content changes, including
+after a layout change (for example switching `place_nested` to `artist_nested`), not only
+when the file is missing.
 
 The background image used for each poster depends on the folder type:
 
@@ -96,7 +102,7 @@ The background image used for each poster depends on the folder type:
 |-------------|----------------------------------|
 | Artist folder | DJ artwork from 1001Tracklists, then fanart.tv, then gradient |
 | Festival folder | Curated festival logo, then gradient |
-| Year folder | Gradient only |
+| Year folder | Gradient + colorful year badge |
 
 If no background image is available, a color gradient is generated from the available
 metadata. Curated festival logos can be added to improve festival folder posters. See
