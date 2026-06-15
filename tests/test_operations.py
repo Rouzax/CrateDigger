@@ -746,14 +746,31 @@ def test_album_poster_segment_for_folder_depth(tmp_path):
     config._data["default_layout"] = "artist_nested"
     op = AlbumPosterOperation(config=config, library_root=tmp_path)
     mf = _make_mf(place="Tomorrowland", place_kind="festival")
-    # Template: {artist}/{festival}/{year}
-    # Depth 0 = artist, depth 1 = festival, depth 2 = year
-    artist_folder = tmp_path / "Tiësto"
-    festival_folder = artist_folder / "Tomorrowland"
-    year_folder = festival_folder / "2025"
-    assert op._get_poster_type_for_folder(year_folder, mf) == "year"
-    assert op._get_poster_type_for_folder(festival_folder, mf) == "festival"
-    assert op._get_poster_type_for_folder(artist_folder, mf) == "artist"
+    # Template: {artist}/{festival}/{year}; the file lives at the deepest (year) folder.
+    video = tmp_path / "Tiësto" / "Tomorrowland" / "2025" / "x.mkv"
+    video.parent.mkdir(parents=True)
+    video.write_bytes(b"")
+    types = {f.name: t for f, t, _ in op._layout_levels(video, mf)}
+    assert types["Tiësto"] == "artist"
+    assert types["Tomorrowland"] == "festival"
+    assert types["2025"] == "year"
+
+
+def test_layout_levels_bounded_to_layout_depth(tmp_path):
+    """Regression: the per-level walk is bounded by the layout depth, not by where
+    a .cratedigger marker lives, so posters are never generated above the library."""
+    config = Config(DEFAULT_CONFIG)
+    config._data["default_layout"] = "place_nested"
+    # File is nested under extra ancestors; library_root points far above them.
+    video = tmp_path / "a" / "b" / "EDC Las Vegas" / "2025" / "Tiesto" / "x.mkv"
+    video.parent.mkdir(parents=True)
+    video.write_bytes(b"")
+    op = AlbumPosterOperation(config=config, library_root=tmp_path)
+    mf = _make_mf(place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025")
+    levels = op._layout_levels(video, mf)
+    # Exactly the 3 layout folders; the "a"/"b" ancestors are never touched.
+    assert [f.name for f, _, _ in levels] == ["EDC Las Vegas", "2025", "Tiesto"]
+    assert [t for _, t, _ in levels] == ["festival", "year", "artist"]
 
 
 def test_get_folder_poster_type_returns_festival_for_festival_kind():

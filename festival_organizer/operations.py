@@ -424,27 +424,37 @@ class AlbumPosterOperation(Operation):
     def _layout_levels(self, file_path: Path, mf: MediaFile) -> list[tuple[Path, str, str | None]]:
         """Folder levels to render for this file: (folder, poster_type, parent_type).
 
-        Walks from the shallowest folder under the library root down to the file's
-        own folder, typing each level by its layout segment (depth-aware via
-        _get_poster_type_for_folder). Without a library root, falls back to the
-        single deepest folder typed by the first segment. ``parent_type`` is the
-        type of the segment above (None at the top), used to name and color year
-        folders by their parent (place or artist).
+        The file sits at ``<library>/<seg0>/.../<segN-1>/file``, so the last
+        ``len(segments)`` folders map one-to-one to the layout segments and are typed
+        accordingly. ``parent_type`` is the type of the segment above (None at the
+        top), used to name and color year folders by their parent (place or artist).
         """
+        segments = self._get_layout_segments(mf.content_type)
+        if not segments:
+            return [(file_path.parent, self._get_folder_poster_type(mf), None)]
+
+        # The file sits at <library>/<seg0>/.../<segN-1>/file, so the last
+        # len(segments) folders map 1:1 to the layout's segments. Bound the walk to
+        # that depth instead of walking up to a .cratedigger marker (which can live
+        # far above an un-marked library), so posters are never written above the
+        # library and the result does not depend on marker placement.
+        ancestors: list[Path] = []
         folder = file_path.parent
-        if not self.library_root:
-            return [(folder, self._get_folder_poster_type(mf), None)]
-        root = self.library_root.resolve()
-        try:
-            parts = folder.resolve().relative_to(root).parts
-        except ValueError:
-            return [(folder, self._get_folder_poster_type(mf), None)]
+        for _ in range(len(segments)):
+            ancestors.append(folder)
+            if folder.parent == folder:
+                break
+            folder = folder.parent
+        ancestors.reverse()  # shallowest -> deepest, aligned with the segment tail
+        seg_tail = segments[-len(ancestors):]
+
+        def _typed(seg: str) -> str:
+            return "artist" if seg == "festival" and mf.place_kind == "artist" else seg
+
         levels: list[tuple[Path, str, str | None]] = []
-        for depth in range(len(parts)):
-            lvl = root.joinpath(*parts[:depth + 1])
-            ptype = self._get_poster_type_for_folder(lvl, mf)
-            parent = self._get_poster_type_for_folder(root.joinpath(*parts[:depth]), mf) if depth else None
-            levels.append((lvl, ptype, parent))
+        for i, fdr in enumerate(ancestors):
+            parent = _typed(seg_tail[i - 1]) if i else None
+            levels.append((fdr, _typed(seg_tail[i]), parent))
         return levels
 
     def _level_stamp_fields(self, ptype: str, parent: str | None, year: str, mf: MediaFile) -> dict:
@@ -514,25 +524,6 @@ class AlbumPosterOperation(Operation):
         """Return poster type for each segment of the layout template."""
         template = self.config.get_layout_template(content_type)
         return [self._classify_segment(seg) for seg in template.split("/")]
-
-    def _get_poster_type_for_folder(self, folder: Path, mf: MediaFile) -> str:
-        """Determine poster type for a specific folder depth in a nested layout."""
-        if not self.library_root:
-            return self._get_folder_poster_type(mf)
-        segments = self._get_layout_segments(mf.content_type)
-        try:
-            depth = len(folder.resolve().relative_to(self.library_root.resolve()).parts) - 1
-        except ValueError:
-            depth = 0
-        if depth < 0:
-            depth = 0
-        if depth < len(segments):
-            base = segments[depth]
-        else:
-            base = segments[-1] if segments else "artist"
-        if base == "festival" and mf.place_kind == "artist":
-            return "artist"
-        return base
 
     @staticmethod
     def _classify_segment(segment: str) -> str:
