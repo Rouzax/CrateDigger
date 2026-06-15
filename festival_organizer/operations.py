@@ -378,13 +378,46 @@ class AlbumPosterOperation(Operation):
         self._logo_misses: set[str] = set()      # places without curated logo
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
+        from festival_organizer.poster import read_poster_stamp
         folder = file_path.parent
         if folder in self._completed_folders:
             return False
         folder_jpg = folder / "folder.jpg"
         if self.force:
             return True
-        return not folder_jpg.exists()
+        if not folder_jpg.exists():
+            return True
+        # Regenerate when the embedded stamp no longer matches what we would render
+        # (folder-poster composition, name/type/year/edition, or version changed).
+        return read_poster_stamp(folder_jpg) != self._expected_folder_stamp(media_file, folder)
+
+    def _consensus_year(self, folder: Path) -> str:
+        """Single year shared by all videos in a folder, or '' if mixed/none."""
+        from festival_organizer.parsers import parse_filename
+        years: set[str] = set()
+        for video in folder.iterdir():
+            if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
+                yr = parse_filename(video, self.config).get("year", "")
+                if yr:
+                    years.add(yr)
+        return years.pop() if len(years) == 1 else ""
+
+    def _folder_stamp_fields(self, mf: MediaFile, poster_type: str, year: str) -> dict:
+        """Identity fields for the folder-poster stamp at the given poster type."""
+        if poster_type == "artist":
+            return {"poster_type": "artist", "name": mf.artist or "", "year": "", "edition": ""}
+        if poster_type == "year":
+            return {"poster_type": "year", "name": mf.place or "",
+                    "year": year or "", "edition": mf.edition or ""}
+        return {"poster_type": poster_type, "name": mf.place or "",
+                "year": "", "edition": mf.edition or ""}
+
+    def _expected_folder_stamp(self, mf: MediaFile, folder: Path) -> bytes:
+        """The folder-poster stamp this folder should carry, given mf and layout."""
+        from festival_organizer.poster import build_folder_stamp
+        poster_type = self._get_folder_poster_type(mf)
+        year = self._consensus_year(folder) if poster_type == "year" else ""
+        return build_folder_stamp(**self._folder_stamp_fields(mf, poster_type, year))
 
     def _get_folder_poster_type(self, mf: MediaFile) -> str:
         """Determine poster type from the first segment of the layout template.
@@ -673,19 +706,8 @@ class AlbumPosterOperation(Operation):
         try:
             folder_jpg = file_path.parent / "folder.jpg"
             mf = media_file
-            # Determine year: scan folder for consensus, omit if mixed
-            from festival_organizer.parsers import parse_filename
-            years_in_folder: set[str] = set()
-            for video in file_path.parent.iterdir():
-                if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
-                    parsed = parse_filename(video, self.config)
-                    yr = parsed.get("year", "")
-                    if yr:
-                        years_in_folder.add(yr)
-            if len(years_in_folder) == 1:
-                date_or_year = years_in_folder.pop()
-            else:
-                date_or_year = ""
+            # Determine year: single consensus year for the folder, omit if mixed
+            date_or_year = self._consensus_year(file_path.parent)
 
             # Collect existing thumbs in folder for color extraction
             thumb_paths = list(file_path.parent.glob("*-thumb.jpg"))
@@ -732,6 +754,8 @@ class AlbumPosterOperation(Operation):
                 background_source=bg_source,
                 hero_text=hero_text,
             )
+            from festival_organizer.poster import inject_poster_stamp
+            inject_poster_stamp(folder_jpg, self._expected_folder_stamp(mf, file_path.parent))
             self._completed_folders.add(file_path.parent)
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:

@@ -26,6 +26,17 @@ def _make_mf(**kwargs: Any) -> MediaFile:
     return MediaFile(**defaults)
 
 
+def _stub_generate_album_poster(**kwargs):
+    """Stand-in for generate_album_poster in mocked tests.
+
+    Honors the real contract (generate_album_poster always writes output_path) so
+    the folder-stamp injection that runs after it has a file to stamp.
+    """
+    out = Path(kwargs["output_path"])
+    out.write_bytes(b"\xff\xd8\xff\xd9")
+    return out
+
+
 def test_nfo_op_needed_when_missing(tmp_path):
     """NFO operation needed when .nfo file doesn't exist."""
     video = tmp_path / "test.mkv"
@@ -417,13 +428,54 @@ def test_album_poster_needed_when_missing(tmp_path):
     assert op.is_needed(video, _make_mf()) is True
 
 
-def test_album_poster_not_needed_when_exists(tmp_path):
-    """Album poster not needed when folder.jpg exists."""
+def test_album_poster_not_needed_when_stamp_matches(tmp_path):
+    """Folder poster is up to date when folder.jpg carries the matching stamp."""
+    from festival_organizer.poster import inject_poster_stamp
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
-    (tmp_path / "folder.jpg").write_bytes(b"\xff\xd8")
+    folder_jpg = tmp_path / "folder.jpg"
+    folder_jpg.write_bytes(b"\xff\xd8\xff\xd9")
     op = AlbumPosterOperation(config=load_config())
-    assert op.is_needed(video, _make_mf()) is False
+    mf = _make_mf()
+    inject_poster_stamp(folder_jpg, op._expected_folder_stamp(mf, tmp_path))
+    assert op.is_needed(video, mf) is False
+
+
+def test_album_poster_needed_when_unstamped(tmp_path):
+    """Existing folder.jpg with no stamp (pre-stamp libraries) regenerates once."""
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    (tmp_path / "folder.jpg").write_bytes(b"\xff\xd8\xff\xd9")  # valid JPEG, no stamp
+    op = AlbumPosterOperation(config=load_config())
+    assert op.is_needed(video, _make_mf()) is True
+
+
+def test_album_poster_needed_when_stamp_mismatch(tmp_path):
+    """Folder poster regenerates when the rendered identity changed (stamp mismatch)."""
+    from festival_organizer.poster import inject_poster_stamp
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    folder_jpg = tmp_path / "folder.jpg"
+    folder_jpg.write_bytes(b"\xff\xd8\xff\xd9")
+    op = AlbumPosterOperation(config=load_config())
+    inject_poster_stamp(folder_jpg, op._expected_folder_stamp(_make_mf(artist="Old Name"), tmp_path))
+    assert op.is_needed(video, _make_mf(artist="New Name")) is True
+
+
+def test_album_poster_regenerates_on_version_bump(tmp_path, monkeypatch):
+    """Bumping FOLDER_POSTER_VERSION invalidates existing folder-poster stamps."""
+    from festival_organizer import poster as poster_mod
+    from festival_organizer.poster import inject_poster_stamp
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    folder_jpg = tmp_path / "folder.jpg"
+    folder_jpg.write_bytes(b"\xff\xd8\xff\xd9")
+    op = AlbumPosterOperation(config=load_config())
+    mf = _make_mf()
+    inject_poster_stamp(folder_jpg, op._expected_folder_stamp(mf, tmp_path))
+    assert op.is_needed(video, mf) is False
+    monkeypatch.setattr(poster_mod, "FOLDER_POSTER_VERSION", poster_mod.FOLDER_POSTER_VERSION + 1)
+    assert op.is_needed(video, mf) is True
 
 
 def test_album_poster_execute_parses_filenames(tmp_path):
@@ -433,7 +485,7 @@ def test_album_poster_execute_parses_filenames(tmp_path):
     (tmp_path / "2024 - Tomorrowland - Bicep-thumb.jpg").write_bytes(b"\xff\xd8")
     op = AlbumPosterOperation(config=load_config())
     mf = _make_mf(festival="Tomorrowland", artist="Bicep", year="2024")
-    with patch("festival_organizer.poster.generate_album_poster"):
+    with patch("festival_organizer.poster.generate_album_poster", side_effect=_stub_generate_album_poster):
         result = op.execute(video, mf)
     assert result.status == "done"
 
@@ -486,7 +538,7 @@ def test_album_poster_dedup_same_folder(tmp_path):
     # First file: needed
     assert op.is_needed(video1, mf) is True
     # Simulate execute completing
-    with patch("festival_organizer.poster.generate_album_poster"):
+    with patch("festival_organizer.poster.generate_album_poster", side_effect=_stub_generate_album_poster):
         op.execute(video1, mf)
     # Second file in same folder: not needed
     assert op.is_needed(video2, mf) is False
@@ -505,7 +557,7 @@ def test_album_poster_dedup_different_folders(tmp_path):
     op = AlbumPosterOperation(config=load_config(), force=True)
     mf1 = _make_mf(artist="Artist1")
     mf2 = _make_mf(artist="Artist2")
-    with patch("festival_organizer.poster.generate_album_poster"):
+    with patch("festival_organizer.poster.generate_album_poster", side_effect=_stub_generate_album_poster):
         op.execute(video1, mf1)
     # Different folder: still needed
     assert op.is_needed(video2, mf2) is True
@@ -782,7 +834,7 @@ def test_album_poster_warms_caches_for_unused_sources(tmp_path):
     op = AlbumPosterOperation(config=config, library_root=lib, force=True)
     mf = _make_mf(artist="Tiesto", festival="Tomorrowland", year="2024")
 
-    with patch("festival_organizer.poster.generate_album_poster"):
+    with patch("festival_organizer.poster.generate_album_poster", side_effect=_stub_generate_album_poster):
         with patch.object(op, "_try_background_source", wraps=op._try_background_source) as mock_try:
             with patch.object(op, "_warm_dj_artwork_cache") as mock_warm:
                 op.execute(video, mf)

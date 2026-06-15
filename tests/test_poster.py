@@ -744,3 +744,30 @@ def test_darken_for_white_text_preserves_hue_family():
     # Lowering value only: a light yellow stays yellow-ish after darkening.
     r, g, b = _darken_for_white_text((245, 215, 110))
     assert r >= b and g >= b
+
+
+# --- folder-poster stamp tests (Phase B) ---
+
+def test_folder_poster_version_is_1():
+    from festival_organizer.poster import FOLDER_POSTER_VERSION
+    assert FOLDER_POSTER_VERSION == 1
+
+
+def test_build_folder_stamp_distinct_fields():
+    from festival_organizer.poster import build_folder_stamp
+    base = build_folder_stamp(poster_type="year", name="EDC Las Vegas", year="2025", edition="")
+    # Identical inputs -> identical bytes.
+    assert build_folder_stamp(poster_type="year", name="EDC Las Vegas", year="2025", edition="") == base
+    # Any field change -> different bytes.
+    assert build_folder_stamp(poster_type="festival", name="EDC Las Vegas", year="2025", edition="") != base
+    assert build_folder_stamp(poster_type="year", name="EDC", year="2025", edition="") != base
+    assert build_folder_stamp(poster_type="year", name="EDC Las Vegas", year="2024", edition="") != base
+    assert build_folder_stamp(poster_type="year", name="EDC Las Vegas", year="2025", edition="Winter") != base
+
+
+def test_build_folder_stamp_version_bump(monkeypatch):
+    from festival_organizer import poster as poster_mod
+    before = poster_mod.build_folder_stamp(poster_type="year", name="N", year="2025", edition="")
+    monkeypatch.setattr(poster_mod, "FOLDER_POSTER_VERSION", poster_mod.FOLDER_POSTER_VERSION + 1)
+    after = poster_mod.build_folder_stamp(poster_type="year", name="N", year="2025", edition="")
+    assert before != after

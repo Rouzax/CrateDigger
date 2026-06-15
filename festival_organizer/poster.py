@@ -53,6 +53,31 @@ def build_cover_stamp(*, artist: str, festival: str, date: str, year: str,
     return _STAMP_SEP.join(fields).encode("utf-8")
 
 
+# Bump FOLDER_POSTER_VERSION whenever the folder-poster (folder.jpg) composition or
+# per-level layout changes so existing folder posters re-render on the next enrich run.
+FOLDER_POSTER_VERSION = 1
+
+_FOLDER_STAMP_PREFIX = "CDFOLDER"
+
+
+def build_folder_stamp(*, poster_type: str, name: str, year: str, edition: str) -> bytes:
+    """Build the staleness stamp for a folder poster (``folder.jpg``).
+
+    Encodes the inputs that determine which folder poster is rendered: the poster
+    type (``festival`` / ``artist`` / ``year``), the name shown above the line, the
+    year (for year badges), and the edition. A change to any of these, or a
+    ``FOLDER_POSTER_VERSION`` bump, makes the stamp differ from the one embedded in
+    an existing ``folder.jpg`` and triggers regeneration, this is how a layout
+    change (folder now represents a different type/name) self-heals. Color is
+    intentionally excluded (mirrors ``build_cover_stamp``) to avoid thrash from
+    thumbnail-derived colors. Reuses the same JPEG COM read/write as set posters
+    (``read_poster_stamp`` / ``inject_poster_stamp``).
+    """
+    fields = [f"{_FOLDER_STAMP_PREFIX}{FOLDER_POSTER_VERSION}",
+              poster_type or "", name or "", year or "", edition or ""]
+    return _STAMP_SEP.join(fields).encode("utf-8")
+
+
 def read_poster_stamp(path: Path) -> bytes | None:
     """Return the first JPEG COM marker payload from a poster sidecar, or None."""
     try:
