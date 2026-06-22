@@ -159,7 +159,7 @@ def _parse_tracks(html) -> list["Track"]:
     soup = _to_soup(html)
     tracks: list[Track] = []
     for row in soup.select("div.tlpItem"):
-        classes = set(row.get("class", []))
+        classes = set(_attr_classes(row))
         if "tlpTog" not in classes:
             continue
         if "tlpSubTog" in classes:
@@ -168,18 +168,18 @@ def _parse_tracks(html) -> list["Track"]:
         if cue_el is None:
             continue
         try:
-            start_ms = int(float(cue_el.get("value", "0")) * 1000)
+            start_ms = int(float(_attr_str(cue_el, "value", "0")) * 1000)
         except ValueError:
             continue
         # con at cue=0 are component overlays (acappellas, samples), not chapters.
         if "con" in classes and start_ms == 0:
             continue
         name_meta = row.select_one('meta[itemprop="name"]')
-        raw_text = fix_mojibake(name_meta.get("content", "")) if name_meta else ""
+        raw_text = fix_mojibake(_attr_str(name_meta, "content")) if name_meta else ""
         genres = [
-            normalize_genre(fix_mojibake(m.get("content", "")))
+            normalize_genre(fix_mojibake(_attr_str(m, "content")))
             for m in row.select('meta[itemprop="genre"]')
-            if m.get("content")
+            if _attr_str(m, "content")
         ]
         # Walk artist anchors in document order; capture (slug, display_name)
         # pairs. Display name is the stripped text of the nearest ancestor
@@ -187,7 +187,7 @@ def _parse_tracks(html) -> list["Track"]:
         slugs: list[str] = []
         names: list[str] = []
         for a in row.select("a[href^='/artist/']"):
-            m = re.match(r"/artist/[^/]+/([^/]+)/", a.get("href", ""))
+            m = re.match(r"/artist/[^/]+/([^/]+)/", _attr_str(a, "href"))
             if not m:
                 continue
             slug = m.group(1)
@@ -219,11 +219,11 @@ def _parse_tracks(html) -> list["Track"]:
             # annotation, not a clean name. Slug-fallback wins in that case.
             display = ""
             parent_wrapper = a.parent
+            wrapper_classes = _attr_classes(parent_wrapper)
             if (
                 parent_wrapper is not None
-                and hasattr(parent_wrapper, "get")
-                and "tgHid" in parent_wrapper.get("class", [])
-                and "spR" in parent_wrapper.get("class", [])
+                and "tgHid" in wrapper_classes
+                and "spR" in wrapper_classes
             ):
                 prev = parent_wrapper.previous_sibling
                 while prev is not None and getattr(prev, "name", None) is None:
@@ -233,8 +233,7 @@ def _parse_tracks(html) -> list["Track"]:
                 if (
                     prev is not None
                     and getattr(prev, "name", None) == "span"
-                    and hasattr(prev, "get")
-                    and "blueTxt" in prev.get("class", [])
+                    and "blueTxt" in _attr_classes(prev)
                 ):
                     display = prev.get_text(" ", strip=True)
             if not display:
@@ -243,9 +242,7 @@ def _parse_tracks(html) -> list["Track"]:
                     parent = parent.parent if parent else None
                     if parent is None:
                         break
-                    parent_classes = (
-                        parent.get("class", []) if hasattr(parent, "get") else []
-                    )
+                    parent_classes = _attr_classes(parent)
                     if (
                         "notranslate" in parent_classes
                         and "trackValue" not in parent_classes
@@ -459,7 +456,7 @@ class TracklistSession:
 
     def export_tracklist(
         self,
-        tracklist_id: str,
+        tracklist_id: str | None,
         full_url: str | None = None,
         on_progress: Callable[[str], None] | None = None,
     ) -> TracklistExport:
@@ -1129,7 +1126,7 @@ def _extract_genres(html) -> list[str]:
     seen: set[str] = set()
     genres: list[str] = []
     for meta in soup.select('meta[itemprop="genre"]'):
-        content = meta.get("content", "")
+        content = _attr_str(meta, "content")
         if not content:
             continue
         genre = _html_decode(content)
@@ -1245,6 +1242,35 @@ def _to_soup(value):
     if isinstance(value, str):
         return BeautifulSoup(value, "html.parser")
     return value
+
+
+def _attr_str(el, name: str, default: str = "") -> str:
+    """Read a single HTML attribute as a string.
+
+    BeautifulSoup attribute access returns ``str | list[str] | None`` (a
+    multi-valued attribute yields a list). This collapses that to a single
+    string: lists are space-joined, missing attributes return *default*.
+    """
+    if el is None or not hasattr(el, "get"):
+        return default
+    value = el.get(name)
+    if value is None:
+        return default
+    if isinstance(value, list):
+        return " ".join(value)
+    return value
+
+
+def _attr_classes(el) -> list[str]:
+    """Read an element's ``class`` attribute as a list of class names."""
+    if el is None or not hasattr(el, "get"):
+        return []
+    value = el.get("class")
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    return value.split()
 
 
 def _maximize_artwork_url(url: str) -> str:

@@ -15,9 +15,13 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from festival_organizer.normalization import fix_mojibake
 from festival_organizer.subprocess_utils import tracked_run
+
+if TYPE_CHECKING:
+    from festival_organizer.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -101,10 +105,10 @@ MKVPROPEDIT_PATH = find_tool("mkvpropedit")
 MKVMERGE_PATH = find_tool("mkvmerge")
 
 
-def configure_tools(config: object) -> None:
+def configure_tools(config: "Config") -> None:
     """Re-resolve tool paths using config-provided overrides."""
     global FFPROBE_PATH, MKVEXTRACT_PATH, MKVPROPEDIT_PATH, MKVMERGE_PATH
-    tool_paths = config.tool_paths if hasattr(config, "tool_paths") else {}
+    tool_paths = config.tool_paths
     FFPROBE_PATH = find_tool("ffprobe", configured_path=tool_paths.get("ffprobe"))
     MKVEXTRACT_PATH = find_tool(
         "mkvextract", configured_path=tool_paths.get("mkvextract")

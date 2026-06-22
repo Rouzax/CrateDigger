@@ -73,7 +73,11 @@ from festival_organizer.tracklists.query import (
     expand_aliases_in_query,
     extract_tracklist_id,
 )
-from festival_organizer.tracklists.scoring import parse_query, score_results
+from festival_organizer.tracklists.scoring import (
+    SearchResult,
+    parse_query,
+    score_results,
+)
 from festival_organizer.tracklists.source_cache import SourceCache
 
 logger = logging.getLogger(__name__)
@@ -850,7 +854,7 @@ def _fetch_and_embed(
                 ),
             }
             # Tags that would change at TTV=70
-            tags_to_update = {}
+            tags_to_update: dict[str, str] = {}
             for k, v in desired.items():
                 stored_val = stored_map.get(k, "")
                 if v is CLEAR_TAG:
@@ -1006,7 +1010,7 @@ def _fetch_and_embed(
 
 
 def _select_interactive(
-    results: list,
+    results: list[SearchResult],
     duration_mins: int,
     query_parts=None,
     console: Console | None = None,
@@ -1015,7 +1019,7 @@ def _select_interactive(
     query_str: str | None = None,
     index: int = 0,
     total: int = 0,
-) -> object | None:
+) -> SearchResult | None:
     """Display results table and prompt for selection."""
     con = console or make_console()
 
@@ -1033,7 +1037,7 @@ def _select_interactive(
     con.print("   [dim]0. Cancel[/dim]\n")
 
     max_show = min(len(results), 15)
-    selected: object | None = None
+    selected: SearchResult | None = None
     while True:
         try:
             choice = input(f"  Select (1-{max_show}, or 0): ").strip()

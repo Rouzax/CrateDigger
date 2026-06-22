@@ -8,7 +8,11 @@ from pathlib import Path
 
 from festival_organizer.log import _file_var
 from festival_organizer.models import MediaFile
-from festival_organizer.operations import Operation, OperationResult
+from festival_organizer.operations import (
+    Operation,
+    OperationResult,
+    OrganizeOperation,
+)
 from festival_organizer.progress import (
     EnrichContractProgress,
     OrganizeContractProgress,
@@ -34,7 +38,7 @@ def run_pipeline(
         # Determine target folder for display (legacy progress)
         target_folder = ""
         for op in operations:
-            if op.name == "organize" and hasattr(op, "target"):
+            if isinstance(op, OrganizeOperation):
                 target_folder = str(op.target.parent.name) + "/" + op.target.name
                 break
 
@@ -62,7 +66,7 @@ def run_pipeline(
             if needed:
                 result = op.execute(current_path, media_file)
                 result.display_name = op_display
-                if op.name == "organize" and result.status == "done":
+                if isinstance(op, OrganizeOperation) and result.status == "done":
                     current_path = op.target
             else:
                 result = OperationResult(

@@ -636,7 +636,7 @@ def _save_win32_console_mode() -> None:
         import ctypes
         from ctypes import wintypes
 
-        kernel32 = ctypes.windll.kernel32
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]  # Windows-only API
         handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
         mode = wintypes.DWORD()
         if kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
@@ -652,7 +652,7 @@ def _restore_win32_console_mode() -> None:
     try:
         import ctypes
 
-        kernel32 = ctypes.windll.kernel32
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]  # Windows-only API
         handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
         kernel32.SetConsoleMode(handle, _SAVED_CONSOLE_MODE)
     except (OSError, AttributeError, ValueError):

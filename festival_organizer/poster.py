@@ -194,7 +194,7 @@ def font_visual_height(font: ImageFont.FreeTypeFont) -> int:
 def measure_w(font: ImageFont.FreeTypeFont, text: str) -> int:
     """Measure text width."""
     bbox = font.getbbox(text)
-    return bbox[2] - bbox[0]
+    return int(bbox[2] - bbox[0])
 
 
 # --- Color contrast (WCAG) ---
@@ -299,7 +299,11 @@ def get_accent_color(img: Image.Image) -> tuple[int, int, int]:
     h_arr, s_arr = arr[:, :, 0].ravel(), arr[:, :, 1].ravel()
 
     h = _circular_hue_mean(h_arr, s_arr)
-    s = min(1.0, np.mean(s_arr[s_arr >= 40]) / 160) if (s_arr >= 40).any() else 0.5
+    s = (
+        min(1.0, float(np.mean(s_arr[s_arr >= 40])) / 160)
+        if (s_arr >= 40).any()
+        else 0.5
+    )
     v = 0.95
     r, g, b = hsv_to_rgb(h, s, v)
     color = (int(r * 255), int(g * 255), int(b * 255))
@@ -630,7 +634,7 @@ def generate_set_poster(
     accent = get_accent_color(frame_rgb)
 
     # Blurred + darkened background fills entire poster
-    bg = frame_rgb.resize((POSTER_W, POSTER_H), Image.LANCZOS)
+    bg = frame_rgb.resize((POSTER_W, POSTER_H), Image.Resampling.LANCZOS)
     bg = bg.filter(ImageFilter.GaussianBlur(radius=40))
     bg = ImageEnhance.Brightness(bg).enhance(0.18)
 
@@ -641,9 +645,11 @@ def generate_set_poster(
     scaled_h = int(frame_raw.height * scale)
 
     if has_alpha:
-        sharp = frame_raw.convert("RGBA").resize((scaled_w, scaled_h), Image.LANCZOS)
+        sharp = frame_raw.convert("RGBA").resize(
+            (scaled_w, scaled_h), Image.Resampling.LANCZOS
+        )
     else:
-        sharp = frame_rgb.resize((scaled_w, scaled_h), Image.LANCZOS)
+        sharp = frame_rgb.resize((scaled_w, scaled_h), Image.Resampling.LANCZOS)
 
     # Center-crop horizontally to poster width
     if scaled_w > POSTER_W:
@@ -783,7 +789,11 @@ def get_dominant_color_from_thumbs(thumb_paths: list[Path]) -> tuple[int, int, i
     s_arr = np.concatenate(all_s)
 
     h = _circular_hue_mean(h_arr, s_arr)
-    s = min(0.7, np.mean(s_arr[s_arr >= 40]) / 255) if (s_arr >= 40).any() else 0.3
+    s = (
+        min(0.7, float(np.mean(s_arr[s_arr >= 40])) / 255)
+        if (s_arr >= 40).any()
+        else 0.3
+    )
     v = 0.5
     r, g, b = hsv_to_rgb(h, s, v)
     return (int(r * 255), int(g * 255), int(b * 255))
@@ -853,7 +863,7 @@ def _center_sharp(frame: Image.Image, max_display: int) -> tuple[Image.Image, in
     scale = min(max_display / frame.width, max_display / frame.height)
     new_w = int(frame.width * scale)
     new_h = int(frame.height * scale)
-    sharp = frame.resize((new_w, new_h), Image.LANCZOS)
+    sharp = frame.resize((new_w, new_h), Image.Resampling.LANCZOS)
     img_x = (POSTER_W - new_w) // 2
     img_y = int(LINE_Y * 0.5) - new_h // 2
     img_y = max(30, img_y)
@@ -1018,7 +1028,9 @@ def generate_album_poster(
                     frame_raw.height,
                     background_source or "unknown",
                 )
-                blurred = frame_rgb.resize((POSTER_W, POSTER_H), Image.LANCZOS)
+                blurred = frame_rgb.resize(
+                    (POSTER_W, POSTER_H), Image.Resampling.LANCZOS
+                )
                 blurred = blurred.filter(ImageFilter.GaussianBlur(radius=40))
                 blurred = ImageEnhance.Brightness(blurred).enhance(0.18)
                 blurred_rgba = blurred.convert("RGBA")
@@ -1057,7 +1069,7 @@ def generate_album_poster(
 
                 if has_alpha:
                     sharp_rgba = frame_raw.convert("RGBA").resize(
-                        (POSTER_W, new_h), Image.LANCZOS
+                        (POSTER_W, new_h), Image.Resampling.LANCZOS
                     )
                     orig_alpha = sharp_rgba.split()[3]
                     combined = Image.fromarray(
@@ -1068,7 +1080,9 @@ def generate_album_poster(
                     bg.paste(sharp_rgba, (0, 0), sharp_rgba)
                     bg = bg.convert("RGB")
                 else:
-                    sharp = frame_rgb.resize((POSTER_W, new_h), Image.LANCZOS)
+                    sharp = frame_rgb.resize(
+                        (POSTER_W, new_h), Image.Resampling.LANCZOS
+                    )
                     bg.paste(sharp, (0, 0), fade_mask)
 
             # Dark gradient overlay from 40% down

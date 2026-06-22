@@ -82,7 +82,7 @@ def cache_dj_artwork(
                 )
             max_side = 550
             if img.width > max_side:
-                img = img.resize((max_side, max_side), Image.LANCZOS)
+                img = img.resize((max_side, max_side), Image.Resampling.LANCZOS)
                 out.debug(
                     "enrich.dj_artwork: action=resize to=%dx%d", max_side, max_side
                 )

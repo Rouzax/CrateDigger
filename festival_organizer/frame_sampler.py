@@ -13,7 +13,7 @@ import math
 from pathlib import Path
 
 try:
-    import cv2
+    import cv2  # type: ignore[import]  # optional 'vision' extra; guarded by ImportError
     import numpy as np
 
     _HAS_CV2 = True

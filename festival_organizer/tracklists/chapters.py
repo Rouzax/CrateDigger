@@ -331,8 +331,8 @@ def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
                 # Normalize nanosecond timestamps to milliseconds
                 if len(timestamp) > 12:
                     timestamp = timestamp[:12]
-                title = title_elem.text if title_elem is not None else ""
-                language = lang_elem.text if lang_elem is not None else "eng"
+                title = (title_elem.text or "") if title_elem is not None else ""
+                language = (lang_elem.text or "eng") if lang_elem is not None else "eng"
                 chapters.append(
                     Chapter(timestamp=timestamp, title=title, language=language)
                 )
