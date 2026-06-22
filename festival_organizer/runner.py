@@ -6,12 +6,12 @@ import logging
 import time
 from pathlib import Path
 
-from festival_organizer.models import MediaFile
 from festival_organizer.log import _file_var
+from festival_organizer.models import MediaFile
 from festival_organizer.operations import Operation, OperationResult
 from festival_organizer.progress import (
-    OrganizeContractProgress,
     EnrichContractProgress,
+    OrganizeContractProgress,
     OrganizeEnrichProgress,
 )
 

@@ -1,7 +1,8 @@
 from pathlib import Path
-from festival_organizer.templates import render_folder, render_filename, _render
+
 from festival_organizer.config import Config
 from festival_organizer.models import MediaFile
+from festival_organizer.templates import _render, render_filename, render_folder
 from tests.conftest import TEST_CONFIG, make_mediafile
 
 CFG = Config(TEST_CONFIG)

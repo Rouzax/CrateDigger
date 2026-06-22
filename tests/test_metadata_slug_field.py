@@ -1,5 +1,6 @@
-from festival_organizer.models import MediaFile
 from pathlib import Path
+
+from festival_organizer.models import MediaFile
 
 
 def test_mediafile_has_artist_slugs_default():

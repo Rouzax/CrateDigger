@@ -195,9 +195,12 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # 1001TL signal: if it doesn't name a festival, there probably isn't one.
     # Preserve only festivals that are independently recognized (known_places).
     if festival and festival not in config.known_places:
-        if artists_list and not meta.get("tracklists_festival"):
-            festival = ""
-        elif artist and festival.lower() == artist.lower():
+        if (
+            artists_list
+            and not meta.get("tracklists_festival")
+            or artist
+            and festival.lower() == artist.lower()
+        ):
             festival = ""
     # Even a known-place filename guess defers to an authoritative 1001TL venue or
     # location tag: when 1001TL names a venue/location but no festival, the set is

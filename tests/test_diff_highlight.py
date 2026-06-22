@@ -1,7 +1,5 @@
 """Tests for the _diff_highlight helper that colors changed segments."""
 
-from rich.text import Text
-
 from festival_organizer.console import _diff_highlight
 
 

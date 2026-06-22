@@ -1,5 +1,4 @@
 import io
-from pathlib import Path
 from types import SimpleNamespace
 
 import festival_organizer.notify as notify
@@ -7,8 +6,8 @@ from festival_organizer.console import make_console
 from festival_organizer.notify.models import (
     EmailSet,
     RunReport,
-    UpdateInfo,
     SMTPSettings,
+    UpdateInfo,
 )
 
 

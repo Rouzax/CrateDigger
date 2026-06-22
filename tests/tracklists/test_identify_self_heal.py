@@ -350,6 +350,7 @@ def test_set_genres_capped_via_config_genre_top_n(tmp_path):
     """_fetch_and_embed honours config.tracklists_settings.genre_top_n, capping
     the set-level CRATEDIGGER_1001TL_GENRES to top-N per-track genres."""
     from unittest.mock import MagicMock, patch
+
     from festival_organizer.tracklists.api import Track, TracklistExport
     from festival_organizer.tracklists.cli_handler import _fetch_and_embed
 
@@ -460,6 +461,7 @@ def test_set_genres_capped_via_config_genre_top_n(tmp_path):
 def test_set_genres_uncapped_when_config_zero(tmp_path):
     """genre_top_n=0 disables the cap; full export.genres flows through."""
     from unittest.mock import MagicMock, patch
+
     from festival_organizer.tracklists.api import Track, TracklistExport
     from festival_organizer.tracklists.cli_handler import _fetch_and_embed
 
@@ -536,6 +538,7 @@ def test_fetch_and_embed_uses_export_date_when_tracklist_date_none(tmp_path):
     carries the h1-captured event date, which must propagate to embed_chapters
     so CRATEDIGGER_1001TL_DATE gets written (Red Rocks reproduction)."""
     from unittest.mock import MagicMock, patch
+
     from festival_organizer.tracklists.api import Track, TracklistExport
     from festival_organizer.tracklists.cli_handler import _fetch_and_embed
 
@@ -618,6 +621,7 @@ def test_fetch_and_embed_tracklist_date_wins_over_export_date(tmp_path):
     """When the search-results date (tracklist_date) is present, it takes
     precedence over the h1-captured export.date."""
     from unittest.mock import MagicMock, patch
+
     from festival_organizer.tracklists.api import Track, TracklistExport
     from festival_organizer.tracklists.cli_handler import _fetch_and_embed
 

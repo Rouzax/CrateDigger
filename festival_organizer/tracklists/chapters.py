@@ -20,9 +20,10 @@ import re
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Literal, overload
+from typing import TYPE_CHECKING, Literal, overload
 
 from festival_organizer import metadata
 from festival_organizer.mkv_tags import (
@@ -263,7 +264,7 @@ def build_chapter_xml(chapters: list[Chapter], return_uids: bool = False):
         # TTV=30 tags that reference these UIDs) when the source data is
         # unchanged. Matroska requires ChapterUID > 0; MD5 of non-empty input
         # is never zero in practice.
-        digest = hashlib.md5(f"{ch.timestamp}|{ch.title}".encode("utf-8")).digest()
+        digest = hashlib.md5(f"{ch.timestamp}|{ch.title}".encode()).digest()
         uid_value = int.from_bytes(digest[:8], "big") or 1
         uids.append(uid_value)
         uid = ET.SubElement(atom, "ChapterUID")
@@ -383,7 +384,7 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         "1001TRACKLISTS_GENRES": "genres",
         "1001TRACKLISTS_DJ_ARTWORK": "dj_artwork",
     }
-    result = {v: "" for v in tag_map.values()}
+    result = dict.fromkeys(tag_map.values(), "")
 
     for tag in root.iter("Tag"):
         targets = tag.find("Targets")
@@ -442,7 +443,7 @@ def _build_chapter_tags_map(
     (typically Config.resolve_artist) so per-chapter names match the
     canonicalised top-level ARTIST tag.
     """
-    tracks_by_ms: dict[int, "Track"] = {}
+    tracks_by_ms: dict[int, Track] = {}
     for t in tracks:
         tracks_by_ms.setdefault(t.start_ms, t)  # first wins on ties
     result: dict[int, dict[str, str]] = {}

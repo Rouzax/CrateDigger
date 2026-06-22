@@ -1,4 +1,4 @@
-from festival_organizer.normalization import slugify, folder_slug
+from festival_organizer.normalization import folder_slug, slugify
 
 
 def test_slugify_matches_1001tl_style():

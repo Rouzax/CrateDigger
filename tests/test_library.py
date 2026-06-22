@@ -1,11 +1,12 @@
-import tomllib
 import logging
 import os
+import tomllib
 from unittest.mock import patch
+
 from festival_organizer.library import (
+    cleanup_empty_dirs,
     find_library_root,
     init_library,
-    cleanup_empty_dirs,
     migrate_folder_artefacts,
     resolve_library_root,
 )

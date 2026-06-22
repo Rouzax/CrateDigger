@@ -1,5 +1,6 @@
 from pathlib import Path
-from festival_organizer.models import MediaFile, FileAction, build_display_title
+
+from festival_organizer.models import FileAction, MediaFile, build_display_title
 
 
 def test_media_file_defaults():
@@ -54,8 +55,9 @@ def test_display_artist_defaults_empty():
 
 
 def test_mediafile_has_place_fields():
-    from festival_organizer.models import MediaFile
     from pathlib import Path
+
+    from festival_organizer.models import MediaFile
 
     mf = MediaFile(source_path=Path("/tmp/x.mkv"))
     assert mf.place == ""

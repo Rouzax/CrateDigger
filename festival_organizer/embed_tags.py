@@ -15,7 +15,7 @@ Logging:
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from festival_organizer import metadata
@@ -181,7 +181,7 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
 
     # Only stamp ENRICHED_AT when actually writing
     if tags_70:
-        tags_70["CRATEDIGGER_ENRICHED_AT"] = datetime.now(timezone.utc).isoformat(
+        tags_70["CRATEDIGGER_ENRICHED_AT"] = datetime.now(UTC).isoformat(
             timespec="seconds"
         )
 

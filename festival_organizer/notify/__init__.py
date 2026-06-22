@@ -21,7 +21,7 @@ from festival_organizer.notify.models import (
     SMTPSettings,
     UpdateInfo,
 )
-from festival_organizer.notify.render import render, MAX_SETS
+from festival_organizer.notify.render import MAX_SETS, render
 from festival_organizer.notify.send import send_email
 from festival_organizer.notify.thumbnails import make_thumbnail
 from festival_organizer.update_check import get_cached_update_status

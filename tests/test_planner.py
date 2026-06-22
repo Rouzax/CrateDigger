@@ -1,7 +1,8 @@
 from pathlib import Path
-from festival_organizer.planner import plan_actions
-from festival_organizer.config import Config, DEFAULT_CONFIG
+
+from festival_organizer.config import DEFAULT_CONFIG, Config
 from festival_organizer.models import MediaFile
+from festival_organizer.planner import plan_actions
 from tests.conftest import make_mediafile
 
 CFG = Config(DEFAULT_CONFIG)

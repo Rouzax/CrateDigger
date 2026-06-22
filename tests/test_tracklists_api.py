@@ -3,28 +3,26 @@
 import logging
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 import requests
 
 from festival_organizer.tracklists.api import (
-    TracklistSession,
-    TracklistError,
-    RateLimitError,
-    ExportError,
     AuthenticationError,
-    _parse_duration_string,
-    _html_decode,
-    _normalize_date,
-    _is_rate_limited,
-    _extract_genres,
+    ExportError,
+    TracklistError,
+    TracklistSession,
     _extract_dj_slugs,
+    _extract_genres,
+    _html_decode,
+    _is_rate_limited,
     _maximize_artwork_url,
+    _normalize_date,
     _parse_dj_profile,
+    _parse_duration_string,
     _parse_h1_structure,
 )
-
 
 # --- Helper function tests ---
 
@@ -881,7 +879,7 @@ def test_request_forces_utf8_encoding(tmp_path):
     from festival_organizer.tracklists.api import TracklistSession
 
     # "Tiësto" in UTF-8 bytes: 54 69 C3 AB 73 74 6F
-    utf8_bytes = "Tiësto".encode("utf-8")
+    utf8_bytes = "Tiësto".encode()
 
     with patch.object(TracklistSession, "throttle"):
         sess = TracklistSession(cookie_cache_path=tmp_path / "cookies.json")

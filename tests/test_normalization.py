@@ -1,14 +1,13 @@
 from festival_organizer.normalization import (
-    safe_filename,
-    normalise_name,
-    strip_scene_tags,
-    strip_noise_words,
     extract_youtube_id,
-    scene_dots_to_spaces,
     fix_mojibake,
+    normalise_name,
     normalize_genre,
+    safe_filename,
+    scene_dots_to_spaces,
+    strip_noise_words,
+    strip_scene_tags,
 )
-
 
 # --- normalize_genre ---
 

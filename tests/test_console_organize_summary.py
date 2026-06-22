@@ -1,8 +1,10 @@
 """Tests for organize_summary_panel."""
 
 import io
+
 from rich.console import Console
 from rich.panel import Panel
+
 from festival_organizer.console import organize_summary_panel
 
 

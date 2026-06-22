@@ -1,8 +1,8 @@
 import json
 import logging
-import subprocess as subprocess_mod
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from festival_organizer.metadata import (
     find_tool,
     get_install_hint,

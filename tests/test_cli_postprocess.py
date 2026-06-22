@@ -12,8 +12,8 @@ from unittest.mock import patch
 from festival_organizer.config import load_config
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
-    NfoOperation,
     ArtOperation,
+    NfoOperation,
     PosterOperation,
     TagsOperation,
 )

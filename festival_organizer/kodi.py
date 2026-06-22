@@ -260,6 +260,7 @@ def sync_library(
         return
 
     import time
+
     from festival_organizer.console import (
         StepProgress,
         library_sync_summary_line,

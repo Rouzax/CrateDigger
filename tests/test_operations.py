@@ -1,21 +1,21 @@
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from PIL import Image
 
+from festival_organizer.config import DEFAULT_CONFIG, Config, load_config
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
-    NfoOperation,
-    ArtOperation,
-    PosterOperation,
-    CoverEmbedOperation,
-    OrganizeOperation,
     AlbumPosterOperation,
+    ArtOperation,
+    CoverEmbedOperation,
     FanartOperation,
+    NfoOperation,
+    OrganizeOperation,
+    PosterOperation,
     _resolve_poster_fields,
 )
-from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
 
 
 def _win_normcase(s: str) -> str:
@@ -152,8 +152,9 @@ def test_nfo_op_preserves_dateadded_on_regen(tmp_path):
     video.write_bytes(b"")
     config = load_config()
     original_ts = "2023-06-15 14:30:00"
-    from festival_organizer.nfo import generate_nfo
     import xml.etree.ElementTree as ET
+
+    from festival_organizer.nfo import generate_nfo
 
     generate_nfo(_make_mf(stage="Mainstage"), video, config, dateadded=original_ts)
     op = NfoOperation(config)
@@ -681,7 +682,7 @@ def test_album_poster_dedup_different_folders(tmp_path):
 
 def test_album_poster_type_from_artist_flat_layout():
     """artist_flat layout: {artist} -> artist poster type."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_flat"
@@ -692,7 +693,7 @@ def test_album_poster_type_from_artist_flat_layout():
 
 def test_album_poster_type_from_place_flat_layout():
     """place_flat layout: {festival} -> festival poster type."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
@@ -703,7 +704,7 @@ def test_album_poster_type_from_place_flat_layout():
 
 def test_album_poster_type_nested_segments():
     """artist_nested layout: {artist}/{festival}/{year} -> per-segment types."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_nested"
@@ -834,7 +835,7 @@ def test_bg_fingerprint_empty_for_year():
 
 def test_album_poster_type_place_nested_segments():
     """place_nested: {festival}/{year}/{artist} -> per-segment types."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_nested"
@@ -845,7 +846,7 @@ def test_album_poster_type_place_nested_segments():
 
 def test_album_poster_type_mixed_segment_place_wins():
     """Mixed segment {artist} - {place} -> place wins (higher priority)."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(
         {
@@ -864,7 +865,7 @@ def test_album_poster_type_mixed_segment_place_wins():
 
 def test_album_poster_segment_for_folder_depth(tmp_path):
     """Correct poster type at each folder depth in nested layout."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_nested"
@@ -901,7 +902,7 @@ def test_layout_levels_bounded_to_layout_depth(tmp_path):
 
 def test_get_folder_poster_type_returns_festival_for_festival_kind():
     """place_kind='festival' on a place_flat layout yields 'festival' poster type."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
@@ -912,7 +913,7 @@ def test_get_folder_poster_type_returns_festival_for_festival_kind():
 
 def test_get_folder_poster_type_returns_festival_for_venue_kind():
     """place_kind='venue' still routes through the festival poster pipeline."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
@@ -923,7 +924,7 @@ def test_get_folder_poster_type_returns_festival_for_venue_kind():
 
 def test_get_folder_poster_type_returns_festival_for_location_kind():
     """place_kind='location' still routes through the festival poster pipeline."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
@@ -934,7 +935,7 @@ def test_get_folder_poster_type_returns_festival_for_location_kind():
 
 def test_get_folder_poster_type_returns_artist_for_artist_fallback():
     """place_kind='artist' overrides the layout's place segment to 'artist' poster type."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
@@ -969,7 +970,7 @@ def test_priority_chain_year_returns_year_chain():
 
 def test_album_poster_hero_text_uses_mf_place(tmp_path):
     """Album poster hero/festival slot equals mf.place, regardless of place_kind."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
@@ -992,7 +993,7 @@ def test_album_poster_hero_text_uses_mf_place(tmp_path):
 
 def test_album_poster_color_lookup_uses_canonical_place(tmp_path):
     """Brand color lookup keys on mf.place, not mf.festival."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(
         {
@@ -1044,7 +1045,7 @@ def test_set_poster_subline_skipped_when_venue_is_place(tmp_path):
 
 def test_album_poster_config_priority_defaults():
     """Default poster settings have correct priority chains."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     ps = config.poster_settings
@@ -1055,7 +1056,7 @@ def test_album_poster_config_priority_defaults():
 
 def test_album_poster_execute_uses_layout_based_type(tmp_path):
     """Execute uses layout template to determine poster type, not folder scanning."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     # artist_flat layout — should always be "artist" type regardless of folder contents
     config = Config(DEFAULT_CONFIG)
@@ -1086,7 +1087,7 @@ def test_album_poster_execute_uses_layout_based_type(tmp_path):
 
 def test_album_poster_execute_festival_layout_no_hero_text(tmp_path):
     """Festival layout poster should NOT have hero_text (artist name)."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
@@ -1113,7 +1114,7 @@ def test_album_poster_execute_festival_layout_no_hero_text(tmp_path):
 
 def test_album_poster_warms_caches_for_unused_sources(tmp_path):
     """Album poster warms fanart_tv and DJ artwork caches even for festival layout."""
-    from festival_organizer.config import Config, DEFAULT_CONFIG
+    from festival_organizer.config import DEFAULT_CONFIG, Config
 
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
@@ -1663,8 +1664,9 @@ def test_logo_summary_scans_places_dir(tmp_path):
 
 def test_download_artwork_max_width_resizes(tmp_path):
     """Downloaded artwork wider than max_width is resized down."""
-    from PIL import Image
     import io
+
+    from PIL import Image
 
     # Create an 800x800 test image
     img = Image.new("RGB", (800, 800), color="red")
@@ -1693,8 +1695,9 @@ def test_download_artwork_max_width_resizes(tmp_path):
 
 def test_download_artwork_no_max_width_keeps_original(tmp_path):
     """Without max_width, artwork is saved at original size."""
-    from PIL import Image
     import io
+
+    from PIL import Image
 
     img = Image.new("RGB", (800, 800), color="red")
     buf = io.BytesIO()
@@ -1719,8 +1722,9 @@ def test_download_artwork_no_max_width_keeps_original(tmp_path):
 
 def test_download_artwork_uses_global_cache(tmp_path):
     """Downloaded artwork is cached under the user cache_dir(), not library root."""
-    from PIL import Image
     import io
+
+    from PIL import Image
 
     img = Image.new("RGB", (100, 100), color="blue")
     buf = io.BytesIO()
@@ -1754,8 +1758,9 @@ def test_download_artwork_uses_global_cache(tmp_path):
 
 def test_download_dj_artwork_saves_as_jpeg_in_artist_dir(tmp_path):
     """DJ artwork is saved as dj-artwork.jpg in the artist's directory."""
-    from PIL import Image
     import io
+
+    from PIL import Image
 
     img = Image.new("RGB", (800, 800), color="red")
     buf = io.BytesIO()
@@ -1787,8 +1792,9 @@ def test_download_dj_artwork_saves_as_jpeg_in_artist_dir(tmp_path):
 
 def test_download_dj_artwork_crops_and_resizes(tmp_path):
     """DJ artwork is center-cropped to square and resized to 550px max."""
-    from PIL import Image
     import io
+
+    from PIL import Image
 
     img = Image.new("RGB", (1200, 800), color="blue")
     buf = io.BytesIO()
@@ -1951,7 +1957,7 @@ def test_cover_op_not_needed_for_non_matroska_suffix(tmp_path):
 
 
 def test_cover_op_execute_converges_and_stamps(tmp_path):
-    from festival_organizer.poster import read_poster_stamp, build_cover_stamp
+    from festival_organizer.poster import build_cover_stamp, read_poster_stamp
 
     video = tmp_path / "t.mkv"
     video.write_bytes(b"")

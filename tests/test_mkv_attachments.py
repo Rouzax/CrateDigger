@@ -1,5 +1,6 @@
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from festival_organizer import mkv_attachments as att
 
 

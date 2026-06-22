@@ -1,4 +1,4 @@
-from festival_organizer.config import Config, DEFAULT_CONFIG
+from festival_organizer.config import DEFAULT_CONFIG, Config
 
 
 def test_email_defaults_disabled():

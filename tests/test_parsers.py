@@ -1,11 +1,11 @@
 from pathlib import Path
+
+from festival_organizer.config import Config
 from festival_organizer.parsers import (
     parse_filename,
     parse_parent_dirs,
 )
-from festival_organizer.config import Config
 from tests.conftest import TEST_CONFIG
-
 
 CFG = Config(TEST_CONFIG)
 

@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from festival_organizer.tracklists.api import _parse_tracks
 
 FIXTURE = Path(__file__).parent / "fixtures" / "afrojack_edc_2025.html"

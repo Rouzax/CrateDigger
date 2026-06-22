@@ -3,8 +3,9 @@ r"""Integration test: dry-run against the real \\hyperv\Data\Concerts collection
 Skip if the network share is not accessible.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify

@@ -4,12 +4,12 @@ import re
 from pathlib import Path
 
 from festival_organizer.normalization import (
-    extract_youtube_id,
-    strip_scene_tags,
-    strip_noise_words,
     UNICODE_SLASHES,
-    normalize_pipes,
+    extract_youtube_id,
     normalize_colons,
+    normalize_pipes,
+    strip_noise_words,
+    strip_scene_tags,
 )
 
 

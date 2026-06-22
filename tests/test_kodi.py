@@ -7,9 +7,9 @@ import pytest
 from festival_organizer.kodi import (
     KodiClient,
     KodiError,
-    sync_library,
     _infer_path_mapping,
     _translate_path,
+    sync_library,
 )
 
 

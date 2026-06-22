@@ -6,7 +6,7 @@ from pathlib import Path
 from rich.console import Console
 
 from festival_organizer.operations import OperationResult
-from festival_organizer.progress import _enrich_detail, _enrich_badge
+from festival_organizer.progress import _enrich_badge, _enrich_detail
 
 
 def _console():

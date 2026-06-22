@@ -2,10 +2,10 @@ from pathlib import Path
 
 from festival_organizer.notify.models import (
     EmailSet,
-    UpdateInfo,
-    RunReport,
     RenderedEmail,
+    RunReport,
     SMTPSettings,
+    UpdateInfo,
 )
 
 

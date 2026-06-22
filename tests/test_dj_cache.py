@@ -1,8 +1,7 @@
 """Tests for DJ cache and DJ profile parsing."""
 
-from festival_organizer.tracklists.dj_cache import DjCache
 from festival_organizer.tracklists.api import _parse_dj_profile
-
+from festival_organizer.tracklists.dj_cache import DjCache
 
 # -- DjCache tests --
 

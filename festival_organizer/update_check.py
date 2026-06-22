@@ -7,7 +7,6 @@ Keep in sync when editing. Only PACKAGE_NAME, ENV_VAR, and REPO_URL differ.
 from __future__ import annotations
 
 import importlib.metadata
-from importlib.metadata import version
 import json
 import logging
 import os
@@ -15,6 +14,7 @@ import re
 import sys
 import tempfile
 import time
+from importlib.metadata import version
 from pathlib import Path
 from urllib.request import Request, urlopen
 
@@ -274,7 +274,7 @@ def refresh_update_cache(force: bool = False) -> None:
         logger.debug("update_check.refresh: status=failed", exc_info=True)
 
 
-def get_cached_update_status() -> "UpdateInfo":
+def get_cached_update_status() -> UpdateInfo:
     """Build an UpdateInfo from the installed version and the cached latest version.
 
     Reads only the on-disk update-check cache; performs no network I/O. `latest`

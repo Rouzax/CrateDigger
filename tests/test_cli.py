@@ -1,17 +1,16 @@
 import io
 import logging
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-
 from rich.console import Console
 
 from festival_organizer.cli import (
-    run,
     _analyse_parallel,
     _run_kodi_sync,
     resolve_action,
+    run,
 )
 from festival_organizer.config import Config
 from festival_organizer.operations import OperationResult
@@ -396,7 +395,8 @@ def _make_test_console() -> tuple[Console, io.StringIO]:
 
 
 def test_run_check_impl_all_pass(monkeypatch, tmp_path):
-    from festival_organizer import cli as cli_mod, metadata
+    from festival_organizer import cli as cli_mod
+    from festival_organizer import metadata
 
     # Patch tool paths to non-None values
     for attr in (
@@ -477,7 +477,8 @@ def test_run_check_impl_all_pass(monkeypatch, tmp_path):
 
 
 def test_run_check_impl_required_tool_missing_exits_one(monkeypatch, tmp_path):
-    from festival_organizer import cli as cli_mod, metadata
+    from festival_organizer import cli as cli_mod
+    from festival_organizer import metadata
 
     # All tool paths None (missing)
     for attr in (
@@ -517,7 +518,8 @@ def test_run_check_impl_required_tool_missing_exits_one(monkeypatch, tmp_path):
 
 
 def test_run_check_impl_shows_all_section_headers(monkeypatch, tmp_path):
-    from festival_organizer import cli as cli_mod, metadata
+    from festival_organizer import cli as cli_mod
+    from festival_organizer import metadata
 
     for attr in (
         "FFPROBE_PATH",
@@ -624,8 +626,9 @@ def test_run_kodi_sync_album_poster_expands_to_folder_siblings(tmp_path):
 
 def test_config_option_help_mentions_toml():
     """The --config flag's help string must reference config.toml, not config.json."""
-    from festival_organizer.cli import app
     from typer.testing import CliRunner
+
+    from festival_organizer.cli import app
 
     runner = CliRunner()
     result = runner.invoke(app, ["organize", "--help"])
@@ -637,7 +640,9 @@ def test_config_option_help_mentions_toml():
 def test_version_prints_version_then_latest(monkeypatch, tmp_path):
     """When installed == latest, output ends with '(latest)'."""
     from importlib.metadata import version
+
     from typer.testing import CliRunner
+
     from festival_organizer import cli, paths, update_check
 
     installed = version("cratedigger")
@@ -655,7 +660,9 @@ def test_version_prints_version_then_latest(monkeypatch, tmp_path):
 def test_version_prints_stale_notice(monkeypatch, tmp_path):
     """When a newer release exists, the stale 2-line notice prints."""
     from importlib.metadata import version
+
     from typer.testing import CliRunner
+
     from festival_organizer import cli, paths, update_check
 
     installed = version("cratedigger")
@@ -669,15 +676,15 @@ def test_version_prints_stale_notice(monkeypatch, tmp_path):
     result = runner.invoke(cli.app, ["--version"])
     assert result.exit_code == 0
     assert f"cratedigger {installed}" in result.stdout
-    assert (
-        f"newer version is available" in result.stdout or f"{bumped}" in result.stdout
-    )
+    assert "newer version is available" in result.stdout or f"{bumped}" in result.stdout
 
 
 def test_version_silent_on_fetch_failure(monkeypatch, tmp_path):
     """Fetch returning None yields just the version line, no exception."""
     from importlib.metadata import version
+
     from typer.testing import CliRunner
+
     from festival_organizer import cli, paths, update_check
 
     installed = version("cratedigger")
@@ -696,6 +703,7 @@ def test_version_silent_on_fetch_failure(monkeypatch, tmp_path):
 def test_version_honours_env_var_suppression(monkeypatch, tmp_path):
     """CRATEDIGGER_NO_UPDATE_CHECK=1 skips the network call entirely."""
     from typer.testing import CliRunner
+
     from festival_organizer import cli, paths, update_check
 
     fetch_calls = []
@@ -716,8 +724,8 @@ def test_version_honours_env_var_suppression(monkeypatch, tmp_path):
 def test_check_attaches_file_handler(monkeypatch, tmp_path):
     """--check must populate the per-command log with at least one DEBUG record."""
     from typer.testing import CliRunner
-    from festival_organizer import cli, paths
-    from festival_organizer import update_check
+
+    from festival_organizer import cli, paths, update_check
 
     monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
     monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
@@ -742,6 +750,7 @@ def test_check_attaches_file_handler(monkeypatch, tmp_path):
 def test_version_attaches_file_handler(monkeypatch, tmp_path):
     """--version must also populate the per-command log."""
     from typer.testing import CliRunner
+
     from festival_organizer import cli, paths, update_check
 
     monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
@@ -766,7 +775,9 @@ def test_version_attaches_file_handler(monkeypatch, tmp_path):
 def test_check_update_status_row_current(monkeypatch, tmp_path):
     """Update status: current installed version returns (latest)."""
     from importlib.metadata import version
+
     from typer.testing import CliRunner
+
     from festival_organizer import cli, paths, update_check
 
     monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
@@ -783,7 +794,9 @@ def test_check_update_status_row_current(monkeypatch, tmp_path):
 def test_check_update_status_row_stale(monkeypatch, tmp_path):
     """Update status: newer release available counts as a warning."""
     from importlib.metadata import version
+
     from typer.testing import CliRunner
+
     from festival_organizer import cli, paths, update_check
 
     monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
@@ -804,6 +817,7 @@ def test_check_update_status_row_stale(monkeypatch, tmp_path):
 def test_check_update_status_row_suppressed(monkeypatch, tmp_path):
     """Update status: env var suppression shows informational ~ line."""
     from typer.testing import CliRunner
+
     from festival_organizer import cli, paths
 
     monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
@@ -820,7 +834,9 @@ def test_check_clean_install_reports_all_passed(monkeypatch, tmp_path):
     artists.json/artist_mbids.json, and 1001TL credentials configured should
     report 'All checks passed.', not warning about optional items."""
     from importlib.metadata import version
+
     from typer.testing import CliRunner
+
     from festival_organizer import cli, metadata, paths, update_check
 
     # Required tools all present

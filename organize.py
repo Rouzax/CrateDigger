@@ -9,6 +9,7 @@ Usage:
 """
 
 import sys
+
 from festival_organizer.cli import run
 
 sys.exit(run())

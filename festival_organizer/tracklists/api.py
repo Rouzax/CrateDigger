@@ -32,15 +32,15 @@ import random
 import re
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable
 
 import requests
 
 from festival_organizer import paths
-from festival_organizer.tracklists.scoring import SearchResult
 from festival_organizer.tracklists import canary
+from festival_organizer.tracklists.scoring import SearchResult
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +153,7 @@ def _parse_tracks(html) -> list["Track"]:
     row's cue_seconds input (float seconds * 1000).
     """
     from bs4 import BeautifulSoup
+
     from festival_organizer.normalization import fix_mojibake, normalize_genre
 
     soup = _to_soup(html)

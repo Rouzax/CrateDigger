@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 from festival_organizer.tracklists.dj_cache import DjCache
 
 

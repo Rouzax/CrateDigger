@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from festival_organizer.config import Config, DEFAULT_CONFIG, load_config
+from festival_organizer.config import DEFAULT_CONFIG, Config, load_config
 from festival_organizer.models import MediaFile
 from tests.conftest import TEST_CONFIG
 
@@ -666,6 +666,7 @@ def test_invert_alias_map_invalid_value_type_skipped():
 def test_invert_alias_map_circular_flat_warns(caplog):
     """Circular flat aliases should log a warning."""
     import logging
+
     from festival_organizer.config import _invert_alias_map
 
     with caplog.at_level(logging.WARNING):

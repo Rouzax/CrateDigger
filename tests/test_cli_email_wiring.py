@@ -3,8 +3,8 @@ from festival_organizer import cli as cli_mod
 
 
 def test_chapter_counter_and_analyse_imports_exist():
-    from festival_organizer.tracklists.chapters import extract_existing_chapters
     from festival_organizer.analyzer import analyse_file
+    from festival_organizer.tracklists.chapters import extract_existing_chapters
 
     assert callable(extract_existing_chapters)
     assert callable(analyse_file)

@@ -3,8 +3,9 @@
 import os
 import time
 from pathlib import Path
-from festival_organizer.operations import FanartOperation
+
 from festival_organizer.config import Config
+from festival_organizer.operations import FanartOperation
 
 
 def _touch(path: Path, age_days: float) -> None:

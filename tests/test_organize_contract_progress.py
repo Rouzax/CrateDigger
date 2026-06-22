@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from rich.console import Console
 
-from festival_organizer.operations import OrganizeOperation, OperationResult
+from festival_organizer.operations import OperationResult, OrganizeOperation
 from festival_organizer.progress import OrganizeContractProgress
 
 

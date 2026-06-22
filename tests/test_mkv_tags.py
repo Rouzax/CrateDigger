@@ -433,8 +433,8 @@ def test_merge_tags_fold_does_not_touch_chapter_scoped_blocks():
 
 def test_has_chapter_tags_returns_false_when_no_tags(tmp_path, monkeypatch):
     """File with no tags at all: extract_all_tags returns None → False."""
-    from festival_organizer.mkv_tags import has_chapter_tags
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_chapter_tags
 
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: None)
     assert has_chapter_tags(tmp_path / "x.mkv") is False
@@ -443,8 +443,9 @@ def test_has_chapter_tags_returns_false_when_no_tags(tmp_path, monkeypatch):
 def test_has_chapter_tags_returns_false_when_only_global(monkeypatch):
     """File with only TTV=50 and TTV=70 blocks: False."""
     import xml.etree.ElementTree as ET
-    from festival_organizer.mkv_tags import has_chapter_tags
+
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_chapter_tags
 
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
@@ -461,8 +462,9 @@ def test_has_chapter_tags_returns_false_when_only_global(monkeypatch):
 def test_has_chapter_tags_returns_true_when_performer_names_present(monkeypatch):
     """TTV=30 block carrying CRATEDIGGER_TRACK_PERFORMER_NAMES: True (current contract)."""
     import xml.etree.ElementTree as ET
-    from festival_organizer.mkv_tags import has_chapter_tags
+
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_chapter_tags
 
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
@@ -481,8 +483,9 @@ def test_has_chapter_tags_returns_false_when_ttv30_lacks_performer_names(monkeyp
     """Legacy file carrying only the pre-rename unprefixed PERFORMER_NAMES:
     False, so identify self-heals on next run and switches to the prefixed name."""
     import xml.etree.ElementTree as ET
-    from festival_organizer.mkv_tags import has_chapter_tags
+
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_chapter_tags
 
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
@@ -498,8 +501,9 @@ def test_has_chapter_tags_returns_false_when_ttv30_lacks_performer_names(monkeyp
 def test_has_chapter_tags_ignores_targets_without_ttv(monkeypatch):
     """<Targets/> empty block (defaults to TTV=50 semantically): not a chapter tag."""
     import xml.etree.ElementTree as ET
-    from festival_organizer.mkv_tags import has_chapter_tags
+
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_chapter_tags
 
     xml = """<Tags>
 <Tag><Targets/><Simple><Name>ARTIST</Name><String>x</String></Simple></Tag>
@@ -512,8 +516,8 @@ def test_has_chapter_tags_ignores_targets_without_ttv(monkeypatch):
 
 def test_has_album_artist_display_tags_false_when_no_tags(tmp_path, monkeypatch):
     """File with no tags at all: extract_all_tags returns None → False."""
-    from festival_organizer.mkv_tags import has_album_artist_display_tags
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_album_artist_display_tags
 
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: None)
     assert has_album_artist_display_tags(tmp_path / "x.mkv") is False
@@ -522,8 +526,9 @@ def test_has_album_artist_display_tags_false_when_no_tags(tmp_path, monkeypatch)
 def test_has_album_artist_display_tags_false_for_legacy_only_artists(monkeypatch):
     """Pre-0.12.4 file with only CRATEDIGGER_1001TL_ARTISTS: self-heal needed."""
     import xml.etree.ElementTree as ET
-    from festival_organizer.mkv_tags import has_album_artist_display_tags
+
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_album_artist_display_tags
 
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>70</TargetTypeValue></Targets>
@@ -538,8 +543,9 @@ def test_has_album_artist_display_tags_false_for_legacy_only_artists(monkeypatch
 def test_has_album_artist_display_tags_true_when_display_present(monkeypatch):
     """Current contract (0.12.4+): _DISPLAY present at TTV=70 global → True."""
     import xml.etree.ElementTree as ET
-    from festival_organizer.mkv_tags import has_album_artist_display_tags
+
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_album_artist_display_tags
 
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>70</TargetTypeValue></Targets>
@@ -557,8 +563,9 @@ def test_has_album_artist_display_tags_ignores_chapter_scoped_name(monkeypatch):
     """A TTV=30 chapter block that happens to mention the album name must not
     count as album-level coverage."""
     import xml.etree.ElementTree as ET
-    from festival_organizer.mkv_tags import has_album_artist_display_tags
+
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_album_artist_display_tags
 
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
@@ -573,8 +580,9 @@ def test_has_album_artist_display_tags_ignores_chapter_scoped_name(monkeypatch):
 def test_has_legacy_chapter_title_true_when_unprefixed_title(monkeypatch):
     """TTV=30 block with bare TITLE (pre-0.19.6): True, triggers self-heal."""
     import xml.etree.ElementTree as ET
-    from festival_organizer.mkv_tags import has_legacy_chapter_title
+
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_legacy_chapter_title
 
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
@@ -590,8 +598,9 @@ def test_has_legacy_chapter_title_true_when_unprefixed_title(monkeypatch):
 def test_has_legacy_chapter_title_false_when_prefixed(monkeypatch):
     """TTV=30 block with CRATEDIGGER_TRACK_TITLE (current contract): False."""
     import xml.etree.ElementTree as ET
-    from festival_organizer.mkv_tags import has_legacy_chapter_title
+
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_legacy_chapter_title
 
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
@@ -606,8 +615,8 @@ def test_has_legacy_chapter_title_false_when_prefixed(monkeypatch):
 
 def test_has_legacy_chapter_title_false_when_no_chapter_tags(tmp_path, monkeypatch):
     """No TTV=30 blocks at all: False (nothing to self-heal)."""
-    from festival_organizer.mkv_tags import has_legacy_chapter_title
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_legacy_chapter_title
 
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: None)
     assert has_legacy_chapter_title(tmp_path / "x.mkv") is False
@@ -616,8 +625,9 @@ def test_has_legacy_chapter_title_false_when_no_chapter_tags(tmp_path, monkeypat
 def test_has_legacy_chapter_title_ignores_ttv50_title(monkeypatch):
     """TITLE at TTV=50 (file-level) is not a legacy chapter title."""
     import xml.etree.ElementTree as ET
-    from festival_organizer.mkv_tags import has_legacy_chapter_title
+
     import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import has_legacy_chapter_title
 
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
@@ -799,7 +809,8 @@ def test_merge_tags_updates_targetless_block_in_place():
 def test_write_merged_tags_logs_diff_counts(tmp_path, caplog):
     """write_merged_tags emits a DEBUG summary of +added -removed ~changed."""
     import logging
-    from festival_organizer.mkv_tags import write_merged_tags, CLEAR_TAG
+
+    from festival_organizer.mkv_tags import CLEAR_TAG, write_merged_tags
 
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
@@ -841,6 +852,7 @@ def test_write_merged_tags_logs_diff_counts(tmp_path, caplog):
 def test_write_merged_tags_skips_debug_when_no_changes(tmp_path, caplog):
     """No-op merges emit no tag-diff DEBUG line."""
     import logging
+
     from festival_organizer.mkv_tags import write_merged_tags
 
     video = tmp_path / "test.mkv"

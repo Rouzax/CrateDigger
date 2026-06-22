@@ -2,14 +2,13 @@
 
 from festival_organizer.tracklists.scoring import (
     AliasGroup,
-    parse_query,
-    score_results,
-    remove_diacritics,
-    get_abbreviation,
-    SearchResult,
     QueryParts,
+    SearchResult,
+    get_abbreviation,
+    parse_query,
+    remove_diacritics,
+    score_results,
 )
-
 
 # --- remove_diacritics ---
 
@@ -655,8 +654,8 @@ def test_filter_with_alias_group_event_context():
 def test_auto_select_threshold_separates_good_from_bad():
     """Auto-select requires both minimum score AND minimum gap to #2."""
     from festival_organizer.tracklists.cli_handler import (
-        AUTO_SELECT_MIN_SCORE,
         AUTO_SELECT_MIN_GAP,
+        AUTO_SELECT_MIN_SCORE,
     )
 
     strong = SearchResult(

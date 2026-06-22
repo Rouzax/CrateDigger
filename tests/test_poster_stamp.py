@@ -1,9 +1,10 @@
 from PIL import Image
+
 from festival_organizer.poster import (
     COVER_POSTER_VERSION,
     build_cover_stamp,
-    read_poster_stamp,
     inject_poster_stamp,
+    read_poster_stamp,
 )
 
 

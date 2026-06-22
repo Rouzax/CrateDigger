@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
+
 from festival_organizer.embed_tags import embed_tags
 from festival_organizer.models import MediaFile
 from tests.conftest import make_mediafile

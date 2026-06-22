@@ -1,7 +1,8 @@
 import tempfile
 from pathlib import Path
+
+from festival_organizer.config import DEFAULT_CONFIG, Config
 from festival_organizer.scanner import scan_folder
-from festival_organizer.config import Config, DEFAULT_CONFIG
 
 CFG = Config(DEFAULT_CONFIG)
 

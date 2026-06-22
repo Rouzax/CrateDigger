@@ -1,6 +1,8 @@
 from pathlib import Path
 from unittest.mock import patch
+
 from PIL import Image
+
 from festival_organizer import cover_embed
 
 

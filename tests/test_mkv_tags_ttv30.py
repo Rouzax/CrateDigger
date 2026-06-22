@@ -1,6 +1,7 @@
 """Per-chapter (TTV=30) tag merging."""
 
 import xml.etree.ElementTree as ET
+
 from festival_organizer.mkv_tags import merge_tags
 
 

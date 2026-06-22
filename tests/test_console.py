@@ -343,8 +343,9 @@ def test_identify_summary_panel_includes_elapsed():
         unmatched=[],
         elapsed_s=83.2,
     )
-    from rich.console import Console
     import io
+
+    from rich.console import Console
 
     buf = io.StringIO()
     Console(file=buf, no_color=True, width=120).print(panel)
@@ -367,8 +368,9 @@ def test_identify_summary_panel_omits_elapsed_when_none():
         },
         tagged_count=0,
     )
-    from rich.console import Console
     import io
+
+    from rich.console import Console
 
     buf = io.StringIO()
     Console(file=buf, no_color=True, width=120).print(panel)

@@ -58,7 +58,7 @@ def setup_logging(
     debug: bool = False,
     console: Console | None = None,
     command: str = "",
-) -> "os.PathLike[str] | None":
+) -> os.PathLike[str] | None:
     """Configure the festival_organizer logger.
 
     Call once at CLI startup. All modules use logging.getLogger(__name__).

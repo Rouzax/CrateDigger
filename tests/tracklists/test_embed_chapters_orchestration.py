@@ -1,13 +1,14 @@
 """Orchestration tests: embed_chapters builds per-chapter tag map and canonical names."""
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from festival_organizer.mkv_tags import CLEAR_TAG
+from festival_organizer.tracklists.api import Track
 from festival_organizer.tracklists.chapters import (
     Chapter,
     _build_chapter_tags_map,
     embed_chapters,
 )
-from festival_organizer.tracklists.api import Track
 from festival_organizer.tracklists.dj_cache import DjCache
 
 

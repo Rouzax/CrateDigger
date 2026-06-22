@@ -4,7 +4,7 @@ These tests verify observable behaviour (the ops list passed to
 run_pipeline) rather than internal dispatch details.
 """
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from festival_organizer.cli import run
 from festival_organizer.operations import (

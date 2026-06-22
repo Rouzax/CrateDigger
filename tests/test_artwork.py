@@ -1,9 +1,11 @@
 import logging
 import subprocess as subprocess_mod
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from PIL import Image as _Image
-from festival_organizer.artwork import extract_cover, _extract_mkvattachment
+
+from festival_organizer.artwork import _extract_mkvattachment, extract_cover
 from festival_organizer.metadata import find_tool
 
 

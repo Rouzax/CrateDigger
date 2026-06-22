@@ -310,7 +310,7 @@ class StepProgress:
             self.live.__exit__(None, None, None)
             self.live = None
 
-    def __enter__(self) -> "StepProgress":
+    def __enter__(self) -> StepProgress:
         self.start()
         return self
 

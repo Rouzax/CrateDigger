@@ -1,12 +1,14 @@
 """Tests for tracklist query building."""
 
 from pathlib import Path
+
 import pytest
+
 from festival_organizer.tracklists.query import (
     build_search_query,
     detect_tracklist_source,
-    extract_tracklist_id,
     expand_aliases_in_query,
+    extract_tracklist_id,
 )
 
 

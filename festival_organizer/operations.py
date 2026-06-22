@@ -13,12 +13,12 @@ from pathlib import Path
 import requests
 
 from festival_organizer import paths
-from festival_organizer.paths import same_library_path
 from festival_organizer.cache_maintenance import cache_dj_artwork
 from festival_organizer.cache_ttl import hashed_jitter_factor
 from festival_organizer.config import Config
 from festival_organizer.fanart import lookup_mbid
 from festival_organizer.models import MediaFile
+from festival_organizer.paths import same_library_path
 
 logger = logging.getLogger(__name__)
 
@@ -643,8 +643,8 @@ class AlbumPosterOperation(Operation):
             return None
 
         # Check if this is a single-artist folder by scanning filenames
-        from festival_organizer.parsers import parse_filename
         from festival_organizer.normalization import normalise_name
+        from festival_organizer.parsers import parse_filename
 
         artists_in_folder: set[str] = set()
         for video in folder.iterdir():
@@ -823,11 +823,11 @@ class AlbumPosterOperation(Operation):
                 )
                 return None
 
+            from festival_organizer.tracklists import canary
             from festival_organizer.tracklists.api import (
                 TracklistSession,
                 _extract_dj_slugs,
             )
-            from festival_organizer.tracklists import canary
 
             api = TracklistSession()
             api.login(email, password)
@@ -1122,10 +1122,10 @@ class FanartOperation(Operation):
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.fanart import (
             download_artist_images,
-            lookup_mbid,
             fetch_artist_images,
-            pick_best_logo,
+            lookup_mbid,
             pick_best_background,
+            pick_best_logo,
         )
 
         fetched = []

@@ -1,4 +1,5 @@
 import logging
+
 from festival_organizer.poster import get_dominant_color_from_thumbs
 
 

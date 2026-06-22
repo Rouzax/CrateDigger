@@ -846,9 +846,7 @@ def test_full_pipeline_enrich_idempotent(tmp_path):
 
     assert tags1 == tags2, (
         "second enrich changed MKV tags. Likely a duplicate-append or "
-        "non-deterministic write. First tags bytes len={}, second={}".format(
-            len(tags1), len(tags2)
-        )
+        f"non-deterministic write. First tags bytes len={len(tags1)}, second={len(tags2)}"
     )
 
 

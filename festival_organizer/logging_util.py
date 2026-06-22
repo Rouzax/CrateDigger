@@ -9,7 +9,6 @@ from rich.text import Text
 from festival_organizer.console import escape, make_console
 from festival_organizer.models import FileAction
 
-
 CSV_FIELDS = [
     "status",
     "source",

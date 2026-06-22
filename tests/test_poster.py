@@ -8,27 +8,26 @@ from PIL import Image
 
 from festival_organizer.fonts import get_font_path
 from festival_organizer.poster import (
-    split_artist,
-    _resolve_artist_lines,
+    LINE_Y,
+    POSTER_H,
+    POSTER_W,
     _balanced_word_split,
-    _word_wrap_lines,
-    get_accent_color,
-    auto_fit,
-    format_date_display,
-    generate_set_poster,
-    generate_album_poster,
+    _darken_for_white_text,
+    _extract_logo_color,
     _filter_venue_parts,
     _hex_to_rgb,
-    _extract_logo_color,
-    _neutral_base_from_luminance,
     _make_year_badge,
-    _darken_for_white_text,
+    _neutral_base_from_luminance,
+    _resolve_artist_lines,
     _wcag_contrast,
-    POSTER_W,
-    POSTER_H,
-    LINE_Y,
+    _word_wrap_lines,
+    auto_fit,
+    format_date_display,
+    generate_album_poster,
+    generate_set_poster,
+    get_accent_color,
+    split_artist,
 )
-
 
 # --- split_artist tests ---
 
@@ -774,8 +773,9 @@ def test_set_poster_hero_has_no_accent_stroke(tmp_path):
 
 def test_draw_centered_accepts_stroke_params():
     """_draw_centered renders text with stroke without error."""
-    from festival_organizer.poster import _draw_centered, POSTER_W, POSTER_H, get_font
     from PIL import Image, ImageDraw
+
+    from festival_organizer.poster import POSTER_H, POSTER_W, _draw_centered, get_font
 
     bg = Image.new("RGB", (POSTER_W, POSTER_H), (0, 0, 0))
     draw = ImageDraw.Draw(bg)
@@ -791,6 +791,7 @@ def test_draw_centered_accepts_stroke_params():
 
 def test_generate_set_poster_accepts_artists_1001tl_kwarg(tmp_path):
     from PIL import Image
+
     from festival_organizer.poster import generate_set_poster
 
     src = tmp_path / "thumb.jpg"

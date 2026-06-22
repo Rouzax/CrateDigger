@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from festival_organizer.classifier import classify
 from festival_organizer.config import Config
 from festival_organizer.models import MediaFile

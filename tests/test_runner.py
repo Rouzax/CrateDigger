@@ -4,8 +4,8 @@ from pathlib import Path
 from rich.console import Console
 
 from festival_organizer.models import MediaFile
-from festival_organizer.progress import ProgressPrinter
 from festival_organizer.operations import Operation, OperationResult
+from festival_organizer.progress import ProgressPrinter
 from festival_organizer.runner import run_pipeline
 
 

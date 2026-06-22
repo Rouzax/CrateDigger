@@ -3,26 +3,26 @@
 import logging
 import subprocess as subprocess_mod
 import xml.etree.ElementTree as ET
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from festival_organizer.tracklists.chapters import (
-    normalize_timestamp,
-    _timestamp_to_seconds,
-    _ms_to_timestamp,
-    parse_tracklist_lines,
-    build_chapter_xml,
-    build_1001tl_tags,
-    chapters_are_identical,
-    extract_existing_chapters,
-    embed_chapters,
-    trim_chapters_to_duration,
-    supplement_chapters_from_tracks,
-    Chapter,
-)
-from festival_organizer.tracklists.api import Track
-from festival_organizer.mkv_tags import CLEAR_TAG
 import pytest
 
+from festival_organizer.mkv_tags import CLEAR_TAG
+from festival_organizer.tracklists.api import Track
+from festival_organizer.tracklists.chapters import (
+    Chapter,
+    _ms_to_timestamp,
+    _timestamp_to_seconds,
+    build_1001tl_tags,
+    build_chapter_xml,
+    chapters_are_identical,
+    embed_chapters,
+    extract_existing_chapters,
+    normalize_timestamp,
+    parse_tracklist_lines,
+    supplement_chapters_from_tracks,
+    trim_chapters_to_duration,
+)
 
 # --- normalize_timestamp ---
 
@@ -542,6 +542,7 @@ def test_build_chapter_xml_return_uids_tuple_shape():
 def test_build_chapter_xml_uids_match_xml():
     """The returned UIDs are the same ones embedded in the generated XML."""
     import xml.etree.ElementTree as ET
+
     from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
 
     chapters = [

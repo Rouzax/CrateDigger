@@ -30,10 +30,9 @@ from rich.console import Console
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import Config
-from festival_organizer.log import _file_var
 from festival_organizer.console import (
-    StepProgress,
     VERDICT_BADGE_WIDTH,
+    StepProgress,
     escape,
     header_panel,
     identify_summary_panel,
@@ -42,40 +41,40 @@ from festival_organizer.console import (
     suppression_enabled,
     verdict,
 )
-from festival_organizer.scanner import scan_folder
-from festival_organizer.tracklists.api import (
-    TracklistSession,
-    TracklistError,
-    AuthenticationError,
-    RateLimitError,
-    ExportError,
-    top_genres_by_frequency,
-)
+from festival_organizer.log import _file_var
 from festival_organizer.mkv_tags import (
     CLEAR_TAG,
     has_album_artist_display_tags,
     has_chapter_tags,
     has_legacy_chapter_title,
 )
-from festival_organizer.tracklists.source_cache import SourceCache
+from festival_organizer.scanner import scan_folder
+from festival_organizer.tracklists.api import (
+    AuthenticationError,
+    ExportError,
+    RateLimitError,
+    TracklistError,
+    TracklistSession,
+    top_genres_by_frequency,
+)
 from festival_organizer.tracklists.chapters import (
     build_1001tl_tags,
-    parse_tracklist_lines,
-    supplement_chapters_from_tracks,
-    extract_existing_chapters,
-    extract_stored_tracklist_info,
     chapters_are_identical,
     embed_chapters,
+    extract_existing_chapters,
+    extract_stored_tracklist_info,
+    parse_tracklist_lines,
+    supplement_chapters_from_tracks,
     trim_chapters_to_duration,
 )
 from festival_organizer.tracklists.query import (
     build_search_query,
     detect_tracklist_source,
-    extract_tracklist_id,
     expand_aliases_in_query,
+    extract_tracklist_id,
 )
 from festival_organizer.tracklists.scoring import parse_query, score_results
-
+from festival_organizer.tracklists.source_cache import SourceCache
 
 logger = logging.getLogger(__name__)
 

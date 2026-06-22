@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from festival_organizer.frame_sampler import _HAS_CV2, sample_best_frame
-
 
 pytestmark = pytest.mark.skipif(not _HAS_CV2, reason="cv2/numpy not installed")
 

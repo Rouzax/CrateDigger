@@ -6,49 +6,49 @@ import logging
 import sys
 import time
 import types
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Callable, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 if TYPE_CHECKING:
     from rich.console import Console
+
     from festival_organizer.config import Config
     from festival_organizer.models import MediaFile
 
 import typer
 
-from festival_organizer import paths
+from festival_organizer import metadata, paths
 from festival_organizer.analyzer import analyse_file
 from festival_organizer.classifier import classify
 from festival_organizer.config import load_config
 from festival_organizer.console import escape, make_console, print_error
 from festival_organizer.library import init_library, resolve_library_root
-from festival_organizer import metadata
 from festival_organizer.log import setup_logging
 from festival_organizer.metadata import configure_tools
 from festival_organizer.operations import (
-    OrganizeOperation,
-    NfoOperation,
-    ArtOperation,
-    FanartOperation,
-    PosterOperation,
-    AlbumPosterOperation,
-    CoverEmbedOperation,
-    TagsOperation,
     AlbumArtistMbidsOperation,
+    AlbumPosterOperation,
+    ArtOperation,
     ChapterArtistMbidsOperation,
+    CoverEmbedOperation,
+    FanartOperation,
+    NfoOperation,
+    OrganizeOperation,
+    PosterOperation,
+    TagsOperation,
 )
 from festival_organizer.progress import (
-    ProgressPrinter,
-    OrganizeContractProgress,
     EnrichContractProgress,
+    OrganizeContractProgress,
     OrganizeEnrichProgress,
+    ProgressPrinter,
 )
 from festival_organizer.runner import run_pipeline
 from festival_organizer.scanner import scan_folder
-from festival_organizer.templates import render_folder, render_filename
-
+from festival_organizer.templates import render_filename, render_folder
 
 logger = logging.getLogger(__name__)
 
@@ -98,12 +98,8 @@ _CD_ASSETS: list[tuple[str, Callable[[], Path], str, str]] = [
 
 RootArg = Annotated[str, typer.Argument(help="File or folder to process")]
 LibraryArg = Annotated[str, typer.Argument(help="Library folder to process")]
-OutputOpt = Annotated[
-    Optional[str], typer.Option("--output", "-o", help="Output folder")
-]
-ConfigOpt = Annotated[
-    Optional[str], typer.Option("--config", help="Path to config.toml")
-]
+OutputOpt = Annotated[str | None, typer.Option("--output", "-o", help="Output folder")]
+ConfigOpt = Annotated[str | None, typer.Option("--config", help="Path to config.toml")]
 QuietOpt = Annotated[
     bool, typer.Option("--quiet", "-q", help="Suppress per-file progress")
 ]
@@ -123,7 +119,7 @@ class Layout(StrEnum):
     place_nested = "place_nested"
 
 
-LayoutOpt = Annotated[Optional[Layout], typer.Option("--layout", help="Folder layout")]
+LayoutOpt = Annotated[Layout | None, typer.Option("--layout", help="Folder layout")]
 
 
 # ---------------------------------------------------------------------------
@@ -139,16 +135,17 @@ app = typer.Typer(
 )
 
 
-def _print_version_with_freshness(console: "Console") -> None:
+def _print_version_with_freshness(console: Console) -> None:
     """Print 'cratedigger X.Y.Z' and an indented freshness annotation.
 
     Always performs a live fetch (force=True) when not env-suppressed, so the
     user gets a definitive answer for the moment they ran --version.
     """
-    from importlib.metadata import version, PackageNotFoundError
+    from importlib.metadata import PackageNotFoundError, version
+
     from festival_organizer.update_check import (
-        _is_suppressed_explicit,
         _is_newer,
+        _is_suppressed_explicit,
         _read_cache,
         _upgrade_command,
         refresh_update_cache,
@@ -202,7 +199,7 @@ def _pick_version_line(output: str) -> str:
     return lines[0] if lines else ""
 
 
-def _run_email_test_impl(con: "Console") -> int:
+def _run_email_test_impl(con: Console) -> int:
     """Send a sample email and report the outcome. Returns a process exit code."""
     from festival_organizer import notify
     from festival_organizer.config import load_config
@@ -220,14 +217,16 @@ def _run_email_test_impl(con: "Console") -> int:
     return 0
 
 
-def _run_check_impl(con: "Console") -> int:
+def _run_check_impl(con: Console) -> int:
     import subprocess
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as pkg_version
+
     from festival_organizer import metadata
     from festival_organizer.config import load_config
-    from festival_organizer.metadata import get_install_hint
     from festival_organizer.frame_sampler import _HAS_CV2
+    from festival_organizer.metadata import get_install_hint
     from festival_organizer.subprocess_utils import tracked_run
-    from importlib.metadata import version as pkg_version, PackageNotFoundError
 
     errors = warnings = 0
 
@@ -345,8 +344,8 @@ def _run_check_impl(con: "Console") -> int:
     con.print("\n[bold]Update status[/bold]")
     from festival_organizer.update_check import (
         PACKAGE_NAME,
-        _is_suppressed_explicit,
         _is_newer,
+        _is_suppressed_explicit,
         _read_cache,
         format_freshness_line,
         refresh_update_cache,
@@ -493,7 +492,7 @@ def _dispatch(command: str, params: dict) -> int:
 def identify(
     root: RootArg,
     tracklist: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--tracklist", "-t", help="Tracklist URL, ID, or query"),
     ] = None,
     auto: Annotated[
@@ -512,7 +511,7 @@ def identify(
         ),
     ] = False,
     delay: Annotated[
-        Optional[int],
+        int | None,
         typer.Option("--delay", help="Delay between files, seconds (default: 5)"),
     ] = None,
     config: ConfigOpt = None,
@@ -520,7 +519,7 @@ def identify(
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
     email: Annotated[
-        Optional[bool],
+        bool | None,
         typer.Option(
             "--email/--no-email",
             help="Force or suppress the updated-sets email for this run (overrides config)",
@@ -567,7 +566,7 @@ def organize(
         bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")
     ] = False,
     email: Annotated[
-        Optional[bool],
+        bool | None,
         typer.Option(
             "--email/--no-email",
             help="Force or suppress the new-sets summary email for this run (overrides config)",
@@ -595,7 +594,7 @@ def enrich(
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
     only: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             "--only",
             help="Comma-separated operations to run (nfo, art, fanart, posters, cover, tags, chapter_artist_mbids, album_artist_mbids)",
@@ -1041,7 +1040,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
 
     # Analyze + classify (parallel)
     if not quiet and not verbose and not debug:
-        from rich.progress import Progress, BarColumn, MofNCompleteColumn, TextColumn
+        from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn
 
         with Progress(
             TextColumn("Analyzing"),
@@ -1093,7 +1092,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     mbid_cache = None
     mbid_overrides = None
     if args.command in ("enrich", "organize"):
-        from festival_organizer.fanart import MBIDCache, ArtistMbidOverrides
+        from festival_organizer.fanart import ArtistMbidOverrides, MBIDCache
 
         mbid_ttl = config.cache_ttl.get("mbid_days", 90)
         mbid_cache = MBIDCache(ttl_days=mbid_ttl)
@@ -1333,11 +1332,11 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # Structural artwork-cache hygiene: keep cache/artists/ canonical every run.
     if args.command == "enrich" or getattr(args, "enrich", False):
         from festival_organizer import paths as _paths
-        from festival_organizer.normalization import folder_slug
         from festival_organizer.cache_maintenance import (
             reconcile_artist_cache,
             warm_artist_cache_from_dj_cache,
         )
+        from festival_organizer.normalization import folder_slug
 
         if dj_cache is not None:
             # Create the canonical per-artist dirs for every cached DJ that has
@@ -1462,11 +1461,11 @@ def _run_kodi_sync(
     all_results: list[list],
     pipeline_files: list[tuple],
     config: Config,
-    console: "Console",
+    console: Console,
     quiet: bool,
     verbose: bool = False,
     debug: bool = False,
-    album_poster_op: "AlbumPosterOperation | None" = None,
+    album_poster_op: AlbumPosterOperation | None = None,
 ) -> None:
     """Notify Kodi to refresh items that had changes affecting Kodi display."""
     from festival_organizer.kodi import KodiClient, sync_library

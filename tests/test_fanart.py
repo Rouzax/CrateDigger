@@ -2,19 +2,18 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from festival_organizer.fanart import (
     MBIDCache,
-    split_artists,
-    pick_best_logo,
-    pick_best_background,
-    lookup_mbid,
     fetch_artist_images,
+    lookup_mbid,
+    pick_best_background,
+    pick_best_logo,
+    split_artists,
 )
-
 
 # --- split_artists tests ---
 
@@ -389,6 +388,7 @@ def test_fetch_artist_images_no_personal_key(mock_get):
 def test_fetch_artist_images_logs_request_exception_retry(mock_get, _sleep, caplog):
     """RequestException retry branch logs DEBUG symmetric with 5xx retry branch."""
     import logging as _logging
+
     import requests as _requests
 
     mock_resp = MagicMock()
@@ -410,8 +410,8 @@ def test_fetch_artist_images_logs_request_exception_retry(mock_get, _sleep, capl
 
 
 def test_fanart_op_not_needed_when_disabled():
-    from festival_organizer.operations import FanartOperation
     from festival_organizer.models import MediaFile
+    from festival_organizer.operations import FanartOperation
 
     config = MagicMock()
     config.fanart_enabled = False
@@ -422,8 +422,8 @@ def test_fanart_op_not_needed_when_disabled():
 
 
 def test_fanart_op_not_needed_when_no_key():
-    from festival_organizer.operations import FanartOperation
     from festival_organizer.models import MediaFile
+    from festival_organizer.operations import FanartOperation
 
     config = MagicMock()
     config.fanart_enabled = True
@@ -434,8 +434,8 @@ def test_fanart_op_not_needed_when_no_key():
 
 
 def test_fanart_op_not_needed_when_images_exist(tmp_path):
-    from festival_organizer.operations import FanartOperation
     from festival_organizer.models import MediaFile
+    from festival_organizer.operations import FanartOperation
 
     config = MagicMock()
     config.fanart_enabled = True
@@ -455,8 +455,8 @@ def test_fanart_op_not_needed_when_images_exist(tmp_path):
 
 
 def test_fanart_op_needed_when_logo_missing(tmp_path):
-    from festival_organizer.operations import FanartOperation
     from festival_organizer.models import MediaFile
+    from festival_organizer.operations import FanartOperation
 
     config = MagicMock()
     config.fanart_enabled = True
@@ -474,8 +474,8 @@ def test_fanart_op_needed_when_logo_missing(tmp_path):
 
 
 def test_fanart_op_deduplicates_artists(tmp_path):
-    from festival_organizer.operations import FanartOperation
     from festival_organizer.models import MediaFile
+    from festival_organizer.operations import FanartOperation
 
     config = MagicMock()
     config.fanart_enabled = True

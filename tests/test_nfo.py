@@ -1,7 +1,8 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from festival_organizer.models import MediaFile
+
 from festival_organizer.config import load_config
+from festival_organizer.models import MediaFile
 from festival_organizer.nfo import generate_nfo, generate_nfo_xml
 from tests.conftest import make_mediafile
 
