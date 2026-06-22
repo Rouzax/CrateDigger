@@ -640,6 +640,24 @@ def test_generate_album_poster_edition_text_layout(tmp_path):
         assert max_brightness > 50, "Edition text not visible below accent line"
 
 
+def test_album_poster_renders_monochrome_background(tmp_path):
+    """A monochrome background image still renders the portrait, so the poster
+    differs pixel-wise from a bare-gradient poster with no background."""
+    bg = tmp_path / "dj-artwork.jpg"
+    Image.new("RGB", (500, 500), (180, 180, 180)).save(bg)
+
+    with_bg = tmp_path / "with_bg.jpg"
+    no_bg = tmp_path / "no_bg.jpg"
+    generate_album_poster(
+        with_bg, "Hardwell", "2025", hero_text="Hardwell", background_image_path=bg
+    )
+    generate_album_poster(no_bg, "Hardwell", "2025", hero_text="Hardwell")
+
+    a = list(Image.open(with_bg).convert("RGB").getdata())
+    b = list(Image.open(no_bg).convert("RGB").getdata())
+    assert a != b
+
+
 def test_generate_album_poster_brand_color_darkened(tmp_path):
     """Bright brand color override is darkened for gradient, not used raw."""
     logo = tmp_path / "logo.png"
