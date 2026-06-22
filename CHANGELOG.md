@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Internal
+
+- Adopted a Python toolchain: ruff (format + lint), pyright (basic), vulture, and pytest coverage, enforced via pre-commit and CI. GitHub Actions are pinned to commit SHAs with least-privilege permissions. No runtime behavior change.
+
 ## [0.28.1] - 2026-06-22
 
 ### Fixed
