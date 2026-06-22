@@ -613,7 +613,9 @@ def compute_chapter_mbid_tags(
         for name in (entry.get("CRATEDIGGER_TRACK_PERFORMER_NAMES") or "").split("|")
         if name
     ]
-    mbid_by_name = dict(zip(all_names, resolve_mbids_aligned(all_names, resolver)))
+    mbid_by_name = dict(
+        zip(all_names, resolve_mbids_aligned(all_names, resolver), strict=True)
+    )
 
     result: dict[int, dict[str, str]] = {}
     for uid, entry in chapter_tags.items():

@@ -82,13 +82,13 @@ def test_progress_quiet_mode():
 
 
 def _make_mf(**kwargs):
-    defaults = dict(
-        source_path=Path("test.mkv"),
-        artist="Test",
-        festival="TML",
-        year="2024",
-        content_type="festival_set",
-    )
+    defaults = {
+        "source_path": Path("test.mkv"),
+        "artist": "Test",
+        "festival": "TML",
+        "year": "2024",
+        "content_type": "festival_set",
+    }
     defaults.update(kwargs)
     return MediaFile(**defaults)
 

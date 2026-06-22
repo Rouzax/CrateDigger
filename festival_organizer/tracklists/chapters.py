@@ -13,6 +13,7 @@ Logging:
     See docs/logging.md for full guidelines.
 """
 
+import contextlib
 import hashlib
 import logging
 import os
@@ -342,10 +343,8 @@ def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
         logger.debug('chapters.extract_failed: path=%s error="%s"', filepath.name, e)
         return None
     finally:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(xml_path)
-        except OSError:
-            pass
 
 
 def extract_stored_tracklist_info(filepath: Path) -> dict | None:
@@ -414,7 +413,7 @@ def chapters_are_identical(existing: list[Chapter] | None, new: list[Chapter]) -
     if len(existing) != len(new):
         return False
 
-    for e, n in zip(existing, new):
+    for e, n in zip(existing, new, strict=True):
         # Compare timestamps to mm:ss precision (ignore milliseconds)
         e_short = e.timestamp[:8] if len(e.timestamp) >= 8 else e.timestamp
         n_short = n.timestamp[:8] if len(n.timestamp) >= 8 else n.timestamp
@@ -447,7 +446,7 @@ def _build_chapter_tags_map(
     for t in tracks:
         tracks_by_ms.setdefault(t.start_ms, t)  # first wins on ties
     result: dict[int, dict[str, str]] = {}
-    for chapter, uid in zip(chapters, chapter_uids):
+    for chapter, uid in zip(chapters, chapter_uids, strict=True):
         chapter_ms = int(_timestamp_to_seconds(chapter.timestamp) * 1000)
         track = tracks_by_ms.get(chapter_ms)
         if track is None:
@@ -687,7 +686,5 @@ def embed_chapters(
         return False
     finally:
         if chapter_file:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(chapter_file)
-            except OSError:
-                pass

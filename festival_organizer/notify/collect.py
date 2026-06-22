@@ -86,9 +86,9 @@ def collect_new_sets(
 ) -> RunReport:
     """Collect sets newly organized into the library (organize op status 'done')."""
     sets: list[EmailSet] = []
-    for (_src, mf, ops), results in zip(pipeline_files, all_results):
+    for (_src, mf, ops), results in zip(pipeline_files, all_results, strict=True):
         final_path = None
-        for op, result in zip(ops, results):
+        for op, result in zip(ops, results, strict=True):
             if op.name == "organize" and result.status == "done":
                 final_path = op.target
         if final_path is None:

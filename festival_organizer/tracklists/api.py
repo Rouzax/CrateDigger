@@ -378,9 +378,8 @@ class TracklistSession:
     def login(self, email: str, password: str) -> None:
         """Login or restore cached session. Raises AuthenticationError on failure."""
         # Try restoring cached cookies first
-        if self._restore_cookies(email):
-            if self._validate_session():
-                return
+        if self._restore_cookies(email) and self._validate_session():
+            return
 
         # Visit site first to get initial cookies (guid)
         self._request("GET", f"{BASE_URL}/")
@@ -513,7 +512,7 @@ class TracklistSession:
                 resp.url,
                 e,
             )
-            raise ExportError("Invalid JSON response from export API")
+            raise ExportError("Invalid JSON response from export API") from e
 
         if not result.get("success"):
             raise ExportError(result.get("message", "Export failed"))
@@ -603,7 +602,7 @@ class TracklistSession:
             if dj_artists
             else _extract_dj_slugs(page_soup)
         )
-        dj_name_map = {slug: name for slug, name in dj_artists}
+        dj_name_map = dict(dj_artists)
         if on_progress:
             on_progress(f"Fetching tracklist ({len(dj_slugs)} DJs)")
         for i, dj_slug in enumerate(dj_slugs):
@@ -723,7 +722,7 @@ class TracklistSession:
                     continue
                 raise TracklistError(
                     f"Request failed after {max_retries} attempts: {e}"
-                )
+                ) from e
 
         raise TracklistError("Request failed: max retries exceeded")
 
@@ -839,9 +838,7 @@ class TracklistSession:
             text = resp.text.lower()
             if "login-form" in text or "please log in" in text:
                 return False
-            if "logout" in text or "/my/" in resp.url:
-                return True
-            return False
+            return "logout" in text or "/my/" in resp.url
         except (requests.RequestException, OSError) as e:
             logger.debug('session.validate_failed: error="%s"', e)
             return False
@@ -893,9 +890,12 @@ class TracklistSession:
             # Check expiration
             for cookie_data in cache.get("Cookies", []):
                 expires = cookie_data.get("Expires")
-                if expires and isinstance(expires, (int, float)):
-                    if time.time() > expires:
-                        return False
+                if (
+                    expires
+                    and isinstance(expires, (int, float))
+                    and time.time() > expires
+                ):
+                    return False
 
             # Restore cookies
             for cookie_data in cache.get("Cookies", []):
@@ -1065,10 +1065,7 @@ def _parse_h1_structure(h1_html: str) -> dict:
     )
 
     first_source = source_matches[0] if source_matches else None
-    if first_source:
-        plain = after_at[: first_source.start()]
-    else:
-        plain = after_at
+    plain = after_at[: first_source.start()] if first_source else after_at
 
     plain = re.sub(r"<[^>]+>", "", plain).strip().rstrip(",").strip()
 
@@ -1090,10 +1087,7 @@ def _parse_h1_structure(h1_html: str) -> dict:
     # left by the preceding link, and a trailing ISO date. If the final
     # comma-segment is a known country, lift it into result["country"];
     # whatever remains is result["location"].
-    if source_matches:
-        tail_raw = after_at[source_matches[-1].end() :]
-    else:
-        tail_raw = after_at
+    tail_raw = after_at[source_matches[-1].end() :] if source_matches else after_at
 
     tail = re.sub(r"<[^>]+>", "", tail_raw)
     tail = tail.lstrip().lstrip(",").strip()

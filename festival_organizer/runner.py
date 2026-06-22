@@ -86,7 +86,7 @@ def run_pipeline(
             organize_op = None
             organize_result = None
             enrich_results = []
-            for op, r in zip(operations, file_results):
+            for op, r in zip(operations, file_results, strict=True):
                 if op.name == "organize":
                     organize_op = op
                     organize_result = r
@@ -110,7 +110,7 @@ def run_pipeline(
             # Find the organize operation and its result
             organize_op = None
             organize_result = None
-            for op, r in zip(operations, file_results):
+            for op, r in zip(operations, file_results, strict=True):
                 if op.name == "organize":
                     organize_op = op
                     organize_result = r

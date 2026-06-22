@@ -339,7 +339,7 @@ def split_artist(name: str) -> list[str]:
         return [name[:idx].strip(), name[idx:].strip()]
     # 4. Multiple connectors -> one line per artist, keeping connector on each subsequent line
     lines = [name[: splits[0][0]].strip()]
-    for i, (idx, sep) in enumerate(splits):
+    for i, (idx, _sep) in enumerate(splits):
         end = splits[i + 1][0] if i + 1 < len(splits) else len(name)
         lines.append(name[idx:end].strip())
     return lines

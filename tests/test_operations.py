@@ -23,13 +23,13 @@ def _win_normcase(s: str) -> str:
 
 
 def _make_mf(**kwargs: Any) -> MediaFile:
-    defaults: dict[str, Any] = dict(
-        source_path=Path("test.mkv"),
-        artist="Test",
-        festival="TML",
-        year="2024",
-        content_type="festival_set",
-    )
+    defaults: dict[str, Any] = {
+        "source_path": Path("test.mkv"),
+        "artist": "Test",
+        "festival": "TML",
+        "year": "2024",
+        "content_type": "festival_set",
+    }
     defaults.update(kwargs)
     return MediaFile(**defaults)
 

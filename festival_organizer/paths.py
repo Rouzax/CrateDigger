@@ -27,6 +27,7 @@ intentionally stay local.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import shutil
@@ -323,10 +324,8 @@ def _write_legacy_stamp() -> None:
                 f.write(date.today().isoformat())
             os.replace(tmp_path, target)
         except BaseException:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp_path)
-            except OSError:
-                pass
             raise
     except OSError as e:
         logger.debug('paths.legacy_stamp: status=failed path=%s error="%s"', target, e)

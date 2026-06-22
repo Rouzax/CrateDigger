@@ -12,6 +12,7 @@ Logging:
     See docs/logging.md for full guidelines.
 """
 
+import contextlib
 import logging
 import os
 import subprocess
@@ -101,10 +102,8 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
         return None
     finally:
         if tag_file:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tag_file)
-            except OSError:
-                pass
 
 
 def _tag_values_from_root(root: ET.Element) -> dict[int, dict[str, str]]:
@@ -303,10 +302,7 @@ def merge_tags(
     Returns:
         Merged XML string ready for mkvpropedit
     """
-    if existing is not None:
-        root = existing
-    else:
-        root = ET.Element("Tags")
+    root = existing if existing is not None else ET.Element("Tags")
 
     # Remove track-targeted Tag blocks (with TrackUID), these are managed by
     # mkvpropedit separately and must NOT be in the --tags global: XML, or
@@ -506,9 +502,8 @@ def _count_tag_deltas(
                 if value is CLEAR_TAG:
                     if old_text:
                         removed += 1
-                elif value:
-                    if value != old_text:
-                        changed += 1
+                elif value and value != old_text:
+                    changed += 1
             else:
                 if value and value is not CLEAR_TAG:
                     added += 1
@@ -596,7 +591,5 @@ def write_merged_tags(
         return False
     finally:
         if tag_file:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tag_file)
-            except OSError:
-                pass

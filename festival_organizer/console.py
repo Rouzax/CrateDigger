@@ -524,10 +524,7 @@ def organize_verdict(
     try:
         src_rel = source.relative_to(output_root)
         src_folder = str(src_rel.parent)
-        if src_folder == ".":
-            src_path = "./" + source.name
-        else:
-            src_path = str(src_rel)
+        src_path = "./" + source.name if src_folder == "." else str(src_rel)
     except ValueError:
         src_path = source.name
 

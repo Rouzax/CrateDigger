@@ -816,9 +816,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     verbose = getattr(args, "verbose", False)
     debug = getattr(args, "debug", False)
     console = make_console()
-    log_path = setup_logging(
-        verbose=verbose, debug=debug, console=console, command=args.command
-    )
+    setup_logging(verbose=verbose, debug=debug, console=console, command=args.command)
 
     config.log_load_summary()
     paths.warn_if_legacy_paths_exist()
@@ -1305,29 +1303,26 @@ def _run_command(args: types.SimpleNamespace) -> int:
     #     folder and leaves its source folder empty of videos, follow
     #     folder.jpg/fanart.jpg to the new folder and then remove the empty
     #     source folder.
-    if args.command == "organize":
-        if action in ("move", "rename"):
-            from festival_organizer.library import (
-                cleanup_empty_dirs,
-                migrate_folder_artefacts,
-            )
+    if args.command == "organize" and action in ("move", "rename"):
+        from festival_organizer.library import (
+            cleanup_empty_dirs,
+            migrate_folder_artefacts,
+        )
 
-            if action == "rename":
-                moves: list[tuple[Path, Path]] = []
-                for orig_path, _mf, ops in pipeline_files:
-                    for op in ops:
-                        if op.name == "organize" and getattr(op, "target", None):
-                            src_dir = orig_path.parent
-                            tgt_dir = op.target.parent
-                            if src_dir.resolve() != tgt_dir.resolve():
-                                moves.append((src_dir, tgt_dir))
-                if moves:
-                    migrate_folder_artefacts(
-                        moves, video_exts=set(config.video_extensions)
-                    )
-                cleanup_empty_dirs(output)
-            elif root.resolve() != output.resolve():
-                cleanup_empty_dirs(root)
+        if action == "rename":
+            moves: list[tuple[Path, Path]] = []
+            for orig_path, _mf, ops in pipeline_files:
+                for op in ops:
+                    if op.name == "organize" and getattr(op, "target", None):
+                        src_dir = orig_path.parent
+                        tgt_dir = op.target.parent
+                        if src_dir.resolve() != tgt_dir.resolve():
+                            moves.append((src_dir, tgt_dir))
+            if moves:
+                migrate_folder_artefacts(moves, video_exts=set(config.video_extensions))
+            cleanup_empty_dirs(output)
+        elif root.resolve() != output.resolve():
+            cleanup_empty_dirs(root)
 
     # Structural artwork-cache hygiene: keep cache/artists/ canonical every run.
     if args.command == "enrich" or getattr(args, "enrich", False):
@@ -1478,9 +1473,9 @@ def _run_kodi_sync(
     album_poster_folders: set[Path] = set()
     kodi_logger = logging.getLogger("festival_organizer.kodi")
 
-    for (fp, _mf, ops), results in zip(pipeline_files, all_results):
+    for (fp, _mf, ops), results in zip(pipeline_files, all_results, strict=True):
         final_path = fp
-        for op, result in zip(ops, results):
+        for op, result in zip(ops, results, strict=True):
             if op.name == "organize" and result.status == "done":
                 final_path = op.target
 

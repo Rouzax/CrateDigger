@@ -128,7 +128,7 @@ def test_parse_tracks_b2b_multi_artist_rows():
     for t in multi:
         assert len(t.artist_names) == len(t.artist_slugs)
         # Display names should not look like title-cased slugs
-        for _slug, name in zip(t.artist_slugs, t.artist_names):
+        for _slug, name in zip(t.artist_slugs, t.artist_names, strict=True):
             # Either the name differs from the title-cased slug (preserved
             # original casing), or they happen to match because the display
             # form IS title case for that artist. Both are legitimate.

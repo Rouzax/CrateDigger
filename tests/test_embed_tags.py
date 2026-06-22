@@ -15,13 +15,13 @@ def _make_mf(**kwargs: Any) -> MediaFile:
     production. Tests asserting on ``build_display_title`` output (TITLE tag,
     SYNOPSIS line) need the canonical place set, since the function reads
     ``mf.place`` rather than ``mf.festival``."""
-    defaults: dict[str, Any] = dict(
-        source_path=Path("test.mkv"),
-        artist="Test",
-        festival="TML",
-        year="2024",
-        content_type="festival_set",
-    )
+    defaults: dict[str, Any] = {
+        "source_path": Path("test.mkv"),
+        "artist": "Test",
+        "festival": "TML",
+        "year": "2024",
+        "content_type": "festival_set",
+    }
     defaults.update(kwargs)
     return make_mediafile(**defaults)
 

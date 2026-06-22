@@ -187,9 +187,10 @@ def _infer_path_mapping(
         local_parts = local_path.resolve().parts
         kodi_parts = kodi_path.replace("\\", "/").split("/")
 
-        # Walk backwards, case-insensitive comparison
+        # Walk backwards, case-insensitive comparison. The two path lists can
+        # differ in length (we only compare the common suffix), so strict=False.
         common = 0
-        for lp, kp in zip(reversed(local_parts), reversed(kodi_parts)):
+        for lp, kp in zip(reversed(local_parts), reversed(kodi_parts), strict=False):
             if lp.lower() == kp.lower():
                 common += 1
             else:
@@ -229,10 +230,7 @@ def _translate_path(
         return None
     relative = resolved[len(local_prefix) :]
     relative = relative.replace("\\", "/").lstrip("/")
-    if relative:
-        candidate = f"{kodi_prefix}/{relative}"
-    else:
-        candidate = kodi_prefix
+    candidate = f"{kodi_prefix}/{relative}" if relative else kodi_prefix
     # Look up case-insensitive against actual Kodi paths
     return kodi_lookup.get(candidate.lower())
 

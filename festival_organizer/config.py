@@ -715,10 +715,7 @@ class Config:
         """Check if a relative path matches any skip pattern."""
         # Normalize to forward slashes for matching
         normalized = relative_path.replace("\\", "/")
-        for pattern in self.skip_patterns:
-            if fnmatch(normalized, pattern):
-                return True
-        return False
+        return any(fnmatch(normalized, pattern) for pattern in self.skip_patterns)
 
     def is_forced_concert(self, relative_path: str) -> bool:
         """Check if a relative path is force-classified as concert_film."""

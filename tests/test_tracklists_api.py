@@ -1,5 +1,6 @@
 """Tests for 1001Tracklists API layer (all mocked, no real network calls)."""
 
+import contextlib
 import logging
 import tempfile
 from pathlib import Path
@@ -586,10 +587,8 @@ def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
             with caplog.at_level(
                 logging.WARNING, logger="festival_organizer.tracklists.api"
             ):
-                try:
+                with contextlib.suppress(Exception):
                     session.export_tracklist("xxx")
-                except Exception:
-                    pass
 
     canary_warnings = [
         r for r in caplog.records if "identify.canary.warning:" in r.message

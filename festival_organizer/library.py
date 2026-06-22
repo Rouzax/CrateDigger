@@ -189,7 +189,7 @@ def cleanup_empty_dirs(root: Path) -> None:
     """
     root = root.resolve()
 
-    for dirpath_str, dirnames, filenames in os.walk(str(root), topdown=False):
+    for dirpath_str, _dirnames, _filenames in os.walk(str(root), topdown=False):
         dirpath = Path(dirpath_str)
 
         # Never touch root itself.

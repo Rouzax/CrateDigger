@@ -6,6 +6,7 @@ Keep in sync when editing. Only PACKAGE_NAME, ENV_VAR, and REPO_URL differ.
 
 from __future__ import annotations
 
+import contextlib
 import importlib.metadata
 import json
 import logging
@@ -16,9 +17,13 @@ import tempfile
 import time
 from importlib.metadata import version
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.request import Request, urlopen
 
 from festival_organizer import paths
+
+if TYPE_CHECKING:
+    from festival_organizer.notify.models import UpdateInfo
 
 logger = logging.getLogger(__name__)
 
@@ -108,10 +113,8 @@ def _write_cache(*, latest_version: str | None, ttl_seconds: int) -> None:
             json.dump(payload, f)
         os.replace(tmp_path, p)
     except BaseException:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp_path)
-        except OSError:
-            pass
         raise
 
 

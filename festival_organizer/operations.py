@@ -1095,7 +1095,9 @@ class FanartOperation(Operation):
                         name, slug=slug, dj_cache=self.config.dj_cache
                     ),
                 )
-                for name, slug in zip(media_file.artists, media_file.artist_slugs)
+                for name, slug in zip(
+                    media_file.artists, media_file.artist_slugs, strict=True
+                )
             ]
         return [
             (name, paths.artist_cache_folder_key(name, dj_cache=self.config.dj_cache))
@@ -1187,11 +1189,9 @@ class TagsOperation(Operation):
             return True
         from festival_organizer.mkv_tags import MATROSKA_EXTS
 
-        if file_path.suffix.lower() not in MATROSKA_EXTS:
-            return False
         # embed_tags compares desired vs existing tags and skips the write
-        # when nothing changed, so always return True here.
-        return True
+        # when nothing changed, so Matroska files always return True here.
+        return file_path.suffix.lower() in MATROSKA_EXTS
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.embed_tags import embed_tags

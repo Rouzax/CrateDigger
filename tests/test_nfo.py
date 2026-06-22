@@ -1,3 +1,4 @@
+import contextlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -475,10 +476,9 @@ def test_generate_nfo_logs_warning_on_write_failure(tmp_path, caplog):
 
     with patch("pathlib.Path.write_text", side_effect=OSError("disk full")):
         with caplog.at_level(logging.WARNING, logger="festival_organizer.nfo"):
-            try:
+            # generate_nfo re-raises the OSError; we only assert on the log.
+            with contextlib.suppress(OSError):
                 generate_nfo(mf, video, load_config())
-            except OSError:
-                pass  # expected — re-raised
     joined = "\n".join(r.message for r in caplog.records)
     assert "nfo.write: status=failed" in joined
     assert "disk full" in joined

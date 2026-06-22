@@ -122,9 +122,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         if ed:
             info["edition"] = ed
         metadata_source = "1001tracklists"
-    if not artists_list and not meta.get("tracklists_festival"):
-        if embedded:
-            metadata_source = "metadata+filename"
+    if not artists_list and not meta.get("tracklists_festival") and embedded:
+        metadata_source = "metadata+filename"
 
     # Build display_artist
     if artists_list:
@@ -167,7 +166,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # Build resolved artists list from 1001TL pipe-separated tag
     resolved_artists: list[str] = []
     if artist_slugs and len(artist_slugs) == len(artists_list) and config.dj_cache:
-        for slug, a in zip(artist_slugs, artists_list):
+        for slug, a in zip(artist_slugs, artists_list, strict=True):
             resolved_artists.append(
                 config.dj_cache.canonical_name(
                     slug, fallback=config.resolve_artist(normalise_name(a))
@@ -194,14 +193,17 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # (e.g., standalone venue sets where YYYY-Part2-Part3 misparses). Trust the
     # 1001TL signal: if it doesn't name a festival, there probably isn't one.
     # Preserve only festivals that are independently recognized (known_places).
-    if festival and festival not in config.known_places:
-        if (
+    if (
+        festival
+        and festival not in config.known_places
+        and (
             artists_list
             and not meta.get("tracklists_festival")
             or artist
             and festival.lower() == artist.lower()
-        ):
-            festival = ""
+        )
+    ):
+        festival = ""
     # Even a known-place filename guess defers to an authoritative 1001TL venue or
     # location tag: when 1001TL names a venue/location but no festival, the set is
     # venue/location-routed, so a festival parsed from the filename (often the same

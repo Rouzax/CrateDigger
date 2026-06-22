@@ -4,6 +4,7 @@ Scores search results by combining content relevance with duration matching.
 Ported from Add-TracklistChapters PowerShell Get-RelevanceScore.
 """
 
+import contextlib
 import re
 import unicodedata
 from dataclasses import dataclass, field
@@ -225,10 +226,8 @@ def score_results(
     dates = []
     for r in results:
         if r.date:
-            try:
+            with contextlib.suppress(ValueError):
                 dates.append(datetime.strptime(r.date, "%Y-%m-%d"))
-            except ValueError:
-                pass
 
     min_date = min(dates) if dates else None
     date_range_days = (max(dates) - min(dates)).days if len(dates) >= 2 else 0.0
