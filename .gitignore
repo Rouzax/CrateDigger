@@ -27,6 +27,11 @@ desktop.ini
 # Logs
 *.log
 
+# Test / coverage artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+
 # Project-specific
 CLAUDE.md
 .claude/
