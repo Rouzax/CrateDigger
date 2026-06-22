@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.28.2] - 2026-06-22
+
 ### Internal
 
 - Adopted a Python toolchain: ruff (format + lint), pyright (basic), vulture, and pytest coverage, enforced via pre-commit and CI. GitHub Actions are pinned to commit SHAs with least-privilege permissions. No runtime behavior change.
+- Made the optional OpenCV/NumPy import in the frame sampler robust across pyright versions (split into a TYPE_CHECKING view plus a runtime guard), and fixed a stale, CI-skipped frame-sampler test. No runtime behavior change.
+- Raised dependency floors to versions already exercised by the test suite and CI: beautifulsoup4 >=4.15.0, numpy >=2.4.6, platformdirs >=4.10.0, requests >=2.34.2, typer >=0.26.7. No runtime behavior change.
 
 ## [0.28.1] - 2026-06-22
 
