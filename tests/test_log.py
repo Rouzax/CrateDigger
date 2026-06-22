@@ -133,6 +133,7 @@ def test_env_override_does_not_affect_file_handler(tmp_path, monkeypatch):
         _reset_logger()
         setup_logging()
         from tests.test_log_file_handler import _find_file_handler
+
         assert _find_file_handler().level == logging.DEBUG
     finally:
         ctx.__exit__(None, None, None)

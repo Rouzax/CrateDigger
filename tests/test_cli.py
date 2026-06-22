@@ -7,7 +7,12 @@ import pytest
 
 from rich.console import Console
 
-from festival_organizer.cli import run, _analyse_parallel, _run_kodi_sync, resolve_action
+from festival_organizer.cli import (
+    run,
+    _analyse_parallel,
+    _run_kodi_sync,
+    resolve_action,
+)
 from festival_organizer.config import Config
 from festival_organizer.operations import OperationResult
 from tests.conftest import TEST_CONFIG
@@ -63,6 +68,7 @@ def test_run_unexpected_error_returns_1(capsys):
 def _console_handler_level():
     """Return the level of the non-file handler (the user-visible console handler)."""
     import logging.handlers
+
     logger = logging.getLogger("festival_organizer")
     for h in logger.handlers:
         if not isinstance(h, (logging.handlers.MemoryHandler, logging.FileHandler)):
@@ -104,14 +110,24 @@ def test_organize_rename_only_flag_is_gone(capsys):
 
 def test_resolve_action_dry_run_wins(tmp_path):
     """--dry-run overrides everything; action is 'dry_run'."""
-    assert resolve_action(
-        source=tmp_path, output=tmp_path / "lib",
-        move=False, dry_run=True,
-    ) == "dry_run"
-    assert resolve_action(
-        source=tmp_path, output=tmp_path / "lib",
-        move=True, dry_run=True,
-    ) == "dry_run"
+    assert (
+        resolve_action(
+            source=tmp_path,
+            output=tmp_path / "lib",
+            move=False,
+            dry_run=True,
+        )
+        == "dry_run"
+    )
+    assert (
+        resolve_action(
+            source=tmp_path,
+            output=tmp_path / "lib",
+            move=True,
+            dry_run=True,
+        )
+        == "dry_run"
+    )
 
 
 def test_resolve_action_in_place_is_rename(tmp_path):
@@ -284,7 +300,10 @@ def test_analyse_parallel_propagates_exception():
     files = [Path("/fake/bad.mkv")]
     root = Path("/fake")
 
-    with patch("festival_organizer.cli.analyse_file", side_effect=RuntimeError("mediainfo exploded")):
+    with patch(
+        "festival_organizer.cli.analyse_file",
+        side_effect=RuntimeError("mediainfo exploded"),
+    ):
         with pytest.raises(RuntimeError, match="mediainfo exploded"):
             _analyse_parallel(files, root, cfg, max_workers=4)
 
@@ -313,8 +332,10 @@ def test_run_kodi_sync_calls_sync_library_when_op_done(tmp_path):
     results = [OperationResult(name="nfo", status="done", display_name="nfo")]
     pipeline_files, all_results = _make_kodi_inputs(tmp_path, [(video, results)])
 
-    with patch("festival_organizer.kodi.sync_library") as mock_sync, \
-         patch("festival_organizer.kodi.KodiClient") as mock_client:
+    with (
+        patch("festival_organizer.kodi.sync_library") as mock_sync,
+        patch("festival_organizer.kodi.KodiClient") as mock_client,
+    ):
         _run_kodi_sync(all_results, pipeline_files, cfg, Console(), quiet=True)
 
     mock_client.assert_called_once()
@@ -328,12 +349,18 @@ def test_run_kodi_sync_empty_logs_debug_and_skips_sync(tmp_path, caplog):
     cfg = Config(TEST_CONFIG)
     video = tmp_path / "set.mkv"
     video.touch()
-    results = [OperationResult(name="nfo", status="skipped", detail="exists", display_name="nfo")]
+    results = [
+        OperationResult(
+            name="nfo", status="skipped", detail="exists", display_name="nfo"
+        )
+    ]
     pipeline_files, all_results = _make_kodi_inputs(tmp_path, [(video, results)])
 
     caplog.set_level(logging.DEBUG, logger="festival_organizer.kodi")
-    with patch("festival_organizer.kodi.sync_library") as mock_sync, \
-         patch("festival_organizer.kodi.KodiClient"):
+    with (
+        patch("festival_organizer.kodi.sync_library") as mock_sync,
+        patch("festival_organizer.kodi.KodiClient"),
+    ):
         _run_kodi_sync(all_results, pipeline_files, cfg, Console(), quiet=True)
 
     mock_sync.assert_not_called()
@@ -347,9 +374,11 @@ def test_run_kodi_sync_empty_logs_debug_and_skips_sync(tmp_path, caplog):
 def test_check_flag_exists_and_exits_zero(monkeypatch, tmp_path):
     import festival_organizer.cli as cli_mod
     from festival_organizer import paths
+
     monkeypatch.setattr(cli_mod, "_run_check_impl", lambda con: 0)
     monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
     from typer.testing import CliRunner
+
     runner = CliRunner()
     result = runner.invoke(cli_mod.app, ["--check"])
     assert result.exit_code == 0
@@ -358,6 +387,7 @@ def test_check_flag_exists_and_exits_zero(monkeypatch, tmp_path):
 # ---------------------------------------------------------------------------
 # _run_check_impl tests
 # ---------------------------------------------------------------------------
+
 
 def _make_test_console() -> tuple[Console, io.StringIO]:
     buf = io.StringIO()
@@ -369,14 +399,23 @@ def test_run_check_impl_all_pass(monkeypatch, tmp_path):
     from festival_organizer import cli as cli_mod, metadata
 
     # Patch tool paths to non-None values
-    for attr in ("FFPROBE_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+    for attr in (
+        "FFPROBE_PATH",
+        "MKVEXTRACT_PATH",
+        "MKVPROPEDIT_PATH",
+        "MKVMERGE_PATH",
+    ):
         monkeypatch.setattr(metadata, attr, "/usr/bin/fake")
 
     # Patch subprocess to return a fake version line
     import subprocess
+
     monkeypatch.setattr(
-        subprocess, "run",
-        lambda *a, **kw: type("R", (), {"stdout": "fake 1.0\n", "stderr": "", "returncode": 0})(),
+        subprocess,
+        "run",
+        lambda *a, **kw: type(
+            "R", (), {"stdout": "fake 1.0\n", "stderr": "", "returncode": 0}
+        )(),
     )
 
     # cv2 present
@@ -415,12 +454,16 @@ def test_run_check_impl_all_pass(monkeypatch, tmp_path):
     )
 
     # load_config returns a config with credentials set
-    fake_config = type("C", (), {
-        "tracklists_credentials": ("a@b.com", "pass"),
-        "fanart_personal_api_key": "key",
-        "kodi_enabled": False,
-        "kodi_host": "",
-    })()
+    fake_config = type(
+        "C",
+        (),
+        {
+            "tracklists_credentials": ("a@b.com", "pass"),
+            "fanart_personal_api_key": "key",
+            "kodi_enabled": False,
+            "kodi_host": "",
+        },
+    )()
     monkeypatch.setattr("festival_organizer.config.load_config", lambda: fake_config)
 
     # importlib.metadata.version always succeeds
@@ -437,14 +480,25 @@ def test_run_check_impl_required_tool_missing_exits_one(monkeypatch, tmp_path):
     from festival_organizer import cli as cli_mod, metadata
 
     # All tool paths None (missing)
-    for attr in ("FFPROBE_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+    for attr in (
+        "FFPROBE_PATH",
+        "MKVEXTRACT_PATH",
+        "MKVPROPEDIT_PATH",
+        "MKVMERGE_PATH",
+    ):
         monkeypatch.setattr(metadata, attr, None)
 
     monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", False)
     # Point every asset probe at a path under tmp_path that does not exist,
     # so all is_file() checks return False.
     missing = tmp_path / "missing"
-    for name in ("config_file", "places_file", "artists_file", "artist_mbids_file", "cookies_file"):
+    for name in (
+        "config_file",
+        "places_file",
+        "artists_file",
+        "artist_mbids_file",
+        "cookies_file",
+    ):
         monkeypatch.setattr(
             f"festival_organizer.cli.paths.{name}",
             lambda _n=name: missing / _n,
@@ -465,13 +519,22 @@ def test_run_check_impl_required_tool_missing_exits_one(monkeypatch, tmp_path):
 def test_run_check_impl_shows_all_section_headers(monkeypatch, tmp_path):
     from festival_organizer import cli as cli_mod, metadata
 
-    for attr in ("FFPROBE_PATH", "MKVEXTRACT_PATH", "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+    for attr in (
+        "FFPROBE_PATH",
+        "MKVEXTRACT_PATH",
+        "MKVPROPEDIT_PATH",
+        "MKVMERGE_PATH",
+    ):
         monkeypatch.setattr(metadata, attr, "/usr/bin/fake")
 
     import subprocess
+
     monkeypatch.setattr(
-        subprocess, "run",
-        lambda *a, **kw: type("R", (), {"stdout": "fake 1.0\n", "stderr": "", "returncode": 0})(),
+        subprocess,
+        "run",
+        lambda *a, **kw: type(
+            "R", (), {"stdout": "fake 1.0\n", "stderr": "", "returncode": 0}
+        )(),
     )
     monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", True)
 
@@ -507,12 +570,16 @@ def test_run_check_impl_shows_all_section_headers(monkeypatch, tmp_path):
         "festival_organizer.cli.paths.cookies_file", lambda: cookie_path
     )
 
-    fake_config = type("C", (), {
-        "tracklists_credentials": ("a@b.com", "pass"),
-        "fanart_personal_api_key": "key",
-        "kodi_enabled": False,
-        "kodi_host": "",
-    })()
+    fake_config = type(
+        "C",
+        (),
+        {
+            "tracklists_credentials": ("a@b.com", "pass"),
+            "fanart_personal_api_key": "key",
+            "kodi_enabled": False,
+            "kodi_host": "",
+        },
+    )()
     monkeypatch.setattr("festival_organizer.config.load_config", lambda: fake_config)
     monkeypatch.setattr("importlib.metadata.version", lambda pkg: "9.9.9")
 
@@ -537,11 +604,15 @@ def test_run_kodi_sync_album_poster_expands_to_folder_siblings(tmp_path):
     # Also add a non-video file to confirm filtering
     (folder / "notes.txt").write_text("x")
 
-    results = [OperationResult(name="posters", status="done", display_name="album_poster")]
+    results = [
+        OperationResult(name="posters", status="done", display_name="album_poster")
+    ]
     pipeline_files, all_results = _make_kodi_inputs(tmp_path, [(video_a, results)])
 
-    with patch("festival_organizer.kodi.sync_library") as mock_sync, \
-         patch("festival_organizer.kodi.KodiClient"):
+    with (
+        patch("festival_organizer.kodi.sync_library") as mock_sync,
+        patch("festival_organizer.kodi.KodiClient"),
+    ):
         _run_kodi_sync(all_results, pipeline_files, cfg, Console(), quiet=True)
 
     mock_sync.assert_called_once()
@@ -598,7 +669,9 @@ def test_version_prints_stale_notice(monkeypatch, tmp_path):
     result = runner.invoke(cli.app, ["--version"])
     assert result.exit_code == 0
     assert f"cratedigger {installed}" in result.stdout
-    assert f"newer version is available" in result.stdout or f"{bumped}" in result.stdout
+    assert (
+        f"newer version is available" in result.stdout or f"{bumped}" in result.stdout
+    )
 
 
 def test_version_silent_on_fetch_failure(monkeypatch, tmp_path):
@@ -626,8 +699,9 @@ def test_version_honours_env_var_suppression(monkeypatch, tmp_path):
     from festival_organizer import cli, paths, update_check
 
     fetch_calls = []
-    monkeypatch.setattr(update_check, "_fetch_latest_release",
-                        lambda: fetch_calls.append(1) or "9.9.9")
+    monkeypatch.setattr(
+        update_check, "_fetch_latest_release", lambda: fetch_calls.append(1) or "9.9.9"
+    )
     monkeypatch.setenv("CRATEDIGGER_NO_UPDATE_CHECK", "1")
     monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
 
@@ -750,8 +824,12 @@ def test_check_clean_install_reports_all_passed(monkeypatch, tmp_path):
     from festival_organizer import cli, metadata, paths, update_check
 
     # Required tools all present
-    for attr in ("FFPROBE_PATH", "MKVEXTRACT_PATH",
-                 "MKVPROPEDIT_PATH", "MKVMERGE_PATH"):
+    for attr in (
+        "FFPROBE_PATH",
+        "MKVEXTRACT_PATH",
+        "MKVPROPEDIT_PATH",
+        "MKVMERGE_PATH",
+    ):
         monkeypatch.setattr(metadata, attr, "/usr/bin/true")
     # cv2/numpy absent
     monkeypatch.setattr("festival_organizer.frame_sampler._HAS_CV2", False)
@@ -767,8 +845,12 @@ def test_check_clean_install_reports_all_passed(monkeypatch, tmp_path):
     monkeypatch.setattr(paths, "config_file", lambda: config_path)
     monkeypatch.setattr(paths, "places_file", lambda: places_path)
     # Optional assets absent
-    monkeypatch.setattr(paths, "artists_file", lambda: tmp_path / "missing-artists.json")
-    monkeypatch.setattr(paths, "artist_mbids_file", lambda: tmp_path / "missing-mbids.json")
+    monkeypatch.setattr(
+        paths, "artists_file", lambda: tmp_path / "missing-artists.json"
+    )
+    monkeypatch.setattr(
+        paths, "artist_mbids_file", lambda: tmp_path / "missing-mbids.json"
+    )
     monkeypatch.setattr(paths, "log_dir", lambda: tmp_path)
     monkeypatch.setattr(paths, "cookies_file", lambda: tmp_path / "missing-cookies.txt")
 

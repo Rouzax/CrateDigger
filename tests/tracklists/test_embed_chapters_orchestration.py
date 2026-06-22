@@ -1,8 +1,11 @@
 """Orchestration tests: embed_chapters builds per-chapter tag map and canonical names."""
+
 from unittest.mock import patch, MagicMock
 from festival_organizer.mkv_tags import CLEAR_TAG
 from festival_organizer.tracklists.chapters import (
-    Chapter, _build_chapter_tags_map, embed_chapters,
+    Chapter,
+    _build_chapter_tags_map,
+    embed_chapters,
 )
 from festival_organizer.tracklists.api import Track
 from festival_organizer.tracklists.dj_cache import DjCache
@@ -17,10 +20,18 @@ def test_build_chapter_tags_map_matches_by_ms(tmp_path):
     ]
     uids = [111, 222]
     tracks = [
-        Track(start_ms=0, raw_text="AFROJACK ft. Eva Simons - Take Over Control",
-              artist_slugs=["afrojack"], genres=["House"]),
-        Track(start_ms=60000, raw_text="Guest & Someone - Track",
-              artist_slugs=["guest-artist", "someone"], genres=["Techno", "Tech House"]),
+        Track(
+            start_ms=0,
+            raw_text="AFROJACK ft. Eva Simons - Take Over Control",
+            artist_slugs=["afrojack"],
+            genres=["House"],
+        ),
+        Track(
+            start_ms=60000,
+            raw_text="Guest & Someone - Track",
+            artist_slugs=["guest-artist", "someone"],
+            genres=["Techno", "Tech House"],
+        ),
     ]
     result = _build_chapter_tags_map(chapters, uids, tracks, cache)
     assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "AFROJACK ft. Eva Simons"
@@ -43,8 +54,14 @@ def test_build_chapter_tags_map_skips_unmatched(tmp_path):
 def test_build_chapter_tags_map_no_dj_cache(tmp_path):
     chapters = [Chapter(timestamp="00:00:00.000", title="A")]
     uids = [111]
-    tracks = [Track(start_ms=0, raw_text="Artist Name - Some Title",
-                    artist_slugs=["artist-slug"], genres=["House"])]
+    tracks = [
+        Track(
+            start_ms=0,
+            raw_text="Artist Name - Some Title",
+            artist_slugs=["artist-slug"],
+            genres=["House"],
+        )
+    ]
     result = _build_chapter_tags_map(chapters, uids, tracks, None)
     # PERFORMER comes from raw_text prefix; DjCache is not consulted for it.
     assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "Artist Name"
@@ -68,7 +85,9 @@ def test_build_chapter_tags_map_pairs_by_index(tmp_path):
     uids = [111, 222]
     tracks = [
         Track(start_ms=0, raw_text="Artist A - Song A", artist_slugs=["a"], genres=[]),
-        Track(start_ms=120000, raw_text="Artist B - Song B", artist_slugs=["b"], genres=[]),
+        Track(
+            start_ms=120000, raw_text="Artist B - Song B", artist_slugs=["b"], genres=[]
+        ),
     ]
     result = _build_chapter_tags_map(chapters, uids, tracks, None)
     assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "Artist A"
@@ -87,9 +106,11 @@ def test_embed_chapters_canonical_artists_tag(tmp_path):
     fake_mkv.write_bytes(b"")
 
     # mock mkvpropedit path so embed_chapters attempts the calls
-    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
-         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         mock_write.return_value = True
         embed_chapters(
@@ -116,9 +137,11 @@ def test_embed_chapters_writes_albumartist_display_and_slugs(tmp_path):
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
 
-    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
-         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         mock_write.return_value = True
         embed_chapters(
@@ -143,9 +166,11 @@ def test_embed_chapters_single_artist_writes_length_1_albumartist_tags(tmp_path)
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
 
-    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
-         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         mock_write.return_value = True
         embed_chapters(
@@ -166,9 +191,11 @@ def test_embed_chapters_without_dj_cache_uses_display_name(tmp_path):
     dj_artists = [("afrojack", "AFROJACK")]
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
-    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
-         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         mock_write.return_value = True
         embed_chapters(
@@ -186,29 +213,41 @@ def test_performer_preserves_full_display_line_from_raw_text(tmp_path):
     """PERFORMER is the raw_text prefix (everything before the final ' - ')."""
     chapters = [Chapter(timestamp="00:00:00.000", title="Intro")]
     uids = [111]
-    tracks = [Track(
-        start_ms=0,
-        raw_text="Fred again.. & Jamie T - Lights Burn Dimmer (Tiësto Remix)",
-        artist_slugs=["fred-again..", "jamie-t", "tiesto"],
-        genres=[],
-    )]
+    tracks = [
+        Track(
+            start_ms=0,
+            raw_text="Fred again.. & Jamie T - Lights Burn Dimmer (Tiësto Remix)",
+            artist_slugs=["fred-again..", "jamie-t", "tiesto"],
+            genres=[],
+        )
+    ]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
     # Full display artist line, multi-artist preserved, no drop.
     assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "Fred again.. & Jamie T"
-    assert result[111]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "fred-again..|jamie-t|tiesto"
+    assert (
+        result[111]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"]
+        == "fred-again..|jamie-t|tiesto"
+    )
 
 
 def test_performer_handles_mashup_composite_display():
     """Mashup rows put the full composite artist string before the ' - '."""
     chapters = [Chapter(timestamp="00:00:00.000", title="x")]
     uids = [111]
-    tracks = [Track(
-        start_ms=0,
-        raw_text=("NLW & MureKian vs. Ivan Gough & Feenixpawl & Georgi Kay vs. "
-                  "RÜFÜS DU SOL - Loco vs. In My Mind vs. Innerbloom (AFROJACK Mashup)"),
-        artist_slugs=["nlw-murekian-vs-ivan-gough-feenixpawl-georgi-kay-vs-rufus-du-sol", "afrojack"],
-        genres=[],
-    )]
+    tracks = [
+        Track(
+            start_ms=0,
+            raw_text=(
+                "NLW & MureKian vs. Ivan Gough & Feenixpawl & Georgi Kay vs. "
+                "RÜFÜS DU SOL - Loco vs. In My Mind vs. Innerbloom (AFROJACK Mashup)"
+            ),
+            artist_slugs=[
+                "nlw-murekian-vs-ivan-gough-feenixpawl-georgi-kay-vs-rufus-du-sol",
+                "afrojack",
+            ],
+            genres=[],
+        )
+    ]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
     assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == (
         "NLW & MureKian vs. Ivan Gough & Feenixpawl & Georgi Kay vs. RÜFÜS DU SOL"
@@ -221,16 +260,20 @@ def test_performer_preserves_1001tl_display_form_not_alias():
     tag for filesystem routing, NOT to per-chapter tags which document what
     the DJ / crowd knows the track as."""
     aliases = {"SOMETHING ELSE": "ALOK"}
+
     def resolver(name: str) -> str:
         return aliases.get(name, name)
+
     chapters = [Chapter(timestamp="00:00:00.000", title="x")]
     uids = [111]
-    tracks = [Track(
-        start_ms=0,
-        raw_text="SOMETHING ELSE - Ignite",
-        artist_slugs=["somethingelse-br"],
-        genres=[],
-    )]
+    tracks = [
+        Track(
+            start_ms=0,
+            raw_text="SOMETHING ELSE - Ignite",
+            artist_slugs=["somethingelse-br"],
+            genres=[],
+        )
+    ]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, resolver)
     # Display form preserved. ALOK would only be correct for filesystem
     # routing (top-level ARTIST tag handled elsewhere).
@@ -241,14 +284,16 @@ def test_chapter_tags_include_title_and_label():
     """CRATEDIGGER_TRACK_TITLE and CRATEDIGGER_TRACK_LABEL are emitted when the track carries them."""
     chapters = [Chapter(timestamp="00:00:00.000", title="x")]
     uids = [111]
-    tracks = [Track(
-        start_ms=0,
-        raw_text="AFROJACK ft. Eva Simons - Take Over Control",
-        artist_slugs=["afrojack"],
-        genres=[],
-        title="Take Over Control",
-        label="WALL",
-    )]
+    tracks = [
+        Track(
+            start_ms=0,
+            raw_text="AFROJACK ft. Eva Simons - Take Over Control",
+            artist_slugs=["afrojack"],
+            genres=[],
+            title="Take Over Control",
+            label="WALL",
+        )
+    ]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
     assert result[111]["CRATEDIGGER_TRACK_TITLE"] == "Take Over Control"
     assert result[111]["CRATEDIGGER_TRACK_LABEL"] == "WALL"
@@ -258,14 +303,16 @@ def test_chapter_tags_omit_title_and_label_when_empty():
     """CRATEDIGGER_TRACK_TITLE and CRATEDIGGER_TRACK_LABEL omitted when track fields are empty strings."""
     chapters = [Chapter(timestamp="00:00:00.000", title="x")]
     uids = [111]
-    tracks = [Track(
-        start_ms=0,
-        raw_text="Artist - Song",
-        artist_slugs=["slug"],
-        genres=[],
-        title="",
-        label="",
-    )]
+    tracks = [
+        Track(
+            start_ms=0,
+            raw_text="Artist - Song",
+            artist_slugs=["slug"],
+            genres=[],
+            title="",
+            label="",
+        )
+    ]
     result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
     assert "CRATEDIGGER_TRACK_TITLE" not in result[111]
     assert "CRATEDIGGER_TRACK_LABEL" not in result[111]
@@ -279,9 +326,11 @@ def test_embed_chapters_writes_location_when_no_linked_source(tmp_path):
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
 
-    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
-         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         mock_write.return_value = True
         embed_chapters(
@@ -309,9 +358,11 @@ def test_embed_chapters_clears_location_when_linked_venue_present(tmp_path):
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
 
-    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
-         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         mock_write.return_value = True
         embed_chapters(
@@ -333,9 +384,11 @@ def test_embed_chapters_clears_location_when_festival_present(tmp_path):
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
 
-    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
-         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         mock_write.return_value = True
         embed_chapters(
@@ -358,9 +411,11 @@ def test_embed_chapters_clears_location_when_empty_and_no_linked_source(tmp_path
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
 
-    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
-         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         mock_write.return_value = True
         embed_chapters(

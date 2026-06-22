@@ -50,42 +50,80 @@ def test_resolve_place_with_edition_country_fallback():
     cfg = Config(TEST_CONFIG)
     # Name yields no edition (all Dreamstate sources are named just "Dreamstate"),
     # so the scraped country selects the edition.
-    assert cfg.resolve_place_with_edition("Dreamstate", "Australia") == ("Dreamstate", "Australia")
-    assert cfg.resolve_place_with_edition("Dreamstate", "Mexico") == ("Dreamstate", "Mexico")
+    assert cfg.resolve_place_with_edition("Dreamstate", "Australia") == (
+        "Dreamstate",
+        "Australia",
+    )
+    assert cfg.resolve_place_with_edition("Dreamstate", "Mexico") == (
+        "Dreamstate",
+        "Mexico",
+    )
     # Case-insensitive country match.
-    assert cfg.resolve_place_with_edition("Dreamstate", "australia") == ("Dreamstate", "Australia")
+    assert cfg.resolve_place_with_edition("Dreamstate", "australia") == (
+        "Dreamstate",
+        "Australia",
+    )
     # Name-resolved edition is never overridden by country (Winter's country is France).
-    assert cfg.resolve_place_with_edition("Tomorrowland Winter", "France") == ("Tomorrowland", "Winter")
+    assert cfg.resolve_place_with_edition("Tomorrowland Winter", "France") == (
+        "Tomorrowland",
+        "Winter",
+    )
     # Main edition: host country is not an edition -> stays editionless.
-    assert cfg.resolve_place_with_edition("Tomorrowland", "Belgium") == ("Tomorrowland", "")
+    assert cfg.resolve_place_with_edition("Tomorrowland", "Belgium") == (
+        "Tomorrowland",
+        "",
+    )
     # Worldwide / unknown country matches nothing -> no edition.
-    assert cfg.resolve_place_with_edition("Dreamstate", "Worldwide") == ("Dreamstate", "")
+    assert cfg.resolve_place_with_edition("Dreamstate", "Worldwide") == (
+        "Dreamstate",
+        "",
+    )
     # Region edition (not a country name) is not matched by country.
-    assert cfg.resolve_place_with_edition("Dreamstate", "United States") == ("Dreamstate", "")
+    assert cfg.resolve_place_with_edition("Dreamstate", "United States") == (
+        "Dreamstate",
+        "",
+    )
     # Backward compatible: no country argument behaves exactly as before.
     assert cfg.resolve_place_with_edition("Dreamstate") == ("Dreamstate", "")
     # Country can also match an edition's alias (e.g. an English country spelling
     # mapped to a non-English edition name).
-    cfg2 = Config({"place_config": {"Foo": {"editions": {"Brasil": {"aliases": ["Brazil"]}}}}})
+    cfg2 = Config(
+        {"place_config": {"Foo": {"editions": {"Brasil": {"aliases": ["Brazil"]}}}}}
+    )
     assert cfg2.resolve_place_with_edition("Foo", "Brazil") == ("Foo", "Brasil")
 
 
 def test_resolve_place_with_edition():
     cfg = Config(TEST_CONFIG)
     # Edition decomposition (no alias needed)
-    assert cfg.resolve_place_with_edition("Tomorrowland Winter") == ("Tomorrowland", "Winter")
-    assert cfg.resolve_place_with_edition("Tomorrowland Brasil") == ("Tomorrowland", "Brasil")
+    assert cfg.resolve_place_with_edition("Tomorrowland Winter") == (
+        "Tomorrowland",
+        "Winter",
+    )
+    assert cfg.resolve_place_with_edition("Tomorrowland Brasil") == (
+        "Tomorrowland",
+        "Brasil",
+    )
     assert cfg.resolve_place_with_edition("EDC Las Vegas") == ("EDC", "Las Vegas")
     assert cfg.resolve_place_with_edition("Dreamstate SoCal") == ("Dreamstate", "SoCal")
-    assert cfg.resolve_place_with_edition("Dreamstate Europe") == ("Dreamstate", "Europe")
+    assert cfg.resolve_place_with_edition("Dreamstate Europe") == (
+        "Dreamstate",
+        "Europe",
+    )
     # Alias prefix + edition (Ultra is alias for UMF)
     assert cfg.resolve_place_with_edition("Ultra Europe") == ("UMF", "Europe")
-    assert cfg.resolve_place_with_edition("Ultra Music Festival Miami") == ("UMF", "Miami")
+    assert cfg.resolve_place_with_edition("Ultra Music Festival Miami") == (
+        "UMF",
+        "Miami",
+    )
     # Pure alias (no edition)
     assert cfg.resolve_place_with_edition("TML") == ("Tomorrowland", "")
     assert cfg.resolve_place_with_edition("AMF") == ("AMF", "")
     # Weekend aliases resolve to plain Tomorrowland (no edition)
-    assert cfg.resolve_place_with_edition("Tomorrowland Weekend 1") == ("Tomorrowland", "")
+    assert cfg.resolve_place_with_edition("Tomorrowland Weekend 1") == (
+        "Tomorrowland",
+        "",
+    )
     # Genuine alternate name (not an edition)
     assert cfg.resolve_place_with_edition("Red Rocks Amphitheatre") == ("Red Rocks", "")
     # Unknown place
@@ -94,7 +132,10 @@ def test_resolve_place_with_edition():
 
 def test_resolve_place_with_edition_case_insensitive():
     cfg = Config(TEST_CONFIG)
-    assert cfg.resolve_place_with_edition("tomorrowland winter") == ("Tomorrowland", "Winter")
+    assert cfg.resolve_place_with_edition("tomorrowland winter") == (
+        "Tomorrowland",
+        "Winter",
+    )
     assert cfg.resolve_place_with_edition("EDC LAS VEGAS") == ("EDC", "Las Vegas")
 
 
@@ -156,10 +197,7 @@ def test_config_force_concert_patterns():
 def test_load_config_from_toml_file():
     """load_config(config_path=...) merges a TOML file over built-in defaults."""
     toml_text = (
-        'default_layout = "festival_first"\n'
-        '\n'
-        '[place_aliases]\n'
-        'Tomorrowland = ["TML"]\n'
+        'default_layout = "festival_first"\n\n[place_aliases]\nTomorrowland = ["TML"]\n'
     )
     with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
         f.write(toml_text)
@@ -209,10 +247,10 @@ def test_load_config_user_layer(tmp_path):
     user_dir.mkdir()
     user_config = user_dir / "config.toml"
     user_config.write_text(
-        '[place_aliases]\n'
+        "[place_aliases]\n"
         '"My Festival" = ["My Fest"]\n'
-        '\n'
-        '[tracklists]\n'
+        "\n"
+        "[tracklists]\n"
         'email = "me@example.com"\n'
         'password = "secret"\n'
     )
@@ -287,14 +325,15 @@ def test_place_flat_layout_present():
 
 def test_place_nested_layout_present():
     cfg = Config({})
-    assert cfg.get_layout_template("festival_set", "place_nested") == "{place}{ edition}/{year}/{artist}"
+    assert (
+        cfg.get_layout_template("festival_set", "place_nested")
+        == "{place}{ edition}/{year}/{artist}"
+    )
 
 
 def test_tracklists_credentials_from_config():
     """Credentials loaded from tracklists section."""
-    config = Config({
-        "tracklists": {"email": "a@b.com", "password": "pw123"}
-    })
+    config = Config({"tracklists": {"email": "a@b.com", "password": "pw123"}})
     assert config.tracklists_credentials == ("a@b.com", "pw123")
 
 
@@ -302,9 +341,7 @@ def test_tracklists_credentials_env_override(monkeypatch):
     """Environment variables override config credentials."""
     monkeypatch.setenv("TRACKLISTS_EMAIL", "env@b.com")
     monkeypatch.setenv("TRACKLISTS_PASSWORD", "envpw")
-    config = Config({
-        "tracklists": {"email": "config@b.com", "password": "configpw"}
-    })
+    config = Config({"tracklists": {"email": "config@b.com", "password": "configpw"}})
     assert config.tracklists_credentials == ("env@b.com", "envpw")
 
 
@@ -388,7 +425,9 @@ def test_external_config_logs_candidates(tmp_path, caplog):
     cfg = Config(DEFAULT_CONFIG, config_dir=tmp_path)
     with caplog.at_level("DEBUG", logger="festival_organizer.config"):
         cfg._load_external_config("festivals.json", {})
-    assert any("festivals.json" in msg and "candidates" in msg for msg in caplog.messages)
+    assert any(
+        "festivals.json" in msg and "candidates" in msg for msg in caplog.messages
+    )
 
 
 def test_external_config_logs_loaded(tmp_path, caplog):
@@ -438,6 +477,7 @@ def test_festivals_json_migrates_to_places_on_config_init(tmp_path, monkeypatch)
     (user_data / "festivals.json").write_text('{"Tomorrowland": {"color": "#9B1B5A"}}')
 
     from festival_organizer import paths as paths_module
+
     monkeypatch.setattr(paths_module, "data_dir", lambda: user_data)
 
     cfg = Config({}, config_dir=user_data)
@@ -465,9 +505,7 @@ def test_place_aliases_includes_registry_aliases(tmp_path):
 
 
 def test_resolve_place_alias_returns_canonical(tmp_path):
-    (tmp_path / "places.json").write_text(
-        '{"Tomorrowland": {"aliases": ["TML"]}}'
-    )
+    (tmp_path / "places.json").write_text('{"Tomorrowland": {"aliases": ["TML"]}}')
     cfg = Config({}, config_dir=tmp_path)
     assert cfg.resolve_place_alias("TML") == "Tomorrowland"
     assert cfg.resolve_place_alias("unknown") == "unknown"
@@ -483,7 +521,10 @@ def test_known_places_includes_canonicals_and_aliases(tmp_path):
 
 def test_place_background_priority_default():
     cfg = Config({})
-    assert cfg.poster_settings["place_background_priority"] == ["curated_logo", "gradient"]
+    assert cfg.poster_settings["place_background_priority"] == [
+        "curated_logo",
+        "gradient",
+    ]
 
 
 def test_unknown_place_default():
@@ -492,7 +533,14 @@ def test_unknown_place_default():
 
 
 def test_resolve_artist_alias():
-    config = Config({"artist_aliases": {"Dimitri Vegas & Like Mike": ["DVLM"], "Martin Garrix": ["Area21"]}})
+    config = Config(
+        {
+            "artist_aliases": {
+                "Dimitri Vegas & Like Mike": ["DVLM"],
+                "Martin Garrix": ["Area21"],
+            }
+        }
+    )
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
     assert config.resolve_artist("Area21") == "Martin Garrix"
     assert config.resolve_artist("Hardwell") == "Hardwell"
@@ -510,22 +558,31 @@ def test_resolve_artist_b2b_not_in_groups():
 
 def test_resolve_artist_group_stays_intact():
     config = Config({"artist_groups": ["Dimitri Vegas & Like Mike"]})
-    assert config.resolve_artist("Dimitri Vegas & Like Mike") == "Dimitri Vegas & Like Mike"
+    assert (
+        config.resolve_artist("Dimitri Vegas & Like Mike")
+        == "Dimitri Vegas & Like Mike"
+    )
 
 
 def test_resolve_artist_alias_then_group():
-    config = Config({
-        "artist_aliases": {"Dimitri Vegas & Like Mike": ["DVLM"]},
-        "artist_groups": ["Dimitri Vegas & Like Mike"],
-    })
+    config = Config(
+        {
+            "artist_aliases": {"Dimitri Vegas & Like Mike": ["DVLM"]},
+            "artist_groups": ["Dimitri Vegas & Like Mike"],
+        }
+    )
     assert config.resolve_artist("DVLM") == "Dimitri Vegas & Like Mike"
 
 
 def test_place_aliases_grouped_format():
-    config = Config({"place_aliases": {
-        "Tomorrowland": ["TML", "Tomorrowland Weekend 1"],
-        "AMF": ["Amsterdam Music Festival"],
-    }})
+    config = Config(
+        {
+            "place_aliases": {
+                "Tomorrowland": ["TML", "Tomorrowland Weekend 1"],
+                "AMF": ["Amsterdam Music Festival"],
+            }
+        }
+    )
     assert config.resolve_place_alias("TML") == "Tomorrowland"
     assert config.resolve_place_alias("Tomorrowland Weekend 1") == "Tomorrowland"
     assert config.resolve_place_alias("Tomorrowland") == "Tomorrowland"
@@ -533,9 +590,13 @@ def test_place_aliases_grouped_format():
 
 
 def test_artist_aliases_grouped_format():
-    config = Config({"artist_aliases": {
-        "Martin Garrix": ["Area21", "YTRAM"],
-    }})
+    config = Config(
+        {
+            "artist_aliases": {
+                "Martin Garrix": ["Area21", "YTRAM"],
+            }
+        }
+    )
     assert config.resolve_artist("Area21") == "Martin Garrix"
     assert config.resolve_artist("YTRAM") == "Martin Garrix"
     assert config.resolve_artist("Martin Garrix") == "Martin Garrix"
@@ -543,11 +604,15 @@ def test_artist_aliases_grouped_format():
 
 def test_place_aliases_flat_format():
     """Flat format {alias: canonical} should be handled correctly."""
-    config = Config({"place_aliases": {
-        "AMF": "AMF",
-        "Amsterdam Music Festival": "AMF",
-        "EDC": "EDC Las Vegas",
-    }})
+    config = Config(
+        {
+            "place_aliases": {
+                "AMF": "AMF",
+                "Amsterdam Music Festival": "AMF",
+                "EDC": "EDC Las Vegas",
+            }
+        }
+    )
     assert config.resolve_place_alias("Amsterdam Music Festival") == "AMF"
     assert config.resolve_place_alias("AMF") == "AMF"
     assert config.resolve_place_alias("EDC") == "EDC Las Vegas"
@@ -555,11 +620,15 @@ def test_place_aliases_flat_format():
 
 def test_place_aliases_mixed_format():
     """Mixed dict with some grouped and some flat entries."""
-    config = Config({"place_aliases": {
-        "Tomorrowland": ["TML", "Tomorrowland Weekend 1"],
-        "AMF": "AMF",
-        "Amsterdam Music Festival": "AMF",
-    }})
+    config = Config(
+        {
+            "place_aliases": {
+                "Tomorrowland": ["TML", "Tomorrowland Weekend 1"],
+                "AMF": "AMF",
+                "Amsterdam Music Festival": "AMF",
+            }
+        }
+    )
     assert config.resolve_place_alias("TML") == "Tomorrowland"
     assert config.resolve_place_alias("Amsterdam Music Festival") == "AMF"
     assert config.resolve_place_alias("AMF") == "AMF"
@@ -568,6 +637,7 @@ def test_place_aliases_mixed_format():
 def test_invert_alias_map_flat_does_not_iterate_characters():
     """Flat format 'AMF': 'AMF' must NOT create entries for 'A', 'M', 'F'."""
     from festival_organizer.config import _invert_alias_map
+
     result = _invert_alias_map({"AMF": "AMF", "Amsterdam Music Festival": "AMF"})
     assert "A" not in result
     assert "M" not in result
@@ -579,11 +649,14 @@ def test_invert_alias_map_flat_does_not_iterate_characters():
 def test_invert_alias_map_invalid_value_type_skipped():
     """Non-string, non-list values should be skipped with warning."""
     from festival_organizer.config import _invert_alias_map
-    result = _invert_alias_map({
-        "AMF": ["Amsterdam Music Festival"],
-        "bad": 42,
-        "also_bad": None,
-    })
+
+    result = _invert_alias_map(
+        {
+            "AMF": ["Amsterdam Music Festival"],
+            "bad": 42,
+            "also_bad": None,
+        }
+    )
     assert result["AMF"] == "AMF"
     assert result["Amsterdam Music Festival"] == "AMF"
     assert "bad" not in result
@@ -594,11 +667,14 @@ def test_invert_alias_map_circular_flat_warns(caplog):
     """Circular flat aliases should log a warning."""
     import logging
     from festival_organizer.config import _invert_alias_map
+
     with caplog.at_level(logging.WARNING):
-        result = _invert_alias_map({
-            "AMF": "Amsterdam Music Festival",
-            "Amsterdam Music Festival": "AMF",
-        })
+        result = _invert_alias_map(
+            {
+                "AMF": "Amsterdam Music Festival",
+                "Amsterdam Music Festival": "AMF",
+            }
+        )
     assert result["AMF"] == "Amsterdam Music Festival"
     assert result["Amsterdam Music Festival"] == "AMF"
     assert any("ircular" in msg for msg in caplog.messages)
@@ -607,6 +683,7 @@ def test_invert_alias_map_circular_flat_warns(caplog):
 def test_load_config_unreadable_file(tmp_path, caplog):
     """Unreadable config logs warning and falls back to defaults."""
     import os
+
     user_dir = tmp_path / "user"
     user_dir.mkdir()
     cfg_file = user_dir / "config.toml"
@@ -629,9 +706,9 @@ class TestTomlConfigLoading:
         user_dir.mkdir()
         (user_dir / "config.toml").write_text(
             'default_layout = "place_nested"\n'
-            '\n'
-            '[kodi]\n'
-            'enabled = true\n'
+            "\n"
+            "[kodi]\n"
+            "enabled = true\n"
             'host = "192.168.1.10"\n'
         )
         with patch("festival_organizer.config.paths") as mock_paths:
@@ -674,7 +751,9 @@ class TestTomlConfigLoading:
             mock_paths.config_file.return_value = user_dir / "config.toml"
             with caplog.at_level("WARNING", logger="festival_organizer.config"):
                 cfg = load_config()
-        assert any("config.read: status=failed" in r.getMessage() for r in caplog.records)
+        assert any(
+            "config.read: status=failed" in r.getMessage() for r in caplog.records
+        )
         assert cfg is not None
 
 
@@ -693,8 +772,9 @@ def test_legacy_library_config_json_logs_warning(tmp_path, caplog):
         with caplog.at_level("WARNING", logger="festival_organizer.config"):
             load_config(library_config_dir=library_dir)
 
-    messages = [r.getMessage() for r in caplog.records
-                if r.name == "festival_organizer.config"]
+    messages = [
+        r.getMessage() for r in caplog.records if r.name == "festival_organizer.config"
+    ]
     assert any("config.json" in m and "config.toml" in m for m in messages), (
         f"expected a WARNING mentioning both config.json and config.toml, got: {messages}"
     )
@@ -800,8 +880,9 @@ def test_resolve_place_chain_location_resolves_through_alias(cfg_with_places):
 
 
 def test_resolve_place_chain_location_raw(cfg_with_places):
-    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
-                   location="Random Bar, Berlin, Germany")
+    mf = MediaFile(
+        source_path=Path("/tmp/x.mkv"), location="Random Bar, Berlin, Germany"
+    )
     name, kind = cfg_with_places.resolve_place_for_media(mf)
     assert (name, kind) == ("Random Bar, Berlin, Germany", "location")
 
@@ -814,33 +895,43 @@ def test_resolve_place_chain_artist_fallback(cfg_with_places):
 
 def test_resolve_place_chain_strips_whitespace_only_festival(cfg_with_places):
     """A whitespace-only festival field falls through to the next chain position."""
-    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
-                   festival="   ", venue="Alexandra Palace",
-                   artist="Fred again..")
+    mf = MediaFile(
+        source_path=Path("/tmp/x.mkv"),
+        festival="   ",
+        venue="Alexandra Palace",
+        artist="Fred again..",
+    )
     name, kind = cfg_with_places.resolve_place_for_media(mf)
     assert (name, kind) == ("Alexandra Palace", "venue")
 
 
 def test_resolve_place_chain_strips_whitespace_only_venue(cfg_with_places):
     """A whitespace-only venue field falls through to the next chain position."""
-    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
-                   venue="\t \n", location="Some Bar, Berlin",
-                   artist="DJ Example")
+    mf = MediaFile(
+        source_path=Path("/tmp/x.mkv"),
+        venue="\t \n",
+        location="Some Bar, Berlin",
+        artist="DJ Example",
+    )
     name, kind = cfg_with_places.resolve_place_for_media(mf)
     assert (name, kind) == ("Some Bar, Berlin", "location")
 
 
 def test_resolve_place_chain_strips_whitespace_only_artist(cfg_with_places):
     """All-whitespace fields produce an empty result, not a whitespace folder."""
-    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
-                   festival=" ", venue="  ", location="\t", artist="   ")
+    mf = MediaFile(
+        source_path=Path("/tmp/x.mkv"),
+        festival=" ",
+        venue="  ",
+        location="\t",
+        artist="   ",
+    )
     name, kind = cfg_with_places.resolve_place_for_media(mf)
     assert (name, kind) == ("", "")
 
 
 def test_resolve_place_chain_returns_stripped_value(cfg_with_places):
     """When a field has padding, the returned name is stripped."""
-    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
-                   festival="  Tomorrowland  ")
+    mf = MediaFile(source_path=Path("/tmp/x.mkv"), festival="  Tomorrowland  ")
     name, kind = cfg_with_places.resolve_place_for_media(mf)
     assert (name, kind) == ("Tomorrowland", "festival")

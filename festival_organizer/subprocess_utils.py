@@ -21,6 +21,7 @@ Logging:
         - subprocess.spawn_failed (DEBUG): Subprocess could not be started
     See docs/logging.md for full guidelines.
 """
+
 from __future__ import annotations
 
 import logging
@@ -58,7 +59,9 @@ def _log_nonzero_exit(returncode: int, cmd_str: str, stderr: Any) -> None:
     if tail:
         logger.debug(
             "subprocess.exit: code=%d cmd=%s tail=%s",
-            returncode, cmd_str, tail,
+            returncode,
+            cmd_str,
+            tail,
         )
     else:
         logger.debug("subprocess.exit: code=%d cmd=%s", returncode, cmd_str)
@@ -93,7 +96,7 @@ def tracked_run(cmd: Any, **kwargs: Any) -> subprocess.CompletedProcess:
         _log_nonzero_exit(e.returncode, cmd_str, e.stderr)
         raise
     except OSError as e:
-        logger.debug("subprocess.spawn_failed: cmd=%s error=\"%s\"", cmd_str, e)
+        logger.debug('subprocess.spawn_failed: cmd=%s error="%s"', cmd_str, e)
         raise
 
     if result.returncode != 0:

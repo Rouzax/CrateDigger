@@ -18,6 +18,7 @@ Logging:
         - identify.write_failed (WARNING): Tag writing via mkvpropedit failed
     See docs/logging.md for full guidelines.
 """
+
 import logging
 import re
 import sys
@@ -50,7 +51,12 @@ from festival_organizer.tracklists.api import (
     ExportError,
     top_genres_by_frequency,
 )
-from festival_organizer.mkv_tags import CLEAR_TAG, has_album_artist_display_tags, has_chapter_tags, has_legacy_chapter_title
+from festival_organizer.mkv_tags import (
+    CLEAR_TAG,
+    has_album_artist_display_tags,
+    has_chapter_tags,
+    has_legacy_chapter_title,
+)
 from festival_organizer.tracklists.source_cache import SourceCache
 from festival_organizer.tracklists.chapters import (
     build_1001tl_tags,
@@ -94,6 +100,7 @@ def _build_search_expansion(config: Config) -> dict[str, str]:
                 expansion[key] = long
     return expansion
 
+
 _FRIENDLY_TAG_NAMES = {
     "CRATEDIGGER_1001TL_URL": "url",
     "CRATEDIGGER_1001TL_TITLE": "title",
@@ -116,7 +123,10 @@ _FRIENDLY_TAG_NAMES = {
 
 
 def _print_tagged_metadata_from_stored(
-    filepath: Path, console: Console, *, total: int = 0,
+    filepath: Path,
+    console: Console,
+    *,
+    total: int = 0,
 ) -> None:
     """Print per-file tagged metadata from stored tags (post-verdict, under --verbose).
 
@@ -146,8 +156,14 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
     """Main entry point for the 'identify' subcommand."""
     con = console or make_console()
     root = Path(args.root)
-    auto_select = args.auto_select or config.tracklists_settings.get("auto_select", False)
-    delay = args.delay if hasattr(args, "delay") and args.delay is not None else config.tracklists_settings.get("delay_seconds", 5)
+    auto_select = args.auto_select or config.tracklists_settings.get(
+        "auto_select", False
+    )
+    delay = (
+        args.delay
+        if hasattr(args, "delay") and args.delay is not None
+        else config.tracklists_settings.get("delay_seconds", 5)
+    )
     preview = getattr(args, "preview", False)
     ignore_stored = getattr(args, "ignore_stored_url", False)
     tracklist_input = getattr(args, "tracklist", None)
@@ -166,7 +182,11 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         files = [root]
         scan_root = root.parent
     elif root.is_dir():
-        files = [f for f in scan_folder(root, config) if f.suffix.lower() in (".mkv", ".webm")]
+        files = [
+            f
+            for f in scan_folder(root, config)
+            if f.suffix.lower() in (".mkv", ".webm")
+        ]
         scan_root = root
     else:
         print(f"Error: path does not exist: {root}", file=sys.stderr)
@@ -182,7 +202,10 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
     session = TracklistSession(source_cache=source_cache, dj_cache=dj_cache)
     email, password = _get_credentials(config)
     if not email or not password:
-        print("Error: credentials required. Set TRACKLISTS_EMAIL and TRACKLISTS_PASSWORD environment variables.", file=sys.stderr)
+        print(
+            "Error: credentials required. Set TRACKLISTS_EMAIL and TRACKLISTS_PASSWORD environment variables.",
+            file=sys.stderr,
+        )
         return 1
 
     total_start = time.perf_counter()
@@ -210,8 +233,13 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
         search_expansion = _build_search_expansion(config)
 
         # Process files
-        stats = {"updated": 0, "up_to_date": 0, "skipped": 0,
-                 "error": 0, "previewed": 0}
+        stats = {
+            "updated": 0,
+            "up_to_date": 0,
+            "skipped": 0,
+            "error": 0,
+            "previewed": 0,
+        }
         tagged_festivals: dict[str, int] = {}
         unmatched_files: list[str] = []
         updated_paths: list[Path] = []
@@ -231,7 +259,7 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 remaining = delay - (time.monotonic() - prev_file_start)
                 if remaining > 0:
                     spinner.update(
-                        f"[{i+1}/{len(files)}] Cooling down {remaining:.1f}s",
+                        f"[{i + 1}/{len(files)}] Cooling down {remaining:.1f}s",
                         filename=filepath.name,
                     )
                     time.sleep(remaining)
@@ -261,7 +289,12 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 con.print("\nAborted by user.")
                 aborted = True
                 break
-            except (TracklistError, AuthenticationError, RateLimitError, ExportError) as e:
+            except (
+                TracklistError,
+                AuthenticationError,
+                RateLimitError,
+                ExportError,
+            ) as e:
                 stat_key, vstatus, detail = "error", "error", f"{type(e).__name__}: {e}"
             except Exception as e:
                 logger.exception("Unexpected error processing %s", filepath.name)
@@ -287,13 +320,17 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 unmatched_files.append(filepath.name)
 
             console_width = con.size.width if con.size else 120
-            con.print(verdict(
-                status=vstatus, index=i + 1, total=len(files),
-                filename=filepath.name,
-                detail_line=detail if detail else None,
-                elapsed_s=elapsed,
-                width=console_width,
-            ))
+            con.print(
+                verdict(
+                    status=vstatus,
+                    index=i + 1,
+                    total=len(files),
+                    filename=filepath.name,
+                    detail_line=detail if detail else None,
+                    elapsed_s=elapsed,
+                    width=console_width,
+                )
+            )
             if info_enabled and stat_key == "updated":
                 _print_tagged_metadata_from_stored(filepath, con, total=len(files))
 
@@ -304,13 +341,15 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
 
     # Summary
     con.print()
-    con.print(identify_summary_panel(
-        stats=stats,
-        tagged_count=tagged_count,
-        festivals=tagged_festivals,
-        unmatched=unmatched_files,
-        elapsed_s=total_elapsed,
-    ))
+    con.print(
+        identify_summary_panel(
+            stats=stats,
+            tagged_count=tagged_count,
+            festivals=tagged_festivals,
+            unmatched=unmatched_files,
+            elapsed_s=total_elapsed,
+        )
+    )
 
     from festival_organizer import notify
 
@@ -371,51 +410,89 @@ def _process_file(
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
             if auto_select:
-                logger.info("identify.stored_url: file=%s url=%s action=reuse", filepath.name, stored["url"])
+                logger.info(
+                    "identify.stored_url: file=%s url=%s action=reuse",
+                    filepath.name,
+                    stored["url"],
+                )
                 if spinner is not None:
                     spinner.update(
                         f"[{index}/{total}] Verifying stored tracklist",
                         filename=filepath.name,
                     )
                 return _fetch_and_embed(
-                    session, stored["url"], filepath,
-                    config, preview, quiet, language, console=con,
+                    session,
+                    stored["url"],
+                    filepath,
+                    config,
+                    preview,
+                    quiet,
+                    language,
+                    console=con,
                     duration_seconds=mf.duration_seconds,
                     regenerate=ignore_stored,
-                    spinner=spinner, index=index, total=total,
+                    spinner=spinner,
+                    index=index,
+                    total=total,
                 )
             else:
                 if spinner is not None:
                     spinner.stop()
                 con.print()
                 if total > 0:
-                    con.print(f"  [bold]\\[{index}/{total}][/bold] {escape(filepath.name)}")
+                    con.print(
+                        f"  [bold]\\[{index}/{total}][/bold] {escape(filepath.name)}"
+                    )
                 else:
                     con.print(f"  {escape(filepath.name)}")
-                con.print(f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]")
-                choice = input("  Use stored? [Y]es / (S)kip / (R)esearch: ").strip().lower()
+                con.print(
+                    f"  [bold]Stored URL:[/bold] [dim]{escape(stored['url'])}[/dim]"
+                )
+                choice = (
+                    input("  Use stored? [Y]es / (S)kip / (R)esearch: ").strip().lower()
+                )
                 con.print()
                 if spinner is not None:
                     spinner.start()
                 if choice in ("y", "yes", ""):
-                    logger.info("identify.stored_url: file=%s url=%s action=reuse", filepath.name, stored["url"])
+                    logger.info(
+                        "identify.stored_url: file=%s url=%s action=reuse",
+                        filepath.name,
+                        stored["url"],
+                    )
                     if spinner is not None:
                         spinner.update(
                             f"[{index}/{total}] Verifying stored tracklist",
                             filename=filepath.name,
                         )
                     return _fetch_and_embed(
-                        session, stored["url"], filepath,
-                        config, preview, quiet, language, console=con,
+                        session,
+                        stored["url"],
+                        filepath,
+                        config,
+                        preview,
+                        quiet,
+                        language,
+                        console=con,
                         duration_seconds=mf.duration_seconds,
                         regenerate=ignore_stored,
-                        spinner=spinner, index=index, total=total,
+                        spinner=spinner,
+                        index=index,
+                        total=total,
                     )
                 elif choice in ("s", "skip"):
-                    logger.info("identify.stored_url: file=%s url=%s action=skip", filepath.name, stored["url"])
+                    logger.info(
+                        "identify.stored_url: file=%s url=%s action=skip",
+                        filepath.name,
+                        stored["url"],
+                    )
                     return ("skipped", "skipped", "user skipped")
                 else:
-                    logger.info("identify.stored_url: file=%s url=%s action=research", filepath.name, stored["url"])
+                    logger.info(
+                        "identify.stored_url: file=%s url=%s action=research",
+                        filepath.name,
+                        stored["url"],
+                    )
                 # fall through to search
 
     # Determine search query
@@ -427,23 +504,47 @@ def _process_file(
 
     # Handle direct URL or ID
     if source["type"] == "url":
-        logger.debug("identify.direct_input: file=%s type=url value=%s", filepath.name, source["value"])
+        logger.debug(
+            "identify.direct_input: file=%s type=url value=%s",
+            filepath.name,
+            source["value"],
+        )
         return _fetch_and_embed(
-            session, source["value"], filepath,
-            config, preview, quiet, language, console=con,
+            session,
+            source["value"],
+            filepath,
+            config,
+            preview,
+            quiet,
+            language,
+            console=con,
             duration_seconds=mf.duration_seconds,
             regenerate=ignore_stored,
-            spinner=spinner, index=index, total=total,
+            spinner=spinner,
+            index=index,
+            total=total,
         )
     elif source["type"] == "id":
-        logger.debug("identify.direct_input: file=%s type=id value=%s", filepath.name, source["value"])
+        logger.debug(
+            "identify.direct_input: file=%s type=id value=%s",
+            filepath.name,
+            source["value"],
+        )
         return _fetch_and_embed(
-            session, None, filepath,
-            config, preview, quiet, language, console=con,
+            session,
+            None,
+            filepath,
+            config,
+            preview,
+            quiet,
+            language,
+            console=con,
             tracklist_id=source["value"],
             duration_seconds=mf.duration_seconds,
             regenerate=ignore_stored,
-            spinner=spinner, index=index, total=total,
+            spinner=spinner,
+            index=index,
+            total=total,
         )
 
     # Search
@@ -453,14 +554,29 @@ def _process_file(
     query_str = expand_aliases_in_query(original_query, search_expansion)
 
     if query_str != original_query:
-        logger.info("identify.search: file=%s query=\"%s\" expanded=\"%s\" duration_m=%d year=%s", filepath.name, original_query, query_str, duration_mins, mf.year or "")
+        logger.info(
+            'identify.search: file=%s query="%s" expanded="%s" duration_m=%d year=%s',
+            filepath.name,
+            original_query,
+            query_str,
+            duration_mins,
+            mf.year or "",
+        )
     else:
-        logger.info("identify.search: file=%s query=\"%s\" duration_m=%d year=%s", filepath.name, query_str, duration_mins, mf.year or "")
+        logger.info(
+            'identify.search: file=%s query="%s" duration_m=%d year=%s',
+            filepath.name,
+            query_str,
+            duration_mins,
+            mf.year or "",
+        )
 
     if spinner is not None:
         spinner.update(f"[{index}/{total}] Searching 1001TL", filename=filepath.name)
 
-    results = session.search(query_str, duration_minutes=duration_mins, year=mf.year or None)
+    results = session.search(
+        query_str, duration_minutes=duration_mins, year=mf.year or None
+    )
 
     if not results:
         return ("skipped", "skipped", "no results")
@@ -471,7 +587,13 @@ def _process_file(
     if not scored:
         return ("skipped", "skipped", "no results")
 
-    logger.debug("identify.results: file=%s count=%d top_score=%.0f runner_up=%.0f", filepath.name, len(scored), scored[0].score if scored else 0, scored[1].score if len(scored) > 1 else 0)
+    logger.debug(
+        "identify.results: file=%s count=%d top_score=%.0f runner_up=%.0f",
+        filepath.name,
+        len(scored),
+        scored[0].score if scored else 0,
+        scored[1].score if len(scored) > 1 else 0,
+    )
 
     # Select result
     if auto_select:
@@ -480,19 +602,45 @@ def _process_file(
         gap = selected.score - runner_up
 
         if selected.score < AUTO_SELECT_MIN_SCORE:
-            logger.info("identify.auto_select: file=%s action=reject reason=low_score score=%.0f min=%d", filepath.name, selected.score, AUTO_SELECT_MIN_SCORE)
-            return ("skipped", "skipped", f"low confidence (score {selected.score:.0f})")
+            logger.info(
+                "identify.auto_select: file=%s action=reject reason=low_score score=%.0f min=%d",
+                filepath.name,
+                selected.score,
+                AUTO_SELECT_MIN_SCORE,
+            )
+            return (
+                "skipped",
+                "skipped",
+                f"low confidence (score {selected.score:.0f})",
+            )
         if gap < AUTO_SELECT_MIN_GAP:
-            logger.info("identify.auto_select: file=%s action=reject reason=low_gap score=%.0f gap=%.0f min=%d", filepath.name, selected.score, gap, AUTO_SELECT_MIN_GAP)
+            logger.info(
+                "identify.auto_select: file=%s action=reject reason=low_gap score=%.0f gap=%.0f min=%d",
+                filepath.name,
+                selected.score,
+                gap,
+                AUTO_SELECT_MIN_GAP,
+            )
             return ("skipped", "skipped", f"low confidence (gap {gap:.0f})")
-        logger.info("identify.auto_select: file=%s action=accept score=%.0f gap=%.0f id=%s", filepath.name, selected.score, gap, selected.id)
+        logger.info(
+            "identify.auto_select: file=%s action=accept score=%.0f gap=%.0f id=%s",
+            filepath.name,
+            selected.score,
+            gap,
+            selected.id,
+        )
     else:
         if spinner is not None:
             spinner.stop()
         selected = _select_interactive(
-            scored, duration_mins, query_parts, con,
-            filename=filepath.name, query_str=query_str,
-            index=index, total=total,
+            scored,
+            duration_mins,
+            query_parts,
+            con,
+            filename=filepath.name,
+            query_str=query_str,
+            index=index,
+            total=total,
         )
         if spinner is not None:
             spinner.start()
@@ -502,13 +650,21 @@ def _process_file(
     # Fetch and embed
     tl_id = selected.id
     return _fetch_and_embed(
-        session, selected.url, filepath,
-        config, preview, quiet, language, console=con,
+        session,
+        selected.url,
+        filepath,
+        config,
+        preview,
+        quiet,
+        language,
+        console=con,
         tracklist_id=tl_id,
         tracklist_date=selected.date,
         duration_seconds=mf.duration_seconds,
         regenerate=ignore_stored,
-        spinner=spinner, index=index, total=total,
+        spinner=spinner,
+        index=index,
+        total=total,
     )
 
 
@@ -577,19 +733,41 @@ def _fetch_and_embed(
         source = "frequency" if capped else "scrape"
         logger.info(
             "identify.genres: file=%s written=%d scraped=%d source=%s genres=%s",
-            filepath.name, len(set_genres), len(export.genres), source,
+            filepath.name,
+            len(set_genres),
+            len(export.genres),
+            source,
             "|".join(set_genres),
         )
 
     try:
         chapters = parse_tracklist_lines(export.lines, language=language)
-        chapters = supplement_chapters_from_tracks(chapters, export.tracks, language=language)
+        chapters = supplement_chapters_from_tracks(
+            chapters, export.tracks, language=language
+        )
         chapters = trim_chapters_to_duration(chapters, duration_seconds)
     except ValueError:
         logger.debug("identify.skip: file=%s reason=parse_failed", filepath.name)
         if not preview:
             # Tag file with URL for future pickup
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=effective_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
+            embed_chapters(
+                filepath,
+                [],
+                tracklist_url=export.url,
+                tracklist_title=export.title,
+                tracklist_id=tracklist_id,
+                tracklist_date=effective_date,
+                genres=set_genres,
+                dj_artwork_url=export.dj_artwork_url,
+                stage_text=export.stage_text,
+                sources_by_type=export.sources_by_type,
+                dj_artists=export.dj_artists,
+                country=export.country,
+                location=export.location,
+                tracks=export.tracks,
+                dj_cache=session._dj_cache,
+                alias_resolver=config.resolve_artist,
+            )
         return ("skipped", "skipped", "no chapters parsed")
 
     if not chapters:
@@ -597,15 +775,42 @@ def _fetch_and_embed(
         return ("skipped", "skipped", "no chapters parsed")
 
     if len(chapters) < 2:
-        logger.debug("identify.skip: file=%s reason=single_chapter chapters=%d", filepath.name, len(chapters))
+        logger.debug(
+            "identify.skip: file=%s reason=single_chapter chapters=%d",
+            filepath.name,
+            len(chapters),
+        )
         if not preview:
-            embed_chapters(filepath, [], tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=effective_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
+            embed_chapters(
+                filepath,
+                [],
+                tracklist_url=export.url,
+                tracklist_title=export.title,
+                tracklist_id=tracklist_id,
+                tracklist_date=effective_date,
+                genres=set_genres,
+                dj_artwork_url=export.dj_artwork_url,
+                stage_text=export.stage_text,
+                sources_by_type=export.sources_by_type,
+                dj_artists=export.dj_artists,
+                country=export.country,
+                location=export.location,
+                tracks=export.tracks,
+                dj_cache=session._dj_cache,
+                alias_resolver=config.resolve_artist,
+            )
         return ("skipped", "skipped", "only 1 chapter")
 
     # Check for duplicates
     existing = extract_existing_chapters(filepath)
     match = chapters_are_identical(existing, chapters)
-    logger.debug("identify.chapters_match: file=%s match=%s existing=%d new=%d", filepath.name, match, len(existing) if existing else 0, len(chapters))
+    logger.debug(
+        "identify.chapters_match: file=%s match=%s existing=%d new=%d",
+        filepath.name,
+        match,
+        len(existing) if existing else 0,
+        len(chapters),
+    )
     if match:
         stored = extract_stored_tracklist_info(filepath)
         if stored and stored.get("url"):
@@ -641,7 +846,9 @@ def _fetch_and_embed(
                 "CRATEDIGGER_1001TL_LOCATION": stored.get("location", ""),
                 "CRATEDIGGER_1001TL_SOURCE_TYPE": stored.get("source_type", ""),
                 "CRATEDIGGER_ALBUMARTIST_SLUGS": stored.get("albumartist_slugs", ""),
-                "CRATEDIGGER_ALBUMARTIST_DISPLAY": stored.get("albumartist_display", ""),
+                "CRATEDIGGER_ALBUMARTIST_DISPLAY": stored.get(
+                    "albumartist_display", ""
+                ),
             }
             # Tags that would change at TTV=70
             tags_to_update = {}
@@ -653,8 +860,15 @@ def _fetch_and_embed(
                 elif v and v != stored_val:
                     tags_to_update[k] = v
             if tags_to_update:
-                friendly = ", ".join(_FRIENDLY_TAG_NAMES.get(k, k) for k in tags_to_update)
-                logger.debug("identify.tags_update: file=%s changed=%d tags=%s", filepath.name, len(tags_to_update), friendly)
+                friendly = ", ".join(
+                    _FRIENDLY_TAG_NAMES.get(k, k) for k in tags_to_update
+                )
+                logger.debug(
+                    "identify.tags_update: file=%s changed=%d tags=%s",
+                    filepath.name,
+                    len(tags_to_update),
+                    friendly,
+                )
             else:
                 logger.debug("identify.tags_update: file=%s changed=0", filepath.name)
             # Self-heal: legacy files enriched before 0.9.9 lack TTV=30
@@ -666,17 +880,32 @@ def _fetch_and_embed(
             # album-level tags. Force a re-embed using the stored URL so the
             # user doesn't have to --regenerate (which would re-search 1001TL
             # and risk rebinding to a different tracklist).
-            missing_album_tags = bool(export.dj_artists) and not has_album_artist_display_tags(filepath)
+            missing_album_tags = bool(
+                export.dj_artists
+            ) and not has_album_artist_display_tags(filepath)
             legacy_chapter_title = has_legacy_chapter_title(filepath)
             if missing_chapter_tags:
-                logger.debug("identify.self_heal: file=%s reason=missing_chapter_tags", filepath.name)
+                logger.debug(
+                    "identify.self_heal: file=%s reason=missing_chapter_tags",
+                    filepath.name,
+                )
             elif missing_album_tags:
-                logger.debug("identify.self_heal: file=%s reason=missing_album_tags", filepath.name)
+                logger.debug(
+                    "identify.self_heal: file=%s reason=missing_album_tags",
+                    filepath.name,
+                )
             elif legacy_chapter_title:
-                logger.debug("identify.self_heal: file=%s reason=legacy_chapter_title", filepath.name)
-            if (not tags_to_update and not missing_chapter_tags
-                    and not missing_album_tags and not legacy_chapter_title
-                    and not regenerate):
+                logger.debug(
+                    "identify.self_heal: file=%s reason=legacy_chapter_title",
+                    filepath.name,
+                )
+            if (
+                not tags_to_update
+                and not missing_chapter_tags
+                and not missing_album_tags
+                and not legacy_chapter_title
+                and not regenerate
+            ):
                 return ("up_to_date", "up-to-date", "")
             # Otherwise route through embed_chapters: it writes TTV=70 +
             # per-chapter TTV=30 + folds any duplicate global Tag blocks.
@@ -696,30 +925,48 @@ def _fetch_and_embed(
                 reason = "refreshed (regenerate)"
                 logger.debug("identify.regenerate: file=%s", filepath.name)
             if preview:
-                return ("updated", "updated", f"{export.title} . {reason} . {len(chapters)} chapters")
+                return (
+                    "updated",
+                    "updated",
+                    f"{export.title} . {reason} . {len(chapters)} chapters",
+                )
             if spinner is not None:
                 spinner.update(
                     f"[{index}/{total}] Embedding {len(chapters)} chapters",
                     filename=filepath.name,
                 )
             success = embed_chapters(
-                filepath, chapters,
-                tracklist_url=export.url, tracklist_title=export.title,
-                tracklist_id=tracklist_id, tracklist_date=effective_date,
-                genres=set_genres, dj_artwork_url=export.dj_artwork_url,
+                filepath,
+                chapters,
+                tracklist_url=export.url,
+                tracklist_title=export.title,
+                tracklist_id=tracklist_id,
+                tracklist_date=effective_date,
+                genres=set_genres,
+                dj_artwork_url=export.dj_artwork_url,
                 stage_text=export.stage_text,
                 sources_by_type=export.sources_by_type,
-                dj_artists=export.dj_artists, country=export.country,
+                dj_artists=export.dj_artists,
+                country=export.country,
                 location=export.location,
-                tracks=export.tracks, dj_cache=session._dj_cache,
+                tracks=export.tracks,
+                dj_cache=session._dj_cache,
                 alias_resolver=config.resolve_artist,
             )
             if success:
-                return ("updated", "updated", f"{export.title} . {reason} . {len(chapters)} chapters")
+                return (
+                    "updated",
+                    "updated",
+                    f"{export.title} . {reason} . {len(chapters)} chapters",
+                )
             logger.warning("identify.retag: status=failed file=%s", filepath)
             return ("error", "error", "mkvpropedit failed")
         else:
-            logger.debug("identify.chapters_no_stored: file=%s existing=%d", filepath.name, len(existing) if existing else 0)
+            logger.debug(
+                "identify.chapters_no_stored: file=%s existing=%d",
+                filepath.name,
+                len(existing) if existing else 0,
+            )
 
     # Preview-only: show the planned chapter list, don't write.
     if preview:
@@ -736,7 +983,24 @@ def _fetch_and_embed(
             f"[{index}/{total}] Embedding {len(chapters)} chapters",
             filename=filepath.name,
         )
-    success = embed_chapters(filepath, chapters, tracklist_url=export.url, tracklist_title=export.title, tracklist_id=tracklist_id, tracklist_date=effective_date, genres=set_genres, dj_artwork_url=export.dj_artwork_url, stage_text=export.stage_text, sources_by_type=export.sources_by_type, dj_artists=export.dj_artists, country=export.country, location=export.location, tracks=export.tracks, dj_cache=session._dj_cache, alias_resolver=config.resolve_artist)
+    success = embed_chapters(
+        filepath,
+        chapters,
+        tracklist_url=export.url,
+        tracklist_title=export.title,
+        tracklist_id=tracklist_id,
+        tracklist_date=effective_date,
+        genres=set_genres,
+        dj_artwork_url=export.dj_artwork_url,
+        stage_text=export.stage_text,
+        sources_by_type=export.sources_by_type,
+        dj_artists=export.dj_artists,
+        country=export.country,
+        location=export.location,
+        tracks=export.tracks,
+        dj_cache=session._dj_cache,
+        alias_resolver=config.resolve_artist,
+    )
     if success:
         return ("updated", "updated", f"{export.title} . {len(chapters)} chapters")
     return ("error", "error", "mkvpropedit failed")

@@ -23,6 +23,7 @@ Logging:
         - session.network_error (DEBUG): Network error, retrying
     See docs/logging.md for full guidelines.
 """
+
 import html as html_mod
 import json
 import logging
@@ -43,7 +44,9 @@ from festival_organizer.tracklists import canary
 
 logger = logging.getLogger(__name__)
 
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0"
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0"
+)
 BASE_URL = "https://www.1001tracklists.com"
 
 # Short pause between consecutive 1001TL requests inside one file's processing
@@ -83,6 +86,7 @@ class Track:
     label: record label as plain text (e.g. "WALL"), empty if not listed
     genres: per-track <meta itemprop="genre"> values for this row
     """
+
     start_ms: int
     raw_text: str
     artist_slugs: list[str]
@@ -96,6 +100,7 @@ class Track:
 @dataclass
 class TracklistExport:
     """Exported tracklist data."""
+
     lines: list[str]
     url: str
     title: str
@@ -149,6 +154,7 @@ def _parse_tracks(html) -> list["Track"]:
     """
     from bs4 import BeautifulSoup
     from festival_organizer.normalization import fix_mojibake, normalize_genre
+
     soup = _to_soup(html)
     tracks: list[Track] = []
     for row in soup.select("div.tlpItem"):
@@ -212,17 +218,23 @@ def _parse_tracks(html) -> list["Track"]:
             # annotation, not a clean name. Slug-fallback wins in that case.
             display = ""
             parent_wrapper = a.parent
-            if (parent_wrapper is not None and hasattr(parent_wrapper, "get")
-                    and "tgHid" in parent_wrapper.get("class", [])
-                    and "spR" in parent_wrapper.get("class", [])):
+            if (
+                parent_wrapper is not None
+                and hasattr(parent_wrapper, "get")
+                and "tgHid" in parent_wrapper.get("class", [])
+                and "spR" in parent_wrapper.get("class", [])
+            ):
                 prev = parent_wrapper.previous_sibling
                 while prev is not None and getattr(prev, "name", None) is None:
                     if str(prev).strip():
                         break
                     prev = prev.previous_sibling
-                if (prev is not None and getattr(prev, "name", None) == "span"
-                        and hasattr(prev, "get")
-                        and "blueTxt" in prev.get("class", [])):
+                if (
+                    prev is not None
+                    and getattr(prev, "name", None) == "span"
+                    and hasattr(prev, "get")
+                    and "blueTxt" in prev.get("class", [])
+                ):
                     display = prev.get_text(" ", strip=True)
             if not display:
                 parent = a
@@ -230,13 +242,20 @@ def _parse_tracks(html) -> list["Track"]:
                     parent = parent.parent if parent else None
                     if parent is None:
                         break
-                    parent_classes = parent.get("class", []) if hasattr(parent, "get") else []
-                    if "notranslate" in parent_classes and "trackValue" not in parent_classes:
+                    parent_classes = (
+                        parent.get("class", []) if hasattr(parent, "get") else []
+                    )
+                    if (
+                        "notranslate" in parent_classes
+                        and "trackValue" not in parent_classes
+                    ):
                         candidate = parent.get_text(" ", strip=True)
                         if not (candidate.startswith("(") and candidate.endswith(")")):
                             display = candidate
                         break
-            display = re.sub(r"^(ft\.?\s+|feat\.?\s+)", "", display, flags=re.IGNORECASE)
+            display = re.sub(
+                r"^(ft\.?\s+|feat\.?\s+)", "", display, flags=re.IGNORECASE
+            )
             if not display:
                 display = slug.replace("-", " ").title()
             slugs.append(slug)
@@ -257,7 +276,9 @@ def _parse_tracks(html) -> list["Track"]:
         label_span = row.select_one("span.trackLabel")
         if label_span is not None:
             # Clone and strip nested <a> icons so only the plain label text remains.
-            label_copy = BeautifulSoup(str(label_span), "html.parser").select_one("span.trackLabel")
+            label_copy = BeautifulSoup(str(label_span), "html.parser").select_one(
+                "span.trackLabel"
+            )
             if label_copy is not None:
                 for sub in label_copy.select("a"):
                     sub.decompose()
@@ -285,8 +306,9 @@ def _parse_tracks(html) -> list["Track"]:
 class TracklistSession:
     """Manages authenticated session with 1001tracklists.com."""
 
-    def __init__(self, cookie_cache_path: Path | None = None,
-                 source_cache=None, dj_cache=None):
+    def __init__(
+        self, cookie_cache_path: Path | None = None, source_cache=None, dj_cache=None
+    ):
         self._cookie_path = (
             cookie_cache_path if cookie_cache_path is not None else paths.cookies_file()
         )
@@ -294,16 +316,19 @@ class TracklistSession:
         self._dj_cache = dj_cache
         self._last_request_time: float = 0
         self._session = requests.Session()
-        self._session.headers.update({
-            "User-Agent": USER_AGENT,
-            "Accept-Language": "en-US,en;q=0.9",
-        })
+        self._session.headers.update(
+            {
+                "User-Agent": USER_AGENT,
+                "Accept-Language": "en-US,en;q=0.9",
+            }
+        )
         # (page_type, frozenset(missing)) pairs already reported at
         # WARNING this session. See _run_canary.
         self._canary_seen: set[tuple[str, frozenset[str]]] = set()
 
-    def _run_canary(self, page_type: str, missing: list[str], url: str,
-                    *extras: str) -> None:
+    def _run_canary(
+        self, page_type: str, missing: list[str], url: str, *extras: str
+    ) -> None:
         """Emit a WARNING when a scraped page is structurally broken.
 
         Dedupes by (page_type, frozenset(missing)) for the lifetime of
@@ -317,14 +342,18 @@ class TracklistSession:
         if key in self._canary_seen:
             logger.debug(
                 "identify.canary.suppressed: page_type=%s url=%s",
-                page_type, url,
+                page_type,
+                url,
             )
             return
         self._canary_seen.add(key)
         extras_str = " ".join(extras)
         logger.warning(
             "identify.canary.warning: page_type=%s missing=%s url=%s detail=%s",
-            page_type, missing, url, extras_str,
+            page_type,
+            missing,
+            url,
+            extras_str,
         )
 
     def throttle(self) -> None:
@@ -356,11 +385,15 @@ class TracklistSession:
         self._request("GET", f"{BASE_URL}/")
 
         # Fresh login
-        resp = self._request("POST", f"{BASE_URL}/action/login.html", data={
-            "email": email,
-            "password": password,
-            "referer": f"{BASE_URL}/",
-        })
+        resp = self._request(
+            "POST",
+            f"{BASE_URL}/action/login.html",
+            data={
+                "email": email,
+                "password": password,
+                "referer": f"{BASE_URL}/",
+            },
+        )
 
         if resp.status_code != 200:
             raise AuthenticationError(f"Login returned status {resp.status_code}")
@@ -375,7 +408,9 @@ class TracklistSession:
 
         self._save_cookies(email)
 
-    def search(self, query: str, duration_minutes: int = 0, year: str | None = None) -> list[SearchResult]:
+    def search(
+        self, query: str, duration_minutes: int = 0, year: str | None = None
+    ) -> list[SearchResult]:
         """Search 1001Tracklists for matching tracklists.
 
         Returns list of unscored SearchResult objects.
@@ -393,14 +428,24 @@ class TracklistSession:
 
         logger.debug(
             "identify.search.params: year=%s order=%s filter=%s",
-            data.get("startDate", ""), data.get("orderby", ""),
+            data.get("startDate", ""),
+            data.get("orderby", ""),
             bool(data.get("filterObject")),
         )
 
-        resp = self._request("POST", f"{BASE_URL}/search/result.php", data=data,
-                             headers={"Referer": f"{BASE_URL}/search/"})
+        resp = self._request(
+            "POST",
+            f"{BASE_URL}/search/result.php",
+            data=data,
+            headers={"Referer": f"{BASE_URL}/search/"},
+        )
 
-        logger.debug("identify.search.response: status=%d length=%d has_results=%s", resp.status_code, len(resp.text), "bItm" in resp.text)
+        logger.debug(
+            "identify.search.response: status=%d length=%d has_results=%s",
+            resp.status_code,
+            len(resp.text),
+            "bItm" in resp.text,
+        )
 
         self._run_canary(
             "search results",
@@ -437,28 +482,35 @@ class TracklistSession:
 
         # Structural canary: flag up-front if 1001TL changed the markup
         # in ways that would silently drain data from the parsers below.
-        self._run_canary("tracklist page",
-                         canary.check_tracklist_page(page_resp.text),
-                         actual_url)
+        self._run_canary(
+            "tracklist page", canary.check_tracklist_page(page_resp.text), actual_url
+        )
 
         # Export via AJAX
-        resp = self._request("POST", f"{BASE_URL}/ajax/export_data.php", data={
-            "object": "tracklist",
-            "idTL": tracklist_id,
-        }, headers={
-            "X-Requested-With": "XMLHttpRequest",
-            "Referer": actual_url,
-            "Accept": "application/json, text/javascript, */*; q=0.01",
-            "Origin": BASE_URL,
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        })
+        resp = self._request(
+            "POST",
+            f"{BASE_URL}/ajax/export_data.php",
+            data={
+                "object": "tracklist",
+                "idTL": tracklist_id,
+            },
+            headers={
+                "X-Requested-With": "XMLHttpRequest",
+                "Referer": actual_url,
+                "Accept": "application/json, text/javascript, */*; q=0.01",
+                "Origin": BASE_URL,
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            },
+        )
 
         try:
             result = resp.json()
         except (json.JSONDecodeError, ValueError) as e:
             logger.debug(
-                "identify.export.decode_failed: id=%s url=%s error=\"%s\"",
-                tracklist_id, resp.url, e,
+                'identify.export.decode_failed: id=%s url=%s error="%s"',
+                tracklist_id,
+                resp.url,
+                e,
             )
             raise ExportError("Invalid JSON response from export API")
 
@@ -482,7 +534,11 @@ class TracklistSession:
         # Extract enrichment metadata from page HTML
         genres = _extract_genres(page_soup)
         if genres:
-            logger.info("identify.export.genres: count=%d genres=%s", len(genres), "|".join(genres))
+            logger.info(
+                "identify.export.genres: count=%d genres=%s",
+                len(genres),
+                "|".join(genres),
+            )
 
         # Parse structured h1 for stage, source, and DJ artist metadata
         h1_el = page_soup.find("h1")
@@ -510,15 +566,26 @@ class TracklistSession:
                         self.throttle()
                         info = self.fetch_source_info(sid, slug)
                         self._source_cache.put(sid, info)
-                        logger.info("identify.cache.source: name=\"%s\" type=\"%s\" country=%s", display_name, info["type"], info["country"])
+                        logger.info(
+                            'identify.cache.source: name="%s" type="%s" country=%s',
+                            display_name,
+                            info["type"],
+                            info["country"],
+                        )
 
                 sources_by_type = self._source_cache.group_by_type(
                     [s[0] for s in h1_info["sources"]]
                 )
 
                 # Derive country and source_type from the primary source
-                for stype in ("Open Air / Festival", "Event Location", "Club",
-                              "Conference", "Concert / Live Event", "Event Promoter"):
+                for stype in (
+                    "Open Air / Festival",
+                    "Event Location",
+                    "Club",
+                    "Conference",
+                    "Concert / Live Event",
+                    "Event Promoter",
+                ):
                     if stype in sources_by_type:
                         source_type_str = stype
                         for sid, _slug, _name in h1_info["sources"]:
@@ -530,7 +597,11 @@ class TracklistSession:
 
         # Fetch DJ profiles and populate cache (skip already-cached DJs)
         dj_artwork_url = ""
-        dj_slugs = [slug for slug, _name in dj_artists] if dj_artists else _extract_dj_slugs(page_soup)
+        dj_slugs = (
+            [slug for slug, _name in dj_artists]
+            if dj_artists
+            else _extract_dj_slugs(page_soup)
+        )
         dj_name_map = {slug: name for slug, name in dj_artists}
         if on_progress:
             on_progress(f"Fetching tracklist ({len(dj_slugs)} DJs)")
@@ -546,7 +617,9 @@ class TracklistSession:
                     display_name = dj_name_map.get(dj_slug, dj_slug)
                     entry = {"name": display_name, **profile}
                     self._dj_cache.put(dj_slug, entry)
-                    logger.info("identify.cache.dj: slug=%s name=\"%s\"", dj_slug, display_name)
+                    logger.info(
+                        'identify.cache.dj: slug=%s name="%s"', dj_slug, display_name
+                    )
             if i == 0 and profile.get("artwork_url"):
                 dj_artwork_url = profile["artwork_url"]
                 logger.info("identify.export.dj_artwork: url=%s", dj_artwork_url)
@@ -560,25 +633,38 @@ class TracklistSession:
             location = ""
 
         return TracklistExport(
-            lines=lines, url=short_url, title=title,
-            genres=genres, dj_artists=dj_artists,
+            lines=lines,
+            url=short_url,
+            title=title,
+            genres=genres,
+            dj_artists=dj_artists,
             dj_artwork_url=dj_artwork_url,
-            stage_text=stage_text, sources_by_type=sources_by_type,
-            country=country, location=location,
+            stage_text=stage_text,
+            sources_by_type=sources_by_type,
+            country=country,
+            location=location,
             source_type=source_type_str,
             tracks=tracks,
             date=h1_date,
         )
 
-    def _request(self, method: str, url: str, data: dict | None = None,
-                 headers: dict | None = None, max_retries: int = 5) -> requests.Response:
+    def _request(
+        self,
+        method: str,
+        url: str,
+        data: dict | None = None,
+        headers: dict | None = None,
+        max_retries: int = 5,
+    ) -> requests.Response:
         """Make HTTP request with retry logic and rate limit handling."""
         for attempt in range(max_retries):
             try:
                 if method.upper() == "GET":
                     resp = self._session.get(url, headers=headers, timeout=30)
                 else:
-                    resp = self._session.post(url, data=data, headers=headers, timeout=30)
+                    resp = self._session.post(
+                        url, data=data, headers=headers, timeout=30
+                    )
 
                 # Rate limit detection
                 if resp.status_code == 429 or _is_rate_limited(resp.text):
@@ -586,19 +672,26 @@ class TracklistSession:
                         wait = 30
                         logger.debug(
                             "session.rate_limit: retry=%d/%d wait=%.1fs",
-                            attempt + 1, max_retries, wait,
+                            attempt + 1,
+                            max_retries,
+                            wait,
                         )
                         time.sleep(wait)
                         continue
-                    raise RateLimitError("Rate limited: solve captcha at 1001tracklists.com in your browser")
+                    raise RateLimitError(
+                        "Rate limited: solve captcha at 1001tracklists.com in your browser"
+                    )
 
                 # Transient errors
                 if resp.status_code in (502, 503, 504):
                     if attempt < max_retries - 1:
-                        wait = min(2 ** attempt + random.uniform(0, 3), 30)
+                        wait = min(2**attempt + random.uniform(0, 3), 30)
                         logger.debug(
                             "session.http_error: status=%d retry=%d/%d wait=%.1fs",
-                            resp.status_code, attempt + 1, max_retries, wait,
+                            resp.status_code,
+                            attempt + 1,
+                            max_retries,
+                            wait,
                         )
                         time.sleep(wait)
                         continue
@@ -617,20 +710,26 @@ class TracklistSession:
 
             except requests.RequestException as e:
                 if attempt < max_retries - 1:
-                    wait = min(2 ** attempt + random.uniform(0, 3), 30)
+                    wait = min(2**attempt + random.uniform(0, 3), 30)
                     logger.debug(
-                        "session.network_error: error=\"%s\" retry=%d/%d wait=%.1fs",
-                        e, attempt + 1, max_retries, wait,
+                        'session.network_error: error="%s" retry=%d/%d wait=%.1fs',
+                        e,
+                        attempt + 1,
+                        max_retries,
+                        wait,
                     )
                     time.sleep(wait)
                     continue
-                raise TracklistError(f"Request failed after {max_retries} attempts: {e}")
+                raise TracklistError(
+                    f"Request failed after {max_retries} attempts: {e}"
+                )
 
         raise TracklistError("Request failed: max retries exceeded")
 
     def _parse_search_results(self, html: str) -> list[SearchResult]:
         """Parse search result HTML into SearchResult objects."""
         from bs4 import BeautifulSoup
+
         soup = BeautifulSoup(html, "html.parser")
         results: list[SearchResult] = []
         seen_ids: set[str] = set()
@@ -665,19 +764,22 @@ class TracklistSession:
                 date_str = date_el.get_text(" ", strip=True)
                 date = _normalize_date(date_str)
 
-            results.append(SearchResult(
-                id=tl_id,
-                title=title,
-                url=f"{BASE_URL}{href}",
-                duration_mins=duration_mins,
-                date=date,
-            ))
+            results.append(
+                SearchResult(
+                    id=tl_id,
+                    title=title,
+                    url=f"{BASE_URL}{href}",
+                    duration_mins=duration_mins,
+                    date=date,
+                )
+            )
 
         return results
 
     def fetch_source_info(self, source_id: str, slug: str) -> dict:
         """Fetch metadata from a /source/ page. Returns {name, slug, type, country}."""
         from bs4 import BeautifulSoup
+
         url = f"{BASE_URL}/source/{source_id}/{slug}/index.html"
         resp = self._request("GET", url, max_retries=2)
         self._run_canary(
@@ -730,8 +832,9 @@ class TracklistSession:
     def _validate_session(self) -> bool:
         """Check if current session is still valid."""
         try:
-            resp = self._session.get(f"{BASE_URL}/my/", timeout=15,
-                                     allow_redirects=True)
+            resp = self._session.get(
+                f"{BASE_URL}/my/", timeout=15, allow_redirects=True
+            )
             text = resp.text.lower()
             if "login-form" in text or "please log in" in text:
                 return False
@@ -739,7 +842,7 @@ class TracklistSession:
                 return True
             return False
         except (requests.RequestException, OSError) as e:
-            logger.debug("session.validate_failed: error=\"%s\"", e)
+            logger.debug('session.validate_failed: error="%s"', e)
             return False
 
     def _save_cookies(self, email: str) -> None:
@@ -747,13 +850,15 @@ class TracklistSession:
         try:
             cookies_list = []
             for cookie in self._session.cookies:
-                cookies_list.append({
-                    "Name": cookie.name,
-                    "Value": cookie.value,
-                    "Domain": cookie.domain,
-                    "Path": cookie.path,
-                    "Expires": cookie.expires,
-                })
+                cookies_list.append(
+                    {
+                        "Name": cookie.name,
+                        "Value": cookie.value,
+                        "Domain": cookie.domain,
+                        "Path": cookie.path,
+                        "Expires": cookie.expires,
+                    }
+                )
 
             cache = {
                 "Email": email,
@@ -768,9 +873,9 @@ class TracklistSession:
                 try:
                     os.chmod(self._cookie_path, 0o600)
                 except OSError as exc:
-                    logger.debug("session.cookie_chmod_failed: error=\"%s\"", exc)
+                    logger.debug('session.cookie_chmod_failed: error="%s"', exc)
         except (OSError, TypeError) as e:
-            logger.debug("session.cookie_save_failed: error=\"%s\"", e)
+            logger.debug('session.cookie_save_failed: error="%s"', e)
 
     def _restore_cookies(self, email: str) -> bool:
         """Restore cookies from cache. Returns True if cache was valid."""
@@ -808,7 +913,7 @@ class TracklistSession:
             return valid
 
         except (OSError, json.JSONDecodeError, KeyError, TypeError) as e:
-            logger.debug("session.cookie_restore_failed: error=\"%s\"", e)
+            logger.debug('session.cookie_restore_failed: error="%s"', e)
             return False
 
 
@@ -824,18 +929,72 @@ these appears in sources_by_type, the h1-derived location string is
 suppressed because the source cache entry is the canonical source."""
 
 
-_H1_FALLBACK_COUNTRIES: frozenset[str] = frozenset({
-    "United States", "USA", "United Kingdom", "UK", "Netherlands", "Germany",
-    "Belgium", "Spain", "France", "Italy", "Portugal", "Switzerland", "Austria",
-    "Poland", "Czech Republic", "Hungary", "Romania", "Bulgaria", "Greece",
-    "Turkey", "Sweden", "Norway", "Denmark", "Finland", "Iceland", "Ireland",
-    "Croatia", "Serbia", "Slovenia", "Slovakia", "Ukraine", "Russia",
-    "Australia", "New Zealand", "Japan", "South Korea", "China", "India",
-    "Thailand", "Vietnam", "Indonesia", "Singapore", "Malaysia", "Philippines",
-    "Canada", "Mexico", "Brazil", "Argentina", "Chile", "Colombia", "Peru",
-    "Uruguay", "Ecuador", "Venezuela", "South Africa", "Egypt", "Morocco",
-    "United Arab Emirates", "UAE", "Israel", "Lebanon", "Saudi Arabia",
-})
+_H1_FALLBACK_COUNTRIES: frozenset[str] = frozenset(
+    {
+        "United States",
+        "USA",
+        "United Kingdom",
+        "UK",
+        "Netherlands",
+        "Germany",
+        "Belgium",
+        "Spain",
+        "France",
+        "Italy",
+        "Portugal",
+        "Switzerland",
+        "Austria",
+        "Poland",
+        "Czech Republic",
+        "Hungary",
+        "Romania",
+        "Bulgaria",
+        "Greece",
+        "Turkey",
+        "Sweden",
+        "Norway",
+        "Denmark",
+        "Finland",
+        "Iceland",
+        "Ireland",
+        "Croatia",
+        "Serbia",
+        "Slovenia",
+        "Slovakia",
+        "Ukraine",
+        "Russia",
+        "Australia",
+        "New Zealand",
+        "Japan",
+        "South Korea",
+        "China",
+        "India",
+        "Thailand",
+        "Vietnam",
+        "Indonesia",
+        "Singapore",
+        "Malaysia",
+        "Philippines",
+        "Canada",
+        "Mexico",
+        "Brazil",
+        "Argentina",
+        "Chile",
+        "Colombia",
+        "Peru",
+        "Uruguay",
+        "Ecuador",
+        "Venezuela",
+        "South Africa",
+        "Egypt",
+        "Morocco",
+        "United Arab Emirates",
+        "UAE",
+        "Israel",
+        "Lebanon",
+        "Saudi Arabia",
+    }
+)
 
 
 def _parse_h1_structure(h1_html: str) -> dict:
@@ -857,8 +1016,14 @@ def _parse_h1_structure(h1_html: str) -> dict:
             event-date source when the search-results "tracklist date" field
             is missing.
     """
-    result: dict = {"stage_text": "", "sources": [], "dj_artists": [],
-                    "country": "", "location": "", "date": ""}
+    result: dict = {
+        "stage_text": "",
+        "sources": [],
+        "dj_artists": [],
+        "country": "",
+        "location": "",
+        "date": "",
+    }
 
     if "@" not in h1_html:
         return result
@@ -875,9 +1040,7 @@ def _parse_h1_structure(h1_html: str) -> dict:
         m = re.match(r"/dj/([^/]+)/", href)
         if not m:
             continue
-        result["dj_artists"].append(
-            (m.group(1), _html_decode(a.get_text(strip=True)))
-        )
+        result["dj_artists"].append((m.group(1), _html_decode(a.get_text(strip=True))))
 
     # Source anchors in the after-@ fragment. BS4 gives us the data; a
     # lenient quote-style-agnostic regex over the raw after_at string
@@ -890,18 +1053,19 @@ def _parse_h1_structure(h1_html: str) -> dict:
         m = re.match(r"/source/([^/]+)/([^/]+)/", href)
         if not m:
             continue
-        sources.append((m.group(1), m.group(2),
-                        _html_decode(a.get_text(strip=True))))
+        sources.append((m.group(1), m.group(2), _html_decode(a.get_text(strip=True))))
     result["sources"] = sources
 
-    source_matches = list(re.finditer(
-        r'<a[^>]*href=["\']/source/[^/"\']+/[^/"\']+/[^"\']*["\'][^>]*>[^<]+</a>',
-        after_at,
-    ))
+    source_matches = list(
+        re.finditer(
+            r'<a[^>]*href=["\']/source/[^/"\']+/[^/"\']+/[^"\']*["\'][^>]*>[^<]+</a>',
+            after_at,
+        )
+    )
 
     first_source = source_matches[0] if source_matches else None
     if first_source:
-        plain = after_at[:first_source.start()]
+        plain = after_at[: first_source.start()]
     else:
         plain = after_at
 
@@ -926,7 +1090,7 @@ def _parse_h1_structure(h1_html: str) -> dict:
     # comma-segment is a known country, lift it into result["country"];
     # whatever remains is result["location"].
     if source_matches:
-        tail_raw = after_at[source_matches[-1].end():]
+        tail_raw = after_at[source_matches[-1].end() :]
     else:
         tail_raw = after_at
 
@@ -992,6 +1156,7 @@ def _parse_dj_profile(html: str) -> dict:
         members: list of {"slug": str, "name": str} (the group's lineup)
     """
     from bs4 import BeautifulSoup
+
     soup = BeautifulSoup(html, "html.parser")
 
     artwork_url = ""
@@ -999,7 +1164,12 @@ def _parse_dj_profile(html: str) -> dict:
     if og is not None:
         content = og.get("content", "")
         url = content if isinstance(content, str) else ""
-        if url and "/images/static/" not in url and "logo" not in url.lower() and "default" not in url:
+        if (
+            url
+            and "/images/static/" not in url
+            and "logo" not in url.lower()
+            and "default" not in url
+        ):
             artwork_url = _maximize_artwork_url(url)
 
     def _extract_section(section_header: str) -> list[dict]:
@@ -1028,10 +1198,12 @@ def _parse_dj_profile(html: str) -> dict:
                 if slug in seen:
                     continue
                 seen.add(slug)
-                entries.append({
-                    "slug": slug,
-                    "name": _html_decode(a.get_text(strip=True)),
-                })
+                entries.append(
+                    {
+                        "slug": slug,
+                        "name": _html_decode(a.get_text(strip=True)),
+                    }
+                )
         return entries
 
     return {
@@ -1074,6 +1246,7 @@ def _to_soup(value):
     the cost of reparsing 200 KB of HTML per parser.
     """
     from bs4 import BeautifulSoup
+
     if isinstance(value, str):
         return BeautifulSoup(value, "html.parser")
     return value
@@ -1124,6 +1297,7 @@ def _normalize_date(date_str: str) -> str | None:
         return date_str
     # Try common formats
     import datetime
+
     for fmt in ("%b %d, %Y", "%B %d, %Y", "%d %b %Y", "%d %B %Y", "%Y-%m-%d"):
         try:
             dt = datetime.datetime.strptime(date_str.strip(), fmt)

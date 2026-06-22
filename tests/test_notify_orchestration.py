@@ -4,7 +4,12 @@ from types import SimpleNamespace
 
 import festival_organizer.notify as notify
 from festival_organizer.console import make_console
-from festival_organizer.notify.models import EmailSet, RunReport, UpdateInfo, SMTPSettings
+from festival_organizer.notify.models import (
+    EmailSet,
+    RunReport,
+    UpdateInfo,
+    SMTPSettings,
+)
 
 
 def _op(name, target=None):
@@ -23,6 +28,7 @@ def _console_buf():
 
 class _FakeProgress:
     """Records StepProgress.update calls so tests can assert on counters."""
+
     def __init__(self):
         self.calls = []
 
@@ -32,6 +38,7 @@ class _FakeProgress:
 
 class _Cfg:
     """Minimal config stand-in exposing the email_* surface used by the orchestrator."""
+
     def __init__(self, enabled=True, to=("a@x",)):
         self._enabled, self._to = enabled, list(to)
         self.email_smtp_host = "mail.lan"
@@ -55,10 +62,13 @@ class _Cfg:
 
 
 def _report(channel="new_sets", n=1, update=None):
-    sets = [EmailSet(f"Artist{i}", "UMF Miami", "2026", "", [], "19 tracks",
-                     None, "festival_set") for i in range(n)]
-    return RunReport(channel=channel, sets=sets, update=update,
-                     stats={}, timestamp="t")
+    sets = [
+        EmailSet(
+            f"Artist{i}", "UMF Miami", "2026", "", [], "19 tracks", None, "festival_set"
+        )
+        for i in range(n)
+    ]
+    return RunReport(channel=channel, sets=sets, update=update, stats={}, timestamp="t")
 
 
 def test_resolve_should_send_flag_overrides():
@@ -114,19 +124,25 @@ def test_update_reminder_throttled(monkeypatch, tmp_path):
 def test_update_reminder_suppressed_when_content_sent(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(notify, "send_email", lambda *a, **k: calls.append(1))
-    monkeypatch.setattr(notify, "get_cached_update_status",
-                        lambda: UpdateInfo("0.19.9", "0.20.0", True))
-    notify.maybe_send_update_reminder(_Cfg(), content_email_sent=True,
-                                      marker_path=tmp_path / "m.json")
+    monkeypatch.setattr(
+        notify, "get_cached_update_status", lambda: UpdateInfo("0.19.9", "0.20.0", True)
+    )
+    notify.maybe_send_update_reminder(
+        _Cfg(), content_email_sent=True, marker_path=tmp_path / "m.json"
+    )
     assert calls == []
 
 
 def test_notify_new_sets_sends_and_then_reminder(monkeypatch, tmp_path):
     sent_channels = []
-    monkeypatch.setattr(notify, "send_email",
-                        lambda settings, rendered, *, to: sent_channels.append(rendered.subject))
-    monkeypatch.setattr(notify, "get_cached_update_status",
-                        lambda: UpdateInfo("0.19.9", "0.20.0", True))
+    monkeypatch.setattr(
+        notify,
+        "send_email",
+        lambda settings, rendered, *, to: sent_channels.append(rendered.subject),
+    )
+    monkeypatch.setattr(
+        notify, "get_cached_update_status", lambda: UpdateInfo("0.19.9", "0.20.0", True)
+    )
 
     def _op(name, target):
         return SimpleNamespace(name=name, target=target)
@@ -135,9 +151,16 @@ def test_notify_new_sets_sends_and_then_reminder(monkeypatch, tmp_path):
         return SimpleNamespace(name=name, status=status, detail="", display_name=name)
 
     from tests.conftest import make_mediafile
+
     target = tmp_path / "v.mkv"
-    mf = make_mediafile(source_path=target, artist="A", festival="UMF Miami", year="2026",
-                        content_type="festival_set", duration_seconds=5400.0)
+    mf = make_mediafile(
+        source_path=target,
+        artist="A",
+        festival="UMF Miami",
+        year="2026",
+        content_type="festival_set",
+        duration_seconds=5400.0,
+    )
     notify.notify_new_sets(
         _Cfg(),
         pipeline_files=[(target, mf, [_op("organize", target)])],
@@ -153,28 +176,49 @@ def test_notify_new_sets_sends_and_then_reminder(monkeypatch, tmp_path):
 
 def test_notify_new_sets_disabled_still_sends_reminder(monkeypatch, tmp_path):
     sent = []
-    monkeypatch.setattr(notify, "send_email",
-                        lambda settings, rendered, *, to: sent.append(rendered.subject))
-    monkeypatch.setattr(notify, "get_cached_update_status",
-                        lambda: UpdateInfo("0.19.9", "0.20.0", True))
+    monkeypatch.setattr(
+        notify,
+        "send_email",
+        lambda settings, rendered, *, to: sent.append(rendered.subject),
+    )
+    monkeypatch.setattr(
+        notify, "get_cached_update_status", lambda: UpdateInfo("0.19.9", "0.20.0", True)
+    )
     cfg = _Cfg(enabled=False)
     notify.notify_new_sets(
-        cfg, pipeline_files=[], all_results=[], stats={}, flag=None,
-        count_chapters=lambda p: None, marker_path=tmp_path / "m.json",
+        cfg,
+        pipeline_files=[],
+        all_results=[],
+        stats={},
+        flag=None,
+        count_chapters=lambda p: None,
+        marker_path=tmp_path / "m.json",
     )
     assert len(sent) == 1
 
 
 def test_notify_updated_sets_sends(monkeypatch, tmp_path):
     sent = []
-    monkeypatch.setattr(notify, "send_email",
-                        lambda settings, rendered, *, to: sent.append(rendered.subject))
-    monkeypatch.setattr(notify, "get_cached_update_status",
-                        lambda: UpdateInfo("0.20.0", "0.20.0", False))
+    monkeypatch.setattr(
+        notify,
+        "send_email",
+        lambda settings, rendered, *, to: sent.append(rendered.subject),
+    )
+    monkeypatch.setattr(
+        notify,
+        "get_cached_update_status",
+        lambda: UpdateInfo("0.20.0", "0.20.0", False),
+    )
     from tests.conftest import make_mediafile
+
     path = tmp_path / "u.mkv"
-    mf = make_mediafile(source_path=path, artist="Armin van Buuren", festival="ASOT",
-                        year="2026", content_type="festival_set")
+    mf = make_mediafile(
+        source_path=path,
+        artist="Armin van Buuren",
+        festival="ASOT",
+        year="2026",
+        content_type="festival_set",
+    )
     notify.notify_updated_sets(
         _Cfg(),
         updated_paths=[path],
@@ -189,38 +233,56 @@ def test_notify_updated_sets_sends(monkeypatch, tmp_path):
 
 def test_build_thumbs_reports_progress(tmp_path):
     from PIL import Image
+
     posters = []
     for i in range(3):
         p = tmp_path / f"p{i}-poster.jpg"
         Image.new("RGB", (200, 120), (10, 20, 30)).save(p, "JPEG")
         posters.append(p)
-    sets = [EmailSet(f"A{i}", "E", "2026", "", [], "", posters[i], "festival_set")
-            for i in range(3)]
-    report = RunReport(channel="new_sets", sets=sets, update=None, stats={}, timestamp="t")
+    sets = [
+        EmailSet(f"A{i}", "E", "2026", "", [], "", posters[i], "festival_set")
+        for i in range(3)
+    ]
+    report = RunReport(
+        channel="new_sets", sets=sets, update=None, stats={}, timestamp="t"
+    )
     prog = _FakeProgress()
     thumbs = notify._build_thumbs(report, 80, progress=prog)
     assert len(thumbs) == 3
     resize = [c for c in prog.calls if c[0] == "Resizing posters"]
-    assert [c[1] for c in resize] == [1, 2, 3]   # 1-based current
-    assert all(c[2] == 3 for c in resize)        # total
+    assert [c[1] for c in resize] == [1, 2, 3]  # 1-based current
+    assert all(c[2] == 3 for c in resize)  # total
 
 
 def test_notify_new_sets_prints_sent_verdict(monkeypatch, tmp_path):
     monkeypatch.setattr(notify, "send_email", lambda settings, rendered, *, to: None)
-    monkeypatch.setattr(notify, "get_cached_update_status",
-                        lambda: UpdateInfo("0.20.0", "0.20.0", False))
+    monkeypatch.setattr(
+        notify,
+        "get_cached_update_status",
+        lambda: UpdateInfo("0.20.0", "0.20.0", False),
+    )
     from tests.conftest import make_mediafile
+
     target = tmp_path / "v.mkv"
-    mf = make_mediafile(source_path=target, artist="A", festival="UMF Miami", year="2026",
-                        content_type="festival_set", duration_seconds=5400.0)
+    mf = make_mediafile(
+        source_path=target,
+        artist="A",
+        festival="UMF Miami",
+        year="2026",
+        content_type="festival_set",
+        duration_seconds=5400.0,
+    )
     con, buf = _console_buf()
     notify.notify_new_sets(
         _Cfg(to=["a@x", "b@x"]),
         pipeline_files=[(target, mf, [_op("organize", target)])],
         all_results=[[_res("organize", "done")]],
         stats={"added": 1, "up_to_date": 0, "errors": 0},
-        flag=None, count_chapters=lambda p: 19, marker_path=tmp_path / "m.json",
-        console=con, suppressed=True,
+        flag=None,
+        count_chapters=lambda p: 19,
+        marker_path=tmp_path / "m.json",
+        console=con,
+        suppressed=True,
     )
     out = buf.getvalue()
     assert "New-sets email" in out
@@ -232,17 +294,31 @@ def test_notify_updated_sets_prints_error_verdict(monkeypatch, tmp_path):
         raise OSError("smtp down")
 
     monkeypatch.setattr(notify, "send_email", boom)
-    monkeypatch.setattr(notify, "get_cached_update_status",
-                        lambda: UpdateInfo("0.20.0", "0.20.0", False))
+    monkeypatch.setattr(
+        notify,
+        "get_cached_update_status",
+        lambda: UpdateInfo("0.20.0", "0.20.0", False),
+    )
     from tests.conftest import make_mediafile
+
     path = tmp_path / "u.mkv"
-    mf = make_mediafile(source_path=path, artist="Armin van Buuren", festival="ASOT",
-                        year="2026", content_type="festival_set")
+    mf = make_mediafile(
+        source_path=path,
+        artist="Armin van Buuren",
+        festival="ASOT",
+        year="2026",
+        content_type="festival_set",
+    )
     con, buf = _console_buf()
     notify.notify_updated_sets(
-        _Cfg(), updated_paths=[path], analyse=lambda p: mf,
-        count_chapters=lambda p: 41, flag=None, marker_path=tmp_path / "m.json",
-        console=con, suppressed=True,
+        _Cfg(),
+        updated_paths=[path],
+        analyse=lambda p: mf,
+        count_chapters=lambda p: 41,
+        flag=None,
+        marker_path=tmp_path / "m.json",
+        console=con,
+        suppressed=True,
     )
     out = buf.getvalue()
     assert "Updated-sets email" in out
@@ -252,35 +328,54 @@ def test_notify_updated_sets_prints_error_verdict(monkeypatch, tmp_path):
 
 def test_notify_skip_is_silent_with_console(monkeypatch, tmp_path):
     monkeypatch.setattr(notify, "send_email", lambda *a, **k: None)
-    monkeypatch.setattr(notify, "get_cached_update_status",
-                        lambda: UpdateInfo("0.20.0", "0.20.0", False))
+    monkeypatch.setattr(
+        notify,
+        "get_cached_update_status",
+        lambda: UpdateInfo("0.20.0", "0.20.0", False),
+    )
     con, buf = _console_buf()
     # empty run -> no_changes -> skipped -> nothing printed
     notify.notify_new_sets(
-        _Cfg(to=[]), pipeline_files=[], all_results=[], stats={}, flag=None,
-        count_chapters=lambda p: None, marker_path=tmp_path / "m.json",
-        console=con, suppressed=True,
+        _Cfg(to=[]),
+        pipeline_files=[],
+        all_results=[],
+        stats={},
+        flag=None,
+        count_chapters=lambda p: None,
+        marker_path=tmp_path / "m.json",
+        console=con,
+        suppressed=True,
     )
     assert buf.getvalue().strip() == ""
 
 
 def test_build_thumbs_capped(monkeypatch, tmp_path):
     from festival_organizer.notify.render import MAX_SETS
+
     poster = tmp_path / "p-poster.jpg"
     from PIL import Image
+
     Image.new("RGB", (1920, 1080), (40, 40, 60)).save(poster, "JPEG")
-    sets = [EmailSet(f"A{i}", "E", "2026", "", [], "", poster, "festival_set")
-            for i in range(MAX_SETS + 10)]
-    report = RunReport(channel="new_sets", sets=sets, update=None, stats={}, timestamp="t")
+    sets = [
+        EmailSet(f"A{i}", "E", "2026", "", [], "", poster, "festival_set")
+        for i in range(MAX_SETS + 10)
+    ]
+    report = RunReport(
+        channel="new_sets", sets=sets, update=None, stats={}, timestamp="t"
+    )
     thumbs = notify._build_thumbs(report, 140)
-    assert len(thumbs) == MAX_SETS    # capped, not MAX_SETS+10
+    assert len(thumbs) == MAX_SETS  # capped, not MAX_SETS+10
 
 
 def test_notify_test_sends_sample(monkeypatch):
     captured = {}
-    monkeypatch.setattr(notify, "send_email",
-                        lambda settings, rendered, *, to: captured.update(
-                            to=to, subject=rendered.subject, html=rendered.html))
+    monkeypatch.setattr(
+        notify,
+        "send_email",
+        lambda settings, rendered, *, to: captured.update(
+            to=to, subject=rendered.subject, html=rendered.html
+        ),
+    )
     recipients = notify.notify_test(_Cfg(to=["me@x"]))
     assert recipients == ["me@x"]
     assert captured["to"] == ["me@x"]
@@ -290,12 +385,14 @@ def test_notify_test_sends_sample(monkeypatch):
 
 def test_notify_test_raises_without_recipients():
     import pytest
+
     with pytest.raises(ValueError, match="recipients"):
         notify.notify_test(_Cfg(to=[]))
 
 
 def test_notify_test_raises_without_smtp_host():
     import pytest
+
     cfg = _Cfg(to=["me@x"])
     cfg.email_smtp_host = ""
     with pytest.raises(ValueError, match="smtp_host"):

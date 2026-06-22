@@ -3,6 +3,7 @@
 Hand-synced with src/tracksplit/update_check.py in the TrackSplit repo.
 Keep in sync when editing. Only PACKAGE_NAME, ENV_VAR, and REPO_URL differ.
 """
+
 from __future__ import annotations
 
 import importlib.metadata
@@ -72,7 +73,7 @@ def _read_cache() -> dict | None:
     except FileNotFoundError:
         return None
     except (json.JSONDecodeError, OSError) as e:
-        logger.debug("update_check.cache: status=unreadable path=%s error=\"%s\"", p, e)
+        logger.debug('update_check.cache: status=unreadable path=%s error="%s"', p, e)
         return None
     if not isinstance(data, dict) or data.get("schema") != SCHEMA_VERSION:
         return None
@@ -159,7 +160,7 @@ def _is_suppressed() -> bool:
             logger.debug("update_check.suppressed: reason=not_tty")
             return True
     except (AttributeError, ValueError) as e:
-        logger.debug("update_check.suppressed: reason=isatty_error error=\"%s\"", e)
+        logger.debug('update_check.suppressed: reason=isatty_error error="%s"', e)
         return True
     return False
 
@@ -185,6 +186,7 @@ def _releases_url() -> str:
 def _user_agent() -> str:
     try:
         from importlib.metadata import version
+
         return f"{PACKAGE_NAME}/{version(PACKAGE_NAME)} (+update-check)"
     except Exception:
         return f"{PACKAGE_NAME}/unknown (+update-check)"
@@ -197,7 +199,7 @@ def _fetch_latest_release() -> str | None:
         with urlopen(req, timeout=_HTTP_TIMEOUT_SECONDS) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except Exception as e:
-        logger.debug("update_check.fetch: status=failed error=\"%s\"", e, exc_info=True)
+        logger.debug('update_check.fetch: status=failed error="%s"', e, exc_info=True)
         return None
 
     tag = data.get("tag_name") if isinstance(data, dict) else None

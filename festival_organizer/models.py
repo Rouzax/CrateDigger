@@ -1,4 +1,5 @@
 """Data models for the festival organizer pipeline."""
+
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -6,6 +7,7 @@ from pathlib import Path
 @dataclass
 class MediaFile:
     """All known information about a single media file."""
+
     source_path: Path
 
     # Content metadata
@@ -16,21 +18,29 @@ class MediaFile:
     year: str = ""
     date: str = ""
     set_title: str = ""
-    title: str = ""          # For concert films: the concert/show title
+    title: str = ""  # For concert films: the concert/show title
     stage: str = ""
-    venue: str = ""          # Alias-resolved canonical venue name
-    venue_full: str = ""     # Raw 1001TL venue name before alias resolution
-    location: str = ""  # Plain-text venue+city from 1001TL h1 tail (fallback when no linked source)
+    venue: str = ""  # Alias-resolved canonical venue name
+    venue_full: str = ""  # Raw 1001TL venue name before alias resolution
+    location: str = (
+        ""  # Plain-text venue+city from 1001TL h1 tail (fallback when no linked source)
+    )
     edition: str = ""
-    content_type: str = ""   # "festival_set" | "concert_film" | "unknown"
-    artists: list[str] = field(default_factory=list)  # Resolved (alias-canonical) per-act artists
-    artist_slugs: list[str] = field(default_factory=list)  # 1001TL album-artist slugs, link order
-    artists_1001tl: list[str] = field(default_factory=list)  # Raw billed 1001TL per-act names (alias-preserving); pairs with artist_slugs
+    content_type: str = ""  # "festival_set" | "concert_film" | "unknown"
+    artists: list[str] = field(
+        default_factory=list
+    )  # Resolved (alias-canonical) per-act artists
+    artist_slugs: list[str] = field(
+        default_factory=list
+    )  # 1001TL album-artist slugs, link order
+    artists_1001tl: list[str] = field(
+        default_factory=list
+    )  # Raw billed 1001TL per-act names (alias-preserving); pairs with artist_slugs
     country: str = ""
-    source_type: str = ""          # e.g. "Open Air / Festival", "Event Location"
-    metadata_source: str = "" # "1001tracklists" | "metadata" | "filename"
-    place: str = ""          # Canonical resolved name used for folder routing
-    place_kind: str = ""     # "festival" | "venue" | "location" | "artist"
+    source_type: str = ""  # e.g. "Open Air / Festival", "Event Location"
+    metadata_source: str = ""  # "1001tracklists" | "metadata" | "filename"
+    place: str = ""  # Canonical resolved name used for folder routing
+    place_kind: str = ""  # "festival" | "venue" | "location" | "artist"
 
     # Identifiers
     youtube_id: str = ""
@@ -46,7 +56,7 @@ class MediaFile:
 
     # Technical metadata
     extension: str = ""
-    file_type: str = ""      # "video" | "audio"
+    file_type: str = ""  # "video" | "audio"
     duration_seconds: float | None = None
     width: int | None = None
     height: int | None = None
@@ -108,9 +118,10 @@ def build_display_title(mf: MediaFile, config=None) -> str:
 @dataclass
 class FileAction:
     """A planned move/copy/rename operation."""
+
     source: Path
     target: Path
     media_file: MediaFile
-    action: str = "move"       # "move" | "copy" | "rename"
-    status: str = "pending"    # "pending" | "done" | "skipped" | "error"
+    action: str = "move"  # "move" | "copy" | "rename"
+    status: str = "pending"  # "pending" | "done" | "skipped" | "error"
     error: str = ""

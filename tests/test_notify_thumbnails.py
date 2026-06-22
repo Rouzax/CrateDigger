@@ -15,8 +15,8 @@ def test_make_thumbnail_resizes_to_2x_width_and_keeps_aspect(tmp_path):
     poster = _make_poster(tmp_path)
     data = make_thumbnail(poster, 140)
     img = Image.open(io.BytesIO(data))
-    assert img.width == 280               # 2x of 140 for retina
-    assert img.height == 158              # 1080 * (280/1920) rounded
+    assert img.width == 280  # 2x of 140 for retina
+    assert img.height == 158  # 1080 * (280/1920) rounded
     assert img.format == "JPEG"
 
 

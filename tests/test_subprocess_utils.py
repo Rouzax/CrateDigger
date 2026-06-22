@@ -1,4 +1,5 @@
 """Tests for the tracked_run subprocess wrapper."""
+
 from __future__ import annotations
 
 import logging

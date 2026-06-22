@@ -35,7 +35,9 @@ def test_plan_concert_film():
     )
     actions = plan_actions([mf], OUTPUT, CFG)
     a = actions[0]
-    assert a.target == OUTPUT / "Coldplay" / "Coldplay - A Head Full of Dreams (2018).mkv"
+    assert (
+        a.target == OUTPUT / "Coldplay" / "Coldplay - A Head Full of Dreams (2018).mkv"
+    )
 
 
 def test_plan_unknown_goes_to_needs_review():

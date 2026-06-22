@@ -1,4 +1,5 @@
 """Tests for enrich_summary_panel."""
+
 from festival_organizer.console import enrich_summary_panel
 
 

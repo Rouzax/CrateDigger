@@ -32,6 +32,7 @@ def test_legacy_migration_treated_as_expired(tmp_path):
 def test_mbid_cache_load_logs_not_found(tmp_path, caplog):
     """New MBID cache logs 'not found' at DEBUG."""
     import logging
+
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.fanart"):
         MBIDCache(cache_dir=tmp_path / "empty")
     assert any("fanart.mbid_cache: status=not_found" in msg for msg in caplog.messages)
@@ -40,9 +41,17 @@ def test_mbid_cache_load_logs_not_found(tmp_path, caplog):
 def test_mbid_cache_load_logs_entry_count(tmp_path, caplog):
     """Existing MBID cache logs path and entry count at DEBUG."""
     import logging
-    (tmp_path / "mbid_cache.json").write_text(json.dumps({
-        "tiesto": {"mbid": "abc", "ts": time.time(), "ttl": 86400},
-    }))
+
+    (tmp_path / "mbid_cache.json").write_text(
+        json.dumps(
+            {
+                "tiesto": {"mbid": "abc", "ts": time.time(), "ttl": 86400},
+            }
+        )
+    )
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.fanart"):
         MBIDCache(cache_dir=tmp_path)
-    assert any("fanart.mbid_cache: status=loaded" in msg and "entries=1" in msg for msg in caplog.messages)
+    assert any(
+        "fanart.mbid_cache: status=loaded" in msg and "entries=1" in msg
+        for msg in caplog.messages
+    )

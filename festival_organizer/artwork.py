@@ -7,6 +7,7 @@ Logging:
         - frame.sample_error (DEBUG): Frame sampling via ffmpeg failed
     See docs/logging.md for full guidelines.
 """
+
 import logging
 import subprocess
 from pathlib import Path
@@ -72,7 +73,9 @@ def _extract_mkvattachment(source: Path, thumb_path: Path) -> bool:
         return False
 
     # cover_land.* first, then everything else (so a landscape cover.* is tried too).
-    ordered = sorted(atts, key=lambda a: 0 if a["file_name"].lower().startswith("cover_land") else 1)
+    ordered = sorted(
+        atts, key=lambda a: 0 if a["file_name"].lower().startswith("cover_land") else 1
+    )
 
     temp_path = thumb_path.with_suffix(".tmp.img")
     try:
@@ -87,7 +90,7 @@ def _extract_mkvattachment(source: Path, thumb_path: Path) -> bool:
             return thumb_path.exists()
         return False
     except (OSError, subprocess.SubprocessError) as e:
-        logger.debug("artwork.extract: status=failed source=%s error=\"%s\"", source, e)
+        logger.debug('artwork.extract: status=failed source=%s error="%s"', source, e)
         return False
     finally:
         temp_path.unlink(missing_ok=True)
@@ -97,6 +100,7 @@ def _sample_frame_fallback(source: Path, thumb_path: Path) -> bool:
     """Sample best frame from video and save as thumb JPG."""
     try:
         from festival_organizer.frame_sampler import sample_best_frame
+
         frame_path = sample_best_frame(source)
         if not frame_path or not frame_path.exists():
             return False
@@ -112,7 +116,9 @@ def _sample_frame_fallback(source: Path, thumb_path: Path) -> bool:
     except ImportError:
         return False
     except (OSError, subprocess.SubprocessError) as e:
-        logger.debug("artwork.frame_sample: status=failed source=%s error=\"%s\"", source, e)
+        logger.debug(
+            'artwork.frame_sample: status=failed source=%s error="%s"', source, e
+        )
         return False
 
 
@@ -124,11 +130,14 @@ def _gradient_thumb_fallback(thumb_path: Path) -> bool:
     """
     try:
         from festival_organizer.poster import _make_gradient_bg
+
         # Neutral brand blue; deterministic across runs and files.
         base_color = (60, 90, 140)
         bg = _make_gradient_bg(base_color, width=1920, height=1080)
         bg.save(str(thumb_path), "JPEG", quality=95)
         return thumb_path.exists()
     except (OSError, ValueError) as e:
-        logger.debug("artwork.gradient_fallback: status=failed path=%s error=\"%s\"", thumb_path, e)
+        logger.debug(
+            'artwork.gradient_fallback: status=failed path=%s error="%s"', thumb_path, e
+        )
         return False

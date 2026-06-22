@@ -1,4 +1,5 @@
 """Tests for _print_tagged_metadata_from_stored."""
+
 import io
 from pathlib import Path
 
@@ -15,8 +16,9 @@ def test_print_tagged_metadata_from_stored_happy_path(monkeypatch):
         "stage": "ASOT Worldwide Stage",
         "url": "https://example/tl/abc",
     }
-    monkeypatch.setattr(cli_handler, "extract_stored_tracklist_info",
-                        lambda p: fake_stored)
+    monkeypatch.setattr(
+        cli_handler, "extract_stored_tracklist_info", lambda p: fake_stored
+    )
 
     buf = io.StringIO()
     con = Console(file=buf, no_color=True, width=120)
@@ -32,8 +34,7 @@ def test_print_tagged_metadata_from_stored_empty_noop(monkeypatch):
     """When extract_stored_tracklist_info returns None/empty, prints nothing."""
     from festival_organizer.tracklists import cli_handler
 
-    monkeypatch.setattr(cli_handler, "extract_stored_tracklist_info",
-                        lambda p: None)
+    monkeypatch.setattr(cli_handler, "extract_stored_tracklist_info", lambda p: None)
 
     buf = io.StringIO()
     con = Console(file=buf, no_color=True, width=120)
@@ -50,8 +51,9 @@ def test_print_tagged_metadata_from_stored_prefers_festival_over_radio(monkeypat
         "festival": "Big Fest",
         "radio": "Some Radio Show",
     }
-    monkeypatch.setattr(cli_handler, "extract_stored_tracklist_info",
-                        lambda p: fake_stored)
+    monkeypatch.setattr(
+        cli_handler, "extract_stored_tracklist_info", lambda p: fake_stored
+    )
 
     buf = io.StringIO()
     con = Console(file=buf, no_color=True, width=120)

@@ -1,4 +1,5 @@
 """Tests for the shared cache TTL helper."""
+
 import time
 from festival_organizer.cache_ttl import jittered_ttl_seconds, is_fresh
 from festival_organizer.cache_ttl import hashed_jitter_factor

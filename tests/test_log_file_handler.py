@@ -1,4 +1,5 @@
 """Tests for per-command file logging in festival_organizer.log."""
+
 from __future__ import annotations
 
 import logging
@@ -155,8 +156,7 @@ def test_repeated_setup_closes_previous_handlers(tmp_path):
         # The old target FileHandler should have been closed.
         # FileHandler.close() sets self.stream to None.
         assert first_target.stream is None, (
-            "previous FileHandler was not closed on re-setup; "
-            "FD leak on repeated calls"
+            "previous FileHandler was not closed on re-setup; FD leak on repeated calls"
         )
     finally:
         ctx.__exit__(None, None, None)
@@ -174,9 +174,7 @@ def test_file_handler_opens_lazily(tmp_path):
         setup_logging(verbose=False, debug=False)
 
         fh = _find_file_handler()
-        assert fh.delay is True, (
-            "FileHandler should be constructed with delay=True"
-        )
+        assert fh.delay is True, "FileHandler should be constructed with delay=True"
         # Stream not yet open because delay=True and nothing was flushed.
         assert fh.stream is None, (
             "with delay=True the stream should stay None until first flush"
@@ -195,6 +193,7 @@ def test_setup_logging_survives_unwritable_log_dir(tmp_path, caplog):
     with patch("festival_organizer.log.paths") as mock_paths:
         mock_paths.log_dir.return_value = bad_log_dir
         from festival_organizer import paths as real_paths
+
         mock_paths.ensure_parent.side_effect = real_paths.ensure_parent
 
         _reset_logger()
@@ -204,15 +203,9 @@ def test_setup_logging_survives_unwritable_log_dir(tmp_path, caplog):
     assert result is None
     # Console handler is still present.
     root = logging.getLogger("festival_organizer")
-    assert any(
-        not isinstance(h, logging.handlers.MemoryHandler)
-        for h in root.handlers
-    )
+    assert any(not isinstance(h, logging.handlers.MemoryHandler) for h in root.handlers)
     # No MemoryHandler was installed because we could not create the path.
-    assert not any(
-        isinstance(h, logging.handlers.MemoryHandler)
-        for h in root.handlers
-    )
+    assert not any(isinstance(h, logging.handlers.MemoryHandler) for h in root.handlers)
     # One WARNING about the disabled log file was emitted.
     assert any(
         "log.file_handler: status=disabled" in rec.getMessage()
@@ -236,6 +229,7 @@ def test_memory_handler_capacity_and_flush_level(tmp_path):
 def test_file_attribution_appears_in_log_output(tmp_path):
     """ContextVar-based file attribution shows up in the file handler output."""
     from festival_organizer.log import _file_var
+
     ctx, mock_paths = _patch_paths(tmp_path)
     try:
         _reset_logger()
@@ -258,6 +252,7 @@ def test_file_attribution_appears_in_log_output(tmp_path):
 def test_file_attribution_empty_when_unset(tmp_path):
     """When no file context is active, the bracket field is absent."""
     from festival_organizer.log import _file_var
+
     ctx, mock_paths = _patch_paths(tmp_path)
     try:
         _reset_logger()

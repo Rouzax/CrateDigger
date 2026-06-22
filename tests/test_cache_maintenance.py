@@ -68,9 +68,7 @@ def _fake_image_response(width, height):
 def test_cache_dj_artwork_downloads_crops_and_resizes(tmp_path, monkeypatch):
     from PIL import Image
 
-    monkeypatch.setattr(
-        "requests.get", lambda *a, **k: _fake_image_response(1000, 800)
-    )
+    monkeypatch.setattr("requests.get", lambda *a, **k: _fake_image_response(1000, 800))
     dest = tmp_path / "artists" / "tiesto" / "dj-artwork.jpg"
     result = cache_dj_artwork("https://x/a.jpg", dest, ttl_days=90)
     assert result == dest
@@ -104,6 +102,7 @@ def test_cache_dj_artwork_empty_url_returns_none(tmp_path):
 
 def _stub_downloader(monkeypatch):
     """Replace cache_dj_artwork with a stub that just writes the dest file."""
+
     def _fake(url, dest, ttl_days, *, artist_label="", log=None):
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(b"img")
@@ -114,11 +113,27 @@ def _stub_downloader(monkeypatch):
 
 def _seed_cache(tmp_path):
     cache = DjCache(tmp_path / "dj_cache.json")
-    cache.put("kevindevries", {"name": "Kevin de Vries", "artwork_url": "https://x/kdv.jpg",
-                               "aliases": [], "member_of": []})
-    cache.put("somethingelse-br", {"name": "SOMETHING ELSE", "artwork_url": "https://x/se.jpg",
-                                    "aliases": [], "member_of": []})
-    cache.put("nourl", {"name": "No URL", "artwork_url": "", "aliases": [], "member_of": []})
+    cache.put(
+        "kevindevries",
+        {
+            "name": "Kevin de Vries",
+            "artwork_url": "https://x/kdv.jpg",
+            "aliases": [],
+            "member_of": [],
+        },
+    )
+    cache.put(
+        "somethingelse-br",
+        {
+            "name": "SOMETHING ELSE",
+            "artwork_url": "https://x/se.jpg",
+            "aliases": [],
+            "member_of": [],
+        },
+    )
+    cache.put(
+        "nourl", {"name": "No URL", "artwork_url": "", "aliases": [], "member_of": []}
+    )
     return cache
 
 

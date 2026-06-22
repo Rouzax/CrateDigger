@@ -11,12 +11,17 @@ def test_email_defaults_disabled():
 
 
 def test_email_channel_reads_subtables():
-    c = Config({"email": {
-        "smtp_host": "mail.lan", "from_address": "cd@lan",
-        "new_sets": {"enabled": True, "to": ["a@x", "b@x"]},
-        "updated_sets": {"enabled": True, "to": ["a@x"]},
-        "update_reminder": {"enabled": False, "to": ["a@x"]},
-    }})
+    c = Config(
+        {
+            "email": {
+                "smtp_host": "mail.lan",
+                "from_address": "cd@lan",
+                "new_sets": {"enabled": True, "to": ["a@x", "b@x"]},
+                "updated_sets": {"enabled": True, "to": ["a@x"]},
+                "update_reminder": {"enabled": False, "to": ["a@x"]},
+            }
+        }
+    )
     assert c.email_smtp_host == "mail.lan"
     assert c.email_from_address == "cd@lan"
     assert c.email_channel_enabled("new_sets") is True

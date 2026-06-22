@@ -14,6 +14,7 @@ Logging:
         - config.invalid_kodi_port (WARNING): KODI_PORT env var is not a valid int
     See docs/logging.md for full guidelines.
 """
+
 import json
 import logging
 import re
@@ -117,7 +118,7 @@ DEFAULT_CONFIG = {
     "email": {
         "smtp_host": "",
         "smtp_port": 587,
-        "smtp_security": "starttls",   # starttls | ssl | none
+        "smtp_security": "starttls",  # starttls | ssl | none
         "smtp_user": "",
         "smtp_password": "",
         "from_address": "",
@@ -164,14 +165,16 @@ def _invert_alias_map(grouped: dict) -> dict[str, str]:
             # Flat format: {alias: canonical}, already inverted
             flat[key] = value
         else:
-            logger.warning("config.alias: status=skipped key=%s error=\"expected str or list, got %s\"",
-                           key, type(value).__name__)
+            logger.warning(
+                'config.alias: status=skipped key=%s error="expected str or list, got %s"',
+                key,
+                type(value).__name__,
+            )
             continue
     # Detect circular flat references
     for key, value in flat.items():
         if value in flat and flat[value] != value and flat[value] == key:
-            logger.warning("config.alias: status=circular key=%s target=%s",
-                           key, value)
+            logger.warning("config.alias: status=circular key=%s target=%s", key, value)
     return flat
 
 
@@ -221,7 +224,11 @@ class Config:
 
         candidates = self._external_config_candidates(filename)
 
-        logger.debug("config.candidates: file=%s paths=%s", filename, [str(p) for p in candidates])
+        logger.debug(
+            "config.candidates: file=%s paths=%s",
+            filename,
+            [str(p) for p in candidates],
+        )
 
         for path in candidates:
             if path.exists():
@@ -231,7 +238,9 @@ class Config:
                     self._ext_cache[filename] = data
                     return data
                 except (json.JSONDecodeError, OSError) as e:
-                    logger.warning("config.load: status=skipped file=%s error=\"%s\"", path, e)
+                    logger.warning(
+                        'config.load: status=skipped file=%s error="%s"', path, e
+                    )
 
         logger.debug("config.not_found: file=%s", filename)
         self._ext_cache[filename] = defaults
@@ -269,8 +278,11 @@ class Config:
     @property
     def place_config(self) -> dict:
         raw = self._load_external_config("places.json", {})
-        defaults = {k: v for k, v in raw.items()
-                    if not k.startswith("_") and isinstance(v, dict)}
+        defaults = {
+            k: v
+            for k, v in raw.items()
+            if not k.startswith("_") and isinstance(v, dict)
+        }
         overlay = self._data.get("place_config")
         if overlay:
             return {**defaults, **overlay}
@@ -284,7 +296,9 @@ class Config:
             editions.update(pc.get("editions", {}).keys())
         return editions
 
-    def resolve_place_with_edition(self, name: str, country: str = "") -> tuple[str, str]:
+    def resolve_place_with_edition(
+        self, name: str, country: str = ""
+    ) -> tuple[str, str]:
         """Resolve alias and extract edition from the name if applicable.
 
         Returns (canonical_place, edition).
@@ -335,7 +349,11 @@ class Config:
                 if name in ed_conf.get("aliases", []):
                     return canonical, ed_name
             # Check if suffix matches an edition name
-            suffix = name[len(canonical):].strip() if name.lower().startswith(canonical.lower()) else ""
+            suffix = (
+                name[len(canonical) :].strip()
+                if name.lower().startswith(canonical.lower())
+                else ""
+            )
             if suffix:
                 for ed_name in pc.get("editions", {}):
                     if ed_name.lower() == suffix.lower():
@@ -390,6 +408,7 @@ class Config:
     def tracklists_credentials(self) -> tuple[str, str]:
         """Return (email, password); env vars override config."""
         import os
+
         tl = self._data.get("tracklists", {})
         email = os.environ.get("TRACKLISTS_EMAIL") or tl.get("email", "")
         password = os.environ.get("TRACKLISTS_PASSWORD") or tl.get("password", "")
@@ -425,11 +444,17 @@ class Config:
         if name in self.place_aliases:
             resolved = self.place_aliases[name]
             if resolved != name:
-                logger.debug("config.place_alias: name=\"%s\" resolved=%s", name, resolved)
+                logger.debug(
+                    'config.place_alias: name="%s" resolved=%s', name, resolved
+                )
             return resolved
         resolved = _ci_lookup(self.place_aliases, name) or name
         if resolved != name:
-            logger.debug("config.place_alias: name=\"%s\" resolved=%s case_insensitive=true", name, resolved)
+            logger.debug(
+                'config.place_alias: name="%s" resolved=%s case_insensitive=true',
+                name,
+                resolved,
+            )
         return resolved
 
     def resolve_place_for_media(self, mf) -> tuple[str, str]:
@@ -463,9 +488,10 @@ class Config:
         """Lazy single DjCache instance, shared by artist_aliases and artist_groups."""
         try:
             from festival_organizer.tracklists.dj_cache import DjCache
+
             return DjCache()
         except (ImportError, OSError, json.JSONDecodeError) as e:
-            logger.debug("config.dj_cache_skipped: error=\"%s\"", e)
+            logger.debug('config.dj_cache_skipped: error="%s"', e)
             return None
 
     @cached_property
@@ -521,7 +547,10 @@ class Config:
                 name = resolved
                 aliased = True
             else:
-                stripped_map = {strip_diacritics(k).lower(): v for k, v in self.artist_aliases.items()}
+                stripped_map = {
+                    strip_diacritics(k).lower(): v
+                    for k, v in self.artist_aliases.items()
+                }
                 resolved = stripped_map.get(strip_diacritics(name).lower())
                 if resolved is not None:
                     name = resolved
@@ -530,7 +559,9 @@ class Config:
         # If an alias matched, the user explicitly chose this canonical name
         if aliased:
             if name != original:
-                logger.debug("config.artist_alias: name=\"%s\" resolved=%s", original, name)
+                logger.debug(
+                    'config.artist_alias: name="%s" resolved=%s', original, name
+                )
             return name
 
         # 2. If the full name is a known group, keep it
@@ -551,7 +582,9 @@ class Config:
             return f"{canonical_place} {edition}"
         return canonical_place
 
-    def get_layout_template(self, content_type: str, layout_name: str | None = None) -> str:
+    def get_layout_template(
+        self, content_type: str, layout_name: str | None = None
+    ) -> str:
         """Get the folder layout template for a content type."""
         layout = layout_name or self.default_layout
         layouts = self.layouts.get(layout, {})
@@ -569,13 +602,19 @@ class Config:
     def fanart_project_api_key(self) -> str:
         """Return fanart.tv project API key; env var override + config fallback."""
         import os
-        return os.environ.get("FANART_PROJECT_API_KEY") or self.fanart_settings.get("project_api_key", "")
+
+        return os.environ.get("FANART_PROJECT_API_KEY") or self.fanart_settings.get(
+            "project_api_key", ""
+        )
 
     @property
     def fanart_personal_api_key(self) -> str:
         """Return fanart.tv personal API key; env var override + config fallback."""
         import os
-        return os.environ.get("FANART_PERSONAL_API_KEY") or self.fanart_settings.get("personal_api_key", "")
+
+        return os.environ.get("FANART_PERSONAL_API_KEY") or self.fanart_settings.get(
+            "personal_api_key", ""
+        )
 
     @property
     def fanart_enabled(self) -> bool:
@@ -592,27 +631,38 @@ class Config:
     @property
     def kodi_host(self) -> str:
         import os
-        return os.environ.get("KODI_HOST") or self.kodi_settings.get("host", "localhost")
+
+        return os.environ.get("KODI_HOST") or self.kodi_settings.get(
+            "host", "localhost"
+        )
 
     @property
     def kodi_port(self) -> int:
         import os
+
         env_port = os.environ.get("KODI_PORT")
         if env_port:
             try:
                 return int(env_port)
             except ValueError:
-                logger.warning("config.env_override: var=KODI_PORT value=%s status=invalid", env_port)
+                logger.warning(
+                    "config.env_override: var=KODI_PORT value=%s status=invalid",
+                    env_port,
+                )
         return self.kodi_settings.get("port", 8080)
 
     @property
     def kodi_username(self) -> str:
         import os
-        return os.environ.get("KODI_USERNAME") or self.kodi_settings.get("username", "kodi")
+
+        return os.environ.get("KODI_USERNAME") or self.kodi_settings.get(
+            "username", "kodi"
+        )
 
     @property
     def kodi_password(self) -> str:
         import os
+
         return os.environ.get("KODI_PASSWORD") or self.kodi_settings.get("password", "")
 
     @property
@@ -638,8 +688,10 @@ class Config:
     @property
     def email_smtp_password(self) -> str:
         import os
-        return os.environ.get("CRATEDIGGER_SMTP_PASSWORD") or \
-            self.email_settings.get("smtp_password", "")
+
+        return os.environ.get("CRATEDIGGER_SMTP_PASSWORD") or self.email_settings.get(
+            "smtp_password", ""
+        )
 
     @property
     def email_from_address(self) -> str:
@@ -717,7 +769,7 @@ def load_config(
             _deep_merge(data, layer)
             return True
         except (tomllib.TOMLDecodeError, OSError) as e:
-            logger.warning("config.read: status=failed file=%s error=\"%s\"", path, e)
+            logger.warning('config.read: status=failed file=%s error="%s"', path, e)
             return False
 
     if config_path is not None:
@@ -725,14 +777,24 @@ def load_config(
         _migrate_layout_names(data)
         cfg = Config(data, config_dir=config_path.parent)
         cfg._load_journal.append(
-            ("config.load: path=%s status=%s", str(config_path), "loaded" if loaded else "not found")
+            (
+                "config.load: path=%s status=%s",
+                str(config_path),
+                "loaded" if loaded else "not found",
+            )
         )
         return cfg
 
-    user_file = user_config_file if user_config_file is not None else paths.config_file()
+    user_file = (
+        user_config_file if user_config_file is not None else paths.config_file()
+    )
     user_loaded = _merge_toml(user_file)
     journal.append(
-        ("config.load: path=%s status=%s", str(user_file), "loaded" if user_loaded else "not found")
+        (
+            "config.load: path=%s status=%s",
+            str(user_file),
+            "loaded" if user_loaded else "not found",
+        )
     )
 
     if library_config_dir is not None:
@@ -748,7 +810,11 @@ def load_config(
         lib_toml = library_config_dir / "config.toml"
         lib_loaded = _merge_toml(lib_toml)
         journal.append(
-            ("config.load: path=%s status=%s", str(lib_toml), "loaded" if lib_loaded else "not found")
+            (
+                "config.load: path=%s status=%s",
+                str(lib_toml),
+                "loaded" if lib_loaded else "not found",
+            )
         )
 
     _migrate_layout_names(data)

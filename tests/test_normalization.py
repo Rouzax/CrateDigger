@@ -12,6 +12,7 @@ from festival_organizer.normalization import (
 
 # --- normalize_genre ---
 
+
 def test_normalize_genre_collapses_spaced_slash():
     assert normalize_genre("Dance / Electro Pop") == "Dance/Electro Pop"
     assert normalize_genre("Minimal / Deep Tech") == "Minimal/Deep Tech"
@@ -37,6 +38,7 @@ def test_normalize_genre_is_idempotent():
 
 
 # --- fix_mojibake ---
+
 
 def test_fix_mojibake_empty():
     assert fix_mojibake("") == ""
@@ -87,12 +89,23 @@ def test_normalise_name_trims_separators():
 
 
 def test_strip_scene_tags():
-    assert strip_scene_tags("Coldplay A Head Full of Dreams 2018 1080p AMZN WEB-DL DDP5 1 H 264-NTG") == "Coldplay A Head Full of Dreams 2018"
-    assert strip_scene_tags("glastonbury 2016 coldplay 720p hdtv x264-verum") == "glastonbury 2016 coldplay"
+    assert (
+        strip_scene_tags(
+            "Coldplay A Head Full of Dreams 2018 1080p AMZN WEB-DL DDP5 1 H 264-NTG"
+        )
+        == "Coldplay A Head Full of Dreams 2018"
+    )
+    assert (
+        strip_scene_tags("glastonbury 2016 coldplay 720p hdtv x264-verum")
+        == "glastonbury 2016 coldplay"
+    )
 
 
 def test_strip_scene_tags_preserves_content():
-    assert strip_scene_tags("Martin Garrix LIVE @ AMF 2024") == "Martin Garrix LIVE @ AMF 2024"
+    assert (
+        strip_scene_tags("Martin Garrix LIVE @ AMF 2024")
+        == "Martin Garrix LIVE @ AMF 2024"
+    )
 
 
 def test_strip_noise_words():
@@ -125,7 +138,9 @@ def test_strip_noise_words_strips_live_from():
 
 
 def test_extract_youtube_id():
-    stem, yt_id = extract_youtube_id("Armin van Buuren live at EDC Las Vegas 2025 [Dp7AwrAKckQ]")
+    stem, yt_id = extract_youtube_id(
+        "Armin van Buuren live at EDC Las Vegas 2025 [Dp7AwrAKckQ]"
+    )
     assert yt_id == "Dp7AwrAKckQ"
     assert "[Dp7AwrAKckQ]" not in stem
     assert stem.strip() == "Armin van Buuren live at EDC Las Vegas 2025"
@@ -136,8 +151,14 @@ def test_extract_youtube_id():
 
 
 def test_scene_dots_to_spaces():
-    assert scene_dots_to_spaces("glastonbury.2016.coldplay.1080p.hdtv.x264-verum") == "glastonbury 2016 coldplay 1080p hdtv x264-verum"
+    assert (
+        scene_dots_to_spaces("glastonbury.2016.coldplay.1080p.hdtv.x264-verum")
+        == "glastonbury 2016 coldplay 1080p hdtv x264-verum"
+    )
     # Should NOT convert when there are few dots (not scene-style)
     assert scene_dots_to_spaces("Defqon.1") == "Defqon.1"
     # Should NOT convert when there are already spaces
-    assert scene_dots_to_spaces("Artist Name - Festival 2024") == "Artist Name - Festival 2024"
+    assert (
+        scene_dots_to_spaces("Artist Name - Festival 2024")
+        == "Artist Name - Festival 2024"
+    )

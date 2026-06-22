@@ -1,4 +1,5 @@
 """Tests for the verdict one-line-per-file primitive."""
+
 import pytest
 
 from festival_organizer.console import verdict
@@ -47,24 +48,35 @@ def test_verdict_error_style():
     assert spans_have_red
 
 
-@pytest.mark.parametrize("status,expected_style", [
-    ("done", "green"),
-    ("updated", "cyan"),
-    ("up-to-date", "dim green"),
-    ("preview", "cyan"),
-    ("skipped", "yellow"),
-    ("error", "red"),
-])
+@pytest.mark.parametrize(
+    "status,expected_style",
+    [
+        ("done", "green"),
+        ("updated", "cyan"),
+        ("up-to-date", "dim green"),
+        ("preview", "cyan"),
+        ("skipped", "yellow"),
+        ("error", "red"),
+    ],
+)
 def test_verdict_badge_colours(status, expected_style):
-    row = verdict(status=status, index=1, total=1, filename="f.mkv",
-                  detail="x", elapsed_s=1.0)
+    row = verdict(
+        status=status, index=1, total=1, filename="f.mkv", detail="x", elapsed_s=1.0
+    )
     assert any(span.style == expected_style for span in row.spans)
 
 
 def test_verdict_long_filename_truncated_preserves_bracketed_id():
     long = "A Very Long Filename That Overruns The Width [fLyb8KvtSzw].mkv"
-    row = verdict(status="done", index=1, total=1, filename=long,
-                  detail="x", elapsed_s=1.0, width=60)
+    row = verdict(
+        status="done",
+        index=1,
+        total=1,
+        filename=long,
+        detail="x",
+        elapsed_s=1.0,
+        width=60,
+    )
     plain = row.plain
     assert "[fLyb8KvtSzw].mkv" in plain
     assert ".mkv" in plain
@@ -73,26 +85,34 @@ def test_verdict_long_filename_truncated_preserves_bracketed_id():
 
 def test_verdict_unknown_status_raises():
     with pytest.raises(ValueError):
-        verdict(status="weird", index=1, total=1, filename="f.mkv",
-                detail="x", elapsed_s=1.0)
+        verdict(
+            status="weird",
+            index=1,
+            total=1,
+            filename="f.mkv",
+            detail="x",
+            elapsed_s=1.0,
+        )
 
 
-@pytest.mark.parametrize("status", ["done", "updated", "up-to-date", "preview", "skipped", "error"])
+@pytest.mark.parametrize(
+    "status", ["done", "updated", "up-to-date", "preview", "skipped", "error"]
+)
 def test_verdict_has_gap_between_badge_and_counter(status):
     """Every status must have at least 2 spaces between the badge label
     and the [i/N] counter. Regression: up-to-date (10 chars) previously
     collided with the counter when badge width was 11.
     """
-    row = verdict(status=status, index=1, total=5, filename="f.mkv",
-                  detail="x", elapsed_s=1.0)
+    row = verdict(
+        status=status, index=1, total=5, filename="f.mkv", detail="x", elapsed_s=1.0
+    )
     plain = row.plain
     # Find the badge label and verify what follows contains at least 2 spaces
     # before the counter.
     idx = plain.index("[1/5]")
     # Characters immediately before "[1/5]" must include >= 2 spaces.
-    assert plain[idx - 2:idx] == "  ", (
-        f"Expected 2-space gap before [i/N] for status={status}, "
-        f"got: {plain!r}"
+    assert plain[idx - 2 : idx] == "  ", (
+        f"Expected 2-space gap before [i/N] for status={status}, got: {plain!r}"
     )
 
 
@@ -183,8 +203,12 @@ def test_verdict_preview_shape():
 
 def test_verdict_counter_right_aligned():
     row = verdict(
-        status="done", index=1, total=86,
-        filename="f.mkv", detail="x", elapsed_s=1.0,
+        status="done",
+        index=1,
+        total=86,
+        filename="f.mkv",
+        detail="x",
+        elapsed_s=1.0,
     )
     assert "[ 1/86]" in row.plain
 
@@ -192,12 +216,20 @@ def test_verdict_counter_right_aligned():
 def test_verdict_counter_alignment_consistent():
     """Index=1 and index=86 produce filenames at the same column."""
     row1 = verdict(
-        status="done", index=1, total=86,
-        filename="f.mkv", detail="x", elapsed_s=1.0,
+        status="done",
+        index=1,
+        total=86,
+        filename="f.mkv",
+        detail="x",
+        elapsed_s=1.0,
     )
     row86 = verdict(
-        status="done", index=86, total=86,
-        filename="f.mkv", detail="x", elapsed_s=1.0,
+        status="done",
+        index=86,
+        total=86,
+        filename="f.mkv",
+        detail="x",
+        elapsed_s=1.0,
     )
     col1 = row1.plain.index("f.mkv")
     col86 = row86.plain.index("f.mkv")
@@ -206,8 +238,12 @@ def test_verdict_counter_alignment_consistent():
 
 def test_verdict_counter_no_pad_when_single_digit_total():
     row = verdict(
-        status="done", index=1, total=5,
-        filename="f.mkv", detail="x", elapsed_s=1.0,
+        status="done",
+        index=1,
+        total=5,
+        filename="f.mkv",
+        detail="x",
+        elapsed_s=1.0,
     )
     assert "[1/5]" in row.plain
 

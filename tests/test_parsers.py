@@ -12,6 +12,7 @@ CFG = Config(TEST_CONFIG)
 
 # --- Filename parser ---
 
+
 def test_filename_yyyy_festival_artist():
     result = parse_filename(Path("2025 - AMF - Armin van Buuren.mkv"), CFG)
     assert result["year"] == "2025"
@@ -53,13 +54,17 @@ def test_filename_scene_style():
     )
     assert result["year"] == "2016"
     # Should detect glastonbury as festival
-    assert "glastonbury" in result.get("festival", "").lower() or "Glastonbury" in result.get("festival", "")
+    assert "glastonbury" in result.get(
+        "festival", ""
+    ).lower() or "Glastonbury" in result.get("festival", "")
 
 
 def test_filename_live_at_title_case():
     """'Live At' with capital A should match the live-at pattern."""
     result = parse_filename(
-        Path("Dimitri Vegas & Like Mike - Live At Tomorrowland 2024 Mainstage (FULL SET 4K UHD) [fJysO-Y4Tj4].mkv"),
+        Path(
+            "Dimitri Vegas & Like Mike - Live At Tomorrowland 2024 Mainstage (FULL SET 4K UHD) [fJysO-Y4Tj4].mkv"
+        ),
         CFG,
     )
     assert result["artist"] == "Dimitri Vegas & Like Mike"
@@ -77,7 +82,9 @@ def test_filename_bare_at_festival():
 
 
 def test_filename_concert_style():
-    result = parse_filename(Path("Adele - Live At The Royal Albert Hall-concert.mkv"), CFG)
+    result = parse_filename(
+        Path("Adele - Live At The Royal Albert Hall-concert.mkv"), CFG
+    )
     assert "Adele" in result.get("artist", "")
 
 
@@ -115,7 +122,9 @@ def test_filename_fallback_cleans_leftover_pipes():
 
 def test_filename_complex_youtube():
     result = parse_filename(
-        Path("Everything Always (Dom Dolla & John Summit) Live @ Ultra Music Festival 2025 [9ZqJPIbTme4].mkv"),
+        Path(
+            "Everything Always (Dom Dolla & John Summit) Live @ Ultra Music Festival 2025 [9ZqJPIbTme4].mkv"
+        ),
         CFG,
     )
     assert result["youtube_id"] == "9ZqJPIbTme4"
@@ -123,6 +132,7 @@ def test_filename_complex_youtube():
 
 
 # --- Parent directory parser ---
+
 
 def test_parent_dirs_festival_year():
     result = parse_parent_dirs(
@@ -159,10 +169,12 @@ def test_parse_filename_logs_debug_on_fallback(caplog):
     logs a single DEBUG line so users debugging a 'wrong parse' can see which
     filenames missed all the primary patterns."""
     import logging
+
     # This filename doesn't match any of the primary patterns
     # (no @, no 'at', no YYYY-Festival-Artist, no pipe-plus-year, no dash
     # split that looks like "Artist - Title"). Just "name 2024 noise".
     from festival_organizer.parsers import parse_filename
+
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.parsers"):
         parse_filename(Path("bare_name 2024.mkv"), CFG)
     joined = "\n".join(r.message for r in caplog.records)
@@ -174,6 +186,7 @@ def test_parse_filename_no_debug_when_primary_pattern_matches(caplog):
     """Primary-pattern matches don't emit the fallback DEBUG line
     (keeps the log quiet for the happy path)."""
     import logging
+
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.parsers"):
         parse_filename(Path("Martin Garrix @ Tomorrowland 2024.mkv"), CFG)
     joined = "\n".join(r.message for r in caplog.records)
@@ -184,8 +197,11 @@ def test_parse_filename_no_debug_when_primary_pattern_matches(caplog):
 # Regression: the YYYY-A-B pattern assumed "Festival - Artist" order and swapped
 # artist/place when re-reading an unidentified file organize had produced.
 
+
 def test_filename_organize_output_artist_place_roundtrips():
-    r = parse_filename(Path("2025 - Armin van Buuren - Tomorrowland [Mainstage].mkv"), CFG)
+    r = parse_filename(
+        Path("2025 - Armin van Buuren - Tomorrowland [Mainstage].mkv"), CFG
+    )
     assert r["year"] == "2025"
     assert r["artist"] == "Armin van Buuren"
     assert r["festival"] == "Tomorrowland"
@@ -202,7 +218,10 @@ def test_filename_organize_output_amf():
 
 
 def test_filename_organize_output_edc_alias_with_compound_stage():
-    r = parse_filename(Path("2025 - Tiësto - EDC Las Vegas [In Search Of Sunrise, kineticFIELD].mkv"), CFG)
+    r = parse_filename(
+        Path("2025 - Tiësto - EDC Las Vegas [In Search Of Sunrise, kineticFIELD].mkv"),
+        CFG,
+    )
     assert r["artist"] == "Tiësto"
     assert r["festival"] == "EDC Las Vegas"
     assert r["stage"] == "In Search Of Sunrise, kineticFIELD"

@@ -1,4 +1,5 @@
 """Resize a poster image to inline-email thumbnail JPEG bytes."""
+
 from __future__ import annotations
 
 import io

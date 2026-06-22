@@ -37,6 +37,7 @@ def test_club_source_type_maps_to_venue_tag():
     London. It must route to CRATEDIGGER_1001TL_VENUE so the venue surfaces
     on the file, not fall through silently."""
     from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
+
     assert SOURCE_TYPE_TO_TAG["Club"] == "CRATEDIGGER_1001TL_VENUE"
 
 
@@ -56,7 +57,14 @@ def test_club_group_by_type_is_not_promoted_to_festival(tmp_path):
     """A Club must remain a Club in the grouped output, never be promoted
     to 'Open Air / Festival' by the fallback logic."""
     cache = SourceCache(cache_path=tmp_path / "source_cache.json", ttl_days=365)
-    cache.put("5fg8dv", {"name": "Alexandra Palace London", "slug": "alexandra-palace-london", "type": "Club"})
+    cache.put(
+        "5fg8dv",
+        {
+            "name": "Alexandra Palace London",
+            "slug": "alexandra-palace-london",
+            "type": "Club",
+        },
+    )
     groups = cache.group_by_type(["5fg8dv"])
     assert groups == {"Club": ["Alexandra Palace London"]}
     assert "Open Air / Festival" not in groups

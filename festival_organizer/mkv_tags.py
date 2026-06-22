@@ -11,6 +11,7 @@ Logging:
         - mkv_tags.write_failed (WARNING): Tag writing via mkvpropedit failed
     See docs/logging.md for full guidelines.
 """
+
 import logging
 import os
 import subprocess
@@ -71,11 +72,17 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
 
         if result.returncode >= 2:
             detail = result.stderr.strip() or f"exit code {result.returncode}"
-            logger.warning("mkv_tags.extract: status=failed file=%s error=\"%s\"", filepath, detail)
+            logger.warning(
+                'mkv_tags.extract: status=failed file=%s error="%s"', filepath, detail
+            )
             return None
 
         if result.returncode == 1:
-            logger.debug("mkv_tags.extract: status=warnings file=%s stderr=\"%s\"", filepath, result.stderr.strip())
+            logger.debug(
+                'mkv_tags.extract: status=warnings file=%s stderr="%s"',
+                filepath,
+                result.stderr.strip(),
+            )
 
         # mkvextract writes an empty file when there are no tags
         content = Path(tag_file).read_text(encoding="utf-8").strip()
@@ -85,10 +92,12 @@ def extract_all_tags(filepath: Path) -> ET.Element | None:
         return ET.fromstring(content)
 
     except (OSError, subprocess.SubprocessError) as e:
-        logger.warning("mkv_tags.extract: status=failed file=%s error=\"%s\"", filepath, e)
+        logger.warning(
+            'mkv_tags.extract: status=failed file=%s error="%s"', filepath, e
+        )
         return None
     except ET.ParseError as e:
-        logger.warning("mkv_tags.parse: status=failed file=%s error=\"%s\"", filepath, e)
+        logger.warning('mkv_tags.parse: status=failed file=%s error="%s"', filepath, e)
         return None
     finally:
         if tag_file:
@@ -112,7 +121,11 @@ def _tag_values_from_root(root: ET.Element) -> dict[int, dict[str, str]]:
             if targets.find("TrackUID") is not None:
                 continue
             ttv_el = targets.find("TargetTypeValue")
-            ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+            ttv = (
+                int(ttv_el.text)
+                if (ttv_el is not None and ttv_el.text is not None)
+                else 50
+            )
 
         tags: dict[str, str] = {}
         for simple in tag.findall("Simple"):
@@ -167,7 +180,10 @@ def has_chapter_tags(filepath: Path) -> bool:
             continue
         for simple in tag.iter("Simple"):
             name_el = simple.find("Name")
-            if name_el is not None and name_el.text == "CRATEDIGGER_TRACK_PERFORMER_NAMES":
+            if (
+                name_el is not None
+                and name_el.text == "CRATEDIGGER_TRACK_PERFORMER_NAMES"
+            ):
                 return True
     return False
 
@@ -224,7 +240,10 @@ def has_album_artist_display_tags(filepath: Path) -> bool:
             continue
         for simple in tag.iter("Simple"):
             name_el = simple.find("Name")
-            if name_el is not None and name_el.text == "CRATEDIGGER_ALBUMARTIST_DISPLAY":
+            if (
+                name_el is not None
+                and name_el.text == "CRATEDIGGER_ALBUMARTIST_DISPLAY"
+            ):
                 return True
     return False
 
@@ -248,7 +267,11 @@ def has_duplicate_global_blocks(root: ET.Element) -> bool:
             if targets.find("ChapterUID") is not None:
                 continue
             ttv_el = targets.find("TargetTypeValue")
-            ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+            ttv = (
+                int(ttv_el.text)
+                if (ttv_el is not None and ttv_el.text is not None)
+                else 50
+            )
         counts[ttv] = counts.get(ttv, 0) + 1
     return any(c > 1 for c in counts.values())
 
@@ -322,7 +345,9 @@ def merge_tags(
         if targets.find("ChapterUID") is not None:
             continue
         ttv_el = targets.find("TargetTypeValue")
-        ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+        ttv = (
+            int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+        )
         by_ttv.setdefault(ttv, []).append(tag)
     for blocks in by_ttv.values():
         if len(blocks) <= 1:
@@ -359,7 +384,9 @@ def merge_tags(
         if targets.find("ChapterUID") is not None:
             continue
         ttv_el = targets.find("TargetTypeValue")
-        ttv = int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+        ttv = (
+            int(ttv_el.text) if (ttv_el is not None and ttv_el.text is not None) else 50
+        )
         ttv_to_tag[ttv] = tag
 
     # Merge each TTV scope
@@ -446,8 +473,10 @@ def _count_tag_deltas(
         for tag in existing.findall("Tag"):
             targets = tag.find("Targets")
             if targets is not None:
-                if (targets.find("TrackUID") is not None
-                        or targets.find("ChapterUID") is not None):
+                if (
+                    targets.find("TrackUID") is not None
+                    or targets.find("ChapterUID") is not None
+                ):
                     continue
                 ttv_el = targets.find("TargetTypeValue")
                 if ttv_el is not None and ttv_el.text is not None:
@@ -461,7 +490,11 @@ def _count_tag_deltas(
                 if name_el is None or name_el.text is None:
                     continue
                 string_el = simple.find("String")
-                old_text = string_el.text if (string_el is not None and string_el.text is not None) else ""
+                old_text = (
+                    string_el.text
+                    if (string_el is not None and string_el.text is not None)
+                    else ""
+                )
                 existing_index[(ttv, name_el.text)] = old_text
 
     added = removed = changed = 0
@@ -513,14 +546,19 @@ def write_merged_tags(
         return False
 
     # Extract existing tags (skip if caller already extracted)
-    existing = existing_root if existing_root is not None else extract_all_tags(filepath)
+    existing = (
+        existing_root if existing_root is not None else extract_all_tags(filepath)
+    )
 
     # Count deltas BEFORE merge_tags mutates existing.
     added, removed, changed = _count_tag_deltas(existing, new_tags)
     if added or removed or changed:
         logger.debug(
             "tags.write: file=%s added=%d removed=%d changed=%d",
-            filepath.name, added, removed, changed,
+            filepath.name,
+            added,
+            removed,
+            changed,
         )
 
     # Merge
@@ -546,13 +584,15 @@ def write_merged_tags(
 
         if result.returncode != 0:
             detail = result.stderr.strip() or f"exit code {result.returncode}"
-            logger.warning("mkv_tags.write: status=failed file=%s error=\"%s\"", filepath, detail)
+            logger.warning(
+                'mkv_tags.write: status=failed file=%s error="%s"', filepath, detail
+            )
             return False
 
         return True
 
     except (OSError, subprocess.SubprocessError) as e:
-        logger.warning("mkv_tags.write: status=failed file=%s error=\"%s\"", filepath, e)
+        logger.warning('mkv_tags.write: status=failed file=%s error="%s"', filepath, e)
         return False
     finally:
         if tag_file:

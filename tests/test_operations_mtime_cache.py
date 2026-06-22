@@ -1,4 +1,5 @@
 """Verify mtime-cache staleness uses deterministic hashed jitter."""
+
 import os
 import time
 from pathlib import Path
@@ -21,7 +22,7 @@ def test_is_stale_jitters_per_path(tmp_path):
     # Create files at known ages relative to the base TTL.
     fresh_path = tmp_path / "fresh.jpg"
     stale_path = tmp_path / "stale.jpg"
-    _touch(fresh_path, 70)   # well under 0.8 * 90 = 72 days
+    _touch(fresh_path, 70)  # well under 0.8 * 90 = 72 days
     _touch(stale_path, 110)  # well past 1.2 * 90 = 108 days
     assert op._is_stale(fresh_path) is False
     assert op._is_stale(stale_path) is True

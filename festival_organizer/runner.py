@@ -1,4 +1,5 @@
 """Pipeline runner: executes operations per file with live progress."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,11 @@ from pathlib import Path
 from festival_organizer.models import MediaFile
 from festival_organizer.log import _file_var
 from festival_organizer.operations import Operation, OperationResult
-from festival_organizer.progress import OrganizeContractProgress, EnrichContractProgress, OrganizeEnrichProgress
+from festival_organizer.progress import (
+    OrganizeContractProgress,
+    EnrichContractProgress,
+    OrganizeEnrichProgress,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +54,9 @@ def run_pipeline(
             try:
                 needed = op.is_needed(current_path, media_file)
             except Exception as e:
-                file_results.append(OperationResult(op.name, "error", str(e), display_name=op_display))
+                file_results.append(
+                    OperationResult(op.name, "error", str(e), display_name=op_display)
+                )
                 continue
 
             if needed:
@@ -58,18 +65,20 @@ def run_pipeline(
                 if op.name == "organize" and result.status == "done":
                     current_path = op.target
             else:
-                result = OperationResult(op.name, "skipped", "exists", display_name=op_display)
+                result = OperationResult(
+                    op.name, "skipped", "exists", display_name=op_display
+                )
             file_results.append(result)
 
         elapsed = time.perf_counter() - file_start_time
 
         has_organize = any(r.name == "organize" for r in file_results)
-        prefix = "organize.file" if has_organize and not any(
-            r.name != "organize" for r in file_results
-        ) else "enrich.file"
-        parts = " ".join(
-            f"{r.display_name or r.name}={r.status}" for r in file_results
+        prefix = (
+            "organize.file"
+            if has_organize and not any(r.name != "organize" for r in file_results)
+            else "enrich.file"
         )
+        parts = " ".join(f"{r.display_name or r.name}={r.status}" for r in file_results)
         logger.debug("%s: file=%s %s", prefix, current_path.name, parts)
 
         if is_dual:
@@ -85,8 +94,10 @@ def run_pipeline(
                     enrich_results.append(r)
             if organize_op and organize_result:
                 progress.organize.file_done(
-                    source=file_path, media_file=media_file,
-                    op=organize_op, result=organize_result,
+                    source=file_path,
+                    media_file=media_file,
+                    op=organize_op,
+                    result=organize_result,
                     elapsed_s=elapsed,
                 )
             if enrich_results:
@@ -106,8 +117,10 @@ def run_pipeline(
                     break
             if organize_op and organize_result:
                 progress.file_done(
-                    source=file_path, media_file=media_file,
-                    op=organize_op, result=organize_result,
+                    source=file_path,
+                    media_file=media_file,
+                    op=organize_op,
+                    result=organize_result,
                     elapsed_s=elapsed,
                 )
         elif is_enrich_contract:

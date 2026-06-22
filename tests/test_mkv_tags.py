@@ -1,10 +1,15 @@
 """Tests for the mkv_tags extract-merge-write module."""
+
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from unittest.mock import patch
 
-from festival_organizer.mkv_tags import _tag_values_from_root, extract_all_tags, merge_tags
+from festival_organizer.mkv_tags import (
+    _tag_values_from_root,
+    extract_all_tags,
+    merge_tags,
+)
 
 
 def _parse_merged(xml_str: str) -> ET.Element:
@@ -148,6 +153,7 @@ def test_merge_tags_empty_value_preserves_existing():
 def test_merge_tags_clear_tag_clears_existing():
     """CLEAR_TAG sentinel explicitly clears an existing tag value."""
     from festival_organizer.mkv_tags import CLEAR_TAG
+
     existing_xml = """<Tags>
   <Tag>
     <Targets><TargetTypeValue>50</TargetTypeValue></Targets>
@@ -167,10 +173,13 @@ def test_merge_tags_clear_tag_clears_existing():
 
 def test_merge_tags_multiple_ttvs_at_once():
     """Can write both TTV=50 and TTV=70 in a single merge call."""
-    result = merge_tags(None, {
-        50: {"ARTIST": "Tiesto", "TITLE": "TML 2024"},
-        70: {"1001TRACKLISTS_URL": "https://example.com"},
-    })
+    result = merge_tags(
+        None,
+        {
+            50: {"ARTIST": "Tiesto", "TITLE": "TML 2024"},
+            70: {"1001TRACKLISTS_URL": "https://example.com"},
+        },
+    )
     root = _parse_merged(result)
 
     tag50 = _get_tag_block(root, 50)
@@ -318,9 +327,13 @@ def test_extract_all_tags_exit_code_1_still_parses(tmp_path):
     def fake_run(cmd, **kwargs):
         tag_file = cmd[3]  # mkvextract <file> tags <tagfile>
         Path(tag_file).write_text(tag_xml, encoding="utf-8")
-        return subprocess.CompletedProcess(cmd, returncode=1, stdout="", stderr="Warning: something")
+        return subprocess.CompletedProcess(
+            cmd, returncode=1, stdout="", stderr="Warning: something"
+        )
 
-    with patch("festival_organizer.mkv_tags.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
+    with patch(
+        "festival_organizer.mkv_tags.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"
+    ):
         with patch("festival_organizer.mkv_tags.tracked_run", side_effect=fake_run):
             root = extract_all_tags(video)
 
@@ -341,6 +354,7 @@ def test_merge_tags_folds_duplicate_global_blocks():
 <Simple><Name>URL</Name><String>https://x</String></Simple></Tag>
 </Tags>"""
     import xml.etree.ElementTree as ET
+
     existing = ET.fromstring(existing_xml)
     result = merge_tags(existing, {})
     root = ET.fromstring(result)
@@ -350,7 +364,12 @@ def test_merge_tags_folds_duplicate_global_blocks():
         for s in tag.findall("Simple"):
             n = s.find("Name")
             v = s.find("String")
-            if n is not None and n.text == "ARTIST" and v is not None and v.text == "Tiësto":
+            if (
+                n is not None
+                and n.text == "ARTIST"
+                and v is not None
+                and v.text == "Tiësto"
+            ):
                 artist_blocks.append(tag)
                 break
     assert len(artist_blocks) == 1, f"Expected 1 ARTIST block, got {len(artist_blocks)}"
@@ -363,6 +382,7 @@ def test_merge_tags_fold_preserves_distinct_names_across_duplicates():
 <Tag><Targets/><Simple><Name>TITLE</Name><String>Y</String></Simple></Tag>
 </Tags>"""
     import xml.etree.ElementTree as ET
+
     existing = ET.fromstring(existing_xml)
     result = merge_tags(existing, {})
     root = ET.fromstring(result)
@@ -380,6 +400,7 @@ def test_merge_tags_fold_later_wins_on_conflicting_values():
 <Tag><Targets/><Simple><Name>ARTIST</Name><String>New</String></Simple></Tag>
 </Tags>"""
     import xml.etree.ElementTree as ET
+
     existing = ET.fromstring(existing_xml)
     result = merge_tags(existing, {})
     root = ET.fromstring(result)
@@ -400,11 +421,13 @@ def test_merge_tags_fold_does_not_touch_chapter_scoped_blocks():
 <Simple><Name>PERFORMER</Name><String>B</String></Simple></Tag>
 </Tags>"""
     import xml.etree.ElementTree as ET
+
     existing = ET.fromstring(existing_xml)
     result = merge_tags(existing, {})
     root = ET.fromstring(result)
-    chap_tags = [t for t in root.findall("Tag")
-                 if t.find("Targets/ChapterUID") is not None]
+    chap_tags = [
+        t for t in root.findall("Tag") if t.find("Targets/ChapterUID") is not None
+    ]
     assert len(chap_tags) == 2
 
 
@@ -412,6 +435,7 @@ def test_has_chapter_tags_returns_false_when_no_tags(tmp_path, monkeypatch):
     """File with no tags at all: extract_all_tags returns None → False."""
     from festival_organizer.mkv_tags import has_chapter_tags
     import festival_organizer.mkv_tags as mod
+
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: None)
     assert has_chapter_tags(tmp_path / "x.mkv") is False
 
@@ -421,6 +445,7 @@ def test_has_chapter_tags_returns_false_when_only_global(monkeypatch):
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_chapter_tags
     import festival_organizer.mkv_tags as mod
+
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
 <Simple><Name>ARTIST</Name><String>Tiësto</String></Simple></Tag>
@@ -429,6 +454,7 @@ def test_has_chapter_tags_returns_false_when_only_global(monkeypatch):
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
+
     assert has_chapter_tags(Path("/x.mkv")) is False
 
 
@@ -437,6 +463,7 @@ def test_has_chapter_tags_returns_true_when_performer_names_present(monkeypatch)
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_chapter_tags
     import festival_organizer.mkv_tags as mod
+
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
 <Simple><Name>ARTIST</Name><String>x</String></Simple></Tag>
@@ -446,6 +473,7 @@ def test_has_chapter_tags_returns_true_when_performer_names_present(monkeypatch)
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
+
     assert has_chapter_tags(Path("/x.mkv")) is True
 
 
@@ -455,6 +483,7 @@ def test_has_chapter_tags_returns_false_when_ttv30_lacks_performer_names(monkeyp
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_chapter_tags
     import festival_organizer.mkv_tags as mod
+
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
 <Simple><Name>PERFORMER</Name><String>y</String></Simple>
@@ -462,6 +491,7 @@ def test_has_chapter_tags_returns_false_when_ttv30_lacks_performer_names(monkeyp
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
+
     assert has_chapter_tags(Path("/x.mkv")) is False
 
 
@@ -470,11 +500,13 @@ def test_has_chapter_tags_ignores_targets_without_ttv(monkeypatch):
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_chapter_tags
     import festival_organizer.mkv_tags as mod
+
     xml = """<Tags>
 <Tag><Targets/><Simple><Name>ARTIST</Name><String>x</String></Simple></Tag>
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
+
     assert has_chapter_tags(Path("/x.mkv")) is False
 
 
@@ -482,6 +514,7 @@ def test_has_album_artist_display_tags_false_when_no_tags(tmp_path, monkeypatch)
     """File with no tags at all: extract_all_tags returns None → False."""
     from festival_organizer.mkv_tags import has_album_artist_display_tags
     import festival_organizer.mkv_tags as mod
+
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: None)
     assert has_album_artist_display_tags(tmp_path / "x.mkv") is False
 
@@ -491,12 +524,14 @@ def test_has_album_artist_display_tags_false_for_legacy_only_artists(monkeypatch
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_album_artist_display_tags
     import festival_organizer.mkv_tags as mod
+
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>70</TargetTypeValue></Targets>
 <Simple><Name>CRATEDIGGER_1001TL_ARTISTS</Name><String>Martin Garrix|Alesso</String></Simple></Tag>
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
+
     assert has_album_artist_display_tags(Path("/x.mkv")) is False
 
 
@@ -505,6 +540,7 @@ def test_has_album_artist_display_tags_true_when_display_present(monkeypatch):
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_album_artist_display_tags
     import festival_organizer.mkv_tags as mod
+
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>70</TargetTypeValue></Targets>
 <Simple><Name>CRATEDIGGER_1001TL_ARTISTS</Name><String>Martin Garrix|Alesso</String></Simple>
@@ -513,6 +549,7 @@ def test_has_album_artist_display_tags_true_when_display_present(monkeypatch):
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
+
     assert has_album_artist_display_tags(Path("/x.mkv")) is True
 
 
@@ -522,12 +559,14 @@ def test_has_album_artist_display_tags_ignores_chapter_scoped_name(monkeypatch):
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_album_artist_display_tags
     import festival_organizer.mkv_tags as mod
+
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
 <Simple><Name>CRATEDIGGER_ALBUMARTIST_DISPLAY</Name><String>misplaced</String></Simple></Tag>
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
+
     assert has_album_artist_display_tags(Path("/x.mkv")) is False
 
 
@@ -536,6 +575,7 @@ def test_has_legacy_chapter_title_true_when_unprefixed_title(monkeypatch):
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_legacy_chapter_title
     import festival_organizer.mkv_tags as mod
+
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
 <Simple><Name>CRATEDIGGER_TRACK_PERFORMER</Name><String>y</String></Simple>
@@ -543,6 +583,7 @@ def test_has_legacy_chapter_title_true_when_unprefixed_title(monkeypatch):
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
+
     assert has_legacy_chapter_title(Path("/x.mkv")) is True
 
 
@@ -551,6 +592,7 @@ def test_has_legacy_chapter_title_false_when_prefixed(monkeypatch):
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_legacy_chapter_title
     import festival_organizer.mkv_tags as mod
+
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
 <Simple><Name>CRATEDIGGER_TRACK_PERFORMER</Name><String>y</String></Simple>
@@ -558,6 +600,7 @@ def test_has_legacy_chapter_title_false_when_prefixed(monkeypatch):
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
+
     assert has_legacy_chapter_title(Path("/x.mkv")) is False
 
 
@@ -565,6 +608,7 @@ def test_has_legacy_chapter_title_false_when_no_chapter_tags(tmp_path, monkeypat
     """No TTV=30 blocks at all: False (nothing to self-heal)."""
     from festival_organizer.mkv_tags import has_legacy_chapter_title
     import festival_organizer.mkv_tags as mod
+
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: None)
     assert has_legacy_chapter_title(tmp_path / "x.mkv") is False
 
@@ -574,12 +618,14 @@ def test_has_legacy_chapter_title_ignores_ttv50_title(monkeypatch):
     import xml.etree.ElementTree as ET
     from festival_organizer.mkv_tags import has_legacy_chapter_title
     import festival_organizer.mkv_tags as mod
+
     xml = """<Tags>
 <Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
 <Simple><Name>TITLE</Name><String>Set Title</String></Simple></Tag>
 </Tags>"""
     monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
     from pathlib import Path
+
     assert has_legacy_chapter_title(Path("/x.mkv")) is False
 
 
@@ -749,6 +795,7 @@ def test_merge_tags_updates_targetless_block_in_place():
 
 # --- Tier 2 tag-diff DEBUG for write_merged_tags ---
 
+
 def test_write_merged_tags_logs_diff_counts(tmp_path, caplog):
     """write_merged_tags emits a DEBUG summary of +added -removed ~changed."""
     import logging
@@ -768,17 +815,22 @@ def test_write_merged_tags_logs_diff_counts(tmp_path, caplog):
 
     new_tags = {
         50: {
-            "ARTIST": "Skrillex",   # changed: Tiesto -> Skrillex
-            "YEAR": "2025",         # added: not in existing
-            "GENRE": CLEAR_TAG,     # removed: was "Trance"
-            "ALBUM": "Live",        # no change: same value
+            "ARTIST": "Skrillex",  # changed: Tiesto -> Skrillex
+            "YEAR": "2025",  # added: not in existing
+            "GENRE": CLEAR_TAG,  # removed: was "Trance"
+            "ALBUM": "Live",  # no change: same value
         }
     }
 
     from unittest.mock import MagicMock
-    with patch("festival_organizer.mkv_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-        with patch("festival_organizer.mkv_tags.tracked_run",
-                   return_value=MagicMock(returncode=0, stderr="")):
+
+    with patch(
+        "festival_organizer.mkv_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"
+    ):
+        with patch(
+            "festival_organizer.mkv_tags.tracked_run",
+            return_value=MagicMock(returncode=0, stderr=""),
+        ):
             with caplog.at_level(logging.DEBUG, logger="festival_organizer.mkv_tags"):
                 ok = write_merged_tags(video, new_tags, existing_root=existing_root)
     assert ok is True
@@ -805,9 +857,14 @@ def test_write_merged_tags_skips_debug_when_no_changes(tmp_path, caplog):
     new_tags = {50: {"ARTIST": "Tiesto"}}
 
     from unittest.mock import MagicMock
-    with patch("festival_organizer.mkv_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-        with patch("festival_organizer.mkv_tags.tracked_run",
-                   return_value=MagicMock(returncode=0, stderr="")):
+
+    with patch(
+        "festival_organizer.mkv_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"
+    ):
+        with patch(
+            "festival_organizer.mkv_tags.tracked_run",
+            return_value=MagicMock(returncode=0, stderr=""),
+        ):
             with caplog.at_level(logging.DEBUG, logger="festival_organizer.mkv_tags"):
                 ok = write_merged_tags(video, new_tags, existing_root=existing_root)
     assert ok is True

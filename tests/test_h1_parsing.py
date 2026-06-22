@@ -40,7 +40,7 @@ def test_complex_set_and_venue():
 
 def test_no_at_sign():
     """Mysteryland - Aftermovie (no @)"""
-    h1 = 'Mysteryland - Aftermovie 2025-09-15'
+    h1 = "Mysteryland - Aftermovie 2025-09-15"
     result = _parse_h1_structure(h1)
     assert result["stage_text"] == ""
     assert result["sources"] == []
@@ -57,14 +57,19 @@ def test_h1_extracts_single_dj():
 def test_h1_extracts_collab_djs():
     h1 = '<a href="/dj/arminvanbuuren/index.html" class="notranslate ">Armin van Buuren</a> &amp; <a href="/dj/kislashki/index.html" class="notranslate ">KI/KI</a> @ Two Is One, <a href="/source/5tb5n3/amsterdam-music-festival/index.html">Amsterdam Music Festival</a>'
     result = _parse_h1_structure(h1)
-    assert result["dj_artists"] == [("arminvanbuuren", "Armin van Buuren"), ("kislashki", "KI/KI")]
+    assert result["dj_artists"] == [
+        ("arminvanbuuren", "Armin van Buuren"),
+        ("kislashki", "KI/KI"),
+    ]
     assert result["stage_text"] == "Two Is One"
 
 
 def test_h1_extracts_group_dj():
     h1 = '<a href="/dj/dimitrivegasandlikemike/index.html" class="notranslate ">Dimitri Vegas &amp; Like Mike</a> @ Mainstage, <a href="/source/fgcfkm/tomorrowland/index.html">Tomorrowland</a> Weekend 2, Belgium 2025-07-26'
     result = _parse_h1_structure(h1)
-    assert result["dj_artists"] == [("dimitrivegasandlikemike", "Dimitri Vegas & Like Mike")]
+    assert result["dj_artists"] == [
+        ("dimitrivegasandlikemike", "Dimitri Vegas & Like Mike")
+    ]
 
 
 def test_h1_existing_source_extraction_unchanged():
@@ -92,7 +97,11 @@ def test_stage_from_source_link_with_suffix():
     assert result["stage_text"] == "Resistance Megastructure"
     assert result["dj_artists"] == [("ericprydz", "Eric Prydz")]
     assert ("v088zc", "resistance", "Resistance") in result["sources"]
-    assert ("u8bf5c", "ultra-music-festival-miami", "Ultra Music Festival Miami") in result["sources"]
+    assert (
+        "u8bf5c",
+        "ultra-music-festival-miami",
+        "Ultra Music Festival Miami",
+    ) in result["sources"]
 
 
 def test_stage_from_source_link_the_cove():
@@ -122,7 +131,7 @@ def test_no_sources_strips_trailing_country_and_date():
     """
     h1 = (
         '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
-        ' @ Bay Oval Park, New Zealand 2026-01-31'
+        " @ Bay Oval Park, New Zealand 2026-01-31"
     )
     result = _parse_h1_structure(h1)
     assert result["stage_text"] == ""
@@ -136,7 +145,7 @@ def test_no_sources_strips_trailing_date_only():
     """No country present, just trailing date."""
     h1 = (
         '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
-        ' @ Bay Oval Park 2026-01-31'
+        " @ Bay Oval Park 2026-01-31"
     )
     result = _parse_h1_structure(h1)
     assert result["stage_text"] == ""
@@ -148,7 +157,7 @@ def test_no_sources_unknown_country_kept_in_location():
     """Unknown country names stay in location (defensive)."""
     h1 = (
         '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
-        ' @ Some Venue, Unknownland 2026-01-31'
+        " @ Some Venue, Unknownland 2026-01-31"
     )
     result = _parse_h1_structure(h1)
     assert result["stage_text"] == ""
@@ -260,7 +269,7 @@ def test_parse_h1_captures_date_when_no_source_links():
     The date must still be captured when the h1 tail has no /source/ link."""
     h1 = (
         '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
-        ' @ Bay Oval Park, New Zealand 2026-01-31'
+        " @ Bay Oval Park, New Zealand 2026-01-31"
     )
     result = _parse_h1_structure(h1)
     assert result["date"] == "2026-01-31"
@@ -270,7 +279,7 @@ def test_parse_h1_captures_date_when_only_date_in_tail():
     """No country, only a trailing date — still captured."""
     h1 = (
         '<a href="/dj/fisher/index.html" class="notranslate ">FISHER</a>'
-        ' @ Bay Oval Park 2026-01-31'
+        " @ Bay Oval Park 2026-01-31"
     )
     result = _parse_h1_structure(h1)
     assert result["date"] == "2026-01-31"
@@ -288,6 +297,6 @@ def test_parse_h1_date_empty_when_no_trailing_date():
 
 def test_parse_h1_date_empty_when_no_at_sign():
     """Aftermovie-style h1 with no @ returns early — date is empty."""
-    h1 = 'Mysteryland - Aftermovie 2025-09-15'
+    h1 = "Mysteryland - Aftermovie 2025-09-15"
     result = _parse_h1_structure(h1)
     assert result["date"] == ""

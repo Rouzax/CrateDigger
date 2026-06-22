@@ -6,8 +6,13 @@ from PIL import Image
 
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
-    NfoOperation, ArtOperation, PosterOperation, CoverEmbedOperation,
-    OrganizeOperation, AlbumPosterOperation, FanartOperation,
+    NfoOperation,
+    ArtOperation,
+    PosterOperation,
+    CoverEmbedOperation,
+    OrganizeOperation,
+    AlbumPosterOperation,
+    FanartOperation,
     _resolve_poster_fields,
 )
 from festival_organizer.config import load_config, Config, DEFAULT_CONFIG
@@ -19,8 +24,11 @@ def _win_normcase(s: str) -> str:
 
 def _make_mf(**kwargs: Any) -> MediaFile:
     defaults: dict[str, Any] = dict(
-        source_path=Path("test.mkv"), artist="Test",
-        festival="TML", year="2024", content_type="festival_set",
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="TML",
+        year="2024",
+        content_type="festival_set",
     )
     defaults.update(kwargs)
     return MediaFile(**defaults)
@@ -52,6 +60,7 @@ def test_nfo_op_not_needed_when_exists(tmp_path):
     mf = _make_mf()
     config = load_config()
     from festival_organizer.nfo import generate_nfo
+
     generate_nfo(mf, video, config)
     op = NfoOperation(config)
     assert op.is_needed(video, mf) is False
@@ -64,6 +73,7 @@ def test_nfo_op_needed_when_forced(tmp_path):
     mf = _make_mf()
     config = load_config()
     from festival_organizer.nfo import generate_nfo
+
     generate_nfo(mf, video, config)
     op = NfoOperation(config, force=True)
     assert op.is_needed(video, mf) is True
@@ -75,6 +85,7 @@ def test_nfo_op_needed_when_artist_changed(tmp_path):
     video.write_bytes(b"")
     config = load_config()
     from festival_organizer.nfo import generate_nfo
+
     generate_nfo(_make_mf(artists=["Artist A"]), video, config)
     op = NfoOperation(config)
     assert op.is_needed(video, _make_mf(artists=["Artist B"])) is True
@@ -86,6 +97,7 @@ def test_nfo_op_needed_when_genre_added(tmp_path):
     video.write_bytes(b"")
     config = load_config()
     from festival_organizer.nfo import generate_nfo
+
     generate_nfo(_make_mf(), video, config)
     op = NfoOperation(config)
     assert op.is_needed(video, _make_mf(genres=["Techno"])) is True
@@ -97,6 +109,7 @@ def test_nfo_op_needed_when_stage_changed(tmp_path):
     video.write_bytes(b"")
     config = load_config()
     from festival_organizer.nfo import generate_nfo
+
     generate_nfo(_make_mf(stage="Mainstage"), video, config)
     op = NfoOperation(config)
     assert op.is_needed(video, _make_mf(stage="Freedom")) is True
@@ -109,6 +122,7 @@ def test_nfo_op_skipped_when_only_dateadded_differs(tmp_path):
     mf = _make_mf()
     config = load_config()
     from festival_organizer.nfo import generate_nfo
+
     generate_nfo(mf, video, config, dateadded="2020-01-01 00:00:00")
     op = NfoOperation(config)
     assert op.is_needed(video, mf) is False
@@ -121,10 +135,13 @@ def test_nfo_op_needed_when_dj_cache_adds_group_member(tmp_path):
     config = load_config()
     mf = _make_mf(artists=["Gaia"])
     from festival_organizer.nfo import generate_nfo
+
     generate_nfo(mf, video, config)
 
     dj_cache = MagicMock()
-    dj_cache.derive_group_members.return_value = {"Gaia": ["Armin van Buuren", "Benno de Goeij"]}
+    dj_cache.derive_group_members.return_value = {
+        "Gaia": ["Armin van Buuren", "Benno de Goeij"]
+    }
     op = NfoOperation(config, dj_cache=dj_cache)
     assert op.is_needed(video, mf) is True
 
@@ -137,8 +154,8 @@ def test_nfo_op_preserves_dateadded_on_regen(tmp_path):
     original_ts = "2023-06-15 14:30:00"
     from festival_organizer.nfo import generate_nfo
     import xml.etree.ElementTree as ET
-    generate_nfo(_make_mf(stage="Mainstage"), video, config,
-                 dateadded=original_ts)
+
+    generate_nfo(_make_mf(stage="Mainstage"), video, config, dateadded=original_ts)
     op = NfoOperation(config)
     op.execute(video, _make_mf(stage="Freedom"))
     root = ET.fromstring((tmp_path / "test.nfo").read_text(encoding="utf-8"))
@@ -183,21 +200,28 @@ def test_poster_op_needed_when_thumb_exists_but_poster_missing(tmp_path):
 def test_poster_op_not_needed_when_stamp_matches(tmp_path):
     """Skip when the sidecar stamp equals the current resolved inputs."""
     from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
-    video = tmp_path / "test.mkv"; video.write_bytes(b"")
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
     poster = tmp_path / "test-poster.jpg"
     Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
     cfg = load_config()
     op = PosterOperation(cfg)
     mf = _make_mf()
-    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(mf, cfg),
-                                                  artists_1001tl=mf.artists_1001tl))
+    inject_poster_stamp(
+        poster,
+        build_cover_stamp(
+            **_resolve_poster_fields(mf, cfg), artists_1001tl=mf.artists_1001tl
+        ),
+    )
     assert op.is_needed(video, mf) is False
 
 
 def test_poster_op_needed_when_stamp_absent(tmp_path):
     """Poster exists but carries no stamp (older CrateDigger) -> re-render."""
-    video = tmp_path / "test.mkv"; video.write_bytes(b"")
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
     poster = tmp_path / "test-poster.jpg"
     Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
@@ -206,7 +230,8 @@ def test_poster_op_needed_when_stamp_absent(tmp_path):
 
 def test_poster_op_non_matroska_needed_when_unstamped(tmp_path):
     """Non-Matroska poster without a stamp now regenerates (to add the stamp)."""
-    video = tmp_path / "test.mp4"; video.write_bytes(b"")
+    video = tmp_path / "test.mp4"
+    video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
     poster = tmp_path / "test-poster.jpg"
     Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")  # no stamp
@@ -216,20 +241,27 @@ def test_poster_op_non_matroska_needed_when_unstamped(tmp_path):
 def test_poster_op_non_matroska_not_needed_when_stamp_matches(tmp_path):
     """Non-Matroska poster carrying a matching stamp is up to date."""
     from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
-    video = tmp_path / "test.mp4"; video.write_bytes(b"")
+
+    video = tmp_path / "test.mp4"
+    video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
     poster = tmp_path / "test-poster.jpg"
     Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
     cfg = load_config()
     mf = _make_mf()
-    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(mf, cfg),
-                                                  artists_1001tl=mf.artists_1001tl))
+    inject_poster_stamp(
+        poster,
+        build_cover_stamp(
+            **_resolve_poster_fields(mf, cfg), artists_1001tl=mf.artists_1001tl
+        ),
+    )
     assert PosterOperation(cfg).is_needed(video, mf) is False
 
 
 def test_poster_op_execute_stamps_non_matroska(tmp_path):
     """execute() stamps a non-Matroska sidecar, so a second run is a no-op."""
-    video = tmp_path / "test.mp4"; video.write_bytes(b"")
+    video = tmp_path / "test.mp4"
+    video.write_bytes(b"")
     Image.new("RGB", (1280, 720), (50, 60, 90)).save(str(tmp_path / "test-thumb.jpg"))
     cfg = load_config()
     op = PosterOperation(cfg)
@@ -240,7 +272,9 @@ def test_poster_op_execute_stamps_non_matroska(tmp_path):
 
 def test_poster_op_needed_when_field_changes(tmp_path):
     from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
-    video = tmp_path / "test.mkv"; video.write_bytes(b"")
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
     poster = tmp_path / "test-poster.jpg"
     Image.new("RGB", (1000, 1500), (10, 10, 10)).save(str(poster), "JPEG")
@@ -278,8 +312,15 @@ def _run_poster_and_capture_kwargs(tmp_path, mf):
 
 def test_resolve_poster_fields_uses_display_artist_and_edition_slot():
     cfg = load_config()
-    mf = _make_mf(artist="afrojack", display_artist="AFROJACK",
-                  place="UMF", edition="", stage="Mainstage", date="2026-03-29", year="2026")
+    mf = _make_mf(
+        artist="afrojack",
+        display_artist="AFROJACK",
+        place="UMF",
+        edition="",
+        stage="Mainstage",
+        date="2026-03-29",
+        year="2026",
+    )
     f = _resolve_poster_fields(mf, cfg)
     assert f["artist"] == "AFROJACK"
     assert f["stage"] == "Mainstage"
@@ -296,34 +337,53 @@ def test_resolve_poster_fields_drops_venue_when_place_is_venue():
 
 def test_poster_festival_slot_uses_place_for_festival(tmp_path):
     """Festival set: mf.place fills the headline slot."""
-    mf = _make_mf(festival="Tomorrowland", venue="Some Venue",
-                  location="Some Location", title="Artist @ Stage, TML",
-                  place="Tomorrowland", place_kind="festival")
+    mf = _make_mf(
+        festival="Tomorrowland",
+        venue="Some Venue",
+        location="Some Location",
+        title="Artist @ Stage, TML",
+        place="Tomorrowland",
+        place_kind="festival",
+    )
     assert _run_poster_and_capture_festival(tmp_path, mf) == "Tomorrowland"
 
 
 def test_poster_festival_slot_uses_place_for_venue(tmp_path):
     """Concert at a linked venue: mf.place holds the venue and fills the slot."""
-    mf = _make_mf(festival="", venue="Alexandra Palace London",
-                  location="ignored freeform",
-                  title="Fred again.. @ USB002",
-                  place="Alexandra Palace London", place_kind="venue")
+    mf = _make_mf(
+        festival="",
+        venue="Alexandra Palace London",
+        location="ignored freeform",
+        title="Fred again.. @ USB002",
+        place="Alexandra Palace London",
+        place_kind="venue",
+    )
     assert _run_poster_and_capture_festival(tmp_path, mf) == "Alexandra Palace London"
 
 
 def test_poster_festival_slot_uses_place_for_location(tmp_path):
     """Freeform location: mf.place carries the canonical location."""
-    mf = _make_mf(festival="", venue="", location="Some Unlinked Venue",
-                  title="Artist @ Stage",
-                  place="Some Unlinked Venue", place_kind="location")
+    mf = _make_mf(
+        festival="",
+        venue="",
+        location="Some Unlinked Venue",
+        title="Artist @ Stage",
+        place="Some Unlinked Venue",
+        place_kind="location",
+    )
     assert _run_poster_and_capture_festival(tmp_path, mf) == "Some Unlinked Venue"
 
 
 def test_poster_venue_subline_suppressed_when_place_kind_is_venue(tmp_path):
     """When place_kind=venue the venue is already in the slot; subline is blank."""
-    mf = _make_mf(festival="", venue="Red Rocks Amphitheatre",
-                  stage="", title="Martin Garrix @ Red Rocks",
-                  place="Red Rocks Amphitheatre", place_kind="venue")
+    mf = _make_mf(
+        festival="",
+        venue="Red Rocks Amphitheatre",
+        stage="",
+        title="Martin Garrix @ Red Rocks",
+        place="Red Rocks Amphitheatre",
+        place_kind="venue",
+    )
     kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
     assert kwargs["festival"] == "Red Rocks Amphitheatre"
     assert kwargs["venue"] == ""
@@ -331,9 +391,15 @@ def test_poster_venue_subline_suppressed_when_place_kind_is_venue(tmp_path):
 
 def test_poster_venue_subline_suppressed_when_place_kind_is_location(tmp_path):
     """place_kind=location also suppresses the venue subline (same slot)."""
-    mf = _make_mf(festival="", venue="Some Bar", location="Some Bar, Berlin",
-                  stage="", title="irrelevant",
-                  place="Some Bar, Berlin", place_kind="location")
+    mf = _make_mf(
+        festival="",
+        venue="Some Bar",
+        location="Some Bar, Berlin",
+        stage="",
+        title="irrelevant",
+        place="Some Bar, Berlin",
+        place_kind="location",
+    )
     kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
     assert kwargs["festival"] == "Some Bar, Berlin"
     assert kwargs["venue"] == ""
@@ -341,10 +407,14 @@ def test_poster_venue_subline_suppressed_when_place_kind_is_location(tmp_path):
 
 def test_poster_venue_subline_rendered_when_place_kind_is_festival(tmp_path):
     """Real festival in the slot: venue still renders as a subline."""
-    mf = _make_mf(festival="Amsterdam Music Festival",
-                  venue="Johan Cruijff ArenA Amsterdam",
-                  stage="Mainstage", title="irrelevant",
-                  place="Amsterdam Music Festival", place_kind="festival")
+    mf = _make_mf(
+        festival="Amsterdam Music Festival",
+        venue="Johan Cruijff ArenA Amsterdam",
+        stage="Mainstage",
+        title="irrelevant",
+        place="Amsterdam Music Festival",
+        place_kind="festival",
+    )
     kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
     assert kwargs["festival"] == "Amsterdam Music Festival"
     assert kwargs["venue"] == "Johan Cruijff ArenA Amsterdam"
@@ -352,9 +422,13 @@ def test_poster_venue_subline_rendered_when_place_kind_is_festival(tmp_path):
 
 def test_poster_festival_slot_uses_edition_display(tmp_path):
     """When mf.edition matches a known edition, the slot uses 'Place Edition'."""
-    mf = _make_mf(festival="Tomorrowland", edition="Winter",
-                  place="Tomorrowland", place_kind="festival",
-                  title="irrelevant")
+    mf = _make_mf(
+        festival="Tomorrowland",
+        edition="Winter",
+        place="Tomorrowland",
+        place_kind="festival",
+        title="irrelevant",
+    )
     cfg = load_config()
     cfg._data["place_config"] = {"Tomorrowland": {"editions": {"Winter": {}}}}
     video = tmp_path / "test.mkv"
@@ -399,8 +473,10 @@ def test_organize_op_needed_for_case_only_rename(tmp_path):
 
 def test_organize_op_not_needed_for_prefix_case():
     """e:\\ vs E:\\ prefix difference is not a real rename."""
-    with patch("festival_organizer.paths.os.sep", "\\"), \
-         patch("festival_organizer.paths.os.path.normcase", side_effect=_win_normcase):
+    with (
+        patch("festival_organizer.paths.os.sep", "\\"),
+        patch("festival_organizer.paths.os.path.normcase", side_effect=_win_normcase),
+    ):
         source = Path("e:\\Data\\AMF\\2024 - Marlon Hoffstadt - AMF.mkv")
         target = Path("E:\\Data\\AMF\\2024 - Marlon Hoffstadt - AMF.mkv")
         root = Path("E:\\Data")
@@ -455,6 +531,7 @@ def test_album_poster_needed_when_missing(tmp_path):
 def test_album_poster_not_needed_when_stamp_matches(tmp_path):
     """Folder poster is up to date when folder.jpg carries the matching stamp."""
     from festival_organizer.poster import inject_poster_stamp
+
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     folder_jpg = tmp_path / "folder.jpg"
@@ -477,12 +554,15 @@ def test_album_poster_needed_when_unstamped(tmp_path):
 def test_album_poster_needed_when_stamp_mismatch(tmp_path):
     """Folder poster regenerates when the rendered identity changed (stamp mismatch)."""
     from festival_organizer.poster import inject_poster_stamp
+
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     folder_jpg = tmp_path / "folder.jpg"
     folder_jpg.write_bytes(b"\xff\xd8\xff\xd9")
     op = AlbumPosterOperation(config=load_config())
-    inject_poster_stamp(folder_jpg, op._expected_folder_stamp(_make_mf(artist="Old Name"), tmp_path))
+    inject_poster_stamp(
+        folder_jpg, op._expected_folder_stamp(_make_mf(artist="Old Name"), tmp_path)
+    )
     assert op.is_needed(video, _make_mf(artist="New Name")) is True
 
 
@@ -490,6 +570,7 @@ def test_album_poster_regenerates_on_version_bump(tmp_path, monkeypatch):
     """Bumping FOLDER_POSTER_VERSION invalidates existing folder-poster stamps."""
     from festival_organizer import poster as poster_mod
     from festival_organizer.poster import inject_poster_stamp
+
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     folder_jpg = tmp_path / "folder.jpg"
@@ -498,7 +579,9 @@ def test_album_poster_regenerates_on_version_bump(tmp_path, monkeypatch):
     mf = _make_mf()
     inject_poster_stamp(folder_jpg, op._expected_folder_stamp(mf, tmp_path))
     assert op.is_needed(video, mf) is False
-    monkeypatch.setattr(poster_mod, "FOLDER_POSTER_VERSION", poster_mod.FOLDER_POSTER_VERSION + 1)
+    monkeypatch.setattr(
+        poster_mod, "FOLDER_POSTER_VERSION", poster_mod.FOLDER_POSTER_VERSION + 1
+    )
     assert op.is_needed(video, mf) is True
 
 
@@ -509,7 +592,10 @@ def test_album_poster_execute_parses_filenames(tmp_path):
     (tmp_path / "2024 - Tomorrowland - Bicep-thumb.jpg").write_bytes(b"\xff\xd8")
     op = AlbumPosterOperation(config=load_config())
     mf = _make_mf(festival="Tomorrowland", artist="Bicep", year="2024")
-    with patch("festival_organizer.poster.generate_album_poster", side_effect=_stub_generate_album_poster):
+    with patch(
+        "festival_organizer.poster.generate_album_poster",
+        side_effect=_stub_generate_album_poster,
+    ):
         result = op.execute(video, mf)
     assert result.status == "done"
 
@@ -562,7 +648,10 @@ def test_album_poster_dedup_same_folder(tmp_path):
     # First file: needed
     assert op.is_needed(video1, mf) is True
     # Simulate execute completing
-    with patch("festival_organizer.poster.generate_album_poster", side_effect=_stub_generate_album_poster):
+    with patch(
+        "festival_organizer.poster.generate_album_poster",
+        side_effect=_stub_generate_album_poster,
+    ):
         op.execute(video1, mf)
     # Second file in same folder: not needed
     assert op.is_needed(video2, mf) is False
@@ -581,7 +670,10 @@ def test_album_poster_dedup_different_folders(tmp_path):
     op = AlbumPosterOperation(config=load_config(), force=True)
     mf1 = _make_mf(artist="Artist1")
     mf2 = _make_mf(artist="Artist2")
-    with patch("festival_organizer.poster.generate_album_poster", side_effect=_stub_generate_album_poster):
+    with patch(
+        "festival_organizer.poster.generate_album_poster",
+        side_effect=_stub_generate_album_poster,
+    ):
         op.execute(video1, mf1)
     # Different folder: still needed
     assert op.is_needed(video2, mf2) is True
@@ -590,6 +682,7 @@ def test_album_poster_dedup_different_folders(tmp_path):
 def test_album_poster_type_from_artist_flat_layout():
     """artist_flat layout: {artist} -> artist poster type."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_flat"
     op = AlbumPosterOperation(config=config)
@@ -600,6 +693,7 @@ def test_album_poster_type_from_artist_flat_layout():
 def test_album_poster_type_from_place_flat_layout():
     """place_flat layout: {festival} -> festival poster type."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
     op = AlbumPosterOperation(config=config)
@@ -610,6 +704,7 @@ def test_album_poster_type_from_place_flat_layout():
 def test_album_poster_type_nested_segments():
     """artist_nested layout: {artist}/{festival}/{year} -> per-segment types."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_nested"
     op = AlbumPosterOperation(config=config)
@@ -619,6 +714,7 @@ def test_album_poster_type_nested_segments():
 
 def _stamp_type(folder_jpg: Path):
     from festival_organizer.poster import read_poster_stamp
+
     raw = read_poster_stamp(folder_jpg)
     return raw.decode().split("\x1f")[1] if raw else None
 
@@ -632,7 +728,9 @@ def test_album_poster_layout_levels_place_nested(tmp_path):
     video = artist / "2025 - EDC Las Vegas - Tiesto.mkv"
     video.write_bytes(b"")
     op = AlbumPosterOperation(config=config, library_root=tmp_path)
-    mf = _make_mf(place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025")
+    mf = _make_mf(
+        place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025"
+    )
     assert [(f.name, t, p) for f, t, p in op._layout_levels(video, mf)] == [
         ("EDC Las Vegas", "festival", None),
         ("2025", "year", "festival"),
@@ -649,7 +747,9 @@ def test_album_poster_layout_levels_artist_nested(tmp_path):
     video = year / "2025 - EDC Las Vegas - Tiesto.mkv"
     video.write_bytes(b"")
     op = AlbumPosterOperation(config=config, library_root=tmp_path)
-    mf = _make_mf(place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025")
+    mf = _make_mf(
+        place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025"
+    )
     assert [(f.name, t, p) for f, t, p in op._layout_levels(video, mf)] == [
         ("Tiesto", "artist", None),
         ("EDC Las Vegas", "festival", "artist"),
@@ -666,8 +766,13 @@ def test_album_poster_generates_all_levels(tmp_path):
     video = artist / "2025 - EDC Las Vegas - Tiesto.mkv"
     video.write_bytes(b"")
     op = AlbumPosterOperation(config=config, library_root=tmp_path)
-    mf = _make_mf(place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025")
-    with patch("festival_organizer.poster.generate_album_poster", side_effect=_stub_generate_album_poster):
+    mf = _make_mf(
+        place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025"
+    )
+    with patch(
+        "festival_organizer.poster.generate_album_poster",
+        side_effect=_stub_generate_album_poster,
+    ):
         assert op.execute(video, mf).status == "done"
     levels = op._layout_levels(video, mf)
     assert [t for _, t, _ in levels] == ["festival", "year", "artist"]
@@ -682,15 +787,24 @@ def test_year_level_stamp_name_place_vs_artist():
     op = AlbumPosterOperation(config=load_config())
     mf = _make_mf(place="EDC", artist="Tiesto", edition="Winter")
     assert op._level_stamp_fields("year", "festival", "2025", mf) == {
-        "poster_type": "year", "name": "EDC", "year": "2025", "edition": "Winter"}
+        "poster_type": "year",
+        "name": "EDC",
+        "year": "2025",
+        "edition": "Winter",
+    }
     assert op._level_stamp_fields("year", "artist", "2025", mf) == {
-        "poster_type": "year", "name": "Tiesto", "year": "2025", "edition": ""}
+        "poster_type": "year",
+        "name": "Tiesto",
+        "year": "2025",
+        "edition": "",
+    }
 
 
 def test_album_poster_regenerates_on_artwork_change(tmp_path, monkeypatch):
     """An artist folder poster regenerates when its DJ artwork changes (bg fingerprint)."""
     from festival_organizer import paths as paths_mod
     from festival_organizer.poster import inject_poster_stamp
+
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     folder_jpg = tmp_path / "folder.jpg"
@@ -700,7 +814,9 @@ def test_album_poster_regenerates_on_artwork_change(tmp_path, monkeypatch):
     (art_dir / "dj-artwork.jpg").write_bytes(b"x" * 100)
     monkeypatch.setattr(paths_mod, "artist_cache_dir", lambda key: art_dir)
 
-    op = AlbumPosterOperation(config=load_config())  # artist_flat default -> artist poster
+    op = AlbumPosterOperation(
+        config=load_config()
+    )  # artist_flat default -> artist poster
     mf = _make_mf()
     inject_poster_stamp(folder_jpg, op._expected_folder_stamp(mf, tmp_path))
     assert op.is_needed(video, mf) is False
@@ -719,6 +835,7 @@ def test_bg_fingerprint_empty_for_year():
 def test_album_poster_type_place_nested_segments():
     """place_nested: {festival}/{year}/{artist} -> per-segment types."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_nested"
     op = AlbumPosterOperation(config=config)
@@ -729,10 +846,16 @@ def test_album_poster_type_place_nested_segments():
 def test_album_poster_type_mixed_segment_place_wins():
     """Mixed segment {artist} - {place} -> place wins (higher priority)."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
-    config = Config({**DEFAULT_CONFIG, "layouts": {
-        **DEFAULT_CONFIG["layouts"],
-        "custom": {"festival_set": "{artist} - {place}"},
-    }})
+
+    config = Config(
+        {
+            **DEFAULT_CONFIG,
+            "layouts": {
+                **DEFAULT_CONFIG["layouts"],
+                "custom": {"festival_set": "{artist} - {place}"},
+            },
+        }
+    )
     config._data["default_layout"] = "custom"
     op = AlbumPosterOperation(config=config)
     mf = _make_mf(place="Tomorrowland", place_kind="festival")
@@ -742,6 +865,7 @@ def test_album_poster_type_mixed_segment_place_wins():
 def test_album_poster_segment_for_folder_depth(tmp_path):
     """Correct poster type at each folder depth in nested layout."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_nested"
     op = AlbumPosterOperation(config=config, library_root=tmp_path)
@@ -766,7 +890,9 @@ def test_layout_levels_bounded_to_layout_depth(tmp_path):
     video.parent.mkdir(parents=True)
     video.write_bytes(b"")
     op = AlbumPosterOperation(config=config, library_root=tmp_path)
-    mf = _make_mf(place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025")
+    mf = _make_mf(
+        place="EDC Las Vegas", place_kind="festival", artist="Tiesto", year="2025"
+    )
     levels = op._layout_levels(video, mf)
     # Exactly the 3 layout folders; the "a"/"b" ancestors are never touched.
     assert [f.name for f, _, _ in levels] == ["EDC Las Vegas", "2025", "Tiesto"]
@@ -776,6 +902,7 @@ def test_layout_levels_bounded_to_layout_depth(tmp_path):
 def test_get_folder_poster_type_returns_festival_for_festival_kind():
     """place_kind='festival' on a place_flat layout yields 'festival' poster type."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
     op = AlbumPosterOperation(config=config)
@@ -786,6 +913,7 @@ def test_get_folder_poster_type_returns_festival_for_festival_kind():
 def test_get_folder_poster_type_returns_festival_for_venue_kind():
     """place_kind='venue' still routes through the festival poster pipeline."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
     op = AlbumPosterOperation(config=config)
@@ -796,6 +924,7 @@ def test_get_folder_poster_type_returns_festival_for_venue_kind():
 def test_get_folder_poster_type_returns_festival_for_location_kind():
     """place_kind='location' still routes through the festival poster pipeline."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
     op = AlbumPosterOperation(config=config)
@@ -806,6 +935,7 @@ def test_get_folder_poster_type_returns_festival_for_location_kind():
 def test_get_folder_poster_type_returns_artist_for_artist_fallback():
     """place_kind='artist' overrides the layout's place segment to 'artist' poster type."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
     op = AlbumPosterOperation(config=config)
@@ -840,6 +970,7 @@ def test_priority_chain_year_returns_year_chain():
 def test_album_poster_hero_text_uses_mf_place(tmp_path):
     """Album poster hero/festival slot equals mf.place, regardless of place_kind."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
     folder = tmp_path / "Alexandra Palace"
@@ -847,8 +978,13 @@ def test_album_poster_hero_text_uses_mf_place(tmp_path):
     video = folder / "2024 - Alexandra Palace - Fred again...mkv"
     video.write_bytes(b"")
     op = AlbumPosterOperation(config=config, force=True)
-    mf = _make_mf(festival="", artist="Fred again..",
-                  place="Alexandra Palace", place_kind="venue", year="2024")
+    mf = _make_mf(
+        festival="",
+        artist="Fred again..",
+        place="Alexandra Palace",
+        place_kind="venue",
+        year="2024",
+    )
     with patch("festival_organizer.poster.generate_album_poster") as gen:
         op.execute(video, mf)
     assert gen.call_args.kwargs["festival"] == "Alexandra Palace"
@@ -857,21 +993,30 @@ def test_album_poster_hero_text_uses_mf_place(tmp_path):
 def test_album_poster_color_lookup_uses_canonical_place(tmp_path):
     """Brand color lookup keys on mf.place, not mf.festival."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
-    config = Config({
-        **DEFAULT_CONFIG,
-        "default_layout": "place_flat",
-        "place_config": {"Tomorrowland": {"color": "#9B1B5A"}},
-    })
+
+    config = Config(
+        {
+            **DEFAULT_CONFIG,
+            "default_layout": "place_flat",
+            "place_config": {"Tomorrowland": {"color": "#9B1B5A"}},
+        }
+    )
     folder = tmp_path / "Tomorrowland"
     folder.mkdir()
     video = folder / "2024 - Tomorrowland - Tiesto.mkv"
     video.write_bytes(b"")
     op = AlbumPosterOperation(config=config, force=True)
-    mf = _make_mf(festival="", artist="Tiesto",
-                  place="Tomorrowland", place_kind="festival", year="2024")
+    mf = _make_mf(
+        festival="",
+        artist="Tiesto",
+        place="Tomorrowland",
+        place_kind="festival",
+        year="2024",
+    )
     with patch("festival_organizer.poster.generate_album_poster") as gen:
-        with patch("festival_organizer.poster._hex_to_rgb",
-                   return_value=(0x9B, 0x1B, 0x5A)) as hexer:
+        with patch(
+            "festival_organizer.poster._hex_to_rgb", return_value=(0x9B, 0x1B, 0x5A)
+        ) as hexer:
             op.execute(video, mf)
     hexer.assert_called_with("#9B1B5A")
     assert gen.call_args.kwargs["override_color"] == (0x9B, 0x1B, 0x5A)
@@ -882,9 +1027,14 @@ def test_set_poster_subline_skipped_when_venue_is_place(tmp_path):
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     (tmp_path / "test-thumb.jpg").write_bytes(b"\xff\xd8")
-    mf = _make_mf(festival="", artist="Fred again..",
-                  venue="Printworks", place="Printworks", place_kind="venue",
-                  title="irrelevant")
+    mf = _make_mf(
+        festival="",
+        artist="Fred again..",
+        venue="Printworks",
+        place="Printworks",
+        place_kind="venue",
+        title="irrelevant",
+    )
     with patch("festival_organizer.poster.generate_set_poster") as gen:
         PosterOperation(load_config()).execute(video, mf)
     kwargs = gen.call_args.kwargs
@@ -895,6 +1045,7 @@ def test_set_poster_subline_skipped_when_venue_is_place(tmp_path):
 def test_album_poster_config_priority_defaults():
     """Default poster settings have correct priority chains."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     ps = config.poster_settings
     assert ps["artist_background_priority"] == ["dj_artwork", "fanart_tv", "gradient"]
@@ -905,6 +1056,7 @@ def test_album_poster_config_priority_defaults():
 def test_album_poster_execute_uses_layout_based_type(tmp_path):
     """Execute uses layout template to determine poster type, not folder scanning."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     # artist_flat layout — should always be "artist" type regardless of folder contents
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "artist_flat"
@@ -935,6 +1087,7 @@ def test_album_poster_execute_uses_layout_based_type(tmp_path):
 def test_album_poster_execute_festival_layout_no_hero_text(tmp_path):
     """Festival layout poster should NOT have hero_text (artist name)."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
     lib = tmp_path / "lib"
@@ -961,6 +1114,7 @@ def test_album_poster_execute_festival_layout_no_hero_text(tmp_path):
 def test_album_poster_warms_caches_for_unused_sources(tmp_path):
     """Album poster warms fanart_tv and DJ artwork caches even for festival layout."""
     from festival_organizer.config import Config, DEFAULT_CONFIG
+
     config = Config(DEFAULT_CONFIG)
     config._data["default_layout"] = "place_flat"
     lib = tmp_path / "lib"
@@ -974,8 +1128,13 @@ def test_album_poster_warms_caches_for_unused_sources(tmp_path):
     op = AlbumPosterOperation(config=config, library_root=lib, force=True)
     mf = _make_mf(artist="Tiesto", festival="Tomorrowland", year="2024")
 
-    with patch("festival_organizer.poster.generate_album_poster", side_effect=_stub_generate_album_poster):
-        with patch.object(op, "_try_background_source", wraps=op._try_background_source) as mock_try:
+    with patch(
+        "festival_organizer.poster.generate_album_poster",
+        side_effect=_stub_generate_album_poster,
+    ):
+        with patch.object(
+            op, "_try_background_source", wraps=op._try_background_source
+        ) as mock_try:
             with patch.object(op, "_warm_dj_artwork_cache") as mock_warm:
                 op.execute(video, mf)
 
@@ -1188,10 +1347,12 @@ def test_organize_sidecar_stem_rename(tmp_path):
 
 def test_fanart_op_stores_urls_on_mediafile(tmp_path):
     """FanartOperation stores fanart and clearlogo URLs on MediaFile."""
-    config = Config({
-        **DEFAULT_CONFIG,
-        "fanart": {"enabled": True, "project_api_key": "test-key"},
-    })
+    config = Config(
+        {
+            **DEFAULT_CONFIG,
+            "fanart": {"enabled": True, "project_api_key": "test-key"},
+        }
+    )
     lib = tmp_path / "lib"
     lib.mkdir()
     video = tmp_path / "test.mkv"
@@ -1201,12 +1362,22 @@ def test_fanart_op_stores_urls_on_mediafile(tmp_path):
     mock_cache = MagicMock()
     mock_cache.has.return_value = False
 
-    with patch("festival_organizer.fanart.download_artist_images", return_value=(True, True)):
+    with patch(
+        "festival_organizer.fanart.download_artist_images", return_value=(True, True)
+    ):
         with patch("festival_organizer.fanart.lookup_mbid", return_value="mbid-123"):
             with patch("festival_organizer.fanart.fetch_artist_images") as mock_fetch:
                 mock_fetch.return_value = {
-                    "hdmusiclogo": [{"url": "https://fanart.tv/logo.png", "likes": "5", "lang": "en"}],
-                    "artistbackground": [{"url": "https://fanart.tv/bg.jpg", "likes": "3"}],
+                    "hdmusiclogo": [
+                        {
+                            "url": "https://fanart.tv/logo.png",
+                            "likes": "5",
+                            "lang": "en",
+                        }
+                    ],
+                    "artistbackground": [
+                        {"url": "https://fanart.tv/bg.jpg", "likes": "3"}
+                    ],
                 }
                 op = FanartOperation(config, lib)
                 op._cache = mock_cache
@@ -1223,12 +1394,16 @@ def test_artist_dir_uses_global_cache(tmp_path):
     cache_root = tmp_path / "cache"
     cache_root.mkdir()
 
-    config = Config({
-        **DEFAULT_CONFIG,
-        "fanart": {"enabled": True, "project_api_key": "test-key"},
-    })
+    config = Config(
+        {
+            **DEFAULT_CONFIG,
+            "fanart": {"enabled": True, "project_api_key": "test-key"},
+        }
+    )
     op = FanartOperation(config, lib)
-    with patch("festival_organizer.operations.paths.cache_dir", return_value=cache_root):
+    with patch(
+        "festival_organizer.operations.paths.cache_dir", return_value=cache_root
+    ):
         result = op._artist_dir("Tiesto")
 
     assert str(cache_root) in str(result)
@@ -1252,10 +1427,12 @@ def test_artist_cache_dir_joins_folder_key():
 
 def test_album_poster_dj_artwork_fallback_from_tracklist(tmp_path):
     """When dj_artwork_url is empty but tracklists_url exists, fetch DJ artwork from tracklist page."""
-    config = Config({
-        **DEFAULT_CONFIG,
-        "tracklists": {"email": "test@test.com", "password": "pw"},
-    })
+    config = Config(
+        {
+            **DEFAULT_CONFIG,
+            "tracklists": {"email": "test@test.com", "password": "pw"},
+        }
+    )
     lib = tmp_path / "lib"
     lib.mkdir()
 
@@ -1265,7 +1442,10 @@ def test_album_poster_dj_artwork_fallback_from_tracklist(tmp_path):
     video.write_bytes(b"")
 
     # MediaFile with tracklists_url but no dj_artwork_url
-    mf = _make_mf(tracklists_url="https://www.1001tracklists.com/tracklist/abc123/", dj_artwork_url="")
+    mf = _make_mf(
+        tracklists_url="https://www.1001tracklists.com/tracklist/abc123/",
+        dj_artwork_url="",
+    )
 
     op = AlbumPosterOperation(config=config, library_root=lib)
 
@@ -1278,8 +1458,14 @@ def test_album_poster_dj_artwork_fallback_from_tracklist(tmp_path):
             api_instance = MockSession.return_value
             api_instance.login.return_value = None
             api_instance._request.return_value = mock_resp
-            api_instance._fetch_dj_profile.return_value = {"artwork_url": "https://cdn.1001tracklists.com/images/dj/martingarrix.jpg", "aliases": [], "member_of": []}
-            with patch.object(op, "_download_dj_artwork", return_value=Path("/tmp/cached.jpg")):
+            api_instance._fetch_dj_profile.return_value = {
+                "artwork_url": "https://cdn.1001tracklists.com/images/dj/martingarrix.jpg",
+                "aliases": [],
+                "member_of": [],
+            }
+            with patch.object(
+                op, "_download_dj_artwork", return_value=Path("/tmp/cached.jpg")
+            ):
                 result = op._find_dj_artwork(folder)
 
     assert result is not None
@@ -1296,7 +1482,10 @@ def test_album_poster_dj_artwork_fallback_no_credentials(tmp_path):
     video = folder / "set.mkv"
     video.write_bytes(b"")
 
-    mf = _make_mf(tracklists_url="https://www.1001tracklists.com/tracklist/abc123/", dj_artwork_url="")
+    mf = _make_mf(
+        tracklists_url="https://www.1001tracklists.com/tracklist/abc123/",
+        dj_artwork_url="",
+    )
 
     op = AlbumPosterOperation(config=config, library_root=lib)
 
@@ -1309,6 +1498,7 @@ def test_album_poster_dj_artwork_fallback_no_credentials(tmp_path):
 
 
 # --- Curated logo tests ---
+
 
 def test_find_curated_logo_library_level(tmp_path):
     """Curated logo found at library .cratedigger/places/{Name}/logo.png."""
@@ -1488,8 +1678,12 @@ def test_download_artwork_max_width_resizes(tmp_path):
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
     with patch("festival_organizer.operations.paths.cache_dir", return_value=tmp_path):
-        with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
-            result = op._download_artwork("https://example.com/big.jpg", "test-art", max_width=600)
+        with patch(
+            "festival_organizer.operations.requests.get", return_value=mock_resp
+        ):
+            result = op._download_artwork(
+                "https://example.com/big.jpg", "test-art", max_width=600
+            )
 
     assert result is not None
     with Image.open(result) as saved:
@@ -1513,7 +1707,9 @@ def test_download_artwork_no_max_width_keeps_original(tmp_path):
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
     with patch("festival_organizer.operations.paths.cache_dir", return_value=tmp_path):
-        with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+        with patch(
+            "festival_organizer.operations.requests.get", return_value=mock_resp
+        ):
             result = op._download_artwork("https://example.com/big.jpg", "test-art")
 
     assert result is not None
@@ -1541,8 +1737,12 @@ def test_download_artwork_uses_global_cache(tmp_path):
     lib.mkdir()
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=lib)
-    with patch("festival_organizer.operations.paths.cache_dir", return_value=cache_root):
-        with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+    with patch(
+        "festival_organizer.operations.paths.cache_dir", return_value=cache_root
+    ):
+        with patch(
+            "festival_organizer.operations.requests.get", return_value=mock_resp
+        ):
             result = op._download_artwork("https://example.com/photo.jpg", "dj-artwork")
 
     assert result is not None
@@ -1570,8 +1770,12 @@ def test_download_dj_artwork_saves_as_jpeg_in_artist_dir(tmp_path):
     cache_root.mkdir()
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
-    with patch("festival_organizer.operations.paths.cache_dir", return_value=cache_root):
-        with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+    with patch(
+        "festival_organizer.operations.paths.cache_dir", return_value=cache_root
+    ):
+        with patch(
+            "festival_organizer.operations.requests.get", return_value=mock_resp
+        ):
             result = op._download_dj_artwork("https://example.com/photo.png", "Tiesto")
 
     assert result is not None
@@ -1599,8 +1803,12 @@ def test_download_dj_artwork_crops_and_resizes(tmp_path):
     cache_root.mkdir()
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
-    with patch("festival_organizer.operations.paths.cache_dir", return_value=cache_root):
-        with patch("festival_organizer.operations.requests.get", return_value=mock_resp):
+    with patch(
+        "festival_organizer.operations.paths.cache_dir", return_value=cache_root
+    ):
+        with patch(
+            "festival_organizer.operations.requests.get", return_value=mock_resp
+        ):
             result = op._download_dj_artwork("https://example.com/big.jpg", "Tiesto")
 
     assert result is not None
@@ -1624,7 +1832,9 @@ def test_download_dj_artwork_returns_cached(tmp_path):
     img.save(cached, "JPEG")
 
     op = AlbumPosterOperation(config=Config(DEFAULT_CONFIG), library_root=tmp_path)
-    with patch("festival_organizer.operations.paths.cache_dir", return_value=cache_root):
+    with patch(
+        "festival_organizer.operations.paths.cache_dir", return_value=cache_root
+    ):
         result = op._download_dj_artwork("https://example.com/photo.jpg", "Tiesto")
 
     assert result == cached
@@ -1689,66 +1899,97 @@ def _portrait(path):
 
 
 def test_cover_op_needed_when_stamp_absent(tmp_path):
-    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    video = tmp_path / "t.mkv"
+    video.write_bytes(b"")
     _portrait(tmp_path / "t-poster.jpg")
     assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is True
 
 
 def test_cover_op_not_needed_when_stamp_matches(tmp_path):
     from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
-    video = tmp_path / "t.mkv"; video.write_bytes(b"")
-    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+
+    video = tmp_path / "t.mkv"
+    video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"
+    _portrait(poster)
     cfg = load_config()
-    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg), artists_1001tl=[]))
+    inject_poster_stamp(
+        poster,
+        build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg), artists_1001tl=[]),
+    )
     assert CoverEmbedOperation(cfg).is_needed(video, _make_mf()) is False
 
 
 def test_cover_op_not_needed_when_no_poster(tmp_path):
-    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    video = tmp_path / "t.mkv"
+    video.write_bytes(b"")
     assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is False
 
 
 def test_cover_op_force_overrides_stamp_match(tmp_path):
     from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
-    video = tmp_path / "t.mkv"; video.write_bytes(b"")
-    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+
+    video = tmp_path / "t.mkv"
+    video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"
+    _portrait(poster)
     cfg = load_config()
-    inject_poster_stamp(poster, build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg), artists_1001tl=[]))
+    inject_poster_stamp(
+        poster,
+        build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg), artists_1001tl=[]),
+    )
     assert CoverEmbedOperation(cfg, force=True).is_needed(video, _make_mf()) is True
 
 
 def test_cover_op_not_needed_for_non_matroska_suffix(tmp_path):
-    video = tmp_path / "t.mp4"; video.write_bytes(b"")
-    _portrait(tmp_path / "t-poster.jpg")  # poster present, so the False comes from the suffix gate
+    video = tmp_path / "t.mp4"
+    video.write_bytes(b"")
+    _portrait(
+        tmp_path / "t-poster.jpg"
+    )  # poster present, so the False comes from the suffix gate
     assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is False
 
 
 def test_cover_op_execute_converges_and_stamps(tmp_path):
     from festival_organizer.poster import read_poster_stamp, build_cover_stamp
-    video = tmp_path / "t.mkv"; video.write_bytes(b"")
-    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
-    thumb = tmp_path / "t-thumb.jpg"; thumb.write_bytes(b"\xff\xd8")
+
+    video = tmp_path / "t.mkv"
+    video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"
+    _portrait(poster)
+    thumb = tmp_path / "t-thumb.jpg"
+    thumb.write_bytes(b"\xff\xd8")
     cfg = load_config()
-    with patch("festival_organizer.cover_embed.converge_cover_attachments", return_value=True) as conv:
+    with patch(
+        "festival_organizer.cover_embed.converge_cover_attachments", return_value=True
+    ) as conv:
         result = CoverEmbedOperation(cfg).execute(video, _make_mf())
     conv.assert_called_once_with(video, poster, thumb)
     assert result.status == "done"
-    assert read_poster_stamp(poster) == build_cover_stamp(**_resolve_poster_fields(_make_mf(), cfg), artists_1001tl=[])
+    assert read_poster_stamp(poster) == build_cover_stamp(
+        **_resolve_poster_fields(_make_mf(), cfg), artists_1001tl=[]
+    )
 
 
 def test_cover_op_execute_no_stamp_when_converge_fails(tmp_path):
     from festival_organizer.poster import read_poster_stamp
-    video = tmp_path / "t.mkv"; video.write_bytes(b"")
-    poster = tmp_path / "t-poster.jpg"; _portrait(poster)
+
+    video = tmp_path / "t.mkv"
+    video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"
+    _portrait(poster)
     (tmp_path / "t-thumb.jpg").write_bytes(b"\xff\xd8")
-    with patch("festival_organizer.cover_embed.converge_cover_attachments", return_value=False):
+    with patch(
+        "festival_organizer.cover_embed.converge_cover_attachments", return_value=False
+    ):
         result = CoverEmbedOperation(load_config()).execute(video, _make_mf())
     assert result.status == "error"
     assert read_poster_stamp(poster) is None  # not stamped on failed embed
 
 
 def test_cover_op_execute_refuses_non_portrait_poster(tmp_path):
-    video = tmp_path / "t.mkv"; video.write_bytes(b"")
+    video = tmp_path / "t.mkv"
+    video.write_bytes(b"")
     poster = tmp_path / "t-poster.jpg"
     Image.new("RGB", (1600, 900), (10, 10, 20)).save(str(poster), "JPEG")  # landscape!
     with patch("festival_organizer.cover_embed.converge_cover_attachments") as conv:
@@ -1761,8 +2002,8 @@ def test_poster_op_passes_billed_artists_not_resolved(tmp_path):
     """PosterOperation must pass the billed list (alias), never the resolved one."""
     mf = _make_mf(
         artist="ALOK",
-        artists=["ALOK", "R3HAB"],                    # resolved canonical
-        artists_1001tl=["SOMETHING ELSE", "R3HAB"],   # billed alias
+        artists=["ALOK", "R3HAB"],  # resolved canonical
+        artists_1001tl=["SOMETHING ELSE", "R3HAB"],  # billed alias
     )
     kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
     assert kwargs["artists_1001tl"] == ["SOMETHING ELSE", "R3HAB"]

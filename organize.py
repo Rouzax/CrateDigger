@@ -7,6 +7,7 @@ Usage:
     organize.py enrich <path>        Add metadata artifacts in place
     organize.py chapters <path>      Add 1001Tracklists chapters
 """
+
 import sys
 from festival_organizer.cli import run
 

@@ -4,6 +4,7 @@ These tests replace the old _run_post_processing tests.
 The individual operation gap detection and execution are covered in test_operations.py.
 These tests verify the operations work correctly in pipeline context.
 """
+
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -11,7 +12,10 @@ from unittest.mock import patch
 from festival_organizer.config import load_config
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
-    NfoOperation, ArtOperation, PosterOperation, TagsOperation,
+    NfoOperation,
+    ArtOperation,
+    PosterOperation,
+    TagsOperation,
 )
 
 
@@ -49,6 +53,7 @@ def test_nfo_operation_skipped_when_exists():
         mf = _make_media_file(video)
         config = load_config()
         from festival_organizer.nfo import generate_nfo
+
         generate_nfo(mf, video, config)
 
         op = NfoOperation(config)

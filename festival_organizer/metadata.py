@@ -7,6 +7,7 @@ Logging:
         - metadata.unreadable (WARNING): ffprobe returned no metadata for a file
     See docs/logging.md for full guidelines.
 """
+
 import json
 import logging
 import platform
@@ -32,13 +33,29 @@ def _fix_string_values(d: dict) -> dict:
 # Package → tool names for install hints
 _INSTALL_PACKAGES = {
     "ffprobe": {"brew": "ffmpeg", "apt": "ffmpeg", "winget": "Gyan.FFmpeg"},
-    "mkvextract": {"brew": "mkvtoolnix", "apt": "mkvtoolnix", "winget": "MKVToolNix.MKVToolNix"},
-    "mkvpropedit": {"brew": "mkvtoolnix", "apt": "mkvtoolnix", "winget": "MKVToolNix.MKVToolNix"},
-    "mkvmerge": {"brew": "mkvtoolnix", "apt": "mkvtoolnix", "winget": "MKVToolNix.MKVToolNix"},
+    "mkvextract": {
+        "brew": "mkvtoolnix",
+        "apt": "mkvtoolnix",
+        "winget": "MKVToolNix.MKVToolNix",
+    },
+    "mkvpropedit": {
+        "brew": "mkvtoolnix",
+        "apt": "mkvtoolnix",
+        "winget": "MKVToolNix.MKVToolNix",
+    },
+    "mkvmerge": {
+        "brew": "mkvtoolnix",
+        "apt": "mkvtoolnix",
+        "winget": "MKVToolNix.MKVToolNix",
+    },
 }
 
 
-def find_tool(name: str, fallback_paths: list[str] | None = None, configured_path: str | None = None) -> str | None:
+def find_tool(
+    name: str,
+    fallback_paths: list[str] | None = None,
+    configured_path: str | None = None,
+) -> str | None:
     """Find an external tool by name.
 
     Priority:
@@ -89,8 +106,12 @@ def configure_tools(config: object) -> None:
     global FFPROBE_PATH, MKVEXTRACT_PATH, MKVPROPEDIT_PATH, MKVMERGE_PATH
     tool_paths = config.tool_paths if hasattr(config, "tool_paths") else {}
     FFPROBE_PATH = find_tool("ffprobe", configured_path=tool_paths.get("ffprobe"))
-    MKVEXTRACT_PATH = find_tool("mkvextract", configured_path=tool_paths.get("mkvextract"))
-    MKVPROPEDIT_PATH = find_tool("mkvpropedit", configured_path=tool_paths.get("mkvpropedit"))
+    MKVEXTRACT_PATH = find_tool(
+        "mkvextract", configured_path=tool_paths.get("mkvextract")
+    )
+    MKVPROPEDIT_PATH = find_tool(
+        "mkvpropedit", configured_path=tool_paths.get("mkvpropedit")
+    )
     MKVMERGE_PATH = find_tool("mkvmerge", configured_path=tool_paths.get("mkvmerge"))
 
 
@@ -110,12 +131,36 @@ def _first_tag(*sources: dict, keys: list[str]) -> str:
 # CRATEDIGGER_ prefix was adopted; the leading-underscore variants are legacy
 # forms still seen on some older files.
 _1001TL_TAG_KEYS: dict[str, list[str]] = {
-    "tracklists_title": ["CRATEDIGGER_1001TL_TITLE", "1001TRACKLISTS_TITLE", "_1001TRACKLISTS_TITLE"],
-    "tracklists_url": ["CRATEDIGGER_1001TL_URL", "1001TRACKLISTS_URL", "_1001TRACKLISTS_URL"],
-    "tracklists_id": ["CRATEDIGGER_1001TL_ID", "1001TRACKLISTS_ID", "_1001TRACKLISTS_ID"],
-    "tracklists_date": ["CRATEDIGGER_1001TL_DATE", "1001TRACKLISTS_DATE", "_1001TRACKLISTS_DATE"],
-    "tracklists_genres": ["CRATEDIGGER_1001TL_GENRES", "1001TRACKLISTS_GENRES", "_1001TRACKLISTS_GENRES"],
-    "tracklists_dj_artwork": ["CRATEDIGGER_1001TL_DJ_ARTWORK", "1001TRACKLISTS_DJ_ARTWORK", "_1001TRACKLISTS_DJ_ARTWORK"],
+    "tracklists_title": [
+        "CRATEDIGGER_1001TL_TITLE",
+        "1001TRACKLISTS_TITLE",
+        "_1001TRACKLISTS_TITLE",
+    ],
+    "tracklists_url": [
+        "CRATEDIGGER_1001TL_URL",
+        "1001TRACKLISTS_URL",
+        "_1001TRACKLISTS_URL",
+    ],
+    "tracklists_id": [
+        "CRATEDIGGER_1001TL_ID",
+        "1001TRACKLISTS_ID",
+        "_1001TRACKLISTS_ID",
+    ],
+    "tracklists_date": [
+        "CRATEDIGGER_1001TL_DATE",
+        "1001TRACKLISTS_DATE",
+        "_1001TRACKLISTS_DATE",
+    ],
+    "tracklists_genres": [
+        "CRATEDIGGER_1001TL_GENRES",
+        "1001TRACKLISTS_GENRES",
+        "_1001TRACKLISTS_GENRES",
+    ],
+    "tracklists_dj_artwork": [
+        "CRATEDIGGER_1001TL_DJ_ARTWORK",
+        "1001TRACKLISTS_DJ_ARTWORK",
+        "_1001TRACKLISTS_DJ_ARTWORK",
+    ],
     "tracklists_stage": ["CRATEDIGGER_1001TL_STAGE"],
     "tracklists_venue": ["CRATEDIGGER_1001TL_VENUE"],
     "tracklists_location": ["CRATEDIGGER_1001TL_LOCATION"],
@@ -139,10 +184,21 @@ def _extract_ffprobe(filepath: Path) -> dict:
         return {}
     try:
         result = tracked_run(
-            [FFPROBE_PATH, "-v", "quiet", "-print_format", "json",
-             "-show_format", "-show_streams", str(filepath)],
-            capture_output=True, text=True, timeout=30,
-            encoding="utf-8", errors="replace",
+            [
+                FFPROBE_PATH,
+                "-v",
+                "quiet",
+                "-print_format",
+                "json",
+                "-show_format",
+                "-show_streams",
+                str(filepath),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            encoding="utf-8",
+            errors="replace",
         )
         if result.returncode != 0:
             return {}
@@ -184,7 +240,7 @@ def _extract_ffprobe(filepath: Path) -> dict:
 
         return _fix_string_values(result_dict)
     except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as e:
-        logger.debug("metadata.ffprobe: status=failed file=%s error=\"%s\"", filepath, e)
+        logger.debug('metadata.ffprobe: status=failed file=%s error="%s"', filepath, e)
         return {}
 
 
@@ -202,7 +258,9 @@ def extract_metadata(filepath: Path) -> dict:
     """
     meta = _extract_ffprobe(filepath)
     if not meta:
-        logger.warning("metadata.unreadable: file=%s reason=ffprobe_no_metadata", filepath.name)
+        logger.warning(
+            "metadata.unreadable: file=%s reason=ffprobe_no_metadata", filepath.name
+        )
     return meta
 
 

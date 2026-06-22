@@ -1,4 +1,5 @@
 """AlbumArtistMbidsOperation: extract CRATEDIGGER_1001TL_ARTISTS → resolve → write."""
+
 from pathlib import Path
 from unittest.mock import patch
 
@@ -20,8 +21,13 @@ def _mock_tags(existing_70: dict[str, str]):
     """Patch extract_all_tags + _tag_values_from_root to return a given TTV=70 dict."""
     sentinel_root = object()
     return (
-        patch("festival_organizer.mkv_tags.extract_all_tags", return_value=sentinel_root),
-        patch("festival_organizer.mkv_tags._tag_values_from_root", return_value={70: existing_70}),
+        patch(
+            "festival_organizer.mkv_tags.extract_all_tags", return_value=sentinel_root
+        ),
+        patch(
+            "festival_organizer.mkv_tags._tag_values_from_root",
+            return_value={70: existing_70},
+        ),
     )
 
 
@@ -41,8 +47,11 @@ def test_execute_skipped_when_no_1001tl_artists(tmp_path):
     mkv = tmp_path / "set.mkv"
     mkv.write_bytes(b"")
     extract_p, tvals_p = _mock_tags({})
-    with extract_p, tvals_p, \
-         patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn:
+    with (
+        extract_p,
+        tvals_p,
+        patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn,
+    ):
         op = AlbumArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
     assert result.status == "skipped"
@@ -59,9 +68,12 @@ def test_execute_writes_aligned_mbids(tmp_path):
         return {"Armin van Buuren": "armin-mbid", "KI/KI": "kiki-mbid"}.get(name)
 
     extract_p, tvals_p = _mock_tags(existing_70)
-    with extract_p, tvals_p, \
-         patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn, \
-         patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup):
+    with (
+        extract_p,
+        tvals_p,
+        patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn,
+        patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup),
+    ):
         op = AlbumArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
 
@@ -78,9 +90,12 @@ def test_execute_skipped_when_all_artists_unresolvable(tmp_path):
     existing_70 = {"CRATEDIGGER_1001TL_ARTISTS": "UnknownA|UnknownB"}
 
     extract_p, tvals_p = _mock_tags(existing_70)
-    with extract_p, tvals_p, \
-         patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn, \
-         patch("festival_organizer.operations.lookup_mbid", return_value=None):
+    with (
+        extract_p,
+        tvals_p,
+        patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn,
+        patch("festival_organizer.operations.lookup_mbid", return_value=None),
+    ):
         op = AlbumArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
 
@@ -101,9 +116,12 @@ def test_execute_skipped_when_mbids_already_current(tmp_path):
         return {"Armin van Buuren": "armin-mbid", "KI/KI": "kiki-mbid"}.get(name)
 
     extract_p, tvals_p = _mock_tags(existing_70)
-    with extract_p, tvals_p, \
-         patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn, \
-         patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup):
+    with (
+        extract_p,
+        tvals_p,
+        patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn,
+        patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup),
+    ):
         op = AlbumArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
 
@@ -121,9 +139,12 @@ def test_force_rewrites_even_when_mbids_match(tmp_path):
     }
 
     extract_p, tvals_p = _mock_tags(existing_70)
-    with extract_p, tvals_p, \
-         patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn, \
-         patch("festival_organizer.operations.lookup_mbid", return_value="armin-mbid"):
+    with (
+        extract_p,
+        tvals_p,
+        patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn,
+        patch("festival_organizer.operations.lookup_mbid", return_value="armin-mbid"),
+    ):
         op = AlbumArtistMbidsOperation(force=True)
         result = op.execute(mkv, _make_mf())
 
@@ -140,9 +161,12 @@ def test_force_rewrites_when_stale_mbids_present(tmp_path):
     }
 
     extract_p, tvals_p = _mock_tags(existing_70)
-    with extract_p, tvals_p, \
-         patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn, \
-         patch("festival_organizer.operations.lookup_mbid", return_value="FRESH"):
+    with (
+        extract_p,
+        tvals_p,
+        patch("festival_organizer.mkv_tags.write_merged_tags") as write_fn,
+        patch("festival_organizer.operations.lookup_mbid", return_value="FRESH"),
+    ):
         op = AlbumArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
 

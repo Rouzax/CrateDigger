@@ -12,6 +12,7 @@ Logging:
         - layout.branch (INFO): Which album poster layout was selected
     See docs/logging.md for full guidelines.
 """
+
 import logging
 import math
 import re
@@ -32,12 +33,21 @@ COVER_POSTER_VERSION = 2
 
 _STAMP_PREFIX = "CDPOSTER"
 _STAMP_SEP = "\x1f"  # unit separator: never appears in the resolved field values
-_STAMP_LINE_SEP = "\x1e"  # record separator: joins the rendered artist lines within the stamp
+_STAMP_LINE_SEP = (
+    "\x1e"  # record separator: joins the rendered artist lines within the stamp
+)
 
 
-def build_cover_stamp(*, artist: str, festival: str, date: str, year: str,
-                      stage: str, venue: str,
-                      artists_1001tl: list[str] | None = None) -> bytes:
+def build_cover_stamp(
+    *,
+    artist: str,
+    festival: str,
+    date: str,
+    year: str,
+    stage: str,
+    venue: str,
+    artists_1001tl: list[str] | None = None,
+) -> bytes:
     """Build the staleness stamp from the fields that determine the rendered poster.
 
     The artist portion is stamped as the resolved render output
@@ -47,9 +57,15 @@ def build_cover_stamp(*, artist: str, festival: str, date: str, year: str,
     they fall back to ``artist`` (display) via the helper.
     """
     artist_lines = _resolve_artist_lines(artists_1001tl, artist)
-    fields = [f"{_STAMP_PREFIX}{COVER_POSTER_VERSION}",
-              _STAMP_LINE_SEP.join(artist_lines),
-              festival or "", date or "", year or "", stage or "", venue or ""]
+    fields = [
+        f"{_STAMP_PREFIX}{COVER_POSTER_VERSION}",
+        _STAMP_LINE_SEP.join(artist_lines),
+        festival or "",
+        date or "",
+        year or "",
+        stage or "",
+        venue or "",
+    ]
     return _STAMP_SEP.join(fields).encode("utf-8")
 
 
@@ -60,8 +76,9 @@ FOLDER_POSTER_VERSION = 1
 _FOLDER_STAMP_PREFIX = "CDFOLDER"
 
 
-def build_folder_stamp(*, poster_type: str, name: str, year: str, edition: str,
-                       bg: str = "") -> bytes:
+def build_folder_stamp(
+    *, poster_type: str, name: str, year: str, edition: str, bg: str = ""
+) -> bytes:
     """Build the staleness stamp for a folder poster (``folder.jpg``).
 
     Encodes the inputs that determine which folder poster is rendered: the poster
@@ -75,8 +92,14 @@ def build_folder_stamp(*, poster_type: str, name: str, year: str, edition: str,
     excluded (mirrors ``build_cover_stamp``) to avoid thrash. Reuses the same JPEG
     COM read/write as set posters (``read_poster_stamp`` / ``inject_poster_stamp``).
     """
-    fields = [f"{_FOLDER_STAMP_PREFIX}{FOLDER_POSTER_VERSION}",
-              poster_type or "", name or "", year or "", edition or "", bg or ""]
+    fields = [
+        f"{_FOLDER_STAMP_PREFIX}{FOLDER_POSTER_VERSION}",
+        poster_type or "",
+        name or "",
+        year or "",
+        edition or "",
+        bg or "",
+    ]
     return _STAMP_SEP.join(fields).encode("utf-8")
 
 
@@ -96,9 +119,9 @@ def read_poster_stamp(path: Path) -> bytes | None:
         if 0xD0 <= marker <= 0xD7:  # RSTn: no length
             i += 2
             continue
-        seg_len = int.from_bytes(data[i + 2:i + 4], "big")
+        seg_len = int.from_bytes(data[i + 2 : i + 4], "big")
         if marker == 0xFE:  # COM
-            return data[i + 4:i + 2 + seg_len]
+            return data[i + 4 : i + 2 + seg_len]
         if marker == 0xDA:  # SOS: image scan begins
             break
         i += 2 + seg_len
@@ -118,7 +141,7 @@ def inject_poster_stamp(path: Path, stamp: bytes) -> None:
     # Drop existing COM markers at the SOI position (idempotent re-stamp).
     while len(body) >= 4 and body[:2] == b"\xff\xfe":
         seg_len = int.from_bytes(body[2:4], "big")
-        body = body[2 + seg_len:]
+        body = body[2 + seg_len :]
     segment = b"\xff\xfe" + (len(stamp) + 2).to_bytes(2, "big") + stamp
     Path(path).write_bytes(data[:2] + segment + body)
 
@@ -150,7 +173,9 @@ def get_font(name: str, size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.truetype(path, size)
 
 
-def auto_fit(text: str, font_name: str, max_width: int, start: int = 120, minimum: int = 40):
+def auto_fit(
+    text: str, font_name: str, max_width: int, start: int = 120, minimum: int = 40
+):
     """Auto-size font to fit text within max_width. Returns (font, size)."""
     for size in range(start, minimum - 1, -2):
         font = get_font(font_name, size)
@@ -177,15 +202,20 @@ def measure_w(font: ImageFont.FreeTypeFont, text: str) -> int:
 #   _ensure_contrast        - brighten a color until it reads on a dark background
 #   _darken_for_white_text  - darken a fill until white text reads on it
 
+
 def _wcag_luminance(r: int, g: int, b: int) -> float:
     """Calculate WCAG relative luminance with proper sRGB linearization."""
+
     def _linearize(c: int) -> float:
         s = c / 255
         return s / 12.92 if s <= 0.04045 else ((s + 0.055) / 1.055) ** 2.4
+
     return 0.2126 * _linearize(r) + 0.7152 * _linearize(g) + 0.0722 * _linearize(b)
 
 
-def _wcag_contrast(r: int, g: int, b: int, bg: tuple[int, int, int] = (10, 10, 10)) -> float:
+def _wcag_contrast(
+    r: int, g: int, b: int, bg: tuple[int, int, int] = (10, 10, 10)
+) -> float:
     """Calculate WCAG contrast ratio against a dark background."""
     l1 = _wcag_luminance(r, g, b)
     l2 = _wcag_luminance(*bg)
@@ -193,12 +223,18 @@ def _wcag_contrast(r: int, g: int, b: int, bg: tuple[int, int, int] = (10, 10, 1
     return (lighter + 0.05) / (darker + 0.05)
 
 
-def _ensure_contrast(r: int, g: int, b: int, min_ratio: float = 4.5) -> tuple[int, int, int]:
+def _ensure_contrast(
+    r: int, g: int, b: int, min_ratio: float = 4.5
+) -> tuple[int, int, int]:
     """Boost color brightness until it meets WCAG AA contrast against dark background."""
     if _wcag_contrast(r, g, b) >= min_ratio:
         return (r, g, b)
     h, s, v = rgb_to_hsv(r / 255, g / 255, b / 255)
-    ri, gi, bi = r, g, b  # bound before the loop (range(40) always runs; satisfies type check)
+    ri, gi, bi = (
+        r,
+        g,
+        b,
+    )  # bound before the loop (range(40) always runs; satisfies type check)
     for _ in range(40):
         v = min(v + 0.03, 1.0)
         s = max(s - 0.01, 0.3)  # slightly desaturate to gain luminance
@@ -209,7 +245,9 @@ def _ensure_contrast(r: int, g: int, b: int, min_ratio: float = 4.5) -> tuple[in
     return (ri, gi, bi)
 
 
-def _darken_for_white_text(color: tuple[int, int, int], min_ratio: float = 3.0) -> tuple[int, int, int]:
+def _darken_for_white_text(
+    color: tuple[int, int, int], min_ratio: float = 3.0
+) -> tuple[int, int, int]:
     """Darken a fill color until white text on it meets WCAG contrast.
 
     The inverse of :func:`_ensure_contrast` (which brightens a color to read on a
@@ -278,7 +316,7 @@ def split_artist(name: str) -> list[str]:
     4. No connector: single line
     """
     # 1. Parenthetical pattern
-    paren_match = re.match(r'^(.+?)\s*\((.+)\)\s*$', name)
+    paren_match = re.match(r"^(.+?)\s*\((.+)\)\s*$", name)
     if paren_match:
         return [paren_match.group(1).strip(), paren_match.group(2).strip()]
     # 2. Find all connector positions
@@ -300,7 +338,7 @@ def split_artist(name: str) -> list[str]:
         idx, sep = splits[0]
         return [name[:idx].strip(), name[idx:].strip()]
     # 4. Multiple connectors -> one line per artist, keeping connector on each subsequent line
-    lines = [name[:splits[0][0]].strip()]
+    lines = [name[: splits[0][0]].strip()]
     for i, (idx, sep) in enumerate(splits):
         end = splits[i + 1][0] if i + 1 < len(splits) else len(name)
         lines.append(name[idx:end].strip())
@@ -363,8 +401,20 @@ def format_date_display(date: str, year: str) -> str:
     if date and len(date) == 10:
         try:
             parts = date.split("-")
-            months = ["January", "February", "March", "April", "May", "June",
-                      "July", "August", "September", "October", "November", "December"]
+            months = [
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+            ]
             day = int(parts[2])
             month = months[int(parts[1]) - 1]
             return f"{day} {month} {parts[0]}"
@@ -390,7 +440,10 @@ def _filter_venue_parts(venue: str, detail: str, festival: str = "") -> list[str
 
 # --- Drawing helpers ---
 
-def _draw_centered(draw, y, text, font, fill, letter_spacing=0, stroke_width=0, stroke_fill=None):
+
+def _draw_centered(
+    draw, y, text, font, fill, letter_spacing=0, stroke_width=0, stroke_fill=None
+):
     """Draw centered text with optional letter spacing and stroke outline."""
     sw_kwargs = {}
     if stroke_width and stroke_fill:
@@ -400,7 +453,9 @@ def _draw_centered(draw, y, text, font, fill, letter_spacing=0, stroke_width=0, 
         x = (POSTER_W - w) // 2
         draw.text((x, y), text, fill=fill, font=font, **sw_kwargs)
     else:
-        total_w = sum(measure_w(font, c) for c in text) + letter_spacing * (len(text) - 1)
+        total_w = sum(measure_w(font, c) for c in text) + letter_spacing * (
+            len(text) - 1
+        )
         x = (POSTER_W - total_w) // 2
         for c in text:
             cw = measure_w(font, c)
@@ -447,14 +502,15 @@ def _draw_glow_text(base_img, y, text, font, fill, glow_color, glow_radius=18):
     return result.convert("RGB")
 
 
-def _flatten_alpha(img: Image.Image, bg_color: tuple[int, int, int] = (0, 0, 0)) -> Image.Image:
+def _flatten_alpha(
+    img: Image.Image, bg_color: tuple[int, int, int] = (0, 0, 0)
+) -> Image.Image:
     """Composite an image with alpha onto a solid background -> RGB."""
     if img.mode not in ("RGBA", "LA", "PA"):
         return img.convert("RGB")
     bg = Image.new("RGB", img.size, bg_color)
     bg.paste(img.convert("RGBA"), (0, 0), img.convert("RGBA"))
     return bg
-
 
 
 def _hex_to_rgb(hex_str: str) -> tuple[int, int, int]:
@@ -476,9 +532,7 @@ def _neutral_base_from_luminance(img: Image.Image) -> tuple[int, int, int]:
     if img.mode in ("RGBA", "LA", "PA"):
         arr = np.array(img.convert("RGBA"))
         mask = arr[:, :, 3] > 128
-        rgb_pixels = (
-            arr[:, :, :3][mask] if mask.any() else arr[:, :, :3].reshape(-1, 3)
-        )
+        rgb_pixels = arr[:, :, :3][mask] if mask.any() else arr[:, :, :3].reshape(-1, 3)
     else:
         rgb_pixels = np.array(img.convert("RGB")).reshape(-1, 3)
 
@@ -535,8 +589,8 @@ def _extract_logo_color(img: Image.Image) -> tuple[int, int, int]:
     return (int(r * 255), int(g * 255), int(b * 255))
 
 
-
 # --- Set poster generation ---
+
 
 def generate_set_poster(
     source_image_path: Path,
@@ -628,7 +682,7 @@ def generate_set_poster(
     grad_start = int(POSTER_H * 0.40)
     for y in range(grad_start, POSTER_H):
         progress = (y - grad_start) / (POSTER_H - grad_start)
-        a = int(200 * progress ** 1.4)
+        a = int(200 * progress**1.4)
         dg.line([(0, y), (POSTER_W, y)], fill=(0, 0, 0, a))
     bg = Image.alpha_composite(bg.convert("RGBA"), gradient).convert("RGB")
 
@@ -636,7 +690,9 @@ def generate_set_poster(
     max_w = POSTER_W - 100
 
     # Split artist name into lines, word-wrap any that don't fit
-    artist_lines = [line.upper() for line in _resolve_artist_lines(artists_1001tl, artist)]
+    artist_lines = [
+        line.upper() for line in _resolve_artist_lines(artists_1001tl, artist)
+    ]
     artist_lines = _word_wrap_lines(artist_lines, max_w, min_size=80)
 
     # Auto-fit fonts — uniform size across all lines (driven by the longest)
@@ -653,7 +709,9 @@ def generate_set_poster(
     cursor_y = LINE_Y - PAD_LINE_TO_ARTIST
     for line in reversed(artist_lines):
         cursor_y -= line_h
-        sp = max(2, min(14, (max_w - measure_w(font_artist, line)) // max(len(line), 1)))
+        sp = max(
+            2, min(14, (max_w - measure_w(font_artist, line)) // max(len(line), 1))
+        )
         _draw_centered(draw, cursor_y, line, font_artist, "white", letter_spacing=sp)
         cursor_y -= PAD_ARTIST_LINES
 
@@ -700,6 +758,7 @@ def generate_set_poster(
 
 # --- Album poster generation ---
 
+
 def get_dominant_color_from_thumbs(thumb_paths: list[Path]) -> tuple[int, int, int]:
     """Get average color from thumbnail images using circular hue mean."""
     if not thumb_paths:
@@ -714,7 +773,7 @@ def get_dominant_color_from_thumbs(thumb_paths: list[Path]) -> tuple[int, int, i
             all_h.append(arr[:, :, 0].ravel())
             all_s.append(arr[:, :, 1].ravel())
         except (OSError, ValueError) as e:
-            logger.debug("poster.thumb: status=read_failed path=%s error=\"%s\"", path, e)
+            logger.debug('poster.thumb: status=read_failed path=%s error="%s"', path, e)
             continue
 
     if not all_h:
@@ -761,7 +820,7 @@ def _make_gradient_bg(
     # Vertical gradient: lighter at top, darker at bottom
     for y in range(height):
         progress = y / height
-        brightness = 0.55 * (1 - progress ** 0.8) + 0.08
+        brightness = 0.55 * (1 - progress**0.8) + 0.08
         sat_factor = 1.0 - 0.3 * progress
         line_r = int(r * brightness * sat_factor)
         line_g = int(g * brightness * sat_factor)
@@ -775,7 +834,9 @@ def _make_gradient_bg(
     radius = int(width * 0.6)
     for dist in range(radius, 0, -2):
         alpha = int(40 * (1 - dist / radius) ** 2)
-        hd.ellipse([(cx - dist, cy - dist), (cx + dist, cy + dist)], fill=(r, g, b, alpha))
+        hd.ellipse(
+            [(cx - dist, cy - dist), (cx + dist, cy + dist)], fill=(r, g, b, alpha)
+        )
     bg = Image.alpha_composite(bg.convert("RGBA"), highlight).convert("RGB")
 
     # Subtle noise grain
@@ -808,7 +869,9 @@ def _rounded_edge_mask(w: int, h: int, corner_pct: float = 0.06) -> Image.Image:
     return mask.filter(ImageFilter.GaussianBlur(radius=2))
 
 
-def _draw_glyph_centered(draw, width, top, text, font, fill=(255, 255, 255, 255)) -> None:
+def _draw_glyph_centered(
+    draw, width, top, text, font, fill=(255, 255, 255, 255)
+) -> None:
     """Draw text horizontally centered in `width` with its glyph box top at `top`.
 
     Uses the glyph bounding box (not the font line box) so the visible digits are
@@ -840,14 +903,20 @@ def _make_year_badge(
     v = v or 0.6
     top = hsv_to_rgb(h, max(0.0, s * 0.85), min(1.0, v * 1.18))
     bot = hsv_to_rgb(h, min(1.0, s * 1.05), v * 0.70)
-    top_stop = _darken_for_white_text((int(top[0] * 255), int(top[1] * 255), int(top[2] * 255)))
-    bot_stop = _darken_for_white_text((int(bot[0] * 255), int(bot[1] * 255), int(bot[2] * 255)))
+    top_stop = _darken_for_white_text(
+        (int(top[0] * 255), int(top[1] * 255), int(top[2] * 255))
+    )
+    bot_stop = _darken_for_white_text(
+        (int(bot[0] * 255), int(bot[1] * 255), int(bot[2] * 255))
+    )
     top_rgb = np.array(top_stop, dtype=float)
     bot_rgb = np.array(bot_stop, dtype=float)
     t = np.linspace(0.0, 1.0, size).reshape(size, 1)
-    rows = top_rgb * (1 - t) + bot_rgb * t          # (size, 3)
+    rows = top_rgb * (1 - t) + bot_rgb * t  # (size, 3)
     grad = np.repeat(rows[:, None, :], size, axis=1)  # (size, size, 3)
-    tile = Image.fromarray(np.clip(grad, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
+    tile = Image.fromarray(np.clip(grad, 0, 255).astype(np.uint8), "RGB").convert(
+        "RGBA"
+    )
     tile.putalpha(_rounded_edge_mask(size, size))
 
     draw = ImageDraw.Draw(tile)
@@ -917,7 +986,11 @@ def generate_album_poster(
             bg = _make_gradient_bg(base_color)
 
             # Flatten for blur/tile operations
-            frame_rgb = _flatten_alpha(frame_raw, base_color) if has_alpha else frame_raw.convert("RGB")
+            frame_rgb = (
+                _flatten_alpha(frame_raw, base_color)
+                if has_alpha
+                else frame_raw.convert("RGB")
+            )
             is_small_source = frame_raw.width < 600
 
             if is_small_source and hero_text is None:
@@ -925,7 +998,9 @@ def generate_album_poster(
                 logger.info("poster.layout: type=festival_gradient_logo")
                 max_display = 420
                 if has_alpha:
-                    sharp, img_x, img_y = _center_sharp(frame_raw.convert("RGBA"), max_display)
+                    sharp, img_x, img_y = _center_sharp(
+                        frame_raw.convert("RGBA"), max_display
+                    )
                     bg = bg.convert("RGBA")
                     bg.paste(sharp, (img_x, img_y), sharp)
                     bg = bg.convert("RGB")
@@ -937,7 +1012,12 @@ def generate_album_poster(
             elif is_small_source:
                 # Artist layout: blurred overlay on gradient + centered sharp logo
                 logger.info("poster.layout: type=artist_centered_blur")
-                logger.debug("poster.layout: source=%dx%d origin=%s", frame_raw.width, frame_raw.height, background_source or "unknown")
+                logger.debug(
+                    "poster.layout: source=%dx%d origin=%s",
+                    frame_raw.width,
+                    frame_raw.height,
+                    background_source or "unknown",
+                )
                 blurred = frame_rgb.resize((POSTER_W, POSTER_H), Image.LANCZOS)
                 blurred = blurred.filter(ImageFilter.GaussianBlur(radius=40))
                 blurred = ImageEnhance.Brightness(blurred).enhance(0.18)
@@ -947,7 +1027,9 @@ def generate_album_poster(
 
                 max_display = 550
                 if has_alpha:
-                    sharp, img_x, img_y = _center_sharp(frame_raw.convert("RGBA"), max_display)
+                    sharp, img_x, img_y = _center_sharp(
+                        frame_raw.convert("RGBA"), max_display
+                    )
                     bg.paste(sharp, (img_x, img_y), sharp)
                 else:
                     sharp, img_x, img_y = _center_sharp(frame_rgb, max_display)
@@ -958,7 +1040,12 @@ def generate_album_poster(
             else:
                 # Large source: sharp top on gradient, fade to dark
                 logger.info("poster.layout: type=large_source_fade")
-                logger.debug("poster.layout: source=%dx%d origin=%s", frame_raw.width, frame_raw.height, background_source or "unknown")
+                logger.debug(
+                    "poster.layout: source=%dx%d origin=%s",
+                    frame_raw.width,
+                    frame_raw.height,
+                    background_source or "unknown",
+                )
                 scale = POSTER_W / frame_raw.width
                 new_h = int(frame_raw.height * scale)
                 fade_mask = Image.new("L", (POSTER_W, new_h), 255)
@@ -969,7 +1056,9 @@ def generate_album_poster(
                     dm.line([(0, y), (POSTER_W, y)], fill=alpha)
 
                 if has_alpha:
-                    sharp_rgba = frame_raw.convert("RGBA").resize((POSTER_W, new_h), Image.LANCZOS)
+                    sharp_rgba = frame_raw.convert("RGBA").resize(
+                        (POSTER_W, new_h), Image.LANCZOS
+                    )
                     orig_alpha = sharp_rgba.split()[3]
                     combined = Image.fromarray(
                         np.minimum(np.array(orig_alpha), np.array(fade_mask)), mode="L"
@@ -988,11 +1077,15 @@ def generate_album_poster(
             grad_start = int(POSTER_H * 0.40)
             for y in range(grad_start, POSTER_H):
                 progress = (y - grad_start) / (POSTER_H - grad_start)
-                a = int(200 * progress ** 1.4)
+                a = int(200 * progress**1.4)
                 dg.line([(0, y), (POSTER_W, y)], fill=(0, 0, 0, a))
             bg = Image.alpha_composite(bg.convert("RGBA"), gradient).convert("RGB")
         except (OSError, ValueError) as e:
-            logger.warning("poster.background: status=failed path=%s error=\"%s\"", background_image_path, e)
+            logger.warning(
+                'poster.background: status=failed path=%s error="%s"',
+                background_image_path,
+                e,
+            )
             background_image_path = None  # fall through to gradient
 
     if not background_image_path or not background_image_path.exists():
@@ -1023,16 +1116,34 @@ def generate_album_poster(
         display_text = hero_text.upper()
         font_hero, _ = auto_fit(display_text, "bold", max_w, start=130, minimum=50)
         hero_h = font_visual_height(font_hero)
-        spacing = max(2, min(14, (max_w - measure_w(font_hero, display_text)) // max(len(display_text), 1)))
+        spacing = max(
+            2,
+            min(
+                14,
+                (max_w - measure_w(font_hero, display_text))
+                // max(len(display_text), 1),
+            ),
+        )
         hero_y = LINE_Y - PAD_LINE_TO_ARTIST - hero_h
-        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
+        _draw_centered(
+            draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing
+        )
     else:
         display_text = festival.upper()
         font_hero, _ = auto_fit(display_text, "bold", max_w, start=130, minimum=50)
         hero_h = font_visual_height(font_hero)
-        spacing = max(2, min(14, (max_w - measure_w(font_hero, display_text)) // max(len(display_text), 1)))
+        spacing = max(
+            2,
+            min(
+                14,
+                (max_w - measure_w(font_hero, display_text))
+                // max(len(display_text), 1),
+            ),
+        )
         hero_y = LINE_Y - PAD_LINE_TO_FEST - hero_h
-        _draw_centered(draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing)
+        _draw_centered(
+            draw, hero_y, display_text, font_hero, "white", letter_spacing=spacing
+        )
 
     # Accent line with glow
     bg = _draw_glow_line(bg, LINE_Y, 400, LINE_H, accent, glow_radius=16)

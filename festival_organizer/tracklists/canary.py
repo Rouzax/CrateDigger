@@ -13,6 +13,7 @@ Probes use BeautifulSoup with the same selectors the paired parsers
 use, so a canary hit corresponds to a real parser failure on the same
 HTML. The labels are phrased for log output, not for code consumers.
 """
+
 from __future__ import annotations
 
 from bs4 import BeautifulSoup

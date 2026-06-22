@@ -1,4 +1,5 @@
 """Tests for the frame_sampler module's logging of silent-None return paths."""
+
 from __future__ import annotations
 
 import logging
@@ -19,8 +20,12 @@ def test_sample_best_frame_warns_when_video_not_opened(tmp_path, caplog):
     video.write_bytes(b"")
     fake_cap = MagicMock()
     fake_cap.isOpened.return_value = False
-    with patch("festival_organizer.frame_sampler.cv2.VideoCapture", return_value=fake_cap):
-        with caplog.at_level(logging.WARNING, logger="festival_organizer.frame_sampler"):
+    with patch(
+        "festival_organizer.frame_sampler.cv2.VideoCapture", return_value=fake_cap
+    ):
+        with caplog.at_level(
+            logging.WARNING, logger="festival_organizer.frame_sampler"
+        ):
             result = sample_best_frame(video)
     assert result is None
     joined = "\n".join(r.message for r in caplog.records)
@@ -37,19 +42,29 @@ def test_sample_best_frame_warns_when_video_too_short(tmp_path, caplog):
 
     def _get(prop):
         import cv2
+
         if prop == cv2.CAP_PROP_FPS:
             return 25.0
         if prop == cv2.CAP_PROP_FRAME_COUNT:
             return 3
         return 0
+
     fake_cap.get.side_effect = _get
-    with patch("festival_organizer.frame_sampler.cv2.VideoCapture", return_value=fake_cap):
-        with caplog.at_level(logging.WARNING, logger="festival_organizer.frame_sampler"):
+    with patch(
+        "festival_organizer.frame_sampler.cv2.VideoCapture", return_value=fake_cap
+    ):
+        with caplog.at_level(
+            logging.WARNING, logger="festival_organizer.frame_sampler"
+        ):
             result = sample_best_frame(video)
     assert result is None
     joined = "\n".join(r.message for r in caplog.records)
     assert "short.mkv" in joined
-    assert "too short" in joined.lower() or "insufficient" in joined.lower() or "3" in joined
+    assert (
+        "too short" in joined.lower()
+        or "insufficient" in joined.lower()
+        or "3" in joined
+    )
 
 
 def test_sample_best_frame_warns_when_no_best_frame(tmp_path, caplog):
@@ -62,15 +77,21 @@ def test_sample_best_frame_warns_when_no_best_frame(tmp_path, caplog):
 
     def _get(prop):
         import cv2
+
         if prop == cv2.CAP_PROP_FPS:
             return 25.0
         if prop == cv2.CAP_PROP_FRAME_COUNT:
             return 1000
         return 0
+
     fake_cap.get.side_effect = _get
     fake_cap.read.return_value = (False, None)  # every sample fails
-    with patch("festival_organizer.frame_sampler.cv2.VideoCapture", return_value=fake_cap):
-        with caplog.at_level(logging.WARNING, logger="festival_organizer.frame_sampler"):
+    with patch(
+        "festival_organizer.frame_sampler.cv2.VideoCapture", return_value=fake_cap
+    ):
+        with caplog.at_level(
+            logging.WARNING, logger="festival_organizer.frame_sampler"
+        ):
             result = sample_best_frame(video)
     assert result is None
     joined = "\n".join(r.message for r in caplog.records)

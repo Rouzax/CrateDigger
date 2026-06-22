@@ -3,6 +3,7 @@
 Downloads HD ClearLOGOs and artist backgrounds from fanart.tv.
 Artist images provided by fanart.tv (https://fanart.tv).
 """
+
 import json
 import logging
 import re
@@ -27,6 +28,7 @@ USER_AGENT = "CrateDigger/1.0 (festival set organizer)"
 
 # --- Exceptions ---
 
+
 class FanartError(Exception):
     """Base error for fanart operations."""
 
@@ -40,6 +42,7 @@ class FanartAPIError(FanartError):
 
 
 # --- MBID Cache ---
+
 
 class MBIDCache:
     """Persistent artist-name-to-MBID mapping with TTL-based expiry.
@@ -61,14 +64,18 @@ class MBIDCache:
             try:
                 raw = json.loads(self._path.read_text(encoding="utf-8"))
             except (json.JSONDecodeError, OSError) as e:
-                logger.warning("fanart.mbid_cache: status=load_error error=\"%s\"", e)
+                logger.warning('fanart.mbid_cache: status=load_error error="%s"', e)
                 return
             for key, value in raw.items():
                 if isinstance(value, dict) and "ts" in value:
                     self._data[key] = value
                 else:
                     self._data[key] = {"mbid": value, "ts": 0}
-            logger.debug("fanart.mbid_cache: status=loaded path=%s entries=%d", self._path, len(self._data))
+            logger.debug(
+                "fanart.mbid_cache: status=loaded path=%s entries=%d",
+                self._path,
+                len(self._data),
+            )
         else:
             logger.debug("fanart.mbid_cache: status=not_found path=%s", self._path)
 
@@ -132,17 +139,17 @@ class ArtistMbidOverrides:
         try:
             raw = json.loads(self._path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError) as e:
-            logger.warning("fanart.overrides: status=load_error error=\"%s\"", e)
+            logger.warning('fanart.overrides: status=load_error error="%s"', e)
             return
         if not isinstance(raw, dict):
             logger.warning("fanart.overrides: status=invalid_format expected=dict")
             return
-        self._data = {
-            k.lower(): v
-            for k, v in raw.items()
-            if isinstance(v, str) and v
-        }
-        logger.debug("fanart.overrides: status=loaded path=%s entries=%d", self._path, len(self._data))
+        self._data = {k.lower(): v for k, v in raw.items() if isinstance(v, str) and v}
+        logger.debug(
+            "fanart.overrides: status=loaded path=%s entries=%d",
+            self._path,
+            len(self._data),
+        )
 
     def get(self, artist_name: str) -> str | None:
         """Return the pinned MBID for an artist, or None when not pinned."""
@@ -182,22 +189,26 @@ def lookup_mbid(
     if overrides is not None:
         pinned = overrides.get(artist_name)
         if pinned:
-            logger.debug("fanart.mbid: source=override artist=\"%s\" mbid=%s", artist_name, pinned)
+            logger.debug(
+                'fanart.mbid: source=override artist="%s" mbid=%s', artist_name, pinned
+            )
             return pinned
 
     if cache.has(artist_name):
         mbid = cache.get(artist_name)
         if not mbid:
-            logger.debug("fanart.mbid: source=cache_negative artist=\"%s\"", artist_name)
+            logger.debug('fanart.mbid: source=cache_negative artist="%s"', artist_name)
         return mbid
 
-    logger.info("fanart.mbid_lookup: artist=\"%s\" status=searching", artist_name)
+    logger.info('fanart.mbid_lookup: artist="%s" status=searching', artist_name)
     mbid = _mb_search(artist_name)
     cache.put(artist_name, mbid)
     if mbid:
-        logger.info("fanart.mbid_lookup: artist=\"%s\" status=found mbid=%s", artist_name, mbid)
+        logger.info(
+            'fanart.mbid_lookup: artist="%s" status=found mbid=%s', artist_name, mbid
+        )
     else:
-        logger.info("fanart.mbid_lookup: artist=\"%s\" status=not_found", artist_name)
+        logger.info('fanart.mbid_lookup: artist="%s" status=not_found', artist_name)
     return mbid
 
 
@@ -229,7 +240,7 @@ def _mb_search(artist_name: str) -> str | None:
         try:
             resp = requests.get(url, params=params, headers=headers, timeout=30)
             if resp.status_code == 503:
-                wait = 2 ** attempt + 1
+                wait = 2**attempt + 1
                 logger.debug("fanart.mb_retry: code=503 wait=%ds", wait)
                 time.sleep(wait)
                 continue
@@ -241,50 +252,74 @@ def _mb_search(artist_name: str) -> str | None:
 
             # Filter: drop non-artist types; require score >= 80.
             candidates = [
-                a for a in artists
+                a
+                for a in artists
                 if a.get("score", 0) >= 80
                 and (a.get("type") or "") not in non_artist_types
             ]
             if not candidates:
-                logger.debug("fanart.mb_search: status=low_score best=%d artist=\"%s\"",
-                             artists[0].get("score", 0), artist_name)
+                logger.debug(
+                    'fanart.mb_search: status=low_score best=%d artist="%s"',
+                    artists[0].get("score", 0),
+                    artist_name,
+                )
                 return None
 
             # Tier 1: exact case match
             for a in candidates:
                 if a.get("name") == artist_name:
-                    logger.debug("fanart.mb_match: artist=\"%s\" mbid=%s tier=exact", a["name"], a["id"])
+                    logger.debug(
+                        'fanart.mb_match: artist="%s" mbid=%s tier=exact',
+                        a["name"],
+                        a["id"],
+                    )
                     return a["id"]
 
             # Tier 2: case-insensitive match
             query_lower = artist_name.lower()
             for a in candidates:
                 if a.get("name", "").lower() == query_lower:
-                    logger.debug("fanart.mb_match: artist=\"%s\" mbid=%s tier=case_insensitive", a["name"], a["id"])
+                    logger.debug(
+                        'fanart.mb_match: artist="%s" mbid=%s tier=case_insensitive',
+                        a["name"],
+                        a["id"],
+                    )
                     return a["id"]
 
             # Tier 3: diacritics-insensitive match
             query_stripped = strip_diacritics(artist_name).lower()
             for a in candidates:
                 if strip_diacritics(a.get("name", "")).lower() == query_stripped:
-                    logger.debug("fanart.mb_match: artist=\"%s\" mbid=%s tier=diacritics", a["name"], a["id"])
+                    logger.debug(
+                        'fanart.mb_match: artist="%s" mbid=%s tier=diacritics',
+                        a["name"],
+                        a["id"],
+                    )
                     return a["id"]
 
-            logger.debug("fanart.mb_search: status=no_match candidates=%d artist=\"%s\"",
-                         len(candidates), artist_name)
+            logger.debug(
+                'fanart.mb_search: status=no_match candidates=%d artist="%s"',
+                len(candidates),
+                artist_name,
+            )
             return None
         except requests.RequestException as e:
             if attempt < 2:
-                time.sleep(2 ** attempt + 1)
+                time.sleep(2**attempt + 1)
                 continue
-            raise MusicBrainzError(f"MusicBrainz lookup failed for '{artist_name}': {e}") from e
+            raise MusicBrainzError(
+                f"MusicBrainz lookup failed for '{artist_name}': {e}"
+            ) from e
     return None
 
 
 # --- fanart.tv Client ---
 
+
 def fetch_artist_images(
-    mbid: str, project_api_key: str, personal_api_key: str = "",
+    mbid: str,
+    project_api_key: str,
+    personal_api_key: str = "",
 ) -> dict | None:
     """Fetch artist images from fanart.tv API v3.2. Returns parsed JSON or None on 404."""
     url = f"{FANART_BASE_URL}/music/{mbid}"
@@ -298,26 +333,35 @@ def fetch_artist_images(
             if resp.status_code == 404:
                 return None
             if resp.status_code >= 500:
-                wait = 2 ** attempt + 1
-                logger.debug("fanart.api: source=fanart_tv status=retry code=%d wait=%ds", resp.status_code, wait)
+                wait = 2**attempt + 1
+                logger.debug(
+                    "fanart.api: source=fanart_tv status=retry code=%d wait=%ds",
+                    resp.status_code,
+                    wait,
+                )
                 time.sleep(wait)
                 continue
             resp.raise_for_status()
             return resp.json()
         except requests.RequestException as e:
             if attempt < 2:
-                wait = 2 ** attempt + 1
+                wait = 2**attempt + 1
                 logger.debug(
-                    "fanart.api: source=fanart_tv status=failed attempt=%d error=\"%s\" wait=%ds",
-                    attempt + 1, e, wait,
+                    'fanart.api: source=fanart_tv status=failed attempt=%d error="%s" wait=%ds',
+                    attempt + 1,
+                    e,
+                    wait,
                 )
                 time.sleep(wait)
                 continue
-            raise FanartAPIError(f"fanart.tv request failed for MBID {mbid}: {e}") from e
+            raise FanartAPIError(
+                f"fanart.tv request failed for MBID {mbid}: {e}"
+            ) from e
     return None
 
 
 # --- Image Selection ---
+
 
 def _image_sort_key(img: dict) -> tuple[int, str]:
     """Sort key: likes first, then newest added date as tiebreaker."""
@@ -359,7 +403,7 @@ def fetch_audiodb_artist(mbid: str) -> dict | None:
             return artists[0]
         return None
     except requests.RequestException as e:
-        logger.debug("fanart.audiodb: status=failed mbid=%s error=\"%s\"", mbid, e)
+        logger.debug('fanart.audiodb: status=failed mbid=%s error="%s"', mbid, e)
         return None
 
 
@@ -368,7 +412,12 @@ def _audiodb_best_fanart(artist: dict) -> str | None:
 
     Priority: strArtistFanart (1280px) > strArtistThumb (700px square).
     """
-    for field in ("strArtistFanart", "strArtistFanart2", "strArtistFanart3", "strArtistThumb"):
+    for field in (
+        "strArtistFanart",
+        "strArtistFanart2",
+        "strArtistFanart3",
+        "strArtistThumb",
+    ):
         url = artist.get(field)
         if url:
             return url
@@ -382,6 +431,7 @@ def _audiodb_best_logo(artist: dict) -> str | None:
 
 # --- Image Download ---
 
+
 def _download_image(url: str, output_path: Path) -> bool:
     """Download an image URL to disk. Returns True on success."""
     try:
@@ -394,7 +444,7 @@ def _download_image(url: str, output_path: Path) -> bool:
         logger.info("fanart.download: url=%s target=%s", url, output_path)
         return True
     except requests.RequestException as e:
-        logger.warning("fanart.download: url=%s status=failed error=\"%s\"", url, e)
+        logger.warning('fanart.download: url=%s status=failed error="%s"', url, e)
         return False
 
 
@@ -452,8 +502,10 @@ def download_artist_images(
     """
     global _attribution_logged
     if not _attribution_logged:
-        logger.info("Artist images provided by fanart.tv (https://fanart.tv) "
-                     "and TheAudioDB (https://www.theaudiodb.com)")
+        logger.info(
+            "Artist images provided by fanart.tv (https://fanart.tv) "
+            "and TheAudioDB (https://www.theaudiodb.com)"
+        )
         _attribution_logged = True
 
     logo_path = artist_dir / "clearlogo.png"
@@ -476,7 +528,9 @@ def download_artist_images(
     bg_ok = False
 
     # --- Source 1: fanart.tv ---
-    data = prefetched_data or fetch_artist_images(mbid, project_api_key, personal_api_key)
+    data = prefetched_data or fetch_artist_images(
+        mbid, project_api_key, personal_api_key
+    )
     if data:
         if need_logo:
             logo = pick_best_logo(data.get("hdmusiclogo", []))
@@ -493,7 +547,7 @@ def download_artist_images(
     still_need_bg = need_bg and not bg_ok
 
     if still_need_logo or still_need_bg:
-        logger.debug("fanart.audiodb_fallback: artist=\"%s\"", artist_name)
+        logger.debug('fanart.audiodb_fallback: artist="%s"', artist_name)
         audiodb = fetch_audiodb_artist(mbid)
         if audiodb:
             if still_need_logo:
@@ -531,7 +585,7 @@ def resolve_mbids_aligned(
     for name, mbid in unique.items():
         if mbid is None:
             logger.info(
-                "fanart.mbid_unresolved: artist=\"%s\" overrides_path=%s",
+                'fanart.mbid_unresolved: artist="%s" overrides_path=%s',
                 name,
                 paths.artist_mbids_file(),
             )

@@ -15,8 +15,11 @@ def _make_mf(**kwargs: Any) -> MediaFile:
     SYNOPSIS line) need the canonical place set, since the function reads
     ``mf.place`` rather than ``mf.festival``."""
     defaults: dict[str, Any] = dict(
-        source_path=Path("test.mkv"), artist="Test",
-        festival="TML", year="2024", content_type="festival_set",
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="TML",
+        year="2024",
+        content_type="festival_set",
     )
     defaults.update(kwargs)
     return make_mediafile(**defaults)
@@ -28,8 +31,13 @@ def test_embed_tags_failure_logged(tmp_path, caplog):
     video.write_bytes(b"")
     mf = _make_mf()
 
-    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-        with patch("festival_organizer.embed_tags.write_merged_tags", return_value=False):
+    with patch(
+        "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+        "/usr/bin/mkvpropedit",
+    ):
+        with patch(
+            "festival_organizer.embed_tags.write_merged_tags", return_value=False
+        ):
             result = embed_tags(mf, video)
     assert result == "error"
 
@@ -38,11 +46,17 @@ def test_embed_tags_calls_write_merged_tags(tmp_path):
     """embed_tags uses mkv_tags.write_merged_tags, not raw mkvpropedit."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
-    mf = _make_mf(artist="Afrojack", festival="EDC Las Vegas",
-                   stage="kineticFIELD", year="2025")
+    mf = _make_mf(
+        artist="Afrojack", festival="EDC Las Vegas", stage="kineticFIELD", year="2025"
+    )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             result = embed_tags(mf, video)
 
     assert result == "done"
@@ -60,11 +74,21 @@ def test_embed_tags_title_includes_set_title(tmp_path):
     """MKV TITLE tag includes set_title (WE1/WE2) appended to festival."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
-    mf = _make_mf(artist="Armin van Buuren", festival="Tomorrowland",
-                   stage="Mainstage", year="2025", set_title="WE2")
+    mf = _make_mf(
+        artist="Armin van Buuren",
+        festival="Tomorrowland",
+        stage="Mainstage",
+        year="2025",
+        set_title="WE2",
+    )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -77,8 +101,13 @@ def test_embed_tags_title_fallback_no_stage(tmp_path):
     video.write_bytes(b"")
     mf = _make_mf(artist="Martin Garrix", festival="Red Rocks", year="2025")
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -94,8 +123,13 @@ def test_embed_tags_writes_enrichment_tags_at_ttv70(tmp_path):
         clearlogo_url="https://fanart.tv/logo.png",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             result = embed_tags(mf, video)
 
     assert result == "done"
@@ -105,7 +139,9 @@ def test_embed_tags_writes_enrichment_tags_at_ttv70(tmp_path):
     assert tags_dict[70]["CRATEDIGGER_CLEARLOGO_URL"] == "https://fanart.tv/logo.png"
     # CRATEDIGGER_ENRICHED_AT should be a current ISO timestamp
     assert "CRATEDIGGER_ENRICHED_AT" in tags_dict[70]
-    assert re.match(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", tags_dict[70]["CRATEDIGGER_ENRICHED_AT"])
+    assert re.match(
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", tags_dict[70]["CRATEDIGGER_ENRICHED_AT"]
+    )
 
 
 def test_embed_tags_skips_empty_enrichment_fields(tmp_path):
@@ -114,8 +150,13 @@ def test_embed_tags_skips_empty_enrichment_fields(tmp_path):
     video.write_bytes(b"")
     mf = _make_mf(fanart_url="", clearlogo_url="")
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -134,13 +175,20 @@ def test_embed_tags_b2b_artist_in_title_not_artist_tag(tmp_path):
         year="2025",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
     assert tags_dict[50]["ARTIST"] == "Martin Garrix"  # primary for Plex
-    assert tags_dict[50]["TITLE"] == "Martin Garrix & Alesso @ Red Rocks"  # display_artist in title
+    assert (
+        tags_dict[50]["TITLE"] == "Martin Garrix & Alesso @ Red Rocks"
+    )  # display_artist in title
 
 
 def test_embed_tags_b2b_with_stage_in_title(tmp_path):
@@ -155,8 +203,13 @@ def test_embed_tags_b2b_with_stage_in_title(tmp_path):
         year="2025",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -183,8 +236,13 @@ TML</String></Simple>
 </Tags>"""
     existing_root = ET.fromstring(existing_xml)
 
-    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-        with patch("festival_organizer.embed_tags.extract_all_tags", return_value=existing_root):
+    with patch(
+        "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+        "/usr/bin/mkvpropedit",
+    ):
+        with patch(
+            "festival_organizer.embed_tags.extract_all_tags", return_value=existing_root
+        ):
             with patch("festival_organizer.embed_tags.write_merged_tags") as mock_wmt:
                 result = embed_tags(mf, video)
 
@@ -197,7 +255,10 @@ def test_embed_tags_skipped_with_enrichment_tags_match(tmp_path):
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
-        artist="Tiesto", festival="TML", festival_full="TML", year="2024",
+        artist="Tiesto",
+        festival="TML",
+        festival_full="TML",
+        year="2024",
         fanart_url="https://fanart.tv/bg.jpg",
         clearlogo_url="https://fanart.tv/logo.png",
     )
@@ -221,8 +282,13 @@ TML</String></Simple>
 </Tags>"""
     existing_root = ET.fromstring(existing_xml)
 
-    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-        with patch("festival_organizer.embed_tags.extract_all_tags", return_value=existing_root):
+    with patch(
+        "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+        "/usr/bin/mkvpropedit",
+    ):
+        with patch(
+            "festival_organizer.embed_tags.extract_all_tags", return_value=existing_root
+        ):
             with patch("festival_organizer.embed_tags.write_merged_tags") as mock_wmt:
                 result = embed_tags(mf, video)
 
@@ -240,19 +306,31 @@ def test_embed_tags_curated_description_full(tmp_path):
     mf = _make_mf(
         artist="Armin van Buuren",
         display_artist="Armin van Buuren",
-        festival="Tomorrowland", festival_full="Tomorrowland",
+        festival="Tomorrowland",
+        festival_full="Tomorrowland",
         stage="Mainstage",
-        country="Belgium", source_type="Open Air / Festival",
-        edition="Belgium", set_title="WE2", year="2024",
+        country="Belgium",
+        source_type="Open Air / Festival",
+        edition="Belgium",
+        set_title="WE2",
+        year="2024",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
     desc = tags_dict[50]["SYNOPSIS"]
-    assert desc == "Armin van Buuren @ Mainstage\nTomorrowland (Open Air / Festival), Belgium\nEdition: Belgium | WE2"
+    assert (
+        desc
+        == "Armin van Buuren @ Mainstage\nTomorrowland (Open Air / Festival), Belgium\nEdition: Belgium | WE2"
+    )
 
 
 def test_embed_tags_description_no_stage(tmp_path):
@@ -262,13 +340,20 @@ def test_embed_tags_description_no_stage(tmp_path):
     mf = _make_mf(
         artist="Martin Garrix",
         display_artist="Martin Garrix",
-        festival="Tomorrowland", festival_full="Tomorrowland",
-        country="Belgium", source_type="Open Air / Festival",
+        festival="Tomorrowland",
+        festival_full="Tomorrowland",
+        country="Belgium",
+        source_type="Open Air / Festival",
         year="2024",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -283,14 +368,21 @@ def test_embed_tags_description_venue_fallback(tmp_path):
     mf = _make_mf(
         artist="Martin Garrix",
         display_artist="Martin Garrix",
-        festival="", venue="Red Rocks Amphitheatre",
+        festival="",
+        venue="Red Rocks Amphitheatre",
         venue_full="Red Rocks Amphitheatre",
-        country="United States", source_type="Event Location",
+        country="United States",
+        source_type="Event Location",
         year="2025",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -303,9 +395,13 @@ def test_embed_tags_description_skipped_when_same(tmp_path):
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
-        artist="Tiesto", display_artist="Tiesto",
-        festival="TML", festival_full="TML", country="Belgium",
-        source_type="Open Air / Festival", year="2024",
+        artist="Tiesto",
+        display_artist="Tiesto",
+        festival="TML",
+        festival_full="TML",
+        country="Belgium",
+        source_type="Open Air / Festival",
+        year="2024",
     )
 
     curated = "Tiesto\nTML (Open Air / Festival), Belgium"
@@ -322,8 +418,13 @@ def test_embed_tags_description_skipped_when_same(tmp_path):
 </Tags>"""
     existing_root = ET.fromstring(existing_xml)
 
-    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-        with patch("festival_organizer.embed_tags.extract_all_tags", return_value=existing_root):
+    with patch(
+        "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+        "/usr/bin/mkvpropedit",
+    ):
+        with patch(
+            "festival_organizer.embed_tags.extract_all_tags", return_value=existing_root
+        ):
             with patch("festival_organizer.embed_tags.write_merged_tags") as mock_wmt:
                 result = embed_tags(mf, video)
 
@@ -338,13 +439,20 @@ def test_embed_tags_description_b2b(tmp_path):
     mf = _make_mf(
         artist="Martin Garrix",
         display_artist="Martin Garrix & Alesso",
-        festival="Red Rocks", stage="Main Stage",
-        country="United States", source_type="Event Location",
+        festival="Red Rocks",
+        stage="Main Stage",
+        country="United States",
+        source_type="Event Location",
         year="2025",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -357,12 +465,19 @@ def test_embed_tags_description_no_location(tmp_path):
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
-        artist="Test", display_artist="Test",
-        festival="", year="2024",
+        artist="Test",
+        display_artist="Test",
+        festival="",
+        year="2024",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -373,16 +488,23 @@ def test_embed_tags_description_no_location(tmp_path):
 def test_embed_tags_description_cleared(tmp_path):
     """DESCRIPTION is marked for clearing via CLEAR_TAG sentinel."""
     from festival_organizer.mkv_tags import CLEAR_TAG
+
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf(
         artist="Armin van Buuren",
         display_artist="Armin van Buuren",
-        festival="Tomorrowland", year="2024",
+        festival="Tomorrowland",
+        year="2024",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -401,14 +523,21 @@ def test_embed_tags_description_uses_location_when_festival_and_venue_empty(tmp_
     mf = _make_mf(
         artist="Fred again..",
         display_artist="Fred again..",
-        festival="", festival_full="", venue="",
+        festival="",
+        festival_full="",
+        venue="",
         location="Alexandra Palace London",
         country="United Kingdom",
         year="2024",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -425,7 +554,8 @@ def test_embed_tags_description_prefers_venue_full_over_location(tmp_path):
         artist="DJ",
         display_artist="DJ",
         stage="Main",
-        festival="", festival_full="",
+        festival="",
+        festival_full="",
         venue="Structured Venue",
         venue_full="raw structured venue, london",
         location="Free Text Location",
@@ -433,8 +563,13 @@ def test_embed_tags_description_prefers_venue_full_over_location(tmp_path):
         year="2024",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -452,12 +587,18 @@ def test_embed_tags_synopsis_uses_festival_full(tmp_path):
         display_artist="Martin Garrix",
         festival="AMF",
         festival_full="Amsterdam Music Festival",
-        country="Netherlands", source_type="Open Air / Festival",
+        country="Netherlands",
+        source_type="Open Air / Festival",
         year="2024",
     )
 
-    with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
             embed_tags(mf, video)
 
     tags_dict = mock_wmt.call_args[0][1]
@@ -554,9 +695,16 @@ TML</String></Simple>
 </Tags>"""
     existing_root = ET.fromstring(existing_xml)
 
-    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-        with patch("festival_organizer.embed_tags.extract_all_tags", return_value=existing_root):
-            with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True) as mock_wmt:
+    with patch(
+        "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+        "/usr/bin/mkvpropedit",
+    ):
+        with patch(
+            "festival_organizer.embed_tags.extract_all_tags", return_value=existing_root
+        ):
+            with patch(
+                "festival_organizer.embed_tags.write_merged_tags", return_value=True
+            ) as mock_wmt:
                 result = embed_tags(mf, video)
 
     assert result == "done"
@@ -567,6 +715,7 @@ def test_embed_tags_debug_when_mkvpropedit_missing(tmp_path, caplog):
     """Missing MKVPROPEDIT_PATH -> DEBUG (not WARNING; would spam over many
     files when --embed-tags runs without the tool installed) and returns 'error'."""
     import logging as _logging
+
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     mf = _make_mf()
@@ -584,9 +733,13 @@ def test_embed_tags_warns_when_target_missing_or_wrong_ext(tmp_path, caplog):
     """Missing file or non-Matroska extension -> WARNING (upstream pipeline
     bug, should be rare; one per bad input is fine)."""
     import logging as _logging
+
     mf = _make_mf()
     video = tmp_path / "nonexistent.mkv"
-    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
+    with patch(
+        "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+        "/usr/bin/mkvpropedit",
+    ):
         with caplog.at_level(_logging.WARNING, logger="festival_organizer.embed_tags"):
             result = embed_tags(mf, video)
     assert result == "error"
@@ -600,28 +753,42 @@ def test_embed_tags_warns_when_target_missing_or_wrong_ext(tmp_path, caplog):
 def test_location_tag_uses_raw_venue_full():
     """When festival is empty but venue is alias-resolved, the location line carries the raw scrape."""
     from festival_organizer.embed_tags import compute_location_tag
-    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
-                   festival="", festival_full="",
-                   venue="Alexandra Palace",
-                   venue_full="alexandra palace, london",
-                   location="")
+
+    mf = MediaFile(
+        source_path=Path("/tmp/x.mkv"),
+        festival="",
+        festival_full="",
+        venue="Alexandra Palace",
+        venue_full="alexandra palace, london",
+        location="",
+    )
     assert compute_location_tag(mf) == "alexandra palace, london"
 
 
 def test_location_tag_falls_through_to_location_field():
     from festival_organizer.embed_tags import compute_location_tag
-    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
-                   festival="", festival_full="",
-                   venue="", venue_full="",
-                   location="Some Bar, Berlin")
+
+    mf = MediaFile(
+        source_path=Path("/tmp/x.mkv"),
+        festival="",
+        festival_full="",
+        venue="",
+        venue_full="",
+        location="Some Bar, Berlin",
+    )
     assert compute_location_tag(mf) == "Some Bar, Berlin"
 
 
 def test_location_tag_prefers_festival_full():
     from festival_organizer.embed_tags import compute_location_tag
-    mf = MediaFile(source_path=Path("/tmp/x.mkv"),
-                   festival="Tomorrowland", festival_full="Tomorrowland Belgium",
-                   venue="Anywhere", venue_full="Anywhere Else")
+
+    mf = MediaFile(
+        source_path=Path("/tmp/x.mkv"),
+        festival="Tomorrowland",
+        festival_full="Tomorrowland Belgium",
+        venue="Anywhere",
+        venue_full="Anywhere Else",
+    )
     assert compute_location_tag(mf) == "Tomorrowland Belgium"
 
 
@@ -645,10 +812,19 @@ def test_embed_tags_diff_debug_renders_clear_tag_readably(tmp_path, caplog):
 </Tags>"""
     existing_root = ET.fromstring(existing_xml)
 
-    with patch("festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-        with patch("festival_organizer.embed_tags.extract_all_tags", return_value=existing_root):
-            with patch("festival_organizer.embed_tags.write_merged_tags", return_value=True):
-                with caplog.at_level(_logging.DEBUG, logger="festival_organizer.embed_tags"):
+    with patch(
+        "festival_organizer.embed_tags.metadata.MKVPROPEDIT_PATH",
+        "/usr/bin/mkvpropedit",
+    ):
+        with patch(
+            "festival_organizer.embed_tags.extract_all_tags", return_value=existing_root
+        ):
+            with patch(
+                "festival_organizer.embed_tags.write_merged_tags", return_value=True
+            ):
+                with caplog.at_level(
+                    _logging.DEBUG, logger="festival_organizer.embed_tags"
+                ):
                     embed_tags(mf, video)
 
     joined = "\n".join(r.message for r in caplog.records)

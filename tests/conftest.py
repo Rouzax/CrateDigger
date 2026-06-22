@@ -1,4 +1,5 @@
 """Shared test configuration for CrateDigger tests."""
+
 import json
 from pathlib import Path
 
@@ -9,7 +10,9 @@ from festival_organizer.config import DEFAULT_CONFIG
 from festival_organizer.models import MediaFile
 
 
-def make_mediafile(*, place: str | None = None, place_kind: str | None = None, **kwargs) -> MediaFile:
+def make_mediafile(
+    *, place: str | None = None, place_kind: str | None = None, **kwargs
+) -> MediaFile:
     """Construct a MediaFile and auto-populate ``place`` / ``place_kind`` for tests.
 
     Production code populates ``mf.place`` and ``mf.place_kind`` in
@@ -55,6 +58,7 @@ def _reset_per_process_state():
     _paths_module._migrated_this_process = False
     yield
     _paths_module._migrated_this_process = False
+
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 

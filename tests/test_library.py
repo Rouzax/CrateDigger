@@ -3,7 +3,9 @@ import logging
 import os
 from unittest.mock import patch
 from festival_organizer.library import (
-    find_library_root, init_library, cleanup_empty_dirs,
+    find_library_root,
+    init_library,
+    cleanup_empty_dirs,
     migrate_folder_artefacts,
     resolve_library_root,
 )
@@ -202,7 +204,11 @@ class TestCleanupEmptyDirs:
                 cleanup_empty_dirs(tmp_path)
             # dir2 should still be cleaned up despite dir1 error
             assert not d2.exists()
-            assert "WARNING" in caplog.text or "Permission" in caplog.text or "locked" in caplog.text
+            assert (
+                "WARNING" in caplog.text
+                or "Permission" in caplog.text
+                or "locked" in caplog.text
+            )
         finally:
             os.chmod(str(d1), 0o755)
 

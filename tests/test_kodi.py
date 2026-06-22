@@ -1,16 +1,19 @@
 """Tests for Kodi JSON-RPC client and library sync."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from festival_organizer.kodi import (
-    KodiClient, KodiError, sync_library,
-    _infer_path_mapping, _translate_path,
+    KodiClient,
+    KodiError,
+    sync_library,
+    _infer_path_mapping,
+    _translate_path,
 )
 
 
 class TestKodiClient:
-
     def test_call_sends_jsonrpc_payload(self):
         client = KodiClient("localhost", 8080, "kodi", "pass")
         mock_resp = MagicMock()
@@ -30,10 +33,12 @@ class TestKodiClient:
 
     def test_call_raises_on_connection_error(self):
         import requests
+
         client = KodiClient("localhost", 8080, "kodi", "pass")
 
-        with patch.object(client._session, "post",
-                          side_effect=requests.ConnectionError("refused")):
+        with patch.object(
+            client._session, "post", side_effect=requests.ConnectionError("refused")
+        ):
             with pytest.raises(KodiError, match="Cannot connect"):
                 client._call("VideoLibrary.Scan")
 
@@ -41,7 +46,8 @@ class TestKodiClient:
         client = KodiClient("localhost", 8080, "kodi", "pass")
         mock_resp = MagicMock()
         mock_resp.json.return_value = {
-            "jsonrpc": "2.0", "id": 1,
+            "jsonrpc": "2.0",
+            "id": 1,
             "error": {"code": -32601, "message": "Method not found"},
         }
         mock_resp.raise_for_status = MagicMock()
@@ -55,14 +61,18 @@ class TestKodiClient:
         client = KodiClient("localhost", 8080, "kodi", "pass")
         rpc_result = {
             "musicvideos": [
-                {"musicvideoid": 10,
-                 "file": "smb://HYPERV/Data/Concerts/Artist/video1.mkv",
-                 "art": {"poster": "image://poster1/"},
-                 "label": "v1"},
-                {"musicvideoid": 20,
-                 "file": "smb://HYPERV/Data/Concerts/Artist/video2.mkv",
-                 "art": {},
-                 "label": "v2"},
+                {
+                    "musicvideoid": 10,
+                    "file": "smb://HYPERV/Data/Concerts/Artist/video1.mkv",
+                    "art": {"poster": "image://poster1/"},
+                    "label": "v1",
+                },
+                {
+                    "musicvideoid": 20,
+                    "file": "smb://HYPERV/Data/Concerts/Artist/video2.mkv",
+                    "art": {},
+                    "label": "v2",
+                },
             ],
         }
 
@@ -71,7 +81,9 @@ class TestKodiClient:
 
         assert len(mapping) == 2
         assert mapping["smb://HYPERV/Data/Concerts/Artist/video1.mkv"]["id"] == 10
-        assert mapping["smb://HYPERV/Data/Concerts/Artist/video1.mkv"]["art"] == {"poster": "image://poster1/"}
+        assert mapping["smb://HYPERV/Data/Concerts/Artist/video1.mkv"]["art"] == {
+            "poster": "image://poster1/"
+        }
         assert mapping["smb://HYPERV/Data/Concerts/Artist/video2.mkv"]["id"] == 20
 
     def test_get_music_videos_empty_library(self):
@@ -105,9 +117,13 @@ class TestKodiClient:
         with patch.object(client, "_call", return_value="OK") as mock_call:
             client.remove_texture(101)
 
-        mock_call.assert_called_once_with("Textures.RemoveTexture", {
-            "textureid": 101,
-        }, quiet=True)
+        mock_call.assert_called_once_with(
+            "Textures.RemoveTexture",
+            {
+                "textureid": 101,
+            },
+            quiet=True,
+        )
 
     def test_refresh_music_video_calls_rpc(self):
         client = KodiClient("localhost", 8080, "kodi", "pass")
@@ -115,10 +131,13 @@ class TestKodiClient:
         with patch.object(client, "_call", return_value="OK") as mock_call:
             client.refresh_music_video(42)
 
-        mock_call.assert_called_once_with("VideoLibrary.RefreshMusicVideo", {
-            "musicvideoid": 42,
-            "ignorenfo": False,
-        })
+        mock_call.assert_called_once_with(
+            "VideoLibrary.RefreshMusicVideo",
+            {
+                "musicvideoid": 42,
+                "ignorenfo": False,
+            },
+        )
 
     def test_clean_calls_rpc(self):
         client = KodiClient("localhost", 8080, "kodi", "pass")
@@ -126,14 +145,16 @@ class TestKodiClient:
         with patch.object(client, "_call", return_value="OK") as mock_call:
             client.clean()
 
-        mock_call.assert_called_once_with("VideoLibrary.Clean", {
-            "content": "musicvideos",
-            "showdialogs": False,
-        })
+        mock_call.assert_called_once_with(
+            "VideoLibrary.Clean",
+            {
+                "content": "musicvideos",
+                "showdialogs": False,
+            },
+        )
 
 
 class TestInferPathMapping:
-
     def test_infers_mapping_from_matching_filename(self, tmp_path):
         """Auto-detects prefix pair from a file that exists in both local and Kodi."""
         video = tmp_path / "Concerts" / "ALOK" / "2025 - TML - ALOK.mkv"
@@ -141,7 +162,10 @@ class TestInferPathMapping:
         video.touch()
 
         kodi_videos = {
-            "smb://HYPERV/Data/Concerts/ALOK/2025 - TML - ALOK.mkv": {"id": 10, "art": {}},
+            "smb://HYPERV/Data/Concerts/ALOK/2025 - TML - ALOK.mkv": {
+                "id": 10,
+                "art": {},
+            },
         }
 
         result = _infer_path_mapping([video], kodi_videos)
@@ -170,7 +194,9 @@ class TestInferPathMapping:
         video = tmp_path / "unique_file.mkv"
         video.touch()
 
-        result = _infer_path_mapping([video], {"smb://X/other.mkv": {"id": 1, "art": {}}})
+        result = _infer_path_mapping(
+            [video], {"smb://X/other.mkv": {"id": 1, "art": {}}}
+        )
         assert result is None
 
     def test_returns_none_for_empty_inputs(self):
@@ -179,7 +205,6 @@ class TestInferPathMapping:
 
 
 class TestTranslatePath:
-
     def test_translates_local_to_kodi(self, tmp_path):
         video = tmp_path / "ALOK" / "video.mkv"
         video.parent.mkdir()
@@ -228,7 +253,6 @@ class TestTranslatePath:
 
 
 class TestSyncLibrary:
-
     def _make_client(self, kodi_files: dict[str, dict]):
         """Create a mock KodiClient with given file->entry mapping."""
         client = MagicMock(spec=KodiClient)
@@ -285,7 +309,9 @@ class TestSyncLibrary:
         console = MagicMock()
 
         sync_library(
-            client, [video], console,
+            client,
+            [video],
+            console,
             path_mapping={"local": str(tmp_path), "kodi": "smb://HOST/share"},
             suppressed=True,
         )
@@ -313,6 +339,7 @@ class TestSyncLibrary:
         console = MagicMock()
 
         import logging
+
         with caplog.at_level(logging.WARNING, logger="festival_organizer.kodi"):
             sync_library(client, [video], console, suppressed=True)
 
@@ -374,7 +401,9 @@ class TestSyncLibrary:
 
         art = {"poster": "image://poster.jpg/", "fanart": "image://fanart.jpg/"}
         client = self._make_client({"smb://HOST/video.mkv": self._entry(1, art)})
-        client.get_textures.return_value = [{"textureid": 99, "url": "image://poster.jpg/"}]
+        client.get_textures.return_value = [
+            {"textureid": 99, "url": "image://poster.jpg/"}
+        ]
         console = MagicMock()
 
         call_order = []
@@ -409,15 +438,20 @@ class TestSyncLibrary:
         art_changed.touch()
 
         art = {"poster": "image://poster.jpg/"}
-        client = self._make_client({
-            "smb://HOST/nfo_only.mkv": self._entry(1, art),
-            "smb://HOST/art_changed.mkv": self._entry(2, art),
-        })
+        client = self._make_client(
+            {
+                "smb://HOST/nfo_only.mkv": self._entry(1, art),
+                "smb://HOST/art_changed.mkv": self._entry(2, art),
+            }
+        )
         client.get_textures.return_value = [{"textureid": 50}]
         console = MagicMock()
 
         sync_library(
-            client, [nfo_only, art_changed], console, suppressed=True,
+            client,
+            [nfo_only, art_changed],
+            console,
+            suppressed=True,
             art_changed_paths={art_changed},
         )
 
@@ -433,22 +467,26 @@ class TestSyncLibrary:
         video.touch()
         (festival_dir / "folder.jpg").touch()
 
-        client = self._make_client({
-            "smb://HOST/Festivals/Tomorrowland/video.mkv": self._entry(1),
-        })
+        client = self._make_client(
+            {
+                "smb://HOST/Festivals/Tomorrowland/video.mkv": self._entry(1),
+            }
+        )
         client.get_textures.return_value = [{"textureid": 200}]
         console = MagicMock()
 
         sync_library(
-            client, [video], console, suppressed=True,
+            client,
+            [video],
+            console,
+            suppressed=True,
             path_mapping={"local": str(tmp_path), "kodi": "smb://HOST"},
             album_poster_folders={festival_dir},
         )
 
         # Should have queried for folder.jpg texture
         folder_jpg_calls = [
-            c for c in client.get_textures.call_args_list
-            if "folder.jpg" in str(c)
+            c for c in client.get_textures.call_args_list if "folder.jpg" in str(c)
         ]
         assert len(folder_jpg_calls) == 1
         client.remove_texture.assert_called_with(200)

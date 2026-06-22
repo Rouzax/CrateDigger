@@ -5,6 +5,7 @@ collapse with the field when empty.  ``{field}`` is a required field (uses
 fallback when empty), while ``{[stage]}`` or ``{ - set_title}`` are optional
 decorated fields that vanish entirely when the field is empty.
 """
+
 import re
 
 from festival_organizer.config import Config
@@ -12,16 +13,26 @@ from festival_organizer.models import MediaFile
 from festival_organizer.normalization import safe_filename
 
 # All known placeholder field names used in templates.
-_KNOWN_FIELDS = frozenset({
-    "artist", "place", "year", "date",
-    "edition", "stage", "set_title", "title",
-})
+_KNOWN_FIELDS = frozenset(
+    {
+        "artist",
+        "place",
+        "year",
+        "date",
+        "edition",
+        "stage",
+        "set_title",
+        "title",
+    }
+)
 
 # Regex that matches a single ``{...}`` token (non-greedy).
 _TOKEN_RE = re.compile(r"\{([^}]+)\}")
 
 
-def render_folder(media_file: MediaFile, config: Config, layout_name: str | None = None) -> str:
+def render_folder(
+    media_file: MediaFile, config: Config, layout_name: str | None = None
+) -> str:
     """Render the folder path for a media file using the configured layout template.
 
     Returns a relative path string like "Artist/Festival/2024".
@@ -55,10 +66,7 @@ def render_filename(media_file: MediaFile, config: Config) -> str:
     rendered = _render(template, values, config.fallback_values)
 
     # If the rendered name is mostly fallback values, keep the original
-    fallbacks_used = sum(
-        1 for v in config.fallback_values.values()
-        if v in rendered
-    )
+    fallbacks_used = sum(1 for v in config.fallback_values.values() if v in rendered)
     if fallbacks_used >= 2:
         return media_file.source_path.name
 
@@ -70,7 +78,9 @@ def render_filename(media_file: MediaFile, config: Config) -> str:
     return rendered + ext
 
 
-def _build_values(media_file: MediaFile, config: Config, *, for_filename: bool = False) -> dict[str, str]:
+def _build_values(
+    media_file: MediaFile, config: Config, *, for_filename: bool = False
+) -> dict[str, str]:
     """Build the substitution values dict for a media file."""
     place = media_file.place
 
@@ -115,7 +125,7 @@ def _parse_token(content: str) -> tuple[str, str, str]:
         idx = content.find(field)
         if idx != -1:
             prefix = content[:idx]
-            suffix = content[idx + len(field):]
+            suffix = content[idx + len(field) :]
             return prefix, field, suffix
     return "", content, ""
 
@@ -133,7 +143,7 @@ def _render(template: str, values: dict[str, str], fallbacks: dict[str, str]) ->
 
     for m in _TOKEN_RE.finditer(template):
         # Text between the previous token and this one
-        parts.append(template[last_end:m.start()])
+        parts.append(template[last_end : m.start()])
         last_end = m.end()
 
         content = m.group(1)

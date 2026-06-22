@@ -6,6 +6,7 @@ Logging:
         - setup (DEBUG): Logger configured with level and handler
     See docs/logging.md for full guidelines.
 """
+
 from __future__ import annotations
 
 import logging
@@ -95,7 +96,9 @@ def setup_logging(
             pass
     logger.handlers.clear()
 
-    console_level = logging.DEBUG if debug else logging.INFO if verbose else logging.WARNING
+    console_level = (
+        logging.DEBUG if debug else logging.INFO if verbose else logging.WARNING
+    )
     env_level = os.environ.get("CRATEDIGGER_LOG_LEVEL", "").strip().upper()
     if env_level:
         numeric = getattr(logging, env_level, None)
@@ -151,9 +154,9 @@ def setup_logging(
         )
         file_handler.setLevel(logging.DEBUG)
         file_handler.addFilter(_FileAttributionFilter())
-        file_handler.setFormatter(logging.Formatter(
-            "%(asctime)s %(levelname)s %(name)s%(file)s: %(message)s"
-        ))
+        file_handler.setFormatter(
+            logging.Formatter("%(asctime)s %(levelname)s %(name)s%(file)s: %(message)s")
+        )
 
         memory_handler = logging.handlers.MemoryHandler(
             capacity=50,
@@ -165,8 +168,9 @@ def setup_logging(
     except OSError as exc:
         log_path = None
         logger.warning(
-            "log.file_handler: status=disabled dir=%s error=\"%s\"",
-            paths.log_dir(), exc,
+            'log.file_handler: status=disabled dir=%s error="%s"',
+            paths.log_dir(),
+            exc,
         )
 
     return log_path

@@ -1,4 +1,5 @@
 """Tests for tracklist search result scoring."""
+
 from festival_organizer.tracklists.scoring import (
     AliasGroup,
     parse_query,
@@ -12,6 +13,7 @@ from festival_organizer.tracklists.scoring import (
 
 # --- remove_diacritics ---
 
+
 def test_remove_diacritics_basic():
     assert remove_diacritics("Tiësto") == "Tiesto"
     assert remove_diacritics("Château") == "Chateau"
@@ -23,6 +25,7 @@ def test_remove_diacritics_no_change():
 
 
 # --- get_abbreviation ---
+
 
 def test_get_abbreviation_basic():
     assert get_abbreviation("Amsterdam Music Festival") == "AMF"
@@ -38,6 +41,7 @@ def test_get_abbreviation_lowercase():
 
 
 # --- parse_query ---
+
 
 def test_parse_query_basic():
     aliases = {"amf": "Amsterdam Music Festival"}
@@ -165,10 +169,13 @@ def test_parse_query_mixed_case_known_alias_stays_abbreviation():
 
 # --- parse_query alias groups ---
 
+
 def test_parse_query_detects_alias_group_from_expansion():
     """Expanded 'Electric Daisy Carnival' should become an alias group, not 3 keywords."""
     aliases = {"edc": "Electric Daisy Carnival"}
-    parts = parse_query("ZEDD @ Electric Daisy Carnival Las Vegas 2026 kineticFIELD 2K", aliases)
+    parts = parse_query(
+        "ZEDD @ Electric Daisy Carnival Las Vegas 2026 kineticFIELD 2K", aliases
+    )
     assert parts.year == "2026"
     assert len(parts.alias_groups) == 1
     assert parts.alias_groups[0].abbreviation == "edc"
@@ -229,9 +236,12 @@ def test_parse_query_alias_group_longest_match_first():
 
 # --- score_results ---
 
+
 def test_score_keywords_proportional():
     results = [
-        SearchResult(id="1", title="Sub Zero Project @ Amsterdam Music Festival 2025", url=""),
+        SearchResult(
+            id="1", title="Sub Zero Project @ Amsterdam Music Festival 2025", url=""
+        ),
         SearchResult(id="2", title="Random Artist @ Other Event", url=""),
     ]
     parts = parse_query("Sub Zero Project", {})
@@ -245,11 +255,21 @@ def test_score_keywords_proportional():
 def test_score_all_keywords_good_duration_reaches_plus():
     """All keywords matched + duration within 5m + year match should score 250+."""
     results = [
-        SearchResult(id="1", title="Swedish House Mafia @ Creamfields 2025", url="", duration_mins=63, date="2025-07-25"),
+        SearchResult(
+            id="1",
+            title="Swedish House Mafia @ Creamfields 2025",
+            url="",
+            duration_mins=63,
+            date="2025-07-25",
+        ),
     ]
-    parts = QueryParts(keywords=["swedish", "house", "mafia", "creamfields"], year="2025")
+    parts = QueryParts(
+        keywords=["swedish", "house", "mafia", "creamfields"], year="2025"
+    )
     scored = score_results(results, parts, video_duration_minutes=60)
-    assert scored[0].score >= 250, f"Perfect match with good duration should reach '+' (got {scored[0].score:.0f})"
+    assert scored[0].score >= 250, (
+        f"Perfect match with good duration should reach '+' (got {scored[0].score:.0f})"
+    )
 
 
 def test_score_abbreviation_direct():
@@ -321,15 +341,22 @@ def test_score_event_pattern_correct_weekend():
     results = [
         SearchResult(id="1", title="Artist @ Tomorrowland Weekend 1 2025", url=""),
     ]
-    parts = QueryParts(keywords=["artist"], event_patterns=[{"type": "Weekend", "number": "1"}])
+    parts = QueryParts(
+        keywords=["artist"], event_patterns=[{"type": "Weekend", "number": "1"}]
+    )
     scored = score_results(results, parts)
     assert scored[0].score > 100  # Gets +40 pattern bonus
 
 
 def test_score_event_pattern_wrong_weekend():
     wrong = [SearchResult(id="1", title="Artist @ Tomorrowland Weekend 2 2025", url="")]
-    correct = [SearchResult(id="2", title="Artist @ Tomorrowland Weekend 1 2025", url="")]
-    parts = QueryParts(keywords=["artist", "tomorrowland"], event_patterns=[{"type": "Weekend", "number": "1"}])
+    correct = [
+        SearchResult(id="2", title="Artist @ Tomorrowland Weekend 1 2025", url="")
+    ]
+    parts = QueryParts(
+        keywords=["artist", "tomorrowland"],
+        event_patterns=[{"type": "Weekend", "number": "1"}],
+    )
     wrong_scored = score_results(wrong, parts)
     correct_scored = score_results(correct, parts)
     assert wrong_scored[0].score < correct_scored[0].score
@@ -361,9 +388,27 @@ def test_filter_low_relevance_with_event():
 def test_all_caps_query_scores_matching_results():
     """ALL-CAPS query should score and return matching results, not filter all out."""
     results = [
-        SearchResult(id="1", title="AFROJACK @ Mainstage, Ultra Music Festival Miami, United States", url="", duration_mins=60, date="2026-03-29"),
-        SearchResult(id="2", title="ZHU @ Live Stage, Ultra Music Festival Miami, United States", url="", duration_mins=58, date="2026-03-29"),
-        SearchResult(id="3", title="Random DJ - Radio Show 123", url="", duration_mins=60, date="2026-01-01"),
+        SearchResult(
+            id="1",
+            title="AFROJACK @ Mainstage, Ultra Music Festival Miami, United States",
+            url="",
+            duration_mins=60,
+            date="2026-03-29",
+        ),
+        SearchResult(
+            id="2",
+            title="ZHU @ Live Stage, Ultra Music Festival Miami, United States",
+            url="",
+            duration_mins=58,
+            date="2026-03-29",
+        ),
+        SearchResult(
+            id="3",
+            title="Random DJ - Radio Show 123",
+            url="",
+            duration_mins=60,
+            date="2026-01-01",
+        ),
     ]
     aliases = {"umf": "Ultra Music Festival"}
     parts = parse_query("AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026", aliases)
@@ -377,7 +422,9 @@ def test_all_caps_query_scores_matching_results():
 def test_mixed_case_with_alias_still_filters_correctly():
     """Regression: mixed-case queries with aliases should keep strict filtering."""
     results = [
-        SearchResult(id="1", title="Sub Zero Project @ Amsterdam Music Festival 2025", url=""),
+        SearchResult(
+            id="1", title="Sub Zero Project @ Amsterdam Music Festival 2025", url=""
+        ),
         SearchResult(id="2", title="Sub Random Other Track 2025", url=""),
     ]
     aliases = {"amf": "Amsterdam Music Festival"}
@@ -394,7 +441,9 @@ def test_mixed_case_with_alias_still_filters_correctly():
 
 def test_duration_multiplier_never_penalizes():
     """Duration multiplier should never go below 1.0 (no penalty for mismatch)."""
-    result = SearchResult(id="test", title="Test Set @ Festival", url="/test/", duration_mins=30)
+    result = SearchResult(
+        id="test", title="Test Set @ Festival", url="/test/", duration_mins=30
+    )
     query_parts = QueryParts(keywords=["test", "festival"])
 
     # Score with large duration mismatch (video=120min, result=30min)
@@ -402,7 +451,9 @@ def test_duration_multiplier_never_penalizes():
     score_with_mismatch = result.score
 
     # Score with no duration info
-    result2 = SearchResult(id="test2", title="Test Set @ Festival", url="/test2/", duration_mins=None)
+    result2 = SearchResult(
+        id="test2", title="Test Set @ Festival", url="/test2/", duration_mins=None
+    )
     score_results([result2], query_parts, video_duration_minutes=120)
     score_no_duration = result2.score
 
@@ -413,13 +464,27 @@ def test_duration_multiplier_never_penalizes():
 def test_all_match_bonus_beats_partial_with_close_duration():
     """A result matching all keywords should outscore a partial match with closer duration."""
     # Simulates Eric Prydz (all 4 kw, 118min) vs Adriatique (2/4 kw, 91min) with 90min video
-    full_match = SearchResult(id="full", title="Eric Prydz @ Resistance Megastructure, Ultra Music Festival", url="/f/", duration_mins=118)
-    partial_match = SearchResult(id="partial", title="Adriatique @ Resistance Megastructure, Ultra Music Festival", url="/p/", duration_mins=91)
+    full_match = SearchResult(
+        id="full",
+        title="Eric Prydz @ Resistance Megastructure, Ultra Music Festival",
+        url="/f/",
+        duration_mins=118,
+    )
+    partial_match = SearchResult(
+        id="partial",
+        title="Adriatique @ Resistance Megastructure, Ultra Music Festival",
+        url="/p/",
+        duration_mins=91,
+    )
 
     query_parts = QueryParts(keywords=["eric", "prydz", "resistance", "megastructure"])
-    results = score_results([full_match, partial_match], query_parts, video_duration_minutes=90)
+    results = score_results(
+        [full_match, partial_match], query_parts, video_duration_minutes=90
+    )
 
-    assert results[0].id == "full", "Full keyword match should rank higher despite worse duration"
+    assert results[0].id == "full", (
+        "Full keyword match should rank higher despite worse duration"
+    )
 
 
 def test_multi_word_event_pattern():
@@ -431,12 +496,23 @@ def test_multi_word_event_pattern():
 
 # --- alias group scoring ---
 
+
 def test_score_alias_group_matches_abbreviation_in_title():
     """Alias group should match when title contains the abbreviation."""
-    result = SearchResult(id="1", title="Zedd @ kineticFIELD, EDC Las Vegas", url="", duration_mins=68, date="2026-05-17")
+    result = SearchResult(
+        id="1",
+        title="Zedd @ kineticFIELD, EDC Las Vegas",
+        url="",
+        duration_mins=68,
+        date="2026-05-17",
+    )
     parts = QueryParts(
         keywords=["zedd", "las", "vegas", "kineticfield"],
-        alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
+        alias_groups=[
+            AliasGroup(
+                "edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"]
+            )
+        ],
         year="2026",
     )
     scored = score_results([result], parts, video_duration_minutes=67)
@@ -446,10 +522,16 @@ def test_score_alias_group_matches_abbreviation_in_title():
 
 def test_score_alias_group_matches_full_name_in_title():
     """Alias group should match when title contains the full name."""
-    result = SearchResult(id="1", title="Zedd @ kineticFIELD, Electric Daisy Carnival Las Vegas", url="")
+    result = SearchResult(
+        id="1", title="Zedd @ kineticFIELD, Electric Daisy Carnival Las Vegas", url=""
+    )
     parts = QueryParts(
         keywords=["zedd", "las", "vegas", "kineticfield"],
-        alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
+        alias_groups=[
+            AliasGroup(
+                "edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"]
+            )
+        ],
     )
     scored = score_results([result], parts)
     assert scored[0].has_event_match is True
@@ -461,27 +543,51 @@ def test_score_alias_group_no_match():
     result = SearchResult(id="1", title="Zedd @ Tomorrowland Mainstage", url="")
     parts = QueryParts(
         keywords=["zedd", "tomorrowland"],
-        alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
+        alias_groups=[
+            AliasGroup(
+                "edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"]
+            )
+        ],
     )
     scored = score_results([result], parts)
     assert scored[0].has_event_match is False
-    assert scored[0].matched_keyword_count == 2  # "zedd" + "tomorrowland", no alias contribution
+    assert (
+        scored[0].matched_keyword_count == 2
+    )  # "zedd" + "tomorrowland", no alias contribution
 
 
 def test_score_alias_group_triggers_all_keywords_bonus():
     """When all regular keywords AND alias group match, the all-keywords bonus should trigger."""
-    all_match = SearchResult(id="full", title="Zedd @ kineticFIELD, EDC Las Vegas, United States", url="", duration_mins=68)
-    partial_match = SearchResult(id="partial", title="Hardwell @ kineticFIELD, EDC Las Vegas, United States", url="", duration_mins=68)
+    all_match = SearchResult(
+        id="full",
+        title="Zedd @ kineticFIELD, EDC Las Vegas, United States",
+        url="",
+        duration_mins=68,
+    )
+    partial_match = SearchResult(
+        id="partial",
+        title="Hardwell @ kineticFIELD, EDC Las Vegas, United States",
+        url="",
+        duration_mins=68,
+    )
 
     parts = QueryParts(
         keywords=["zedd", "las", "vegas", "kineticfield"],
-        alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
+        alias_groups=[
+            AliasGroup(
+                "edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"]
+            )
+        ],
     )
     scored = score_results([all_match, partial_match], parts, video_duration_minutes=67)
 
     assert scored[0].id == "full"
-    assert scored[0].matched_keyword_count == 7  # all keywords + alias = all-match bonus
-    assert scored[1].matched_keyword_count == 6  # 3 regular + 3 alias = no all-match bonus
+    assert (
+        scored[0].matched_keyword_count == 7
+    )  # all keywords + alias = all-match bonus
+    assert (
+        scored[1].matched_keyword_count == 6
+    )  # 3 regular + 3 alias = no all-match bonus
     assert scored[0].score > scored[1].score + 50  # decisive gap from +80 bonus
 
 
@@ -497,46 +603,80 @@ def test_zedd_outscores_hardwell_with_expanded_edc():
     parts = parse_query(query, aliases)
 
     results = [
-        SearchResult(id="hardwell", title="Hardwell @ kineticFIELD, EDC Las Vegas, United States", url="", duration_mins=68, date="2026-05-16"),
-        SearchResult(id="zedd", title="Zedd @ kineticFIELD, EDC Las Vegas, United States", url="", duration_mins=68, date="2026-05-17"),
+        SearchResult(
+            id="hardwell",
+            title="Hardwell @ kineticFIELD, EDC Las Vegas, United States",
+            url="",
+            duration_mins=68,
+            date="2026-05-16",
+        ),
+        SearchResult(
+            id="zedd",
+            title="Zedd @ kineticFIELD, EDC Las Vegas, United States",
+            url="",
+            duration_mins=68,
+            date="2026-05-17",
+        ),
     ]
 
     scored = score_results(results, parts, video_duration_minutes=67)
-    assert scored[0].id == "zedd", f"Zedd should rank #1 but got {scored[0].id} (scores: {scored[0].score:.0f} vs {scored[1].score:.0f})"
+    assert scored[0].id == "zedd", (
+        f"Zedd should rank #1 but got {scored[0].id} (scores: {scored[0].score:.0f} vs {scored[1].score:.0f})"
+    )
     assert scored[0].score > scored[1].score + 20, "Zedd should have a decisive lead"
 
 
 def test_filter_with_alias_group_event_context():
     """Alias groups should enable has_event_context, filtering low-relevance results."""
     results = [
-        SearchResult(id="1", title="Zedd @ kineticFIELD, EDC Las Vegas, United States", url=""),
+        SearchResult(
+            id="1", title="Zedd @ kineticFIELD, EDC Las Vegas, United States", url=""
+        ),
         SearchResult(id="2", title="Random Vegas DJ Mix 2026", url=""),
     ]
     parts = QueryParts(
         keywords=["zedd", "las", "vegas", "kineticfield"],
-        alias_groups=[AliasGroup("edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"])],
+        alias_groups=[
+            AliasGroup(
+                "edc", "Electric Daisy Carnival", ["electric", "daisy", "carnival"]
+            )
+        ],
     )
     scored = score_results(results, parts)
     result_ids = [r.id for r in scored]
     assert "1" in result_ids
     # Result 2 matches only "vegas" (1 keyword) with no event match
     # With has_event_context from alias_groups, it should be filtered
-    assert "2" not in result_ids, "Low-relevance result should be filtered with alias group event context"
+    assert "2" not in result_ids, (
+        "Low-relevance result should be filtered with alias group event context"
+    )
 
 
 def test_auto_select_threshold_separates_good_from_bad():
     """Auto-select requires both minimum score AND minimum gap to #2."""
-    from festival_organizer.tracklists.cli_handler import AUTO_SELECT_MIN_SCORE, AUTO_SELECT_MIN_GAP
+    from festival_organizer.tracklists.cli_handler import (
+        AUTO_SELECT_MIN_SCORE,
+        AUTO_SELECT_MIN_GAP,
+    )
 
-    strong = SearchResult(id="s", title="Hardwell @ Mainstage, Tomorrowland Weekend 2", url="/s/", duration_mins=90)
-    partial = SearchResult(id="p", title="Hardwell @ Some Other Festival", url="/p/", duration_mins=90)
+    strong = SearchResult(
+        id="s",
+        title="Hardwell @ Mainstage, Tomorrowland Weekend 2",
+        url="/s/",
+        duration_mins=90,
+    )
+    partial = SearchResult(
+        id="p", title="Hardwell @ Some Other Festival", url="/p/", duration_mins=90
+    )
 
     query_parts = QueryParts(keywords=["hardwell", "tomorrowland", "mainstage"])
     query_parts.event_patterns = [{"type": "Weekend", "number": "2"}]
 
     scored = score_results([strong, partial], query_parts, video_duration_minutes=90)
 
-    assert scored[0].score >= AUTO_SELECT_MIN_SCORE, f"Strong match ({scored[0].score:.0f}) should pass score threshold"
+    assert scored[0].score >= AUTO_SELECT_MIN_SCORE, (
+        f"Strong match ({scored[0].score:.0f}) should pass score threshold"
+    )
     gap = scored[0].score - scored[1].score
     assert gap >= AUTO_SELECT_MIN_GAP, f"Gap ({gap:.0f}) should pass gap threshold"
 
@@ -546,14 +686,28 @@ def test_auto_select_rejects_narrow_gap():
     from festival_organizer.tracklists.cli_handler import AUTO_SELECT_MIN_GAP
 
     # Two results with near-identical scores (same keywords match both)
-    r1 = SearchResult(id="r1", title="AFROJACK @ Mainstage, Ultra Music Festival Miami", url="/1/", duration_mins=60)
-    r2 = SearchResult(id="r2", title="Martin Garrix & Alesso @ Mainstage, Ultra Music Festival Miami", url="/2/", duration_mins=60)
+    r1 = SearchResult(
+        id="r1",
+        title="AFROJACK @ Mainstage, Ultra Music Festival Miami",
+        url="/1/",
+        duration_mins=60,
+    )
+    r2 = SearchResult(
+        id="r2",
+        title="Martin Garrix & Alesso @ Mainstage, Ultra Music Festival Miami",
+        url="/2/",
+        duration_mins=60,
+    )
 
-    query_parts = QueryParts(keywords=["ultra", "music", "festival", "miami", "mainstage"])
+    query_parts = QueryParts(
+        keywords=["ultra", "music", "festival", "miami", "mainstage"]
+    )
     scored = score_results([r1, r2], query_parts, video_duration_minutes=60)
 
     gap = scored[0].score - scored[1].score
-    assert gap < AUTO_SELECT_MIN_GAP, f"Near-identical results should have gap ({gap:.0f}) below threshold"
+    assert gap < AUTO_SELECT_MIN_GAP, (
+        f"Near-identical results should have gap ({gap:.0f}) below threshold"
+    )
 
 
 def test_dj_cache_does_not_distort_ranking():
@@ -568,12 +722,18 @@ def test_dj_cache_does_not_distort_ranking():
         {"edc": "Electric Daisy Carnival"},
     )
     correct = SearchResult(
-        id="cg", title="Cosmic Gate @ quantumVALLEY, EDC Las Vegas, United States",
-        url="/t/", duration_mins=59, date="2026-05-15",
+        id="cg",
+        title="Cosmic Gate @ quantumVALLEY, EDC Las Vegas, United States",
+        url="/t/",
+        duration_mins=59,
+        date="2026-05-15",
     )
     wrong = SearchResult(
-        id="pg", title="Peggy Gou & KI/KI @ circuitGROUNDS, EDC Las Vegas, United States",
-        url="/t/", duration_mins=60, date="2026-05-16",
+        id="pg",
+        title="Peggy Gou & KI/KI @ circuitGROUNDS, EDC Las Vegas, United States",
+        url="/t/",
+        duration_mins=60,
+        date="2026-05-16",
     )
     scored = score_results([wrong, correct], parts, video_duration_minutes=59)
     assert scored[0].id == "cg"

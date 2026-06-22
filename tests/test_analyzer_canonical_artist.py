@@ -9,6 +9,7 @@ DjCache.canonical_name(slug). When the 1001TL slug list is present, the
 analyzer must derive both the primary artist and the artists list from those
 canonical names instead of from the truncation-prone display tag.
 """
+
 import json
 from pathlib import Path
 from unittest.mock import patch

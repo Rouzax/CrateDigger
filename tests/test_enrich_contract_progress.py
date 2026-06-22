@@ -1,4 +1,5 @@
 """Tests for enrich contract progress helpers and class."""
+
 import io
 from pathlib import Path
 
@@ -58,14 +59,18 @@ class TestEnrichDetail:
             OperationResult("nfo", "done"),
             OperationResult("chapter_artist_mbids", "skipped", "run identify"),
         ]
-        assert _enrich_detail(results) == "nfo; chapter_artist_mbids skipped: run identify"
+        assert (
+            _enrich_detail(results) == "nfo; chapter_artist_mbids skipped: run identify"
+        )
 
     def test_all_error(self):
         results = [
             OperationResult("nfo", "error", "write failed"),
             OperationResult("art", "error", "no source"),
         ]
-        assert _enrich_detail(results) == "nfo error: write failed; art error: no source"
+        assert (
+            _enrich_detail(results) == "nfo error: write failed; art error: no source"
+        )
 
     def test_all_skipped_with_actionable_reason(self):
         """All skipped but with non-trivial reasons."""
@@ -80,6 +85,7 @@ class TestEnrichDetail:
 class TestEnrichContractFileDone:
     def test_emits_two_line_verdict(self):
         from festival_organizer.progress import EnrichContractProgress
+
         con = _console()
         p = EnrichContractProgress(total=1, console=con, quiet=False, verbose=False)
         results = [
@@ -99,6 +105,7 @@ class TestEnrichContractFileDone:
 
     def test_all_skipped_shows_up_to_date_compact(self):
         from festival_organizer.progress import EnrichContractProgress
+
         con = _console()
         p = EnrichContractProgress(total=1, console=con, quiet=False, verbose=False)
         results = [
@@ -114,6 +121,7 @@ class TestEnrichContractFileDone:
 
     def test_error_badge_with_mixed(self):
         from festival_organizer.progress import EnrichContractProgress
+
         con = _console()
         p = EnrichContractProgress(total=1, console=con, quiet=False, verbose=False)
         results = [
@@ -128,6 +136,7 @@ class TestEnrichContractFileDone:
 
     def test_quiet_suppresses(self):
         from festival_organizer.progress import EnrichContractProgress
+
         con = _console()
         p = EnrichContractProgress(total=1, console=con, quiet=True, verbose=False)
         results = [OperationResult("nfo", "done")]
@@ -136,6 +145,7 @@ class TestEnrichContractFileDone:
 
     def test_verbose_shows_per_op_breakdown(self):
         from festival_organizer.progress import EnrichContractProgress
+
         con = _console()
         p = EnrichContractProgress(total=1, console=con, quiet=False, verbose=True)
         results = [
@@ -151,37 +161,59 @@ class TestEnrichContractFileDone:
 
     def test_stats_tracking(self):
         from festival_organizer.progress import EnrichContractProgress
+
         con = _console()
         p = EnrichContractProgress(total=3, console=con, quiet=True, verbose=False)
-        p.file_done(source=Path("/lib/a.mkv"),
-                     results=[OperationResult("nfo", "done")], elapsed_s=0.1)
-        p.file_done(source=Path("/lib/b.mkv"),
-                     results=[OperationResult("nfo", "done")], elapsed_s=0.1)
-        p.file_done(source=Path("/lib/c.mkv"),
-                     results=[OperationResult("nfo", "skipped", "exists")], elapsed_s=0.1)
+        p.file_done(
+            source=Path("/lib/a.mkv"),
+            results=[OperationResult("nfo", "done")],
+            elapsed_s=0.1,
+        )
+        p.file_done(
+            source=Path("/lib/b.mkv"),
+            results=[OperationResult("nfo", "done")],
+            elapsed_s=0.1,
+        )
+        p.file_done(
+            source=Path("/lib/c.mkv"),
+            results=[OperationResult("nfo", "skipped", "exists")],
+            elapsed_s=0.1,
+        )
         assert p._file_stats["done"] == 2
         assert p._file_stats["up_to_date"] == 1
 
     def test_error_tracking(self):
         from festival_organizer.progress import EnrichContractProgress
+
         con = _console()
         p = EnrichContractProgress(total=1, console=con, quiet=True, verbose=False)
-        p.file_done(source=Path("/lib/a.mkv"),
-                     results=[OperationResult("posters", "error", "no thumb")], elapsed_s=0.1)
+        p.file_done(
+            source=Path("/lib/a.mkv"),
+            results=[OperationResult("posters", "error", "no thumb")],
+            elapsed_s=0.1,
+        )
         assert p._file_stats["error"] == 1
         assert len(p._errors) == 1
         assert p._errors[0] == ("a.mkv", "posters", "no thumb")
 
     def test_op_counts_tracking(self):
         from festival_organizer.progress import EnrichContractProgress
+
         con = _console()
         p = EnrichContractProgress(total=2, console=con, quiet=True, verbose=False)
-        p.file_done(source=Path("/lib/a.mkv"),
-                     results=[OperationResult("nfo", "done"), OperationResult("art", "done")],
-                     elapsed_s=0.1)
-        p.file_done(source=Path("/lib/b.mkv"),
-                     results=[OperationResult("nfo", "skipped", "exists"), OperationResult("art", "done")],
-                     elapsed_s=0.1)
+        p.file_done(
+            source=Path("/lib/a.mkv"),
+            results=[OperationResult("nfo", "done"), OperationResult("art", "done")],
+            elapsed_s=0.1,
+        )
+        p.file_done(
+            source=Path("/lib/b.mkv"),
+            results=[
+                OperationResult("nfo", "skipped", "exists"),
+                OperationResult("art", "done"),
+            ],
+            elapsed_s=0.1,
+        )
         assert p._op_counts["nfo"]["done"] == 1
         assert p._op_counts["nfo"]["skipped"] == 1
         assert p._op_counts["art"]["done"] == 2

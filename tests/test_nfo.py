@@ -12,8 +12,14 @@ def _parse_nfo(nfo_path: Path) -> ET.Element:
 
 def test_nfo_uses_premiered_not_year(tmp_path):
     """premiered field present, year tag absent (deprecated in Kodi v20)."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test", year="2024",
-                   date="2024-07-21", content_type="festival_set", festival="TML")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        year="2024",
+        date="2024-07-21",
+        content_type="festival_set",
+        festival="TML",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -24,9 +30,13 @@ def test_nfo_uses_premiered_not_year(tmp_path):
 
 def test_nfo_album_is_festival_plus_year(tmp_path):
     """album = festival + year for Kodi grouping."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   festival="Tomorrowland", year="2024",
-                   content_type="festival_set")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="Tomorrowland",
+        year="2024",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -35,9 +45,13 @@ def test_nfo_album_is_festival_plus_year(tmp_path):
 
 def test_nfo_title_artist_at_festival_when_no_stage(tmp_path):
     """title = 'Artist @ Festival' when no stage available for festival sets."""
-    mf = make_mediafile(source_path=Path("2024 - TML - Artist.mkv"), artist="Martin Garrix",
-                   festival="Tomorrowland", year="2024",
-                   content_type="festival_set")
+    mf = make_mediafile(
+        source_path=Path("2024 - TML - Artist.mkv"),
+        artist="Martin Garrix",
+        festival="Tomorrowland",
+        year="2024",
+        content_type="festival_set",
+    )
     video = tmp_path / "2024 - TML - Martin Garrix.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -46,8 +60,12 @@ def test_nfo_title_artist_at_festival_when_no_stage(tmp_path):
 
 def test_nfo_title_is_title_for_concerts(tmp_path):
     """title = descriptive title for concert films."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Adele",
-                   title="Live at Hyde Park", content_type="concert_film")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Adele",
+        title="Live at Hyde Park",
+        content_type="concert_film",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -56,9 +74,14 @@ def test_nfo_title_is_title_for_concerts(tmp_path):
 
 def test_nfo_tags_for_smart_playlists(tmp_path):
     """tag elements for content type, festival, edition."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   festival="Tomorrowland", edition="Belgium",
-                   year="2024", content_type="festival_set")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="Tomorrowland",
+        edition="Belgium",
+        year="2024",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -70,9 +93,14 @@ def test_nfo_tags_for_smart_playlists(tmp_path):
 
 def test_nfo_studio_is_stage(tmp_path):
     """studio = stage name for festival sets."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   stage="Mainstage", content_type="festival_set",
-                   festival="TML", year="2024")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        stage="Mainstage",
+        content_type="festival_set",
+        festival="TML",
+        year="2024",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -81,8 +109,13 @@ def test_nfo_studio_is_stage(tmp_path):
 
 def test_nfo_dateadded_present(tmp_path):
     """dateadded element is present with ISO format."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   content_type="festival_set", festival="TML", year="2024")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        content_type="festival_set",
+        festival="TML",
+        year="2024",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -93,10 +126,16 @@ def test_nfo_dateadded_present(tmp_path):
 
 def test_nfo_plot_no_tracklist_url(tmp_path):
     """plot should NOT contain 1001Tracklists URL."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   festival="TML", year="2024", content_type="festival_set",
-                   stage="Mainstage", edition="Belgium",
-                   tracklists_url="https://www.1001tracklists.com/tracklist/abc123")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="TML",
+        year="2024",
+        content_type="festival_set",
+        stage="Mainstage",
+        edition="Belgium",
+        tracklists_url="https://www.1001tracklists.com/tracklist/abc123",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -107,8 +146,13 @@ def test_nfo_plot_no_tracklist_url(tmp_path):
 
 def test_nfo_multiple_thumb_aspects(tmp_path):
     """thumb elements for both thumb and poster images."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   content_type="festival_set", festival="TML", year="2024")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        content_type="festival_set",
+        festival="TML",
+        year="2024",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -126,10 +170,18 @@ def test_nfo_multiple_thumb_aspects(tmp_path):
 
 def test_nfo_no_streamdetails(tmp_path):
     """fileinfo/streamdetails should not be present (Kodi overwrites on playback)."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   content_type="festival_set", festival="TML", year="2024",
-                   video_format="HEVC", audio_format="AAC",
-                   width=1920, height=1080, duration_seconds=3600)
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        content_type="festival_set",
+        festival="TML",
+        year="2024",
+        video_format="HEVC",
+        audio_format="AAC",
+        width=1920,
+        height=1080,
+        duration_seconds=3600,
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -138,9 +190,13 @@ def test_nfo_no_streamdetails(tmp_path):
 
 def test_nfo_concert_film(tmp_path):
     """Concert film NFO has correct album and genre."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Coldplay",
-                   title="A Head Full of Dreams", year="2018",
-                   content_type="concert_film")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Coldplay",
+        title="A Head Full of Dreams",
+        year="2018",
+        content_type="concert_film",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -151,9 +207,14 @@ def test_nfo_concert_film(tmp_path):
 
 def test_nfo_title_artist_at_stage_festival(tmp_path):
     """title = 'Artist @ Stage, Festival' for festival sets."""
-    mf = make_mediafile(source_path=Path("test.mkv"), artist="Afrojack",
-                   stage="kineticFIELD", festival="EDC Las Vegas", year="2025",
-                   content_type="festival_set")
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Afrojack",
+        stage="kineticFIELD",
+        festival="EDC Las Vegas",
+        year="2025",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -162,9 +223,15 @@ def test_nfo_title_artist_at_stage_festival(tmp_path):
 
 def test_nfo_title_includes_set_title(tmp_path):
     """title appends set_title (WE1/WE2) to festival name."""
-    mf = make_mediafile(source_path=Path("test.mkv"), artist="Armin van Buuren",
-                   stage="Mainstage", festival="Tomorrowland", year="2025",
-                   set_title="WE2", content_type="festival_set")
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Armin van Buuren",
+        stage="Mainstage",
+        festival="Tomorrowland",
+        year="2025",
+        set_title="WE2",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -173,9 +240,13 @@ def test_nfo_title_includes_set_title(tmp_path):
 
 def test_nfo_title_artist_at_festival_no_stage(tmp_path):
     """title = 'Artist @ Festival' when no stage available."""
-    mf = make_mediafile(source_path=Path("test.mkv"), artist="Martin Garrix",
-                   festival="Red Rocks", year="2025",
-                   content_type="festival_set")
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        festival="Red Rocks",
+        year="2025",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -218,8 +289,12 @@ def test_nfo_title_display_artist_at_festival_no_stage(tmp_path):
 
 def test_nfo_title_no_stage_no_festival(tmp_path):
     """title = bare artist when neither stage nor festival."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Martin Garrix",
-                   year="2025", content_type="festival_set")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        year="2025",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -228,9 +303,14 @@ def test_nfo_title_no_stage_no_festival(tmp_path):
 
 def test_nfo_title_no_stage_with_set_title(tmp_path):
     """set_title appended to festival when no stage."""
-    mf = make_mediafile(source_path=Path("test.mkv"), artist="Agents Of Time",
-                   festival="Tomorrowland", set_title="WE1", year="2025",
-                   content_type="festival_set")
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Agents Of Time",
+        festival="Tomorrowland",
+        set_title="WE1",
+        year="2025",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     root = _parse_nfo(generate_nfo(mf, video, load_config()))
@@ -244,7 +324,8 @@ def test_nfo_multiple_artists_b2b(tmp_path):
         artist="Martin Garrix",
         display_artist="Martin Garrix & Alesso",
         artists=["Martin Garrix", "Alesso"],
-        festival="Red Rocks", year="2025",
+        festival="Red Rocks",
+        year="2025",
         content_type="festival_set",
     )
     video = tmp_path / "test.mkv"
@@ -262,7 +343,8 @@ def test_nfo_single_artist_stays_single(tmp_path):
         source_path=Path("test.mkv"),
         artist="Armin van Buuren",
         artists=["Armin van Buuren"],
-        festival="Tomorrowland", year="2024",
+        festival="Tomorrowland",
+        year="2024",
         content_type="festival_set",
     )
     video = tmp_path / "test.mkv"
@@ -279,7 +361,8 @@ def test_nfo_empty_artists_falls_back(tmp_path):
         source_path=Path("test.mkv"),
         artist="Martin Garrix",
         artists=[],
-        festival="TML", year="2024",
+        festival="TML",
+        year="2024",
         content_type="festival_set",
     )
     video = tmp_path / "test.mkv"
@@ -297,7 +380,8 @@ def test_nfo_artist_tags_present(tmp_path):
         artist="Martin Garrix",
         display_artist="Martin Garrix & Alesso",
         artists=["Martin Garrix", "Alesso"],
-        festival="Red Rocks", year="2025",
+        festival="Red Rocks",
+        year="2025",
         content_type="festival_set",
     )
     video = tmp_path / "test.mkv"
@@ -314,7 +398,8 @@ def test_nfo_artist_tags_deduplicated(tmp_path):
         source_path=Path("test.mkv"),
         artist="Tomorrowland",
         artists=["Tomorrowland"],
-        festival="Tomorrowland", year="2024",
+        festival="Tomorrowland",
+        year="2024",
         content_type="festival_set",
     )
     video = tmp_path / "test.mkv"
@@ -327,17 +412,24 @@ def test_nfo_artist_tags_deduplicated(tmp_path):
 def test_nfo_group_members_as_tags(tmp_path):
     """Group members from DJ cache appear as <tag> elements."""
     from festival_organizer.tracklists.dj_cache import DjCache
+
     dj_cache = DjCache(tmp_path / "dj_cache.json")
-    dj_cache.put("arminvanbuuren", {
-        "name": "Armin van Buuren", "artwork_url": "",
-        "aliases": [], "member_of": [{"slug": "gaia-nl", "name": "Gaia"}],
-    })
+    dj_cache.put(
+        "arminvanbuuren",
+        {
+            "name": "Armin van Buuren",
+            "artwork_url": "",
+            "aliases": [],
+            "member_of": [{"slug": "gaia-nl", "name": "Gaia"}],
+        },
+    )
     mf = MediaFile(
         source_path=Path("test.mkv"),
         artist="Gaia",
         artists=["Gaia"],
         artist_slugs=["gaia-nl"],
-        festival="Tomorrowland", year="2024",
+        festival="Tomorrowland",
+        year="2024",
         content_type="festival_set",
     )
     video = tmp_path / "test.mkv"
@@ -354,7 +446,8 @@ def test_nfo_no_dj_cache_no_expansion(tmp_path):
         source_path=Path("test.mkv"),
         artist="Gaia",
         artists=["Gaia"],
-        festival="Tomorrowland", year="2024",
+        festival="Tomorrowland",
+        year="2024",
         content_type="festival_set",
     )
     video = tmp_path / "test.mkv"
@@ -369,13 +462,17 @@ def test_generate_nfo_logs_warning_on_write_failure(tmp_path, caplog):
     import logging
     from unittest.mock import patch
 
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   festival="TML", year="2024", content_type="festival_set")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="TML",
+        year="2024",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
 
-    with patch("pathlib.Path.write_text",
-               side_effect=OSError("disk full")):
+    with patch("pathlib.Path.write_text", side_effect=OSError("disk full")):
         with caplog.at_level(logging.WARNING, logger="festival_organizer.nfo"):
             try:
                 generate_nfo(mf, video, load_config())
@@ -389,8 +486,13 @@ def test_generate_nfo_logs_warning_on_write_failure(tmp_path, caplog):
 
 def test_generate_nfo_xml_returns_string(tmp_path):
     """generate_nfo_xml returns XML string without writing to disk."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   festival="TML", year="2024", content_type="festival_set")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="TML",
+        year="2024",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     result = generate_nfo_xml(mf, video, load_config())
@@ -401,12 +503,16 @@ def test_generate_nfo_xml_returns_string(tmp_path):
 
 def test_generate_nfo_xml_uses_provided_dateadded(tmp_path):
     """generate_nfo_xml stamps the provided dateadded value."""
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   festival="TML", year="2024", content_type="festival_set")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="TML",
+        year="2024",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
-    result = generate_nfo_xml(mf, video, load_config(),
-                              dateadded="2024-01-15 12:00:00")
+    result = generate_nfo_xml(mf, video, load_config(), dateadded="2024-01-15 12:00:00")
     root = ET.fromstring(result)
     assert root.find("dateadded").text == "2024-01-15 12:00:00"
 
@@ -414,8 +520,14 @@ def test_generate_nfo_xml_uses_provided_dateadded(tmp_path):
 def test_generate_nfo_xml_falls_back_to_now(tmp_path):
     """generate_nfo_xml uses current time when dateadded is None."""
     from datetime import datetime
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   festival="TML", year="2024", content_type="festival_set")
+
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="TML",
+        year="2024",
+        content_type="festival_set",
+    )
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     before = datetime.now().strftime("%Y-%m-%d")

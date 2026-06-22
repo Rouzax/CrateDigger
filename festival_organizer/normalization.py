@@ -1,4 +1,5 @@
 """Text normalization: filename safety, scene tag stripping, alias resolution."""
+
 import re
 import unicodedata
 
@@ -8,13 +9,13 @@ import ftfy
 ILLEGAL_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
 # Unicode characters that look like slashes but aren't (e.g. KI⧸KI)
-UNICODE_SLASHES = re.compile(r'[\u2044\u2215\u29F8\u29F9\uFF0F]')
+UNICODE_SLASHES = re.compile(r"[\u2044\u2215\u29F8\u29F9\uFF0F]")
 
 # Fullwidth pipe ｜ (U+FF5C) used in YouTube titles as separator
-FULLWIDTH_PIPE = re.compile(r'\uFF5C')
+FULLWIDTH_PIPE = re.compile(r"\uFF5C")
 
 # Fullwidth colon ： (U+FF1A) used in YouTube filenames where : is illegal
-FULLWIDTH_COLON = re.compile(r'\uFF1A')
+FULLWIDTH_COLON = re.compile(r"\uFF1A")
 
 # Scene-release technical tags
 SCENE_TAGS = re.compile(

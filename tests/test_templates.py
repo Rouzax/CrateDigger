@@ -447,7 +447,12 @@ def test_render_multiple_optional_fields_all_empty():
 
 
 def test_render_multiple_optional_fields_all_present():
-    values = {"festival": "Tomorrowland", "edition": "Winter", "stage": "Mainstage", "set_title": "WE1"}
+    values = {
+        "festival": "Tomorrowland",
+        "edition": "Winter",
+        "stage": "Mainstage",
+        "set_title": "WE1",
+    }
     result = _render("{festival}{ edition}{ [stage]}{ - set_title}", values, {})
     assert result == "Tomorrowland Winter [Mainstage] - WE1"
 

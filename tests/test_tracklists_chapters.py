@@ -1,4 +1,5 @@
 """Tests for chapter XML generation and parsing."""
+
 import logging
 import subprocess as subprocess_mod
 import xml.etree.ElementTree as ET
@@ -24,6 +25,7 @@ import pytest
 
 
 # --- normalize_timestamp ---
+
 
 def test_normalize_timestamp_mm_ss():
     assert normalize_timestamp("5:30") == "00:05:30.000"
@@ -52,6 +54,7 @@ def test_normalize_timestamp_invalid():
 
 # --- _timestamp_to_seconds ---
 
+
 def test_timestamp_to_seconds_zero():
     assert _timestamp_to_seconds("00:00:00.000") == 0.0
 
@@ -69,6 +72,7 @@ def test_timestamp_to_seconds_millis():
 
 
 # --- parse_tracklist_lines ---
+
 
 def test_parse_tracklist_lines_basic():
     lines = [
@@ -111,6 +115,7 @@ def test_parse_tracklist_lines_custom_language():
 
 
 # --- mashup filtering ---
+
 
 def test_parse_tracklist_filters_mashup_at_start():
     """Mashup stack at the start: [00:00] and [00:01] are <5s apart, drop [00:00]."""
@@ -192,13 +197,16 @@ def test_parse_tracklist_mashup_filter_logs(caplog):
 
 # --- trim_chapters_to_duration ---
 
+
 def _chs(*seconds: float) -> list[Chapter]:
     """Build chapters from seconds: _chs(0, 60, 120) -> 3 chapters at those times."""
     out = []
     for s in seconds:
         h, rem = divmod(int(s), 3600)
         m, sec = divmod(rem, 60)
-        out.append(Chapter(timestamp=f"{h:02d}:{m:02d}:{sec:02d}.000", title=f"Track {s:.0f}s"))
+        out.append(
+            Chapter(timestamp=f"{h:02d}:{m:02d}:{sec:02d}.000", title=f"Track {s:.0f}s")
+        )
     return out
 
 
@@ -254,6 +262,7 @@ def test_trim_no_log_when_nothing_dropped(caplog):
 
 # --- build_chapter_xml ---
 
+
 def test_build_chapter_xml_structure():
     chapters = [
         Chapter(timestamp="00:03:45.000", title="Track One"),
@@ -293,6 +302,7 @@ def test_build_chapter_xml_escapes_special_chars():
 
 # --- chapters_are_identical ---
 
+
 def test_chapters_identical_same():
     a = [Chapter("00:03:45.000", "Track One"), Chapter("00:07:20.000", "Track Two")]
     b = [Chapter("00:03:45.000", "Track One"), Chapter("00:07:20.000", "Track Two")]
@@ -331,15 +341,23 @@ def test_chapters_identical_millis_ignored():
 
 # --- extract_existing_chapters error logging ---
 
+
 def test_extract_chapters_failure_logged(tmp_path, caplog):
     """Chapter extraction failure is logged at debug level."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
 
-    with patch("festival_organizer.tracklists.chapters.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
-        with patch("festival_organizer.tracklists.chapters.tracked_run",
-                   side_effect=subprocess_mod.SubprocessError("timeout")):
-            with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.chapters"):
+    with patch(
+        "festival_organizer.tracklists.chapters.metadata.MKVEXTRACT_PATH",
+        "/usr/bin/mkvextract",
+    ):
+        with patch(
+            "festival_organizer.tracklists.chapters.tracked_run",
+            side_effect=subprocess_mod.SubprocessError("timeout"),
+        ):
+            with caplog.at_level(
+                logging.DEBUG, logger="festival_organizer.tracklists.chapters"
+            ):
                 result = extract_existing_chapters(video)
     assert result is None
     assert "timeout" in caplog.text
@@ -347,18 +365,27 @@ def test_extract_chapters_failure_logged(tmp_path, caplog):
 
 # --- embed_chapters ---
 
+
 def test_embed_chapters_uses_merged_tags(tmp_path):
     """embed_chapters uses write_merged_tags for 1001TL tags."""
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
     chapters = [Chapter("00:03:45.000", "Track One")]
 
-    with patch("festival_organizer.tracklists.chapters.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.tracklists.chapters.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-            with patch("festival_organizer.tracklists.chapters.tracked_run") as mock_run:
+    with patch(
+        "festival_organizer.tracklists.chapters.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.tracklists.chapters.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
+            with patch(
+                "festival_organizer.tracklists.chapters.tracked_run"
+            ) as mock_run:
                 mock_run.return_value = MagicMock(returncode=0)
                 result = embed_chapters(
-                    video, chapters,
+                    video,
+                    chapters,
                     tracklist_url="https://example.com/tracklist/abc123/",
                     tracklist_title="Artist @ Festival",
                 )
@@ -369,7 +396,10 @@ def test_embed_chapters_uses_merged_tags(tmp_path):
     mock_wmt.assert_called_once()
     tags_dict = mock_wmt.call_args[0][1]
     assert 70 in tags_dict
-    assert tags_dict[70]["CRATEDIGGER_1001TL_URL"] == "https://example.com/tracklist/abc123/"
+    assert (
+        tags_dict[70]["CRATEDIGGER_1001TL_URL"]
+        == "https://example.com/tracklist/abc123/"
+    )
     assert tags_dict[70]["CRATEDIGGER_1001TL_TITLE"] == "Artist @ Festival"
 
 
@@ -379,12 +409,20 @@ def test_embed_chapters_writes_all_new_tag_names(tmp_path):
     video.write_bytes(b"")
     chapters = [Chapter("00:03:45.000", "Track One")]
 
-    with patch("festival_organizer.tracklists.chapters.write_merged_tags", return_value=True) as mock_wmt:
-        with patch("festival_organizer.tracklists.chapters.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"):
-            with patch("festival_organizer.tracklists.chapters.tracked_run") as mock_run:
+    with patch(
+        "festival_organizer.tracklists.chapters.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.tracklists.chapters.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
+            with patch(
+                "festival_organizer.tracklists.chapters.tracked_run"
+            ) as mock_run:
                 mock_run.return_value = MagicMock(returncode=0)
                 embed_chapters(
-                    video, chapters,
+                    video,
+                    chapters,
                     tracklist_url="https://example.com/tracklist/abc123/",
                     tracklist_title="Artist @ Festival",
                     tracklist_id="12345",
@@ -428,7 +466,10 @@ def test_extract_stored_tracklist_info_reads_new_tags(tmp_path):
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
 
-    with patch("festival_organizer.tracklists.chapters.extract_all_tags", return_value=new_tags_xml):
+    with patch(
+        "festival_organizer.tracklists.chapters.extract_all_tags",
+        return_value=new_tags_xml,
+    ):
         result = extract_stored_tracklist_info(video)
 
     assert result is not None
@@ -459,7 +500,10 @@ def test_extract_stored_tracklist_info_reads_old_tags(tmp_path):
     video = tmp_path / "test.mkv"
     video.write_bytes(b"")
 
-    with patch("festival_organizer.tracklists.chapters.extract_all_tags", return_value=old_tags_xml):
+    with patch(
+        "festival_organizer.tracklists.chapters.extract_all_tags",
+        return_value=old_tags_xml,
+    ):
         result = extract_stored_tracklist_info(video)
 
     assert result is not None
@@ -469,9 +513,11 @@ def test_extract_stored_tracklist_info_reads_old_tags(tmp_path):
 
 # --- build_chapter_xml return_uids ---
 
+
 def test_build_chapter_xml_default_return_is_string():
     """Backwards-compat: default call returns just the XML string."""
     from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+
     result = build_chapter_xml([Chapter(timestamp="00:00:00.000", title="Intro")])
     assert isinstance(result, str)
     assert "<Chapters>" in result
@@ -480,6 +526,7 @@ def test_build_chapter_xml_default_return_is_string():
 def test_build_chapter_xml_return_uids_tuple_shape():
     """return_uids=True yields (xml_str, [uids])."""
     from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+
     chapters = [
         Chapter(timestamp="00:00:00.000", title="A"),
         Chapter(timestamp="00:01:00.000", title="B"),
@@ -496,12 +543,13 @@ def test_build_chapter_xml_uids_match_xml():
     """The returned UIDs are the same ones embedded in the generated XML."""
     import xml.etree.ElementTree as ET
     from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+
     chapters = [
         Chapter(timestamp="00:00:00.000", title="A"),
         Chapter(timestamp="00:01:00.000", title="B"),
     ]
     xml_str, uids = build_chapter_xml(chapters, return_uids=True)
-    root = ET.fromstring(xml_str[xml_str.index("<Chapters>"):])
+    root = ET.fromstring(xml_str[xml_str.index("<Chapters>") :])
     atoms = root.findall(".//ChapterAtom")
     xml_uids = [int(a.find("ChapterUID").text) for a in atoms]
     assert xml_uids == uids
@@ -511,6 +559,7 @@ def test_build_chapter_xml_uids_are_stable_across_calls():
     """Deterministic ChapterUIDs: same input always produces same UIDs so
     re-enrichment is byte-idempotent when source data is unchanged."""
     from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+
     chapters = [
         Chapter(timestamp="00:00:00.000", title="Intro"),
         Chapter(timestamp="00:03:30.000", title="Second Track [LABEL]"),
@@ -524,24 +573,33 @@ def test_build_chapter_xml_uids_are_stable_across_calls():
 def test_build_chapter_xml_uid_depends_on_both_ts_and_title():
     """Different (timestamp, title) must produce different UIDs."""
     from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+
     # Same title, different timestamp
-    _, uids_a = build_chapter_xml([Chapter(timestamp="00:00:00.000", title="A")], return_uids=True)
-    _, uids_b = build_chapter_xml([Chapter(timestamp="00:01:00.000", title="A")], return_uids=True)
+    _, uids_a = build_chapter_xml(
+        [Chapter(timestamp="00:00:00.000", title="A")], return_uids=True
+    )
+    _, uids_b = build_chapter_xml(
+        [Chapter(timestamp="00:01:00.000", title="A")], return_uids=True
+    )
     assert uids_a != uids_b
     # Same timestamp, different title
-    _, uids_c = build_chapter_xml([Chapter(timestamp="00:00:00.000", title="B")], return_uids=True)
+    _, uids_c = build_chapter_xml(
+        [Chapter(timestamp="00:00:00.000", title="B")], return_uids=True
+    )
     assert uids_a != uids_c
 
 
 def test_build_chapter_xml_uid_is_positive():
     """Matroska requires ChapterUID > 0. Our hash-based UIDs must satisfy that."""
     from festival_organizer.tracklists.chapters import Chapter, build_chapter_xml
+
     chapters = [Chapter(timestamp=f"00:0{i}:00.000", title=f"t{i}") for i in range(10)]
     _, uids = build_chapter_xml(chapters, return_uids=True)
     assert all(u > 0 for u in uids)
 
 
 # --- build_1001tl_tags ---
+
 
 def test_stale_source_tags_cleared_on_reidentify():
     """Tags from a prior identification that no longer apply are cleared."""
@@ -592,7 +650,10 @@ def test_build_tags_sets_all_positive_tags():
         dj_artwork_url="https://example.com/art.jpg",
         dj_artists=[("fisher", "FISHER")],
     )
-    assert tags["CRATEDIGGER_1001TL_URL"] == "https://www.1001tracklists.com/tracklist/abc/"
+    assert (
+        tags["CRATEDIGGER_1001TL_URL"]
+        == "https://www.1001tracklists.com/tracklist/abc/"
+    )
     assert tags["CRATEDIGGER_1001TL_STAGE"] == "Mainstage"
     assert tags["CRATEDIGGER_1001TL_FESTIVAL"] == "Tomorrowland"
     assert tags["CRATEDIGGER_1001TL_COUNTRY"] == "Belgium"
@@ -604,6 +665,7 @@ def test_build_tags_sets_all_positive_tags():
 
 
 # --- _ms_to_timestamp ---
+
 
 def test_ms_to_timestamp_zero():
     assert _ms_to_timestamp(0) == "00:00:00.000"
@@ -633,10 +695,17 @@ def test_ms_to_timestamp_round_trip():
 
 # --- supplement_chapters_from_tracks ---
 
+
 def test_supplement_adds_missing_mashup_tracks():
     chapters = _chs(0, 60, 120)
     tracks = [
-        Track(start_ms=90000, raw_text="A vs. B - Alpha vs. Beta (Mashup)", artist_slugs=[], genres=[], is_mashup=True),
+        Track(
+            start_ms=90000,
+            raw_text="A vs. B - Alpha vs. Beta (Mashup)",
+            artist_slugs=[],
+            genres=[],
+            is_mashup=True,
+        ),
     ]
     result = supplement_chapters_from_tracks(chapters, tracks)
     assert len(result) == 4
@@ -647,7 +716,13 @@ def test_supplement_adds_missing_mashup_tracks():
 def test_supplement_skips_non_mashup_tracks():
     chapters = _chs(0, 60, 120)
     tracks = [
-        Track(start_ms=90000, raw_text="Overlay Track", artist_slugs=[], genres=[], is_mashup=False),
+        Track(
+            start_ms=90000,
+            raw_text="Overlay Track",
+            artist_slugs=[],
+            genres=[],
+            is_mashup=False,
+        ),
     ]
     result = supplement_chapters_from_tracks(chapters, tracks)
     assert len(result) == 3
@@ -656,7 +731,13 @@ def test_supplement_skips_non_mashup_tracks():
 def test_supplement_skips_zero_start_ms():
     chapters = _chs(60, 120)
     tracks = [
-        Track(start_ms=0, raw_text="Should Skip", artist_slugs=[], genres=[], is_mashup=True),
+        Track(
+            start_ms=0,
+            raw_text="Should Skip",
+            artist_slugs=[],
+            genres=[],
+            is_mashup=True,
+        ),
     ]
     result = supplement_chapters_from_tracks(chapters, tracks)
     assert len(result) == 2
@@ -665,7 +746,13 @@ def test_supplement_skips_zero_start_ms():
 def test_supplement_skips_matching_timestamp():
     chapters = _chs(0, 60, 120)
     tracks = [
-        Track(start_ms=60000, raw_text="Already Exists", artist_slugs=[], genres=[], is_mashup=True),
+        Track(
+            start_ms=60000,
+            raw_text="Already Exists",
+            artist_slugs=[],
+            genres=[],
+            is_mashup=True,
+        ),
     ]
     result = supplement_chapters_from_tracks(chapters, tracks)
     assert len(result) == 3
@@ -674,7 +761,13 @@ def test_supplement_skips_matching_timestamp():
 def test_supplement_skips_within_threshold():
     chapters = _chs(0, 60, 120)
     tracks = [
-        Track(start_ms=63000, raw_text="Too Close", artist_slugs=[], genres=[], is_mashup=True),
+        Track(
+            start_ms=63000,
+            raw_text="Too Close",
+            artist_slugs=[],
+            genres=[],
+            is_mashup=True,
+        ),
     ]
     result = supplement_chapters_from_tracks(chapters, tracks)
     assert len(result) == 3
@@ -683,7 +776,13 @@ def test_supplement_skips_within_threshold():
 def test_supplement_keeps_at_threshold():
     chapters = _chs(0, 60, 120)
     tracks = [
-        Track(start_ms=65000, raw_text="At Threshold", artist_slugs=[], genres=[], is_mashup=True),
+        Track(
+            start_ms=65000,
+            raw_text="At Threshold",
+            artist_slugs=[],
+            genres=[],
+            is_mashup=True,
+        ),
     ]
     result = supplement_chapters_from_tracks(chapters, tracks)
     assert len(result) == 4
@@ -692,8 +791,16 @@ def test_supplement_keeps_at_threshold():
 def test_supplement_first_track_wins_duplicate_start_ms():
     chapters = _chs(0, 60)
     tracks = [
-        Track(start_ms=90000, raw_text="First", artist_slugs=[], genres=[], is_mashup=True),
-        Track(start_ms=90000, raw_text="Second", artist_slugs=[], genres=[], is_mashup=True),
+        Track(
+            start_ms=90000, raw_text="First", artist_slugs=[], genres=[], is_mashup=True
+        ),
+        Track(
+            start_ms=90000,
+            raw_text="Second",
+            artist_slugs=[],
+            genres=[],
+            is_mashup=True,
+        ),
     ]
     result = supplement_chapters_from_tracks(chapters, tracks)
     assert len(result) == 3
@@ -703,8 +810,16 @@ def test_supplement_first_track_wins_duplicate_start_ms():
 def test_supplement_result_sorted():
     chapters = _chs(0, 120, 240)
     tracks = [
-        Track(start_ms=180000, raw_text="Middle", artist_slugs=[], genres=[], is_mashup=True),
-        Track(start_ms=60000, raw_text="Early", artist_slugs=[], genres=[], is_mashup=True),
+        Track(
+            start_ms=180000,
+            raw_text="Middle",
+            artist_slugs=[],
+            genres=[],
+            is_mashup=True,
+        ),
+        Track(
+            start_ms=60000, raw_text="Early", artist_slugs=[], genres=[], is_mashup=True
+        ),
     ]
     result = supplement_chapters_from_tracks(chapters, tracks)
     times = [_timestamp_to_seconds(ch.timestamp) for ch in result]
@@ -721,7 +836,13 @@ def test_supplement_empty_tracks():
 def test_supplement_respects_language():
     chapters = _chs(0, 60)
     tracks = [
-        Track(start_ms=120000, raw_text="Track", artist_slugs=[], genres=[], is_mashup=True),
+        Track(
+            start_ms=120000,
+            raw_text="Track",
+            artist_slugs=[],
+            genres=[],
+            is_mashup=True,
+        ),
     ]
     result = supplement_chapters_from_tracks(chapters, tracks, language="dut")
     assert result[2].language == "dut"
@@ -730,7 +851,9 @@ def test_supplement_respects_language():
 def test_supplement_logs_when_adding(caplog):
     chapters = _chs(0, 60)
     tracks = [
-        Track(start_ms=120000, raw_text="New", artist_slugs=[], genres=[], is_mashup=True),
+        Track(
+            start_ms=120000, raw_text="New", artist_slugs=[], genres=[], is_mashup=True
+        ),
     ]
     with caplog.at_level(logging.INFO, logger="festival_organizer.tracklists.chapters"):
         supplement_chapters_from_tracks(chapters, tracks)
@@ -741,7 +864,13 @@ def test_supplement_logs_when_adding(caplog):
 def test_supplement_no_log_when_nothing_added(caplog):
     chapters = _chs(0, 60, 120)
     tracks = [
-        Track(start_ms=60000, raw_text="Exists", artist_slugs=[], genres=[], is_mashup=True),
+        Track(
+            start_ms=60000,
+            raw_text="Exists",
+            artist_slugs=[],
+            genres=[],
+            is_mashup=True,
+        ),
     ]
     with caplog.at_level(logging.INFO, logger="festival_organizer.tracklists.chapters"):
         supplement_chapters_from_tracks(chapters, tracks)

@@ -1,4 +1,5 @@
 """Render a RunReport into a house-styled multipart HTML + text email."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -12,12 +13,16 @@ from festival_organizer.notify.models import RenderedEmail, RunReport
 ACCENT = "#e8734a"
 ACCENT_SOFT = "#d4845e"
 BG = "#06060c"
-OUTER = "#05060a"  # full-width page background behind the card (slightly darker than BG)
+OUTER = (
+    "#05060a"  # full-width page background behind the card (slightly darker than BG)
+)
 CARD = "#101019"
 BORDER = "#1b1b27"
 TEXT = "#f0f0f5"
 MUTED = "#8888a0"
-MUTED2 = "#80809a"  # tertiary text (footer tally, event set-count); 5.27:1 on BG, WCAG AA
+MUTED2 = (
+    "#80809a"  # tertiary text (footer tally, event set-count); 5.27:1 on BG, WCAG AA
+)
 FONT = "'Outfit',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 MONO = "'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace"
 
@@ -34,9 +39,9 @@ def _is_concert(s) -> bool:
 def _pills(genres) -> str:
     return "".join(
         f'<span style="display:inline-block;background:rgba(232,115,74,0.08);'
-        f'color:{ACCENT_SOFT};font-size:10px;font-weight:600;text-transform:uppercase;'
+        f"color:{ACCENT_SOFT};font-size:10px;font-weight:600;text-transform:uppercase;"
         f'letter-spacing:.1em;padding:4px 10px;border-radius:20px;margin:0 6px 0 0;">'
-        f'{escape(g)}</span>'
+        f"{escape(g)}</span>"
         for g in genres
     )
 
@@ -47,17 +52,28 @@ def _row(s, thumb_cid: str | None) -> str:
     # squeezing the text on narrow screens. Gmail on Android ignores media queries,
     # so a percentage column is the reliable way to stay responsive.
     if thumb_cid:
-        img = (f'<img src="cid:{thumb_cid}" '
-               f'style="display:block;width:100%;height:auto;border-radius:7px;'
-               f'border:1px solid {BORDER};">')
+        img = (
+            f'<img src="cid:{thumb_cid}" '
+            f'style="display:block;width:100%;height:auto;border-radius:7px;'
+            f'border:1px solid {BORDER};">'
+        )
     else:
-        img = (f'<div style="width:100%;padding-bottom:56%;border-radius:7px;'
-               f'background:{CARD};border:1px solid {BORDER};"></div>')
+        img = (
+            f'<div style="width:100%;padding-bottom:56%;border-radius:7px;'
+            f'background:{CARD};border:1px solid {BORDER};"></div>'
+        )
     # Repeat the event/place on the card so a row is self-describing inside its group.
-    event = f'{escape(s.event)} &middot; ' if s.event else ""
-    note = f' &middot; <span style="color:{ACCENT}">{escape(s.note)}</span>' if s.note else ""
-    meta = (f'<div style="font-size:12px;color:{MUTED};margin-top:9px;">{escape(s.metric)}</div>'
-            if s.metric else "")
+    event = f"{escape(s.event)} &middot; " if s.event else ""
+    note = (
+        f' &middot; <span style="color:{ACCENT}">{escape(s.note)}</span>'
+        if s.note
+        else ""
+    )
+    meta = (
+        f'<div style="font-size:12px;color:{MUTED};margin-top:9px;">{escape(s.metric)}</div>'
+        if s.metric
+        else ""
+    )
     return (
         f'<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;"><tr>'
         f'<td valign="top" width="25%" style="padding:0;">{img}</td>'
@@ -66,7 +82,7 @@ def _row(s, thumb_cid: str | None) -> str:
         f'<div style="font-size:13px;color:{MUTED};margin-top:4px;">'
         f'{event}<span style="font-family:{MONO};">{escape(s.year)}</span>{note}</div>'
         f'<div style="margin-top:9px;">{_pills(s.genres)}</div>'
-        f'{meta}</td></tr></table>'
+        f"{meta}</td></tr></table>"
     )
 
 
@@ -93,7 +109,7 @@ def _update_banner(update) -> str:
         f'<span style="color:{MUTED};font-size:13px;">You\'re on '
         f'<span style="font-family:{MONO};">{escape(update.installed)}</span>, latest is '
         f'<span style="font-family:{MONO};color:{ACCENT};font-weight:600;">{escape(update.latest or "")}</span>.'
-        f'</span></div>'
+        f"</span></div>"
     )
 
 
@@ -113,8 +129,9 @@ def render(report: RunReport, thumbs: dict) -> RenderedEmail:
     by_event = OrderedDict()
     for idx, s in festival_sets:
         by_event.setdefault(s.event, []).append((idx, s))
-    ordered = sorted(by_event.items(),
-                     key=lambda kv: max(x[1].year for x in kv[1]), reverse=True)
+    ordered = sorted(
+        by_event.items(), key=lambda kv: max(x[1].year for x in kv[1]), reverse=True
+    )
     for event, items in ordered:
         items = sorted(items, key=lambda it: (it[1].year, it[1].artist), reverse=False)
         items = sorted(items, key=lambda it: it[1].year, reverse=True)
@@ -137,7 +154,7 @@ def render(report: RunReport, thumbs: dict) -> RenderedEmail:
     if overflow:
         body_parts.append(
             f'<div style="color:{MUTED2};font-size:12px;margin-top:14px;">'
-            f'...and {overflow} more set{"s" if overflow != 1 else ""} not shown</div>'
+            f"...and {overflow} more set{'s' if overflow != 1 else ''} not shown</div>"
         )
         text_lines.append(f"\n...and {overflow} more not shown")
 
@@ -158,20 +175,24 @@ def render(report: RunReport, thumbs: dict) -> RenderedEmail:
         f'<span style="color:{TEXT};">Crate</span><span style="color:{ACCENT};">Digger</span></div>'
         f'<div style="font-size:26px;color:{TEXT};font-weight:700;margin-top:6px;">{escape(heading)}</div>'
         f'<div style="font-size:13px;color:{MUTED};margin-top:5px;font-family:{MONO};">'
-        f'{escape(report.timestamp)}</div></div>'
+        f"{escape(report.timestamp)}</div></div>"
     )
     stats = report.stats or {}
     if report.channel == "updated_sets":
         unchanged = stats.get("up_to_date", 0)
         skipped = stats.get("skipped", 0) + stats.get("error", 0)
-        footer_inner = (f'{len(report.sets)} updated &middot; {unchanged} unchanged '
-                        f'&middot; {skipped} skipped')
+        footer_inner = (
+            f"{len(report.sets)} updated &middot; {unchanged} unchanged "
+            f"&middot; {skipped} skipped"
+        )
     else:
-        footer_inner = (f'{stats.get("added", 0)} added &middot; {stats.get("up_to_date", 0)} up to date '
-                        f'&middot; {stats.get("errors", 0)} errors')
+        footer_inner = (
+            f"{stats.get('added', 0)} added &middot; {stats.get('up_to_date', 0)} up to date "
+            f"&middot; {stats.get('errors', 0)} errors"
+        )
     footer = (
         f'<div style="padding:18px 28px;border-top:1px solid {BORDER};color:{MUTED2};font-size:11px;">'
-        f'{footer_inner}</div>'
+        f"{footer_inner}</div>"
     )
     card = (
         f'<div style="max-width:620px;margin:0 auto;background:{BG};border-radius:20px;'

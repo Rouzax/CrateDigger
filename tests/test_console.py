@@ -1,4 +1,5 @@
 """Tests for the central Rich formatting module."""
+
 from __future__ import annotations
 
 import io
@@ -29,6 +30,7 @@ def _render(renderable) -> str:
 
 # --- make_console ---
 
+
 def test_make_console_defaults_to_stdout(monkeypatch):
     c = make_console()
     assert isinstance(c, Console)
@@ -41,6 +43,7 @@ def test_make_console_custom_file():
 
 
 # --- header_panel ---
+
 
 def test_header_panel_returns_panel():
     p = header_panel("Test Run", {"Source": "/tmp/a", "Output": "/tmp/b"})
@@ -58,6 +61,7 @@ def test_header_panel_contains_rows():
 
 
 # --- status_text ---
+
 
 def test_status_text_done():
     t = status_text("done", "nfo")
@@ -97,6 +101,7 @@ def test_status_text_error_red_style():
 
 
 # --- results_table ---
+
 
 def _make_result(
     score: float = 200,
@@ -183,6 +188,7 @@ def test_results_table_duration_coloring():
 
 # --- summary_panel ---
 
+
 def test_summary_panel_flat_counts():
     p = summary_panel({"added": 3, "skipped": 1, "error": 0})
     assert isinstance(p, Panel)
@@ -233,7 +239,9 @@ def test_summary_panel_up_to_date():
 
 
 def test_summary_panel_updated_status():
-    p = summary_panel({"added": 1, "updated": 3, "up_to_date": 5, "skipped": 0, "error": 0})
+    p = summary_panel(
+        {"added": 1, "updated": 3, "up_to_date": 5, "skipped": 0, "error": 0}
+    )
     output = _render(p)
     assert "updated" in output
     assert "3" in output
@@ -241,9 +249,11 @@ def test_summary_panel_updated_status():
 
 # --- classification_summary_panel ---
 
+
 def test_classification_summary_panel():
     """Classification summary shows breakdown by content type."""
     from festival_organizer.console import classification_summary_panel
+
     panel = classification_summary_panel(
         total=80,
         festival_sets=75,
@@ -262,9 +272,11 @@ def test_classification_summary_panel():
 
 # --- identify_summary_panel ---
 
+
 def test_identify_summary_panel():
     """Identify summary shows metadata breakdown."""
     from festival_organizer.console import identify_summary_panel
+
     panel = identify_summary_panel(
         stats={"added": 72, "updated": 5, "skipped": 1, "error": 2, "up_to_date": 0},
         tagged_count=77,
@@ -283,6 +295,7 @@ def test_identify_summary_panel():
 
 
 # --- suppression_enabled ---
+
 
 def test_suppression_enabled_non_tty():
     con = make_console(file=io.StringIO())
@@ -315,8 +328,16 @@ def test_suppression_enabled_debug(monkeypatch):
 
 def test_identify_summary_panel_includes_elapsed():
     from festival_organizer.console import identify_summary_panel
+
     panel = identify_summary_panel(
-        stats={"added": 1, "updated": 0, "up_to_date": 0, "skipped": 0, "error": 0, "previewed": 0},
+        stats={
+            "added": 1,
+            "updated": 0,
+            "up_to_date": 0,
+            "skipped": 0,
+            "error": 0,
+            "previewed": 0,
+        },
         tagged_count=1,
         festivals={"Foo": 1},
         unmatched=[],
@@ -324,6 +345,7 @@ def test_identify_summary_panel_includes_elapsed():
     )
     from rich.console import Console
     import io
+
     buf = io.StringIO()
     Console(file=buf, no_color=True, width=120).print(panel)
     out = buf.getvalue()
@@ -333,26 +355,39 @@ def test_identify_summary_panel_includes_elapsed():
 
 def test_identify_summary_panel_omits_elapsed_when_none():
     from festival_organizer.console import identify_summary_panel
+
     panel = identify_summary_panel(
-        stats={"added": 0, "updated": 0, "up_to_date": 0, "skipped": 0, "error": 0, "previewed": 0},
+        stats={
+            "added": 0,
+            "updated": 0,
+            "up_to_date": 0,
+            "skipped": 0,
+            "error": 0,
+            "previewed": 0,
+        },
         tagged_count=0,
     )
     from rich.console import Console
     import io
+
     buf = io.StringIO()
     Console(file=buf, no_color=True, width=120).print(panel)
     assert "Elapsed:" not in buf.getvalue()
 
 
-@pytest.mark.parametrize("seconds,expected", [
-    (0.0, "0.0s"),
-    (0.5, "0.5s"),
-    (29.0, "29.0s"),
-    (59.9, "59.9s"),
-    (60.0, "1m 0s"),
-    (83.2, "1m 23s"),
-    (600.0, "10m 0s"),
-])
+@pytest.mark.parametrize(
+    "seconds,expected",
+    [
+        (0.0, "0.0s"),
+        (0.5, "0.5s"),
+        (29.0, "29.0s"),
+        (59.9, "59.9s"),
+        (60.0, "1m 0s"),
+        (83.2, "1m 23s"),
+        (600.0, "10m 0s"),
+    ],
+)
 def test_format_elapsed_ranges(seconds, expected):
     from festival_organizer.console import _format_elapsed
+
     assert _format_elapsed(seconds) == expected

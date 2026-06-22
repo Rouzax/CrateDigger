@@ -1,4 +1,5 @@
 """Tests for StepProgress transient spinner."""
+
 import io
 import threading
 

@@ -11,6 +11,7 @@ Logging:
         - cover.preserve (INFO): landscape preserved as cover_land
         - cover.land_missing (WARNING): no landscape source available
 """
+
 import logging
 import tempfile
 from pathlib import Path
@@ -64,7 +65,9 @@ def ensure_cover_land(target: Path, atts: list[dict], thumb_path: Path) -> bool:
         logger.warning("cover.land_missing: file=%s reason=add_failed", target.name)
         return False
 
-    logger.warning("cover.land_missing: file=%s reason=no_landscape_source", target.name)
+    logger.warning(
+        "cover.land_missing: file=%s reason=no_landscape_source", target.name
+    )
     return False
 
 
@@ -72,13 +75,19 @@ def set_primary_cover(target: Path, poster_path: Path, atts: list[dict]) -> bool
     """Write the portrait poster as cover.jpg, replacing any existing cover.* slot."""
     names = {a["file_name"] for a in atts}
     if "cover.jpg" in names:
-        return replace_attachment(target, "cover.jpg", poster_path, "cover.jpg", "image/jpeg")
+        return replace_attachment(
+            target, "cover.jpg", poster_path, "cover.jpg", "image/jpeg"
+        )
     if "cover.png" in names:
-        return replace_attachment(target, "cover.png", poster_path, "cover.jpg", "image/jpeg")
+        return replace_attachment(
+            target, "cover.png", poster_path, "cover.jpg", "image/jpeg"
+        )
     return add_attachment(target, poster_path, "cover.jpg", "image/jpeg")
 
 
-def converge_cover_attachments(target: Path, poster_path: Path, thumb_path: Path) -> bool:
+def converge_cover_attachments(
+    target: Path, poster_path: Path, thumb_path: Path
+) -> bool:
     """Converge the MKV to {cover.jpg = portrait poster, cover_land.<ext> = landscape}.
 
     Order matters: the landscape is preserved as cover_land BEFORE the cover slot is
@@ -87,7 +96,9 @@ def converge_cover_attachments(target: Path, poster_path: Path, thumb_path: Path
     """
     atts = list_image_attachments(target)
     if not ensure_cover_land(target, atts, thumb_path):
-        logger.warning("cover.skip: file=%s reason=landscape_not_preserved", target.name)
+        logger.warning(
+            "cover.skip: file=%s reason=landscape_not_preserved", target.name
+        )
         return False
     atts = list_image_attachments(target)  # refresh after the add
     if not set_primary_cover(target, poster_path, atts):

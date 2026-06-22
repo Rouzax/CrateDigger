@@ -1,4 +1,5 @@
 """ChapterArtistMbidsOperation: orchestrate extract → compute → merge → write."""
+
 from pathlib import Path
 from unittest.mock import patch
 
@@ -55,10 +56,14 @@ def test_execute_writes_mbids_aligned_with_names(tmp_path):
     mkv = tmp_path / "set.mkv"
     mkv.write_bytes(b"")
 
-    with patch("festival_organizer.operations._extract_chapter_tags_by_uid",
-               return_value=existing), \
-         patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn, \
-         patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup):
+    with (
+        patch(
+            "festival_organizer.operations._extract_chapter_tags_by_uid",
+            return_value=existing,
+        ),
+        patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn,
+        patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup),
+    ):
         op = ChapterArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
 
@@ -70,19 +75,35 @@ def test_execute_writes_mbids_aligned_with_names(tmp_path):
     assert merged_chapter_tags[111]["MUSICBRAINZ_ARTISTIDS"] == "A|O"
     assert merged_chapter_tags[222]["MUSICBRAINZ_ARTISTIDS"] == "A||T"
     # Existing tags MUST be preserved (they would be wiped if we passed only the MBID dict).
-    assert merged_chapter_tags[111]["CRATEDIGGER_TRACK_PERFORMER"] == "Afrojack & Oliver Heldens"
-    assert merged_chapter_tags[111]["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Afrojack|Oliver Heldens"
-    assert merged_chapter_tags[111]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "afrojack|oliver-heldens"
+    assert (
+        merged_chapter_tags[111]["CRATEDIGGER_TRACK_PERFORMER"]
+        == "Afrojack & Oliver Heldens"
+    )
+    assert (
+        merged_chapter_tags[111]["CRATEDIGGER_TRACK_PERFORMER_NAMES"]
+        == "Afrojack|Oliver Heldens"
+    )
+    assert (
+        merged_chapter_tags[111]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"]
+        == "afrojack|oliver-heldens"
+    )
     assert merged_chapter_tags[111]["CRATEDIGGER_TRACK_TITLE"] == "Happy"
-    assert merged_chapter_tags[222]["CRATEDIGGER_TRACK_PERFORMER"] == "Afrojack vs. Mystery ID vs. Tiësto"
+    assert (
+        merged_chapter_tags[222]["CRATEDIGGER_TRACK_PERFORMER"]
+        == "Afrojack vs. Mystery ID vs. Tiësto"
+    )
 
 
 def test_execute_skipped_when_no_chapter_tags(tmp_path):
     mkv = tmp_path / "set.mkv"
     mkv.write_bytes(b"")
-    with patch("festival_organizer.operations._extract_chapter_tags_by_uid",
-               return_value={}), \
-         patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn:
+    with (
+        patch(
+            "festival_organizer.operations._extract_chapter_tags_by_uid",
+            return_value={},
+        ),
+        patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn,
+    ):
         op = ChapterArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
     assert result.status == "skipped"
@@ -93,9 +114,13 @@ def test_execute_skipped_when_no_performer_names(tmp_path):
     # Legacy file: chapter tags exist but none carry PERFORMER_NAMES.
     mkv = tmp_path / "set.mkv"
     mkv.write_bytes(b"")
-    with patch("festival_organizer.operations._extract_chapter_tags_by_uid",
-               return_value={111: {"CRATEDIGGER_TRACK_PERFORMER": "Afrojack"}}), \
-         patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn:
+    with (
+        patch(
+            "festival_organizer.operations._extract_chapter_tags_by_uid",
+            return_value={111: {"CRATEDIGGER_TRACK_PERFORMER": "Afrojack"}},
+        ),
+        patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn,
+    ):
         op = ChapterArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
     assert result.status == "skipped"
@@ -111,10 +136,14 @@ def test_execute_skipped_when_mbids_already_current(tmp_path):
     }
     mkv = tmp_path / "set.mkv"
     mkv.write_bytes(b"")
-    with patch("festival_organizer.operations._extract_chapter_tags_by_uid",
-               return_value=existing), \
-         patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn, \
-         patch("festival_organizer.operations.lookup_mbid", return_value="A"):
+    with (
+        patch(
+            "festival_organizer.operations._extract_chapter_tags_by_uid",
+            return_value=existing,
+        ),
+        patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn,
+        patch("festival_organizer.operations.lookup_mbid", return_value="A"),
+    ):
         op = ChapterArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
     assert result.status == "skipped"
@@ -130,10 +159,14 @@ def test_force_rewrites_even_when_mbids_already_match(tmp_path):
     }
     mkv = tmp_path / "set.mkv"
     mkv.write_bytes(b"")
-    with patch("festival_organizer.operations._extract_chapter_tags_by_uid",
-               return_value=existing), \
-         patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn, \
-         patch("festival_organizer.operations.lookup_mbid", return_value="A"):
+    with (
+        patch(
+            "festival_organizer.operations._extract_chapter_tags_by_uid",
+            return_value=existing,
+        ),
+        patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn,
+        patch("festival_organizer.operations.lookup_mbid", return_value="A"),
+    ):
         op = ChapterArtistMbidsOperation(force=True)
         result = op.execute(mkv, _make_mf())
     assert result.status == "done"
@@ -149,10 +182,14 @@ def test_force_rewrites_when_stale_mbids_present(tmp_path):
     }
     mkv = tmp_path / "set.mkv"
     mkv.write_bytes(b"")
-    with patch("festival_organizer.operations._extract_chapter_tags_by_uid",
-               return_value=existing), \
-         patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn, \
-         patch("festival_organizer.operations.lookup_mbid", return_value="FRESH"):
+    with (
+        patch(
+            "festival_organizer.operations._extract_chapter_tags_by_uid",
+            return_value=existing,
+        ),
+        patch("festival_organizer.operations.write_chapter_mbid_tags") as write_fn,
+        patch("festival_organizer.operations.lookup_mbid", return_value="FRESH"),
+    ):
         op = ChapterArtistMbidsOperation()
         result = op.execute(mkv, _make_mf())
     assert result.status == "done"

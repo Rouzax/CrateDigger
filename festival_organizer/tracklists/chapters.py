@@ -12,6 +12,7 @@ Logging:
         - chapters.embed_failed (DEBUG): Chapter or tag embedding failed
     See docs/logging.md for full guidelines.
 """
+
 import hashlib
 import logging
 import os
@@ -24,7 +25,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Literal, overload
 
 from festival_organizer import metadata
-from festival_organizer.mkv_tags import CLEAR_TAG, MATROSKA_EXTS, extract_all_tags, write_merged_tags
+from festival_organizer.mkv_tags import (
+    CLEAR_TAG,
+    MATROSKA_EXTS,
+    extract_all_tags,
+    write_merged_tags,
+)
 from festival_organizer.subprocess_utils import tracked_run
 from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
 
@@ -38,7 +44,8 @@ if TYPE_CHECKING:
 @dataclass
 class Chapter:
     """A single chapter marker."""
-    timestamp: str   # "HH:MM:SS.mmm"
+
+    timestamp: str  # "HH:MM:SS.mmm"
     title: str
     language: str = "eng"
 
@@ -113,12 +120,16 @@ def parse_tracklist_lines(lines: list[str], language: str = "eng") -> list[Chapt
         if match:
             timestamp = normalize_timestamp(match.group(1))
             title = match.group(2)
-            chapters.append(Chapter(timestamp=timestamp, title=title, language=language))
+            chapters.append(
+                Chapter(timestamp=timestamp, title=title, language=language)
+            )
         elif re.match(r"^\s*\d+\.\s+", line):
             has_numbered_tracks = True
 
     if not chapters and has_numbered_tracks:
-        raise ValueError("Tracklist has no timestamps yet (tracks are numbered but no time markers)")
+        raise ValueError(
+            "Tracklist has no timestamps yet (tracks are numbered but no time markers)"
+        )
 
     # Filter mashup components: when consecutive chapters are <threshold apart,
     # drop the earlier one (mashup marker) and keep the later one (actual track).
@@ -126,9 +137,13 @@ def parse_tracklist_lines(lines: list[str], language: str = "eng") -> list[Chapt
         filtered = []
         for i, ch in enumerate(chapters):
             if i < len(chapters) - 1:
-                gap = _timestamp_to_seconds(chapters[i + 1].timestamp) - _timestamp_to_seconds(ch.timestamp)
+                gap = _timestamp_to_seconds(
+                    chapters[i + 1].timestamp
+                ) - _timestamp_to_seconds(ch.timestamp)
                 if gap < MASHUP_THRESHOLD_SECONDS:
-                    logger.info("chapters.drop_mashup: title=\"%s\" gap_s=%.0f", ch.title, gap)
+                    logger.info(
+                        'chapters.drop_mashup: title="%s" gap_s=%.0f', ch.title, gap
+                    )
                     continue
             filtered.append(ch)
         chapters = filtered
@@ -166,7 +181,8 @@ def trim_chapters_to_duration(
     if dropped:
         logger.info(
             "chapters.trim: dropped=%d duration=%.1fs",
-            dropped, duration_s,
+            dropped,
+            duration_s,
         )
     return kept
 
@@ -200,11 +216,13 @@ def supplement_chapters_from_tracks(
             continue
         if any(abs(track_s - es) < MASHUP_THRESHOLD_SECONDS for es in existing_list):
             continue
-        supplemented.append(Chapter(
-            timestamp=_ms_to_timestamp(track.start_ms),
-            title=track.raw_text,
-            language=language,
-        ))
+        supplemented.append(
+            Chapter(
+                timestamp=_ms_to_timestamp(track.start_ms),
+                title=track.raw_text,
+                language=language,
+            )
+        )
 
     if supplemented:
         logger.info(
@@ -219,9 +237,13 @@ def supplement_chapters_from_tracks(
 
 
 @overload
-def build_chapter_xml(chapters: list[Chapter], return_uids: Literal[False] = False) -> str: ...
+def build_chapter_xml(
+    chapters: list[Chapter], return_uids: Literal[False] = False
+) -> str: ...
 @overload
-def build_chapter_xml(chapters: list[Chapter], return_uids: Literal[True]) -> tuple[str, list[int]]: ...
+def build_chapter_xml(
+    chapters: list[Chapter], return_uids: Literal[True]
+) -> tuple[str, list[int]]: ...
 def build_chapter_xml(chapters: list[Chapter], return_uids: bool = False):
     """Generate Matroska chapter XML string.
 
@@ -256,11 +278,12 @@ def build_chapter_xml(chapters: list[Chapter], return_uids: bool = False):
         ch_lang = ET.SubElement(display, "ChapterLanguage")
         ch_lang.text = ch.language
 
-    xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding="unicode")
+    xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(
+        root, encoding="unicode"
+    )
     if return_uids:
         return xml_str, uids
     return xml_str
-
 
 
 def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
@@ -277,8 +300,11 @@ def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
 
         result = tracked_run(
             [metadata.MKVEXTRACT_PATH, str(filepath), "chapters", xml_path],
-            capture_output=True, text=True, timeout=30,
-            encoding="utf-8", errors="replace",
+            capture_output=True,
+            text=True,
+            timeout=30,
+            encoding="utf-8",
+            errors="replace",
         )
 
         if result.returncode != 0 or not os.path.exists(xml_path):
@@ -305,12 +331,14 @@ def extract_existing_chapters(filepath: Path) -> list[Chapter] | None:
                     timestamp = timestamp[:12]
                 title = title_elem.text if title_elem is not None else ""
                 language = lang_elem.text if lang_elem is not None else "eng"
-                chapters.append(Chapter(timestamp=timestamp, title=title, language=language))
+                chapters.append(
+                    Chapter(timestamp=timestamp, title=title, language=language)
+                )
 
         return chapters if chapters else None
 
     except (OSError, subprocess.SubprocessError, ET.ParseError) as e:
-        logger.debug("chapters.extract_failed: path=%s error=\"%s\"", filepath.name, e)
+        logger.debug('chapters.extract_failed: path=%s error="%s"', filepath.name, e)
         return None
     finally:
         try:
@@ -433,8 +461,12 @@ def _build_chapter_tags_map(
             # unknown to mediainfo so they stay scoped where we put them.
             entry["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] = "|".join(track.artist_slugs)
             # Length must match CRATEDIGGER_TRACK_PERFORMER_SLUGS: enrich zips SLUGS/NAMES/MBIDS by index.
-            if track.artist_names and len(track.artist_names) == len(track.artist_slugs):
-                entry["CRATEDIGGER_TRACK_PERFORMER_NAMES"] = "|".join(track.artist_names)
+            if track.artist_names and len(track.artist_names) == len(
+                track.artist_slugs
+            ):
+                entry["CRATEDIGGER_TRACK_PERFORMER_NAMES"] = "|".join(
+                    track.artist_names
+                )
             # CRATEDIGGER_TRACK_PERFORMER is the full artist display line
             # exactly as 1001TL renders it: everything before the final
             # " - " in raw_text. Covers solo ("AFROJACK ft. Eva Simons"),
@@ -461,25 +493,27 @@ def _build_chapter_tags_map(
     return result
 
 
-_MANAGED_1001TL_TAGS = frozenset({
-    "CRATEDIGGER_1001TL_URL",
-    "CRATEDIGGER_1001TL_TITLE",
-    "CRATEDIGGER_1001TL_ID",
-    "CRATEDIGGER_1001TL_DATE",
-    "CRATEDIGGER_1001TL_GENRES",
-    "CRATEDIGGER_1001TL_DJ_ARTWORK",
-    "CRATEDIGGER_1001TL_STAGE",
-    "CRATEDIGGER_1001TL_FESTIVAL",
-    "CRATEDIGGER_1001TL_VENUE",
-    "CRATEDIGGER_1001TL_CONFERENCE",
-    "CRATEDIGGER_1001TL_RADIO",
-    "CRATEDIGGER_1001TL_COUNTRY",
-    "CRATEDIGGER_1001TL_LOCATION",
-    "CRATEDIGGER_1001TL_SOURCE_TYPE",
-    "CRATEDIGGER_1001TL_ARTISTS",
-    "CRATEDIGGER_ALBUMARTIST_SLUGS",
-    "CRATEDIGGER_ALBUMARTIST_DISPLAY",
-})
+_MANAGED_1001TL_TAGS = frozenset(
+    {
+        "CRATEDIGGER_1001TL_URL",
+        "CRATEDIGGER_1001TL_TITLE",
+        "CRATEDIGGER_1001TL_ID",
+        "CRATEDIGGER_1001TL_DATE",
+        "CRATEDIGGER_1001TL_GENRES",
+        "CRATEDIGGER_1001TL_DJ_ARTWORK",
+        "CRATEDIGGER_1001TL_STAGE",
+        "CRATEDIGGER_1001TL_FESTIVAL",
+        "CRATEDIGGER_1001TL_VENUE",
+        "CRATEDIGGER_1001TL_CONFERENCE",
+        "CRATEDIGGER_1001TL_RADIO",
+        "CRATEDIGGER_1001TL_COUNTRY",
+        "CRATEDIGGER_1001TL_LOCATION",
+        "CRATEDIGGER_1001TL_SOURCE_TYPE",
+        "CRATEDIGGER_1001TL_ARTISTS",
+        "CRATEDIGGER_ALBUMARTIST_SLUGS",
+        "CRATEDIGGER_ALBUMARTIST_DISPLAY",
+    }
+)
 
 
 def build_1001tl_tags(
@@ -528,8 +562,14 @@ def build_1001tl_tags(
         tags["CRATEDIGGER_1001TL_LOCATION"] = location
     # TODO: source_type priority is also derived in api.py export_tracklist().
     # Consider passing source_type as a parameter instead of re-deriving.
-    for stype in ("Open Air / Festival", "Event Location", "Club",
-                  "Conference", "Concert / Live Event", "Event Promoter"):
+    for stype in (
+        "Open Air / Festival",
+        "Event Location",
+        "Club",
+        "Conference",
+        "Concert / Live Event",
+        "Event Promoter",
+    ):
         if sources_by_type and stype in sources_by_type:
             tags["CRATEDIGGER_1001TL_SOURCE_TYPE"] = stype
             break
@@ -541,7 +581,9 @@ def build_1001tl_tags(
         # via DjCache (so we don't re-emit 1001TL's UPPERCASE-on-submit
         # artefact when DjCache has the canonical casing).
         names = [
-            dj_cache.canonical_name(slug, fallback=name) if dj_cache is not None else name
+            dj_cache.canonical_name(slug, fallback=name)
+            if dj_cache is not None
+            else name
             for slug, name in dj_artists
         ]
         slugs = [slug for slug, _name in dj_artists]
@@ -595,14 +637,19 @@ def embed_chapters(
         # Write chapters via mkvpropedit --chapters (only if chapters provided)
         if chapters:
             chapter_xml, chapter_uids = build_chapter_xml(chapters, return_uids=True)
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False, encoding="utf-8") as f:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".xml", delete=False, encoding="utf-8"
+            ) as f:
                 f.write(chapter_xml)
                 chapter_file = f.name
 
             result = tracked_run(
                 [metadata.MKVPROPEDIT_PATH, str(filepath), "--chapters", chapter_file],
-                capture_output=True, text=True, timeout=30,
-                encoding="utf-8", errors="replace",
+                capture_output=True,
+                text=True,
+                timeout=30,
+                encoding="utf-8",
+                errors="replace",
             )
 
             if result.returncode != 0:
@@ -635,7 +682,7 @@ def embed_chapters(
         return True
 
     except (OSError, subprocess.SubprocessError) as e:
-        logger.debug("chapters.embed_failed: path=%s error=\"%s\"", filepath.name, e)
+        logger.debug('chapters.embed_failed: path=%s error="%s"', filepath.name, e)
         return False
     finally:
         if chapter_file:

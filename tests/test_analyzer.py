@@ -33,7 +33,9 @@ def test_analyse_with_1001tl_overrides_filename():
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(
-            Path("//hyperv/Data/Concerts/AMF/2024 - AMF/MARTIN GARRIX LIVE @ AMF 2024.mkv"),
+            Path(
+                "//hyperv/Data/Concerts/AMF/2024 - AMF/MARTIN GARRIX LIVE @ AMF 2024.mkv"
+            ),
             Path("//hyperv/Data/Concerts"),
             CFG,
         )
@@ -105,10 +107,15 @@ def test_analyse_identified_file_ignores_filename_set_title():
         "artist_tag": "",
         "date_tag": "",
         "duration_seconds": 7200.0,
-        "width": 1920, "height": 1080,
-        "video_format": "", "audio_format": "",
-        "audio_bitrate": "", "overall_bitrate": "",
-        "description": "", "comment": "", "purl": "",
+        "width": 1920,
+        "height": 1080,
+        "video_format": "",
+        "audio_format": "",
+        "audio_bitrate": "",
+        "overall_bitrate": "",
+        "description": "",
+        "comment": "",
+        "purl": "",
     }
     # Pre-organize YouTube-style filename — current code derives
     # set_title='RESISTANCE MEGASTRUCTURE' from the tail of this name,
@@ -135,7 +142,9 @@ def test_analyse_unidentified_file_keeps_filename_set_title():
     matched to a tracklist yet."""
     with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
         mf = analyse_file(
-            Path("//hyperv/Data/Concerts/Tomorrowland/Martin Garrix @ Tomorrowland 2024 Mainstage Closing Set.mkv"),
+            Path(
+                "//hyperv/Data/Concerts/Tomorrowland/Martin Garrix @ Tomorrowland 2024 Mainstage Closing Set.mkv"
+            ),
             Path("//hyperv/Data/Concerts"),
             CFG,
         )
@@ -149,7 +158,9 @@ def test_analyse_filename_only():
     """When no metadata is available, filename parsing should work."""
     with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
         mf = analyse_file(
-            Path("//hyperv/Data/Concerts/AMF/2025 - AMF/2025 - AMF - Armin van Buuren.mkv"),
+            Path(
+                "//hyperv/Data/Concerts/AMF/2025 - AMF/2025 - AMF - Armin van Buuren.mkv"
+            ),
             Path("//hyperv/Data/Concerts"),
             CFG,
         )
@@ -163,7 +174,9 @@ def test_analyse_concert_film():
     """Concert films with minimal metadata."""
     with patch("festival_organizer.analyzer.extract_metadata", return_value={}):
         mf = analyse_file(
-            Path("//hyperv/Data/Concerts/Adele/2011 - Live/Adele - Live At The Royal Albert Hall-concert.mkv"),
+            Path(
+                "//hyperv/Data/Concerts/Adele/2011 - Live/Adele - Live At The Royal Albert Hall-concert.mkv"
+            ),
             Path("//hyperv/Data/Concerts"),
             CFG,
         )
@@ -233,27 +246,50 @@ def test_analyse_normalizes_genre_spacing_from_tag():
     """Genres read from the 1001TL tag get compact-slash normalization (retroactive
     on enrich, no re-identify needed)."""
     fake_meta = {
-        "title": "", "tracklists_title": "", "tracklists_url": "",
-        "artist_tag": "Test", "date_tag": "",
+        "title": "",
+        "tracklists_title": "",
+        "tracklists_url": "",
+        "artist_tag": "Test",
+        "date_tag": "",
         "tracklists_genres": "Melodic House/Techno|Dance / Electro Pop|Minimal / Deep Tech|House",
-        "duration_seconds": None, "width": None, "height": None,
-        "video_format": "", "audio_format": "", "audio_bitrate": "",
+        "duration_seconds": None,
+        "width": None,
+        "height": None,
+        "video_format": "",
+        "audio_format": "",
+        "audio_bitrate": "",
         "overall_bitrate": "",
-        "description": "", "comment": "", "purl": "",
+        "description": "",
+        "comment": "",
+        "purl": "",
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(Path("/tmp/test/file.mkv"), Path("/tmp/test"), CFG)
-    assert mf.genres == ["Melodic House/Techno", "Dance/Electro Pop", "Minimal/Deep Tech", "House"]
+    assert mf.genres == [
+        "Melodic House/Techno",
+        "Dance/Electro Pop",
+        "Minimal/Deep Tech",
+        "House",
+    ]
 
 
 def _identified_meta(**overrides):
     base = {
-        "title": "", "tracklists_title": "", "tracklists_url": "https://1001.tl/x",
-        "artist_tag": "Test", "date_tag": "",
-        "duration_seconds": None, "width": None, "height": None,
-        "video_format": "", "audio_format": "", "audio_bitrate": "",
+        "title": "",
+        "tracklists_title": "",
+        "tracklists_url": "https://1001.tl/x",
+        "artist_tag": "Test",
+        "date_tag": "",
+        "duration_seconds": None,
+        "width": None,
+        "height": None,
+        "video_format": "",
+        "audio_format": "",
+        "audio_bitrate": "",
         "overall_bitrate": "",
-        "description": "", "comment": "", "purl": "",
+        "description": "",
+        "comment": "",
+        "purl": "",
     }
     base.update(overrides)
     return base
@@ -261,7 +297,9 @@ def _identified_meta(**overrides):
 
 def test_analyse_edition_from_country_when_name_has_none():
     """Festival 'Dreamstate' + country 'Australia' resolves the Australia edition."""
-    meta = _identified_meta(tracklists_festival="Dreamstate", tracklists_country="Australia")
+    meta = _identified_meta(
+        tracklists_festival="Dreamstate", tracklists_country="Australia"
+    )
     with patch("festival_organizer.analyzer.extract_metadata", return_value=meta):
         mf = analyse_file(Path("/tmp/test/file.mkv"), Path("/tmp/test"), CFG)
     assert mf.festival == "Dreamstate"
@@ -270,7 +308,9 @@ def test_analyse_edition_from_country_when_name_has_none():
 
 def test_analyse_name_edition_wins_over_country():
     """Festival 'Tomorrowland Winter' keeps the name edition even with country France."""
-    meta = _identified_meta(tracklists_festival="Tomorrowland Winter", tracklists_country="France")
+    meta = _identified_meta(
+        tracklists_festival="Tomorrowland Winter", tracklists_country="France"
+    )
     with patch("festival_organizer.analyzer.extract_metadata", return_value=meta):
         mf = analyse_file(Path("/tmp/test/file.mkv"), Path("/tmp/test"), CFG)
     assert mf.festival == "Tomorrowland"
@@ -279,7 +319,9 @@ def test_analyse_name_edition_wins_over_country():
 
 def test_analyse_main_edition_stays_editionless():
     """Festival 'Tomorrowland' + country 'Belgium' stays the main (no edition)."""
-    meta = _identified_meta(tracklists_festival="Tomorrowland", tracklists_country="Belgium")
+    meta = _identified_meta(
+        tracklists_festival="Tomorrowland", tracklists_country="Belgium"
+    )
     with patch("festival_organizer.analyzer.extract_metadata", return_value=meta):
         mf = analyse_file(Path("/tmp/test/file.mkv"), Path("/tmp/test"), CFG)
     assert mf.festival == "Tomorrowland"
@@ -304,14 +346,22 @@ def test_display_artist_from_1001tl_b2b():
         "tracklists_artists": "Martin Garrix|Alesso",
         "artist_tag": "Martin Garrix, Alesso",
         "date_tag": "",
-        "duration_seconds": 3600.0, "width": 1920, "height": 1080,
-        "video_format": "VP9", "audio_format": "Opus",
-        "audio_bitrate": "", "overall_bitrate": "",
-        "description": "", "comment": "", "purl": "",
+        "duration_seconds": 3600.0,
+        "width": 1920,
+        "height": 1080,
+        "video_format": "VP9",
+        "audio_format": "Opus",
+        "audio_bitrate": "",
+        "overall_bitrate": "",
+        "description": "",
+        "comment": "",
+        "purl": "",
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(
-            Path("D:/TEMP/_ORG/MARTIN GARRIX B2B ALESSO LIVE @ RED ROCKS 2025 [J8P_X7Fc5as].mkv"),
+            Path(
+                "D:/TEMP/_ORG/MARTIN GARRIX B2B ALESSO LIVE @ RED ROCKS 2025 [J8P_X7Fc5as].mkv"
+            ),
             Path("D:/TEMP/_ORG"),
             CFG,
         )
@@ -328,14 +378,22 @@ def test_display_artist_solo_matches_artist():
         "tracklists_artists": "Martin Garrix",
         "artist_tag": "",
         "date_tag": "",
-        "duration_seconds": 7200.0, "width": 3840, "height": 2160,
-        "video_format": "VP9", "audio_format": "Opus",
-        "audio_bitrate": "125000", "overall_bitrate": "13500000",
-        "description": "", "comment": "", "purl": "",
+        "duration_seconds": 7200.0,
+        "width": 3840,
+        "height": 2160,
+        "video_format": "VP9",
+        "audio_format": "Opus",
+        "audio_bitrate": "125000",
+        "overall_bitrate": "13500000",
+        "description": "",
+        "comment": "",
+        "purl": "",
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(
-            Path("//hyperv/Data/Concerts/AMF/2024 - AMF/MARTIN GARRIX LIVE @ AMF 2024.mkv"),
+            Path(
+                "//hyperv/Data/Concerts/AMF/2024 - AMF/MARTIN GARRIX LIVE @ AMF 2024.mkv"
+            ),
             Path("//hyperv/Data/Concerts"),
             CFG,
         )
@@ -346,17 +404,27 @@ def test_display_artist_solo_matches_artist():
 def test_display_artist_ignores_artist_tag():
     """display_artist is NOT derived from ARTIST tag (which stores primary only)."""
     fake_meta = {
-        "title": "", "tracklists_title": "", "tracklists_url": "",
+        "title": "",
+        "tracklists_title": "",
+        "tracklists_url": "",
         "artist_tag": "Martin Garrix",
-        "date_tag": "", "duration_seconds": None,
-        "width": None, "height": None,
-        "video_format": "", "audio_format": "",
-        "audio_bitrate": "", "overall_bitrate": "",
-        "description": "", "comment": "", "purl": "",
+        "date_tag": "",
+        "duration_seconds": None,
+        "width": None,
+        "height": None,
+        "video_format": "",
+        "audio_format": "",
+        "audio_bitrate": "",
+        "overall_bitrate": "",
+        "description": "",
+        "comment": "",
+        "purl": "",
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(
-            Path("/library/Martin Garrix/2025 - Red Rocks - Martin Garrix & Alesso.mkv"),
+            Path(
+                "/library/Martin Garrix/2025 - Red Rocks - Martin Garrix & Alesso.mkv"
+            ),
             Path("/library"),
             CFG,
         )
@@ -423,7 +491,9 @@ def test_display_artist_group_with_members():
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(
-            Path("/library/UMF Miami/2025 - Everything Always (Dom Dolla & John Summit) - UMF Miami [Mainstage].mkv"),
+            Path(
+                "/library/UMF Miami/2025 - Everything Always (Dom Dolla & John Summit) - UMF Miami [Mainstage].mkv"
+            ),
             Path("/library"),
             CFG,
         )
@@ -602,7 +672,9 @@ def test_analyse_standalone_set_clears_festival():
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(
-            Path("D:/TEMP/_ORG/2026 - FISHER - [Bay Oval Park, New Zealand 2026-01-31].mkv"),
+            Path(
+                "D:/TEMP/_ORG/2026 - FISHER - [Bay Oval Park, New Zealand 2026-01-31].mkv"
+            ),
             Path("D:/TEMP/_ORG"),
             CFG,
         )
@@ -646,14 +718,21 @@ def test_analyse_standalone_set_reparse_after_organize():
         "artist_tag": "FISHER",
         "date_tag": "20260329",
         "duration_seconds": 7320.0,
-        "width": 1920, "height": 1080,
-        "video_format": "AVC", "audio_format": "AAC",
-        "audio_bitrate": "", "overall_bitrate": "9243000",
-        "description": "", "comment": "", "purl": "",
+        "width": 1920,
+        "height": 1080,
+        "video_format": "AVC",
+        "audio_format": "AAC",
+        "audio_bitrate": "",
+        "overall_bitrate": "9243000",
+        "description": "",
+        "comment": "",
+        "purl": "",
     }
     with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
         mf = analyse_file(
-            Path("E:/Data/Concerts/FISHER/2026 - FISHER [Bay Oval Park, New Zealand 2026-01-31].mkv"),
+            Path(
+                "E:/Data/Concerts/FISHER/2026 - FISHER [Bay Oval Park, New Zealand 2026-01-31].mkv"
+            ),
             Path("E:/Data/Concerts"),
             CFG,
         )

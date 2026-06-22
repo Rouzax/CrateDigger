@@ -1,4 +1,5 @@
 """Assemble and send the multipart email via stdlib smtplib."""
+
 from __future__ import annotations
 
 import smtplib
@@ -11,7 +12,9 @@ from festival_organizer.notify.models import RenderedEmail, SMTPSettings
 _TIMEOUT = 30
 
 
-def build_message(rendered: RenderedEmail, *, from_address: str, to: list[str]) -> MIMEMultipart:
+def build_message(
+    rendered: RenderedEmail, *, from_address: str, to: list[str]
+) -> MIMEMultipart:
     """Build a multipart/related message: alternative(text, html) + inline images."""
     root = MIMEMultipart("related")
     root["Subject"] = rendered.subject
@@ -31,7 +34,9 @@ def build_message(rendered: RenderedEmail, *, from_address: str, to: list[str]) 
     return root
 
 
-def send_email(settings: SMTPSettings, rendered: RenderedEmail, *, to: list[str]) -> None:
+def send_email(
+    settings: SMTPSettings, rendered: RenderedEmail, *, to: list[str]
+) -> None:
     """Send the rendered email to `to` using `settings`. Raises on transport failure."""
     msg = build_message(rendered, from_address=settings.from_address, to=to)
     if settings.security == "ssl":

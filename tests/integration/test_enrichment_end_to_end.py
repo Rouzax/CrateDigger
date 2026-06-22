@@ -23,6 +23,7 @@ TTV=30, and the display-vs-canonical split between TTV=50 ARTIST (filesystem
 canonical), TTV=70 CRATEDIGGER_1001TL_ARTISTS (1001TL display form), and
 TTV=30 PERFORMER (1001TL display form, no alias resolution).
 """
+
 import json
 import logging
 import os
@@ -143,21 +144,25 @@ FIXTURES = {
         "filename": "AFROJACK LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 [fLyb8KvtSzw].mkv",
         "tracklist_id": "22r0yk79",
         "scenarios": ["solo"],
-        "expect": {"embedding": {
-            "ttv70_artists": "AFROJACK",
-            "performer_must_include": ["AFROJACK"],
-            "max_chapters": 50,
-        }},
+        "expect": {
+            "embedding": {
+                "ttv70_artists": "AFROJACK",
+                "performer_must_include": ["AFROJACK"],
+                "max_chapters": 50,
+            }
+        },
     },
     "eric-prydz-resistance": {
         "filename": "ERIC PRYDZ LIVE @ ULTRA MUSIC FESTIVAL MIAMI 2026 ｜ RESISTANCE MEGASTRUCTURE [hU-z3iV0LOg].mkv",
         "tracklist_id": "qy9yyy9",
         "scenarios": ["solo", "single-genre"],
-        "expect": {"embedding": {
-            "ttv70_artists": "Eric Prydz",
-            "performer_must_include": ["Eric Prydz"],
-            "max_chapters": 50,
-        }},
+        "expect": {
+            "embedding": {
+                "ttv70_artists": "Eric Prydz",
+                "performer_must_include": ["Eric Prydz"],
+                "max_chapters": 50,
+            }
+        },
     },
     # Synthetic fixture: reuses an existing MKV but identifies it against a
     # non-festival venue tracklist (Fred again.. & Thomas Bangalter @
@@ -216,12 +221,17 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def _run_enrich(mkv: Path, tracklist_id: str, tmp_path: Path, tracklist_date: str | None = None):
+def _run_enrich(
+    mkv: Path, tracklist_id: str, tmp_path: Path, tracklist_date: str | None = None
+):
     """Re-enrich *mkv* through the real pipeline. Returns the loaded Tags and
     Chapters XML roots."""
     from festival_organizer.config import load_config
     from festival_organizer.tracklists.api import TracklistSession
-    from festival_organizer.tracklists.chapters import embed_chapters, parse_tracklist_lines
+    from festival_organizer.tracklists.chapters import (
+        embed_chapters,
+        parse_tracklist_lines,
+    )
     from festival_organizer.tracklists.dj_cache import DjCache
     from festival_organizer.tracklists.source_cache import SourceCache
 
@@ -230,7 +240,9 @@ def _run_enrich(mkv: Path, tracklist_id: str, tmp_path: Path, tracklist_date: st
     dj_cache = DjCache(cache_path=tmp_path / "dj_cache.json", ttl_days=90)
     src_cache = SourceCache(cache_path=tmp_path / "source_cache.json", ttl_days=365)
     sess = TracklistSession(
-        cookie_cache_path=COOKIES, source_cache=src_cache, dj_cache=dj_cache,
+        cookie_cache_path=COOKIES,
+        source_cache=src_cache,
+        dj_cache=dj_cache,
     )
     sess.login(email, password)
 
@@ -262,8 +274,10 @@ def _run_enrich(mkv: Path, tracklist_id: str, tmp_path: Path, tracklist_date: st
     # MUSICBRAINZ_ARTISTIDS). Both ops read from on-disk tags and ignore
     # their `media_file` argument, so passing None is safe.
     from festival_organizer.operations import (
-        AlbumArtistMbidsOperation, ChapterArtistMbidsOperation,
+        AlbumArtistMbidsOperation,
+        ChapterArtistMbidsOperation,
     )
+
     ChapterArtistMbidsOperation(config=cfg).execute(mkv, media_file=None)  # pyright: ignore[reportArgumentType]
     AlbumArtistMbidsOperation(config=cfg).execute(mkv, media_file=None)  # pyright: ignore[reportArgumentType]
 
@@ -297,8 +311,8 @@ def _canonicalize_tags(tags_root: ET.Element) -> dict:
         for simple in tag.findall("Simple"):
             n_el = simple.find("Name")
             s_el = simple.find("String")
-            name = ((n_el.text if n_el is not None else "") or "")
-            value = ((s_el.text if s_el is not None else "") or "")
+            name = (n_el.text if n_el is not None else "") or ""
+            value = (s_el.text if s_el is not None else "") or ""
             pairs.append((name, value))
         pairs.sort()
         if uid_el is not None and uid_el.text:
@@ -328,7 +342,9 @@ def test_embedding(fixture_key: str, tmp_path):
     shutil.copy(src, mkv)
 
     tags_root, chapters_root = _run_enrich(
-        mkv, fixture["tracklist_id"], tmp_path,
+        mkv,
+        fixture["tracklist_id"],
+        tmp_path,
         tracklist_date=fixture.get("tracklist_date"),
     )
     _assert_universal(tags_root, chapters_root)
@@ -360,7 +376,9 @@ def test_embedding_idempotent(tmp_path):
     run1 = tmp_path / "run1"
     run1.mkdir()
     tags1, _ = _run_enrich(
-        mkv, fixture["tracklist_id"], run1,
+        mkv,
+        fixture["tracklist_id"],
+        run1,
         tracklist_date=fixture.get("tracklist_date"),
     )
     canon1 = _canonicalize_tags(tags1)
@@ -368,7 +386,9 @@ def test_embedding_idempotent(tmp_path):
     run2 = tmp_path / "run2"
     run2.mkdir()
     tags2, _ = _run_enrich(
-        mkv, fixture["tracklist_id"], run2,
+        mkv,
+        fixture["tracklist_id"],
+        run2,
         tracklist_date=fixture.get("tracklist_date"),
     )
     canon2 = _canonicalize_tags(tags2)
@@ -410,20 +430,36 @@ def test_full_pipeline(fixture_key: str, tmp_path):
     cfg_arg = ["--config", str(CONFIG)]
 
     subprocess.run(
-        ["cratedigger", "identify", *cfg_arg,
-         "--tracklist", fixture["tracklist_id"], "--auto",
-         str(inbox / fixture["filename"])],
-        check=True, timeout=600,
+        [
+            "cratedigger",
+            "identify",
+            *cfg_arg,
+            "--tracklist",
+            fixture["tracklist_id"],
+            "--auto",
+            str(inbox / fixture["filename"]),
+        ],
+        check=True,
+        timeout=600,
     )
     subprocess.run(
-        ["cratedigger", "organize", *cfg_arg,
-         "--output", str(library), "--move", "--yes",
-         str(inbox)],
-        check=True, timeout=300,
+        [
+            "cratedigger",
+            "organize",
+            *cfg_arg,
+            "--output",
+            str(library),
+            "--move",
+            "--yes",
+            str(inbox),
+        ],
+        check=True,
+        timeout=300,
     )
     subprocess.run(
         ["cratedigger", "enrich", *cfg_arg, str(library)],
-        check=True, timeout=900,
+        check=True,
+        timeout=900,
     )
 
     _assert_pipeline_expect(library, fixture.get("expect", {}).get("pipeline", {}))
@@ -460,18 +496,27 @@ def test_full_pipeline_in_place(fixture_key: str, tmp_path):
     cfg_arg = ["--config", str(CONFIG)]
 
     subprocess.run(
-        ["cratedigger", "identify", *cfg_arg,
-         "--tracklist", fixture["tracklist_id"], "--auto",
-         str(inbox / fixture["filename"])],
-        check=True, timeout=600,
+        [
+            "cratedigger",
+            "identify",
+            *cfg_arg,
+            "--tracklist",
+            fixture["tracklist_id"],
+            "--auto",
+            str(inbox / fixture["filename"]),
+        ],
+        check=True,
+        timeout=600,
     )
     subprocess.run(
         ["cratedigger", "organize", *cfg_arg, "--yes", str(inbox)],
-        check=True, timeout=300,
+        check=True,
+        timeout=300,
     )
     subprocess.run(
         ["cratedigger", "enrich", *cfg_arg, str(inbox)],
-        check=True, timeout=900,
+        check=True,
+        timeout=900,
     )
 
     # In-place organize (source == output) picks the rename action by the new
@@ -524,16 +569,31 @@ def test_in_place_layout_switch_migrates_sidecars_and_folder_artefacts(tmp_path)
     cfg_arg = ["--config", str(CONFIG)]
 
     subprocess.run(
-        ["cratedigger", "identify", *cfg_arg,
-         "--tracklist", fixture["tracklist_id"], "--auto",
-         str(inbox / fixture["filename"])],
-        check=True, timeout=600,
+        [
+            "cratedigger",
+            "identify",
+            *cfg_arg,
+            "--tracklist",
+            fixture["tracklist_id"],
+            "--auto",
+            str(inbox / fixture["filename"]),
+        ],
+        check=True,
+        timeout=600,
     )
     # First organize lands the file in artist_flat layout: inbox/<artist>/<stem>.mkv
     subprocess.run(
-        ["cratedigger", "organize", *cfg_arg,
-         "--layout", "artist_flat", "--yes", str(inbox)],
-        check=True, timeout=300,
+        [
+            "cratedigger",
+            "organize",
+            *cfg_arg,
+            "--layout",
+            "artist_flat",
+            "--yes",
+            str(inbox),
+        ],
+        check=True,
+        timeout=300,
     )
 
     mkvs_after_first = list(inbox.rglob("*.mkv"))
@@ -554,9 +614,17 @@ def test_in_place_layout_switch_migrates_sidecars_and_folder_artefacts(tmp_path)
     # sidecars must come with it, folder-level artefacts must migrate, and the
     # now-empty artist_dir must be removed.
     subprocess.run(
-        ["cratedigger", "organize", *cfg_arg,
-         "--layout", "place_flat", "--yes", str(inbox)],
-        check=True, timeout=300,
+        [
+            "cratedigger",
+            "organize",
+            *cfg_arg,
+            "--layout",
+            "place_flat",
+            "--yes",
+            str(inbox),
+        ],
+        check=True,
+        timeout=300,
     )
 
     mkvs_after_second = list(inbox.rglob("*.mkv"))
@@ -574,7 +642,9 @@ def test_in_place_layout_switch_migrates_sidecars_and_folder_artefacts(tmp_path)
     new_stem = new_mkv.stem
     assert (new_dir / f"{new_stem}.nfo").exists(), "nfo sidecar did not follow"
     assert (new_dir / f"{new_stem}-thumb.jpg").exists(), "thumb sidecar did not follow"
-    assert (new_dir / f"{new_stem}-poster.jpg").exists(), "poster sidecar did not follow"
+    assert (new_dir / f"{new_stem}-poster.jpg").exists(), (
+        "poster sidecar did not follow"
+    )
     folder_jpg = new_dir / "folder.jpg"
     fanart_jpg = new_dir / "fanart.jpg"
     assert folder_jpg.exists(), "folder.jpg did not migrate to the new folder"
@@ -615,16 +685,31 @@ def test_full_pipeline_idempotent(tmp_path):
     # First pass: full pipeline through organize (enrich is not required
     # for identify's up_to_date check, and skipping it saves ~5 min).
     subprocess.run(
-        ["cratedigger", "identify", *cfg_arg,
-         "--tracklist", fixture["tracklist_id"], "--auto",
-         str(inbox / fixture["filename"])],
-        check=True, timeout=600,
+        [
+            "cratedigger",
+            "identify",
+            *cfg_arg,
+            "--tracklist",
+            fixture["tracklist_id"],
+            "--auto",
+            str(inbox / fixture["filename"]),
+        ],
+        check=True,
+        timeout=600,
     )
     subprocess.run(
-        ["cratedigger", "organize", *cfg_arg,
-         "--output", str(library), "--move", "--yes",
-         str(inbox)],
-        check=True, timeout=300,
+        [
+            "cratedigger",
+            "organize",
+            *cfg_arg,
+            "--output",
+            str(library),
+            "--move",
+            "--yes",
+            str(inbox),
+        ],
+        check=True,
+        timeout=300,
     )
 
     organized = next(library.rglob("*.mkv"), None)
@@ -632,10 +717,19 @@ def test_full_pipeline_idempotent(tmp_path):
 
     # Second identify on the organized file should be a no-op.
     result = subprocess.run(
-        ["cratedigger", "identify", *cfg_arg,
-         "--tracklist", fixture["tracklist_id"], "--auto",
-         str(organized)],
-        check=True, capture_output=True, text=True, timeout=300,
+        [
+            "cratedigger",
+            "identify",
+            *cfg_arg,
+            "--tracklist",
+            fixture["tracklist_id"],
+            "--auto",
+            str(organized),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=300,
     )
     assert "up_to_date: 1" in result.stdout, (
         "second identify did not report up_to_date: 1\n"
@@ -660,6 +754,7 @@ def test_full_pipeline_enrich_idempotent(tmp_path):
     Uses the Tiesto fixture only.
     """
     import hashlib
+
     assert MKV_DIR is not None and CONFIG is not None
     fixture = FIXTURES["tiesto-we-belong-here"]
     src = MKV_DIR / fixture["filename"]
@@ -675,20 +770,36 @@ def test_full_pipeline_enrich_idempotent(tmp_path):
     cfg_arg = ["--config", str(CONFIG)]
 
     subprocess.run(
-        ["cratedigger", "identify", *cfg_arg,
-         "--tracklist", fixture["tracklist_id"], "--auto",
-         str(inbox / fixture["filename"])],
-        check=True, timeout=600,
+        [
+            "cratedigger",
+            "identify",
+            *cfg_arg,
+            "--tracklist",
+            fixture["tracklist_id"],
+            "--auto",
+            str(inbox / fixture["filename"]),
+        ],
+        check=True,
+        timeout=600,
     )
     subprocess.run(
-        ["cratedigger", "organize", *cfg_arg,
-         "--output", str(library), "--move", "--yes",
-         str(inbox)],
-        check=True, timeout=300,
+        [
+            "cratedigger",
+            "organize",
+            *cfg_arg,
+            "--output",
+            str(library),
+            "--move",
+            "--yes",
+            str(inbox),
+        ],
+        check=True,
+        timeout=300,
     )
     subprocess.run(
         ["cratedigger", "enrich", *cfg_arg, str(library)],
-        check=True, timeout=900,
+        check=True,
+        timeout=900,
     )
 
     def _hash_sidecars(root: Path) -> dict[str, str]:
@@ -718,7 +829,8 @@ def test_full_pipeline_enrich_idempotent(tmp_path):
     # Second enrich, the thing we're testing.
     subprocess.run(
         ["cratedigger", "enrich", *cfg_arg, str(library)],
-        check=True, timeout=900,
+        check=True,
+        timeout=900,
     )
 
     snap2 = _hash_sidecars(library)
@@ -897,8 +1009,7 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
             r.getMessage() for r in caplog.records if r.levelno == logging.INFO
         ]
         assert any("fanart.mbid_unresolved:" in m for m in info_messages), (
-            "expected an INFO for unresolved artists, got: "
-            f"{info_messages!r}"
+            f"expected an INFO for unresolved artists, got: {info_messages!r}"
         )
 
 
@@ -940,7 +1051,9 @@ def _parse_chapter_time(s: str | None) -> int | None:
         return None
     h, m, rest = s.split(":")
     sec, _, nanos = rest.partition(".")
-    return (int(h) * 3600 + int(m) * 60 + int(sec)) * 1_000_000_000 + int((nanos or "0").ljust(9, "0")[:9])
+    return (int(h) * 3600 + int(m) * 60 + int(sec)) * 1_000_000_000 + int(
+        (nanos or "0").ljust(9, "0")[:9]
+    )
 
 
 def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
@@ -1062,7 +1175,9 @@ def _assert_universal(tags_root: ET.Element, chapters_root: ET.Element) -> None:
         prev_ns = cur_ns
 
 
-def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path) -> None:
+def _assert_embedding_expect(
+    tags_root: ET.Element, expect: dict, tmp_path: Path
+) -> None:
     """Apply a fixture's `expect.embedding` assertions.
 
     Supported keys: ttv70_artists, ttv70_artists_contains, min_chapters,
@@ -1070,7 +1185,10 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
     performer_must_include, dj_cache_min_entries.
     """
     if "ttv70_artists" in expect:
-        assert _find_global_tag(tags_root, 70, "CRATEDIGGER_1001TL_ARTISTS") == expect["ttv70_artists"]
+        assert (
+            _find_global_tag(tags_root, 70, "CRATEDIGGER_1001TL_ARTISTS")
+            == expect["ttv70_artists"]
+        )
 
     if "ttv70_artists_contains" in expect:
         value = _find_global_tag(tags_root, 70, "CRATEDIGGER_1001TL_ARTISTS") or ""
@@ -1148,7 +1266,7 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
             uid_el = targets.find("ChapterUID")
             if ttv_el is None or uid_el is None or (ttv_el.text or "") != "30":
                 continue
-            uid = (uid_el.text or "")
+            uid = uid_el.text or ""
             block: dict[str, str] = {}
             for simple in tag.findall("Simple"):
                 n_el = simple.find("Name")
@@ -1158,12 +1276,14 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
             chapter_tags_by_uid[uid] = block
 
         chapters_with_names = [
-            b for b in chapter_tags_by_uid.values()
+            b
+            for b in chapter_tags_by_uid.values()
             if b.get("CRATEDIGGER_TRACK_PERFORMER_NAMES", "").strip()
         ]
         if chapters_with_names:
             chapters_with_mbids = [
-                b for b in chapters_with_names
+                b
+                for b in chapters_with_names
                 if any((b.get("MUSICBRAINZ_ARTISTIDS", "") or "").split("|"))
             ]
             assert chapters_with_mbids, (
@@ -1173,7 +1293,13 @@ def _assert_embedding_expect(tags_root: ET.Element, expect: dict, tmp_path: Path
             )
             # Alignment invariant: slot count matches PERFORMER_NAMES count.
             for block in chapters_with_mbids:
-                names_n = len([x for x in block["CRATEDIGGER_TRACK_PERFORMER_NAMES"].split("|") if x])
+                names_n = len(
+                    [
+                        x
+                        for x in block["CRATEDIGGER_TRACK_PERFORMER_NAMES"].split("|")
+                        if x
+                    ]
+                )
                 mbid_slots_n = len(block["MUSICBRAINZ_ARTISTIDS"].split("|"))
                 assert mbid_slots_n == names_n, (
                     f"chapter MUSICBRAINZ_ARTISTIDS slot count {mbid_slots_n} "
@@ -1197,6 +1323,7 @@ def _read_configured_layout() -> str:
         return "place_flat"
     try:
         import tomllib
+
         with open(CONFIG, "rb") as f:
             data = tomllib.load(f)
         return data.get("default_layout", "place_flat")
@@ -1295,18 +1422,22 @@ def test_identify_console_contract(tmp_path):
     env = {
         **os.environ,
         "HOME": str(fake_home),
-        "PYTHONUSERBASE": os.environ.get(
-            "PYTHONUSERBASE", site.getuserbase()
-        ),
+        "PYTHONUSERBASE": os.environ.get("PYTHONUSERBASE", site.getuserbase()),
     }
 
     result = subprocess.run(
         [
             cratedigger_bin,
-            "identify", str(scratch), "--auto",
-            "--config", str(CONFIG),
+            "identify",
+            str(scratch),
+            "--auto",
+            "--config",
+            str(CONFIG),
         ],
-        capture_output=True, text=True, timeout=600, env=env,
+        capture_output=True,
+        text=True,
+        timeout=600,
+        env=env,
     )
 
     out = result.stdout
@@ -1331,4 +1462,3 @@ def test_identify_console_contract(tmp_path):
         f"Expected {len(fixtures)} verdict lines, got {len(matches)}: {matches}\n"
         f"Full stdout:\n{out}\nstderr:\n{result.stderr}"
     )
-

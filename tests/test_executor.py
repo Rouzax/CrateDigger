@@ -5,7 +5,9 @@ from unittest.mock import patch
 import pytest
 
 from festival_organizer.executor import (
-    execute_actions, paths_are_same_file, resolve_collision,
+    execute_actions,
+    paths_are_same_file,
+    resolve_collision,
 )
 from festival_organizer.models import FileAction, MediaFile
 
@@ -188,11 +190,18 @@ def test_keyboard_interrupt_propagates(tmp_path):
     source.write_bytes(b"data")
     target = tmp_path / "dest" / "test.mkv"
 
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   festival="TML", year="2024", content_type="festival_set")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="TML",
+        year="2024",
+        content_type="festival_set",
+    )
     action = FileAction(source=source, target=target, action="move", media_file=mf)
 
-    with patch("festival_organizer.executor.shutil.move", side_effect=KeyboardInterrupt):
+    with patch(
+        "festival_organizer.executor.shutil.move", side_effect=KeyboardInterrupt
+    ):
         with pytest.raises(KeyboardInterrupt):
             execute_actions([action])
 
@@ -200,16 +209,24 @@ def test_keyboard_interrupt_propagates(tmp_path):
 def test_execute_actions_logs_warning_on_oserror(tmp_path, caplog):
     """File action OSError is logged WARNING with src, target, and exception."""
     import logging
+
     source = tmp_path / "test.mkv"
     source.write_bytes(b"data")
     target = tmp_path / "dest" / "test.mkv"
 
-    mf = MediaFile(source_path=Path("test.mkv"), artist="Test",
-                   festival="TML", year="2024", content_type="festival_set")
+    mf = MediaFile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="TML",
+        year="2024",
+        content_type="festival_set",
+    )
     action = FileAction(source=source, target=target, action="move", media_file=mf)
 
-    with patch("festival_organizer.executor.shutil.move",
-               side_effect=OSError("permission denied")):
+    with patch(
+        "festival_organizer.executor.shutil.move",
+        side_effect=OSError("permission denied"),
+    ):
         with caplog.at_level(logging.WARNING, logger="festival_organizer.executor"):
             result = execute_actions([action])
 

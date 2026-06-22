@@ -12,20 +12,33 @@ def _save(path, size):
 
 
 def test_extract_prefers_cover_land_over_portrait_cover(tmp_path):
-    source = tmp_path / "s.mkv"; source.touch()
+    source = tmp_path / "s.mkv"
+    source.touch()
     thumb = tmp_path / "s-thumb.jpg"
     atts = [
-        {"id": 1, "file_name": "cover.jpg", "content_type": "image/jpeg"},      # portrait poster
-        {"id": 2, "file_name": "cover_land.png", "content_type": "image/png"},  # landscape thumb
+        {
+            "id": 1,
+            "file_name": "cover.jpg",
+            "content_type": "image/jpeg",
+        },  # portrait poster
+        {
+            "id": 2,
+            "file_name": "cover_land.png",
+            "content_type": "image/png",
+        },  # landscape thumb
     ]
 
     def fake_extract(src, att_id, dest):
         _save(Path(dest), (1280, 720) if att_id == 2 else (1000, 1500))
         return True
 
-    with patch("festival_organizer.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"), \
-         patch("festival_organizer.artwork.list_image_attachments", return_value=atts), \
-         patch("festival_organizer.artwork.extract_attachment", side_effect=fake_extract):
+    with (
+        patch("festival_organizer.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"),
+        patch("festival_organizer.artwork.list_image_attachments", return_value=atts),
+        patch(
+            "festival_organizer.artwork.extract_attachment", side_effect=fake_extract
+        ),
+    ):
         ok = _extract_mkvattachment(source, thumb)
     assert ok and thumb.exists()
     with _Image.open(thumb) as im:
@@ -34,7 +47,8 @@ def test_extract_prefers_cover_land_over_portrait_cover(tmp_path):
 
 def test_extract_returns_false_when_only_portrait_cover(tmp_path):
     """A processed file whose only cover.* is portrait: do not feed the poster to itself."""
-    source = tmp_path / "s.mkv"; source.touch()
+    source = tmp_path / "s.mkv"
+    source.touch()
     thumb = tmp_path / "s-thumb.jpg"
     atts = [{"id": 1, "file_name": "cover.jpg", "content_type": "image/jpeg"}]
 
@@ -42,9 +56,13 @@ def test_extract_returns_false_when_only_portrait_cover(tmp_path):
         _save(Path(dest), (1000, 1500))  # portrait
         return True
 
-    with patch("festival_organizer.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"), \
-         patch("festival_organizer.artwork.list_image_attachments", return_value=atts), \
-         patch("festival_organizer.artwork.extract_attachment", side_effect=fake_extract):
+    with (
+        patch("festival_organizer.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"),
+        patch("festival_organizer.artwork.list_image_attachments", return_value=atts),
+        patch(
+            "festival_organizer.artwork.extract_attachment", side_effect=fake_extract
+        ),
+    ):
         assert _extract_mkvattachment(source, thumb) is False
 
 
@@ -65,8 +83,13 @@ def test_extract_cover_no_tool(tmp_path):
     source = tmp_path / "source.mkv"
     source.touch()
     with patch("festival_organizer.metadata.MKVEXTRACT_PATH", None):
-        with patch("festival_organizer.artwork._sample_frame_fallback", return_value=False):
-            with patch("festival_organizer.artwork._gradient_thumb_fallback", return_value=False):
+        with patch(
+            "festival_organizer.artwork._sample_frame_fallback", return_value=False
+        ):
+            with patch(
+                "festival_organizer.artwork._gradient_thumb_fallback",
+                return_value=False,
+            ):
                 result = extract_cover(source, tmp_path)
                 assert result is None
 
@@ -86,9 +109,13 @@ def test_extract_cover_success(tmp_path):
         _save(Path(dest), (1280, 720))  # landscape
         return True
 
-    with patch("festival_organizer.metadata.MKVEXTRACT_PATH", "mkvextract"), \
-         patch("festival_organizer.artwork.list_image_attachments", return_value=atts), \
-         patch("festival_organizer.artwork.extract_attachment", side_effect=fake_extract):
+    with (
+        patch("festival_organizer.metadata.MKVEXTRACT_PATH", "mkvextract"),
+        patch("festival_organizer.artwork.list_image_attachments", return_value=atts),
+        patch(
+            "festival_organizer.artwork.extract_attachment", side_effect=fake_extract
+        ),
+    ):
         result = extract_cover(source, target_dir)
         assert result == thumb_path
         assert thumb_path.exists()
@@ -106,8 +133,13 @@ def test_extract_cover_no_attachment(tmp_path):
 
     with patch("festival_organizer.metadata.MKVEXTRACT_PATH", "mkvextract"):
         with patch("subprocess.run", return_value=mock_result):
-            with patch("festival_organizer.artwork._sample_frame_fallback", return_value=False):
-                with patch("festival_organizer.artwork._gradient_thumb_fallback", return_value=False):
+            with patch(
+                "festival_organizer.artwork._sample_frame_fallback", return_value=False
+            ):
+                with patch(
+                    "festival_organizer.artwork._gradient_thumb_fallback",
+                    return_value=False,
+                ):
                     result = extract_cover(source, target_dir)
                     assert result is None
 
@@ -146,7 +178,9 @@ def test_extract_cover_frame_sampler_fallback(tmp_path):
                 "festival_organizer.frame_sampler.sample_best_frame",
                 return_value=fake_frame,
             ):
-                with patch("festival_organizer.artwork.Image.open", return_value=mock_img):
+                with patch(
+                    "festival_organizer.artwork.Image.open", return_value=mock_img
+                ):
                     result = extract_cover(source, target_dir)
                     assert result == thumb_path
 
@@ -187,11 +221,19 @@ def test_mkvextract_failure_logged(tmp_path, caplog):
 
     atts = [{"id": 1, "file_name": "cover.png", "content_type": "image/png"}]
 
-    with patch("festival_organizer.artwork.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"):
-        with patch("festival_organizer.artwork.list_image_attachments", return_value=atts):
-            with patch("festival_organizer.artwork.extract_attachment",
-                       side_effect=subprocess_mod.SubprocessError("fail")):
-                with caplog.at_level(logging.DEBUG, logger="festival_organizer.artwork"):
+    with patch(
+        "festival_organizer.artwork.metadata.MKVEXTRACT_PATH", "/usr/bin/mkvextract"
+    ):
+        with patch(
+            "festival_organizer.artwork.list_image_attachments", return_value=atts
+        ):
+            with patch(
+                "festival_organizer.artwork.extract_attachment",
+                side_effect=subprocess_mod.SubprocessError("fail"),
+            ):
+                with caplog.at_level(
+                    logging.DEBUG, logger="festival_organizer.artwork"
+                ):
                     result = _extract_mkvattachment(video, thumb)
     assert result is False
     assert "fail" in caplog.text
@@ -208,7 +250,9 @@ def test_extract_cover_gradient_fallback(tmp_path):
     thumb_path = target_dir / "source-thumb.jpg"
 
     with patch("festival_organizer.metadata.MKVEXTRACT_PATH", None):
-        with patch("festival_organizer.artwork._sample_frame_fallback", return_value=False):
+        with patch(
+            "festival_organizer.artwork._sample_frame_fallback", return_value=False
+        ):
             result = extract_cover(source, target_dir)
 
     assert result == thumb_path
@@ -223,7 +267,9 @@ def test_gradient_thumb_fallback_handles_poster_error(tmp_path):
     from festival_organizer.artwork import _gradient_thumb_fallback
 
     thumb = tmp_path / "x-thumb.jpg"
-    with patch("festival_organizer.poster._make_gradient_bg", side_effect=OSError("boom")):
+    with patch(
+        "festival_organizer.poster._make_gradient_bg", side_effect=OSError("boom")
+    ):
         assert _gradient_thumb_fallback(thumb) is False
     assert not thumb.exists()
 

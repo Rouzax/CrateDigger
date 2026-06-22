@@ -1,4 +1,5 @@
 """Command-line interface with workflow-oriented subcommands."""
+
 from __future__ import annotations
 
 import logging
@@ -27,12 +28,23 @@ from festival_organizer import metadata
 from festival_organizer.log import setup_logging
 from festival_organizer.metadata import configure_tools
 from festival_organizer.operations import (
-    OrganizeOperation, NfoOperation, ArtOperation, FanartOperation,
-    PosterOperation, AlbumPosterOperation, CoverEmbedOperation, TagsOperation,
+    OrganizeOperation,
+    NfoOperation,
+    ArtOperation,
+    FanartOperation,
+    PosterOperation,
+    AlbumPosterOperation,
+    CoverEmbedOperation,
+    TagsOperation,
     AlbumArtistMbidsOperation,
     ChapterArtistMbidsOperation,
 )
-from festival_organizer.progress import ProgressPrinter, OrganizeContractProgress, EnrichContractProgress, OrganizeEnrichProgress
+from festival_organizer.progress import (
+    ProgressPrinter,
+    OrganizeContractProgress,
+    EnrichContractProgress,
+    OrganizeEnrichProgress,
+)
 from festival_organizer.runner import run_pipeline
 from festival_organizer.scanner import scan_folder
 from festival_organizer.templates import render_folder, render_filename
@@ -46,14 +58,20 @@ logger = logging.getLogger(__name__)
 
 _CD_TOOLS: list[tuple[str, str, bool]] = [
     # (metadata attr name, display name, required)
-    ("FFPROBE_PATH",     "ffprobe",     True),
-    ("MKVEXTRACT_PATH",  "mkvextract",  True),
+    ("FFPROBE_PATH", "ffprobe", True),
+    ("MKVEXTRACT_PATH", "mkvextract", True),
     ("MKVPROPEDIT_PATH", "mkvpropedit", True),
-    ("MKVMERGE_PATH",    "mkvmerge",    True),
+    ("MKVMERGE_PATH", "mkvmerge", True),
 ]
 
 _CD_PACKAGES: list[str] = [
-    "beautifulsoup4", "Pillow", "ftfy", "numpy", "requests", "rich", "typer",
+    "beautifulsoup4",
+    "Pillow",
+    "ftfy",
+    "numpy",
+    "requests",
+    "rich",
+    "typer",
 ]
 
 # Asset probe for `--check`. Each entry is (label, resolver, description, severity).
@@ -62,10 +80,15 @@ _CD_PACKAGES: list[str] = [
 # module without needing to reload this list. Routed through
 # ``festival_organizer.paths`` so the probe follows platformdirs layout.
 _CD_ASSETS: list[tuple[str, Callable[[], Path], str, str]] = [
-    ("config.toml",       lambda: paths.config_file(),       "user config",                "warning"),
-    ("places.json",       lambda: paths.places_file(),       "curated place aliases",      "warning"),
-    ("artists.json",      lambda: paths.artists_file(),      "curated artist aliases",     "info"),
-    ("artist_mbids.json", lambda: paths.artist_mbids_file(), "curated MBID overrides",     "info"),
+    ("config.toml", lambda: paths.config_file(), "user config", "warning"),
+    ("places.json", lambda: paths.places_file(), "curated place aliases", "warning"),
+    ("artists.json", lambda: paths.artists_file(), "curated artist aliases", "info"),
+    (
+        "artist_mbids.json",
+        lambda: paths.artist_mbids_file(),
+        "curated MBID overrides",
+        "info",
+    ),
 ]
 
 
@@ -75,11 +98,22 @@ _CD_ASSETS: list[tuple[str, Callable[[], Path], str, str]] = [
 
 RootArg = Annotated[str, typer.Argument(help="File or folder to process")]
 LibraryArg = Annotated[str, typer.Argument(help="Library folder to process")]
-OutputOpt = Annotated[Optional[str], typer.Option("--output", "-o", help="Output folder")]
-ConfigOpt = Annotated[Optional[str], typer.Option("--config", help="Path to config.toml")]
-QuietOpt = Annotated[bool, typer.Option("--quiet", "-q", help="Suppress per-file progress")]
-VerboseOpt = Annotated[bool, typer.Option("--verbose", "-v", help="Show detailed progress and decisions")]
-DebugOpt = Annotated[bool, typer.Option("--debug", help="Show cache hits, retries, and internal mechanics")]
+OutputOpt = Annotated[
+    Optional[str], typer.Option("--output", "-o", help="Output folder")
+]
+ConfigOpt = Annotated[
+    Optional[str], typer.Option("--config", help="Path to config.toml")
+]
+QuietOpt = Annotated[
+    bool, typer.Option("--quiet", "-q", help="Suppress per-file progress")
+]
+VerboseOpt = Annotated[
+    bool, typer.Option("--verbose", "-v", help="Show detailed progress and decisions")
+]
+DebugOpt = Annotated[
+    bool,
+    typer.Option("--debug", help="Show cache hits, retries, and internal mechanics"),
+]
 
 
 class Layout(StrEnum):
@@ -214,14 +248,20 @@ def _run_check_impl(con: "Console") -> int:
         else:
             try:
                 r = tracked_run(
-                    [path, "--version"], capture_output=True, text=True, timeout=5, check=False,
+                    [path, "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    check=False,
                 )
                 version_line = _pick_version_line(r.stdout or r.stderr or "")
                 if version_line:
                     con.print(f"  [green]\u2713[/green] {display:<14} {version_line}")
                 else:
                     marker = "[red]\u2717[/red]" if required else "[yellow]![/yellow]"
-                    con.print(f"  {marker} {display:<14} version probe returned no output")
+                    con.print(
+                        f"  {marker} {display:<14} version probe returned no output"
+                    )
                     if required:
                         errors += 1
                     else:
@@ -265,22 +305,32 @@ def _run_check_impl(con: "Console") -> int:
 
         email, password = config.tracklists_credentials
         if email and password:
-            con.print("  [green]\u2713[/green] 1001TL       email + password configured")
+            con.print(
+                "  [green]\u2713[/green] 1001TL       email + password configured"
+            )
         else:
-            con.print("  [yellow]![/yellow] 1001TL       email or password missing (optional, tracklist enrichment)")
+            con.print(
+                "  [yellow]![/yellow] 1001TL       email or password missing (optional, tracklist enrichment)"
+            )
             warnings += 1
 
         cookie_path = paths.cookies_file()
         if cookie_path.is_file():
             con.print(f"  [green]\u2713[/green] 1001TL cookies  {cookie_path}")
         else:
-            con.print("  [dim]\u007e[/dim] 1001TL cookies  not found, will be created on first login")
+            con.print(
+                "  [dim]\u007e[/dim] 1001TL cookies  not found, will be created on first login"
+            )
 
         fanart_key = config.fanart_personal_api_key or ""
         if fanart_key:
-            con.print("  [green]\u2713[/green] fanart.tv    project + personal API key configured")
+            con.print(
+                "  [green]\u2713[/green] fanart.tv    project + personal API key configured"
+            )
         else:
-            con.print("  [dim]\u007e[/dim] fanart.tv    using built-in project API key (personal key not set)")
+            con.print(
+                "  [dim]\u007e[/dim] fanart.tv    using built-in project API key (personal key not set)"
+            )
 
         if not config.kodi_enabled:
             con.print("  [dim]\u007e[/dim] Kodi         not configured, skipping")
@@ -301,6 +351,7 @@ def _run_check_impl(con: "Console") -> int:
         format_freshness_line,
         refresh_update_cache,
     )
+
     try:
         update_installed = pkg_version(PACKAGE_NAME)
     except PackageNotFoundError:
@@ -318,7 +369,9 @@ def _run_check_impl(con: "Console") -> int:
         update_entry = _read_cache()
         update_latest = update_entry.get("latest_version") if update_entry else None
         annotation = format_freshness_line(
-            update_installed, update_latest, package_name=PACKAGE_NAME,
+            update_installed,
+            update_latest,
+            package_name=PACKAGE_NAME,
         )
         if update_latest is None:
             con.print(
@@ -363,7 +416,9 @@ def _run_check_impl(con: "Console") -> int:
         if errors:
             parts.append(f"[red]{errors} {'error' if errors == 1 else 'errors'}[/red]")
         if warnings:
-            parts.append(f"[yellow]{warnings} {'warning' if warnings == 1 else 'warnings'}[/yellow]")
+            parts.append(
+                f"[yellow]{warnings} {'warning' if warnings == 1 else 'warnings'}[/yellow]"
+            )
         con.print(", ".join(parts) + ".")
 
     return 1 if errors else 0
@@ -391,17 +446,20 @@ def main(
     """CrateDigger: Festival set & concert library manager."""
     if version_flag:
         from festival_organizer.log import setup_logging
+
         console = make_console()
         setup_logging(verbose=False, debug=False, console=console)
         _print_version_with_freshness(console)
         raise typer.Exit()
     if check_flag:
         from festival_organizer.log import setup_logging
+
         console = make_console()
         setup_logging(verbose=False, debug=False, console=console)
         raise typer.Exit(code=_run_check_impl(console))
     if email_test_flag:
         from festival_organizer.log import setup_logging
+
         console = make_console()
         setup_logging(verbose=False, debug=False, console=console)
         raise typer.Exit(code=_run_email_test_impl(console))
@@ -409,12 +467,14 @@ def main(
         typer.echo(ctx.get_help())
         raise SystemExit(1)
     from festival_organizer.update_check import print_cached_update_notice
+
     print_cached_update_notice(make_console())
 
 
 # ---------------------------------------------------------------------------
 # Helper: build namespace from command params and delegate to _run_command
 # ---------------------------------------------------------------------------
+
 
 def _dispatch(command: str, params: dict) -> int:
     params = {k: v for k, v in params.items() if k != "command"}
@@ -428,19 +488,44 @@ def _dispatch(command: str, params: dict) -> int:
 # Commands (in recommended workflow order)
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def identify(
     root: RootArg,
-    tracklist: Annotated[Optional[str], typer.Option("--tracklist", "-t", help="Tracklist URL, ID, or query")] = None,
-    auto: Annotated[bool, typer.Option("--auto", help="Batch mode, no prompts")] = False,
-    preview: Annotated[bool, typer.Option("--preview", help="Show chapters without embedding")] = False,
-    regenerate: Annotated[bool, typer.Option("--regenerate", "--fresh", help="Redo even if already done", show_default=False)] = False,
-    delay: Annotated[Optional[int], typer.Option("--delay", help="Delay between files, seconds (default: 5)")] = None,
+    tracklist: Annotated[
+        Optional[str],
+        typer.Option("--tracklist", "-t", help="Tracklist URL, ID, or query"),
+    ] = None,
+    auto: Annotated[
+        bool, typer.Option("--auto", help="Batch mode, no prompts")
+    ] = False,
+    preview: Annotated[
+        bool, typer.Option("--preview", help="Show chapters without embedding")
+    ] = False,
+    regenerate: Annotated[
+        bool,
+        typer.Option(
+            "--regenerate",
+            "--fresh",
+            help="Redo even if already done",
+            show_default=False,
+        ),
+    ] = False,
+    delay: Annotated[
+        Optional[int],
+        typer.Option("--delay", help="Delay between files, seconds (default: 5)"),
+    ] = None,
     config: ConfigOpt = None,
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
-    email: Annotated[Optional[bool], typer.Option("--email/--no-email", help="Force or suppress the updated-sets email for this run (overrides config)")] = None,
+    email: Annotated[
+        Optional[bool],
+        typer.Option(
+            "--email/--no-email",
+            help="Force or suppress the updated-sets email for this run (overrides config)",
+        ),
+    ] = None,
 ) -> int:
     """Match files on 1001Tracklists; embed metadata and chapters."""
     return _dispatch("identify", locals())
@@ -455,12 +540,39 @@ def organize(
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
-    move: Annotated[bool, typer.Option("--move", help="When importing (source != output): move files instead of copying. Ignored for in-place re-organize — in-place always uses atomic rename.")] = False,
-    dry_run: Annotated[bool, typer.Option("--dry-run", help="Preview what would happen without making changes")] = False,
-    enrich: Annotated[bool, typer.Option("--enrich", help="Run all enrichment after organizing (use enrich command for selective operations)")] = False,
-    yes: Annotated[bool, typer.Option("--yes", "-y", help="Skip confirmation prompts")] = False,
-    kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
-    email: Annotated[Optional[bool], typer.Option("--email/--no-email", help="Force or suppress the new-sets summary email for this run (overrides config)")] = None,
+    move: Annotated[
+        bool,
+        typer.Option(
+            "--move",
+            help="When importing (source != output): move files instead of copying. Ignored for in-place re-organize — in-place always uses atomic rename.",
+        ),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run", help="Preview what would happen without making changes"
+        ),
+    ] = False,
+    enrich: Annotated[
+        bool,
+        typer.Option(
+            "--enrich",
+            help="Run all enrichment after organizing (use enrich command for selective operations)",
+        ),
+    ] = False,
+    yes: Annotated[
+        bool, typer.Option("--yes", "-y", help="Skip confirmation prompts")
+    ] = False,
+    kodi_sync: Annotated[
+        bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")
+    ] = False,
+    email: Annotated[
+        Optional[bool],
+        typer.Option(
+            "--email/--no-email",
+            help="Force or suppress the new-sets summary email for this run (overrides config)",
+        ),
+    ] = None,
 ) -> int:
     """Organize files into the library layout.
 
@@ -482,9 +594,19 @@ def enrich(
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
     debug: DebugOpt = False,
-    only: Annotated[Optional[str], typer.Option("--only", help="Comma-separated operations to run (nfo, art, fanart, posters, cover, tags, chapter_artist_mbids, album_artist_mbids)")] = None,
-    regenerate: Annotated[bool, typer.Option("--regenerate", help="Regenerate even if artifacts exist")] = False,
-    kodi_sync: Annotated[bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")] = False,
+    only: Annotated[
+        Optional[str],
+        typer.Option(
+            "--only",
+            help="Comma-separated operations to run (nfo, art, fanart, posters, cover, tags, chapter_artist_mbids, album_artist_mbids)",
+        ),
+    ] = None,
+    regenerate: Annotated[
+        bool, typer.Option("--regenerate", help="Regenerate even if artifacts exist")
+    ] = False,
+    kodi_sync: Annotated[
+        bool, typer.Option("--kodi-sync", help="Notify Kodi to refresh updated items")
+    ] = False,
 ) -> int:
     """Add artwork, posters, NFO, and tags."""
     return _dispatch("enrich", locals())
@@ -514,6 +636,7 @@ def _save_win32_console_mode() -> None:
     try:
         import ctypes
         from ctypes import wintypes
+
         kernel32 = ctypes.windll.kernel32
         handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
         mode = wintypes.DWORD()
@@ -529,6 +652,7 @@ def _restore_win32_console_mode() -> None:
         return
     try:
         import ctypes
+
         kernel32 = ctypes.windll.kernel32
         handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
         kernel32.SetConsoleMode(handle, _SAVED_CONSOLE_MODE)
@@ -553,6 +677,7 @@ def _cleanup_console() -> None:
 # Entry point
 # ---------------------------------------------------------------------------
 
+
 def run(argv: list[str] | None = None) -> int:
     """Main entry point. Returns exit code."""
     if sys.platform == "win32":
@@ -572,13 +697,18 @@ def run(argv: list[str] | None = None) -> int:
         _cleanup_console()
         try:
             from festival_organizer.update_check import refresh_update_cache
+
             refresh_update_cache()
         except BaseException:
             pass
 
 
 def resolve_action(
-    *, source: Path, output: Path, move: bool, dry_run: bool,
+    *,
+    source: Path,
+    output: Path,
+    move: bool,
+    dry_run: bool,
 ) -> str:
     """Decide the organize action from flags plus the source/output relationship.
 
@@ -663,6 +793,7 @@ def _analyse_parallel(
 # Command logic (unchanged)
 # ---------------------------------------------------------------------------
 
+
 def _run_command(args: types.SimpleNamespace) -> int:
     start_time = time.monotonic()
     # Resolve config layers
@@ -686,7 +817,9 @@ def _run_command(args: types.SimpleNamespace) -> int:
     verbose = getattr(args, "verbose", False)
     debug = getattr(args, "debug", False)
     console = make_console()
-    log_path = setup_logging(verbose=verbose, debug=debug, console=console, command=args.command)
+    log_path = setup_logging(
+        verbose=verbose, debug=debug, console=console, command=args.command
+    )
 
     config.log_load_summary()
     paths.warn_if_legacy_paths_exist()
@@ -699,14 +832,14 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # Handle identify separately
     if args.command == "identify":
         from festival_organizer.tracklists.cli_handler import run_identify
+
         # Map new flag names to what cli_handler expects
         args.auto_select = getattr(args, "auto", False)
         args.ignore_stored_url = getattr(args, "regenerate", False)
         return run_identify(args, config, console=console)
 
     if args.command == "audit-logos":
-        return _run_audit_logos(root, config, console,
-                                verbose=verbose, debug=debug)
+        return _run_audit_logos(root, config, console, verbose=verbose, debug=debug)
 
     if not root.exists():
         print_error(f"path does not exist: {root}", console)
@@ -726,7 +859,8 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # and post-pipeline cleanup all read.
     if args.command == "organize":
         action = resolve_action(
-            source=root, output=output,
+            source=root,
+            output=output,
             move=getattr(args, "move", False),
             dry_run=getattr(args, "dry_run", False),
         )
@@ -737,9 +871,16 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # what would happen if the user ran without --dry-run.
     if args.command == "organize":
         dry_run = getattr(args, "dry_run", False)
-        header_action = action if not dry_run else (
-            "move" if getattr(args, "move", False) else
-            "rename" if source_inside_or_equals_output(root, output) else "copy"
+        header_action = (
+            action
+            if not dry_run
+            else (
+                "move"
+                if getattr(args, "move", False)
+                else "rename"
+                if source_inside_or_equals_output(root, output)
+                else "copy"
+            )
         )
     else:
         header_action = ""
@@ -747,11 +888,18 @@ def _run_command(args: types.SimpleNamespace) -> int:
     if args.command == "organize":
         logger.debug(
             "organize.resolve: source=%s output=%s action=%s",
-            root, output, header_action,
+            root,
+            output,
+            header_action,
         )
 
     # Organize safety: confirm when source is inside existing library
-    if args.command == "organize" and not getattr(args, "dry_run", False) and library_root and not explicit_output:
+    if (
+        args.command == "organize"
+        and not getattr(args, "dry_run", False)
+        and library_root
+        and not explicit_output
+    ):
         try:
             root.resolve().relative_to(library_root.resolve())
             is_inside_library = True
@@ -759,10 +907,12 @@ def _run_command(args: types.SimpleNamespace) -> int:
             is_inside_library = False
 
         if is_inside_library and not getattr(args, "yes", False):
-            print(f"Re-organizing library at {library_root} "
-                  f"with layout '{config.default_layout}'. "
-                  f"Files will be renamed in place to match the layout.",
-                  file=sys.stderr)
+            print(
+                f"Re-organizing library at {library_root} "
+                f"with layout '{config.default_layout}'. "
+                f"Files will be renamed in place to match the layout.",
+                file=sys.stderr,
+            )
             if sys.stdin.isatty():
                 try:
                     answer = input("Continue? [y/N] ").strip().lower()
@@ -772,12 +922,18 @@ def _run_command(args: types.SimpleNamespace) -> int:
                     print("Aborted.", file=sys.stderr)
                     return 0
             else:
-                print_error("re-organizing in-place requires confirmation. "
-                           "Use --yes to skip.", console)
+                print_error(
+                    "re-organizing in-place requires confirmation. Use --yes to skip.",
+                    console,
+                )
                 return 1
 
     # Initialize library marker on first organize
-    if args.command == "organize" and not getattr(args, "dry_run", False) and not library_root:
+    if (
+        args.command == "organize"
+        and not getattr(args, "dry_run", False)
+        and not library_root
+    ):
         init_library(output, layout=config.default_layout)
 
     quiet = args.quiet
@@ -785,7 +941,10 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # Scan
     if args.command == "organize" and not getattr(args, "enrich", False):
         progress = OrganizeContractProgress(
-            total=0, console=console, quiet=quiet, verbose=verbose,
+            total=0,
+            console=console,
+            quiet=quiet,
+            verbose=verbose,
             output_root=output,
             dry_run=getattr(args, "dry_run", False),
             action=header_action,
@@ -793,23 +952,37 @@ def _run_command(args: types.SimpleNamespace) -> int:
         )
     elif args.command == "organize" and getattr(args, "enrich", False):
         organize_prog = OrganizeContractProgress(
-            total=0, console=console, quiet=quiet, verbose=verbose,
+            total=0,
+            console=console,
+            quiet=quiet,
+            verbose=verbose,
             output_root=output,
             dry_run=getattr(args, "dry_run", False),
             action=header_action,
             layout=config.default_layout,
         )
         enrich_prog = EnrichContractProgress(
-            total=0, console=console, quiet=quiet, verbose=verbose,
+            total=0,
+            console=console,
+            quiet=quiet,
+            verbose=verbose,
         )
         progress = OrganizeEnrichProgress(organize_prog, enrich_prog)
     elif args.command == "enrich":
         progress = EnrichContractProgress(
-            total=0, console=console, quiet=quiet, verbose=verbose,
+            total=0,
+            console=console,
+            quiet=quiet,
+            verbose=verbose,
         )
     else:
-        progress = ProgressPrinter(total=0, console=console, quiet=quiet, verbose=verbose)
-    use_contract = isinstance(progress, (OrganizeContractProgress, EnrichContractProgress, OrganizeEnrichProgress))
+        progress = ProgressPrinter(
+            total=0, console=console, quiet=quiet, verbose=verbose
+        )
+    use_contract = isinstance(
+        progress,
+        (OrganizeContractProgress, EnrichContractProgress, OrganizeEnrichProgress),
+    )
     all_tools = {
         "ffprobe": metadata.FFPROBE_PATH,
         "mkvextract": metadata.MKVEXTRACT_PATH,
@@ -837,7 +1010,9 @@ def _run_command(args: types.SimpleNamespace) -> int:
             header_rows["Regenerate"] = "yes"
     else:
         dry_run = getattr(args, "dry_run", False)
-        command_label = f"Organize (dry run, {header_action})" if dry_run else "Organize"
+        command_label = (
+            f"Organize (dry run, {header_action})" if dry_run else "Organize"
+        )
         header_rows = {
             "Source": str(root),
             "Output": str(output),
@@ -854,7 +1029,9 @@ def _run_command(args: types.SimpleNamespace) -> int:
         elif config.kodi_enabled:
             header_rows["Kodi sync"] = "yes (config)"
 
-    progress.print_header(command=command_label, rows=header_rows, missing_tools=missing_tools)
+    progress.print_header(
+        command=command_label, rows=header_rows, missing_tools=missing_tools
+    )
 
     if not files:
         console.print("Nothing to do.")
@@ -865,6 +1042,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # Analyze + classify (parallel)
     if not quiet and not verbose and not debug:
         from rich.progress import Progress, BarColumn, MofNCompleteColumn, TextColumn
+
         with Progress(
             TextColumn("Analyzing"),
             BarColumn(),
@@ -874,7 +1052,9 @@ def _run_command(args: types.SimpleNamespace) -> int:
         ) as pbar:
             task_id = pbar.add_task("analyze", total=len(files))
             media_files = _analyse_parallel(
-                files, root, config,
+                files,
+                root,
+                config,
                 on_complete=lambda: pbar.advance(task_id),
             )
     else:
@@ -887,11 +1067,23 @@ def _run_command(args: types.SimpleNamespace) -> int:
     only = set()
     if getattr(args, "only", None):
         only = {v.strip() for v in args.only.split(",")}
-        valid_ops = {"nfo", "art", "fanart", "posters", "cover", "tags", "chapter_artist_mbids", "album_artist_mbids"}
+        valid_ops = {
+            "nfo",
+            "art",
+            "fanart",
+            "posters",
+            "cover",
+            "tags",
+            "chapter_artist_mbids",
+            "album_artist_mbids",
+        }
         unknown = only - valid_ops
         if unknown:
-            print_error(f"unknown operation {', '.join(repr(u) for u in sorted(unknown))}. "
-                       f"Valid: {', '.join(sorted(valid_ops))}", console)
+            print_error(
+                f"unknown operation {', '.join(repr(u) for u in sorted(unknown))}. "
+                f"Valid: {', '.join(sorted(valid_ops))}",
+                console,
+            )
             return 1
     pipeline_files = []
 
@@ -902,22 +1094,31 @@ def _run_command(args: types.SimpleNamespace) -> int:
     mbid_overrides = None
     if args.command in ("enrich", "organize"):
         from festival_organizer.fanart import MBIDCache, ArtistMbidOverrides
+
         mbid_ttl = config.cache_ttl.get("mbid_days", 90)
         mbid_cache = MBIDCache(ttl_days=mbid_ttl)
         mbid_overrides = ArtistMbidOverrides()
 
-        should_fanart = (args.command == "enrich" and (not only or "fanart" in only)) or \
-                        (args.command == "organize" and getattr(args, "enrich", False))
+        should_fanart = (
+            args.command == "enrich" and (not only or "fanart" in only)
+        ) or (args.command == "organize" and getattr(args, "enrich", False))
         if should_fanart and config.fanart_enabled and config.fanart_project_api_key:
             images_ttl = config.cache_ttl.get("images_days", 90)
-            fanart_op = FanartOperation(config, library_root=output, force=force,
-                                        ttl_days=images_ttl, mbid_cache=mbid_cache)
-        should_album_poster = (args.command == "enrich" and (not only or "posters" in only)) or \
-                              (args.command == "organize" and getattr(args, "enrich", False))
+            fanart_op = FanartOperation(
+                config,
+                library_root=output,
+                force=force,
+                ttl_days=images_ttl,
+                mbid_cache=mbid_cache,
+            )
+        should_album_poster = (
+            args.command == "enrich" and (not only or "posters" in only)
+        ) or (args.command == "organize" and getattr(args, "enrich", False))
         if should_album_poster:
             images_ttl = config.cache_ttl.get("images_days", 90)
-            album_poster_op = AlbumPosterOperation(config, force=force, library_root=output,
-                                                    ttl_days=images_ttl)
+            album_poster_op = AlbumPosterOperation(
+                config, force=force, library_root=output, ttl_days=images_ttl
+            )
 
     # Reuse the Config-level DJ cache (already loaded as a cached_property)
     dj_cache = config.dj_cache
@@ -927,7 +1128,12 @@ def _run_command(args: types.SimpleNamespace) -> int:
         folder_tpl = config.get_layout_template(ct)
         filename_tpl = config.get_filename_template(ct)
         if folder_tpl or filename_tpl:
-            logger.debug("organize.templates: content_type=%s folder_tpl=%s filename_tpl=%s", ct, folder_tpl, filename_tpl)
+            logger.debug(
+                "organize.templates: content_type=%s folder_tpl=%s filename_tpl=%s",
+                ct,
+                folder_tpl,
+                filename_tpl,
+            )
 
     for fp, mf in media_files:
         ops: list = []
@@ -938,7 +1144,10 @@ def _run_command(args: types.SimpleNamespace) -> int:
             target = output / target_folder / target_name
             logger.debug(
                 "organize.template: file=%s folder=%s filename=%s place_kind=%s",
-                fp.name, target_folder, target_name, mf.place_kind or "none",
+                fp.name,
+                target_folder,
+                target_name,
+                mf.place_kind or "none",
             )
             try:
                 src_rel = str(fp.relative_to(output))
@@ -947,7 +1156,10 @@ def _run_command(args: types.SimpleNamespace) -> int:
             tgt_rel = str(target.relative_to(output))
             logger.debug(
                 "organize.target: file=%s source=%s target=%s match=%s",
-                fp.name, src_rel, tgt_rel, src_rel == tgt_rel,
+                fp.name,
+                src_rel,
+                tgt_rel,
+                src_rel == tgt_rel,
             )
             if isinstance(progress, (OrganizeContractProgress, OrganizeEnrichProgress)):
                 # file_preview is only defined on the organize-side progress
@@ -973,9 +1185,14 @@ def _run_command(args: types.SimpleNamespace) -> int:
             target = output / target_folder / target_name
             logger.debug(
                 "organize.template: file=%s folder=%s filename=%s place_kind=%s",
-                fp.name, target_folder, target_name, mf.place_kind or "none",
+                fp.name,
+                target_folder,
+                target_name,
+                mf.place_kind or "none",
             )
-            ops.append(OrganizeOperation(target=target, action=action, output_root=output))
+            ops.append(
+                OrganizeOperation(target=target, action=action, output_root=output)
+            )
 
             if getattr(args, "enrich", False):
                 ops.append(NfoOperation(config, dj_cache=dj_cache))
@@ -987,10 +1204,22 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 if album_poster_op:
                     ops.append(album_poster_op)
                 ops.append(TagsOperation())
-                ops.append(ChapterArtistMbidsOperation(config=config, force=force,
-                                                       mbid_cache=mbid_cache, mbid_overrides=mbid_overrides))
-                ops.append(AlbumArtistMbidsOperation(config=config, force=force,
-                                                     mbid_cache=mbid_cache, mbid_overrides=mbid_overrides))
+                ops.append(
+                    ChapterArtistMbidsOperation(
+                        config=config,
+                        force=force,
+                        mbid_cache=mbid_cache,
+                        mbid_overrides=mbid_overrides,
+                    )
+                )
+                ops.append(
+                    AlbumArtistMbidsOperation(
+                        config=config,
+                        force=force,
+                        mbid_cache=mbid_cache,
+                        mbid_overrides=mbid_overrides,
+                    )
+                )
 
         elif args.command == "enrich":
             if not only or "nfo" in only:
@@ -1008,11 +1237,23 @@ def _run_command(args: types.SimpleNamespace) -> int:
             if not only or "tags" in only:
                 ops.append(TagsOperation(force=force))
             if not only or "chapter_artist_mbids" in only:
-                ops.append(ChapterArtistMbidsOperation(config=config, force=force,
-                                                       mbid_cache=mbid_cache, mbid_overrides=mbid_overrides))
+                ops.append(
+                    ChapterArtistMbidsOperation(
+                        config=config,
+                        force=force,
+                        mbid_cache=mbid_cache,
+                        mbid_overrides=mbid_overrides,
+                    )
+                )
             if not only or "album_artist_mbids" in only:
-                ops.append(AlbumArtistMbidsOperation(config=config, force=force,
-                                                     mbid_cache=mbid_cache, mbid_overrides=mbid_overrides))
+                ops.append(
+                    AlbumArtistMbidsOperation(
+                        config=config,
+                        force=force,
+                        mbid_cache=mbid_cache,
+                        mbid_overrides=mbid_overrides,
+                    )
+                )
 
         pipeline_files.append((fp, mf, ops))
 
@@ -1025,22 +1266,34 @@ def _run_command(args: types.SimpleNamespace) -> int:
             progress.print_summary(elapsed_s=elapsed)
         else:
             from festival_organizer.console import classification_summary_panel
-            festival_count = sum(1 for _, mf in media_files if mf.content_type == "festival_set")
-            concert_count = sum(1 for _, mf in media_files if mf.content_type == "concert_film")
-            unrecognized = [fp.name for fp, mf in media_files if mf.content_type in ("unknown", "")]
+
+            festival_count = sum(
+                1 for _, mf in media_files if mf.content_type == "festival_set"
+            )
+            concert_count = sum(
+                1 for _, mf in media_files if mf.content_type == "concert_film"
+            )
+            unrecognized = [
+                fp.name for fp, mf in media_files if mf.content_type in ("unknown", "")
+            ]
             console.print()
-            console.print(classification_summary_panel(
-                total=len(media_files),
-                festival_sets=festival_count,
-                concerts=concert_count,
-                unrecognized=unrecognized,
-            ))
+            console.print(
+                classification_summary_panel(
+                    total=len(media_files),
+                    festival_sets=festival_count,
+                    concerts=concert_count,
+                    unrecognized=unrecognized,
+                )
+            )
         return 0
 
     # Run pipeline
     if isinstance(progress, (EnrichContractProgress, OrganizeEnrichProgress)):
         from festival_organizer.console import StepProgress, suppression_enabled
-        suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
+
+        suppressed = suppression_enabled(
+            console, quiet=quiet, verbose=verbose, debug=debug
+        )
         step = StepProgress(console, enabled=not suppressed)
         with step:
             all_results = run_pipeline(pipeline_files, progress, step_progress=step)
@@ -1056,11 +1309,13 @@ def _run_command(args: types.SimpleNamespace) -> int:
     if args.command == "organize":
         if action in ("move", "rename"):
             from festival_organizer.library import (
-                cleanup_empty_dirs, migrate_folder_artefacts,
+                cleanup_empty_dirs,
+                migrate_folder_artefacts,
             )
+
             if action == "rename":
                 moves: list[tuple[Path, Path]] = []
-                for (orig_path, _mf, ops) in pipeline_files:
+                for orig_path, _mf, ops in pipeline_files:
                     for op in ops:
                         if op.name == "organize" and getattr(op, "target", None):
                             src_dir = orig_path.parent
@@ -1083,6 +1338,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
             reconcile_artist_cache,
             warm_artist_cache_from_dj_cache,
         )
+
         if dj_cache is not None:
             # Create the canonical per-artist dirs for every cached DJ that has
             # artwork (the CREATE counterpart to reconcile below). This makes the
@@ -1099,15 +1355,21 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 slugs = _mf.artist_slugs if len(_mf.artist_slugs) == len(names) else []
                 for _i, _name in enumerate(names):
                     _slug = slugs[_i] if slugs else None
-                    valid.add(_paths.artist_cache_folder_key(_name, slug=_slug, dj_cache=dj_cache))
+                    valid.add(
+                        _paths.artist_cache_folder_key(
+                            _name, slug=_slug, dj_cache=dj_cache
+                        )
+                    )
             reconcile_artist_cache(_artists_root, valid)
 
     # Pass unresolved artist names to enrich progress for summary
     if isinstance(progress, EnrichContractProgress):
         from festival_organizer.fanart import unresolved_artist_names
+
         progress._unresolved_artists = unresolved_artist_names
     elif isinstance(progress, OrganizeEnrichProgress):
         from festival_organizer.fanart import unresolved_artist_names
+
         progress.enrich._unresolved_artists = unresolved_artist_names
 
     if isinstance(progress, OrganizeEnrichProgress):
@@ -1131,8 +1393,16 @@ def _run_command(args: types.SimpleNamespace) -> int:
     # Post-pipeline: Kodi sync
     kodi_sync = getattr(args, "kodi_sync", False) or config.kodi_enabled
     if kodi_sync and args.command in ("enrich", "organize"):
-        _run_kodi_sync(all_results, pipeline_files, config, console, quiet,
-                       verbose=verbose, debug=debug, album_poster_op=album_poster_op)
+        _run_kodi_sync(
+            all_results,
+            pipeline_files,
+            config,
+            console,
+            quiet,
+            verbose=verbose,
+            debug=debug,
+            album_poster_op=album_poster_op,
+        )
 
     # Completion signal
     if not quiet and not use_contract:
@@ -1153,10 +1423,13 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 return None
 
         organize_stats = (
-            progress.organize._stats if isinstance(progress, OrganizeEnrichProgress)
+            progress.organize._stats
+            if isinstance(progress, OrganizeEnrichProgress)
             else getattr(progress, "_stats", {})
         )
-        suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
+        suppressed = suppression_enabled(
+            console, quiet=quiet, verbose=verbose, debug=debug
+        )
         notify.notify_new_sets(
             config,
             pipeline_files=pipeline_files,
@@ -1174,9 +1447,13 @@ def _run_command(args: types.SimpleNamespace) -> int:
     elif args.command == "enrich":
         from festival_organizer import notify
         from festival_organizer.console import suppression_enabled
-        suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
-        notify.maybe_send_update_reminder(config, content_email_sent=False,
-                                          console=console, suppressed=suppressed)
+
+        suppressed = suppression_enabled(
+            console, quiet=quiet, verbose=verbose, debug=debug
+        )
+        notify.maybe_send_update_reminder(
+            config, content_email_sent=False, console=console, suppressed=suppressed
+        )
 
     return 0
 
@@ -1246,21 +1523,34 @@ def _run_kodi_sync(
         )
         path_mapping = config.kodi_settings.get("path_mapping")
         from festival_organizer.console import suppression_enabled
-        suppressed = suppression_enabled(console, quiet=quiet, verbose=verbose, debug=debug)
-        sync_library(client, changed_paths, console, quiet,
-                     path_mapping=path_mapping, suppressed=suppressed,
-                     art_changed_paths=art_changed_paths,
-                     album_poster_folders=album_poster_folders)
-    except Exception as e:
-        logging.getLogger("festival_organizer.kodi").warning(
-            "Kodi sync failed: %s", e
+
+        suppressed = suppression_enabled(
+            console, quiet=quiet, verbose=verbose, debug=debug
         )
+        sync_library(
+            client,
+            changed_paths,
+            console,
+            quiet,
+            path_mapping=path_mapping,
+            suppressed=suppressed,
+            art_changed_paths=art_changed_paths,
+            album_poster_folders=album_poster_folders,
+        )
+    except Exception as e:
+        logging.getLogger("festival_organizer.kodi").warning("Kodi sync failed: %s", e)
         if not quiet:
             console.print(f"[yellow]Kodi sync failed: {e}[/yellow]")
 
 
-def _run_audit_logos(root: Path, config: Config, console: Console, *,
-                     verbose: bool = False, debug: bool = False) -> int:
+def _run_audit_logos(
+    root: Path,
+    config: Config,
+    console: Console,
+    *,
+    verbose: bool = False,
+    debug: bool = False,
+) -> int:
     """Audit curated festival logo coverage for a library."""
     from festival_organizer.library import find_library_root
 
@@ -1272,13 +1562,19 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
     # Scan all media files for canonical festival names
     if not verbose and not debug:
         with console.status("Scanning for media files..."):
-            videos = [v for v in root.rglob("*")
-                      if v.suffix.lower() in (".mkv", ".mp4", ".webm") and v.is_file()]
+            videos = [
+                v
+                for v in root.rglob("*")
+                if v.suffix.lower() in (".mkv", ".mp4", ".webm") and v.is_file()
+            ]
     else:
         if verbose or debug:
             console.print("Scanning library for festivals...")
-        videos = [v for v in root.rglob("*")
-                  if v.suffix.lower() in (".mkv", ".mp4", ".webm") and v.is_file()]
+        videos = [
+            v
+            for v in root.rglob("*")
+            if v.suffix.lower() in (".mkv", ".mp4", ".webm") and v.is_file()
+        ]
 
     festivals_found: set[str] = set()
     if videos:
@@ -1330,8 +1626,12 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
             lib_path = library_root / ".cratedigger" / "places" / fest
             usr_path = user_places / fest
             console.print(f"  {escape(fest)}")
-            console.print(f"    [dim]-> place logo at: {escape(str(lib_path))}/logo.png[/dim]")
-            console.print(f"    [dim]   or user-level: {escape(str(usr_path))}/logo.png[/dim]")
+            console.print(
+                f"    [dim]-> place logo at: {escape(str(lib_path))}/logo.png[/dim]"
+            )
+            console.print(
+                f"    [dim]   or user-level: {escape(str(usr_path))}/logo.png[/dim]"
+            )
         console.print()
 
     # Check for unmatched folders
@@ -1339,10 +1639,14 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
         if base.is_dir():
             for d in sorted(base.iterdir()):
                 if d.is_dir() and d.name not in festivals_found:
-                    has_logo = any((d / f"logo.{ext}").exists()
-                                  for ext in ("jpg", "jpeg", "png", "webp"))
+                    has_logo = any(
+                        (d / f"logo.{ext}").exists()
+                        for ext in ("jpg", "jpeg", "png", "webp")
+                    )
                     if has_logo:
-                        console.print(f"[dim]Unmatched folder (not in library): {escape(d.name)}[/dim]")
+                        console.print(
+                            f"[dim]Unmatched folder (not in library): {escape(d.name)}[/dim]"
+                        )
 
     # Warn about unsupported formats
     for base in logo_dirs:
@@ -1351,6 +1655,8 @@ def _run_audit_logos(root: Path, config: Config, console: Console, *,
                 if d.is_dir():
                     for f in d.iterdir():
                         if f.suffix.lower() in (".svg", ".gif", ".bmp", ".tiff"):
-                            console.print(f"[yellow]Unsupported format: {escape(str(f))}[/yellow]")
+                            console.print(
+                                f"[yellow]Unsupported format: {escape(str(f))}[/yellow]"
+                            )
 
     return 0

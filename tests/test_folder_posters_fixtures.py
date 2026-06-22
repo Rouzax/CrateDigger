@@ -6,6 +6,7 @@ attachments (regenerate with build_folder_poster_fixtures.py). Reading them need
 ffprobe; rendering needs Pillow. Background priorities are forced to gradient so
 the tests are deterministic and never touch the network.
 """
+
 import shutil
 from pathlib import Path
 
@@ -44,7 +45,9 @@ def _organize_into(lib: Path, layout: str, config) -> list[tuple[Path, MediaFile
     placed = []
     for src in sorted(FIX.glob("*.mkv")):
         mf = analyse_file(src, src.parent, config)
-        mf.content_type = classify(mf, src.parent, config)  # pipeline sets this post-analyse
+        mf.content_type = classify(
+            mf, src.parent, config
+        )  # pipeline sets this post-analyse
         dest = lib / render_folder(mf, config) / render_filename(mf, config)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(src, dest)
@@ -76,24 +79,50 @@ def test_place_nested_all_levels_and_edition(tmp_path):
     jpgs = list(lib.rglob("folder.jpg"))
     assert jpgs
     from PIL import Image
+
     for fj in jpgs:
         with Image.open(fj) as img:
             assert img.size == (1000, 1500)
         assert _stamp(fj)[0] == "CDFOLDER1"
 
     # place_nested {place}{ edition}/{year}/{artist}: typed per depth.
-    assert _stamp(lib / "EDC Las Vegas" / "folder.jpg")[:5] == \
-        ["CDFOLDER1", "festival", "EDC Las Vegas", "", ""]
-    assert _stamp(lib / "EDC Las Vegas" / "2025" / "folder.jpg")[:5] == \
-        ["CDFOLDER1", "year", "EDC Las Vegas", "2025", ""]
-    assert _stamp(lib / "EDC Las Vegas" / "2025" / "AFROJACK" / "folder.jpg")[:5] == \
-        ["CDFOLDER1", "artist", "AFROJACK", "", ""]
+    assert _stamp(lib / "EDC Las Vegas" / "folder.jpg")[:5] == [
+        "CDFOLDER1",
+        "festival",
+        "EDC Las Vegas",
+        "",
+        "",
+    ]
+    assert _stamp(lib / "EDC Las Vegas" / "2025" / "folder.jpg")[:5] == [
+        "CDFOLDER1",
+        "year",
+        "EDC Las Vegas",
+        "2025",
+        "",
+    ]
+    assert _stamp(lib / "EDC Las Vegas" / "2025" / "AFROJACK" / "folder.jpg")[:5] == [
+        "CDFOLDER1",
+        "artist",
+        "AFROJACK",
+        "",
+        "",
+    ]
 
     # Edition set: place resolves to Tomorrowland + Winter; the year folder carries it.
-    assert _stamp(lib / "Tomorrowland Winter" / "folder.jpg")[:5] == \
-        ["CDFOLDER1", "festival", "Tomorrowland", "", "Winter"]
-    assert _stamp(lib / "Tomorrowland Winter" / "2026" / "folder.jpg")[:5] == \
-        ["CDFOLDER1", "year", "Tomorrowland", "2026", "Winter"]
+    assert _stamp(lib / "Tomorrowland Winter" / "folder.jpg")[:5] == [
+        "CDFOLDER1",
+        "festival",
+        "Tomorrowland",
+        "",
+        "Winter",
+    ]
+    assert _stamp(lib / "Tomorrowland Winter" / "2026" / "folder.jpg")[:5] == [
+        "CDFOLDER1",
+        "year",
+        "Tomorrowland",
+        "2026",
+        "Winter",
+    ]
 
     # Re-running enriches nothing (all stamps match).
     op2 = AlbumPosterOperation(config=config, library_root=lib)
@@ -124,8 +153,20 @@ def test_layout_change_place_to_artist_regenerates(tmp_path):
 
     # Re-enrich: posters regenerate, now typed for artist_nested {artist}/{place}/{year}.
     _enrich_posters(lib, relocated, config)
-    assert _stamp(lib / "AFROJACK" / "folder.jpg")[:3] == ["CDFOLDER1", "artist", "AFROJACK"]
-    assert _stamp(lib / "AFROJACK" / "EDC Las Vegas" / "folder.jpg")[:3] == \
-        ["CDFOLDER1", "festival", "EDC Las Vegas"]
-    assert _stamp(lib / "AFROJACK" / "EDC Las Vegas" / "2025" / "folder.jpg")[:5] == \
-        ["CDFOLDER1", "year", "EDC Las Vegas", "2025", ""]
+    assert _stamp(lib / "AFROJACK" / "folder.jpg")[:3] == [
+        "CDFOLDER1",
+        "artist",
+        "AFROJACK",
+    ]
+    assert _stamp(lib / "AFROJACK" / "EDC Las Vegas" / "folder.jpg")[:3] == [
+        "CDFOLDER1",
+        "festival",
+        "EDC Las Vegas",
+    ]
+    assert _stamp(lib / "AFROJACK" / "EDC Las Vegas" / "2025" / "folder.jpg")[:5] == [
+        "CDFOLDER1",
+        "year",
+        "EDC Las Vegas",
+        "2025",
+        "",
+    ]

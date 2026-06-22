@@ -2,8 +2,12 @@ from festival_organizer.tracklists.api import Track, TracklistExport
 
 
 def test_track_fields():
-    t = Track(start_ms=120_000, raw_text="AFROJACK - ID",
-              artist_slugs=["afrojack"], genres=["House"])
+    t = Track(
+        start_ms=120_000,
+        raw_text="AFROJACK - ID",
+        artist_slugs=["afrojack"],
+        genres=["House"],
+    )
     assert t.start_ms == 120_000
     assert t.raw_text == "AFROJACK - ID"
     assert t.artist_slugs == ["afrojack"]

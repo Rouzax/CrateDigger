@@ -1,4 +1,5 @@
 """Composable operations with gap detection."""
+
 from __future__ import annotations
 
 import hashlib
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class OperationResult:
     """Result of a single operation execution."""
+
     name: str
     status: str  # "done", "skipped", "error"
     detail: str = ""
@@ -33,6 +35,7 @@ class OperationResult:
 
 class Operation:
     """Base class for operations."""
+
     name: str = ""
     display_name: str = ""  # Per-file label; falls back to name if empty
 
@@ -48,7 +51,9 @@ class Operation:
 class OrganizeOperation(Operation):
     name = "organize"
 
-    def __init__(self, target: Path, action: str = "move", output_root: Path | None = None):
+    def __init__(
+        self, target: Path, action: str = "move", output_root: Path | None = None
+    ):
         self.target = target
         self.action = action  # "move", "copy", "rename"
         self.output_root = output_root
@@ -71,13 +76,17 @@ class OrganizeOperation(Operation):
                 tgt_rel = str(self.target)
             logger.debug(
                 "organize.is_needed: source=%s target=%s needed=%s",
-                src_rel, tgt_rel, needed,
+                src_rel,
+                tgt_rel,
+                needed,
             )
             return needed
         needed = str(file_path) != str(self.target)
         logger.debug(
             "organize.is_needed: source=%s target=%s needed=%s",
-            file_path.name, self.target.name, needed,
+            file_path.name,
+            self.target.name,
+            needed,
         )
         return needed
 
@@ -102,7 +111,9 @@ class OrganizeOperation(Operation):
                 shutil.move(str(file_path), str(target))
             logger.debug(
                 "organize.action: file=%s action=%s target=%s",
-                file_path.name, self.action, target.name,
+                file_path.name,
+                self.action,
+                target.name,
             )
             # Update target so downstream operations (nfo, art, etc.) use the
             # resolved path. This mutation is read by run_pipeline(); requires
@@ -112,17 +123,27 @@ class OrganizeOperation(Operation):
             # Move sidecar files that share the video's stem
             new_stem = target.stem
             self.sidecars_moved = self._move_sidecars(
-                old_dir, old_stem, target.parent, new_stem,
-                shutil, self.action,
+                old_dir,
+                old_stem,
+                target.parent,
+                new_stem,
+                shutil,
+                self.action,
             )
 
             return OperationResult(self.name, "done")
         except OSError as e:
             return OperationResult(self.name, "error", str(e))
 
-    def _move_sidecars(self, old_dir: Path, old_stem: str,
-                       new_dir: Path, new_stem: str,
-                       shutil, action: str) -> int:
+    def _move_sidecars(
+        self,
+        old_dir: Path,
+        old_stem: str,
+        new_dir: Path,
+        new_stem: str,
+        shutil,
+        action: str,
+    ) -> int:
         """Move/copy sidecar files from old_dir to new_dir, renaming stems."""
         moved = 0
         # Collect sidecars: {old_stem}.* (exact stem match) and {old_stem}-*
@@ -139,7 +160,7 @@ class OrganizeOperation(Operation):
 
         for sidecar in sidecars:
             # Compute new name: replace old_stem prefix with new_stem
-            suffix = sidecar.name[len(old_stem):]  # e.g. ".nfo" or "-poster.jpg"
+            suffix = sidecar.name[len(old_stem) :]  # e.g. ".nfo" or "-poster.jpg"
             new_name = new_stem + suffix
             new_path = new_dir / new_name
 
@@ -150,17 +171,29 @@ class OrganizeOperation(Operation):
                     sidecar.rename(new_path)
                 else:
                     shutil.move(str(sidecar), str(new_path))
-                logger.debug("organize.sidecar: action=%s source=%s target=%s", action, sidecar.name, new_path.name)
+                logger.debug(
+                    "organize.sidecar: action=%s source=%s target=%s",
+                    action,
+                    sidecar.name,
+                    new_path.name,
+                )
                 moved += 1
             except OSError as e:
-                logger.warning("organize.sidecar: status=failed action=%s file=%s error=\"%s\"", action, sidecar.name, e)
+                logger.warning(
+                    'organize.sidecar: status=failed action=%s file=%s error="%s"',
+                    action,
+                    sidecar.name,
+                    e,
+                )
         return moved
 
 
 class NfoOperation(Operation):
     name = "nfo"
 
-    def __init__(self, config: Config, force: bool = False, dj_cache: object | None = None):
+    def __init__(
+        self, config: Config, force: bool = False, dj_cache: object | None = None
+    ):
         self.config = config
         self.force = force
         self.dj_cache = dj_cache
@@ -175,29 +208,39 @@ class NfoOperation(Operation):
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.nfo import generate_nfo
+
         try:
             dateadded = self._read_dateadded(file_path.with_suffix(".nfo"))
-            generate_nfo(media_file, file_path, self.config,
-                         dj_cache=self.dj_cache, dateadded=dateadded)
+            generate_nfo(
+                media_file,
+                file_path,
+                self.config,
+                dj_cache=self.dj_cache,
+                dateadded=dateadded,
+            )
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))
 
-    def _content_changed(self, nfo_path: Path, file_path: Path,
-                         media_file: MediaFile) -> bool:
+    def _content_changed(
+        self, nfo_path: Path, file_path: Path, media_file: MediaFile
+    ) -> bool:
         from festival_organizer.nfo import generate_nfo_xml
+
         try:
             existing = nfo_path.read_text(encoding="utf-8")
         except OSError:
             return True
         dateadded = _extract_dateadded(existing)
         expected = generate_nfo_xml(
-            media_file, file_path, self.config,
-            dj_cache=self.dj_cache, dateadded=dateadded,
+            media_file,
+            file_path,
+            self.config,
+            dj_cache=self.dj_cache,
+            dateadded=dateadded,
         )
         if existing.strip() != expected.strip():
-            logger.info("nfo.stale: file=%s reason=content_changed",
-                        file_path.name)
+            logger.info("nfo.stale: file=%s reason=content_changed", file_path.name)
             return True
         return False
 
@@ -211,6 +254,7 @@ class NfoOperation(Operation):
 
 def _extract_dateadded(nfo_text: str) -> str | None:
     import xml.etree.ElementTree as ET
+
     try:
         root = ET.fromstring(nfo_text)
         elem = root.find("dateadded")
@@ -233,6 +277,7 @@ class ArtOperation(Operation):
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.artwork import extract_cover
+
         try:
             result = extract_cover(file_path, file_path.parent)
             if not result:
@@ -283,12 +328,16 @@ class PosterOperation(Operation):
         if not poster.exists():
             return True
         from festival_organizer.poster import build_cover_stamp, read_poster_stamp
-        current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config),
-                                    artists_1001tl=media_file.artists_1001tl)
+
+        current = build_cover_stamp(
+            **_resolve_poster_fields(media_file, self.config),
+            artists_1001tl=media_file.artists_1001tl,
+        )
         return read_poster_stamp(poster) != current
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.poster import generate_set_poster
+
         try:
             thumb = file_path.with_name(f"{file_path.stem}-thumb.jpg")
             poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
@@ -308,10 +357,17 @@ class PosterOperation(Operation):
             # stamp means "embed is current"). Non-Matroska files have no embed step,
             # so stamp the sidecar here to enable the same content-aware regeneration.
             from festival_organizer.mkv_tags import MATROSKA_EXTS
+
             if file_path.suffix.lower() not in MATROSKA_EXTS:
-                from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
-                inject_poster_stamp(poster, build_cover_stamp(
-                    **f, artists_1001tl=media_file.artists_1001tl))
+                from festival_organizer.poster import (
+                    build_cover_stamp,
+                    inject_poster_stamp,
+                )
+
+                inject_poster_stamp(
+                    poster,
+                    build_cover_stamp(**f, artists_1001tl=media_file.artists_1001tl),
+                )
             return OperationResult(self.name, "done")
         except (OSError, ValueError) as e:
             return OperationResult(self.name, "error", str(e))
@@ -327,6 +383,7 @@ class CoverEmbedOperation(Operation):
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         from festival_organizer.mkv_tags import MATROSKA_EXTS
+
         if file_path.suffix.lower() not in MATROSKA_EXTS:
             return False
         poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
@@ -335,8 +392,11 @@ class CoverEmbedOperation(Operation):
         if self.force:
             return True
         from festival_organizer.poster import build_cover_stamp, read_poster_stamp
-        current = build_cover_stamp(**_resolve_poster_fields(media_file, self.config),
-                                    artists_1001tl=media_file.artists_1001tl)
+
+        current = build_cover_stamp(
+            **_resolve_poster_fields(media_file, self.config),
+            artists_1001tl=media_file.artists_1001tl,
+        )
         # The stamp is written only after a successful embed, so a match means the
         # embedded cover is already current. Mismatch/absent -> (re-)embed.
         # The sidecar stamp is a proxy for the MKV embed being current (they are
@@ -348,17 +408,22 @@ class CoverEmbedOperation(Operation):
         from festival_organizer import cover_embed
         from festival_organizer.mkv_attachments import image_ratio_class
         from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+
         poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
         thumb = file_path.with_name(f"{file_path.stem}-thumb.jpg")
         try:
             if image_ratio_class(poster) != "portrait":
-                logger.warning("cover.skip: file=%s reason=poster_not_portrait", file_path.name)
+                logger.warning(
+                    "cover.skip: file=%s reason=poster_not_portrait", file_path.name
+                )
                 return OperationResult(self.name, "error", "poster not portrait")
             if not cover_embed.converge_cover_attachments(file_path, poster, thumb):
                 return OperationResult(self.name, "error", "cover convergence failed")
             # Stamp the sidecar only after a successful embed.
-            stamp = build_cover_stamp(**_resolve_poster_fields(media_file, self.config),
-                                      artists_1001tl=media_file.artists_1001tl)
+            stamp = build_cover_stamp(
+                **_resolve_poster_fields(media_file, self.config),
+                artists_1001tl=media_file.artists_1001tl,
+            )
             inject_poster_stamp(poster, stamp)
             return OperationResult(self.name, "done")
         except (OSError, ValueError, subprocess.SubprocessError) as e:
@@ -369,15 +434,20 @@ class AlbumPosterOperation(Operation):
     name = "posters"
     display_name = "album_poster"
 
-    def __init__(self, config: Config, force: bool = False, library_root: Path | None = None,
-                 ttl_days: int = 90):
+    def __init__(
+        self,
+        config: Config,
+        force: bool = False,
+        library_root: Path | None = None,
+        ttl_days: int = 90,
+    ):
         self.config = config
         self.force = force
         self.library_root = library_root
         self._ttl_days = ttl_days
         self._completed_folders: set[Path] = set()
-        self._logo_hits: dict[str, Path] = {}   # place -> logo path
-        self._logo_misses: set[str] = set()      # places without curated logo
+        self._logo_hits: dict[str, Path] = {}  # place -> logo path
+        self._logo_misses: set[str] = set()  # places without curated logo
 
     @property
     def generated_folders(self) -> set[Path]:
@@ -391,6 +461,7 @@ class AlbumPosterOperation(Operation):
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
         from festival_organizer.poster import read_poster_stamp
+
         for folder, ptype, parent in self._layout_levels(file_path, media_file):
             if folder in self._completed_folders:
                 continue
@@ -401,7 +472,9 @@ class AlbumPosterOperation(Operation):
                 return True
             # Regenerate when the embedded stamp no longer matches what we would
             # render at this level (type/name/year/edition or version changed).
-            if read_poster_stamp(folder_jpg) != self._level_stamp(folder, ptype, parent, media_file):
+            if read_poster_stamp(folder_jpg) != self._level_stamp(
+                folder, ptype, parent, media_file
+            ):
                 return True
         return False
 
@@ -413,6 +486,7 @@ class AlbumPosterOperation(Operation):
         resolves its year for the badge and the stamp.
         """
         from festival_organizer.parsers import parse_filename
+
         years: set[str] = set()
         for video in folder.rglob("*"):
             if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
@@ -421,7 +495,9 @@ class AlbumPosterOperation(Operation):
                     years.add(yr)
         return years.pop() if len(years) == 1 else ""
 
-    def _layout_levels(self, file_path: Path, mf: MediaFile) -> list[tuple[Path, str, str | None]]:
+    def _layout_levels(
+        self, file_path: Path, mf: MediaFile
+    ) -> list[tuple[Path, str, str | None]]:
         """Folder levels to render for this file: (folder, poster_type, parent_type).
 
         The file sits at ``<library>/<seg0>/.../<segN-1>/file``, so the last
@@ -446,7 +522,7 @@ class AlbumPosterOperation(Operation):
                 break
             folder = folder.parent
         ancestors.reverse()  # shallowest -> deepest, aligned with the segment tail
-        seg_tail = segments[-len(ancestors):]
+        seg_tail = segments[-len(ancestors) :]
 
         def _typed(seg: str) -> str:
             return "artist" if seg == "festival" and mf.place_kind == "artist" else seg
@@ -457,23 +533,42 @@ class AlbumPosterOperation(Operation):
             levels.append((fdr, _typed(seg_tail[i]), parent))
         return levels
 
-    def _level_stamp_fields(self, ptype: str, parent: str | None, year: str, mf: MediaFile) -> dict:
+    def _level_stamp_fields(
+        self, ptype: str, parent: str | None, year: str, mf: MediaFile
+    ) -> dict:
         """Identity fields for a folder-poster stamp at a given level."""
         if ptype == "artist":
-            return {"poster_type": "artist", "name": mf.artist or "", "year": "", "edition": ""}
+            return {
+                "poster_type": "artist",
+                "name": mf.artist or "",
+                "year": "",
+                "edition": "",
+            }
         if ptype == "year":
             parent_is_place = parent == "festival"
-            return {"poster_type": "year",
-                    "name": (mf.place if parent_is_place else mf.artist) or "",
-                    "year": year or "",
-                    "edition": (mf.edition or "") if parent_is_place else ""}
-        return {"poster_type": ptype, "name": mf.place or "", "year": "", "edition": mf.edition or ""}
+            return {
+                "poster_type": "year",
+                "name": (mf.place if parent_is_place else mf.artist) or "",
+                "year": year or "",
+                "edition": (mf.edition or "") if parent_is_place else "",
+            }
+        return {
+            "poster_type": ptype,
+            "name": mf.place or "",
+            "year": "",
+            "edition": mf.edition or "",
+        }
 
-    def _level_stamp(self, folder: Path, ptype: str, parent: str | None, mf: MediaFile) -> bytes:
+    def _level_stamp(
+        self, folder: Path, ptype: str, parent: str | None, mf: MediaFile
+    ) -> bytes:
         from festival_organizer.poster import build_folder_stamp
+
         year = self._consensus_year(folder) if ptype == "year" else ""
-        return build_folder_stamp(**self._level_stamp_fields(ptype, parent, year, mf),
-                                  bg=self._expected_bg_fingerprint(ptype, mf))
+        return build_folder_stamp(
+            **self._level_stamp_fields(ptype, parent, year, mf),
+            bg=self._expected_bg_fingerprint(ptype, mf),
+        )
 
     def _expected_bg_fingerprint(self, ptype: str, mf: MediaFile) -> str:
         """Cheap, network-free fingerprint of the background image the poster uses.
@@ -489,7 +584,9 @@ class AlbumPosterOperation(Operation):
             path = self._find_curated_logo(mf.place, mf.edition)
         elif ptype == "artist" and mf.artist:
             slug = mf.artist_slugs[0] if mf.artist_slugs else None
-            key = paths.artist_cache_folder_key(mf.artist, slug=slug, dj_cache=self.config.dj_cache)
+            key = paths.artist_cache_folder_key(
+                mf.artist, slug=slug, dj_cache=self.config.dj_cache
+            )
             artist_dir = paths.artist_cache_dir(key)
             for name in ("dj-artwork.jpg", "fanart.jpg"):
                 cand = artist_dir / name
@@ -548,6 +645,7 @@ class AlbumPosterOperation(Operation):
         # Check if this is a single-artist folder by scanning filenames
         from festival_organizer.parsers import parse_filename
         from festival_organizer.normalization import normalise_name
+
         artists_in_folder: set[str] = set()
         for video in folder.iterdir():
             if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
@@ -555,19 +653,25 @@ class AlbumPosterOperation(Operation):
                 if parsed.get("artist"):
                     artists_in_folder.add(normalise_name(parsed["artist"]).lower())
                 if len(artists_in_folder) > 1:
-                    logger.info("enrich.album_poster: artists_in_folder=%d style=festival",
-                                len(artists_in_folder))
+                    logger.info(
+                        "enrich.album_poster: artists_in_folder=%d style=festival",
+                        len(artists_in_folder),
+                    )
                     return None  # Multi-artist folder, skip fanart background
 
         # Single artist (or couldn't determine); look for their fanart
         key = paths.artist_cache_folder_key(artist, dj_cache=self.config.dj_cache)
         candidate = paths.artist_cache_dir(key) / "fanart.jpg"
         result = candidate if candidate.exists() else None
-        logger.info("enrich.album_poster: artists_in_folder=1 style=%s",
-                    "artist" if result else "festival")
+        logger.info(
+            "enrich.album_poster: artists_in_folder=1 style=%s",
+            "artist" if result else "festival",
+        )
         return result
 
-    def _download_artwork(self, url: str, cache_subdir: str, max_width: int | None = None) -> Path | None:
+    def _download_artwork(
+        self, url: str, cache_subdir: str, max_width: int | None = None
+    ) -> Path | None:
         """Download an artwork URL to cache. Returns local path or None."""
         if not url:
             return None
@@ -583,8 +687,12 @@ class AlbumPosterOperation(Operation):
             if age_days <= effective_ttl:
                 return cached
             cached.unlink()
-            logger.debug("enrich.artwork_cache: status=stale age_days=%d ttl=%.1f file=%s",
-                         int(age_days), effective_ttl, cached.name)
+            logger.debug(
+                "enrich.artwork_cache: status=stale age_days=%d ttl=%.1f file=%s",
+                int(age_days),
+                effective_ttl,
+                cached.name,
+            )
         try:
             resp = requests.get(url, timeout=15)
             resp.raise_for_status()
@@ -592,19 +700,24 @@ class AlbumPosterOperation(Operation):
             cached.write_bytes(resp.content)
             if max_width:
                 from PIL import Image
+
                 with Image.open(cached) as img:
                     if img.width > max_width:
                         ratio = max_width / img.width
                         new_size = (max_width, int(img.height * ratio))
                         img = img.resize(new_size, Image.LANCZOS)
                         img.save(cached)
-            logger.info("enrich.artwork_download: status=ok url=%s target=%s", url, cached.name)
+            logger.info(
+                "enrich.artwork_download: status=ok url=%s target=%s", url, cached.name
+            )
             return cached
         except (requests.RequestException, OSError) as e:
-            logger.debug("enrich.artwork_download: status=failed error=\"%s\"", e)
+            logger.debug('enrich.artwork_download: status=failed error="%s"', e)
             return None
 
-    def _download_dj_artwork(self, url: str, artist: str, slug: str | None = None) -> Path | None:
+    def _download_dj_artwork(
+        self, url: str, artist: str, slug: str | None = None
+    ) -> Path | None:
         """Download DJ artwork, convert to JPEG, crop/resize, save to artist dir.
 
         Resolves the canonical artist cache key, then delegates the
@@ -614,9 +727,13 @@ class AlbumPosterOperation(Operation):
         """
         if not url or not artist:
             return None
-        key = paths.artist_cache_folder_key(artist, slug=slug, dj_cache=self.config.dj_cache)
+        key = paths.artist_cache_folder_key(
+            artist, slug=slug, dj_cache=self.config.dj_cache
+        )
         cached = paths.artist_cache_dir(key) / "dj-artwork.jpg"
-        return cache_dj_artwork(url, cached, self._ttl_days, artist_label=artist, log=logger)
+        return cache_dj_artwork(
+            url, cached, self._ttl_days, artist_label=artist, log=logger
+        )
 
     def _find_curated_logo(self, place: str, edition: str = "") -> Path | None:
         """Find curated logo for a place from library or user-level folders.
@@ -640,9 +757,7 @@ class AlbumPosterOperation(Operation):
         for name in names:
             search_dirs: list[Path] = []
             if self.library_root:
-                search_dirs.append(
-                    self.library_root / ".cratedigger" / "places" / name
-                )
+                search_dirs.append(self.library_root / ".cratedigger" / "places" / name)
             search_dirs.append(paths.places_logo_dir() / name)
             for d in search_dirs:
                 for ext in ("jpg", "jpeg", "png", "webp"):
@@ -655,18 +770,25 @@ class AlbumPosterOperation(Operation):
     def _find_dj_artwork(self, folder: Path) -> Path | None:
         """Find DJ artwork URL from media files in folder, download and cache."""
         from festival_organizer.analyzer import analyse_file
+
         for video in folder.iterdir():
             if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
                 mf = analyse_file(video, folder, self.config)
-                logger.debug("enrich.dj_artwork: url=%s", mf.dj_artwork_url or "(empty)")
+                logger.debug(
+                    "enrich.dj_artwork: url=%s", mf.dj_artwork_url or "(empty)"
+                )
                 if mf.dj_artwork_url and mf.artist:
                     slug = mf.artist_slugs[0] if mf.artist_slugs else None
-                    result = self._download_dj_artwork(mf.dj_artwork_url, mf.artist, slug=slug)
+                    result = self._download_dj_artwork(
+                        mf.dj_artwork_url, mf.artist, slug=slug
+                    )
                     if result:
                         return result
                 # Fallback: fetch DJ artwork from tracklist page
                 if mf.tracklists_url and mf.artist:
-                    result = self._fetch_dj_artwork_from_tracklist(mf.tracklists_url, mf.artist)
+                    result = self._fetch_dj_artwork_from_tracklist(
+                        mf.tracklists_url, mf.artist
+                    )
                     if result:
                         return result
         return None
@@ -674,6 +796,7 @@ class AlbumPosterOperation(Operation):
     def _warm_dj_artwork_cache(self, folder: Path) -> None:
         """Download DJ artwork for all artists in a folder."""
         from festival_organizer.analyzer import analyse_file
+
         seen: set[str] = set()
         for video in folder.iterdir():
             if video.suffix.lower() in (".mkv", ".mp4", ".webm"):
@@ -685,7 +808,9 @@ class AlbumPosterOperation(Operation):
                     slug = mf.artist_slugs[0] if mf.artist_slugs else None
                     self._download_dj_artwork(mf.dj_artwork_url, mf.artist, slug=slug)
 
-    def _fetch_dj_artwork_from_tracklist(self, tracklist_url: str, artist: str) -> Path | None:
+    def _fetch_dj_artwork_from_tracklist(
+        self, tracklist_url: str, artist: str
+    ) -> Path | None:
         """Fetch DJ artwork by scraping a 1001TL tracklist page for DJ slugs.
 
         Returns local cached path or None on failure.
@@ -693,11 +818,17 @@ class AlbumPosterOperation(Operation):
         try:
             email, password = self.config.tracklists_credentials
             if not email or not password:
-                logger.debug("enrich.dj_artwork_fallback: status=skipped reason=no_credentials")
+                logger.debug(
+                    "enrich.dj_artwork_fallback: status=skipped reason=no_credentials"
+                )
                 return None
 
-            from festival_organizer.tracklists.api import TracklistSession, _extract_dj_slugs
+            from festival_organizer.tracklists.api import (
+                TracklistSession,
+                _extract_dj_slugs,
+            )
             from festival_organizer.tracklists import canary
+
             api = TracklistSession()
             api.login(email, password)
             resp = api._request("GET", tracklist_url)
@@ -708,22 +839,28 @@ class AlbumPosterOperation(Operation):
             )
             slugs = _extract_dj_slugs(resp.text)
             if not slugs:
-                logger.debug("enrich.dj_artwork_fallback: status=skipped reason=no_slugs")
+                logger.debug(
+                    "enrich.dj_artwork_fallback: status=skipped reason=no_slugs"
+                )
                 return None
 
             profile = api._fetch_dj_profile(slugs[0])
             dj_artwork_url = profile["artwork_url"]
             if not dj_artwork_url:
-                logger.debug("enrich.dj_artwork_fallback: status=skipped reason=no_artwork slug=%s", slugs[0])
+                logger.debug(
+                    "enrich.dj_artwork_fallback: status=skipped reason=no_artwork slug=%s",
+                    slugs[0],
+                )
                 return None
 
             return self._download_dj_artwork(dj_artwork_url, artist)
         except Exception as e:
-            logger.debug("enrich.dj_artwork_fallback: status=failed error=\"%s\"", e)
+            logger.debug('enrich.dj_artwork_fallback: status=failed error="%s"', e)
             return None
 
-    def _resolve_background(self, priority: list[str], folder: Path,
-                             media_file: MediaFile) -> tuple[Path | None, str]:
+    def _resolve_background(
+        self, priority: list[str], folder: Path, media_file: MediaFile
+    ) -> tuple[Path | None, str]:
         """Walk the background priority chain, return first successful image and source name."""
         tried_curated = False
         for source in priority:
@@ -732,7 +869,8 @@ class AlbumPosterOperation(Operation):
                 tried_curated = True
                 if bg and media_file.place:
                     display = self.config.get_place_display(
-                        media_file.place, media_file.edition)
+                        media_file.place, media_file.edition
+                    )
                     self._logo_hits[display] = bg
             if bg:
                 logger.info("enrich.album_poster: source=%s status=selected", source)
@@ -740,13 +878,15 @@ class AlbumPosterOperation(Operation):
             logger.debug("enrich.album_poster: source=%s status=unavailable", source)
         if tried_curated and media_file.place:
             display = self.config.get_place_display(
-                media_file.place, media_file.edition)
+                media_file.place, media_file.edition
+            )
             if display not in self._logo_hits:
                 self._logo_misses.add(display)
         return None, ""
 
-    def _try_background_source(self, source: str, folder: Path,
-                                media_file: MediaFile) -> Path | None:
+    def _try_background_source(
+        self, source: str, folder: Path, media_file: MediaFile
+    ) -> Path | None:
         """Try a single background source. Returns path or None."""
         if source == "curated_logo":
             return self._find_curated_logo(media_file.place, media_file.edition)
@@ -761,18 +901,21 @@ class AlbumPosterOperation(Operation):
     def _get_priority_chain_for_poster_type(self, poster_type: str) -> list[str]:
         ps = self.config.poster_settings
         if poster_type == "artist":
-            return ps.get("artist_background_priority",
-                          ["dj_artwork", "fanart_tv", "gradient"])
+            return ps.get(
+                "artist_background_priority", ["dj_artwork", "fanart_tv", "gradient"]
+            )
         if poster_type == "festival":
-            return ps.get("place_background_priority",
-                          ["curated_logo", "gradient"])
+            return ps.get("place_background_priority", ["curated_logo", "gradient"])
         return ps.get("year_background_priority", ["gradient"])
 
     def _place_brand_color(self, mf: MediaFile) -> tuple[int, int, int] | None:
         """Brand color for mf's place/edition from places.json, or None."""
         from festival_organizer.poster import _hex_to_rgb
+
         fc = self.config.place_config.get(mf.place, {})
-        color_hex = fc.get("editions", {}).get(mf.edition, {}).get("color") or fc.get("color")
+        color_hex = fc.get("editions", {}).get(mf.edition, {}).get("color") or fc.get(
+            "color"
+        )
         return _hex_to_rgb(color_hex) if color_hex else None
 
     def _warm_backgrounds(self, video_folder: Path, mf: MediaFile) -> None:
@@ -781,10 +924,17 @@ class AlbumPosterOperation(Operation):
         self._try_background_source("fanart_tv", video_folder, mf)
         self._warm_dj_artwork_cache(video_folder)
 
-    def _render_level(self, folder: Path, ptype: str, parent: str | None,
-                      video_folder: Path, mf: MediaFile) -> None:
+    def _render_level(
+        self,
+        folder: Path,
+        ptype: str,
+        parent: str | None,
+        video_folder: Path,
+        mf: MediaFile,
+    ) -> None:
         """Render and stamp the folder.jpg for one folder level."""
         from festival_organizer.poster import generate_album_poster, inject_poster_stamp
+
         folder_jpg = folder / "folder.jpg"
         date_or_year = self._consensus_year(folder)
         # Artwork/colour sources scan the video-bearing folder (the artist/place
@@ -792,38 +942,58 @@ class AlbumPosterOperation(Operation):
         # subtree so an ancestor folder still gets a colour.
         thumb_paths = list(folder.rglob("*-thumb.jpg"))
         place_color = self._place_brand_color(mf)
-        logger.debug("enrich.album_poster: folder=%s type=%s parent=%s",
-                     folder.name, ptype, parent)
+        logger.debug(
+            "enrich.album_poster: folder=%s type=%s parent=%s",
+            folder.name,
+            ptype,
+            parent,
+        )
 
         if ptype == "artist":
             priority = self._get_priority_chain_for_poster_type("artist")
             bg_path, bg_source = self._resolve_background(priority, video_folder, mf)
             generate_album_poster(
-                output_path=folder_jpg, festival=mf.artist or "Unknown",
-                date_or_year=date_or_year, detail=mf.stage or "", edition="",
-                thumb_paths=thumb_paths or None, override_color=None,
-                background_image_path=bg_path, background_source=bg_source,
+                output_path=folder_jpg,
+                festival=mf.artist or "Unknown",
+                date_or_year=date_or_year,
+                detail=mf.stage or "",
+                edition="",
+                thumb_paths=thumb_paths or None,
+                override_color=None,
+                background_image_path=bg_path,
+                background_source=bg_source,
                 hero_text=mf.artist or "",
             )
         elif ptype == "year":
             parent_is_place = parent == "festival"
             name = (mf.place if parent_is_place else mf.artist) or "Unknown"
             generate_album_poster(
-                output_path=folder_jpg, festival=name, date_or_year=date_or_year,
-                detail="", edition=(mf.edition or "") if parent_is_place else "",
+                output_path=folder_jpg,
+                festival=name,
+                date_or_year=date_or_year,
+                detail="",
+                edition=(mf.edition or "") if parent_is_place else "",
                 thumb_paths=thumb_paths or None,
                 override_color=place_color if parent_is_place else None,
-                background_image_path=None, background_source="",
-                hero_text=None, year_badge=date_or_year or mf.year,
+                background_image_path=None,
+                background_source="",
+                hero_text=None,
+                year_badge=date_or_year or mf.year,
             )
         else:  # festival / place
             priority = self._get_priority_chain_for_poster_type("festival")
             bg_path, bg_source = self._resolve_background(priority, video_folder, mf)
             generate_album_poster(
-                output_path=folder_jpg, festival=mf.place or "Unknown",
-                date_or_year=date_or_year, detail=mf.stage or "", edition=mf.edition or "",
-                thumb_paths=thumb_paths or None, override_color=place_color,
-                background_image_path=bg_path, background_source=bg_source, hero_text=None,
+                output_path=folder_jpg,
+                festival=mf.place or "Unknown",
+                date_or_year=date_or_year,
+                detail=mf.stage or "",
+                edition=mf.edition or "",
+                thumb_paths=thumb_paths or None,
+                override_color=place_color,
+                background_image_path=bg_path,
+                background_source=bg_source,
+                hero_text=None,
             )
         inject_poster_stamp(folder_jpg, self._level_stamp(folder, ptype, parent, mf))
 
@@ -869,10 +1039,17 @@ class FanartOperation(Operation):
     API calls when multiple files share an artist. The _completed_artists set
     tracks which artists have already been processed.
     """
+
     name = "fanart"
 
-    def __init__(self, config: Config, library_root: Path, force: bool = False,
-                 ttl_days: int = 90, mbid_cache=None):
+    def __init__(
+        self,
+        config: Config,
+        library_root: Path,
+        force: bool = False,
+        ttl_days: int = 90,
+        mbid_cache=None,
+    ):
         self.config = config
         self.library_root = library_root
         self.force = force
@@ -883,6 +1060,7 @@ class FanartOperation(Operation):
     def _get_cache(self):
         if self._cache is None:
             from festival_organizer.fanart import MBIDCache
+
             ttl = self.config.cache_ttl.get("mbid_days", 90)
             self._cache = MBIDCache(ttl_days=ttl)
         return self._cache
@@ -906,14 +1084,24 @@ class FanartOperation(Operation):
         with no slug tag (non-1001TL).
         """
         from festival_organizer.fanart import split_artists
-        if media_file.artist_slugs and len(media_file.artist_slugs) == len(media_file.artists):
+
+        if media_file.artist_slugs and len(media_file.artist_slugs) == len(
+            media_file.artists
+        ):
             return [
-                (name, paths.artist_cache_folder_key(name, slug=slug, dj_cache=self.config.dj_cache))
+                (
+                    name,
+                    paths.artist_cache_folder_key(
+                        name, slug=slug, dj_cache=self.config.dj_cache
+                    ),
+                )
                 for name, slug in zip(media_file.artists, media_file.artist_slugs)
             ]
         return [
             (name, paths.artist_cache_folder_key(name, dj_cache=self.config.dj_cache))
-            for name in split_artists(media_file.artist, groups=self.config.artist_groups)
+            for name in split_artists(
+                media_file.artist, groups=self.config.artist_groups
+            )
         ]
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
@@ -933,9 +1121,13 @@ class FanartOperation(Operation):
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.fanart import (
-            download_artist_images, lookup_mbid,
-            fetch_artist_images, pick_best_logo, pick_best_background,
+            download_artist_images,
+            lookup_mbid,
+            fetch_artist_images,
+            pick_best_logo,
+            pick_best_background,
         )
+
         fetched = []
         for artist, key in self._artist_targets(media_file):
             if artist in self._completed_artists:
@@ -956,12 +1148,15 @@ class FanartOperation(Operation):
                         logo = pick_best_logo(fanart_data.get("hdmusiclogo", []))
                         if logo and not media_file.clearlogo_url:
                             media_file.clearlogo_url = logo["url"]
-                        bg = pick_best_background(fanart_data.get("artistbackground", []))
+                        bg = pick_best_background(
+                            fanart_data.get("artistbackground", [])
+                        )
                         if bg and not media_file.fanart_url:
                             media_file.fanart_url = bg["url"]
 
                 logo_ok, bg_ok = download_artist_images(
-                    artist, d,
+                    artist,
+                    d,
                     self.config.fanart_project_api_key,
                     self.config.fanart_personal_api_key,
                     self._get_cache(),
@@ -975,7 +1170,9 @@ class FanartOperation(Operation):
             except Exception as e:
                 return OperationResult(self.name, "error", f"{artist}: {e}")
         if fetched:
-            return OperationResult(self.name, "done", f"fetched for: {', '.join(fetched)}")
+            return OperationResult(
+                self.name, "done", f"fetched for: {', '.join(fetched)}"
+            )
         return OperationResult(self.name, "skipped", "already cached or not available")
 
 
@@ -989,6 +1186,7 @@ class TagsOperation(Operation):
         if self.force:
             return True
         from festival_organizer.mkv_tags import MATROSKA_EXTS
+
         if file_path.suffix.lower() not in MATROSKA_EXTS:
             return False
         # embed_tags compares desired vs existing tags and skips the write
@@ -997,6 +1195,7 @@ class TagsOperation(Operation):
 
     def execute(self, file_path: Path, media_file: MediaFile) -> OperationResult:
         from festival_organizer.embed_tags import embed_tags
+
         try:
             status = embed_tags(media_file, file_path)
             if status == "error":
@@ -1009,6 +1208,7 @@ class TagsOperation(Operation):
 def _extract_chapter_tags_by_uid(filepath: Path) -> dict[int, dict[str, str]]:
     """Return TTV=30 chapter tag blocks keyed by ChapterUID. Empty dict if none."""
     from festival_organizer.mkv_tags import extract_all_tags
+
     root = extract_all_tags(filepath)
     if root is None:
         return {}
@@ -1050,6 +1250,7 @@ def write_chapter_mbid_tags(
     the file's existing per-chapter metadata.
     """
     from festival_organizer.mkv_tags import write_merged_tags
+
     write_merged_tags(filepath, new_tags={}, chapter_tags=merged_chapter_tags)
 
 
@@ -1067,11 +1268,13 @@ class ChapterArtistMbidsOperation(Operation):
     CRATEDIGGER_TRACK_PERFORMER_SLUGS, CRATEDIGGER_TRACK_PERFORMER_NAMES)
     are preserved; only MBIDs are added or updated.
     """
+
     name = "chapter_artist_mbids"
     display_name = "chapter_artist_mbids"
 
-    def __init__(self, config=None, force: bool = False,
-                 mbid_cache=None, mbid_overrides=None):
+    def __init__(
+        self, config=None, force: bool = False, mbid_cache=None, mbid_overrides=None
+    ):
         self.config = config
         self.force = force
         self._cache = mbid_cache
@@ -1080,6 +1283,7 @@ class ChapterArtistMbidsOperation(Operation):
     def _get_cache(self):
         if self._cache is None:
             from festival_organizer.fanart import MBIDCache
+
             ttl = 90
             if self.config is not None:
                 ttl = self.config.cache_ttl.get("mbid_days", 90)
@@ -1089,11 +1293,13 @@ class ChapterArtistMbidsOperation(Operation):
     def _get_overrides(self):
         if self._overrides is None:
             from festival_organizer.fanart import ArtistMbidOverrides
+
             self._overrides = ArtistMbidOverrides()
         return self._overrides
 
     def is_needed(self, file_path: Path, media_file) -> bool:
         from festival_organizer.mkv_tags import MATROSKA_EXTS
+
         return file_path.suffix.lower() in MATROSKA_EXTS
 
     def execute(self, file_path: Path, media_file) -> OperationResult:
@@ -1102,9 +1308,12 @@ class ChapterArtistMbidsOperation(Operation):
         existing = _extract_chapter_tags_by_uid(file_path)
         if not existing:
             return OperationResult(self.name, "skipped", "no chapter tags")
-        if not any("CRATEDIGGER_TRACK_PERFORMER_NAMES" in block for block in existing.values()):
+        if not any(
+            "CRATEDIGGER_TRACK_PERFORMER_NAMES" in block for block in existing.values()
+        ):
             return OperationResult(
-                self.name, "skipped",
+                self.name,
+                "skipped",
                 "no CRATEDIGGER_TRACK_PERFORMER_NAMES on any chapter (run identify)",
             )
 
@@ -1116,7 +1325,9 @@ class ChapterArtistMbidsOperation(Operation):
 
         new_mbid_tags = compute_chapter_mbid_tags(existing, resolver)
         if not new_mbid_tags:
-            return OperationResult(self.name, "skipped", "no resolvable CRATEDIGGER_TRACK_PERFORMER_NAMES")
+            return OperationResult(
+                self.name, "skipped", "no resolvable CRATEDIGGER_TRACK_PERFORMER_NAMES"
+            )
 
         # Short-circuit when every computed MBID matches what's already on disk.
         if not self.force:
@@ -1134,11 +1345,15 @@ class ChapterArtistMbidsOperation(Operation):
         for uid, block in existing.items():
             merged_block = dict(block)
             if uid in new_mbid_tags:
-                merged_block["MUSICBRAINZ_ARTISTIDS"] = new_mbid_tags[uid]["MUSICBRAINZ_ARTISTIDS"]
+                merged_block["MUSICBRAINZ_ARTISTIDS"] = new_mbid_tags[uid][
+                    "MUSICBRAINZ_ARTISTIDS"
+                ]
             merged[uid] = merged_block
 
         write_chapter_mbid_tags(file_path, merged)
-        return OperationResult(self.name, "done", f"wrote MBIDs for {len(new_mbid_tags)} chapters")
+        return OperationResult(
+            self.name, "done", f"wrote MBIDs for {len(new_mbid_tags)} chapters"
+        )
 
 
 class AlbumArtistMbidsOperation(Operation):
@@ -1154,11 +1369,13 @@ class AlbumArtistMbidsOperation(Operation):
     to per-chapter MUSICBRAINZ_ARTISTIDS (intended: MBIDs are properties of
     the artist, not of the tag context).
     """
+
     name = "album_artist_mbids"
     display_name = "album_artist_mbids"
 
-    def __init__(self, config=None, force: bool = False,
-                 mbid_cache=None, mbid_overrides=None):
+    def __init__(
+        self, config=None, force: bool = False, mbid_cache=None, mbid_overrides=None
+    ):
         self.config = config
         self.force = force
         self._cache = mbid_cache
@@ -1167,6 +1384,7 @@ class AlbumArtistMbidsOperation(Operation):
     def _get_cache(self):
         if self._cache is None:
             from festival_organizer.fanart import MBIDCache
+
             ttl = 90
             if self.config is not None:
                 ttl = self.config.cache_ttl.get("mbid_days", 90)
@@ -1176,26 +1394,33 @@ class AlbumArtistMbidsOperation(Operation):
     def _get_overrides(self):
         if self._overrides is None:
             from festival_organizer.fanart import ArtistMbidOverrides
+
             self._overrides = ArtistMbidOverrides()
         return self._overrides
 
     def is_needed(self, file_path: Path, media_file) -> bool:
         from festival_organizer.mkv_tags import MATROSKA_EXTS
+
         return file_path.suffix.lower() in MATROSKA_EXTS
 
     def execute(self, file_path: Path, media_file) -> OperationResult:
         from festival_organizer.fanart import resolve_mbids_aligned
         from festival_organizer.mkv_tags import (
-            _tag_values_from_root, extract_all_tags, write_merged_tags,
+            _tag_values_from_root,
+            extract_all_tags,
+            write_merged_tags,
         )
 
         root = extract_all_tags(file_path)
-        existing_70 = (_tag_values_from_root(root) if root is not None else {}).get(70, {})
+        existing_70 = (_tag_values_from_root(root) if root is not None else {}).get(
+            70, {}
+        )
 
         names_str = existing_70.get("CRATEDIGGER_1001TL_ARTISTS", "")
         if not names_str:
             return OperationResult(
-                self.name, "skipped",
+                self.name,
+                "skipped",
                 "no CRATEDIGGER_1001TL_ARTISTS (run identify)",
             )
 
@@ -1215,7 +1440,10 @@ class AlbumArtistMbidsOperation(Operation):
 
         new_value = "|".join(mbids)
 
-        if not self.force and existing_70.get("CRATEDIGGER_ALBUMARTIST_MBIDS", "") == new_value:
+        if (
+            not self.force
+            and existing_70.get("CRATEDIGGER_ALBUMARTIST_MBIDS", "") == new_value
+        ):
             return OperationResult(self.name, "skipped", "MBIDs already current")
 
         write_merged_tags(
@@ -1225,6 +1453,7 @@ class AlbumArtistMbidsOperation(Operation):
         )
         resolved_count = sum(1 for m in mbids if m)
         return OperationResult(
-            self.name, "done",
+            self.name,
+            "done",
             f"wrote MBIDs for {resolved_count}/{len(mbids)} artists",
         )

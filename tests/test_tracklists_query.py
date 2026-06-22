@@ -1,4 +1,5 @@
 """Tests for tracklist query building."""
+
 from pathlib import Path
 import pytest
 from festival_organizer.tracklists.query import (
@@ -22,7 +23,9 @@ def test_build_search_query_strips_youtube_id():
 
 
 def test_build_search_query_strips_scene_tags():
-    result = build_search_query(Path("glastonbury.2016.coldplay.1080p.hdtv.x264-verum.mkv"))
+    result = build_search_query(
+        Path("glastonbury.2016.coldplay.1080p.hdtv.x264-verum.mkv")
+    )
     assert "1080p" not in result
     assert "hdtv" not in result
 
@@ -40,20 +43,26 @@ def test_build_search_query_strips_noise():
 
 def test_build_search_query_normalizes_unicode_slashes():
     """Unicode fraction slashes (KI⧸KI) should become spaces."""
-    result = build_search_query(Path("Armin van Buuren & KI⧸KI live at AMF 2025 [WownWX6HUTs].mkv"))
+    result = build_search_query(
+        Path("Armin van Buuren & KI⧸KI live at AMF 2025 [WownWX6HUTs].mkv")
+    )
     assert "⧸" not in result
     assert "KI" in result
 
 
 def test_build_search_query_removes_empty_parens():
     """Empty parentheses left after noise stripping should be removed."""
-    result = build_search_query(Path("Artist Live At Festival 2024 (Full Set 4K UHD) [abc12345678].mkv"))
+    result = build_search_query(
+        Path("Artist Live At Festival 2024 (Full Set 4K UHD) [abc12345678].mkv")
+    )
     assert "(" not in result
     assert ")" not in result
 
 
 def test_detect_tracklist_source_url():
-    result = detect_tracklist_source("https://www.1001tracklists.com/tracklist/1g6g22ut/test.html")
+    result = detect_tracklist_source(
+        "https://www.1001tracklists.com/tracklist/1g6g22ut/test.html"
+    )
     assert result["type"] == "url"
     assert "1001tracklists" in result["value"]
 
@@ -75,11 +84,19 @@ def test_detect_tracklist_source_id_too_short():
 
 
 def test_extract_tracklist_id():
-    assert extract_tracklist_id("https://www.1001tracklists.com/tracklist/1g6g22ut/sub-zero-project.html") == "1g6g22ut"
+    assert (
+        extract_tracklist_id(
+            "https://www.1001tracklists.com/tracklist/1g6g22ut/sub-zero-project.html"
+        )
+        == "1g6g22ut"
+    )
 
 
 def test_extract_tracklist_id_short_url():
-    assert extract_tracklist_id("https://www.1001tracklists.com/tracklist/qv6kl89/") == "qv6kl89"
+    assert (
+        extract_tracklist_id("https://www.1001tracklists.com/tracklist/qv6kl89/")
+        == "qv6kl89"
+    )
 
 
 def test_extract_tracklist_id_invalid():
@@ -115,7 +132,9 @@ def test_expand_aliases_word_boundary():
 
 def test_build_search_query_normalizes_fullwidth_pipe():
     """Fullwidth pipe (U+FF5C) from YouTube filenames should become a space."""
-    result = build_search_query(Path("Alesso WE1 \uff5c Tomorrowland 2024 [7ZCNipI13PA].mkv"))
+    result = build_search_query(
+        Path("Alesso WE1 \uff5c Tomorrowland 2024 [7ZCNipI13PA].mkv")
+    )
     assert "\uff5c" not in result
     assert "Alesso" in result
     assert "Tomorrowland" in result
@@ -124,14 +143,18 @@ def test_build_search_query_normalizes_fullwidth_pipe():
 
 def test_build_search_query_normalizes_fullwidth_colon():
     """Fullwidth colon (U+FF1A) from YouTube filenames should become a space."""
-    result = build_search_query(Path("Ti\u00ebsto\uff1a In Search Of Sunrise [d2USUAxBGq0].mkv"))
+    result = build_search_query(
+        Path("Ti\u00ebsto\uff1a In Search Of Sunrise [d2USUAxBGq0].mkv")
+    )
     assert "\uff1a" not in result
     assert "Ti\u00ebsto" in result or "Tiësto" in result
 
 
 def test_build_search_query_strips_all_parens():
     """All parentheses/brackets should be stripped, not just empty ones."""
-    result = build_search_query(Path("HARDWELL TOMORROWLAND 2024 (MAINSTAGE WEEKEND 2) [Ne-nZA2bZMg].mkv"))
+    result = build_search_query(
+        Path("HARDWELL TOMORROWLAND 2024 (MAINSTAGE WEEKEND 2) [Ne-nZA2bZMg].mkv")
+    )
     assert "(" not in result
     assert ")" not in result
     assert "MAINSTAGE" in result
@@ -140,7 +163,11 @@ def test_build_search_query_strips_all_parens():
 
 def test_build_search_query_pipe_separated_format():
     """Official YouTube channel format 'Artist WE1 | Festival' should produce clean query."""
-    result = build_search_query(Path("Armin van Buuren B2B Joris Voorn \uff5c Tomorrowland Winter 2025 [i9hiZZi4c50].mkv"))
+    result = build_search_query(
+        Path(
+            "Armin van Buuren B2B Joris Voorn \uff5c Tomorrowland Winter 2025 [i9hiZZi4c50].mkv"
+        )
+    )
     assert "Armin" in result
     assert "Tomorrowland" in result
     assert "\uff5c" not in result

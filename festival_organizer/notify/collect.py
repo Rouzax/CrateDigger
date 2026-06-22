@@ -1,4 +1,5 @@
 """Build RunReport models from run results (pure, dependency-injected I/O)."""
+
 from __future__ import annotations
 
 import logging
@@ -49,15 +50,18 @@ def _event_for(mf, place_display: PlaceDisplay | None) -> str:
     artist-kind fallback and the no-callable path keep the raw place, so the
     email never shows ``Artist`` twice and tests stay config-free.
     """
-    if (place_display is not None
-            and mf.place_kind in ("festival", "venue", "location")
-            and mf.place):
+    if (
+        place_display is not None
+        and mf.place_kind in ("festival", "venue", "location")
+        and mf.place
+    ):
         return place_display(mf.place, mf.edition)
     return mf.place or mf.festival or ""
 
 
-def _email_set(mf, final_path: Path, *, metric: str,
-               place_display: PlaceDisplay | None = None) -> EmailSet:
+def _email_set(
+    mf, final_path: Path, *, metric: str, place_display: PlaceDisplay | None = None
+) -> EmailSet:
     return EmailSet(
         artist=mf.display_artist or mf.artist,
         event=_event_for(mf, place_display),
@@ -90,10 +94,17 @@ def collect_new_sets(
         if final_path is None:
             continue
         chapters = count_chapters(final_path)
-        sets.append(_email_set(mf, final_path, metric=_new_metric(mf, chapters),
-                               place_display=place_display))
-    return RunReport(channel="new_sets", sets=sets, update=update,
-                     stats=stats, timestamp=timestamp)
+        sets.append(
+            _email_set(
+                mf,
+                final_path,
+                metric=_new_metric(mf, chapters),
+                place_display=place_display,
+            )
+        )
+    return RunReport(
+        channel="new_sets", sets=sets, update=update, stats=stats, timestamp=timestamp
+    )
 
 
 def collect_updated_sets(
@@ -121,7 +132,7 @@ def collect_updated_sets(
         try:
             mf = analyse(path)
         except Exception as e:  # best-effort: never break the run for one file
-            _log.warning("notify.analyse_failed: file=%s error=\"%s\"", path, e)
+            _log.warning('notify.analyse_failed: file=%s error="%s"', path, e)
             continue
         chapters = count_chapters(path)
         parts = []
@@ -132,5 +143,10 @@ def collect_updated_sets(
             parts.append(dur)
         metric = " · ".join(parts)
         sets.append(_email_set(mf, path, metric=metric, place_display=place_display))
-    return RunReport(channel="updated_sets", sets=sets, update=update,
-                     stats=stats or {}, timestamp=timestamp)
+    return RunReport(
+        channel="updated_sets",
+        sets=sets,
+        update=update,
+        stats=stats or {},
+        timestamp=timestamp,
+    )

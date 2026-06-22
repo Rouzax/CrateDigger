@@ -1,4 +1,5 @@
 """Once-per-version throttle marker for the update-reminder email."""
+
 from __future__ import annotations
 
 import json

@@ -1,4 +1,5 @@
 """Tests for the _diff_highlight helper that colors changed segments."""
+
 from rich.text import Text
 
 from festival_organizer.console import _diff_highlight
@@ -16,7 +17,7 @@ def test_single_insertion_styled():
     result = _diff_highlight(source, target)
     assert result.plain == target
     styled_text = "".join(
-        result.plain[span.start:span.end]
+        result.plain[span.start : span.end]
         for span in result.spans
         if span.style == "orange1"
     )
@@ -29,9 +30,7 @@ def test_full_replacement_when_disjoint():
     result = _diff_highlight(source, target)
     assert result.plain == target
     styled_chars = sum(
-        span.end - span.start
-        for span in result.spans
-        if span.style == "orange1"
+        span.end - span.start for span in result.spans if span.style == "orange1"
     )
     assert styled_chars == len(target)
 
@@ -40,9 +39,7 @@ def test_empty_source_styles_entire_target():
     result = _diff_highlight("", "new_name.mkv")
     assert result.plain == "new_name.mkv"
     styled_chars = sum(
-        span.end - span.start
-        for span in result.spans
-        if span.style == "orange1"
+        span.end - span.start for span in result.spans if span.style == "orange1"
     )
     assert styled_chars == len("new_name.mkv")
 

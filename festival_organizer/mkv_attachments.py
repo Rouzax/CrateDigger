@@ -9,6 +9,7 @@ Logging:
         - attachments.extract (DEBUG): mkvextract failed
         - attachments.write (DEBUG): mkvpropedit add/replace/delete failed
 """
+
 import json
 import logging
 import subprocess
@@ -21,7 +22,12 @@ from festival_organizer.subprocess_utils import tracked_run
 
 logger = logging.getLogger(__name__)
 
-IMAGE_MIME = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
+IMAGE_MIME = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+}
 _IMAGE_EXTS = tuple(IMAGE_MIME.keys())
 
 
@@ -53,21 +59,30 @@ def list_image_attachments(source: Path) -> list[dict]:
     try:
         result = tracked_run(
             [metadata.MKVMERGE_PATH, "-i", "-F", "json", str(source)],
-            capture_output=True, text=True, timeout=30,
-            encoding="utf-8", errors="replace",
+            capture_output=True,
+            text=True,
+            timeout=30,
+            encoding="utf-8",
+            errors="replace",
         )
         if result.returncode != 0:
             return []
         data = json.loads(result.stdout or "{}")
     except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as e:
-        logger.debug("attachments.list: status=failed source=%s error=\"%s\"", source, e)
+        logger.debug('attachments.list: status=failed source=%s error="%s"', source, e)
         return []
     out: list[dict] = []
     for a in data.get("attachments", []):
         ct = (a.get("content_type") or "").lower()
         fn = a.get("file_name") or ""
         if ct.startswith("image/") or fn.lower().endswith(_IMAGE_EXTS):
-            out.append({"id": a.get("id"), "file_name": fn, "content_type": a.get("content_type") or ""})
+            out.append(
+                {
+                    "id": a.get("id"),
+                    "file_name": fn,
+                    "content_type": a.get("content_type") or "",
+                }
+            )
     return out
 
 
@@ -78,12 +93,20 @@ def extract_attachment(source: Path, att_id: int, dest: Path) -> bool:
     try:
         result = tracked_run(
             [metadata.MKVEXTRACT_PATH, str(source), "attachments", f"{att_id}:{dest}"],
-            capture_output=True, text=True, timeout=30,
-            encoding="utf-8", errors="replace",
+            capture_output=True,
+            text=True,
+            timeout=30,
+            encoding="utf-8",
+            errors="replace",
         )
         return result.returncode == 0 and Path(dest).exists()
     except (subprocess.SubprocessError, OSError) as e:
-        logger.debug("attachments.extract: status=failed source=%s id=%s error=\"%s\"", source, att_id, e)
+        logger.debug(
+            'attachments.extract: status=failed source=%s id=%s error="%s"',
+            source,
+            att_id,
+            e,
+        )
         return False
 
 
@@ -91,16 +114,31 @@ def add_attachment(target: Path, data_path: Path, name: str, mime: str) -> bool:
     """Add a new attachment with the given name and mime type."""
     return _run_propedit(
         target,
-        ["--attachment-name", name, "--attachment-mime-type", mime, "--add-attachment", str(data_path)],
+        [
+            "--attachment-name",
+            name,
+            "--attachment-mime-type",
+            mime,
+            "--add-attachment",
+            str(data_path),
+        ],
     )
 
 
-def replace_attachment(target: Path, old_name: str, data_path: Path, new_name: str, mime: str) -> bool:
+def replace_attachment(
+    target: Path, old_name: str, data_path: Path, new_name: str, mime: str
+) -> bool:
     """Replace the attachment named old_name with data_path, renaming it to new_name."""
     return _run_propedit(
         target,
-        ["--attachment-name", new_name, "--attachment-mime-type", mime,
-         "--replace-attachment", f"name:{old_name}:{data_path}"],
+        [
+            "--attachment-name",
+            new_name,
+            "--attachment-mime-type",
+            mime,
+            "--replace-attachment",
+            f"name:{old_name}:{data_path}",
+        ],
     )
 
 
@@ -115,10 +153,15 @@ def _run_propedit(target: Path, args: list[str]) -> bool:
     try:
         result = tracked_run(
             [metadata.MKVPROPEDIT_PATH, str(target), *args],
-            capture_output=True, text=True, timeout=60,
-            encoding="utf-8", errors="replace",
+            capture_output=True,
+            text=True,
+            timeout=60,
+            encoding="utf-8",
+            errors="replace",
         )
         return result.returncode == 0
     except (subprocess.SubprocessError, OSError) as e:
-        logger.debug("attachments.write: status=failed target=%s error=\"%s\"", target.name, e)
+        logger.debug(
+            'attachments.write: status=failed target=%s error="%s"', target.name, e
+        )
         return False

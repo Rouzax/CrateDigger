@@ -20,12 +20,14 @@ The unit-level counterpart lives in
 tests close the gap by ensuring the real parse-and-group chain produces
 the same input.
 """
+
 from unittest.mock import MagicMock, patch
 
 from festival_organizer.mkv_tags import CLEAR_TAG
 from festival_organizer.tracklists.api import TracklistSession
 from festival_organizer.tracklists.chapters import (
-    embed_chapters, parse_tracklist_lines,
+    embed_chapters,
+    parse_tracklist_lines,
 )
 
 
@@ -126,16 +128,23 @@ def test_reidentify_clears_stale_location_when_linked_event_location_appears(tmp
     )
     page_html = _build_minimal_page_html(h1_inner)
 
-    cache = _StubSourceCache({
-        "venue": {"name": "Alexandra Palace", "type": "Event Location",
-                  "country": "United Kingdom"},
-    })
+    cache = _StubSourceCache(
+        {
+            "venue": {
+                "name": "Alexandra Palace",
+                "type": "Event Location",
+                "country": "United Kingdom",
+            },
+        }
+    )
     session = TracklistSession(source_cache=cache)
 
-    with patch.object(session, "_request",
-                      side_effect=_build_export_mock_responses(page_html)), \
-         patch.object(session, "_fetch_dj_profile",
-                      return_value={"artwork_url": ""}):
+    with (
+        patch.object(
+            session, "_request", side_effect=_build_export_mock_responses(page_html)
+        ),
+        patch.object(session, "_fetch_dj_profile", return_value={"artwork_url": ""}),
+    ):
         export = session.export_tracklist("abc123")
 
     # Sanity check the export-layer contract these tests are built on:
@@ -150,9 +159,11 @@ def test_reidentify_clears_stale_location_when_linked_event_location_appears(tmp
     fake_mkv = tmp_path / "fred-again-alexandra-palace.mkv"
     fake_mkv.write_bytes(b"")
 
-    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
-         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         mock_write.return_value = True
         embed_chapters(
@@ -189,16 +200,23 @@ def test_reidentify_writes_location_when_no_linked_location_source(tmp_path):
 
     # Event Promoter is NOT in LOCATION_BEARING_TYPES, so export.location
     # must survive and flow through to the tag map.
-    cache = _StubSourceCache({
-        "abc": {"name": "USB002", "type": "Event Promoter",
-                "country": "United Kingdom"},
-    })
+    cache = _StubSourceCache(
+        {
+            "abc": {
+                "name": "USB002",
+                "type": "Event Promoter",
+                "country": "United Kingdom",
+            },
+        }
+    )
     session = TracklistSession(source_cache=cache)
 
-    with patch.object(session, "_request",
-                      side_effect=_build_export_mock_responses(page_html)), \
-         patch.object(session, "_fetch_dj_profile",
-                      return_value={"artwork_url": ""}):
+    with (
+        patch.object(
+            session, "_request", side_effect=_build_export_mock_responses(page_html)
+        ),
+        patch.object(session, "_fetch_dj_profile", return_value={"artwork_url": ""}),
+    ):
         export = session.export_tracklist("abc123")
 
     assert export.location == "Alexandra Palace London"
@@ -213,9 +231,11 @@ def test_reidentify_writes_location_when_no_linked_location_source(tmp_path):
     fake_mkv = tmp_path / "fred-again-usb002.mkv"
     fake_mkv.write_bytes(b"")
 
-    with patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"), \
-         patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write, \
-         patch("subprocess.run") as mock_run:
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         mock_write.return_value = True
         embed_chapters(

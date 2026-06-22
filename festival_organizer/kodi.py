@@ -17,6 +17,7 @@ Logging:
         - connection failed (WARNING): Kodi unreachable
     See docs/logging.md for full guidelines.
 """
+
 from __future__ import annotations
 
 import logging
@@ -42,7 +43,9 @@ class KodiClient:
         self._session.auth = HTTPBasicAuth(username, password)
         self._request_id = 0
 
-    def _call(self, method: str, params: dict | None = None, quiet: bool = False) -> dict:
+    def _call(
+        self, method: str, params: dict | None = None, quiet: bool = False
+    ) -> dict:
         """Send a JSON-RPC 2.0 request and return the result."""
         self._request_id += 1
         payload = {
@@ -54,7 +57,9 @@ class KodiClient:
             payload["params"] = params
 
         if not quiet:
-            logger.debug("kodi.rpc: direction=send method=%s params=%s", method, params or {})
+            logger.debug(
+                "kodi.rpc: direction=send method=%s params=%s", method, params or {}
+            )
 
         try:
             resp = self._session.post(self._url, json=payload, timeout=30)
@@ -77,17 +82,23 @@ class KodiClient:
 
     def scan(self, directory: str = "") -> None:
         """Trigger a video library scan (asynchronous in Kodi)."""
-        self._call("VideoLibrary.Scan", {
-            "directory": directory,
-        })
+        self._call(
+            "VideoLibrary.Scan",
+            {
+                "directory": directory,
+            },
+        )
         logger.info("kodi.sync: action=scan")
 
     def clean(self) -> None:
         """Clean library: remove entries for files that no longer exist."""
-        self._call("VideoLibrary.Clean", {
-            "content": "musicvideos",
-            "showdialogs": False,
-        })
+        self._call(
+            "VideoLibrary.Clean",
+            {
+                "content": "musicvideos",
+                "showdialogs": False,
+            },
+        )
         logger.info("kodi.sync: action=clean type=musicvideos")
 
     def get_music_videos(self) -> dict[str, dict]:
@@ -95,9 +106,12 @@ class KodiClient:
 
         Paths are stored exactly as Kodi reports them (e.g. SMB URLs).
         """
-        result = self._call("VideoLibrary.GetMusicVideos", {
-            "properties": ["file", "art"],
-        })
+        result = self._call(
+            "VideoLibrary.GetMusicVideos",
+            {
+                "properties": ["file", "art"],
+            },
+        )
         mapping: dict[str, dict] = {}
         for mv in result.get("musicvideos", []):
             file_path = mv.get("file", "")
@@ -112,28 +126,39 @@ class KodiClient:
 
     def refresh_music_video(self, musicvideoid: int) -> None:
         """Refresh a single music video (re-reads NFO + clears artwork cache)."""
-        self._call("VideoLibrary.RefreshMusicVideo", {
-            "musicvideoid": musicvideoid,
-            "ignorenfo": False,
-        })
+        self._call(
+            "VideoLibrary.RefreshMusicVideo",
+            {
+                "musicvideoid": musicvideoid,
+                "ignorenfo": False,
+            },
+        )
 
     def get_textures(self, url: str) -> list[dict]:
         """Find cached textures matching a URL."""
-        result = self._call("Textures.GetTextures", {
-            "properties": ["url"],
-            "filter": {
-                "field": "url",
-                "operator": "contains",
-                "value": url,
+        result = self._call(
+            "Textures.GetTextures",
+            {
+                "properties": ["url"],
+                "filter": {
+                    "field": "url",
+                    "operator": "contains",
+                    "value": url,
+                },
             },
-        }, quiet=True)
+            quiet=True,
+        )
         return result.get("textures", [])
 
     def remove_texture(self, texture_id: int) -> None:
         """Hard-delete a cached texture (DB record + file on disk)."""
-        self._call("Textures.RemoveTexture", {
-            "textureid": texture_id,
-        }, quiet=True)
+        self._call(
+            "Textures.RemoveTexture",
+            {
+                "textureid": texture_id,
+            },
+            quiet=True,
+        )
 
 
 def _infer_path_mapping(
@@ -174,10 +199,12 @@ def _infer_path_mapping(
             continue
 
         # local prefix = everything before the common suffix
-        local_prefix = str(Path(*local_parts[:len(local_parts) - common]))
-        kodi_prefix = "/".join(kodi_parts[:len(kodi_parts) - common])
+        local_prefix = str(Path(*local_parts[: len(local_parts) - common]))
+        kodi_prefix = "/".join(kodi_parts[: len(kodi_parts) - common])
 
-        logger.info("kodi.path_mapping: source=auto local=%s kodi=%s", local_prefix, kodi_prefix)
+        logger.info(
+            "kodi.path_mapping: source=auto local=%s kodi=%s", local_prefix, kodi_prefix
+        )
         return (local_prefix, kodi_prefix)
 
     return None
@@ -200,7 +227,7 @@ def _translate_path(
     # Case-insensitive prefix check
     if not resolved.lower().startswith(local_prefix.lower()):
         return None
-    relative = resolved[len(local_prefix):]
+    relative = resolved[len(local_prefix) :]
     relative = relative.replace("\\", "/").lstrip("/")
     if relative:
         candidate = f"{kodi_prefix}/{relative}"
@@ -234,7 +261,8 @@ def sync_library(
 
     import time
     from festival_organizer.console import (
-        StepProgress, library_sync_summary_line,
+        StepProgress,
+        library_sync_summary_line,
     )
 
     logger.info("kodi.sync: action=start items=%d", len(changed_paths))
@@ -259,7 +287,11 @@ def sync_library(
             kodi_prefix = path_mapping.get("kodi", "")
             if local_prefix and kodi_prefix:
                 local_prefix = str(Path(local_prefix).resolve())
-                logger.info("kodi.path_mapping: source=config local=%s kodi=%s", local_prefix, kodi_prefix)
+                logger.info(
+                    "kodi.path_mapping: source=config local=%s kodi=%s",
+                    local_prefix,
+                    kodi_prefix,
+                )
 
         if not (local_prefix and kodi_prefix):
             inferred = _infer_path_mapping(changed_paths, kodi_videos)
@@ -309,7 +341,9 @@ def sync_library(
                 mv_id = entry["id"]
 
                 # Hard-delete texture cache only for items with artwork changes
-                needs_texture_clear = art_changed_paths is None or path in art_changed_paths
+                needs_texture_clear = (
+                    art_changed_paths is None or path in art_changed_paths
+                )
                 if needs_texture_clear:
                     for art_url in entry.get("art", {}).values():
                         for tex in client.get_textures(art_url):
@@ -335,7 +369,9 @@ def sync_library(
                 folder_jpg = folder / "folder.jpg"
                 resolved = str(folder_jpg.resolve())
                 if resolved.lower().startswith(local_prefix.lower()):
-                    relative = resolved[len(local_prefix):].replace("\\", "/").lstrip("/")
+                    relative = (
+                        resolved[len(local_prefix) :].replace("\\", "/").lstrip("/")
+                    )
                     kodi_folder_path = f"{kodi_prefix}/{relative}"
                     for tex in client.get_textures(kodi_folder_path):
                         tex_id = tex.get("textureid")

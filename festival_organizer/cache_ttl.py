@@ -6,6 +6,7 @@ first-fetch.
 
 Logging: no log lines emitted here; callers handle logging around cache ops.
 """
+
 import hashlib
 import random
 import time

@@ -1,4 +1,5 @@
 """Tests for poster generation module."""
+
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +32,7 @@ from festival_organizer.poster import (
 
 # --- split_artist tests ---
 
+
 def test_split_artist_parenthetical():
     line1, line2 = split_artist("Everything Always (Dom Dolla & John Summit)")
     assert line1 == "Everything Always"
@@ -61,15 +63,17 @@ def test_split_artist_single_name():
 
 # --- _resolve_artist_lines tests ---
 
+
 def test_resolve_artist_lines_single_act_one_line():
     # A single act renders on one line; an internal "&" is never split.
     assert _resolve_artist_lines(["Above & Beyond"], "ignored") == ["Above & Beyond"]
 
 
 def test_resolve_artist_lines_b2b_two_acts():
-    assert _resolve_artist_lines(
-        ["Martin Garrix", "Alesso"], "ignored"
-    ) == ["Martin Garrix", "& Alesso"]
+    assert _resolve_artist_lines(["Martin Garrix", "Alesso"], "ignored") == [
+        "Martin Garrix",
+        "& Alesso",
+    ]
 
 
 def test_resolve_artist_lines_b2b_three_acts():
@@ -85,9 +89,10 @@ def test_resolve_artist_lines_duo_in_b2b_keeps_duo_together():
 
 def test_resolve_artist_lines_shows_alias_from_billed_list():
     # Text comes from the billed list (the alias); display is ignored when a list is present.
-    assert _resolve_artist_lines(
-        ["SOMETHING ELSE", "R3HAB"], "WHATEVER"
-    ) == ["SOMETHING ELSE", "& R3HAB"]
+    assert _resolve_artist_lines(["SOMETHING ELSE", "R3HAB"], "WHATEVER") == [
+        "SOMETHING ELSE",
+        "& R3HAB",
+    ]
 
 
 def test_resolve_artist_lines_single_act_ignores_title_enrichment():
@@ -103,6 +108,7 @@ def test_resolve_artist_lines_no_list_falls_back_to_split_artist():
 
 
 # --- word-wrap tests ---
+
 
 def test_balanced_word_split_even():
     result = _balanced_word_split("SWEDISH HOUSE MAFIA")
@@ -126,6 +132,7 @@ def test_word_wrap_lines_long_line_splits():
 
 # --- accent color tests ---
 
+
 def test_get_accent_color_returns_rgb():
     img = Image.new("RGB", (100, 100), (200, 50, 50))
     color = get_accent_color(img)
@@ -135,6 +142,7 @@ def test_get_accent_color_returns_rgb():
 
 
 # --- format_date_display tests ---
+
 
 def test_format_date_full():
     assert format_date_display("2025-03-28", "2025") == "28 March 2025"
@@ -149,6 +157,7 @@ def test_format_date_no_data():
 
 
 # --- auto_fit tests ---
+
 
 def test_auto_fit_short_name():
     font, size = auto_fit("HI", "bold", 900, start=130, minimum=50)
@@ -165,6 +174,7 @@ def test_auto_fit_long_name():
 def test_pad_line_to_artist_matches_fest():
     """Padding from accent line should be symmetric."""
     from festival_organizer.poster import PAD_LINE_TO_ARTIST, PAD_LINE_TO_FEST
+
     assert PAD_LINE_TO_ARTIST == PAD_LINE_TO_FEST == 30
 
 
@@ -179,6 +189,7 @@ def test_auto_fit_hero_range_unified():
 
 
 # --- generate_set_poster tests ---
+
 
 def test_generate_set_poster_creates_file(tmp_path):
     src = tmp_path / "source.png"
@@ -220,6 +231,7 @@ def test_generate_set_poster_with_b2b(tmp_path):
 
 
 # --- generate_album_poster tests ---
+
 
 def test_generate_album_poster_creates_file(tmp_path):
     output = tmp_path / "album_poster.jpg"
@@ -263,6 +275,7 @@ def test_generate_album_poster_with_transparent_png(tmp_path):
     img = Image.new("RGBA", (500, 500), (0, 0, 0, 0))
     # Draw a colored circle on transparent background
     from PIL import ImageDraw
+
     d = ImageDraw.Draw(img)
     d.ellipse([50, 50, 450, 450], fill=(200, 50, 100, 255))
     img.save(str(logo))
@@ -316,6 +329,7 @@ def test_generate_album_poster_dark_logo_uses_override(tmp_path):
     # Black on transparent
     img = Image.new("RGBA", (500, 500), (0, 0, 0, 0))
     from PIL import ImageDraw
+
     d = ImageDraw.Draw(img)
     d.rectangle([100, 100, 400, 400], fill=(0, 0, 0, 255))
     img.save(str(logo))
@@ -331,6 +345,7 @@ def test_generate_album_poster_dark_logo_uses_override(tmp_path):
     assert output.exists()
     with Image.open(output) as result:
         import numpy as np
+
         arr = np.array(result)
         mean_brightness = arr.mean()
         assert mean_brightness > 10, f"Poster too dark ({mean_brightness:.1f})"
@@ -384,6 +399,7 @@ def test_generate_set_poster_with_rgba_source(tmp_path):
 
     output = tmp_path / "poster.jpg"
     from festival_organizer.poster import generate_set_poster
+
     generate_set_poster(
         source_image_path=source,
         output_path=output,
@@ -397,6 +413,7 @@ def test_generate_set_poster_with_rgba_source(tmp_path):
 
 
 # --- font resolver tests ---
+
 
 def test_get_font_path_returns_bundled():
     """Bundled font path exists and is a real file."""
@@ -483,14 +500,24 @@ def test_set_poster_venue_no_dedup_when_different(tmp_path):
 
 # --- _filter_venue_parts tests ---
 
+
 def test_filter_venue_parts_exact_duplicate():
     """Exact duplicate venue part is filtered out."""
-    assert _filter_venue_parts("Historic Virginia Key Park", "Historic Virginia Key Park") == []
+    assert (
+        _filter_venue_parts("Historic Virginia Key Park", "Historic Virginia Key Park")
+        == []
+    )
 
 
 def test_filter_venue_parts_detail_substring_of_venue():
     """Venue containing a detail part as substring is filtered."""
-    assert _filter_venue_parts("Johan Cruijff ArenA Amsterdam", "Johan Cruijff ArenA, Amsterdam Dance Event") == []
+    assert (
+        _filter_venue_parts(
+            "Johan Cruijff ArenA Amsterdam",
+            "Johan Cruijff ArenA, Amsterdam Dance Event",
+        )
+        == []
+    )
 
 
 def test_filter_venue_parts_unrelated():
@@ -510,15 +537,20 @@ def test_filter_venue_parts_empty_venue():
 
 def test_filter_venue_parts_festival_duplicate():
     """Venue matching festival name is filtered out."""
-    assert _filter_venue_parts("[UNVRS] Ibiza", "Galactic Circus", "[UNVRS] Ibiza") == []
+    assert (
+        _filter_venue_parts("[UNVRS] Ibiza", "Galactic Circus", "[UNVRS] Ibiza") == []
+    )
 
 
 def test_filter_venue_parts_festival_no_false_positive():
     """Unrelated venue is not filtered by festival name."""
-    assert _filter_venue_parts("Ahoy Rotterdam", "Mainstage", "ASOT") == ["Ahoy Rotterdam"]
+    assert _filter_venue_parts("Ahoy Rotterdam", "Mainstage", "ASOT") == [
+        "Ahoy Rotterdam"
+    ]
 
 
 # --- hex parsing tests ---
+
 
 def test_hex_to_rgb_with_hash():
     assert _hex_to_rgb("#EA0000") == (234, 0, 0)
@@ -529,6 +561,7 @@ def test_hex_to_rgb_without_hash():
 
 
 # --- logo color extraction tests ---
+
 
 def test_extract_logo_color_saturated():
     """Saturated logo returns a dark/moody color in the correct hue range."""
@@ -543,6 +576,7 @@ def test_extract_logo_color_with_alpha():
     """Transparent logo ignores invisible pixels."""
     img = Image.new("RGBA", (100, 100), (0, 0, 0, 0))
     from PIL import ImageDraw
+
     d = ImageDraw.Draw(img)
     d.ellipse([10, 10, 90, 90], fill=(0, 0, 200, 255))
     color = _extract_logo_color(img)
@@ -605,6 +639,7 @@ def test_neutral_base_from_luminance_respects_alpha():
     """Only visible (alpha > 128) pixels contribute to the luminance mean."""
     img = Image.new("RGBA", (50, 50), (0, 0, 0, 0))  # fully transparent
     from PIL import ImageDraw
+
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, 24, 49], fill=(200, 200, 200, 255))  # visible light patch
     r, g, b = _neutral_base_from_luminance(img)
@@ -627,6 +662,7 @@ def test_generate_album_poster_edition_text_layout(tmp_path):
     logo = tmp_path / "logo.png"
     img = Image.new("RGBA", (500, 500), (0, 0, 0, 0))
     from PIL import ImageDraw
+
     d = ImageDraw.Draw(img)
     d.ellipse([50, 50, 450, 450], fill=(155, 27, 90, 255))
     img.save(str(logo))
@@ -643,8 +679,9 @@ def test_generate_album_poster_edition_text_layout(tmp_path):
     with Image.open(output) as result:
         assert result.size == (POSTER_W, POSTER_H)
         import numpy as np
+
         arr = np.array(result)
-        below_line_strip = arr[LINE_Y + 20:LINE_Y + 80, 300:700]
+        below_line_strip = arr[LINE_Y + 20 : LINE_Y + 80, 300:700]
         max_brightness = below_line_strip.max()
         assert max_brightness > 50, "Edition text not visible below accent line"
 
@@ -683,10 +720,13 @@ def test_generate_album_poster_brand_color_darkened(tmp_path):
     assert output.exists()
     with Image.open(output) as result:
         import numpy as np
+
         arr = np.array(result)
         top_strip = arr[50:150, 300:700]
         mean_r = top_strip[:, :, 0].mean()
-        assert mean_r < 150, f"Gradient too bright ({mean_r:.0f}), brand color not darkened"
+        assert mean_r < 150, (
+            f"Gradient too bright ({mean_r:.0f}), brand color not darkened"
+        )
 
 
 def test_make_gradient_bg_custom_dimensions():
@@ -721,8 +761,9 @@ def test_set_poster_hero_has_no_accent_stroke(tmp_path):
     assert output.exists()
     with Image.open(output) as img:
         import numpy as np
+
         arr = np.array(img)
-        hero_strip = arr[LINE_Y - 120:LINE_Y - 30, 200:800]
+        hero_strip = arr[LINE_Y - 120 : LINE_Y - 30, 200:800]
         bright = hero_strip[hero_strip.max(axis=2) > 200]
         if len(bright) > 0:
             r, g, b = bright.mean(axis=0)
@@ -739,8 +780,11 @@ def test_draw_centered_accepts_stroke_params():
     bg = Image.new("RGB", (POSTER_W, POSTER_H), (0, 0, 0))
     draw = ImageDraw.Draw(bg)
     font = get_font("bold", 80)
-    _draw_centered(draw, 500, "TEST", font, "white", stroke_width=2, stroke_fill=(100, 50, 200))
+    _draw_centered(
+        draw, 500, "TEST", font, "white", stroke_width=2, stroke_fill=(100, 50, 200)
+    )
     import numpy as np
+
     arr = np.array(bg)
     assert arr.max() > 0, "Nothing was drawn"
 
@@ -766,26 +810,35 @@ def test_generate_set_poster_accepts_artists_1001tl_kwarg(tmp_path):
 
 def test_cover_poster_version_is_2():
     from festival_organizer.poster import COVER_POSTER_VERSION
+
     assert COVER_POSTER_VERSION == 2
 
 
 # --- year badge tests (Phase A) ---
 
+
 def test_year_badge_dimensions_and_rounding():
     import numpy as np
+
     badge = _make_year_badge("2025", (237, 56, 149), size=300)
     assert badge.size == (300, 300)
     assert badge.mode == "RGBA"
     arr = np.array(badge)  # (h, w, 4)
-    assert arr[0, 0, 3] == 0        # rounded corner -> transparent
+    assert arr[0, 0, 3] == 0  # rounded corner -> transparent
     assert arr[150, 150, 3] == 255  # centre -> opaque
 
 
 def test_year_badge_full_draws_white_digits():
     import numpy as np
+
     arr = np.array(_make_year_badge("2025", (40, 80, 180), size=300))
     band = arr[110:190, 40:260]
-    white = (band[:, :, 0] > 230) & (band[:, :, 1] > 230) & (band[:, :, 2] > 230) & (band[:, :, 3] > 0)
+    white = (
+        (band[:, :, 0] > 230)
+        & (band[:, :, 1] > 230)
+        & (band[:, :, 2] > 230)
+        & (band[:, :, 3] > 0)
+    )
     assert white.any(), "no white digit pixels found in badge centre band"
 
 
@@ -806,9 +859,12 @@ def test_generate_album_poster_year_badge_smoke(tmp_path):
 
 # --- _darken_for_white_text (WCAG safeguard) tests (Phase A) ---
 
+
 def test_darken_for_white_text_darkens_light_color():
     light = (245, 215, 110)
-    assert _wcag_contrast(255, 255, 255, bg=light) < 3.0  # precondition: too light for white
+    assert (
+        _wcag_contrast(255, 255, 255, bg=light) < 3.0
+    )  # precondition: too light for white
     out = _darken_for_white_text(light)
     assert _wcag_contrast(255, 255, 255, bg=out) >= 3.0
 
@@ -826,26 +882,61 @@ def test_darken_for_white_text_preserves_hue_family():
 
 # --- folder-poster stamp tests (Phase B) ---
 
+
 def test_folder_poster_version_is_1():
     from festival_organizer.poster import FOLDER_POSTER_VERSION
+
     assert FOLDER_POSTER_VERSION == 1
 
 
 def test_build_folder_stamp_distinct_fields():
     from festival_organizer.poster import build_folder_stamp
-    base = build_folder_stamp(poster_type="year", name="EDC Las Vegas", year="2025", edition="")
+
+    base = build_folder_stamp(
+        poster_type="year", name="EDC Las Vegas", year="2025", edition=""
+    )
     # Identical inputs -> identical bytes.
-    assert build_folder_stamp(poster_type="year", name="EDC Las Vegas", year="2025", edition="") == base
+    assert (
+        build_folder_stamp(
+            poster_type="year", name="EDC Las Vegas", year="2025", edition=""
+        )
+        == base
+    )
     # Any field change -> different bytes.
-    assert build_folder_stamp(poster_type="festival", name="EDC Las Vegas", year="2025", edition="") != base
-    assert build_folder_stamp(poster_type="year", name="EDC", year="2025", edition="") != base
-    assert build_folder_stamp(poster_type="year", name="EDC Las Vegas", year="2024", edition="") != base
-    assert build_folder_stamp(poster_type="year", name="EDC Las Vegas", year="2025", edition="Winter") != base
+    assert (
+        build_folder_stamp(
+            poster_type="festival", name="EDC Las Vegas", year="2025", edition=""
+        )
+        != base
+    )
+    assert (
+        build_folder_stamp(poster_type="year", name="EDC", year="2025", edition="")
+        != base
+    )
+    assert (
+        build_folder_stamp(
+            poster_type="year", name="EDC Las Vegas", year="2024", edition=""
+        )
+        != base
+    )
+    assert (
+        build_folder_stamp(
+            poster_type="year", name="EDC Las Vegas", year="2025", edition="Winter"
+        )
+        != base
+    )
 
 
 def test_build_folder_stamp_version_bump(monkeypatch):
     from festival_organizer import poster as poster_mod
-    before = poster_mod.build_folder_stamp(poster_type="year", name="N", year="2025", edition="")
-    monkeypatch.setattr(poster_mod, "FOLDER_POSTER_VERSION", poster_mod.FOLDER_POSTER_VERSION + 1)
-    after = poster_mod.build_folder_stamp(poster_type="year", name="N", year="2025", edition="")
+
+    before = poster_mod.build_folder_stamp(
+        poster_type="year", name="N", year="2025", edition=""
+    )
+    monkeypatch.setattr(
+        poster_mod, "FOLDER_POSTER_VERSION", poster_mod.FOLDER_POSTER_VERSION + 1
+    )
+    after = poster_mod.build_folder_stamp(
+        poster_type="year", name="N", year="2025", edition=""
+    )
     assert before != after

@@ -1,4 +1,5 @@
 """Tests for festival_organizer.paths platform-path resolution."""
+
 from __future__ import annotations
 
 import logging
@@ -14,26 +15,36 @@ from festival_organizer import paths
 class TestDataDir:
     def test_windows_uses_documents_dir(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.delenv("CRATEDIGGER_DATA_DIR", raising=False)
-        with patch("festival_organizer.paths.sys") as mock_sys, \
-             patch("festival_organizer.paths.platformdirs") as mock_pd:
+        with (
+            patch("festival_organizer.paths.sys") as mock_sys,
+            patch("festival_organizer.paths.platformdirs") as mock_pd,
+        ):
             mock_sys.platform = "win32"
             mock_pd.user_documents_dir.return_value = "C:/Users/Name/Documents"
             result = paths.data_dir()
             assert result == Path("C:/Users/Name/Documents/CrateDigger")
 
-    def test_non_windows_uses_home(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    def test_non_windows_uses_home(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
         monkeypatch.delenv("CRATEDIGGER_DATA_DIR", raising=False)
-        with patch("festival_organizer.paths.sys") as mock_sys, \
-             patch.object(Path, "home", return_value=tmp_path):
+        with (
+            patch("festival_organizer.paths.sys") as mock_sys,
+            patch.object(Path, "home", return_value=tmp_path),
+        ):
             mock_sys.platform = "linux"
             result = paths.data_dir()
             assert result == tmp_path / "CrateDigger"
 
-    def test_darwin_uses_home_like_linux(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    def test_darwin_uses_home_like_linux(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
         """macOS uses ~/CrateDigger/ (matches TrackSplit's ~/TrackSplit/ layout)."""
         monkeypatch.delenv("CRATEDIGGER_DATA_DIR", raising=False)
-        with patch("festival_organizer.paths.sys") as mock_sys, \
-             patch.object(Path, "home", return_value=tmp_path):
+        with (
+            patch("festival_organizer.paths.sys") as mock_sys,
+            patch.object(Path, "home", return_value=tmp_path),
+        ):
             mock_sys.platform = "darwin"
             result = paths.data_dir()
             assert result == tmp_path / "CrateDigger"
@@ -50,7 +61,9 @@ class TestCacheDir:
         with patch("festival_organizer.paths.platformdirs") as mock_pd:
             mock_pd.user_cache_dir.return_value = "/fake/cache/CrateDigger"
             result = paths.cache_dir()
-            mock_pd.user_cache_dir.assert_called_once_with("CrateDigger", appauthor=False)
+            mock_pd.user_cache_dir.assert_called_once_with(
+                "CrateDigger", appauthor=False
+            )
             assert result == Path("/fake/cache/CrateDigger")
 
 
@@ -59,7 +72,9 @@ class TestStateDir:
         with patch("festival_organizer.paths.platformdirs") as mock_pd:
             mock_pd.user_state_dir.return_value = "/fake/state/CrateDigger"
             result = paths.state_dir()
-            mock_pd.user_state_dir.assert_called_once_with("CrateDigger", appauthor=False)
+            mock_pd.user_state_dir.assert_called_once_with(
+                "CrateDigger", appauthor=False
+            )
             assert result == Path("/fake/state/CrateDigger")
 
 
@@ -68,7 +83,9 @@ class TestConfigPathIsInsideDataDir:
 
     def test_config_and_curated_share_parent(self, tmp_path: Path):
         with patch("festival_organizer.paths.data_dir", return_value=tmp_path):
-            assert paths.config_file().parent == paths.festivals_file().parent == tmp_path
+            assert (
+                paths.config_file().parent == paths.festivals_file().parent == tmp_path
+            )
 
 
 class TestLogDir:
@@ -170,19 +187,26 @@ class TestWarnIfLegacyPathsExist:
         legacy.mkdir()
         (legacy / "config.json").write_text("{}")
         state = tmp_path / "state"
-        with patch("festival_organizer.paths.state_dir", return_value=state), \
-             caplog.at_level("WARNING", logger="festival_organizer.paths"):
+        with (
+            patch("festival_organizer.paths.state_dir", return_value=state),
+            caplog.at_level("WARNING", logger="festival_organizer.paths"),
+        ):
             paths.warn_if_legacy_paths_exist(home=tmp_path)
-        messages = [r.getMessage() for r in caplog.records if r.name == "festival_organizer.paths"]
+        messages = [
+            r.getMessage()
+            for r in caplog.records
+            if r.name == "festival_organizer.paths"
+        ]
         assert any(
-            "legacy" in m.lower() or "old location" in m.lower()
-            for m in messages
+            "legacy" in m.lower() or "old location" in m.lower() for m in messages
         )
 
     def test_silent_when_nothing_legacy(self, tmp_path: Path, caplog):
         state = tmp_path / "state"
-        with patch("festival_organizer.paths.state_dir", return_value=state), \
-             caplog.at_level("WARNING", logger="festival_organizer.paths"):
+        with (
+            patch("festival_organizer.paths.state_dir", return_value=state),
+            caplog.at_level("WARNING", logger="festival_organizer.paths"),
+        ):
             paths.warn_if_legacy_paths_exist(home=tmp_path)
         ours = [r for r in caplog.records if r.name == "festival_organizer.paths"]
         assert ours == []
@@ -199,15 +223,18 @@ class TestWarnIfLegacyPathsExistDedup:
 
     def _count_warnings(self, caplog) -> int:
         return sum(
-            1 for r in caplog.records
+            1
+            for r in caplog.records
             if r.name == "festival_organizer.paths" and r.levelname == "WARNING"
         )
 
     def test_first_call_warns_and_writes_stamp(self, tmp_path: Path, caplog):
         self._make_legacy(tmp_path)
         state = tmp_path / "state"
-        with patch("festival_organizer.paths.state_dir", return_value=state), \
-             caplog.at_level("WARNING", logger="festival_organizer.paths"):
+        with (
+            patch("festival_organizer.paths.state_dir", return_value=state),
+            caplog.at_level("WARNING", logger="festival_organizer.paths"),
+        ):
             paths.warn_if_legacy_paths_exist(home=tmp_path)
         assert self._count_warnings(caplog) == 1
         stamp = state / "legacy-warning.stamp"
@@ -231,8 +258,10 @@ class TestWarnIfLegacyPathsExistDedup:
         state.mkdir()
         stamp = state / "legacy-warning.stamp"
         stamp.write_text("2020-01-01")
-        with patch("festival_organizer.paths.state_dir", return_value=state), \
-             caplog.at_level("WARNING", logger="festival_organizer.paths"):
+        with (
+            patch("festival_organizer.paths.state_dir", return_value=state),
+            caplog.at_level("WARNING", logger="festival_organizer.paths"),
+        ):
             paths.warn_if_legacy_paths_exist(home=tmp_path)
         assert self._count_warnings(caplog) == 1
         assert stamp.read_text().strip() == date.today().isoformat()
@@ -243,8 +272,10 @@ class TestWarnIfLegacyPathsExistDedup:
         state.mkdir()
         stamp = state / "legacy-warning.stamp"
         stamp.write_text("not a date, garbage \x00\x01")
-        with patch("festival_organizer.paths.state_dir", return_value=state), \
-             caplog.at_level("WARNING", logger="festival_organizer.paths"):
+        with (
+            patch("festival_organizer.paths.state_dir", return_value=state),
+            caplog.at_level("WARNING", logger="festival_organizer.paths"),
+        ):
             paths.warn_if_legacy_paths_exist(home=tmp_path)
         assert self._count_warnings(caplog) == 1
         assert stamp.read_text().strip() == date.today().isoformat()
@@ -257,8 +288,10 @@ class TestWarnIfLegacyPathsExistDedup:
         stamp = state / "legacy-warning.stamp"
         future = (date.today() + timedelta(days=1)).isoformat()
         stamp.write_text(future)
-        with patch("festival_organizer.paths.state_dir", return_value=state), \
-             caplog.at_level("WARNING", logger="festival_organizer.paths"):
+        with (
+            patch("festival_organizer.paths.state_dir", return_value=state),
+            caplog.at_level("WARNING", logger="festival_organizer.paths"),
+        ):
             paths.warn_if_legacy_paths_exist(home=tmp_path)
         assert self._count_warnings(caplog) == 0
 
@@ -290,7 +323,9 @@ class TestIsSourceCheckoutDir:
         assert paths._is_source_checkout_dir(tmp_path) is False
 
     def test_pyproject_without_project_table(self, tmp_path: Path):
-        (tmp_path / "pyproject.toml").write_text('[tool.poetry]\nname = "cratedigger"\n')
+        (tmp_path / "pyproject.toml").write_text(
+            '[tool.poetry]\nname = "cratedigger"\n'
+        )
         assert paths._is_source_checkout_dir(tmp_path) is False
 
     def test_path_does_not_exist(self, tmp_path: Path):
@@ -318,7 +353,8 @@ class TestWarnIfDataDirIsSourceCheckout:
                 paths.warn_if_data_dir_is_source_checkout()
                 paths.warn_if_data_dir_is_source_checkout()
         warnings = [
-            r for r in caplog.records
+            r
+            for r in caplog.records
             if r.name == "festival_organizer.paths" and r.levelname == "WARNING"
         ]
         assert len(warnings) == 1
@@ -363,37 +399,51 @@ class TestWarnIfDataDirIsSourceCheckout:
 
 
 class TestDataDirEnvOverride:
-    def test_env_var_wins_when_dir_exists(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    def test_env_var_wins_when_dir_exists(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
         custom = tmp_path / "custom"
         custom.mkdir()
         monkeypatch.setenv("CRATEDIGGER_DATA_DIR", str(custom))
         assert paths.data_dir() == custom
 
-    def test_env_var_ignored_when_dir_missing(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    def test_env_var_ignored_when_dir_missing(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
         """If the env var points at a non-existent path, fall back to the
         platform default. Matches TrackSplit's behaviour so both tools agree."""
         ghost = tmp_path / "does_not_exist"
         monkeypatch.setenv("CRATEDIGGER_DATA_DIR", str(ghost))
-        with patch("festival_organizer.paths.sys") as mock_sys, \
-             patch.object(Path, "home", return_value=tmp_path):
+        with (
+            patch("festival_organizer.paths.sys") as mock_sys,
+            patch.object(Path, "home", return_value=tmp_path),
+        ):
             mock_sys.platform = "linux"
             assert paths.data_dir() == tmp_path / "CrateDigger"
 
-    def test_env_var_ignored_when_dir_is_file(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    def test_env_var_ignored_when_dir_is_file(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
         """Symmetric to TrackSplit: a file at the env var path is not a valid
         data dir, so fall back to the default."""
         blocker = tmp_path / "blocker"
         blocker.write_text("")
         monkeypatch.setenv("CRATEDIGGER_DATA_DIR", str(blocker))
-        with patch("festival_organizer.paths.sys") as mock_sys, \
-             patch.object(Path, "home", return_value=tmp_path):
+        with (
+            patch("festival_organizer.paths.sys") as mock_sys,
+            patch.object(Path, "home", return_value=tmp_path),
+        ):
             mock_sys.platform = "linux"
             assert paths.data_dir() == tmp_path / "CrateDigger"
 
-    def test_empty_env_var_ignored(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    def test_empty_env_var_ignored(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
         monkeypatch.setenv("CRATEDIGGER_DATA_DIR", "")
-        with patch("festival_organizer.paths.sys") as mock_sys, \
-             patch.object(Path, "home", return_value=tmp_path):
+        with (
+            patch("festival_organizer.paths.sys") as mock_sys,
+            patch.object(Path, "home", return_value=tmp_path),
+        ):
             mock_sys.platform = "linux"
             assert paths.data_dir() == tmp_path / "CrateDigger"
 
@@ -454,9 +504,7 @@ class TestMigrateLegacyPaths:
         assert target.read_text(encoding="utf-8") == '{"new": {}}'
         assert legacy.read_text(encoding="utf-8") == '{"old": {}}'
 
-    def test_copies_logo_subdirs(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ):
+    def test_copies_logo_subdirs(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         legacy_dir = tmp_path / "festivals"
         (legacy_dir / "Tomorrowland").mkdir(parents=True)
         (legacy_dir / "Tomorrowland" / "logo.png").write_bytes(b"PNG")
@@ -523,10 +571,15 @@ class TestMigrateLegacyPaths:
             paths._migrate_legacy_paths()
 
         info_records = [
-            r for r in caplog.records
+            r
+            for r in caplog.records
             if r.name == "festival_organizer.paths" and r.levelname == "INFO"
         ]
         file_msgs = [r for r in info_records if "places.json" in r.getMessage()]
-        logo_msgs = [r for r in info_records if "paths.migrate: type=curated_logos" in r.getMessage()]
+        logo_msgs = [
+            r
+            for r in info_records
+            if "paths.migrate: type=curated_logos" in r.getMessage()
+        ]
         assert len(file_msgs) == 1
         assert len(logo_msgs) == 1

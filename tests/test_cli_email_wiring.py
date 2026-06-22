@@ -5,6 +5,7 @@ from festival_organizer import cli as cli_mod
 def test_chapter_counter_and_analyse_imports_exist():
     from festival_organizer.tracklists.chapters import extract_existing_chapters
     from festival_organizer.analyzer import analyse_file
+
     assert callable(extract_existing_chapters)
     assert callable(analyse_file)
 
@@ -53,15 +54,17 @@ def _option_names(command):
 
 def test_organize_no_longer_has_email_test_flag():
     import typer
+
     group = typer.main.get_command(cli_mod.app)
     org_opts = _option_names(group.commands["organize"])
-    assert "--email-test" not in org_opts   # moved to the top-level command
-    assert "--email" in org_opts            # per-run override still present
+    assert "--email-test" not in org_opts  # moved to the top-level command
+    assert "--email" in org_opts  # per-run override still present
 
 
 def test_top_level_has_email_test_flag():
     import typer
+
     group = typer.main.get_command(cli_mod.app)
-    top_opts = _option_names(group)   # callback options live on the group
+    top_opts = _option_names(group)  # callback options live on the group
     assert "--email-test" in top_opts
     assert "--check" in top_opts

@@ -1,4 +1,5 @@
 """Tests for fanart.tv integration (all mocked, no real network calls)."""
+
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -16,6 +17,7 @@ from festival_organizer.fanart import (
 
 
 # --- split_artists tests ---
+
 
 def test_split_artists_single():
     assert split_artists("Hardwell") == ["Hardwell"]
@@ -56,6 +58,7 @@ def test_split_artists_splits_non_groups():
 
 
 # --- MBIDCache tests ---
+
 
 def test_mbid_cache_put_get():
     with tempfile.TemporaryDirectory() as tmp:
@@ -102,6 +105,7 @@ def test_mbid_cache_persistence():
 
 def test_mbid_cache_uses_platformdirs_cache_dir(tmp_path):
     from festival_organizer.fanart import MBIDCache
+
     with patch("festival_organizer.fanart.paths") as mock_paths:
         mock_paths.cache_dir.return_value = tmp_path
         mock_paths.ensure_parent.side_effect = lambda p: (
@@ -115,6 +119,7 @@ def test_mbid_cache_uses_platformdirs_cache_dir(tmp_path):
 
 def test_artist_mbid_overrides_uses_data_dir(tmp_path):
     from festival_organizer.fanart import ArtistMbidOverrides
+
     override_file = tmp_path / "artist_mbids.json"
     override_file.write_text('{"Tiesto": "tiesto-mbid"}')
     with patch("festival_organizer.fanart.paths") as mock_paths:
@@ -124,6 +129,7 @@ def test_artist_mbid_overrides_uses_data_dir(tmp_path):
 
 
 # --- Image selection tests ---
+
 
 def test_pick_best_logo_prefers_english():
     images = [
@@ -172,6 +178,7 @@ def test_pick_best_background_empty():
 
 
 # --- MusicBrainz lookup tests ---
+
 
 def test_lookup_mbid_cache_hit():
     with tempfile.TemporaryDirectory() as tmp:
@@ -330,12 +337,15 @@ def test_lookup_mbid_no_name_match_returns_none(mock_get):
 
 # --- fanart.tv API tests ---
 
+
 @patch("festival_organizer.fanart.requests.get")
 def test_fetch_artist_images_success(mock_get):
     mock_resp = MagicMock()
     mock_resp.status_code = 200
     mock_resp.json.return_value = {
-        "hdmusiclogo": [{"id": "1", "url": "http://logo.png", "lang": "en", "likes": "10"}],
+        "hdmusiclogo": [
+            {"id": "1", "url": "http://logo.png", "lang": "en", "likes": "10"}
+        ],
         "artistbackground": [{"id": "2", "url": "http://bg.jpg", "likes": "20"}],
     }
     mock_resp.raise_for_status = MagicMock()
@@ -397,6 +407,7 @@ def test_fetch_artist_images_logs_request_exception_retry(mock_get, _sleep, capl
 
 
 # --- FanartOperation tests ---
+
 
 def test_fanart_op_not_needed_when_disabled():
     from festival_organizer.operations import FanartOperation

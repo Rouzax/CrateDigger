@@ -4,10 +4,18 @@ from festival_organizer.tracklists.dj_cache import DjCache
 def _cache(tmp_path):
     c = DjCache(cache_path=tmp_path / "dj_cache.json")
     c._data = {
-        "aboveandbeyond": {"name": "Above & Beyond", "aliases": [], "ts": 9e9, "ttl": 9e9},
-        "tiesto": {"name": "Tiësto",
-                   "aliases": [{"slug": "verwest", "name": "VER:WEST"}],
-                   "ts": 9e9, "ttl": 9e9},
+        "aboveandbeyond": {
+            "name": "Above & Beyond",
+            "aliases": [],
+            "ts": 9e9,
+            "ttl": 9e9,
+        },
+        "tiesto": {
+            "name": "Tiësto",
+            "aliases": [{"slug": "verwest", "name": "VER:WEST"}],
+            "ts": 9e9,
+            "ttl": 9e9,
+        },
         "fredagain..": {"name": "Fred again..", "aliases": [], "ts": 9e9, "ttl": 9e9},
     }
     return c

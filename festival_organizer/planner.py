@@ -1,4 +1,5 @@
 """Plan builder: creates FileAction list from analysed MediaFiles."""
+
 from pathlib import Path
 
 from festival_organizer.config import Config
@@ -34,11 +35,13 @@ def plan_actions(
         else:
             target = output_root / folder_rel / filename
 
-        actions.append(FileAction(
-            source=mf.source_path,
-            target=target,
-            media_file=mf,
-            action=action,
-        ))
+        actions.append(
+            FileAction(
+                source=mf.source_path,
+                target=target,
+                media_file=mf,
+                action=action,
+            )
+        )
 
     return actions

@@ -6,6 +6,7 @@ Logging:
         - parsers.filename_fallback (DEBUG): Filename did not match primary pattern
     See docs/logging.md for full guidelines.
 """
+
 import logging
 import re
 from pathlib import Path
@@ -35,7 +36,6 @@ def _clean_leftover(text: str) -> str:
     text = text.strip(" -\u2013\u2014,.()")
     text = re.sub(r"\s+", " ", text).strip()
     return text
-
 
 
 def parse_filename(filepath: Path, config: Config) -> dict:
@@ -78,7 +78,10 @@ def parse_filename(filepath: Path, config: Config) -> dict:
     known_places = config.known_places
 
     # --- Pattern: YYYY - Part2 - Part3 [WE1/WE2] ---
-    m = re.match(r"^(\d{4})\s*[-\u2013]\s*(.+?)\s*[-\u2013]\s*(.+?)(?:(?:\s*[-\u2013]\s*|\s+)(WE\d))?\s*$", stem)
+    m = re.match(
+        r"^(\d{4})\s*[-\u2013]\s*(.+?)\s*[-\u2013]\s*(.+?)(?:(?:\s*[-\u2013]\s*|\s+)(WE\d))?\s*$",
+        stem,
+    )
     if m:
         result.setdefault("year", m.group(1))
         part2 = m.group(2).strip()
@@ -89,7 +92,9 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         # output: treat part2 as the artist and part3 as the place, so re-reading
         # an unidentified file does not swap artist and festival.
         p3_core, p3_stage = _split_trailing_stage(part3)
-        if not _is_known_place(part2, known_places) and _is_known_place(p3_core, known_places):
+        if not _is_known_place(part2, known_places) and _is_known_place(
+            p3_core, known_places
+        ):
             result.setdefault("artist", part2)
             result.setdefault("festival", p3_core)
             if p3_stage:
@@ -137,7 +142,10 @@ def parse_filename(filepath: Path, config: Config) -> dict:
         return result
 
     # --- Pattern: ARTIST [- ] [live] at FESTIVAL YYYY ---
-    m = re.match(r"^(.+?)\s*[-\u2013\u2014]?\s+(?:[Ll]ive\s+)?[Aa]t\s+(.+?)\s+(\d{4})\s*(.*)$", stem)
+    m = re.match(
+        r"^(.+?)\s*[-\u2013\u2014]?\s+(?:[Ll]ive\s+)?[Aa]t\s+(.+?)\s+(\d{4})\s*(.*)$",
+        stem,
+    )
     if m:
         result.setdefault("artist", m.group(1).strip())
         result.setdefault("festival", m.group(2).strip())
@@ -195,13 +203,17 @@ def parse_filename(filepath: Path, config: Config) -> dict:
     year_match = re.search(r"\b((?:19|20)\d{2})\b", stem)
     if year_match:
         result.setdefault("year", year_match.group(1))
-        remainder = (stem[:year_match.start()] + stem[year_match.end():]).strip(" -\u2013\u2014")
+        remainder = (stem[: year_match.start()] + stem[year_match.end() :]).strip(
+            " -\u2013\u2014"
+        )
         # Check if remainder contains a known festival
         for fest in known_places:
             if _festival_in_text(fest, remainder):
                 result.setdefault("festival", fest)
                 # Remove the festival name to get the artist
-                cleaned = re.sub(re.escape(fest), "", remainder, flags=re.IGNORECASE).strip(" -\u2013\u2014")
+                cleaned = re.sub(
+                    re.escape(fest), "", remainder, flags=re.IGNORECASE
+                ).strip(" -\u2013\u2014")
                 cleaned = _clean_leftover(cleaned)
                 if cleaned:
                     result.setdefault("artist", cleaned)
@@ -249,7 +261,9 @@ def parse_parent_dirs(filepath: Path, root: Path, config: Config) -> dict:
 
 def _festival_in_text(fest: str, text: str) -> bool:
     """Check if festival name appears in text as a whole word/phrase."""
-    return bool(re.search(r"(?<!\w)" + re.escape(fest) + r"(?!\w)", text, re.IGNORECASE))
+    return bool(
+        re.search(r"(?<!\w)" + re.escape(fest) + r"(?!\w)", text, re.IGNORECASE)
+    )
 
 
 def _is_known_place(name: str, known: set[str]) -> bool:
@@ -266,5 +280,5 @@ def _split_trailing_stage(text: str) -> tuple[str, str]:
     """
     m = re.search(r"\s*\[([^\]]*)\]\s*$", text)
     if m:
-        return text[:m.start()].strip(), m.group(1).strip()
+        return text[: m.start()].strip(), m.group(1).strip()
     return text, ""

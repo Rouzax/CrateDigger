@@ -1,4 +1,5 @@
 """lookup_mbid precedence: override > cache > network. Override never writes cache."""
+
 import json
 from unittest.mock import patch
 

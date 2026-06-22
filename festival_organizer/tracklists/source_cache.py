@@ -8,6 +8,7 @@ Logging:
         - source_cache.not_found (DEBUG): Source cache file does not exist yet
     See docs/logging.md for full guidelines.
 """
+
 import json
 import logging
 import time
@@ -38,7 +39,11 @@ class SourceCache:
     """
 
     def __init__(self, cache_path: Path | None = None, ttl_days: int = 365):
-        self._path = cache_path if cache_path is not None else paths.cache_dir() / "source_cache.json"
+        self._path = (
+            cache_path
+            if cache_path is not None
+            else paths.cache_dir() / "source_cache.json"
+        )
         self._ttl_days = ttl_days
         self._ttl_seconds = ttl_days * 86400
         self._data: dict[str, dict] = {}
@@ -48,9 +53,11 @@ class SourceCache:
         if self._path.exists():
             try:
                 self._data = json.loads(self._path.read_text(encoding="utf-8"))
-                logger.debug("source_cache.load: path=%s entries=%d", self._path, len(self._data))
+                logger.debug(
+                    "source_cache.load: path=%s entries=%d", self._path, len(self._data)
+                )
             except (json.JSONDecodeError, OSError) as e:
-                logger.debug("source_cache.load_failed: error=\"%s\"", e)
+                logger.debug('source_cache.load_failed: error="%s"', e)
                 self._data = {}
         else:
             logger.debug("source_cache.not_found: path=%s", self._path)
@@ -99,5 +106,3 @@ class SourceCache:
                     groups["Open Air / Festival"] = groups.pop(fallback_type)
                     break
         return groups
-
-

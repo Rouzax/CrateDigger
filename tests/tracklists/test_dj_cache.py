@@ -1,4 +1,5 @@
 """Tests for DjCache TTL behaviour."""
+
 import json
 import time
 from unittest.mock import patch
@@ -71,6 +72,7 @@ def test_canonical_name_heals_mojibake_on_read(tmp_path):
     """Legacy cache entries with mojibake bytes self-heal via fix_mojibake."""
     import json
     import time
+
     raw = {"tiesto": {"name": "Ti\u251c\u00bdsto", "ts": time.time()}}  # "Ti├½sto"
     (tmp_path / "c.json").write_text(json.dumps(raw))
     cache = DjCache(cache_path=tmp_path / "c.json", ttl_days=90)

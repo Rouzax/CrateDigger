@@ -1,4 +1,5 @@
 """Tests for 1001Tracklists API layer (all mocked, no real network calls)."""
+
 import logging
 import tempfile
 from pathlib import Path
@@ -26,6 +27,7 @@ from festival_organizer.tracklists.api import (
 
 
 # --- Helper function tests ---
+
 
 def test_parse_duration_string_hours_minutes():
     assert _parse_duration_string("1h 15m") == 75
@@ -72,6 +74,7 @@ def test_is_rate_limited():
 
 # --- Cookie caching tests ---
 
+
 def test_cookie_save_restore():
     with tempfile.TemporaryDirectory() as tmp:
         cookie_path = Path(tmp) / "cookies.json"
@@ -117,6 +120,7 @@ class TestCookieFilePermissions:
         """Cookie file must not be world-readable. Contains live session tokens."""
         import stat
         import sys as sys_mod
+
         if sys_mod.platform == "win32":
             pytest.skip("POSIX-only permission semantics")
 
@@ -154,8 +158,9 @@ def test_save_cookies_creates_parent_dir(tmp_path):
 
 # --- Search result parsing ---
 
+
 def test_parse_search_results():
-    html = '''
+    html = """
     <div class="bItm ">
         <a href="/tracklist/abc123/artist-festival.html" class="tLink">Artist @ Festival 2025</a>
         <div title="play time"><i class="fa"></i>1h 2m</div>
@@ -166,7 +171,7 @@ def test_parse_search_results():
         <div title="play time"><i class="fa"></i>58m</div>
         <div title="tracklist date"><i class="fa"></i>2025-06-28</div>
     </div>
-    '''
+    """
     session = TracklistSession()
     results = session._parse_search_results(html)
     assert len(results) == 2
@@ -178,28 +183,28 @@ def test_parse_search_results():
 
 
 def test_parse_search_results_deduplication():
-    html = '''
+    html = """
     <div class="bItm ">
         <a href="/tracklist/abc123/v1.html">Title</a>
     </div>
     <div class="bItm ">
         <a href="/tracklist/abc123/v2.html">Title</a>
     </div>
-    '''
+    """
     session = TracklistSession()
     results = session._parse_search_results(html)
     assert len(results) == 1
 
 
 def test_parse_search_results_skip_pagination():
-    html = '''
+    html = """
     <div class="bItm ">
         <a href="/tracklist/abc123/artist.html">Artist @ Festival</a>
     </div>
     <div class="bItm ">
         <a href="/page/2">Next</a>
     </div>
-    '''
+    """
     session = TracklistSession()
     results = session._parse_search_results(html)
     assert len(results) == 1
@@ -207,7 +212,7 @@ def test_parse_search_results_skip_pagination():
 
 def test_parse_search_results_new_class_format():
     """Site now uses class="bItm action oItm" instead of class="bItm "."""
-    html = '''
+    html = """
     <div class="bItm action oItm">
         <a href="/tracklist/abc123/artist-festival.html" class="">Artist @ Festival 2025</a>
         <div title="play time"><i class="fa"></i>1h 2m</div>
@@ -218,7 +223,7 @@ def test_parse_search_results_new_class_format():
         <div title="play time"><i class="fa"></i>58m</div>
         <div title="tracklist date"><i class="fa"></i>2025-06-28</div>
     </div>
-    '''
+    """
     session = TracklistSession()
     results = session._parse_search_results(html)
     assert len(results) == 2
@@ -228,12 +233,12 @@ def test_parse_search_results_new_class_format():
 
 def test_parse_search_results_skips_header():
     """bItmH (header) class should not be parsed as a result."""
-    html = '''
+    html = """
     <div class="bItmH">Header</div>
     <div class="bItm action oItm">
         <a href="/tracklist/abc123/artist.html">Artist @ Festival</a>
     </div>
-    '''
+    """
     session = TracklistSession()
     results = session._parse_search_results(html)
     assert len(results) == 1
@@ -243,11 +248,11 @@ def test_parse_search_results_survives_class_before_href():
     """BS4 migration: the title-link regex requires href to be the first
     attribute after <a>. Real markup often has class or data-* attributes
     before href; BS4 finds the anchor regardless."""
-    html = '''
+    html = """
     <div class="bItm action">
       <a class="tLink bigBtn" href="/tracklist/abc123/real-set.html">Real Set</a>
     </div>
-    '''
+    """
     session = TracklistSession()
     results = session._parse_search_results(html)
     assert len(results) == 1
@@ -256,11 +261,11 @@ def test_parse_search_results_survives_class_before_href():
 
 
 def test_parse_search_results_survives_single_quoted_href():
-    html = '''
+    html = """
     <div class="bItm">
       <a href='/tracklist/abc123/real-set.html'>Real Set</a>
     </div>
-    '''
+    """
     session = TracklistSession()
     results = session._parse_search_results(html)
     assert len(results) == 1
@@ -274,6 +279,7 @@ def test_parse_search_results_empty():
 
 
 # --- Login tests (mocked) ---
+
 
 def test_login_success():
     session = TracklistSession()
@@ -289,8 +295,12 @@ def test_login_success():
         with patch.object(session._session, "post", return_value=mock_login_resp):
             with patch.object(session._session, "get", return_value=mock_validate_resp):
                 # Add cookies that would normally be set by the server
-                session._session.cookies.set("sid", "test", domain="www.1001tracklists.com")
-                session._session.cookies.set("uid", "test", domain="www.1001tracklists.com")
+                session._session.cookies.set(
+                    "sid", "test", domain="www.1001tracklists.com"
+                )
+                session._session.cookies.set(
+                    "uid", "test", domain="www.1001tracklists.com"
+                )
                 session.login("test@test.com", "pass")
 
 
@@ -304,7 +314,10 @@ def test_cookie_save_failure_logged(tmp_path, caplog):
     with caplog.at_level(logging.DEBUG, logger="festival_organizer.tracklists.api"):
         session._save_cookies("test@example.com")
     # Should not crash, should log
-    assert any("save" in r.message.lower() or "cookie" in r.message.lower() for r in caplog.records)
+    assert any(
+        "save" in r.message.lower() or "cookie" in r.message.lower()
+        for r in caplog.records
+    )
 
 
 def test_login_failure_no_cookies():
@@ -313,34 +326,37 @@ def test_login_failure_no_cookies():
     mock_resp = MagicMock()
     mock_resp.status_code = 200
 
-    with patch.object(session, "_restore_cookies", return_value=False), \
-         patch.object(session, "_request", return_value=mock_resp):
+    with (
+        patch.object(session, "_restore_cookies", return_value=False),
+        patch.object(session, "_request", return_value=mock_resp),
+    ):
         with pytest.raises(AuthenticationError, match="missing session cookies"):
             session.login("test@test.com", "wrong")
 
 
 # --- Genre extraction (itemprop) ---
 
+
 def test_extract_genres_from_itemprop():
-    html = '''<meta itemprop="numTracks" content="25"><meta itemprop="genre" content="Mainstage">
+    html = """<meta itemprop="numTracks" content="25"><meta itemprop="genre" content="Mainstage">
     <meta itemprop="genre" content="Dance / Electro Pop">
-    <meta itemprop="genre" content="Tech House">'''
+    <meta itemprop="genre" content="Tech House">"""
     genres = _extract_genres(html)
     assert genres == ["Mainstage", "Dance / Electro Pop", "Tech House"]
 
 
 def test_extract_genres_deduplication():
-    html = '''<meta itemprop="genre" content="Mainstage">
+    html = """<meta itemprop="genre" content="Mainstage">
     <meta itemprop="genre" content="House">
     <meta itemprop="genre" content="Mainstage">
-    <meta itemprop="genre" content="House">'''
+    <meta itemprop="genre" content="House">"""
     genres = _extract_genres(html)
     assert genres == ["Mainstage", "House"]
 
 
 def test_extract_genres_filters_tracklist_schema():
-    html = '''<meta itemprop="genre" content="tracklist">
-    <meta itemprop="genre" content="Mainstage">'''
+    html = """<meta itemprop="genre" content="tracklist">
+    <meta itemprop="genre" content="Mainstage">"""
     genres = _extract_genres(html)
     assert genres == ["Mainstage"]
 
@@ -369,28 +385,29 @@ def test_extract_genres_survives_intervening_attribute():
 
 # --- DJ slug extraction ---
 
+
 def test_extract_dj_slugs():
-    html = '''<a href="/dj/martingarrix/">MG</a>
+    html = """<a href="/dj/martingarrix/">MG</a>
     <a href="/dj/alesso/">A</a>
-    <a href="/dj/martingarrix/">MG</a>'''
+    <a href="/dj/martingarrix/">MG</a>"""
     slugs = _extract_dj_slugs(html)
     assert slugs == ["martingarrix", "alesso"]
 
 
 def test_extract_dj_slugs_index_html():
     """Real 1001TL pages use /dj/slug/index.html links."""
-    html = '''<a href="/dj/afrojack/index.html" class="notranslate">AFROJACK</a>
+    html = """<a href="/dj/afrojack/index.html" class="notranslate">AFROJACK</a>
     <a href="/dj/nlw/index.html">NLW</a>
-    <a href="/dj/afrojack/index.html">AFROJACK</a>'''
+    <a href="/dj/afrojack/index.html">AFROJACK</a>"""
     slugs = _extract_dj_slugs(html)
     assert slugs == ["afrojack", "nlw"]
 
 
 def test_extract_dj_slugs_group():
     """Group DJs like DVLM have group slug first, then individual members."""
-    html = '''<a href="/dj/dimitrivegasandlikemike/index.html">Dimitri Vegas &amp; Like Mike</a>
+    html = """<a href="/dj/dimitrivegasandlikemike/index.html">Dimitri Vegas &amp; Like Mike</a>
     <a href="/dj/dimitrivegas/index.html">Dimitri Vegas</a>
-    <a href="/dj/likemike/index.html">Like Mike</a>'''
+    <a href="/dj/likemike/index.html">Like Mike</a>"""
     slugs = _extract_dj_slugs(html)
     assert slugs[0] == "dimitrivegasandlikemike"
     assert len(slugs) == 3
@@ -398,8 +415,8 @@ def test_extract_dj_slugs_group():
 
 def test_extract_dj_slugs_mixed_formats():
     """Mix of trailing-slash and index.html link formats."""
-    html = '''<a href="/dj/tiesto/">Tiesto</a>
-    <a href="/dj/martingarrix/index.html">Martin Garrix</a>'''
+    html = """<a href="/dj/tiesto/">Tiesto</a>
+    <a href="/dj/martingarrix/index.html">Martin Garrix</a>"""
     slugs = _extract_dj_slugs(html)
     assert slugs == ["tiesto", "martingarrix"]
 
@@ -422,22 +439,23 @@ def test_extract_dj_slugs_ignores_unrelated_links_with_dj_in_path():
     paths only by the closing quote. A more forgiving match would risk
     false positives. Confirm BS4 still picks up clean /dj/<slug>/ anchors
     and ignores /dj/<slug>/something/else/ paths."""
-    html = '''
+    html = """
     <a href="/dj/tiesto/index.html">Tiesto</a>
     <a href="/dj/tiesto/tracklists/2025/">Tiesto 2025 tracklists</a>
-    '''
+    """
     slugs = _extract_dj_slugs(html)
     assert slugs == ["tiesto"]
 
 
 # --- _parse_h1_structure ---
 
+
 def test_parse_h1_structure_basic_dj_at_source():
     """Baseline: DJ @ source with country tail."""
     h1 = (
         '<a href="/dj/afrojack/index.html">AFROJACK</a>'
         ' @ Mainstage, <a href="/source/abc/ultra-miami/index.html">Ultra Miami</a>'
-        ', United States 2026-03-29'
+        ", United States 2026-03-29"
     )
     result = _parse_h1_structure(h1)
     assert result["dj_artists"] == [("afrojack", "AFROJACK")]
@@ -466,6 +484,7 @@ def test_parse_h1_structure_returns_empty_when_no_at_sign():
 
 # --- Canary integration in callers ---
 
+
 def test_search_fires_canary_on_missing_skeleton(caplog):
     """When the search response has no main_search input, the canary fires."""
     session = TracklistSession()
@@ -474,11 +493,14 @@ def test_search_fires_canary_on_missing_skeleton(caplog):
         status_code=200,
     )
     with patch.object(session, "_request", return_value=resp):
-        with caplog.at_level(logging.WARNING,
-                             logger="festival_organizer.tracklists.api"):
+        with caplog.at_level(
+            logging.WARNING, logger="festival_organizer.tracklists.api"
+        ):
             results = session.search("anything")
     assert results == []
-    canary_warnings = [r for r in caplog.records if "identify.canary.warning:" in r.message]
+    canary_warnings = [
+        r for r in caplog.records if "identify.canary.warning:" in r.message
+    ]
     assert len(canary_warnings) == 1
     msg = canary_warnings[0].message
     assert "search results" in msg
@@ -492,10 +514,13 @@ def test_fetch_source_info_fires_canary_on_broken_page(caplog):
     session = TracklistSession()
     resp = MagicMock(text="<html><body>no mtb5, no flag</body></html>")
     with patch.object(session, "_request", return_value=resp):
-        with caplog.at_level(logging.WARNING,
-                             logger="festival_organizer.tracklists.api"):
+        with caplog.at_level(
+            logging.WARNING, logger="festival_organizer.tracklists.api"
+        ):
             session.fetch_source_info("123", "some-venue")
-    canary_warnings = [r for r in caplog.records if "identify.canary.warning:" in r.message]
+    canary_warnings = [
+        r for r in caplog.records if "identify.canary.warning:" in r.message
+    ]
     assert len(canary_warnings) == 1
     msg = canary_warnings[0].message
     assert "source info" in msg
@@ -509,10 +534,13 @@ def test_fetch_dj_profile_fires_canary_on_broken_page(caplog):
     session = TracklistSession()
     resp = MagicMock(text="<html><body>no og meta at all</body></html>")
     with patch.object(session, "_request", return_value=resp):
-        with caplog.at_level(logging.WARNING,
-                             logger="festival_organizer.tracklists.api"):
+        with caplog.at_level(
+            logging.WARNING, logger="festival_organizer.tracklists.api"
+        ):
             session._fetch_dj_profile("someone")
-    canary_warnings = [r for r in caplog.records if "identify.canary.warning:" in r.message]
+    canary_warnings = [
+        r for r in caplog.records if "identify.canary.warning:" in r.message
+    ]
     assert len(canary_warnings) == 1
     msg = canary_warnings[0].message
     assert "DJ profile" in msg
@@ -528,11 +556,14 @@ def test_search_does_not_fire_canary_on_zero_hits_with_skeleton(caplog):
         status_code=200,
     )
     with patch.object(session, "_request", return_value=resp):
-        with caplog.at_level(logging.WARNING,
-                             logger="festival_organizer.tracklists.api"):
+        with caplog.at_level(
+            logging.WARNING, logger="festival_organizer.tracklists.api"
+        ):
             results = session.search("noresults")
     assert results == []
-    canary_warnings = [r for r in caplog.records if "identify.canary.warning:" in r.message]
+    canary_warnings = [
+        r for r in caplog.records if "identify.canary.warning:" in r.message
+    ]
     assert canary_warnings == []
 
 
@@ -541,8 +572,9 @@ def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
     fires before the AJAX export path even runs."""
     session = TracklistSession()
     broken_html = "<html><body>no tlpItem, no h1, no genre meta</body></html>"
-    page_resp = MagicMock(text=broken_html,
-                           url="https://www.1001tracklists.com/tracklist/xxx/")
+    page_resp = MagicMock(
+        text=broken_html, url="https://www.1001tracklists.com/tracklist/xxx/"
+    )
     ajax_resp = MagicMock(text='{"success": true, "data": ""}')
     ajax_resp.json = lambda: {"success": True, "data": ""}
 
@@ -550,16 +582,20 @@ def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
         return ajax_resp if "export_data.php" in url else page_resp
 
     with patch.object(session, "_request", side_effect=fake_request):
-        with patch.object(session, "_fetch_dj_profile",
-                          return_value={"artwork_url": ""}):
-            with caplog.at_level(logging.WARNING,
-                                 logger="festival_organizer.tracklists.api"):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
+            with caplog.at_level(
+                logging.WARNING, logger="festival_organizer.tracklists.api"
+            ):
                 try:
                     session.export_tracklist("xxx")
                 except Exception:
                     pass
 
-    canary_warnings = [r for r in caplog.records if "identify.canary.warning:" in r.message]
+    canary_warnings = [
+        r for r in caplog.records if "identify.canary.warning:" in r.message
+    ]
     assert len(canary_warnings) >= 1
     msg = canary_warnings[0].message
     assert "tracklist page" in msg
@@ -568,6 +604,7 @@ def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
 
 
 # --- _run_canary dedupe helper ---
+
 
 def test_run_canary_no_op_on_healthy_result(caplog):
     session = TracklistSession()
@@ -580,9 +617,7 @@ def test_run_canary_no_op_on_healthy_result(caplog):
 def test_run_canary_emits_warning_on_missing_selectors(caplog):
     session = TracklistSession()
     with caplog.at_level(logging.WARNING, logger="festival_organizer.tracklists.api"):
-        session._run_canary(
-            "tracklist page", ["tlpItem row"], "https://example/t/1/"
-        )
+        session._run_canary("tracklist page", ["tlpItem row"], "https://example/t/1/")
     records = [r for r in caplog.records if "identify.canary.warning:" in r.message]
     assert len(records) == 1
     msg = records[0].message
@@ -602,11 +637,13 @@ def test_run_canary_dedupes_by_page_type_and_missing_set(caplog):
         session._run_canary("tracklist page", ["tlpItem row"], "https://example/t/3/")
 
     warnings_emitted = [
-        r for r in caplog.records
+        r
+        for r in caplog.records
         if r.levelno == logging.WARNING and "identify.canary.warning:" in r.message
     ]
     debugs = [
-        r for r in caplog.records
+        r
+        for r in caplog.records
         if r.levelno == logging.DEBUG and "identify.canary.suppressed:" in r.message
     ]
     assert len(warnings_emitted) == 1
@@ -618,9 +655,12 @@ def test_run_canary_distinct_missing_sets_both_emit(caplog):
     session = TracklistSession()
     with caplog.at_level(logging.WARNING, logger="festival_organizer.tracklists.api"):
         session._run_canary("tracklist page", ["tlpItem row"], "https://example/a/")
-        session._run_canary("tracklist page", ["cue_seconds input"], "https://example/b/")
+        session._run_canary(
+            "tracklist page", ["cue_seconds input"], "https://example/b/"
+        )
     warnings_emitted = [
-        r for r in caplog.records
+        r
+        for r in caplog.records
         if r.levelno == logging.WARNING and "identify.canary.warning:" in r.message
     ]
     assert len(warnings_emitted) == 2
@@ -628,19 +668,20 @@ def test_run_canary_distinct_missing_sets_both_emit(caplog):
 
 # --- fetch_source_info ---
 
+
 def test_fetch_source_info_extracts_name_type_country():
     """Baseline: the three fields extracted from a /source/ page.
 
     Real source pages embed a badge span with the tracklist count and a
     flag img inside div.h. Only the direct text node should be captured.
     """
-    html = '''
+    html = """
     <div class="h"> Tomorrowland 2026
         <span class="badge spL hO" title="number of tracklists"> 842 </span>
         <img src="/flags/be.png" alt="Belgium" class="flag">
     </div>
     <div class="cRow"><div class="mtb5">Festival</div></div>
-    '''
+    """
     session = TracklistSession()
     resp = MagicMock(text=html)
     with patch.object(session, "_request", return_value=resp):
@@ -654,13 +695,13 @@ def test_fetch_source_info_extracts_name_type_country():
 def test_fetch_source_info_parses_reordered_flag_attrs():
     """BS4 migration: the alt attribute may come before src in real
     markup. The pre-migration regex required src first."""
-    html = '''
+    html = """
     <div class="h"> Ultra Miami
         <span class="badge spL hO" title="number of tracklists"> 1,203 </span>
         <img alt="United States" class="flag" src="/flags/us.png">
     </div>
     <div class="cRow"><div class="mtb5">Open Air / Festival</div></div>
-    '''
+    """
     session = TracklistSession()
     resp = MagicMock(text=html)
     with patch.object(session, "_request", return_value=resp):
@@ -711,7 +752,10 @@ def test_fetch_dj_profile_accepts_real_artwork():
     mock_resp.text = html
     with patch.object(session, "_request", return_value=mock_resp):
         result = session._fetch_dj_profile("martingarrix")
-    assert result["artwork_url"] == "https://cdn.1001tracklists.com/images/dj/martingarrix-abc123.jpg"
+    assert (
+        result["artwork_url"]
+        == "https://cdn.1001tracklists.com/images/dj/martingarrix-abc123.jpg"
+    )
 
 
 def test_request_raises_on_persistent_5xx():
@@ -729,22 +773,32 @@ def test_request_raises_on_persistent_5xx():
 
 # --- _maximize_artwork_url tests ---
 
+
 def test_maximize_artwork_url_soundcloud_t500x500():
     """SoundCloud t500x500 is rewritten to original."""
     url = "https://i1.sndcdn.com/avatars-vjum1BRzTUg83HKy-yajRWQ-t500x500.jpg"
-    assert _maximize_artwork_url(url) == "https://i1.sndcdn.com/avatars-vjum1BRzTUg83HKy-yajRWQ-original.jpg"
+    assert (
+        _maximize_artwork_url(url)
+        == "https://i1.sndcdn.com/avatars-vjum1BRzTUg83HKy-yajRWQ-original.jpg"
+    )
 
 
 def test_maximize_artwork_url_soundcloud_t300x300():
     """SoundCloud t300x300 is also rewritten to original."""
     url = "https://i1.sndcdn.com/avatars-abc123-t300x300.jpg"
-    assert _maximize_artwork_url(url) == "https://i1.sndcdn.com/avatars-abc123-original.jpg"
+    assert (
+        _maximize_artwork_url(url)
+        == "https://i1.sndcdn.com/avatars-abc123-original.jpg"
+    )
 
 
 def test_maximize_artwork_url_squarespace_strips_format():
     """Squarespace format=NNNw query param is stripped."""
     url = "https://images.squarespace-cdn.com/content/v1/abc/image.jpg?format=300w"
-    assert _maximize_artwork_url(url) == "https://images.squarespace-cdn.com/content/v1/abc/image.jpg"
+    assert (
+        _maximize_artwork_url(url)
+        == "https://images.squarespace-cdn.com/content/v1/abc/image.jpg"
+    )
 
 
 def test_maximize_artwork_url_youtube_passthrough():
@@ -768,7 +822,7 @@ def test_maximize_artwork_url_empty_string():
 
 def test_parse_dj_profile_extracts_aliases_and_member_of():
     """Baseline: the section walker finds aliases and group memberships."""
-    html = '''
+    html = """
     <meta property="og:image" content="https://cdn.1001tracklists.com/dj.jpg">
     <div class="h">Aliases</div>
     <div class="c ptb5">
@@ -778,7 +832,7 @@ def test_parse_dj_profile_extracts_aliases_and_member_of():
     <div class="c ptb5">
       <a href="/dj/some-group/index.html">Some Group</a>
     </div>
-    '''
+    """
     result = _parse_dj_profile(html)
     assert result["aliases"] == [{"slug": "alt-name", "name": "Alt Name"}]
     assert result["member_of"] == [{"slug": "some-group", "name": "Some Group"}]
@@ -810,10 +864,14 @@ def test_fetch_dj_profile_maximizes_squarespace_url():
     mock_resp.text = html
     with patch.object(session, "_request", return_value=mock_resp):
         result = session._fetch_dj_profile("someone")
-    assert result["artwork_url"] == "https://images.squarespace-cdn.com/content/v1/abc/image.jpg"
+    assert (
+        result["artwork_url"]
+        == "https://images.squarespace-cdn.com/content/v1/abc/image.jpg"
+    )
 
 
 # --- Encoding fix ---
+
 
 def test_request_forces_utf8_encoding(tmp_path):
     """TracklistSession._request must set resp.encoding = 'utf-8' so that
@@ -821,6 +879,7 @@ def test_request_forces_utf8_encoding(tmp_path):
     include charset= in Content-Type (requests defaults to ISO-8859-1 for
     text/* responses per RFC 7231, which produces mojibake on UTF-8 bodies)."""
     from festival_organizer.tracklists.api import TracklistSession
+
     # "Tiësto" in UTF-8 bytes: 54 69 C3 AB 73 74 6F
     utf8_bytes = "Tiësto".encode("utf-8")
 
@@ -833,10 +892,14 @@ def test_request_forces_utf8_encoding(tmp_path):
         resp.content = utf8_bytes
         resp.encoding = "ISO-8859-1"  # what requests would default to
         resp.text = utf8_bytes.decode("ISO-8859-1")  # mojibake
+
         # Make .text recompute when encoding is set
         def text_property(self):
             return self.content.decode(self.encoding)
-        type(resp).text = PropertyMock(side_effect=lambda: resp.content.decode(resp.encoding))
+
+        type(resp).text = PropertyMock(
+            side_effect=lambda: resp.content.decode(resp.encoding)
+        )
         sess._session.get = MagicMock(return_value=resp)
 
         result = sess._request("GET", "https://example.com/page")
@@ -848,7 +911,10 @@ def test_request_forces_utf8_encoding(tmp_path):
 # --- export_tracklist on_progress callback ---
 
 _ARMIN_MARLON_FIXTURE = (
-    Path(__file__).parent / "tracklists" / "fixtures" / "armin_marlon_ultra_miami_2026.html"
+    Path(__file__).parent
+    / "tracklists"
+    / "fixtures"
+    / "armin_marlon_ultra_miami_2026.html"
 )
 
 
@@ -894,8 +960,12 @@ def test_export_tracklist_invokes_on_progress_with_dj_count():
     session = TracklistSession()
 
     calls: list[str] = []
-    with patch.object(session, "_request", side_effect=_build_export_mock_responses(page_html)):
-        with patch.object(session, "_fetch_dj_profile", return_value={"artwork_url": ""}):
+    with patch.object(
+        session, "_request", side_effect=_build_export_mock_responses(page_html)
+    ):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
             session.export_tracklist(
                 "abc123",
                 on_progress=lambda msg: calls.append(msg),
@@ -935,8 +1005,12 @@ def test_export_tracklist_callback_counts_dj_slugs_not_just_dj_artists(monkeypat
     session = TracklistSession()
 
     calls: list[str] = []
-    with patch.object(session, "_request", side_effect=_build_export_mock_responses(page_html)):
-        with patch.object(session, "_fetch_dj_profile", return_value={"artwork_url": ""}):
+    with patch.object(
+        session, "_request", side_effect=_build_export_mock_responses(page_html)
+    ):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
             session.export_tracklist(
                 "abc123",
                 on_progress=lambda msg: calls.append(msg),
@@ -952,8 +1026,12 @@ def test_export_tracklist_no_callback_does_not_crash():
     page_html = _ARMIN_MARLON_FIXTURE.read_text(encoding="utf-8")
     session = TracklistSession()
 
-    with patch.object(session, "_request", side_effect=_build_export_mock_responses(page_html)):
-        with patch.object(session, "_fetch_dj_profile", return_value={"artwork_url": ""}):
+    with patch.object(
+        session, "_request", side_effect=_build_export_mock_responses(page_html)
+    ):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
             export = session.export_tracklist("abc123")
 
     assert export is not None
@@ -961,6 +1039,7 @@ def test_export_tracklist_no_callback_does_not_crash():
 
 
 # --- h1 location surfacing + suppression ---
+
 
 def _build_minimal_page_html(h1_inner: str) -> str:
     """Wrap a bare h1 payload in a minimal HTML document that the exporter
@@ -1005,16 +1084,23 @@ def test_export_tracklist_surfaces_h1_location():
     page_html = _build_minimal_page_html(h1_inner)
 
     # Event Promoter is NOT location-bearing, so suppression must not fire.
-    cache = _StubSourceCache({
-        "abc": {"name": "USB002", "type": "Event Promoter",
-                "country": "United Kingdom"},
-    })
+    cache = _StubSourceCache(
+        {
+            "abc": {
+                "name": "USB002",
+                "type": "Event Promoter",
+                "country": "United Kingdom",
+            },
+        }
+    )
     session = TracklistSession(source_cache=cache)
 
-    with patch.object(session, "_request",
-                      side_effect=_build_export_mock_responses(page_html)):
-        with patch.object(session, "_fetch_dj_profile",
-                          return_value={"artwork_url": ""}):
+    with patch.object(
+        session, "_request", side_effect=_build_export_mock_responses(page_html)
+    ):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
             export = session.export_tracklist("abc123")
 
     assert export.location == "Alexandra Palace London"
@@ -1030,16 +1116,23 @@ def test_export_tracklist_suppresses_location_when_festival_source_present():
     )
     page_html = _build_minimal_page_html(h1_inner)
 
-    cache = _StubSourceCache({
-        "fest": {"name": "Some Festival", "type": "Open Air / Festival",
-                 "country": "United Kingdom"},
-    })
+    cache = _StubSourceCache(
+        {
+            "fest": {
+                "name": "Some Festival",
+                "type": "Open Air / Festival",
+                "country": "United Kingdom",
+            },
+        }
+    )
     session = TracklistSession(source_cache=cache)
 
-    with patch.object(session, "_request",
-                      side_effect=_build_export_mock_responses(page_html)):
-        with patch.object(session, "_fetch_dj_profile",
-                          return_value={"artwork_url": ""}):
+    with patch.object(
+        session, "_request", side_effect=_build_export_mock_responses(page_html)
+    ):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
             export = session.export_tracklist("abc123")
 
     assert export.location == ""
@@ -1054,16 +1147,23 @@ def test_export_tracklist_suppresses_location_when_event_location_source_present
     )
     page_html = _build_minimal_page_html(h1_inner)
 
-    cache = _StubSourceCache({
-        "venue": {"name": "Alexandra Palace", "type": "Event Location",
-                  "country": "United Kingdom"},
-    })
+    cache = _StubSourceCache(
+        {
+            "venue": {
+                "name": "Alexandra Palace",
+                "type": "Event Location",
+                "country": "United Kingdom",
+            },
+        }
+    )
     session = TracklistSession(source_cache=cache)
 
-    with patch.object(session, "_request",
-                      side_effect=_build_export_mock_responses(page_html)):
-        with patch.object(session, "_fetch_dj_profile",
-                          return_value={"artwork_url": ""}):
+    with patch.object(
+        session, "_request", side_effect=_build_export_mock_responses(page_html)
+    ):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
             export = session.export_tracklist("abc123")
 
     assert export.location == ""
@@ -1082,16 +1182,23 @@ def test_export_tracklist_captures_h1_event_date():
     )
     page_html = _build_minimal_page_html(h1_inner)
 
-    cache = _StubSourceCache({
-        "venue": {"name": "Red Rocks Amphitheatre", "type": "Event Location",
-                  "country": "United States"},
-    })
+    cache = _StubSourceCache(
+        {
+            "venue": {
+                "name": "Red Rocks Amphitheatre",
+                "type": "Event Location",
+                "country": "United States",
+            },
+        }
+    )
     session = TracklistSession(source_cache=cache)
 
-    with patch.object(session, "_request",
-                      side_effect=_build_export_mock_responses(page_html)):
-        with patch.object(session, "_fetch_dj_profile",
-                          return_value={"artwork_url": ""}):
+    with patch.object(
+        session, "_request", side_effect=_build_export_mock_responses(page_html)
+    ):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
             export = session.export_tracklist("abc123")
 
     assert export.date == "2025-10-24"
@@ -1106,16 +1213,19 @@ def test_export_tracklist_date_empty_when_h1_has_no_date():
     page_html = _build_minimal_page_html(h1_inner)
     session = TracklistSession()
 
-    with patch.object(session, "_request",
-                      side_effect=_build_export_mock_responses(page_html)):
-        with patch.object(session, "_fetch_dj_profile",
-                          return_value={"artwork_url": ""}):
+    with patch.object(
+        session, "_request", side_effect=_build_export_mock_responses(page_html)
+    ):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
             export = session.export_tracklist("abc123")
 
     assert export.date == ""
 
 
 # --- Tier 2 DEBUG logging for retry loop and export JSON decode ---
+
 
 def test_request_retry_429_logs_debug_with_reason_and_wait(caplog):
     """A 429 retry logs DEBUG naming the rate-limit reason, attempt, and wait."""
@@ -1128,11 +1238,13 @@ def test_request_retry_429_logs_debug_with_reason_and_wait(caplog):
     mock_resp_ok.status_code = 200
     mock_resp_ok.text = "ok"
 
-    with patch.object(session._session, "get",
-                      side_effect=[mock_resp_bad, mock_resp_ok]):
+    with patch.object(
+        session._session, "get", side_effect=[mock_resp_bad, mock_resp_ok]
+    ):
         with patch("festival_organizer.tracklists.api.time.sleep") as sleep_mock:
-            with caplog.at_level(logging.DEBUG,
-                                 logger="festival_organizer.tracklists.api"):
+            with caplog.at_level(
+                logging.DEBUG, logger="festival_organizer.tracklists.api"
+            ):
                 resp = session._request("GET", "http://example.com", max_retries=3)
 
     assert resp is mock_resp_ok
@@ -1154,11 +1266,13 @@ def test_request_retry_5xx_logs_debug_with_status_and_wait(caplog):
     mock_resp_ok.status_code = 200
     mock_resp_ok.text = "ok"
 
-    with patch.object(session._session, "get",
-                      side_effect=[mock_resp_bad, mock_resp_ok]):
+    with patch.object(
+        session._session, "get", side_effect=[mock_resp_bad, mock_resp_ok]
+    ):
         with patch("festival_organizer.tracklists.api.time.sleep"):
-            with caplog.at_level(logging.DEBUG,
-                                 logger="festival_organizer.tracklists.api"):
+            with caplog.at_level(
+                logging.DEBUG, logger="festival_organizer.tracklists.api"
+            ):
                 session._request("GET", "http://example.com", max_retries=3)
 
     joined = "\n".join(r.message for r in caplog.records)
@@ -1175,12 +1289,15 @@ def test_request_retry_network_exception_logs_debug_with_exc_and_wait(caplog):
     mock_resp_ok.status_code = 200
     mock_resp_ok.text = "ok"
 
-    with patch.object(session._session, "get",
-                      side_effect=[requests.ConnectionError("conn reset"),
-                                   mock_resp_ok]):
+    with patch.object(
+        session._session,
+        "get",
+        side_effect=[requests.ConnectionError("conn reset"), mock_resp_ok],
+    ):
         with patch("festival_organizer.tracklists.api.time.sleep"):
-            with caplog.at_level(logging.DEBUG,
-                                 logger="festival_organizer.tracklists.api"):
+            with caplog.at_level(
+                logging.DEBUG, logger="festival_organizer.tracklists.api"
+            ):
                 session._request("GET", "http://example.com", max_retries=3)
 
     joined = "\n".join(r.message for r in caplog.records)
@@ -1201,11 +1318,11 @@ def test_export_tracklist_logs_debug_on_invalid_json(caplog):
     export_resp.url = "https://www.1001tracklists.com/ajax/export_data.php"
     export_resp.json.side_effect = ValueError("malformed")
 
-    with patch.object(session, "_request",
-                      side_effect=[page_resp, export_resp]):
+    with patch.object(session, "_request", side_effect=[page_resp, export_resp]):
         with patch.object(session, "_run_canary"):
-            with caplog.at_level(logging.DEBUG,
-                                 logger="festival_organizer.tracklists.api"):
+            with caplog.at_level(
+                logging.DEBUG, logger="festival_organizer.tracklists.api"
+            ):
                 with pytest.raises(ExportError, match="Invalid JSON"):
                     session.export_tracklist("abc123")
 

@@ -3,6 +3,7 @@
 These tests verify observable behaviour (the ops list passed to
 run_pipeline) rather than internal dispatch details.
 """
+
 from unittest.mock import patch, MagicMock
 
 from festival_organizer.cli import run
@@ -42,10 +43,13 @@ def _run_enrich_and_capture_ops(tmp_path, extra_args=None):
 
     with patch("festival_organizer.cli.resolve_library_root", return_value=lib):
         with patch("festival_organizer.cli.scan_folder", return_value=[fake_file]):
-            with patch("festival_organizer.cli._analyse_parallel",
-                       return_value=[(fake_file, mock_mf)]):
-                with patch("festival_organizer.cli.run_pipeline",
-                           side_effect=fake_run_pipeline):
+            with patch(
+                "festival_organizer.cli._analyse_parallel",
+                return_value=[(fake_file, mock_mf)],
+            ):
+                with patch(
+                    "festival_organizer.cli.run_pipeline", side_effect=fake_run_pipeline
+                ):
                     run(args)
 
     pipeline_files = captured.get("pipeline_files", [])
@@ -57,8 +61,9 @@ def _run_enrich_and_capture_ops(tmp_path, extra_args=None):
 def test_enrich_default_includes_chapter_artist_mbids_op(tmp_path):
     """Default enrich (no --only) appends a ChapterArtistMbidsOperation."""
     ops = _run_enrich_and_capture_ops(tmp_path)
-    assert any(isinstance(op, ChapterArtistMbidsOperation) for op in ops), \
+    assert any(isinstance(op, ChapterArtistMbidsOperation) for op in ops), (
         f"expected ChapterArtistMbidsOperation in default enrich ops; got {[type(o).__name__ for o in ops]}"
+    )
 
 
 def test_enrich_only_chapter_artist_mbids_selects_only_that_op(tmp_path):

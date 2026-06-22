@@ -31,11 +31,13 @@ def test_progress_operation_results():
     console, buf = _make_console()
     pp = ProgressPrinter(total=3, console=console)
     pp.file_start(Path("test.mkv"), "Artist/")
-    pp.file_done([
-        OperationResult("nfo", "done"),
-        OperationResult("art", "done"),
-        OperationResult("posters", "skipped", "exists"),
-    ])
+    pp.file_done(
+        [
+            OperationResult("nfo", "done"),
+            OperationResult("art", "done"),
+            OperationResult("posters", "skipped", "exists"),
+        ]
+    )
     output = buf.getvalue()
     assert "nfo" in output
     assert "art" in output
@@ -47,14 +49,18 @@ def test_progress_summary():
     """Print aggregate summary."""
     console, buf = _make_console()
     pp = ProgressPrinter(total=3, console=console)
-    pp.record_results([
-        OperationResult("nfo", "done"),
-        OperationResult("art", "done"),
-    ])
-    pp.record_results([
-        OperationResult("nfo", "done"),
-        OperationResult("art", "skipped", "exists"),
-    ])
+    pp.record_results(
+        [
+            OperationResult("nfo", "done"),
+            OperationResult("art", "done"),
+        ]
+    )
+    pp.record_results(
+        [
+            OperationResult("nfo", "done"),
+            OperationResult("art", "skipped", "exists"),
+        ]
+    )
     pp.print_summary()
     output = buf.getvalue()
     assert "NFO" in output or "nfo" in output.lower()
@@ -76,8 +82,13 @@ def test_progress_quiet_mode():
 
 
 def _make_mf(**kwargs):
-    defaults = dict(source_path=Path("test.mkv"), artist="Test",
-                    festival="TML", year="2024", content_type="festival_set")
+    defaults = dict(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="TML",
+        year="2024",
+        content_type="festival_set",
+    )
     defaults.update(kwargs)
     return MediaFile(**defaults)
 

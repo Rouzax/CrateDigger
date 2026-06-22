@@ -1,4 +1,5 @@
 """NFO group-member expansion via slug-keyed DJ cache lookup."""
+
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -21,20 +22,26 @@ def test_nfo_group_members_via_slug(tmp_path):
     matches exactly and the full lineup is emitted as ``<tag>`` elements.
     """
     dj_cache = DjCache(tmp_path / "dj_cache.json")
-    dj_cache.put("aboveandbeyond", {
-        "name": "Above & Beyond", "artwork_url": "",
-        "aliases": [], "member_of": [],
-        "members": [
-            {"slug": "jonogrant", "name": "Jono Grant"},
-            {"slug": "tonymcguinness", "name": "Tony McGuinness"},
-        ],
-    })
+    dj_cache.put(
+        "aboveandbeyond",
+        {
+            "name": "Above & Beyond",
+            "artwork_url": "",
+            "aliases": [],
+            "member_of": [],
+            "members": [
+                {"slug": "jonogrant", "name": "Jono Grant"},
+                {"slug": "tonymcguinness", "name": "Tony McGuinness"},
+            ],
+        },
+    )
     mf = MediaFile(
         source_path=Path("test.mkv"),
         artist="Above & Beyond",
         artists=["Above & Beyond"],
         artist_slugs=["aboveandbeyond"],
-        festival="Tomorrowland", year="2024",
+        festival="Tomorrowland",
+        year="2024",
         content_type="festival_set",
     )
     video = tmp_path / "test.mkv"
@@ -54,19 +61,25 @@ def test_nfo_group_members_graceful_without_slugs(tmp_path):
     own name tag is still emitted and generation does not crash.
     """
     dj_cache = DjCache(tmp_path / "dj_cache.json")
-    dj_cache.put("aboveandbeyond", {
-        "name": "Above & Beyond", "artwork_url": "",
-        "aliases": [], "member_of": [],
-        "members": [
-            {"slug": "jonogrant", "name": "Jono Grant"},
-        ],
-    })
+    dj_cache.put(
+        "aboveandbeyond",
+        {
+            "name": "Above & Beyond",
+            "artwork_url": "",
+            "aliases": [],
+            "member_of": [],
+            "members": [
+                {"slug": "jonogrant", "name": "Jono Grant"},
+            ],
+        },
+    )
     mf = MediaFile(
         source_path=Path("test.mkv"),
         artist="Above & Beyond",
         artists=["Above & Beyond"],
         artist_slugs=[],
-        festival="Tomorrowland", year="2024",
+        festival="Tomorrowland",
+        year="2024",
         content_type="festival_set",
     )
     video = tmp_path / "test.mkv"

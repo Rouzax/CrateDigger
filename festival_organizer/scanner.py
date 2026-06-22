@@ -6,6 +6,7 @@ Logging:
         - scan.error (WARNING): Could not scan directory
     See docs/logging.md for full guidelines.
 """
+
 import logging
 from pathlib import Path
 
@@ -25,7 +26,7 @@ def scan_folder(root: Path, config: Config) -> list[Path]:
     try:
         entries = sorted(root.rglob("*"))
     except OSError as e:
-        logger.warning("scanner.read: status=failed path=%s error=\"%s\"", root, e)
+        logger.warning('scanner.read: status=failed path=%s error="%s"', root, e)
         return files
 
     for item in entries:

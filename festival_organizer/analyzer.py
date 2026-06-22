@@ -6,6 +6,7 @@ Logging:
         - analyzer.result (INFO): Final parsed artist, festival, year, and metadata source
     See docs/logging.md for full guidelines.
 """
+
 import logging
 from pathlib import Path
 
@@ -82,9 +83,17 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # Layer 4: 1001TL dedicated tags (authoritative when present)
     metadata_source = "filename"
     tracklists_artists_raw = meta.get("tracklists_artists", "")
-    artists_list = [a.strip() for a in tracklists_artists_raw.split("|") if a.strip()] if tracklists_artists_raw else []
+    artists_list = (
+        [a.strip() for a in tracklists_artists_raw.split("|") if a.strip()]
+        if tracklists_artists_raw
+        else []
+    )
     artist_slugs_raw = meta.get("tracklists_artist_slugs", "")
-    artist_slugs = [s.strip() for s in artist_slugs_raw.split("|") if s.strip()] if artist_slugs_raw else []
+    artist_slugs = (
+        [s.strip() for s in artist_slugs_raw.split("|") if s.strip()]
+        if artist_slugs_raw
+        else []
+    )
     if artists_list:
         info["artist"] = artists_list[0]
         metadata_source = "1001tracklists"
@@ -128,8 +137,9 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
             tracklists_title = meta.get("tracklists_title", "")
             if tracklists_title and " @ " in tracklists_title:
                 title_artist = tracklists_title.split(" @ ")[0].strip()
-                if (title_artist.lower().startswith(display_artist.lower())
-                        and len(title_artist) > len(display_artist)):
+                if title_artist.lower().startswith(display_artist.lower()) and len(
+                    title_artist
+                ) > len(display_artist):
                     display_artist = title_artist
     else:
         # Fallback: same priority as artist but skip ARTIST tag
@@ -147,7 +157,8 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     if artist_slugs and config.dj_cache:
         # Authoritative, untruncated canonical name straight from the slug.
         artist = config.dj_cache.canonical_name(
-            artist_slugs[0], fallback=normalise_name(info.get("artist", "")))
+            artist_slugs[0], fallback=normalise_name(info.get("artist", ""))
+        )
     else:
         artist = normalise_name(info.get("artist", ""))
     if artist:
@@ -158,14 +169,20 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     if artist_slugs and len(artist_slugs) == len(artists_list) and config.dj_cache:
         for slug, a in zip(artist_slugs, artists_list):
             resolved_artists.append(
-                config.dj_cache.canonical_name(slug, fallback=config.resolve_artist(normalise_name(a))))
+                config.dj_cache.canonical_name(
+                    slug, fallback=config.resolve_artist(normalise_name(a))
+                )
+            )
     elif artists_list:
         for a in artists_list:
             resolved = config.resolve_artist(normalise_name(a))
             resolved_artists.append(resolved if resolved else normalise_name(a))
     # Align display_artist with the config-resolved canonical form
     # when it refers to the same single artist (preserves B2B names)
-    if display_artist and normalise_name(display_artist).lower() == normalise_name(artist).lower():
+    if (
+        display_artist
+        and normalise_name(display_artist).lower() == normalise_name(artist).lower()
+    ):
         display_artist = artist  # Use config-resolved canonical form
     festival = info.get("festival", "")
     # Resolve festival alias
@@ -186,15 +203,24 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # location tag: when 1001TL names a venue/location but no festival, the set is
     # venue/location-routed, so a festival parsed from the filename (often the same
     # place name) must not override it.
-    if (festival and not meta.get("tracklists_festival")
-            and (meta.get("tracklists_venue") or meta.get("tracklists_location"))):
+    if (
+        festival
+        and not meta.get("tracklists_festival")
+        and (meta.get("tracklists_venue") or meta.get("tracklists_location"))
+    ):
         festival = ""
 
     ext = filepath.suffix.lower()
     file_type = "video" if ext in VIDEO_EXTS else "audio"
 
-    logger.info("analyzer.result: file=%s artist=%s festival=%s year=%s source=%s",
-                filepath.name, artist, festival, info.get("year", ""), metadata_source)
+    logger.info(
+        "analyzer.result: file=%s artist=%s festival=%s year=%s source=%s",
+        filepath.name,
+        artist,
+        festival,
+        info.get("year", ""),
+        metadata_source,
+    )
 
     # Identified files (anything with 1001TL tags) get their canonical fields
     # from the embedded tags, not from filename parsing. set_title and title are
@@ -226,7 +252,13 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         youtube_id=info.get("youtube_id", ""),
         tracklists_url=meta.get("tracklists_url", ""),
         tracklists_title=meta.get("tracklists_title", ""),
-        genres=[normalize_genre(g) for g in meta.get("tracklists_genres", "").split("|") if g.strip()] if meta.get("tracklists_genres") else [],
+        genres=[
+            normalize_genre(g)
+            for g in meta.get("tracklists_genres", "").split("|")
+            if g.strip()
+        ]
+        if meta.get("tracklists_genres")
+        else [],
         dj_artwork_url=meta.get("tracklists_dj_artwork", ""),
         country=meta.get("tracklists_country", ""),
         source_type=meta.get("tracklists_source_type", ""),

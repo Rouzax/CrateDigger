@@ -1,4 +1,5 @@
 """Data models for the run-summary email feature."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -8,14 +9,15 @@ from pathlib import Path
 @dataclass
 class EmailSet:
     """One set/album row in an email."""
+
     artist: str
-    event: str            # festival/place name; "" for concerts/albums
+    event: str  # festival/place name; "" for concerts/albums
     year: str
-    note: str             # stage or bracket detail, may be ""
+    note: str  # stage or bracket detail, may be ""
     genres: list[str]
-    metric: str           # e.g. "19 tracks · 1h 30m" or "22 chapters"
+    metric: str  # e.g. "19 tracks · 1h 30m" or "22 chapters"
     poster_path: Path | None
-    kind: str             # "festival_set" | "concert_film" | "unknown"
+    kind: str  # "festival_set" | "concert_film" | "unknown"
 
 
 @dataclass
@@ -27,10 +29,10 @@ class UpdateInfo:
 
 @dataclass
 class RunReport:
-    channel: str                       # "new_sets" | "updated_sets"
+    channel: str  # "new_sets" | "updated_sets"
     sets: list[EmailSet]
     update: UpdateInfo | None
-    stats: dict                        # {"added": int, "up_to_date": int, "errors": int}
+    stats: dict  # {"added": int, "up_to_date": int, "errors": int}
     timestamp: str
 
 
@@ -45,17 +47,18 @@ class RenderedEmail:
 @dataclass
 class SendResult:
     """Outcome of a single email send attempt, for console reporting."""
+
     sent: bool
-    outcome: str          # "sent" | "skipped" | "failed"
+    outcome: str  # "sent" | "skipped" | "failed"
     recipients: int = 0
-    error: str = ""       # exception class name when outcome == "failed"
+    error: str = ""  # exception class name when outcome == "failed"
 
 
 @dataclass
 class SMTPSettings:
     host: str
     port: int
-    security: str          # "starttls" | "ssl" | "none"
+    security: str  # "starttls" | "ssl" | "none"
     user: str
     password: str
     from_address: str

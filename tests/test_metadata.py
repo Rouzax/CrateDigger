@@ -68,20 +68,22 @@ def test_extract_ffprobe_new_tag_names():
     """ffprobe extraction reads new CRATEDIGGER_1001TL_* tags with old fallback."""
     from festival_organizer.metadata import _extract_ffprobe
 
-    fake_output = json.dumps({
-        "format": {
-            "duration": "3600.0",
-            "bit_rate": "13500000",
-            "format_long_name": "Matroska",
-            "tags": {
-                "CRATEDIGGER_1001TL_TITLE": "New Title",
-                "CRATEDIGGER_1001TL_URL": "https://new-url.com",
-                "CRATEDIGGER_1001TL_ID": "abc123",
-                "CRATEDIGGER_1001TL_DATE": "2025-01-01",
+    fake_output = json.dumps(
+        {
+            "format": {
+                "duration": "3600.0",
+                "bit_rate": "13500000",
+                "format_long_name": "Matroska",
+                "tags": {
+                    "CRATEDIGGER_1001TL_TITLE": "New Title",
+                    "CRATEDIGGER_1001TL_URL": "https://new-url.com",
+                    "CRATEDIGGER_1001TL_ID": "abc123",
+                    "CRATEDIGGER_1001TL_DATE": "2025-01-01",
+                },
             },
-        },
-        "streams": [],
-    })
+            "streams": [],
+        }
+    )
 
     with patch("festival_organizer.metadata.FFPROBE_PATH", "/usr/bin/ffprobe"):
         with patch("festival_organizer.metadata.tracked_run") as mock_run:
@@ -98,18 +100,20 @@ def test_extract_ffprobe_old_tag_fallback():
     """ffprobe falls back to old 1001TRACKLISTS_* tags."""
     from festival_organizer.metadata import _extract_ffprobe
 
-    fake_output = json.dumps({
-        "format": {
-            "duration": "3600.0",
-            "bit_rate": "13500000",
-            "format_long_name": "Matroska",
-            "tags": {
-                "1001TRACKLISTS_TITLE": "Old Title",
-                "1001TRACKLISTS_URL": "https://old-url.com",
+    fake_output = json.dumps(
+        {
+            "format": {
+                "duration": "3600.0",
+                "bit_rate": "13500000",
+                "format_long_name": "Matroska",
+                "tags": {
+                    "1001TRACKLISTS_TITLE": "Old Title",
+                    "1001TRACKLISTS_URL": "https://old-url.com",
+                },
             },
-        },
-        "streams": [],
-    })
+            "streams": [],
+        }
+    )
 
     with patch("festival_organizer.metadata.FFPROBE_PATH", "/usr/bin/ffprobe"):
         with patch("festival_organizer.metadata.tracked_run") as mock_run:
@@ -122,6 +126,7 @@ def test_extract_ffprobe_old_tag_fallback():
 
 # --- extract_metadata (ffprobe is the sole reader) ---
 
+
 def test_extract_metadata_uses_ffprobe_only():
     """ffprobe is the sole reader: it reads MKV tags reliably regardless of where
     the Tags element sits in the file.
@@ -131,8 +136,11 @@ def test_extract_metadata_uses_ffprobe_only():
     the CrateDigger tags and making an identified file look unidentified.
     """
     from festival_organizer.metadata import extract_metadata
-    with patch("festival_organizer.metadata._extract_ffprobe",
-               return_value={"tracklists_url": "from_ffprobe"}) as ff:
+
+    with patch(
+        "festival_organizer.metadata._extract_ffprobe",
+        return_value={"tracklists_url": "from_ffprobe"},
+    ) as ff:
         result = extract_metadata(Path("/x/file.mkv"))
     assert result == {"tracklists_url": "from_ffprobe"}
     ff.assert_called_once()
@@ -140,8 +148,11 @@ def test_extract_metadata_uses_ffprobe_only():
 
 def test_extract_metadata_warns_and_returns_empty_when_ffprobe_fails(caplog):
     from festival_organizer.metadata import extract_metadata
-    with caplog.at_level(logging.WARNING), \
-         patch("festival_organizer.metadata._extract_ffprobe", return_value={}):
+
+    with (
+        caplog.at_level(logging.WARNING),
+        patch("festival_organizer.metadata._extract_ffprobe", return_value={}),
+    ):
         result = extract_metadata(Path("/x/file.mkv"))
     assert result == {}
     assert any("metadata" in r.message.lower() for r in caplog.records)

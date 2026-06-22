@@ -10,6 +10,7 @@ Logging:
         - enrich.dj_artwork (DEBUG): crop/resize applied to a downloaded image
         - enrich.dj_artwork_cache (DEBUG): a stale cached image was replaced
 """
+
 import logging
 import shutil
 import time
@@ -51,11 +52,16 @@ def cache_dj_artwork(
         if age_days <= effective_ttl:
             return dest
         dest.unlink()
-        out.debug("enrich.dj_artwork_cache: status=stale age_days=%d ttl=%.1f artist=%s",
-                  int(age_days), effective_ttl, artist_label)
+        out.debug(
+            "enrich.dj_artwork_cache: status=stale age_days=%d ttl=%.1f artist=%s",
+            int(age_days),
+            effective_ttl,
+            artist_label,
+        )
     try:
         import requests
         from PIL import Image
+
         resp = requests.get(url, timeout=15)
         resp.raise_for_status()
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -67,20 +73,38 @@ def cache_dj_artwork(
                 left = (w - side) // 2
                 top = (h - side) // 2
                 img = img.crop((left, top, left + side, top + side))
-                out.debug("enrich.dj_artwork: action=crop from=%dx%d to=%dx%d", w, h, side, side)
+                out.debug(
+                    "enrich.dj_artwork: action=crop from=%dx%d to=%dx%d",
+                    w,
+                    h,
+                    side,
+                    side,
+                )
             max_side = 550
             if img.width > max_side:
                 img = img.resize((max_side, max_side), Image.LANCZOS)
-                out.debug("enrich.dj_artwork: action=resize to=%dx%d", max_side, max_side)
+                out.debug(
+                    "enrich.dj_artwork: action=resize to=%dx%d", max_side, max_side
+                )
             img.save(dest, "JPEG", quality=90)
-        out.info("enrich.dj_artwork_download: status=ok artist=%s target=%s", artist_label, dest)
+        out.info(
+            "enrich.dj_artwork_download: status=ok artist=%s target=%s",
+            artist_label,
+            dest,
+        )
         return dest
     except Exception as e:
-        out.debug("enrich.dj_artwork_download: status=failed artist=%s error=\"%s\"", artist_label, e)
+        out.debug(
+            'enrich.dj_artwork_download: status=failed artist=%s error="%s"',
+            artist_label,
+            e,
+        )
         return None
 
 
-def warm_artist_cache_from_dj_cache(artists_root: Path, dj_cache, ttl_days: float) -> list[Path]:
+def warm_artist_cache_from_dj_cache(
+    artists_root: Path, dj_cache, ttl_days: float
+) -> list[Path]:
     """Ensure ``artists/<folder_slug(slug)>/dj-artwork.jpg`` exists for every cached DJ.
 
     Iterates :meth:`DjCache.all_artwork_urls` and downloads artwork for any cached
@@ -103,7 +127,9 @@ def warm_artist_cache_from_dj_cache(artists_root: Path, dj_cache, ttl_days: floa
     return created
 
 
-def reconcile_artist_cache(artists_root: Path, valid_folder_slugs: set[str]) -> list[Path]:
+def reconcile_artist_cache(
+    artists_root: Path, valid_folder_slugs: set[str]
+) -> list[Path]:
     """Delete cache/artists/* dirs whose name is not a valid folder-ified slug.
 
     The canonical set is the folder_slug() of every known dj_cache slug. Old
@@ -125,7 +151,7 @@ def reconcile_artist_cache(artists_root: Path, valid_folder_slugs: set[str]) -> 
             removed.append(child)
             logger.debug("cache.reconcile.removed: dir=%s", child.name)
         except OSError as exc:
-            logger.debug("cache.reconcile.failed: dir=%s error=\"%s\"", child.name, exc)
+            logger.debug('cache.reconcile.failed: dir=%s error="%s"', child.name, exc)
     if removed:
         logger.info("cache.reconcile.summary: removed=%d", len(removed))
     return removed

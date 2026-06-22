@@ -8,6 +8,7 @@ Logging:
         - dj_cache.not_found (DEBUG): DJ cache file does not exist yet
     See docs/logging.md for full guidelines.
 """
+
 import json
 import logging
 import time
@@ -28,7 +29,11 @@ class DjCache:
     """
 
     def __init__(self, cache_path: Path | None = None, ttl_days: int = 90):
-        self._path = cache_path if cache_path is not None else paths.cache_dir() / "dj_cache.json"
+        self._path = (
+            cache_path
+            if cache_path is not None
+            else paths.cache_dir() / "dj_cache.json"
+        )
         self._ttl_days = ttl_days
         self._ttl_seconds = ttl_days * 86400
         self._data: dict[str, dict] = {}
@@ -38,9 +43,11 @@ class DjCache:
         if self._path.exists():
             try:
                 self._data = json.loads(self._path.read_text(encoding="utf-8"))
-                logger.debug("dj_cache.load: path=%s entries=%d", self._path, len(self._data))
+                logger.debug(
+                    "dj_cache.load: path=%s entries=%d", self._path, len(self._data)
+                )
             except (json.JSONDecodeError, OSError) as e:
-                logger.debug("dj_cache.load_failed: error=\"%s\"", e)
+                logger.debug('dj_cache.load_failed: error="%s"', e)
                 self._data = {}
         else:
             logger.debug("dj_cache.not_found: path=%s", self._path)
@@ -91,6 +98,7 @@ class DjCache:
         names form the 'do not split' guard (e.g. 'above & beyond').
         """
         from festival_organizer.normalization import fix_mojibake
+
         names: set[str] = set()
         for entry in self._data.values():
             name = entry.get("name", "")
@@ -105,6 +113,7 @@ class DjCache:
         do not matter ('Tiesto'/'Tiësto', 'Fred again'/'Fred again..').
         """
         from festival_organizer.normalization import slugify
+
         if not name:
             return None
         index = self._name_index()
@@ -112,6 +121,7 @@ class DjCache:
 
     def _name_index(self) -> dict[str, str]:
         from festival_organizer.normalization import slugify
+
         index: dict[str, str] = {}
         for slug, entry in self._data.items():
             entry_name = entry.get("name", "")
@@ -221,7 +231,9 @@ class DjCache:
             try:
                 entry = fetcher(slug)
             except Exception as exc:
-                logger.warning("dj_cache.fetch: status=failed slug=%s error=\"%s\"", slug, exc)
+                logger.warning(
+                    'dj_cache.fetch: status=failed slug=%s error="%s"', slug, exc
+                )
                 continue
             if entry is None:
                 logger.warning("dj_cache.fetch: status=empty slug=%s", slug)
@@ -240,6 +252,7 @@ class DjCache:
         or "KÃ¶lsch") self-heal the first time they are read back.
         """
         from festival_organizer.normalization import fix_mojibake
+
         entry = self._data.get(slug)
         if entry and entry.get("name"):
             return fix_mojibake(entry["name"])

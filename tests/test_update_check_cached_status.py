@@ -3,7 +3,9 @@ from festival_organizer.notify.models import UpdateInfo
 
 
 def test_get_cached_update_status_behind(monkeypatch):
-    monkeypatch.setattr(update_check, "_read_cache", lambda: {"latest_version": "9.9.9"})
+    monkeypatch.setattr(
+        update_check, "_read_cache", lambda: {"latest_version": "9.9.9"}
+    )
     monkeypatch.setattr(update_check, "version", lambda _pkg: "0.19.9")
     info = update_check.get_cached_update_status()
     assert isinstance(info, UpdateInfo)
@@ -13,7 +15,9 @@ def test_get_cached_update_status_behind(monkeypatch):
 
 
 def test_get_cached_update_status_current(monkeypatch):
-    monkeypatch.setattr(update_check, "_read_cache", lambda: {"latest_version": "0.19.9"})
+    monkeypatch.setattr(
+        update_check, "_read_cache", lambda: {"latest_version": "0.19.9"}
+    )
     monkeypatch.setattr(update_check, "version", lambda _pkg: "0.19.9")
     info = update_check.get_cached_update_status()
     assert info.behind is False

@@ -1,4 +1,5 @@
 """File executor: moves, copies, or renames files with collision handling."""
+
 import logging
 import shutil
 from pathlib import Path
@@ -74,8 +75,10 @@ def execute_actions(actions: list[FileAction]) -> list[FileAction]:
 
         except OSError as e:
             logger.warning(
-                "executor.action: status=failed source=%s target=%s error=\"%s\"",
-                action.source, action.target, e,
+                'executor.action: status=failed source=%s target=%s error="%s"',
+                action.source,
+                action.target,
+                e,
             )
             action.status = "error"
             action.error = str(e)

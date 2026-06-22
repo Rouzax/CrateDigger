@@ -1,8 +1,16 @@
 """Search query building from filenames and MediaFile objects."""
+
 import re
 from pathlib import Path
 
-from festival_organizer.normalization import extract_youtube_id, strip_scene_tags, strip_noise_words, UNICODE_SLASHES, normalize_pipes, normalize_colons
+from festival_organizer.normalization import (
+    extract_youtube_id,
+    strip_scene_tags,
+    strip_noise_words,
+    UNICODE_SLASHES,
+    normalize_pipes,
+    normalize_colons,
+)
 
 
 def build_search_query(source_path: Path) -> str:
@@ -16,9 +24,9 @@ def build_search_query(source_path: Path) -> str:
     stem, _ = extract_youtube_id(stem)
 
     # Normalize YouTube fullwidth characters
-    stem = normalize_pipes(stem)      # ｜ -> |
-    stem = normalize_colons(stem)     # ： -> space
-    stem = stem.replace("|", " ")     # | -> space (flatten pipe separators)
+    stem = normalize_pipes(stem)  # ｜ -> |
+    stem = normalize_colons(stem)  # ： -> space
+    stem = stem.replace("|", " ")  # | -> space (flatten pipe separators)
 
     # Normalize unicode slashes (KI⧸KI → KI KI)
     stem = UNICODE_SLASHES.sub(" ", stem)
@@ -50,7 +58,9 @@ def expand_aliases_in_query(query: str, aliases: dict[str, str]) -> str:
         Query with abbreviations replaced by full names.
     """
     for abbrev, full_name in aliases.items():
-        query = re.sub(rf"\b{re.escape(abbrev)}\b", full_name, query, flags=re.IGNORECASE)
+        query = re.sub(
+            rf"\b{re.escape(abbrev)}\b", full_name, query, flags=re.IGNORECASE
+        )
     return query
 
 

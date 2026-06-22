@@ -13,6 +13,7 @@ analyzer/parser resolve place/edition/year/artist.
 
 Run:  python tests/fixtures/build_folder_poster_fixtures.py
 """
+
 import hashlib
 import subprocess
 from pathlib import Path
@@ -23,13 +24,36 @@ OUT = Path(__file__).parent / "folder_posters"
 
 # (filename, ARTIST, festival-tag, stage, date, artists, slugs, country)
 FIXTURES = [
-    ("2025 - AFROJACK - EDC Las Vegas [kineticFIELD].mkv",
-     "AFROJACK", "EDC Las Vegas", "kineticFIELD", "2025-05-16", "AFROJACK", "afrojack", "United States"),
-    ("2025 - Alesso - EDC Las Vegas [kineticFIELD].mkv",
-     "Alesso", "EDC Las Vegas", "kineticFIELD", "2025-05-17", "Alesso", "alesso", "United States"),
-    ("2026 - Armin van Buuren - Tomorrowland Winter [Mainstage].mkv",
-     "Armin van Buuren", "Tomorrowland Winter", "Mainstage", "2026-03-14",
-     "Armin van Buuren", "arminvanbuuren", "France"),
+    (
+        "2025 - AFROJACK - EDC Las Vegas [kineticFIELD].mkv",
+        "AFROJACK",
+        "EDC Las Vegas",
+        "kineticFIELD",
+        "2025-05-16",
+        "AFROJACK",
+        "afrojack",
+        "United States",
+    ),
+    (
+        "2025 - Alesso - EDC Las Vegas [kineticFIELD].mkv",
+        "Alesso",
+        "EDC Las Vegas",
+        "kineticFIELD",
+        "2025-05-17",
+        "Alesso",
+        "alesso",
+        "United States",
+    ),
+    (
+        "2026 - Armin van Buuren - Tomorrowland Winter [Mainstage].mkv",
+        "Armin van Buuren",
+        "Tomorrowland Winter",
+        "Mainstage",
+        "2026-03-14",
+        "Armin van Buuren",
+        "arminvanbuuren",
+        "France",
+    ),
 ]
 
 PLACES_JSON = """{
@@ -52,8 +76,21 @@ def build_one(spec, work: Path):
     filename, artist, festival, stage, date, artists, slugs, country = spec
     year = date[:4]
     base = work / "base.mkv"
-    _run("ffmpeg", "-y", "-f", "lavfi", "-i", "color=c=black:s=160x90:d=1",
-         "-c:v", "libx264", "-t", "1", "-pix_fmt", "yuv420p", str(base))
+    _run(
+        "ffmpeg",
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        "color=c=black:s=160x90:d=1",
+        "-c:v",
+        "libx264",
+        "-t",
+        "1",
+        "-pix_fmt",
+        "yuv420p",
+        str(base),
+    )
 
     poster = work / "poster.jpg"
     Image.new("RGB", (1000, 1500), (24, 24, 32)).save(poster, quality=70)
@@ -89,11 +126,34 @@ def build_one(spec, work: Path):
  </ChapterAtom>
 </EditionEntry></Chapters>""")
 
-    _run("mkvpropedit", str(base), "--tags", f"global:{tags}", "--chapters", str(chapters))
-    _run("mkvpropedit", str(base), "--attachment-name", "cover.jpg",
-         "--attachment-mime-type", "image/jpeg", "--add-attachment", str(poster))
-    _run("mkvpropedit", str(base), "--attachment-name", "cover_land.jpg",
-         "--attachment-mime-type", "image/jpeg", "--add-attachment", str(thumb))
+    _run(
+        "mkvpropedit",
+        str(base),
+        "--tags",
+        f"global:{tags}",
+        "--chapters",
+        str(chapters),
+    )
+    _run(
+        "mkvpropedit",
+        str(base),
+        "--attachment-name",
+        "cover.jpg",
+        "--attachment-mime-type",
+        "image/jpeg",
+        "--add-attachment",
+        str(poster),
+    )
+    _run(
+        "mkvpropedit",
+        str(base),
+        "--attachment-name",
+        "cover_land.jpg",
+        "--attachment-mime-type",
+        "image/jpeg",
+        "--add-attachment",
+        str(thumb),
+    )
 
     final = OUT / filename
     if final.exists():

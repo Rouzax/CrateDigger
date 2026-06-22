@@ -67,6 +67,7 @@ def test_get_or_fetch_many_progress_not_called_when_all_cached(tmp_path):
     cache = DjCache(cache_path=tmp_path / "c.json", ttl_days=90)
     cache.put("a", {"name": "A"})
     calls = []
-    cache.get_or_fetch_many(["a"], fetcher=lambda s: {"name": s},
-                            progress=lambda *args: calls.append(args))
+    cache.get_or_fetch_many(
+        ["a"], fetcher=lambda s: {"name": s}, progress=lambda *args: calls.append(args)
+    )
     assert calls == []

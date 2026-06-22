@@ -8,6 +8,7 @@ When chapters_are_identical returns True:
 
 These cover the path that currently fails for pre-0.9.9 legacy files.
 """
+
 from unittest.mock import MagicMock, patch
 
 from festival_organizer.tracklists.api import Track, TracklistExport
@@ -28,9 +29,21 @@ def _make_export() -> TracklistExport:
         country="",
         source_type="",
         tracks=[
-            Track(start_ms=0, raw_text="Opener", artist_slugs=["testdj"], genres=["House"]),
-            Track(start_ms=60000, raw_text="Second", artist_slugs=["guest"], genres=["Techno"]),
-            Track(start_ms=120000, raw_text="Third", artist_slugs=["testdj"], genres=["House"]),
+            Track(
+                start_ms=0, raw_text="Opener", artist_slugs=["testdj"], genres=["House"]
+            ),
+            Track(
+                start_ms=60000,
+                raw_text="Second",
+                artist_slugs=["guest"],
+                genres=["Techno"],
+            ),
+            Track(
+                start_ms=120000,
+                raw_text="Third",
+                artist_slugs=["testdj"],
+                genres=["House"],
+            ),
         ],
     )
 
@@ -39,7 +52,9 @@ def _make_session() -> MagicMock:
     sess = MagicMock()
     sess.export_tracklist.return_value = _make_export()
     sess._dj_cache = MagicMock()
-    sess._dj_cache.canonical_name.side_effect = lambda slug, fallback=None: fallback or slug
+    sess._dj_cache.canonical_name.side_effect = lambda slug, fallback=None: (
+        fallback or slug
+    )
     return sess
 
 
@@ -52,26 +67,30 @@ def _make_config() -> MagicMock:
 def _patch_identify_internals(**overrides):
     """Returns a dict of patch contexts keyed by target name."""
     defaults = {
-        "extract_existing_chapters": MagicMock(return_value=[object(), object(), object()]),
+        "extract_existing_chapters": MagicMock(
+            return_value=[object(), object(), object()]
+        ),
         "chapters_are_identical": MagicMock(return_value=True),
-        "extract_stored_tracklist_info": MagicMock(return_value={
-            "url": "https://www.1001tracklists.com/tracklist/abc/",
-            "title": "Test Set",
-            "id": "abc",
-            "date": "",
-            "genres": "House",
-            "dj_artwork": "",
-            "stage": "",
-            "venue": "",
-            "festival": "",
-            "conference": "",
-            "radio": "",
-            "artists": "Test DJ",
-            "country": "",
-            "source_type": "",
-            "albumartist_slugs": "testdj",
-            "albumartist_display": "Test DJ",
-        }),
+        "extract_stored_tracklist_info": MagicMock(
+            return_value={
+                "url": "https://www.1001tracklists.com/tracklist/abc/",
+                "title": "Test Set",
+                "id": "abc",
+                "date": "",
+                "genres": "House",
+                "dj_artwork": "",
+                "stage": "",
+                "venue": "",
+                "festival": "",
+                "conference": "",
+                "radio": "",
+                "artists": "Test DJ",
+                "country": "",
+                "source_type": "",
+                "albumartist_slugs": "testdj",
+                "albumartist_display": "Test DJ",
+            }
+        ),
         "has_chapter_tags": MagicMock(return_value=True),
         "has_album_artist_display_tags": MagicMock(return_value=True),
         "embed_chapters": MagicMock(return_value=True),
@@ -97,10 +116,17 @@ def test_up_to_date_when_ttv30_present_and_tags_match(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            _make_session(), "https://x", fake, _make_config(),
-            preview=False, quiet=True, language="eng",
-            tracklist_id="abc", tracklist_date="",
-            duration_seconds=7560, regenerate=False,
+            _make_session(),
+            "https://x",
+            fake,
+            _make_config(),
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date="",
+            duration_seconds=7560,
+            regenerate=False,
         )
     assert status == "up_to_date"
     mocks["embed_chapters"].assert_not_called()
@@ -122,10 +148,17 @@ def test_self_heal_triggers_when_ttv30_missing(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            _make_session(), "https://x", fake, _make_config(),
-            preview=False, quiet=True, language="eng",
-            tracklist_id="abc", tracklist_date="",
-            duration_seconds=7560, regenerate=False,
+            _make_session(),
+            "https://x",
+            fake,
+            _make_config(),
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date="",
+            duration_seconds=7560,
+            regenerate=False,
         )
     assert status == "updated"
     mocks["embed_chapters"].assert_called_once()
@@ -152,10 +185,17 @@ def test_self_heal_triggers_when_album_artist_display_missing(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            _make_session(), "https://x", fake, _make_config(),
-            preview=False, quiet=True, language="eng",
-            tracklist_id="abc", tracklist_date="",
-            duration_seconds=7560, regenerate=False,
+            _make_session(),
+            "https://x",
+            fake,
+            _make_config(),
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date="",
+            duration_seconds=7560,
+            regenerate=False,
         )
     assert status == "updated"
     mocks["embed_chapters"].assert_called_once()
@@ -204,10 +244,17 @@ def test_album_artist_check_skipped_when_no_dj_artists(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            session, "https://x", fake, _make_config(),
-            preview=False, quiet=True, language="eng",
-            tracklist_id="abc", tracklist_date="",
-            duration_seconds=7560, regenerate=False,
+            session,
+            "https://x",
+            fake,
+            _make_config(),
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date="",
+            duration_seconds=7560,
+            regenerate=False,
         )
     assert status == "up_to_date"
     mocks["embed_chapters"].assert_not_called()
@@ -229,10 +276,17 @@ def test_regenerate_forces_retag_even_when_up_to_date(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            _make_session(), "https://x", fake, _make_config(),
-            preview=False, quiet=True, language="eng",
-            tracklist_id="abc", tracklist_date="",
-            duration_seconds=7560, regenerate=True,
+            _make_session(),
+            "https://x",
+            fake,
+            _make_config(),
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date="",
+            duration_seconds=7560,
+            regenerate=True,
         )
     assert status == "updated"
     mocks["embed_chapters"].assert_called_once()
@@ -276,10 +330,17 @@ def test_ttv70_tag_diff_also_routes_through_embed_chapters(tmp_path):
         trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
-            _make_session(), "https://x", fake, _make_config(),
-            preview=False, quiet=True, language="eng",
-            tracklist_id="abc", tracklist_date="",
-            duration_seconds=7560, regenerate=False,
+            _make_session(),
+            "https://x",
+            fake,
+            _make_config(),
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date="",
+            duration_seconds=7560,
+            regenerate=False,
         )
     assert status == "updated"
     mocks["embed_chapters"].assert_called_once()
@@ -294,19 +355,39 @@ def test_set_genres_capped_via_config_genre_top_n(tmp_path):
 
     # Tracks produce 7 distinct genres with varying frequency.
     tracks = [
-        Track(start_ms=i * 60000, raw_text=f"Artist{i} - T{i}",
-              artist_slugs=[f"a{i}"], genres=[g])
-        for i, g in enumerate([
-            "House", "House", "Tech House", "Tech House", "Trance",
-            "Mainstage", "Techno", "Progressive", "Hard Dance",
-        ])
+        Track(
+            start_ms=i * 60000,
+            raw_text=f"Artist{i} - T{i}",
+            artist_slugs=[f"a{i}"],
+            genres=[g],
+        )
+        for i, g in enumerate(
+            [
+                "House",
+                "House",
+                "Tech House",
+                "Tech House",
+                "Trance",
+                "Mainstage",
+                "Techno",
+                "Progressive",
+                "Hard Dance",
+            ]
+        )
     ]
     export = TracklistExport(
         lines=[f"[{i:02d}:00] t{i}" for i in range(len(tracks))],
         url="https://www.1001tracklists.com/tracklist/abc/",
         title="Test",
-        genres=["House", "Tech House", "Trance", "Mainstage", "Techno",
-                "Progressive", "Hard Dance"],  # 7 genres flat
+        genres=[
+            "House",
+            "Tech House",
+            "Trance",
+            "Mainstage",
+            "Techno",
+            "Progressive",
+            "Hard Dance",
+        ],  # 7 genres flat
         dj_artists=[("test", "Test")],
         tracks=tracks,
     )
@@ -328,23 +409,48 @@ def test_set_genres_capped_via_config_genre_top_n(tmp_path):
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
 
-    with patch("festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
-               return_value=[MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
-                             for i in range(len(tracks))]), \
-         patch("festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
-               side_effect=lambda chs, dur: chs), \
-         patch("festival_organizer.tracklists.cli_handler.extract_existing_chapters",
-               return_value=None), \
-         patch("festival_organizer.tracklists.cli_handler.chapters_are_identical",
-               return_value=False), \
-         patch("festival_organizer.tracklists.cli_handler.embed_chapters",
-               side_effect=fake_embed), \
-         patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
-               return_value="abc"):
-        _fetch_and_embed(session, "https://x", fake_mkv, config,
-                         preview=False, quiet=True, language="eng",
-                         tracklist_id="abc", tracklist_date=None,
-                         duration_seconds=None, regenerate=False)
+    with (
+        patch(
+            "festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
+            return_value=[
+                MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
+                for i in range(len(tracks))
+            ],
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
+            side_effect=lambda chs, dur: chs,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_existing_chapters",
+            return_value=None,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.chapters_are_identical",
+            return_value=False,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.embed_chapters",
+            side_effect=fake_embed,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_tracklist_id",
+            return_value="abc",
+        ),
+    ):
+        _fetch_and_embed(
+            session,
+            "https://x",
+            fake_mkv,
+            config,
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date=None,
+            duration_seconds=None,
+            regenerate=False,
+        )
 
     # Top 3 by frequency: House (2), Tech House (2), Trance (1)
     # (ties broken by first-appearance order)
@@ -359,9 +465,12 @@ def test_set_genres_uncapped_when_config_zero(tmp_path):
 
     tracks = [Track(start_ms=0, raw_text="A - t", artist_slugs=["a"], genres=["X"])]
     export = TracklistExport(
-        lines=["[00:00] t"], url="https://x", title="T",
+        lines=["[00:00] t"],
+        url="https://x",
+        title="T",
         genres=["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],  # 10 genres
-        dj_artists=[("test", "Test")], tracks=tracks,
+        dj_artists=[("test", "Test")],
+        tracks=tracks,
     )
     session = MagicMock()
     session.export_tracklist.return_value = export
@@ -371,28 +480,52 @@ def test_set_genres_uncapped_when_config_zero(tmp_path):
     config.resolve_artist = lambda n: n
 
     captured: dict = {}
+
     def fake_embed(filepath, chapters, **kwargs):
         captured["genres"] = kwargs.get("genres")
         return True
 
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
-    with patch("festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
-               return_value=[MagicMock(timestamp="00:00:00.000", title="t")]), \
-         patch("festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
-               side_effect=lambda chs, dur: chs), \
-         patch("festival_organizer.tracklists.cli_handler.extract_existing_chapters",
-               return_value=None), \
-         patch("festival_organizer.tracklists.cli_handler.chapters_are_identical",
-               return_value=False), \
-         patch("festival_organizer.tracklists.cli_handler.embed_chapters",
-               side_effect=fake_embed), \
-         patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
-               return_value="abc"):
-        _fetch_and_embed(session, "https://x", fake_mkv, config,
-                         preview=False, quiet=True, language="eng",
-                         tracklist_id="abc", tracklist_date=None,
-                         duration_seconds=None, regenerate=False)
+    with (
+        patch(
+            "festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
+            return_value=[MagicMock(timestamp="00:00:00.000", title="t")],
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
+            side_effect=lambda chs, dur: chs,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_existing_chapters",
+            return_value=None,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.chapters_are_identical",
+            return_value=False,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.embed_chapters",
+            side_effect=fake_embed,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_tracklist_id",
+            return_value="abc",
+        ),
+    ):
+        _fetch_and_embed(
+            session,
+            "https://x",
+            fake_mkv,
+            config,
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date=None,
+            duration_seconds=None,
+            regenerate=False,
+        )
 
     # Cap disabled — we keep whatever the flat scrape produced.
     assert captured["genres"] == export.genres
@@ -428,29 +561,55 @@ def test_fetch_and_embed_uses_export_date_when_tracklist_date_none(tmp_path):
     config.resolve_artist = lambda n: n
 
     captured: dict = {}
+
     def fake_embed(filepath, chapters, **kwargs):
         captured["tracklist_date"] = kwargs.get("tracklist_date")
         return True
 
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
-    with patch("festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
-               return_value=[MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
-                             for i in range(3)]), \
-         patch("festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
-               side_effect=lambda chs, dur: chs), \
-         patch("festival_organizer.tracklists.cli_handler.extract_existing_chapters",
-               return_value=None), \
-         patch("festival_organizer.tracklists.cli_handler.chapters_are_identical",
-               return_value=False), \
-         patch("festival_organizer.tracklists.cli_handler.embed_chapters",
-               side_effect=fake_embed), \
-         patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
-               return_value="abc"):
-        _fetch_and_embed(session, "https://x", fake_mkv, config,
-                         preview=False, quiet=True, language="eng",
-                         tracklist_id="abc", tracklist_date=None,
-                         duration_seconds=None, regenerate=False)
+    with (
+        patch(
+            "festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
+            return_value=[
+                MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
+                for i in range(3)
+            ],
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
+            side_effect=lambda chs, dur: chs,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_existing_chapters",
+            return_value=None,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.chapters_are_identical",
+            return_value=False,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.embed_chapters",
+            side_effect=fake_embed,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_tracklist_id",
+            return_value="abc",
+        ),
+    ):
+        _fetch_and_embed(
+            session,
+            "https://x",
+            fake_mkv,
+            config,
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date=None,
+            duration_seconds=None,
+            regenerate=False,
+        )
 
     assert captured["tracklist_date"] == "2025-10-24"
 
@@ -484,29 +643,55 @@ def test_fetch_and_embed_tracklist_date_wins_over_export_date(tmp_path):
     config.resolve_artist = lambda n: n
 
     captured: dict = {}
+
     def fake_embed(filepath, chapters, **kwargs):
         captured["tracklist_date"] = kwargs.get("tracklist_date")
         return True
 
     fake_mkv = tmp_path / "x.mkv"
     fake_mkv.write_bytes(b"")
-    with patch("festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
-               return_value=[MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
-                             for i in range(3)]), \
-         patch("festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
-               side_effect=lambda chs, dur: chs), \
-         patch("festival_organizer.tracklists.cli_handler.extract_existing_chapters",
-               return_value=None), \
-         patch("festival_organizer.tracklists.cli_handler.chapters_are_identical",
-               return_value=False), \
-         patch("festival_organizer.tracklists.cli_handler.embed_chapters",
-               side_effect=fake_embed), \
-         patch("festival_organizer.tracklists.cli_handler.extract_tracklist_id",
-               return_value="abc"):
-        _fetch_and_embed(session, "https://x", fake_mkv, config,
-                         preview=False, quiet=True, language="eng",
-                         tracklist_id="abc", tracklist_date="2025-10-24",
-                         duration_seconds=None, regenerate=False)
+    with (
+        patch(
+            "festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
+            return_value=[
+                MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
+                for i in range(3)
+            ],
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
+            side_effect=lambda chs, dur: chs,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_existing_chapters",
+            return_value=None,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.chapters_are_identical",
+            return_value=False,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.embed_chapters",
+            side_effect=fake_embed,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_tracklist_id",
+            return_value="abc",
+        ),
+    ):
+        _fetch_and_embed(
+            session,
+            "https://x",
+            fake_mkv,
+            config,
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date="2025-10-24",
+            duration_seconds=None,
+            regenerate=False,
+        )
 
     # tracklist_date from search is the same as export.date here — but the
     # contract is that tracklist_date wins when both are present. Assert the

@@ -1,4 +1,5 @@
 """Live progress output formatting."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -102,7 +103,9 @@ class ProgressPrinter:
         self.console.print(header_panel(f"CrateDigger: {command}", rows))
         if missing_tools:
             for tool in missing_tools:
-                self.console.print(f"  [yellow]Warning: {tool} not found (some features may be limited)[/yellow]")
+                self.console.print(
+                    f"  [yellow]Warning: {tool} not found (some features may be limited)[/yellow]"
+                )
 
     def file_start(self, filename: Path, target_folder: str) -> None:
         """Print the start of processing a file."""
@@ -168,8 +171,11 @@ class OrganizeContractProgress:
         self.layout = layout
         self._file_index = 0
         self._stats: dict[str, int] = {
-            "done": 0, "up_to_date": 0, "preview": 0,
-            "skipped": 0, "error": 0,
+            "done": 0,
+            "up_to_date": 0,
+            "preview": 0,
+            "skipped": 0,
+            "error": 0,
         }
         self._destinations: dict[str, int] = {}
         self._skipped_reasons: dict[str, int] = {}
@@ -210,7 +216,9 @@ class OrganizeContractProgress:
             detail = result.detail or "unknown error"
             self._stats["error"] += 1
             self._errors.append((source.name, detail))
-        elif result.status == "skipped" and same_library_path(source, op.target, self.output_root):
+        elif result.status == "skipped" and same_library_path(
+            source, op.target, self.output_root
+        ):
             vstatus = "up-to-date"
             detail = ""
             self._stats["up_to_date"] += 1
@@ -229,13 +237,19 @@ class OrganizeContractProgress:
             return
 
         console_width = self.console.size.width if self.console.size else 120
-        self.console.print(organize_verdict(
-            status=vstatus, index=self._file_index, total=self.total,
-            source=source, target=op.target,
-            output_root=self.output_root,
-            elapsed_s=elapsed_s, width=console_width,
-            detail=detail,
-        ))
+        self.console.print(
+            organize_verdict(
+                status=vstatus,
+                index=self._file_index,
+                total=self.total,
+                source=source,
+                target=op.target,
+                output_root=self.output_root,
+                elapsed_s=elapsed_s,
+                width=console_width,
+                detail=detail,
+            )
+        )
 
         if self.verbose and vstatus in ("done", "up-to-date"):
             self._print_metadata(media_file, op)
@@ -261,12 +275,18 @@ class OrganizeContractProgress:
             return
 
         console_width = self.console.size.width if self.console.size else 120
-        self.console.print(organize_verdict(
-            status=vstatus, index=self._file_index, total=self.total,
-            source=source, target=target,
-            output_root=self.output_root,
-            elapsed_s=0.0, width=console_width,
-        ))
+        self.console.print(
+            organize_verdict(
+                status=vstatus,
+                index=self._file_index,
+                total=self.total,
+                source=source,
+                target=target,
+                output_root=self.output_root,
+                elapsed_s=0.0,
+                width=console_width,
+            )
+        )
 
         if self.verbose and vstatus == "preview":
             self._print_metadata(media_file, None)
@@ -292,16 +312,20 @@ class OrganizeContractProgress:
         """No-op. Stats are tracked inline in file_done/file_preview."""
         pass
 
-    def print_summary(self, elapsed_s: float | None = None, log_path: Path | None = None) -> None:
+    def print_summary(
+        self, elapsed_s: float | None = None, log_path: Path | None = None
+    ) -> None:
         """Print the organize summary panel."""
         self.console.print()
-        self.console.print(organize_summary_panel(
-            stats=self._stats,
-            destinations=self._destinations or None,
-            skipped_reasons=self._skipped_reasons or None,
-            errors=self._errors or None,
-            elapsed_s=elapsed_s,
-        ))
+        self.console.print(
+            organize_summary_panel(
+                stats=self._stats,
+                destinations=self._destinations or None,
+                skipped_reasons=self._skipped_reasons or None,
+                errors=self._errors or None,
+                elapsed_s=elapsed_s,
+            )
+        )
 
 
 class EnrichContractProgress:
@@ -326,7 +350,9 @@ class EnrichContractProgress:
         self.verbose = verbose
         self._file_index = 0
         self._file_stats: dict[str, int] = {"done": 0, "up_to_date": 0, "error": 0}
-        self._op_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self._op_counts: dict[str, dict[str, int]] = defaultdict(
+            lambda: defaultdict(int)
+        )
         self._errors: list[tuple[str, str, str]] = []
         self._unresolved_artists: set[str] = set()
 
@@ -380,15 +406,17 @@ class EnrichContractProgress:
             return
 
         console_width = self.console.size.width if self.console.size else 120
-        self.console.print(verdict(
-            status=badge,
-            index=self._file_index,
-            total=self.total,
-            filename=source.name,
-            detail_line=detail,
-            elapsed_s=elapsed_s,
-            width=console_width,
-        ))
+        self.console.print(
+            verdict(
+                status=badge,
+                index=self._file_index,
+                total=self.total,
+                filename=source.name,
+                detail_line=detail,
+                elapsed_s=elapsed_s,
+                width=console_width,
+            )
+        )
 
         if self.verbose:
             self._print_op_breakdown(results)
@@ -406,22 +434,28 @@ class EnrichContractProgress:
         """No-op. Stats are tracked inline in file_done."""
         pass
 
-    def print_summary(self, elapsed_s: float | None = None, log_path: Path | None = None) -> None:
+    def print_summary(
+        self, elapsed_s: float | None = None, log_path: Path | None = None
+    ) -> None:
         """Print the enrich summary panel."""
         self.console.print()
-        self.console.print(enrich_summary_panel(
-            file_stats=self._file_stats,
-            op_counts=dict(self._op_counts),
-            errors=self._errors or None,
-            unresolved_count=len(self._unresolved_artists),
-            elapsed_s=elapsed_s,
-        ))
+        self.console.print(
+            enrich_summary_panel(
+                file_stats=self._file_stats,
+                op_counts=dict(self._op_counts),
+                errors=self._errors or None,
+                unresolved_count=len(self._unresolved_artists),
+                elapsed_s=elapsed_s,
+            )
+        )
 
 
 class OrganizeEnrichProgress:
     """Composite progress for organize --enrich: emits organize verdict then enrich verdict per file."""
 
-    def __init__(self, organize: OrganizeContractProgress, enrich: EnrichContractProgress):
+    def __init__(
+        self, organize: OrganizeContractProgress, enrich: EnrichContractProgress
+    ):
         self.organize = organize
         self.enrich = enrich
 

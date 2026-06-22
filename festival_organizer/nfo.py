@@ -1,4 +1,5 @@
 """Kodi musicvideo NFO XML generation."""
+
 import logging
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -11,8 +12,13 @@ from festival_organizer.models import MediaFile, build_display_title
 logger = logging.getLogger(__name__)
 
 
-def generate_nfo_xml(media_file: MediaFile, video_path: Path, config: Config,
-                     dj_cache=None, dateadded: str | None = None) -> str:
+def generate_nfo_xml(
+    media_file: MediaFile,
+    video_path: Path,
+    config: Config,
+    dj_cache=None,
+    dateadded: str | None = None,
+) -> str:
     """Build a Kodi-compatible musicvideo NFO XML string.
 
     When *dateadded* is provided it is used verbatim; otherwise ``datetime.now()``
@@ -114,12 +120,11 @@ def generate_nfo_xml(media_file: MediaFile, video_path: Path, config: Config,
     fanart_thumb = ET.SubElement(fanart_elem, "thumb")
     fanart_thumb.text = f"{video_path.stem}-fanart.jpg"
 
-    _add(root, "dateadded",
-         dateadded or datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    _add(root, "dateadded", dateadded or datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-    xml_str = minidom.parseString(
-        ET.tostring(root, encoding="unicode")
-    ).toprettyxml(indent="  ")
+    xml_str = minidom.parseString(ET.tostring(root, encoding="unicode")).toprettyxml(
+        indent="  "
+    )
     lines = xml_str.split("\n")
     if lines[0].startswith("<?xml"):
         xml_str = "\n".join(lines[1:])
@@ -127,20 +132,26 @@ def generate_nfo_xml(media_file: MediaFile, video_path: Path, config: Config,
     return xml_str.strip() + "\n"
 
 
-def generate_nfo(media_file: MediaFile, video_path: Path, config: Config,
-                 dj_cache=None, dateadded: str | None = None) -> Path:
+def generate_nfo(
+    media_file: MediaFile,
+    video_path: Path,
+    config: Config,
+    dj_cache=None,
+    dateadded: str | None = None,
+) -> Path:
     """Write a Kodi-compatible musicvideo NFO file alongside a video file.
 
     Delegates to ``generate_nfo_xml`` for the XML content, then writes to disk.
     Returns the path to the generated .nfo file.
     """
     nfo_path = video_path.with_suffix(".nfo")
-    xml_str = generate_nfo_xml(media_file, video_path, config,
-                               dj_cache=dj_cache, dateadded=dateadded)
+    xml_str = generate_nfo_xml(
+        media_file, video_path, config, dj_cache=dj_cache, dateadded=dateadded
+    )
     try:
         nfo_path.write_text(xml_str, encoding="utf-8")
     except OSError as e:
-        logger.warning("nfo.write: status=failed file=%s error=\"%s\"", nfo_path, e)
+        logger.warning('nfo.write: status=failed file=%s error="%s"', nfo_path, e)
         raise
     return nfo_path
 

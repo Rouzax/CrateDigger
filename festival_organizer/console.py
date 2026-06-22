@@ -4,6 +4,7 @@ All Rich usage in the project flows through this module.
 Provides console creation and reusable widget builders for
 headers, result tables, status indicators, and summaries.
 """
+
 from __future__ import annotations
 
 import difflib
@@ -222,9 +223,11 @@ def summary_panel(counts: dict, log_path=None) -> Panel:
             if not first:
                 body.append("  ")
             first = False
-            style = "green" if key in ("added", "done", "up_to_date") else (
-                "cyan" if key == "updated" else (
-                    "red" if key == "error" else "dim"
+            style = (
+                "green"
+                if key in ("added", "done", "up_to_date")
+                else (
+                    "cyan" if key == "updated" else ("red" if key == "error" else "dim")
                 )
             )
             body.append(f"{key}: ", style="bold")
@@ -316,12 +319,12 @@ class StepProgress:
 
 
 _VERDICT_STYLES = {
-    "done":       ("done",        "green"),
-    "updated":    ("updated",     "cyan"),
-    "up-to-date": ("up-to-date",  "dim green"),
-    "preview":    ("preview",     "cyan"),
-    "skipped":    ("skipped",     "yellow"),
-    "error":      ("error",       "red"),
+    "done": ("done", "green"),
+    "updated": ("updated", "cyan"),
+    "up-to-date": ("up-to-date", "dim green"),
+    "preview": ("preview", "cyan"),
+    "skipped": ("skipped", "yellow"),
+    "error": ("error", "red"),
 }
 
 VERDICT_BADGE_WIDTH = 14
@@ -440,8 +443,10 @@ def verdict(
 
     # Single-line mode (original behaviour)
     if width is not None:
-        budget = max(10, width - VERDICT_BADGE_WIDTH - len(counter)
-                     - len(" -> ") - len(detail) - 10)
+        budget = max(
+            10,
+            width - VERDICT_BADGE_WIDTH - len(counter) - len(" -> ") - len(detail) - 10,
+        )
         fname_display = _truncate_preserving_id(filename, budget)
 
     text = Text()
@@ -481,15 +486,23 @@ def organize_verdict(
     """
     if status in ("up-to-date",):
         return verdict(
-            status=status, index=index, total=total,
-            filename=source.name, elapsed_s=elapsed_s, width=width,
+            status=status,
+            index=index,
+            total=total,
+            filename=source.name,
+            elapsed_s=elapsed_s,
+            width=width,
         )
 
     if status in ("skipped", "error"):
         return verdict(
-            status=status, index=index, total=total,
-            filename=source.name, detail_line=detail,
-            elapsed_s=elapsed_s, width=width,
+            status=status,
+            index=index,
+            total=total,
+            filename=source.name,
+            detail_line=detail,
+            elapsed_s=elapsed_s,
+            width=width,
         )
 
     # preview or done: build the from/to block
@@ -618,9 +631,13 @@ def identify_summary_panel(
         if not first:
             body.append("  ")
         first = False
-        style = "green" if key in ("added", "done", "up_to_date") else (
-            "cyan" if key in ("updated", "previewed") else (
-                "red" if key == "error" else "dim"
+        style = (
+            "green"
+            if key in ("added", "done", "up_to_date")
+            else (
+                "cyan"
+                if key in ("updated", "previewed")
+                else ("red" if key == "error" else "dim")
             )
         )
         body.append(f"{key}: ", style="bold")
@@ -727,9 +744,15 @@ def organize_summary_panel(
 
 
 _OP_ORDER = [
-    "nfo", "art", "fanart",
-    "poster", "album_poster", "posters",
-    "tags", "chapter_artist_mbids", "album_artist_mbids",
+    "nfo",
+    "art",
+    "fanart",
+    "poster",
+    "album_poster",
+    "posters",
+    "tags",
+    "chapter_artist_mbids",
+    "album_artist_mbids",
 ]
 
 

@@ -4,6 +4,7 @@ The example is the canonical starting point users are told to copy into
 their config.toml. If it parses into a structure that does not match the
 loader's expectations, users silently lose settings.
 """
+
 from __future__ import annotations
 
 import tomllib

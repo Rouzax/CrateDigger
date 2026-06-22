@@ -30,9 +30,16 @@ def test_collect_new_sets_picks_only_done(tmp_path):
     poster.write_bytes(b"x")
     target = tmp_path / "2026 - Eric Prydz - UMF Miami.mkv"
 
-    mf_new = make_mediafile(source_path=target, artist="Eric Prydz", festival="UMF Miami",
-                            year="2026", stage="Resistance", genres=["Techno"],
-                            duration_seconds=5400.0, content_type="festival_set")
+    mf_new = make_mediafile(
+        source_path=target,
+        artist="Eric Prydz",
+        festival="UMF Miami",
+        year="2026",
+        stage="Resistance",
+        genres=["Techno"],
+        duration_seconds=5400.0,
+        content_type="festival_set",
+    )
     mf_skip = make_mediafile(source_path=tmp_path / "s.mkv", artist="Skip", year="2025")
 
     pipeline_files = [
@@ -45,7 +52,8 @@ def test_collect_new_sets_picks_only_done(tmp_path):
     ]
 
     report = collect_new_sets(
-        pipeline_files, all_results,
+        pipeline_files,
+        all_results,
         update=UpdateInfo("0.19.9", "0.20.0", True),
         stats={"added": 1, "up_to_date": 1, "errors": 0},
         timestamp="11 Jun 2026",
@@ -64,15 +72,19 @@ def test_collect_new_sets_picks_only_done(tmp_path):
 
 def test_collect_new_sets_missing_poster_sets_none(tmp_path):
     target = tmp_path / "x.mkv"
-    mf = make_mediafile(source_path=target, artist="A", year="2026", duration_seconds=None)
+    mf = make_mediafile(
+        source_path=target, artist="A", year="2026", duration_seconds=None
+    )
     report = collect_new_sets(
         [(target, mf, [_op("organize", target)])],
         [[_res("organize", "done")]],
-        update=None, stats={}, timestamp="t",
+        update=None,
+        stats={},
+        timestamp="t",
         count_chapters=lambda p: None,
     )
     assert report.sets[0].poster_path is None
-    assert report.sets[0].metric == ""   # no chapters, no duration
+    assert report.sets[0].metric == ""  # no chapters, no duration
 
 
 def test_collect_updated_sets(tmp_path):
@@ -80,14 +92,21 @@ def test_collect_updated_sets(tmp_path):
     poster.write_bytes(b"x")
     path = tmp_path / "2026 - Armin van Buuren - ASOT.mkv"
 
-    mf = make_mediafile(source_path=path, artist="Armin van Buuren", festival="ASOT",
-                        year="2026", genres=["Trance"], content_type="festival_set")
+    mf = make_mediafile(
+        source_path=path,
+        artist="Armin van Buuren",
+        festival="ASOT",
+        year="2026",
+        genres=["Trance"],
+        content_type="festival_set",
+    )
 
     report = collect_updated_sets(
         [path],
         analyse=lambda p: mf,
         count_chapters=lambda p: 41,
-        update=None, timestamp="11 Jun 2026",
+        update=None,
+        timestamp="11 Jun 2026",
     )
     assert report.channel == "updated_sets"
     assert len(report.sets) == 1
@@ -105,7 +124,8 @@ def test_collect_updated_sets_skips_analyse_failures(tmp_path):
         [tmp_path / "broken.mkv"],
         analyse=boom,
         count_chapters=lambda p: 10,
-        update=None, timestamp="t",
+        update=None,
+        timestamp="t",
     )
     assert report.sets == []
 
@@ -114,11 +134,20 @@ def test_collect_applies_place_display_with_edition(tmp_path):
     # mirrors build_display_title: festival/venue/location places render through
     # the injected place_display (which folds in the edition).
     path = tmp_path / "x.mkv"
-    mf = make_mediafile(source_path=path, artist="Ben Nicky", festival="Dreamstate",
-                        year="2026", content_type="festival_set", edition="SoCal")
+    mf = make_mediafile(
+        source_path=path,
+        artist="Ben Nicky",
+        festival="Dreamstate",
+        year="2026",
+        content_type="festival_set",
+        edition="SoCal",
+    )
     report = collect_updated_sets(
-        [path], analyse=lambda p: mf, count_chapters=lambda p: 28,
-        update=None, timestamp="t",
+        [path],
+        analyse=lambda p: mf,
+        count_chapters=lambda p: 28,
+        update=None,
+        timestamp="t",
         place_display=lambda place, edition: f"{place} {edition}".strip(),
     )
     assert report.sets[0].event == "Dreamstate SoCal"
@@ -126,12 +155,21 @@ def test_collect_applies_place_display_with_edition(tmp_path):
 
 def test_collect_new_sets_applies_place_display_with_edition(tmp_path):
     target = tmp_path / "x.mkv"
-    mf = make_mediafile(source_path=target, artist="Joris Voorn", festival="UMF",
-                        year="2026", content_type="festival_set", edition="Miami")
+    mf = make_mediafile(
+        source_path=target,
+        artist="Joris Voorn",
+        festival="UMF",
+        year="2026",
+        content_type="festival_set",
+        edition="Miami",
+    )
     report = collect_new_sets(
         [(target, mf, [_op("organize", target)])],
         [[_res("organize", "done")]],
-        update=None, stats={}, timestamp="t", count_chapters=lambda p: 32,
+        update=None,
+        stats={},
+        timestamp="t",
+        count_chapters=lambda p: 32,
         place_display=lambda place, edition: f"{place} {edition}".strip(),
     )
     assert report.sets[0].event == "UMF Miami"
@@ -140,51 +178,84 @@ def test_collect_new_sets_applies_place_display_with_edition(tmp_path):
 def test_collect_place_display_not_applied_to_artist_place_kind(tmp_path):
     # concert/album with an artist-kind place must not be rewritten by place_display
     path = tmp_path / "x.mkv"
-    mf = make_mediafile(source_path=path, artist="Fred Again..", year="2026",
-                        content_type="concert_film")  # place_kind == "artist"
+    mf = make_mediafile(
+        source_path=path,
+        artist="Fred Again..",
+        year="2026",
+        content_type="concert_film",
+    )  # place_kind == "artist"
     calls = []
     report = collect_updated_sets(
-        [path], analyse=lambda p: mf, count_chapters=lambda p: 12,
-        update=None, timestamp="t",
+        [path],
+        analyse=lambda p: mf,
+        count_chapters=lambda p: 12,
+        update=None,
+        timestamp="t",
         place_display=lambda place, edition: calls.append((place, edition)) or "WRONG",
     )
-    assert calls == []                       # never invoked for artist place_kind
+    assert calls == []  # never invoked for artist place_kind
     assert report.sets[0].event == "Fred Again.."  # raw place (== artist)
 
 
 def test_collect_without_place_display_uses_raw_place(tmp_path):
     path = tmp_path / "x.mkv"
-    mf = make_mediafile(source_path=path, artist="A", festival="Dreamstate", year="2026",
-                        content_type="festival_set", edition="SoCal")
-    report = collect_updated_sets(
-        [path], analyse=lambda p: mf, count_chapters=lambda p: 1,
-        update=None, timestamp="t",
+    mf = make_mediafile(
+        source_path=path,
+        artist="A",
+        festival="Dreamstate",
+        year="2026",
+        content_type="festival_set",
+        edition="SoCal",
     )
-    assert report.sets[0].event == "Dreamstate"   # no edition without the callable
+    report = collect_updated_sets(
+        [path],
+        analyse=lambda p: mf,
+        count_chapters=lambda p: 1,
+        update=None,
+        timestamp="t",
+    )
+    assert report.sets[0].event == "Dreamstate"  # no edition without the callable
 
 
 def test_collect_updated_sets_invokes_on_item(tmp_path):
     paths = [tmp_path / f"{i}.mkv" for i in range(3)]
-    mf = make_mediafile(source_path=paths[0], artist="A", festival="E", year="2026",
-                        content_type="festival_set")
+    mf = make_mediafile(
+        source_path=paths[0],
+        artist="A",
+        festival="E",
+        year="2026",
+        content_type="festival_set",
+    )
     calls = []
     collect_updated_sets(
-        paths, analyse=lambda p: mf, count_chapters=lambda p: 10,
-        update=None, timestamp="t",
+        paths,
+        analyse=lambda p: mf,
+        count_chapters=lambda p: 10,
+        update=None,
+        timestamp="t",
         on_item=lambda i, n, name: calls.append((i, n, name)),
     )
-    assert [c[0] for c in calls] == [1, 2, 3]        # 1-based index
-    assert all(c[1] == 3 for c in calls)             # total
+    assert [c[0] for c in calls] == [1, 2, 3]  # 1-based index
+    assert all(c[1] == 3 for c in calls)  # total
     assert [c[2] for c in calls] == [p.name for p in paths]
 
 
 def test_collect_updated_sets_includes_duration_and_stats(tmp_path):
     path = tmp_path / "x.mkv"
-    mf = make_mediafile(source_path=path, artist="A", festival="ASOT", year="2026",
-                        content_type="festival_set", duration_seconds=5400.0)
+    mf = make_mediafile(
+        source_path=path,
+        artist="A",
+        festival="ASOT",
+        year="2026",
+        content_type="festival_set",
+        duration_seconds=5400.0,
+    )
     report = collect_updated_sets(
-        [path], analyse=lambda p: mf, count_chapters=lambda p: 41,
-        update=None, timestamp="t",
+        [path],
+        analyse=lambda p: mf,
+        count_chapters=lambda p: 41,
+        update=None,
+        timestamp="t",
         stats={"updated": 1, "up_to_date": 3, "skipped": 0, "error": 0},
     )
     assert report.sets[0].metric == "41 chapters · 1h 30m"

@@ -13,6 +13,7 @@ Logging:
         - embed_tags.diff (DEBUG): Tag value diff before write
     See docs/logging.md for full guidelines.
 """
+
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -157,22 +158,32 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
 
     values_differ = any(
         _cmp(v) != existing_50.get(k, "") for k, v in tags.items()
-    ) or any(
-        _cmp(v) != existing_70.get(k, "") for k, v in tags_70.items()
-    )
+    ) or any(_cmp(v) != existing_70.get(k, "") for k, v in tags_70.items())
     needs_heal = root is not None and has_duplicate_global_blocks(root)
     needs_write = values_differ or needs_heal
 
     if not needs_write:
         return "skipped"  # Already up to date
 
-    diff_50 = {k: (existing_50.get(k, ""), _render(v)) for k, v in tags.items() if _cmp(v) != existing_50.get(k, "")}
-    diff_70 = {k: (existing_70.get(k, ""), _render(v)) for k, v in tags_70.items() if _cmp(v) != existing_70.get(k, "")}
-    logger.debug("embed_tags.diff: file=%s ttv50=%s ttv70=%s", target_path.name, diff_50, diff_70)
+    diff_50 = {
+        k: (existing_50.get(k, ""), _render(v))
+        for k, v in tags.items()
+        if _cmp(v) != existing_50.get(k, "")
+    }
+    diff_70 = {
+        k: (existing_70.get(k, ""), _render(v))
+        for k, v in tags_70.items()
+        if _cmp(v) != existing_70.get(k, "")
+    }
+    logger.debug(
+        "embed_tags.diff: file=%s ttv50=%s ttv70=%s", target_path.name, diff_50, diff_70
+    )
 
     # Only stamp ENRICHED_AT when actually writing
     if tags_70:
-        tags_70["CRATEDIGGER_ENRICHED_AT"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        tags_70["CRATEDIGGER_ENRICHED_AT"] = datetime.now(timezone.utc).isoformat(
+            timespec="seconds"
+        )
 
     all_tags: dict[int, dict[str, str]] = {}
     if tags:
@@ -180,4 +191,8 @@ def embed_tags(media_file: MediaFile, target_path: Path) -> str:
     if tags_70:
         all_tags[70] = tags_70
 
-    return "done" if write_merged_tags(target_path, all_tags, existing_root=root) else "error"
+    return (
+        "done"
+        if write_merged_tags(target_path, all_tags, existing_root=root)
+        else "error"
+    )

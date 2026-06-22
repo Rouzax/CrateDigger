@@ -24,6 +24,7 @@ folder. Whether it roams depends on Folder Redirection (typical in AD
 setups) or OneDrive sync, not on the Roaming Profile mechanism. Caches
 intentionally stay local.
 """
+
 from __future__ import annotations
 
 import logging
@@ -142,7 +143,9 @@ def cookies_file() -> Path:
     return state_dir() / "1001tl-cookies.json"
 
 
-def artist_cache_folder_key(artist_name: str, slug: str | None = None, dj_cache=None) -> str:
+def artist_cache_folder_key(
+    artist_name: str, slug: str | None = None, dj_cache=None
+) -> str:
     """Resolve an artist to its canonical cache-dir name.
 
     Priority: explicit 1001TL slug (off the file tag) -> name resolved via
@@ -150,6 +153,7 @@ def artist_cache_folder_key(artist_name: str, slug: str | None = None, dj_cache=
     folder_slug so the result is Windows-safe.
     """
     from festival_organizer.normalization import folder_slug, slugify
+
     if slug:
         return folder_slug(slug)
     if dj_cache is not None:
@@ -210,7 +214,8 @@ def _migrate_legacy_paths() -> None:
             )
         except OSError as e:
             logger.warning(
-                "paths.migrate: source=festivals.json target=places.json status=failed error=\"%s\"", e
+                'paths.migrate: source=festivals.json target=places.json status=failed error="%s"',
+                e,
             )
 
     legacy_dir = festivals_logo_dir()
@@ -228,17 +233,19 @@ def _migrate_legacy_paths() -> None:
                     shutil.copytree(entry, target)
                 except OSError as e:
                     logger.warning(
-                        "paths.migrate: source=%s status=failed error=\"%s\"",
-                        entry, e,
+                        'paths.migrate: source=%s status=failed error="%s"',
+                        entry,
+                        e,
                     )
                     continue
                 logger.info(
                     "paths.migrate: type=curated_logos source=%s target=%s status=ok",
-                    entry.name, entry.name,
+                    entry.name,
+                    entry.name,
                 )
         except OSError as e:
             logger.warning(
-                "paths.migrate: type=curated_logos status=failed error=\"%s\"", e
+                'paths.migrate: type=curated_logos status=failed error="%s"', e
             )
 
 
@@ -322,7 +329,7 @@ def _write_legacy_stamp() -> None:
                 pass
             raise
     except OSError as e:
-        logger.debug("paths.legacy_stamp: status=failed path=%s error=\"%s\"", target, e)
+        logger.debug('paths.legacy_stamp: status=failed path=%s error="%s"', target, e)
 
 
 def _is_source_checkout_dir(path: Path) -> bool:
@@ -398,5 +405,5 @@ def same_library_path(a: Path, b: Path, library_root: Path) -> bool:
     sb_norm = os.path.normcase(sb)
     sr_norm = os.path.normcase(sr)
     if sa_norm.startswith(sr_norm) and sb_norm.startswith(sr_norm):
-        return sa[len(sr):] == sb[len(sr):]
+        return sa[len(sr) :] == sb[len(sr) :]
     return sa_norm == sb_norm

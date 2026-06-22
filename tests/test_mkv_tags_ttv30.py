@@ -1,4 +1,5 @@
 """Per-chapter (TTV=30) tag merging."""
+
 import xml.etree.ElementTree as ET
 from festival_organizer.mkv_tags import merge_tags
 
@@ -18,10 +19,14 @@ def _find_chapter_tags(xml_str: str) -> list[ET.Element]:
 
 
 def test_merge_tags_emits_per_chapter_tags():
-    result = merge_tags(None, {50: {"ARTIST": "Afrojack"}}, chapter_tags={
-        111: {"ARTIST": "Afrojack", "GENRE": "House"},
-        222: {"ARTIST": "Guest", "GENRE": "Techno"},
-    })
+    result = merge_tags(
+        None,
+        {50: {"ARTIST": "Afrojack"}},
+        chapter_tags={
+            111: {"ARTIST": "Afrojack", "GENRE": "House"},
+            222: {"ARTIST": "Guest", "GENRE": "Techno"},
+        },
+    )
     chap_tags = _find_chapter_tags(result)
     assert len(chap_tags) == 2
     # Verify ChapterUID targeting
@@ -34,7 +39,9 @@ def test_merge_tags_emits_per_chapter_tags():
     # Verify content
     for t in chap_tags:
         uid = t.find("Targets/ChapterUID").text
-        simples = {s.find("Name").text: s.find("String").text for s in t.findall("Simple")}
+        simples = {
+            s.find("Name").text: s.find("String").text for s in t.findall("Simple")
+        }
         if uid == "111":
             assert simples["ARTIST"] == "Afrojack"
             assert simples["GENRE"] == "House"
@@ -49,9 +56,13 @@ def test_merge_tags_chapter_tags_replace_existing():
 <Simple><Name>ARTIST</Name><String>Old</String></Simple></Tag>
 </Tags>"""
     existing = ET.fromstring(existing_xml)
-    result = merge_tags(existing, {}, chapter_tags={
-        111: {"ARTIST": "New"},
-    })
+    result = merge_tags(
+        existing,
+        {},
+        chapter_tags={
+            111: {"ARTIST": "New"},
+        },
+    )
     chap_tags = _find_chapter_tags(result)
     uids = [t.find("Targets/ChapterUID").text for t in chap_tags]
     # Existing UID 999 must be gone; new UID 111 present; no duplicates
@@ -91,9 +102,13 @@ def test_merge_tags_chapter_tags_coexist_with_global_tags():
 
 def test_merge_tags_chapter_tag_value_types_are_strings():
     """ChapterUID in XML must be a string representation of the int."""
-    result = merge_tags(None, {}, chapter_tags={
-        12345678901234567: {"ARTIST": "Big UID"},
-    })
+    result = merge_tags(
+        None,
+        {},
+        chapter_tags={
+            12345678901234567: {"ARTIST": "Big UID"},
+        },
+    )
     chap_tags = _find_chapter_tags(result)
     assert chap_tags[0].find("Targets/ChapterUID").text == "12345678901234567"
 
@@ -105,14 +120,23 @@ def test_merge_tags_chapter_tags_preserve_empty_string_values():
     not silently dropped — otherwise a 1-slot all-unresolved chapter loses
     the tag entirely and the slot-count invariant breaks.
     """
-    result = merge_tags(None, {}, chapter_tags={
-        111: {"PERFORMER_NAMES": "Mystery", "MUSICBRAINZ_ARTISTIDS": ""},
-    })
+    result = merge_tags(
+        None,
+        {},
+        chapter_tags={
+            111: {"PERFORMER_NAMES": "Mystery", "MUSICBRAINZ_ARTISTIDS": ""},
+        },
+    )
     chap_tags = _find_chapter_tags(result)
-    simples = {s.find("Name").text: s.find("String").text
-               for s in chap_tags[0].findall("Simple")}
+    simples = {
+        s.find("Name").text: s.find("String").text
+        for s in chap_tags[0].findall("Simple")
+    }
     assert "MUSICBRAINZ_ARTISTIDS" in simples, (
         "empty-string MBID was dropped; expected a <Simple> element with an "
         "empty <String> to preserve slot alignment"
     )
-    assert simples["MUSICBRAINZ_ARTISTIDS"] in ("", None)  # empty-string or None-text both serialize as empty
+    assert simples["MUSICBRAINZ_ARTISTIDS"] in (
+        "",
+        None,
+    )  # empty-string or None-text both serialize as empty

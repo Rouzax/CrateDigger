@@ -10,6 +10,7 @@ Logging:
         - cleanup.removed (DEBUG): Empty directory removed
     See docs/logging.md for full guidelines.
 """
+
 import logging
 import os
 from pathlib import Path
@@ -19,19 +20,23 @@ logger = logging.getLogger(__name__)
 MARKER_DIR = ".cratedigger"
 
 # Files that are considered junk and can be deleted during cleanup.
-JUNK_FILES = frozenset({
-    ".DS_Store",
-    "Thumbs.db",
-    "desktop.ini",
-})
+JUNK_FILES = frozenset(
+    {
+        ".DS_Store",
+        "Thumbs.db",
+        "desktop.ini",
+    }
+)
 
 # Folder-level sidecar files that belong to the folder, not individual media.
 # These are removed when no media files remain in the directory.
-FOLDER_SIDECARS = frozenset({
-    "folder.jpg",
-    "folder.png",
-    "fanart.jpg",
-})
+FOLDER_SIDECARS = frozenset(
+    {
+        "folder.jpg",
+        "folder.png",
+        "fanart.jpg",
+    }
+)
 
 
 def migrate_folder_artefacts(
@@ -98,12 +103,14 @@ def migrate_folder_artefacts(
                     src.rename(tgt)
                     logger.debug(
                         "library.artefact: status=moved source=%s target=%s",
-                        src, tgt,
+                        src,
+                        tgt,
                     )
             except OSError as exc:
                 logger.warning(
-                    "library.artefact: status=failed source=%s error=\"%s\"",
-                    src, exc,
+                    'library.artefact: status=failed source=%s error="%s"',
+                    src,
+                    exc,
                 )
 
 
@@ -123,9 +130,7 @@ def find_library_root(start_path: Path) -> Path | None:
         current = parent
 
 
-def resolve_library_root(
-    source: Path, output: Path | None = None
-) -> Path | None:
+def resolve_library_root(source: Path, output: Path | None = None) -> Path | None:
     """Find the library root, checking output first, then source.
 
     When an explicit output path is given, its library root takes priority
@@ -159,9 +164,7 @@ def init_library(root: Path, layout: str | None = None) -> Path:
     # artist_nested, festival_nested) via cli.py, so no TOML string
     # escaping is needed for realistic inputs.
     if layout:
-        config_path.write_text(
-            f'default_layout = "{layout}"\n', encoding="utf-8"
-        )
+        config_path.write_text(f'default_layout = "{layout}"\n', encoding="utf-8")
     else:
         config_path.write_text("", encoding="utf-8")
 
@@ -202,9 +205,15 @@ def cleanup_empty_dirs(root: Path) -> None:
         try:
             _try_cleanup_dir(dirpath)
         except PermissionError as exc:
-            logger.warning("library.cleanup: status=permission_error dir=%s error=\"%s\"", dirpath, exc)
+            logger.warning(
+                'library.cleanup: status=permission_error dir=%s error="%s"',
+                dirpath,
+                exc,
+            )
         except OSError as exc:
-            logger.warning("library.cleanup: status=failed dir=%s error=\"%s\"", dirpath, exc)
+            logger.warning(
+                'library.cleanup: status=failed dir=%s error="%s"', dirpath, exc
+            )
 
 
 def _try_cleanup_dir(dirpath: Path) -> None:
@@ -220,10 +229,7 @@ def _try_cleanup_dir(dirpath: Path) -> None:
     entry_names -= junk_in_dir
 
     # --- Phase 2: check for unknown hidden files ---
-    unknown_hidden = [
-        e.name for e in entries
-        if e.name.startswith(".") and e.is_file()
-    ]
+    unknown_hidden = [e.name for e in entries if e.name.startswith(".") and e.is_file()]
     if unknown_hidden:
         logger.warning(
             "library.cleanup: status=kept dir=%s reason=unknown_hidden files=%s",

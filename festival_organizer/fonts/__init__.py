@@ -1,4 +1,5 @@
 """Font resolution: bundled fonts with config override."""
+
 from pathlib import Path
 
 _FONT_DIR = Path(__file__).parent

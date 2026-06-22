@@ -2,6 +2,7 @@ r"""Integration test: dry-run against the real \\hyperv\Data\Concerts collection
 
 Skip if the network share is not accessible.
 """
+
 import pytest
 from pathlib import Path
 
@@ -23,7 +24,6 @@ def config():
 
 @pytest.mark.skipif(not CONCERTS_ROOT.exists(), reason=SKIP_REASON)
 class TestRealCollection:
-
     def test_scan_finds_files(self, config):
         files = scan_folder(CONCERTS_ROOT, config)
         assert len(files) >= 60  # We know there are 72+
@@ -54,7 +54,13 @@ class TestRealCollection:
     def test_amf_2024_martin_garrix(self, config):
         """Specific file: AMF 2024 Martin Garrix — should have 1001TL metadata."""
         files = scan_folder(CONCERTS_ROOT, config)
-        target = [f for f in files if "MARTIN GARRIX" in f.name.upper() and "AMF" in str(f).upper() and "2024" in str(f)]
+        target = [
+            f
+            for f in files
+            if "MARTIN GARRIX" in f.name.upper()
+            and "AMF" in str(f).upper()
+            and "2024" in str(f)
+        ]
         assert len(target) >= 1
         mf = analyse_file(target[0], CONCERTS_ROOT, config)
         assert mf.artist == "Martin Garrix"

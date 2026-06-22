@@ -1,4 +1,5 @@
 """Tests for the organize_verdict function."""
+
 from pathlib import Path
 
 from festival_organizer.console import organize_verdict

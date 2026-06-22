@@ -1,11 +1,14 @@
 """Pure computation of per-chapter MUSICBRAINZ_ARTISTIDS from CRATEDIGGER_TRACK_PERFORMER_NAMES."""
+
 import logging
 
 from festival_organizer.fanart import compute_chapter_mbid_tags, resolve_mbids_aligned
 
 
 def test_all_resolved():
-    chapter_tags = {111: {"CRATEDIGGER_TRACK_PERFORMER_NAMES": "Afrojack|Oliver Heldens"}}
+    chapter_tags = {
+        111: {"CRATEDIGGER_TRACK_PERFORMER_NAMES": "Afrojack|Oliver Heldens"}
+    }
 
     def resolver(name):
         return {"Afrojack": "A", "Oliver Heldens": "O"}[name]
@@ -15,7 +18,9 @@ def test_all_resolved():
 
 
 def test_partial_resolved_preserves_empty_slots():
-    chapter_tags = {111: {"CRATEDIGGER_TRACK_PERFORMER_NAMES": "Afrojack|ID|Oliver Heldens"}}
+    chapter_tags = {
+        111: {"CRATEDIGGER_TRACK_PERFORMER_NAMES": "Afrojack|ID|Oliver Heldens"}
+    }
 
     def resolver(name):
         return {"Afrojack": "A", "Oliver Heldens": "O"}.get(name)
@@ -100,6 +105,7 @@ def test_mbids_for_chapters_preserved_even_when_other_chapters_have_no_names():
 
 # --- resolve_mbids_aligned: the shared helper ---------------------------------
 
+
 def test_resolve_mbids_aligned_empty():
     assert resolve_mbids_aligned([], lambda n: "x") == []
 
@@ -112,6 +118,7 @@ def test_resolve_mbids_aligned_all_miss_preserves_slots():
 def test_resolve_mbids_aligned_mixed_hits_and_misses():
     def resolver(name):
         return {"A": "mbid_a", "C": "mbid_c"}.get(name)
+
     out = resolve_mbids_aligned(["A", "B", "C"], resolver)
     assert out == ["mbid_a", "", "mbid_c"]
 

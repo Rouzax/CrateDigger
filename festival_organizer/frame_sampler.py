@@ -5,6 +5,7 @@ with soft bonuses for sharpness and exposure quality. Skips near-black frames.
 
 Requires opencv-python-headless and numpy (optional dependencies).
 """
+
 from __future__ import annotations
 
 import logging
@@ -14,6 +15,7 @@ from pathlib import Path
 try:
     import cv2
     import numpy as np
+
     _HAS_CV2 = True
 except ImportError:
     _HAS_CV2 = False
@@ -52,7 +54,9 @@ def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | N
         if total_frames < 10 or fps <= 0:
             logger.warning(
                 "frame_sampler.skip: file=%s reason=invalid frames=%d fps=%s",
-                video_path, total_frames, fps,
+                video_path,
+                total_frames,
+                fps,
             )
             return None
 
@@ -79,7 +83,9 @@ def sample_best_frame(video_path: str | Path, num_samples: int = 50) -> Path | N
         cap.release()
 
     if best_frame is None:
-        logger.warning("frame_sampler.skip: file=%s reason=no_readable_frames", video_path)
+        logger.warning(
+            "frame_sampler.skip: file=%s reason=no_readable_frames", video_path
+        )
         return None
 
     # Save as PNG next to the video
@@ -110,7 +116,7 @@ def _score_frame(frame: np.ndarray) -> float:
 
     # Exposure quality — gaussian around 0.45 brightness
     mean_brightness = gray.mean() / 255.0
-    expo_quality = math.exp(-((mean_brightness - 0.45) ** 2) / (2 * 0.20 ** 2))
+    expo_quality = math.exp(-((mean_brightness - 0.45) ** 2) / (2 * 0.20**2))
 
     # Penalize near-black frames
     if mean_brightness < 0.08:
@@ -118,8 +124,8 @@ def _score_frame(frame: np.ndarray) -> float:
 
     # Combined score
     return (
-        0.60 * vibrancy / 20000.0 +
-        0.15 * sharp_bonus +
-        0.15 * expo_quality +
-        0.10 * min(float(h_ch.astype(float).std()) / 50.0, 1.0)
+        0.60 * vibrancy / 20000.0
+        + 0.15 * sharp_bonus
+        + 0.15 * expo_quality
+        + 0.10 * min(float(h_ch.astype(float).std()) / 50.0, 1.0)
     )

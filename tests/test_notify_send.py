@@ -3,8 +3,12 @@ from festival_organizer.notify.send import build_message, send_email
 
 
 def _rendered():
-    return RenderedEmail(subject="CrateDigger: 1 new set", html="<p>hi</p>",
-                         text="hi", images=[("poster0", b"\xff\xd8jpeg")])
+    return RenderedEmail(
+        subject="CrateDigger: 1 new set",
+        html="<p>hi</p>",
+        text="hi",
+        images=[("poster0", b"\xff\xd8jpeg")],
+    )
 
 
 def test_build_message_structure_and_cids():
@@ -47,8 +51,14 @@ class _FakeSMTP:
 def test_send_email_starttls_and_login(monkeypatch):
     _FakeSMTP.instances = []
     monkeypatch.setattr("festival_organizer.notify.send.smtplib.SMTP", _FakeSMTP)
-    settings = SMTPSettings(host="mail.lan", port=587, security="starttls",
-                            user="u", password="p", from_address="cd@lan")
+    settings = SMTPSettings(
+        host="mail.lan",
+        port=587,
+        security="starttls",
+        user="u",
+        password="p",
+        from_address="cd@lan",
+    )
     send_email(settings, _rendered(), to=["a@x"])
     inst = _FakeSMTP.instances[-1]
     assert inst.started_tls is True

@@ -108,9 +108,15 @@ def test_parse_tracks_title_handles_no_separator():
 # --- Edge-case fixtures ---
 
 FIXTURE_B2B = Path(__file__).parent / "fixtures" / "armin_kiki_amf_2025.html"
-FIXTURE_B2B_2026 = Path(__file__).parent / "fixtures" / "armin_marlon_ultra_miami_2026.html"
-FIXTURE_ALIAS = Path(__file__).parent / "fixtures" / "something_else_tomorrowland_winter_2026.html"
-FIXTURE_LOWERCASE = Path(__file__).parent / "fixtures" / "deadmau5_tomorrowland_brasil_2025.html"
+FIXTURE_B2B_2026 = (
+    Path(__file__).parent / "fixtures" / "armin_marlon_ultra_miami_2026.html"
+)
+FIXTURE_ALIAS = (
+    Path(__file__).parent / "fixtures" / "something_else_tomorrowland_winter_2026.html"
+)
+FIXTURE_LOWERCASE = (
+    Path(__file__).parent / "fixtures" / "deadmau5_tomorrowland_brasil_2025.html"
+)
 
 
 def test_parse_tracks_b2b_multi_artist_rows():
@@ -139,8 +145,12 @@ def test_parse_tracks_b2b_2026_markup():
             f"slug/name pairing broken: {t.artist_slugs} vs {t.artist_names}"
         )
     all_names = {n for t in tracks for n in t.artist_names}
-    assert "Armin van Buuren" in all_names, f"Armin missing from {sorted(all_names)[:20]}..."
-    assert "Marlon Hoffstadt" in all_names, f"Marlon missing from {sorted(all_names)[:20]}..."
+    assert "Armin van Buuren" in all_names, (
+        f"Armin missing from {sorted(all_names)[:20]}..."
+    )
+    assert "Marlon Hoffstadt" in all_names, (
+        f"Marlon missing from {sorted(all_names)[:20]}..."
+    )
 
 
 def test_parse_tracks_preserves_lowercase_artist():
@@ -241,9 +251,17 @@ def test_artist_names_fall_back_to_slug_when_wrapper_missing():
 </span>
 </div>"""
     tracks = _parse_tracks(html)
-    assert tracks[0].artist_slugs == ["hannah-laing", "marlon-hoffstadt", "caroline-roxy"]
+    assert tracks[0].artist_slugs == [
+        "hannah-laing",
+        "marlon-hoffstadt",
+        "caroline-roxy",
+    ]
     # No "ft. " prefix, no remix-note pollution: the slug-derived fallback wins.
-    assert tracks[0].artist_names == ["Hannah Laing", "Marlon Hoffstadt", "Caroline Roxy"]
+    assert tracks[0].artist_names == [
+        "Hannah Laing",
+        "Marlon Hoffstadt",
+        "Caroline Roxy",
+    ]
 
 
 def test_artist_names_fall_back_to_slug_preserves_alignment_with_slugs():
@@ -266,7 +284,7 @@ def test_artist_names_fall_back_to_slug_preserves_alignment_with_slugs():
     assert len(tracks[0].artist_names) == len(tracks[0].artist_slugs)
     assert tracks[0].artist_names[0] == "Armin van Buuren"
     assert tracks[0].artist_names[1] == "Hannah Laing"  # slug-derived
-    assert tracks[0].artist_names[2] == "Wippenberg"    # slug-derived
+    assert tracks[0].artist_names[2] == "Wippenberg"  # slug-derived
 
 
 def test_artist_names_remix_credit_uses_preceding_blueTxt_sibling():
@@ -313,7 +331,9 @@ def test_artist_names_real_fixture_still_clean():
     # None of the extracted display names should contain ft./feat. or
     # enclosing parentheses, which would indicate trackValue pollution.
     polluted = [
-        n for t in tracks for n in t.artist_names
+        n
+        for t in tracks
+        for n in t.artist_names
         if n.lower().startswith(("ft.", "feat."))
         or (n.startswith("(") and n.endswith(")"))
     ]

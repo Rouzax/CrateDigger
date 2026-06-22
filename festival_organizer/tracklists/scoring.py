@@ -3,6 +3,7 @@
 Scores search results by combining content relevance with duration matching.
 Ported from Add-TracklistChapters PowerShell Get-RelevanceScore.
 """
+
 import re
 import unicodedata
 from dataclasses import dataclass, field
@@ -12,25 +13,32 @@ from datetime import datetime
 @dataclass
 class AliasGroup:
     """A detected alias whose multi-word form appeared in the query."""
-    abbreviation: str       # e.g. "edc" (lowercase)
-    full_name: str          # e.g. "Electric Daisy Carnival" (original case from alias map)
-    keywords: list[str]     # e.g. ["electric", "daisy", "carnival"] (normalized)
+
+    abbreviation: str  # e.g. "edc" (lowercase)
+    full_name: str  # e.g. "Electric Daisy Carnival" (original case from alias map)
+    keywords: list[str]  # e.g. ["electric", "daisy", "carnival"] (normalized)
 
 
 @dataclass
 class QueryParts:
     """Parsed components of a search query."""
+
     year: str | None = None
-    keywords: list[str] = field(default_factory=list)        # lowercase, len > 2
-    abbreviations: list[str] = field(default_factory=list)    # uppercase 2+ chars
-    event_patterns: list[dict] = field(default_factory=list)  # [{"type": "Weekend"|"Day", "number": str}]
-    resolved_aliases: list[dict] = field(default_factory=list) # [{"alias": str, "target": str}]
+    keywords: list[str] = field(default_factory=list)  # lowercase, len > 2
+    abbreviations: list[str] = field(default_factory=list)  # uppercase 2+ chars
+    event_patterns: list[dict] = field(
+        default_factory=list
+    )  # [{"type": "Weekend"|"Day", "number": str}]
+    resolved_aliases: list[dict] = field(
+        default_factory=list
+    )  # [{"alias": str, "target": str}]
     alias_groups: list[AliasGroup] = field(default_factory=list)
 
 
 @dataclass
 class SearchResult:
     """A single search result from 1001Tracklists."""
+
     id: str
     title: str
     url: str
@@ -91,12 +99,14 @@ def _detect_alias_groups(
         for i in range(len(remaining_normalized) - target_len + 1):
             if any(j in consumed for j in range(i, i + target_len)):
                 continue
-            if remaining_normalized[i:i + target_len] == target_words:
-                parts.alias_groups.append(AliasGroup(
-                    abbreviation=abbrev,
-                    full_name=full_original,
-                    keywords=list(target_words),
-                ))
+            if remaining_normalized[i : i + target_len] == target_words:
+                parts.alias_groups.append(
+                    AliasGroup(
+                        abbreviation=abbrev,
+                        full_name=full_original,
+                        keywords=list(target_words),
+                    )
+                )
                 consumed.update(range(i, i + target_len))
                 break
 
@@ -138,7 +148,9 @@ def parse_query(query: str, aliases: dict[str, str]) -> QueryParts:
         # Event patterns: WE1, W2, Weekend1, D1, Day2
         we_match = re.match(r"(?i)^(?:WE|W|Weekend)(\d+)$", word)
         if we_match:
-            parts.event_patterns.append({"type": "Weekend", "number": we_match.group(1)})
+            parts.event_patterns.append(
+                {"type": "Weekend", "number": we_match.group(1)}
+            )
             continue
 
         day_match = re.match(r"(?i)^(?:D|Day)(\d+)$", word)
@@ -155,14 +167,18 @@ def parse_query(query: str, aliases: dict[str, str]) -> QueryParts:
                 # All-caps query: only known aliases are treated as abbreviations
                 if is_known_alias:
                     parts.abbreviations.append(word)
-                    parts.resolved_aliases.append({"alias": word, "target": aliases[lower]})
+                    parts.resolved_aliases.append(
+                        {"alias": word, "target": aliases[lower]}
+                    )
                 # Always also a keyword candidate in all-caps mode
                 remaining.append(word)
                 continue
             else:
                 if is_known_alias:
                     parts.abbreviations.append(word)
-                    parts.resolved_aliases.append({"alias": word, "target": aliases[lower]})
+                    parts.resolved_aliases.append(
+                        {"alias": word, "target": aliases[lower]}
+                    )
                 else:
                     remaining.append(word)
                 continue
@@ -219,10 +235,16 @@ def score_results(
 
     # Score each result
     for r in results:
-        _compute_score(r, query_parts, video_duration_minutes, min_date, date_range_days)
+        _compute_score(
+            r, query_parts, video_duration_minutes, min_date, date_range_days
+        )
 
     # Filter
-    has_event_context = bool(query_parts.abbreviations or query_parts.resolved_aliases or query_parts.alias_groups)
+    has_event_context = bool(
+        query_parts.abbreviations
+        or query_parts.resolved_aliases
+        or query_parts.alias_groups
+    )
 
     filtered = []
     for r in results:
@@ -259,8 +281,10 @@ def _compute_score(
         alias_kw_total += len(ag.keywords)
         abbrev_lower = ag.abbreviation.lower()
         full_lower = remove_diacritics(ag.full_name).lower()
-        if (re.search(r"\b" + re.escape(abbrev_lower) + r"\b", title_normalized)
-                or full_lower in title_normalized):
+        if (
+            re.search(r"\b" + re.escape(abbrev_lower) + r"\b", title_normalized)
+            or full_lower in title_normalized
+        ):
             alias_kw_matched += len(ag.keywords)
             content_score += 35
             result.has_event_match = True
@@ -268,7 +292,9 @@ def _compute_score(
     # 1b. Keywords (incorporating alias group contribution)
     total_keywords = len(query_parts.keywords) + alias_kw_total
     if total_keywords > 0:
-        regular_matched = sum(1 for kw in query_parts.keywords if kw in title_normalized)
+        regular_matched = sum(
+            1 for kw in query_parts.keywords if kw in title_normalized
+        )
         matched = regular_matched + alias_kw_matched
         result.matched_keyword_count = matched
         keyword_score = (matched / total_keywords) * 100
@@ -280,7 +306,9 @@ def _compute_score(
     for abbrev in query_parts.abbreviations:
         abbrev_upper = abbrev.upper()
         # Direct match in title
-        if re.search(r"\b" + re.escape(abbrev_upper) + r"\b", result.title, re.IGNORECASE):
+        if re.search(
+            r"\b" + re.escape(abbrev_upper) + r"\b", result.title, re.IGNORECASE
+        ):
             content_score += 35
             result.has_event_match = True
             continue
@@ -323,7 +351,11 @@ def _compute_score(
 
     # --- Duration multiplier ---
     duration_mult = 1.0
-    if video_duration_minutes > 0 and result.duration_mins is not None and result.duration_mins > 0:
+    if (
+        video_duration_minutes > 0
+        and result.duration_mins is not None
+        and result.duration_mins > 0
+    ):
         diff = abs(video_duration_minutes - result.duration_mins)
         if diff <= 1:
             duration_mult = 1.5

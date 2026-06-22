@@ -1,4 +1,5 @@
 """Logging: console output and CSV export."""
+
 import csv
 from pathlib import Path
 
@@ -10,11 +11,26 @@ from festival_organizer.models import FileAction
 
 
 CSV_FIELDS = [
-    "status", "source", "target",
-    "artist", "display_artist", "festival", "year", "date", "set_title",
-    "stage", "edition", "content_type", "file_type",
-    "resolution", "duration", "video_format", "audio_format",
-    "metadata_source", "tracklists_url", "error",
+    "status",
+    "source",
+    "target",
+    "artist",
+    "display_artist",
+    "festival",
+    "year",
+    "date",
+    "set_title",
+    "stage",
+    "edition",
+    "content_type",
+    "file_type",
+    "resolution",
+    "duration",
+    "video_format",
+    "audio_format",
+    "metadata_source",
+    "tracklists_url",
+    "error",
 ]
 
 

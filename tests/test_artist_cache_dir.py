@@ -11,7 +11,10 @@ def test_folder_key_prefers_explicit_slug():
 
 
 def test_folder_key_resolves_name_via_cache():
-    assert paths.artist_cache_folder_key("Above & Beyond", dj_cache=_DjCache()) == "aboveandbeyond"
+    assert (
+        paths.artist_cache_folder_key("Above & Beyond", dj_cache=_DjCache())
+        == "aboveandbeyond"
+    )
 
 
 def test_folder_key_falls_back_to_slugify():
