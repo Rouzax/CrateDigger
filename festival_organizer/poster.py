@@ -495,12 +495,13 @@ def _neutral_base_from_luminance(img: Image.Image) -> tuple[int, int, int]:
 
 
 def _extract_logo_color(img: Image.Image) -> tuple[int, int, int]:
-    """Extract dominant color from logo using saturation-aware circular hue mean.
+    """Extract a gradient base color from a background image.
 
-    Filters out low-saturation pixels (white/black/gray) and returns a dark/moody
-    RGB color suitable for gradient backgrounds (V ~0.4).
-
-    Raises ValueError if no saturated pixels are found.
+    Filters out low-saturation pixels (white/black/gray) and returns a
+    dark/moody RGB color (V ~0.5) derived from the colorful pixels. For a
+    monochrome image (content but no saturated pixels) returns a neutral gray
+    from _neutral_base_from_luminance so the image still renders. Raises
+    ValueError only when the image has no visible pixels at all.
     """
     if img.mode in ("RGBA", "LA", "PA"):
         arr = np.array(img.convert("RGBA"))
@@ -521,7 +522,10 @@ def _extract_logo_color(img: Image.Image) -> tuple[int, int, int]:
     # Filter to saturated pixels
     sat_mask = s_arr >= 40
     if not sat_mask.any():
-        raise ValueError("No saturated pixels found in logo")
+        # Monochrome image (e.g. a black-and-white promo): no hue to extract,
+        # but the image is still displayable. Return a neutral gray base so the
+        # portrait renders instead of collapsing to a bare gradient.
+        return _neutral_base_from_luminance(img)
 
     hue = _circular_hue_mean(h_arr, s_arr, min_sat=40)
     mean_sat = float(np.mean(s_arr[sat_mask]) / 255)

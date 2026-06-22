@@ -549,17 +549,26 @@ def test_extract_logo_color_with_alpha():
     assert b > r and b > g, f"Expected bluish, got {color}"
 
 
-def test_extract_logo_color_unsaturated_raises():
-    """Grayscale logo raises ValueError."""
+def test_extract_logo_color_unsaturated_returns_neutral():
+    """Grayscale logo returns a neutral gray base instead of raising."""
     img = Image.new("RGB", (100, 100), (128, 128, 128))
-    with pytest.raises(ValueError, match="No saturated pixels"):
-        _extract_logo_color(img)
+    r, g, b = _extract_logo_color(img)
+    assert r == g == b
+    assert round(0.40 * 255) <= r <= round(0.55 * 255)
 
 
-def test_extract_logo_color_white_raises():
-    """White logo raises ValueError."""
+def test_extract_logo_color_white_returns_neutral():
+    """White logo returns a neutral gray base instead of raising."""
     img = Image.new("RGB", (100, 100), (255, 255, 255))
-    with pytest.raises(ValueError, match="No saturated pixels"):
+    r, g, b = _extract_logo_color(img)
+    assert r == g == b
+    assert round(0.40 * 255) <= r <= round(0.55 * 255)
+
+
+def test_extract_logo_color_empty_raises():
+    """A fully transparent image has nothing to show and still raises."""
+    img = Image.new("RGBA", (100, 100), (0, 0, 0, 0))
+    with pytest.raises(ValueError, match="No visible pixels"):
         _extract_logo_color(img)
 
 
