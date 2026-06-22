@@ -11,14 +11,27 @@ from __future__ import annotations
 import logging
 import math
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-try:
-    import cv2  # type: ignore[import]  # optional 'vision' extra; guarded by ImportError
+if TYPE_CHECKING:
+    # Type-checking view: the real modules, always bound. This keeps cv2/np from
+    # being seen as "possibly unbound" or Optional by any pyright version, so the
+    # type-clean state does not depend on a lenient checker.
+    import cv2  # type: ignore[import]  # no stubs; optional 'vision' extra
     import numpy as np
 
-    _HAS_CV2 = True
-except ImportError:
-    _HAS_CV2 = False
+    _HAS_CV2: bool = True
+else:
+    # Runtime view: optional dependency; degrade gracefully when it is absent.
+    try:
+        import cv2
+        import numpy as np
+
+        _HAS_CV2 = True
+    except ImportError:
+        cv2 = None
+        np = None
+        _HAS_CV2 = False
 
 logger = logging.getLogger(__name__)
 

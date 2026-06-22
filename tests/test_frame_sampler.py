@@ -27,7 +27,7 @@ def test_sample_best_frame_warns_when_video_not_opened(tmp_path, caplog):
             result = sample_best_frame(video)
     assert result is None
     joined = "\n".join(r.message for r in caplog.records)
-    assert "could not open" in joined.lower()
+    assert "frame_sampler.open: status=failed" in joined
     assert "bad.mkv" in joined
 
 
