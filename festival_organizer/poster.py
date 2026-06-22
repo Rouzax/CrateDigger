@@ -465,6 +465,35 @@ def _hex_to_rgb(hex_str: str) -> tuple[int, int, int]:
     return (int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16))
 
 
+def _neutral_base_from_luminance(img: Image.Image) -> tuple[int, int, int]:
+    """Derive a moody neutral-gray base color from a monochrome image.
+
+    Used when a background image has content but no saturated pixels (e.g. a
+    black-and-white promo). Returns a pure gray whose value is the image's mean
+    luminance, clamped to the moody band [0.40, 0.55] of full scale so high-key
+    images do not blow out and dark images do not go fully black.
+    """
+    if img.mode in ("RGBA", "LA", "PA"):
+        arr = np.array(img.convert("RGBA"))
+        mask = arr[:, :, 3] > 128
+        rgb_pixels = (
+            arr[:, :, :3][mask] if mask.any() else arr[:, :, :3].reshape(-1, 3)
+        )
+    else:
+        rgb_pixels = np.array(img.convert("RGB")).reshape(-1, 3)
+
+    if rgb_pixels.size:
+        # Rec. 601 luma, normalized to 0..1
+        luma = rgb_pixels @ np.array([0.299, 0.587, 0.114])
+        mean_luma = float(np.mean(luma)) / 255
+    else:
+        mean_luma = 0.5
+
+    v = max(0.40, min(0.55, mean_luma))
+    g = round(v * 255)
+    return (g, g, g)
+
+
 def _extract_logo_color(img: Image.Image) -> tuple[int, int, int]:
     """Extract dominant color from logo using saturation-aware circular hue mean.
 

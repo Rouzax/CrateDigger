@@ -18,6 +18,7 @@ from festival_organizer.poster import (
     _filter_venue_parts,
     _hex_to_rgb,
     _extract_logo_color,
+    _neutral_base_from_luminance,
     _make_year_badge,
     _darken_for_white_text,
     _wcag_contrast,
@@ -560,6 +561,47 @@ def test_extract_logo_color_white_raises():
     img = Image.new("RGB", (100, 100), (255, 255, 255))
     with pytest.raises(ValueError, match="No saturated pixels"):
         _extract_logo_color(img)
+
+
+def test_neutral_base_from_luminance_is_pure_gray():
+    """A mid-gray image yields a pure gray base (r == g == b)."""
+    img = Image.new("RGB", (50, 50), (120, 120, 120))
+    r, g, b = _neutral_base_from_luminance(img)
+    assert r == g == b
+
+
+def test_neutral_base_from_luminance_clamps_dark():
+    """A near-black image is clamped up to the bottom of the moody band."""
+    img = Image.new("RGB", (50, 50), (10, 10, 10))
+    r, g, b = _neutral_base_from_luminance(img)
+    assert r == round(0.40 * 255)  # 102
+
+
+def test_neutral_base_from_luminance_clamps_light():
+    """A white image is clamped down to the top of the moody band."""
+    img = Image.new("RGB", (50, 50), (255, 255, 255))
+    r, g, b = _neutral_base_from_luminance(img)
+    assert r == round(0.55 * 255)  # 140
+
+
+def test_neutral_base_from_luminance_darker_image_darker_base():
+    """Within the band, a darker image yields a darker base than a lighter one."""
+    dark = _neutral_base_from_luminance(Image.new("RGB", (50, 50), (110, 110, 110)))
+    light = _neutral_base_from_luminance(Image.new("RGB", (50, 50), (135, 135, 135)))
+    assert dark[0] < light[0]
+
+
+def test_neutral_base_from_luminance_respects_alpha():
+    """Only visible (alpha > 128) pixels contribute to the luminance mean."""
+    img = Image.new("RGBA", (50, 50), (0, 0, 0, 0))  # fully transparent
+    from PIL import ImageDraw
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, 24, 49], fill=(200, 200, 200, 255))  # visible light patch
+    r, g, b = _neutral_base_from_luminance(img)
+    assert r == g == b
+    # Mean of the visible patch only (~200 luma -> clamped to 0.55), not diluted
+    # toward black by the transparent half.
+    assert r == round(0.55 * 255)  # 140
 
 
 def test_generate_album_poster_edition_text_layout(tmp_path):
