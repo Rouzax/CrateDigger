@@ -583,14 +583,14 @@ def test_neutral_base_from_luminance_is_pure_gray():
 def test_neutral_base_from_luminance_clamps_dark():
     """A near-black image is clamped up to the bottom of the moody band."""
     img = Image.new("RGB", (50, 50), (10, 10, 10))
-    r, g, b = _neutral_base_from_luminance(img)
+    r, _, _ = _neutral_base_from_luminance(img)
     assert r == round(0.40 * 255)  # 102
 
 
 def test_neutral_base_from_luminance_clamps_light():
     """A white image is clamped down to the top of the moody band."""
     img = Image.new("RGB", (50, 50), (255, 255, 255))
-    r, g, b = _neutral_base_from_luminance(img)
+    r, _, _ = _neutral_base_from_luminance(img)
     assert r == round(0.55 * 255)  # 140
 
 
@@ -612,6 +612,14 @@ def test_neutral_base_from_luminance_respects_alpha():
     # Mean of the visible patch only (~200 luma -> clamped to 0.55), not diluted
     # toward black by the transparent half.
     assert r == round(0.55 * 255)  # 140
+
+
+def test_neutral_base_from_luminance_empty_pixels_midband():
+    """An image with no pixels falls back to the mid-band gray (V=0.5)."""
+    img = Image.new("RGB", (0, 5))  # zero-area image -> empty pixel array
+    r, g, b = _neutral_base_from_luminance(img)
+    assert r == g == b
+    assert r == round(0.5 * 255)  # 128
 
 
 def test_generate_album_poster_edition_text_layout(tmp_path):
