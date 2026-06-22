@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.28.1] - 2026-06-22
+
+### Fixed
+
+- Artist and folder posters built from a monochrome (black-and-white) artist image now render the portrait on a neutral gray gradient instead of collapsing to a bare gradient with just the name. The gradient tone is derived from the image's luminance. Previously, any background image with no saturated pixels (a common style for dramatic B/W promos) was dropped entirely. Fully empty or transparent images still fall back to a plain gradient.
+
 ## [0.28.0] - 2026-06-15
 
 ### Added
