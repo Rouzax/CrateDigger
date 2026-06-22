@@ -1,0 +1,45 @@
+# Local hooks shell out to the pinned tools in requirements-dev.txt so commit,
+# pre-push, and CI run identical checks. The hooks expect the project virtualenv
+# at .venv/ (so the pinned tool versions are used, not the older system tools).
+# Create it with:
+#   python3 -m venv .venv && .venv/bin/pip install -e . -r requirements-dev.txt
+# Install with:
+#   pre-commit install --install-hooks
+#   pre-commit install --hook-type pre-push
+default_install_hook_types: [pre-commit, pre-push]
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: .venv/bin/ruff check --force-exclude
+        language: system
+        types_or: [python, pyi]
+        stages: [pre-commit]
+      - id: ruff-format
+        name: ruff format
+        entry: .venv/bin/ruff format --check --force-exclude
+        language: system
+        types_or: [python, pyi]
+        stages: [pre-commit]
+      - id: pyright
+        name: pyright
+        entry: .venv/bin/pyright festival_organizer
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: vulture
+        name: vulture
+        entry: .venv/bin/vulture festival_organizer vulture_allowlist.py --min-confidence 80
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: pytest
+        name: pytest (with coverage)
+        entry: .venv/bin/pytest --cov=festival_organizer --cov-report=term-missing --cov-fail-under=80
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
