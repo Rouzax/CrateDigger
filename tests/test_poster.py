@@ -1,6 +1,7 @@
 """Tests for poster generation module."""
 from pathlib import Path
 
+import numpy as np
 import pytest
 from PIL import Image
 
@@ -653,9 +654,9 @@ def test_album_poster_renders_monochrome_background(tmp_path):
     )
     generate_album_poster(no_bg, "Hardwell", "2025", hero_text="Hardwell")
 
-    a = list(Image.open(with_bg).convert("RGB").getdata())
-    b = list(Image.open(no_bg).convert("RGB").getdata())
-    assert a != b
+    a = np.asarray(Image.open(with_bg).convert("RGB"))
+    b = np.asarray(Image.open(no_bg).convert("RGB"))
+    assert not np.array_equal(a, b)
 
 
 def test_generate_album_poster_brand_color_darkened(tmp_path):
