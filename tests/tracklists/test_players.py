@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from festival_organizer.tracklists.players import partition_lines_by_player
+from festival_organizer.tracklists.api import PlayerInfo
+from festival_organizer.tracklists.players import (
+    partition_lines_by_player,
+    select_player,
+)
 
 EXPORT = (Path(__file__).parent / "fixtures" / "multiplayer_export.txt").read_text()
 
@@ -24,3 +28,37 @@ def test_partition_splits_by_player_marker():
 def test_partition_no_markers_returns_single_bucket():
     lines = ["[00:00] A - B", "[01:00] C - D"]
     assert partition_lines_by_player(lines) == {0: lines}
+
+
+PLAYERS = [
+    PlayerInfo(1, "p-nL0FjuCPs", 2277),
+    PlayerInfo(2, "v-e4wZutXY4", 8364),
+]
+
+
+def test_select_empty_players_returns_zero():
+    assert select_player([], "anything", 1234.0) == 0
+
+
+def test_select_by_youtube_id_exact():
+    assert select_player(PLAYERS, "p-nL0FjuCPs", 9999.0) == 1
+    assert select_player(PLAYERS, "v-e4wZutXY4", None) == 2
+
+
+def test_select_by_duration_when_no_id():
+    # 2276s file matches player 1 (2277s) within tolerance
+    assert select_player(PLAYERS, None, 2276.0) == 1
+    assert select_player(PLAYERS, "", 8300.0) == 2
+
+
+def test_select_no_match_returns_none():
+    # unknown id and a duration far from both sources
+    assert select_player(PLAYERS, "zzzzzzzzzzz", 600.0) is None
+
+
+def test_select_ambiguous_duration_returns_none():
+    # two sources both within tolerance of the file duration -> refuse to guess
+    near = [PlayerInfo(1, "aaaaaaaaaaa", 3600), PlayerInfo(2, "bbbbbbbbbbb", 3650)]
+    assert select_player(near, None, 3620.0) is None
+    # but an exact id match still wins even when durations are ambiguous
+    assert select_player(near, "bbbbbbbbbbb", 3620.0) == 2
