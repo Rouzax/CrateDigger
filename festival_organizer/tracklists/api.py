@@ -99,6 +99,23 @@ class Track:
 
 
 @dataclass
+class PlayerInfo:
+    """One YouTube source a tracklist is cued against.
+
+    ordinal matches the "Player N" markers in the export and HTML (and the
+    ytPlayer-block order they share). youtube_id is the source's YouTube id;
+    duration_seconds is that video's length, used to match a downloaded file
+    to its source. A single-source tracklist yields exactly one PlayerInfo
+    (ordinal 1), so we can still capture/persist its source id; multi-source
+    chaptering logic keys on ``len(players) >= 2``.
+    """
+
+    ordinal: int
+    youtube_id: str
+    duration_seconds: int
+
+
+@dataclass
 class TracklistExport:
     """Exported tracklist data."""
 
@@ -115,6 +132,7 @@ class TracklistExport:
     source_type: str = ""
     tracks: list[Track] = field(default_factory=list)
     date: str = ""
+    players: list[PlayerInfo] = field(default_factory=list)
 
 
 def top_genres_by_frequency(tracks: list["Track"], n: int = 5) -> list[str]:
@@ -315,6 +333,28 @@ def _parse_tracks(html) -> list["Track"]:
             )
         )
     return tracks
+
+
+def _parse_players(html: str) -> list["PlayerInfo"]:
+    """Build the ordered YouTube-source list from a tracklist page.
+
+    Sources come from the per-video ``ytPlayer.idPlayer/duration`` JS blocks,
+    which are present for single- AND multi-source pages (the media-tab
+    elements only exist when there are 2+). Ordinal is block order, which
+    matches the "Player N" markers in the export and HTML. Returns one
+    PlayerInfo for a single-source page (so its id can still be persisted),
+    and [] only when the page has no YouTube source at all (e.g. an
+    audio-only tracklist).
+    """
+    blocks = re.findall(
+        r'ytPlayer\.idPlayer\s*=\s*"([^"]+)";\s*ytPlayer\.cue\s*=\s*"[^"]*";'
+        r'\s*ytPlayer\.source\s*=\s*"[^"]*";\s*ytPlayer\.duration\s*=\s*"(\d+)"',
+        html,
+    )
+    return [
+        PlayerInfo(ordinal=i, youtube_id=ytid, duration_seconds=int(dur))
+        for i, (ytid, dur) in enumerate(blocks, start=1)
+    ]
 
 
 class TracklistSession:
@@ -645,6 +685,8 @@ class TracklistSession:
         if any(t in sources_by_type for t in LOCATION_BEARING_TYPES):
             location = ""
 
+        players = _parse_players(page_resp.text)
+
         return TracklistExport(
             lines=lines,
             url=short_url,
@@ -659,6 +701,7 @@ class TracklistSession:
             source_type=source_type_str,
             tracks=tracks,
             date=h1_date,
+            players=players,
         )
 
     def _request(
