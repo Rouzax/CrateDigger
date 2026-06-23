@@ -150,6 +150,7 @@ _1001TL_TAG_KEYS: dict[str, list[str]] = {
         "1001TRACKLISTS_ID",
         "_1001TRACKLISTS_ID",
     ],
+    "tracklists_youtube_id": ["CRATEDIGGER_1001TL_YOUTUBE_ID"],
     "tracklists_date": [
         "CRATEDIGGER_1001TL_DATE",
         "1001TRACKLISTS_DATE",

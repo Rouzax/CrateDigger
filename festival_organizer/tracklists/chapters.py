@@ -498,6 +498,7 @@ _MANAGED_1001TL_TAGS = frozenset(
         "CRATEDIGGER_1001TL_URL",
         "CRATEDIGGER_1001TL_TITLE",
         "CRATEDIGGER_1001TL_ID",
+        "CRATEDIGGER_1001TL_YOUTUBE_ID",
         "CRATEDIGGER_1001TL_DATE",
         "CRATEDIGGER_1001TL_GENRES",
         "CRATEDIGGER_1001TL_DJ_ARTWORK",
@@ -521,6 +522,7 @@ def build_1001tl_tags(
     tracklist_url: str,
     tracklist_title: str = "",
     tracklist_id: str = "",
+    youtube_id: str = "",
     tracklist_date: str = "",
     genres: list[str] | None = None,
     dj_artwork_url: str | None = None,
@@ -543,6 +545,8 @@ def build_1001tl_tags(
         tags["CRATEDIGGER_1001TL_TITLE"] = tracklist_title
     if tracklist_id:
         tags["CRATEDIGGER_1001TL_ID"] = tracklist_id
+    if youtube_id:
+        tags["CRATEDIGGER_1001TL_YOUTUBE_ID"] = youtube_id
     if tracklist_date:
         tags["CRATEDIGGER_1001TL_DATE"] = tracklist_date
     if genres:
@@ -605,6 +609,7 @@ def embed_chapters(
     tracklist_url: str | None = None,
     tracklist_title: str | None = None,
     tracklist_id: str | None = None,
+    youtube_id: str = "",
     tracklist_date: str | None = None,
     genres: list[str] | None = None,
     dj_artwork_url: str | None = None,
@@ -661,6 +666,7 @@ def embed_chapters(
                 tracklist_url=tracklist_url,
                 tracklist_title=tracklist_title or "",
                 tracklist_id=tracklist_id or "",
+                youtube_id=youtube_id,
                 tracklist_date=tracklist_date or "",
                 genres=genres,
                 dj_artwork_url=dj_artwork_url,

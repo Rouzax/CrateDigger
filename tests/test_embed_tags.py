@@ -832,3 +832,24 @@ def test_embed_tags_diff_debug_renders_clear_tag_readably(tmp_path, caplog):
     assert "embed_tags.diff: file=test.mkv" in joined
     assert "<CLEAR>" in joined
     assert "<object object at" not in joined
+
+
+def test_youtube_id_tag_written_when_present():
+    """build_1001tl_tags records the source youtube id when provided."""
+    from festival_organizer.tracklists.chapters import build_1001tl_tags
+
+    tags = build_1001tl_tags(tracklist_url="u", youtube_id="p-nL0FjuCPs")
+    assert tags["CRATEDIGGER_1001TL_YOUTUBE_ID"] == "p-nL0FjuCPs"
+
+
+def test_youtube_id_tag_cleared_when_absent():
+    """The youtube id tag is managed, so an absent id clears any stale value."""
+    from festival_organizer.tracklists.chapters import (
+        _MANAGED_1001TL_TAGS,
+        CLEAR_TAG,
+        build_1001tl_tags,
+    )
+
+    assert "CRATEDIGGER_1001TL_YOUTUBE_ID" in _MANAGED_1001TL_TAGS
+    tags = build_1001tl_tags(tracklist_url="u")
+    assert tags["CRATEDIGGER_1001TL_YOUTUBE_ID"] == CLEAR_TAG

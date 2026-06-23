@@ -156,3 +156,30 @@ def test_extract_metadata_warns_and_returns_empty_when_ffprobe_fails(caplog):
         result = extract_metadata(Path("/x/file.mkv"))
     assert result == {}
     assert any("metadata" in r.message.lower() for r in caplog.records)
+
+
+def test_extract_ffprobe_reads_youtube_id():
+    """ffprobe extraction reads CRATEDIGGER_1001TL_YOUTUBE_ID into tracklists_youtube_id."""
+    from festival_organizer.metadata import _extract_ffprobe
+
+    fake_output = json.dumps(
+        {
+            "format": {
+                "duration": "3600.0",
+                "bit_rate": "13500000",
+                "format_long_name": "Matroska",
+                "tags": {
+                    "CRATEDIGGER_1001TL_URL": "https://new-url.com",
+                    "CRATEDIGGER_1001TL_YOUTUBE_ID": "p-nL0FjuCPs",
+                },
+            },
+            "streams": [],
+        }
+    )
+
+    with patch("festival_organizer.metadata.FFPROBE_PATH", "/usr/bin/ffprobe"):
+        with patch("festival_organizer.metadata.tracked_run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout=fake_output)
+            result = _extract_ffprobe(Path("/tmp/test.mkv"))
+
+    assert result["tracklists_youtube_id"] == "p-nL0FjuCPs"
