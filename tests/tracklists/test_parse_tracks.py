@@ -402,3 +402,31 @@ def test_parse_tracks_sets_is_mashup_on_subPosTog_rows():
         assert "vs." in t.raw_text.lower() or "mashup" in t.raw_text.lower(), (
             f"mashup track doesn't look like a mashup: {t.raw_text}"
         )
+
+
+# --- Player ordinal tagging (multi-source pages) ---
+
+FIXTURE_MULTIPLAYER = Path(__file__).parent / "fixtures" / "multiplayer_tracklist.html"
+
+
+def test_parse_tracks_tags_player_ordinal():
+    tracks = _parse_tracks(FIXTURE_MULTIPLAYER.read_text())
+    # Catharina + Carry You are under "Player 2"
+    assert tracks[0].player == 2
+    assert tracks[1].player == 2
+    # Repeat It + Shape Of You are under "Player 1"
+    assert tracks[2].player == 1
+    assert tracks[3].player == 1
+    # Dragon + High On Life back under "Player 2"; the "Ed Sheeran on stage"
+    # header is NOT a player switch and must not reset the ordinal.
+    assert tracks[4].player == 2
+    assert tracks[5].player == 2
+
+
+def test_parse_tracks_single_player_defaults_to_zero():
+    html = (
+        '<div><div class="tlpTog bItm tlpItem"><input id="x_cue_seconds" value="5">'
+        '<meta itemprop="name" content="A - B"></div></div>'
+    )
+    tracks = _parse_tracks(html)
+    assert tracks[0].player == 0

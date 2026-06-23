@@ -95,6 +95,7 @@ class Track:
     title: str = ""
     label: str = ""
     is_mashup: bool = False
+    player: int = 0  # 1001TL "Player N" ordinal; 0 when no per-player marker
 
 
 @dataclass
@@ -158,8 +159,22 @@ def _parse_tracks(html) -> list["Track"]:
 
     soup = _to_soup(html)
     tracks: list[Track] = []
-    for row in soup.select("div.tlpItem"):
-        classes = set(_attr_classes(row))
+    # Multi-source pages interleave "Player N" headers (div.bItmH) between
+    # track rows to mark which video the following rows are cued against.
+    # Walk rows and headers in document order, tracking the current player
+    # ordinal so each Track records the source it belongs to. Single-source
+    # pages have no such headers, so every Track keeps player=0.
+    current_player = 0
+    player_re = re.compile(r"^Player (\d+)$")
+    for el in soup.select("div.tlpItem, div.bItmH"):
+        el_classes = set(_attr_classes(el))
+        if "bItmH" in el_classes:
+            m = player_re.match(el.get_text(strip=True))
+            if m:
+                current_player = int(m.group(1))
+            continue
+        row = el
+        classes = el_classes
         if "tlpTog" not in classes:
             continue
         if "tlpSubTog" in classes:
@@ -296,6 +311,7 @@ def _parse_tracks(html) -> list["Track"]:
                 title=title,
                 label=label,
                 is_mashup="subPosTog" in classes,
+                player=current_player,
             )
         )
     return tracks
