@@ -11,7 +11,7 @@ These cover the path that currently fails for pre-0.9.9 legacy files.
 
 from unittest.mock import MagicMock, patch
 
-from festival_organizer.tracklists.api import Track, TracklistExport
+from festival_organizer.tracklists.api import PlayerInfo, Track, TracklistExport
 from festival_organizer.tracklists.cli_handler import _fetch_and_embed
 
 
@@ -615,6 +615,123 @@ def test_fetch_and_embed_uses_export_date_when_tracklist_date_none(tmp_path):
         )
 
     assert captured["tracklist_date"] == "2025-10-24"
+
+
+def _stored_matching_export() -> dict:
+    """Stored dict whose TTV=70 values equal build_1001tl_tags(_make_export)."""
+    return {
+        "url": "https://www.1001tracklists.com/tracklist/abc/",
+        "title": "Test Set",
+        "id": "abc",
+        "date": "",
+        "genres": "House",
+        "dj_artwork": "",
+        "stage": "",
+        "venue": "",
+        "festival": "",
+        "conference": "",
+        "radio": "",
+        "artists": "Test DJ",
+        "country": "",
+        "source_type": "",
+        "albumartist_slugs": "testdj",
+        "albumartist_display": "Test DJ",
+    }
+
+
+def test_youtube_id_backfilled_when_otherwise_up_to_date(tmp_path):
+    """Renamed, already-identified file: chapters identical, every TTV=70 tag
+    matches stored, only CRATEDIGGER_1001TL_YOUTUBE_ID is missing. The id must
+    be recovered (here by duration match) and written via embed_chapters, not
+    short-circuited to up_to_date."""
+    export = _make_export()
+    export.players = [
+        PlayerInfo(ordinal=1, youtube_id="fLyb8KvtSzw", duration_seconds=7560)
+    ]
+    session = _make_session()
+    session.export_tracklist.return_value = export
+
+    stored = _stored_matching_export()  # youtube_id key absent -> treated as ""
+    mocks = _patch_identify_internals(
+        has_chapter_tags=MagicMock(return_value=True),
+        extract_stored_tracklist_info=MagicMock(return_value=stored),
+    )
+    fake = tmp_path / "x.mkv"
+    fake.write_bytes(b"")
+    with patch.multiple(
+        "festival_organizer.tracklists.cli_handler",
+        extract_existing_chapters=mocks["extract_existing_chapters"],
+        chapters_are_identical=mocks["chapters_are_identical"],
+        extract_stored_tracklist_info=mocks["extract_stored_tracklist_info"],
+        has_chapter_tags=mocks["has_chapter_tags"],
+        has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
+        embed_chapters=mocks["embed_chapters"],
+        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
+    ):
+        status, _, _ = _fetch_and_embed(
+            session,
+            "https://x",
+            fake,
+            _make_config(),
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date="",
+            duration_seconds=7560,
+            youtube_id="",  # renamed file carries no id
+            regenerate=False,
+        )
+    assert status != "up_to_date"
+    mocks["embed_chapters"].assert_called_once()
+    _, kwargs = mocks["embed_chapters"].call_args
+    assert kwargs.get("youtube_id") == "fLyb8KvtSzw"
+
+
+def test_no_churn_when_youtube_id_already_present(tmp_path):
+    """When stored already carries the correct youtube_id and everything else
+    matches, the file stays up_to_date and embed_chapters is not called."""
+    export = _make_export()
+    export.players = [
+        PlayerInfo(ordinal=1, youtube_id="fLyb8KvtSzw", duration_seconds=7560)
+    ]
+    session = _make_session()
+    session.export_tracklist.return_value = export
+
+    stored = _stored_matching_export()
+    stored["youtube_id"] = "fLyb8KvtSzw"
+    mocks = _patch_identify_internals(
+        has_chapter_tags=MagicMock(return_value=True),
+        extract_stored_tracklist_info=MagicMock(return_value=stored),
+    )
+    fake = tmp_path / "x.mkv"
+    fake.write_bytes(b"")
+    with patch.multiple(
+        "festival_organizer.tracklists.cli_handler",
+        extract_existing_chapters=mocks["extract_existing_chapters"],
+        chapters_are_identical=mocks["chapters_are_identical"],
+        extract_stored_tracklist_info=mocks["extract_stored_tracklist_info"],
+        has_chapter_tags=mocks["has_chapter_tags"],
+        has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
+        embed_chapters=mocks["embed_chapters"],
+        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
+    ):
+        status, _, _ = _fetch_and_embed(
+            session,
+            "https://x",
+            fake,
+            _make_config(),
+            preview=False,
+            quiet=True,
+            language="eng",
+            tracklist_id="abc",
+            tracklist_date="",
+            duration_seconds=7560,
+            youtube_id="fLyb8KvtSzw",
+            regenerate=False,
+        )
+    assert status == "up_to_date"
+    mocks["embed_chapters"].assert_not_called()
 
 
 def test_fetch_and_embed_tracklist_date_wins_over_export_date(tmp_path):

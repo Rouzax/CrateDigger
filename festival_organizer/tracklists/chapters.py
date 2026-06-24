@@ -361,6 +361,7 @@ def extract_stored_tracklist_info(filepath: Path) -> dict | None:
         "CRATEDIGGER_1001TL_URL": "url",
         "CRATEDIGGER_1001TL_TITLE": "title",
         "CRATEDIGGER_1001TL_ID": "id",
+        "CRATEDIGGER_1001TL_YOUTUBE_ID": "youtube_id",
         "CRATEDIGGER_1001TL_DATE": "date",
         "CRATEDIGGER_1001TL_GENRES": "genres",
         "CRATEDIGGER_1001TL_DJ_ARTWORK": "dj_artwork",
