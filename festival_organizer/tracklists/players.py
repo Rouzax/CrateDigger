@@ -63,13 +63,13 @@ def select_player(
                 return p.ordinal
     if duration_s is not None:
         within = [
-            (abs(p.duration_seconds - duration_s), p.ordinal)
+            p.ordinal
             for p in players
             if p.duration_seconds > 0
             and abs(p.duration_seconds - duration_s)
             <= p.duration_seconds * duration_tolerance
         ]
         if len(within) == 1:
-            return within[0][1]
+            return within[0]
         # 0 within tolerance -> no match; 2+ -> ambiguous, refuse to guess
     return None

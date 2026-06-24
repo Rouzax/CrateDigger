@@ -410,7 +410,7 @@ FIXTURE_MULTIPLAYER = Path(__file__).parent / "fixtures" / "multiplayer_tracklis
 
 
 def test_parse_tracks_tags_player_ordinal():
-    tracks = _parse_tracks(FIXTURE_MULTIPLAYER.read_text())
+    tracks = _parse_tracks(FIXTURE_MULTIPLAYER.read_text(encoding="utf-8"))
     # Catharina + Carry You are under "Player 2"
     assert tracks[0].player == 2
     assert tracks[1].player == 2
