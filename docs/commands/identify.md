@@ -61,8 +61,11 @@ cratedigger identify <folder_or_file> [options]
 ### 1. CrateDigger builds a search query
 
 If you did not provide `--tracklist`, CrateDigger builds the search text from the
-**filename only**. It strips noise (codec labels, resolution tags, YouTube IDs in brackets)
-and expands known festival abbreviations. For example, "AMF" becomes
+**filename only**. The `[youtubeid]` bracket suffix is not discarded: it is used first for
+an exact tracklist lookup (see below) and to pick the right source for multi-source
+tracklists. It is only removed from this fallback *text* query, along with other noise
+(codec labels, resolution tags). CrateDigger also expands known festival abbreviations
+in the text query. For example, "AMF" becomes
 "Amsterdam Music Festival" and "EDC" becomes "Electric Daisy Carnival". These expansions
 come from your [festivals.json](../festivals.md) aliases.
 
