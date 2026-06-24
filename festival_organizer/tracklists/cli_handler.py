@@ -5,6 +5,7 @@ Logging:
     Key events:
         - identify.stored_url (INFO): Stored URL decision (reuse/skip/research)
         - identify.direct_input (DEBUG): Direct URL or ID supplied
+        - identify.youtube_lookup (INFO): Watch-URL lookup resolved tracklist(s) by embedded video id (with hit count)
         - identify.search (INFO): Search query dispatched (with optional alias expansion)
         - identify.results (DEBUG): Scored result count and top scores
         - identify.auto_select (INFO): Auto-select accept or reject with reason
@@ -127,6 +128,30 @@ _FRIENDLY_TAG_NAMES = {
     "CRATEDIGGER_ALBUMARTIST_SLUGS": "artist slugs",
     "CRATEDIGGER_ALBUMARTIST_DISPLAY": "artist display",
 }
+
+
+def _youtube_lookup(
+    session: TracklistSession,
+    filepath: Path,
+    file_youtube_id: str,
+) -> list[SearchResult]:
+    """Resolve a tracklist from a file's embedded YouTube id.
+
+    1001TL resolves a YouTube watch-URL query to the tracklist(s) linked to
+    that exact video. Returns the search results (possibly empty). Empty when
+    the file carries no id, so callers fall back to text search.
+    """
+    if not file_youtube_id:
+        return []
+    results = session.search(f"https://www.youtube.com/watch?v={file_youtube_id}")
+    if results:
+        logger.info(
+            "identify.youtube_lookup: file=%s yt_id=%s hits=%d",
+            filepath.name,
+            file_youtube_id,
+            len(results),
+        )
+    return results
 
 
 def _print_tagged_metadata_from_stored(
@@ -513,8 +538,39 @@ def _process_file(
     if tracklist_input:
         source = detect_tracklist_source(tracklist_input)
     else:
-        query_str = build_search_query(filepath)
-        source = {"type": "search", "value": query_str}
+        # Anchor on the file's embedded YouTube id first: a watch-URL query lets
+        # 1001TL resolve the exact tracklist(s) linked to that video. Seeds the
+        # candidate set so both auto and interactive selection apply.
+        yt_results = _youtube_lookup(session, filepath, file_youtube_id)
+        if len(yt_results) == 1:
+            # Unambiguous video match: behave like a pasted URL/ID (bypass picker)
+            top = yt_results[0]
+            return _fetch_and_embed(
+                session,
+                top.url,
+                filepath,
+                config,
+                preview,
+                quiet,
+                language,
+                tracklist_id=top.id,
+                tracklist_date=top.date,
+                console=con,
+                duration_seconds=mf.duration_seconds,
+                regenerate=ignore_stored,
+                spinner=spinner,
+                index=index,
+                total=total,
+                youtube_id=file_youtube_id,
+            )
+        if len(yt_results) > 1:
+            # Several tracklists carry this video: let scoring + selection choose,
+            # but only among the video-anchored candidates.
+            results = yt_results
+            source = {"type": "search", "value": "", "prescored": True}
+        else:
+            query_str = build_search_query(filepath)
+            source = {"type": "search", "value": query_str}
 
     # Handle direct URL or ID
     if source["type"] == "url":
@@ -564,35 +620,45 @@ def _process_file(
         )
 
     # Search
-    original_query = source["value"]
-
-    # Expand abbreviations for better 1001TL search results
-    query_str = expand_aliases_in_query(original_query, search_expansion)
-
-    if query_str != original_query:
-        logger.info(
-            'identify.search: file=%s query="%s" expanded="%s" duration_m=%d year=%s',
-            filepath.name,
-            original_query,
-            query_str,
-            duration_mins,
-            mf.year or "",
+    if source.get("prescored"):
+        # Candidates already seeded by the YouTube watch-URL lookup. Derive the
+        # scoring/display query from the filename so the existing ranking and
+        # interactive table still apply among the video-anchored candidates.
+        query_str = expand_aliases_in_query(
+            build_search_query(filepath), search_expansion
         )
     else:
-        logger.info(
-            'identify.search: file=%s query="%s" duration_m=%d year=%s',
-            filepath.name,
-            query_str,
-            duration_mins,
-            mf.year or "",
+        original_query = source["value"]
+
+        # Expand abbreviations for better 1001TL search results
+        query_str = expand_aliases_in_query(original_query, search_expansion)
+
+        if query_str != original_query:
+            logger.info(
+                'identify.search: file=%s query="%s" expanded="%s" duration_m=%d year=%s',
+                filepath.name,
+                original_query,
+                query_str,
+                duration_mins,
+                mf.year or "",
+            )
+        else:
+            logger.info(
+                'identify.search: file=%s query="%s" duration_m=%d year=%s',
+                filepath.name,
+                query_str,
+                duration_mins,
+                mf.year or "",
+            )
+
+        if spinner is not None:
+            spinner.update(
+                f"[{index}/{total}] Searching 1001TL", filename=filepath.name
+            )
+
+        results = session.search(
+            query_str, duration_minutes=duration_mins, year=mf.year or None
         )
-
-    if spinner is not None:
-        spinner.update(f"[{index}/{total}] Searching 1001TL", filename=filepath.name)
-
-    results = session.search(
-        query_str, duration_minutes=duration_mins, year=mf.year or None
-    )
 
     if not results:
         return ("skipped", "skipped", "no results")

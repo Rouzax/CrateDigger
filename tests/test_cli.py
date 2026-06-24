@@ -829,6 +829,214 @@ def test_check_update_status_row_suppressed(monkeypatch, tmp_path):
     assert "suppressed" in result.stdout
 
 
+# ---------------------------------------------------------------------------
+# _youtube_lookup + worker YouTube-anchored search tests
+# ---------------------------------------------------------------------------
+
+
+def test_youtube_lookup_queries_watch_url():
+    """A file with an embedded YouTube id queries the watch-URL and returns hits."""
+    from festival_organizer.tracklists.cli_handler import _youtube_lookup
+
+    captured = []
+
+    class S:
+        def search(self, q, **kw):
+            captured.append(q)
+            return ["RESULT"] if q.startswith("https://www.youtube.com/watch") else []
+
+    res = _youtube_lookup(S(), Path("Set [p-nL0FjuCPs].mkv"), "p-nL0FjuCPs")
+    assert res == ["RESULT"]
+    assert captured == ["https://www.youtube.com/watch?v=p-nL0FjuCPs"]
+
+
+def test_youtube_lookup_no_id_returns_empty():
+    """No embedded id: the watch-URL search must not run, return []."""
+    from festival_organizer.tracklists.cli_handler import _youtube_lookup
+
+    class S:
+        def search(self, q, **kw):
+            raise AssertionError("should not search without an id")
+
+    assert _youtube_lookup(S(), Path("Set.mkv"), "") == []
+
+
+def _make_identify_mf(youtube_id: str = "", duration_seconds: float = 3600.0):
+    """Minimal MediaFile-like stand-in for the identify worker."""
+    mf = MagicMock()
+    mf.youtube_id = youtube_id
+    mf.duration_seconds = duration_seconds
+    mf.year = None
+    mf.content_type = "festival_set"
+    return mf
+
+
+def _search_result(rid: str, url: str, date: str | None = None):
+    from festival_organizer.tracklists.scoring import SearchResult
+
+    return SearchResult(id=rid, title=f"Title {rid}", url=url, date=date)
+
+
+def _run_worker_for_youtube(tmp_path, monkeypatch, *, search_side_effect, auto_select):
+    """Drive _process_file for a no-stored-tags file with a mocked session.search.
+
+    Returns (status_tuple, fetch_calls, search_queries).
+    """
+    from festival_organizer.tracklists import cli_handler
+
+    fake = tmp_path / "Set [p-nL0FjuCPs].mkv"
+    fake.write_bytes(b"")
+
+    search_queries: list[str] = []
+
+    def _search(q, **kw):
+        search_queries.append(q)
+        return search_side_effect(q)
+
+    session = MagicMock()
+    session.search.side_effect = _search
+
+    fetch_calls: list[dict] = []
+
+    def _fake_fetch(*args, **kwargs):
+        fetch_calls.append(kwargs)
+        return ("updated", "updated", "ok")
+
+    mf = _make_identify_mf(youtube_id="p-nL0FjuCPs")
+
+    monkeypatch.setattr(cli_handler, "analyse_file", lambda *a, **k: mf)
+    monkeypatch.setattr(cli_handler, "classify", lambda *a, **k: "festival_set")
+    monkeypatch.setattr(
+        cli_handler, "extract_stored_tracklist_info", lambda *a, **k: None
+    )
+    monkeypatch.setattr(
+        cli_handler, "build_search_query", lambda fp: "fuzzy text query"
+    )
+    monkeypatch.setattr(cli_handler, "_fetch_and_embed", _fake_fetch)
+    # Auto-select-only path: _select_interactive should be chosen by selecting
+    # the top scored result; stub it to return its first argument's first entry.
+    monkeypatch.setattr(
+        cli_handler,
+        "_select_interactive",
+        lambda scored, *a, **k: scored[0] if scored else None,
+    )
+
+    status = cli_handler._process_file(
+        filepath=fake,
+        scan_root=tmp_path,
+        session=session,
+        config=Config(TEST_CONFIG),
+        search_expansion={},
+        tracklist_input=None,
+        auto_select=auto_select,
+        ignore_stored=False,
+        preview=False,
+        quiet=True,
+        language="eng",
+        console=Console(file=io.StringIO()),
+    )
+    return status, fetch_calls, search_queries
+
+
+def test_worker_single_youtube_hit_bypasses_picker_auto(tmp_path, monkeypatch):
+    """One watch-URL hit feeds straight into _fetch_and_embed; no text search."""
+
+    def side_effect(q):
+        if q.startswith("https://www.youtube.com/watch"):
+            return [
+                _search_result("2wtsw119", "https://1001.tl/2wtsw119", "2024-01-01")
+            ]
+        raise AssertionError(f"unexpected text search: {q}")
+
+    status, fetch_calls, queries = _run_worker_for_youtube(
+        tmp_path, monkeypatch, search_side_effect=side_effect, auto_select=True
+    )
+
+    assert status[0] == "updated"
+    assert queries == ["https://www.youtube.com/watch?v=p-nL0FjuCPs"]
+    assert len(fetch_calls) == 1
+    assert fetch_calls[0]["youtube_id"] == "p-nL0FjuCPs"
+    assert fetch_calls[0]["tracklist_id"] == "2wtsw119"
+
+
+def test_worker_single_youtube_hit_bypasses_picker_interactive(tmp_path, monkeypatch):
+    """Single hit also bypasses the picker in interactive mode."""
+
+    def side_effect(q):
+        if q.startswith("https://www.youtube.com/watch"):
+            return [_search_result("2wtsw119", "https://1001.tl/2wtsw119")]
+        raise AssertionError(f"unexpected text search: {q}")
+
+    status, fetch_calls, queries = _run_worker_for_youtube(
+        tmp_path, monkeypatch, search_side_effect=side_effect, auto_select=False
+    )
+
+    assert status[0] == "updated"
+    assert queries == ["https://www.youtube.com/watch?v=p-nL0FjuCPs"]
+    assert len(fetch_calls) == 1
+    assert fetch_calls[0]["youtube_id"] == "p-nL0FjuCPs"
+
+
+def test_worker_multi_youtube_hits_score_among_candidates(tmp_path, monkeypatch):
+    """Several hits go through scoring/selection over only the anchored set."""
+    anchored = [
+        _search_result("aaa", "https://1001.tl/aaa"),
+        _search_result("bbb", "https://1001.tl/bbb"),
+    ]
+
+    def side_effect(q):
+        if q.startswith("https://www.youtube.com/watch"):
+            return anchored
+        raise AssertionError(f"text search must not run: {q}")
+
+    captured = {}
+
+    def fake_score(results, query_parts, duration_mins):
+        captured["results"] = results
+        return results
+
+    from festival_organizer.tracklists import cli_handler
+
+    monkeypatch.setattr(cli_handler, "score_results", fake_score)
+
+    status, fetch_calls, queries = _run_worker_for_youtube(
+        tmp_path, monkeypatch, search_side_effect=side_effect, auto_select=False
+    )
+
+    # Only the watch-URL query ran; the broad fuzzy text query never did.
+    assert queries == ["https://www.youtube.com/watch?v=p-nL0FjuCPs"]
+    # Scoring was given exactly the anchored candidate set.
+    assert captured["results"] == anchored
+    assert len(fetch_calls) == 1
+    assert fetch_calls[0]["youtube_id"] == "p-nL0FjuCPs"
+
+
+def test_worker_zero_youtube_hits_falls_back_to_text_search(tmp_path, monkeypatch):
+    """No watch-URL hits: fall back to today's fuzzy text search exactly."""
+    text_hit = [_search_result("ccc", "https://1001.tl/ccc")]
+
+    def side_effect(q):
+        if q.startswith("https://www.youtube.com/watch"):
+            return []
+        return text_hit
+
+    from festival_organizer.tracklists import cli_handler
+
+    monkeypatch.setattr(
+        cli_handler, "score_results", lambda results, parts, dur: results
+    )
+
+    status, fetch_calls, queries = _run_worker_for_youtube(
+        tmp_path, monkeypatch, search_side_effect=side_effect, auto_select=False
+    )
+
+    # Both the watch-URL probe AND the fuzzy text search ran, in order.
+    assert queries[0] == "https://www.youtube.com/watch?v=p-nL0FjuCPs"
+    assert "fuzzy text query" in queries[1]
+    assert len(fetch_calls) == 1
+    assert fetch_calls[0]["youtube_id"] == "p-nL0FjuCPs"
+
+
 def test_check_clean_install_reports_all_passed(monkeypatch, tmp_path):
     """A clean install with required tools, optional cv2 absent, no
     artists.json/artist_mbids.json, and 1001TL credentials configured should
