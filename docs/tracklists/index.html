@@ -1357,9 +1357,10 @@
 <ol>
 <li><strong>YouTube ID in the filename.</strong> Files downloaded with yt-dlp carry an embedded YouTube ID in a <code>[youtubeid]</code> bracket suffix (for example, <code>Tiesto - Live @ Festival 2026 [dQw4w9WgXcQ].mkv</code>). CrateDigger checks this ID against the source IDs listed on the tracklist page and picks the matching player.</li>
 <li><strong>Stored YouTube ID tag.</strong> If you renamed the file and stripped the <code>[youtubeid]</code> suffix, CrateDigger reads the <code>CRATEDIGGER_1001TL_YOUTUBE_ID</code> tag that was written during a previous <code>identify</code> run and uses that to find the right player.</li>
-<li><strong>Duration match.</strong> If no ID is available, CrateDigger compares your file's duration against the durations listed for each source and picks the closest match.</li>
+<li><strong>Duration match.</strong> If no ID is available, CrateDigger matches your file's duration against the duration listed for each source. It uses a source only when exactly one is close enough; if two sources are too similar in length to tell apart, CrateDigger treats that as no match rather than guessing.</li>
 </ol>
 <p>If none of these methods produces a match, CrateDigger still writes the album-level metadata tags but does not embed any chapters, and logs a WARNING. Any chapters already in the file are left intact.</p>
+<p>This source selection is automatic. You do not pick Player 1 versus Player 2 yourself: if the interactive picker appears during <code>identify</code>, it is for choosing the tracklist, not the source video within it. The matching source is then resolved by the priority above.</p>
 <p>Single-source tracklists are unaffected. The player selection logic only activates when the tracklist lists two or more sources.</p>
 <h2 id="what-identification-looks-like">What identification looks like</h2>
 <p>Interactive selection is the default mode. <code>identify</code> prints a ranked list of results and prompts you to pick the correct match or skip. See <a href="../commands/identify/#step-by-step-what-happens-when-you-run-identify">identify: step-by-step</a> for a sample transcript and auto-mode behavior.</p>
