@@ -58,41 +58,49 @@ cratedigger identify <folder_or_file> [options]
 
 ## Step-by-step: what happens when you run identify
 
-### 1. CrateDigger builds a search query
+### 1. Re-run shortcut
 
-If you did not provide `--tracklist`, CrateDigger builds the search text from the
-**filename only**. The `[youtubeid]` bracket suffix is not discarded: it is used first for
-an exact tracklist lookup (see below) and to pick the right source for multi-source
-tracklists. It is only removed from this fallback *text* query, along with other noise
-(codec labels, resolution tags). CrateDigger also expands known festival abbreviations
-in the text query. For example, "AMF" becomes
-"Amsterdam Music Festival" and "EDC" becomes "Electric Daisy Carnival". These expansions
-come from your [festivals.json](../festivals.md) aliases.
+If the file already carries a stored 1001Tracklists URL from a previous `identify` run,
+CrateDigger reuses that tracklist rather than searching again. In interactive mode it asks
+whether to proceed, skip, or research a new match first. This is how `up-to-date` and
+self-healing `updated` results happen without repeating a full search.
 
-The file's actual duration (read from the video stream via ffprobe) and year (from an
-embedded date tag if present) are passed separately to help rank results. They are not
-part of the search text.
+### 2. Finding the tracklist
 
-For files downloaded with yt-dlp, the `[youtubeid]` bracket suffix in the filename drives
-an exact tracklist lookup first. CrateDigger queries 1001Tracklists with the full YouTube
-watch URL (`https://www.youtube.com/watch?v=<id>`), which resolves the tracklist(s) linked
-to that exact video. If multiple tracklists match, they go to the candidate picker. If none
-match, CrateDigger falls back to the normal filename text search.
+**Primary path (yt-dlp files):** For a file whose name ends with a YouTube video ID in
+brackets, for example `[p-nL0FjuCPs]`, CrateDigger queries 1001Tracklists with the full
+YouTube watch URL (`https://www.youtube.com/watch?v=<id>`). 1001Tracklists resolves that
+URL to the tracklist(s) directly linked to that video.
 
-### 2. Results are ranked and shown
+- **Exactly one match** (the common case, roughly 9 in 10 yt-dlp files): CrateDigger uses
+  it immediately, with no scoring and no candidate picker, in both automatic and interactive
+  modes. It behaves as though you had pasted that tracklist URL directly.
+- **More than one match** (the same video linked from several tracklists): only those
+  video-linked tracklists become the candidate set, which then goes through scoring and
+  selection (see step 3 below).
 
-CrateDigger queries 1001Tracklists and scores each result based on:
+**Fallback (text search):** When the filename has no `[id]` suffix, or the YouTube-ID
+lookup returns no results, CrateDigger builds a text query from the filename. It removes
+the `[youtubeid]` suffix and other noise (codec labels, resolution tags) and expands known
+festival abbreviations from your [festivals.json](../festivals.md) aliases. For example,
+"AMF" becomes "Amsterdam Music Festival" and "EDC" becomes "Electric Daisy Carnival". The
+file's duration (read via ffprobe) and year (from an embedded date tag, if present) are
+passed separately to help rank results; they are not part of the search text.
 
-- How well the artist name matches
-- How well the festival or event name matches (including alias expansion, e.g. EDC to Electric Daisy Carnival)
-- Whether the year matches
-- How close the tracklist duration is to your file duration
+### 3. Ranking and selection
 
-Results are ranked by score, highest first. A higher score means a stronger match. The gap
-between the top result and second place matters more than the raw score; a large gap means
-CrateDigger is more confident in the top result.
+Selection only applies when scoring is involved: text-search results, or multiple
+video-linked matches from step 2.
 
-In interactive mode you see a numbered table of candidates and a prompt:
+CrateDigger scores each candidate on: artist-name match, festival or event-name match
+(with alias expansion), year match, and how close the tracklist duration is to your file's
+duration. Results are ranked by score, highest first. The gap between the top result and
+the runner-up matters more than the raw score.
+
+In **automatic mode**, CrateDigger accepts the top result only if its score and its lead
+over second place both clear confidence thresholds. If they do not, the file is skipped.
+
+In **interactive mode**, you see a numbered table of candidates and a prompt:
 
 ```
 Top matches:
@@ -106,25 +114,42 @@ Top matches:
 Select (1-5, or 0 to skip): 1
 ```
 
-Type a number to select that tracklist, or `0` to skip the file.
+Type a number to select that tracklist, or `0` to skip the file. This prompt does not
+appear for a single exact YouTube-ID match.
 
-### 3. Chapters and metadata are embedded
+### 4. Picking the right source for multi-source tracklists
 
-Once you confirm a match, CrateDigger:
+Some tracklists on 1001Tracklists are cued against more than one video ("Player 1",
+"Player 2"), whose timelines differ. CrateDigger identifies which source your file came
+from, in this priority:
 
-1. Fetches the full tracklist from 1001Tracklists
-2. Parses each track entry into a chapter with a timestamp and name
-3. Embeds the chapters into your MKV file using `mkvpropedit`
-4. Writes metadata tags into the file:
-   - **Album-level tags**: tracklist URL, title, ID, date, genres, stage name, venue,
-     festival, country, free-text location, artist names, and DJ artwork URL
-   - **Per-chapter tags**: for each track, performer name(s), track title, label, and genre
+1. The YouTube ID (from the filename, or from the stored `CRATEDIGGER_1001TL_YOUTUBE_ID`
+   tag on a re-run of a renamed file).
+2. If there is no ID: a unique match on video duration.
+
+CrateDigger builds chapters only from that source's timeline. If no source matches
+confidently (an unknown cut, or an ambiguous duration), CrateDigger writes the file-level
+metadata but skips the chapter embed and logs a warning. It leaves any existing chapters
+untouched and never writes another source's timeline into your file.
+
+Single-source tracklists are unaffected and chapter normally. See
+[Multi-source tracklists](../tracklists.md) for a fuller explanation.
+
+### 5. Chapters and metadata are embedded
+
+CrateDigger fetches the chosen tracklist, parses the selected source's track list into
+chapters (timestamp and name), and embeds them into the MKV via `mkvpropedit`. It writes:
+
+- **Album-level tags**: tracklist URL, title, ID, date, genres, stage name, venue,
+  festival, country, free-text location, artist names, DJ artwork URL, and the source
+  video ID (`CRATEDIGGER_1001TL_YOUTUBE_ID`).
+- **Per-chapter tags**: for each track, performer name(s), track title, label, and genre.
 
 These tags are later read by the [`enrich`](enrich.md) command to generate artwork, NFO
 files, and resolve MusicBrainz artist IDs.
 
-If the tracklist has fewer than 2 chapters (for example, a tracklist with only a single
-entry), CrateDigger skips the embed. A single chapter provides no navigation value.
+If the chosen source has fewer than 2 chapters, CrateDigger skips the chapter embed.
+A single chapter provides no navigation value.
 
 ## What you see when it runs
 
