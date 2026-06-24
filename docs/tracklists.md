@@ -92,9 +92,11 @@ When CrateDigger encounters a tracklist with two or more sources, it selects the
 
 1. **YouTube ID in the filename.** Files downloaded with yt-dlp carry an embedded YouTube ID in a `[youtubeid]` bracket suffix (for example, `Tiesto - Live @ Festival 2026 [dQw4w9WgXcQ].mkv`). CrateDigger checks this ID against the source IDs listed on the tracklist page and picks the matching player.
 2. **Stored YouTube ID tag.** If you renamed the file and stripped the `[youtubeid]` suffix, CrateDigger reads the `CRATEDIGGER_1001TL_YOUTUBE_ID` tag that was written during a previous `identify` run and uses that to find the right player.
-3. **Duration match.** If no ID is available, CrateDigger compares your file's duration against the durations listed for each source and picks the closest match.
+3. **Duration match.** If no ID is available, CrateDigger matches your file's duration against the duration listed for each source. It uses a source only when exactly one is close enough; if two sources are too similar in length to tell apart, CrateDigger treats that as no match rather than guessing.
 
 If none of these methods produces a match, CrateDigger still writes the album-level metadata tags but does not embed any chapters, and logs a WARNING. Any chapters already in the file are left intact.
+
+This source selection is automatic. You do not pick Player 1 versus Player 2 yourself: if the interactive picker appears during `identify`, it is for choosing the tracklist, not the source video within it. The matching source is then resolved by the priority above.
 
 Single-source tracklists are unaffected. The player selection logic only activates when the tracklist lists two or more sources.
 
