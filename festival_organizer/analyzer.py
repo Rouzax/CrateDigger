@@ -254,7 +254,7 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
         venue_full=info.get("venue", ""),
         location=info.get("location", ""),
         edition=info.get("edition", ""),
-        youtube_id=info.get("youtube_id", ""),
+        youtube_id=info.get("youtube_id", "") or meta.get("tracklists_youtube_id", ""),
         tracklists_url=meta.get("tracklists_url", ""),
         tracklists_title=meta.get("tracklists_title", ""),
         genres=[

@@ -67,6 +67,10 @@ from festival_organizer.tracklists.chapters import (
     supplement_chapters_from_tracks,
     trim_chapters_to_duration,
 )
+from festival_organizer.tracklists.players import (
+    partition_lines_by_player,
+    select_player,
+)
 from festival_organizer.tracklists.query import (
     build_search_query,
     detect_tracklist_source,
@@ -407,6 +411,11 @@ def _process_file(
     mf = analyse_file(filepath, scan_root, config)
     mf.content_type = classify(mf, scan_root, config)
     duration_mins = int(mf.duration_seconds / 60) if mf.duration_seconds else 0
+    # Source id for this file: the [id] filename suffix on fresh downloads, or
+    # the persisted CRATEDIGGER_1001TL_YOUTUBE_ID tag on renamed/organized
+    # files (analyzer falls back to the tag). Lets a re-run recover its source
+    # player by id, or fall through to duration matching when absent.
+    file_youtube_id = mf.youtube_id
 
     # Check for stored tracklist URL
     if not ignore_stored:
@@ -437,6 +446,7 @@ def _process_file(
                     spinner=spinner,
                     index=index,
                     total=total,
+                    youtube_id=file_youtube_id,
                 )
             else:
                 if spinner is not None:
@@ -482,6 +492,7 @@ def _process_file(
                         spinner=spinner,
                         index=index,
                         total=total,
+                        youtube_id=file_youtube_id,
                     )
                 elif choice in ("s", "skip"):
                     logger.info(
@@ -526,6 +537,7 @@ def _process_file(
             spinner=spinner,
             index=index,
             total=total,
+            youtube_id=file_youtube_id,
         )
     elif source["type"] == "id":
         logger.debug(
@@ -548,6 +560,7 @@ def _process_file(
             spinner=spinner,
             index=index,
             total=total,
+            youtube_id=file_youtube_id,
         )
 
     # Search
@@ -668,6 +681,7 @@ def _process_file(
         spinner=spinner,
         index=index,
         total=total,
+        youtube_id=file_youtube_id,
     )
 
 
@@ -687,6 +701,7 @@ def _fetch_and_embed(
     spinner: StepProgress | None = None,
     index: int = 0,
     total: int = 0,
+    youtube_id: str | None = None,
 ) -> tuple[str, str, str]:
     """Fetch tracklist, parse chapters, and embed.
 
@@ -720,6 +735,66 @@ def _fetch_and_embed(
     # instead of ceding to the YouTube DATE tag at display time.
     effective_date = tracklist_date or export.date or None
 
+    # (b) Persist the source id for ANY matched source (single or multi),
+    # duration-confirmed inside select_player so we never write a guessed id.
+    matched_ordinal = select_player(export.players, youtube_id, duration_seconds)
+    persisted_youtube_id = ""
+    if matched_ordinal:  # >= 1 means a confirmed source match
+        persisted_youtube_id = export.players[matched_ordinal - 1].youtube_id
+
+    # (a) Multi-source tracklists cue tracks against more than one video.
+    # Keep only the source that matches this file; refuse to chapter when no
+    # source matches (would otherwise embed another video's timeline).
+    # Single-source tracklists are unaffected (chapter the whole timeline).
+    selected_player = 0
+    is_multiplayer = len(export.players) >= 2
+    if is_multiplayer:
+        if matched_ordinal is None:
+            logger.warning(
+                "identify.player.no_match: file=%s players=%d yt_id=%s dur=%.0f",
+                filepath.name,
+                len(export.players),
+                youtube_id or "",
+                duration_seconds or 0,
+            )
+            if not preview:
+                embed_chapters(
+                    filepath,
+                    [],  # empty -> embed_chapters leaves existing chapters intact
+                    tracklist_url=export.url,
+                    tracklist_title=export.title,
+                    tracklist_id=tracklist_id,
+                    tracklist_date=effective_date,
+                    genres=list(export.genres),
+                    dj_artwork_url=export.dj_artwork_url,
+                    stage_text=export.stage_text,
+                    sources_by_type=export.sources_by_type,
+                    dj_artists=export.dj_artists,
+                    country=export.country,
+                    location=export.location,
+                    tracks=export.tracks,
+                    dj_cache=session._dj_cache,
+                    alias_resolver=config.resolve_artist,
+                    youtube_id=persisted_youtube_id,
+                )
+            return ("skipped", "skipped", "no matching player")
+        selected_player = matched_ordinal
+        logger.info(
+            "identify.player.match: file=%s player=%d yt_id=%s",
+            filepath.name,
+            selected_player,
+            persisted_youtube_id or youtube_id or "",
+        )
+
+    # Scope tracks and lines to the selected source. Only multi-source
+    # selection narrows them; single-source keeps the full timeline.
+    if selected_player:  # only set for multi-source matches
+        export_tracks = [t for t in export.tracks if t.player == selected_player]
+        export_lines = partition_lines_by_player(export.lines).get(selected_player, [])
+    else:
+        export_tracks = export.tracks
+        export_lines = export.lines
+
     # Cap the set-level GENRES tag per config. top_genres_by_frequency counts
     # per-track genre occurrences and keeps the top-N with deterministic
     # first-appearance tie-breaking. Fall back to the flat HTML scrape when
@@ -727,8 +802,8 @@ def _fetch_and_embed(
     # change or an unparsed page still writes genres instead of an empty tag).
     genre_top_n = config.tracklists_settings.get("genre_top_n", 5)
     capped: list[str] = []
-    if genre_top_n and export.tracks:
-        capped = top_genres_by_frequency(export.tracks, n=genre_top_n)
+    if genre_top_n and export_tracks:
+        capped = top_genres_by_frequency(export_tracks, n=genre_top_n)
         set_genres = capped or list(export.genres)
     else:
         set_genres = list(export.genres)
@@ -744,9 +819,9 @@ def _fetch_and_embed(
         )
 
     try:
-        chapters = parse_tracklist_lines(export.lines, language=language)
+        chapters = parse_tracklist_lines(export_lines, language=language)
         chapters = supplement_chapters_from_tracks(
-            chapters, export.tracks, language=language
+            chapters, export_tracks, language=language
         )
         chapters = trim_chapters_to_duration(chapters, duration_seconds)
     except ValueError:
@@ -767,9 +842,10 @@ def _fetch_and_embed(
                 dj_artists=export.dj_artists,
                 country=export.country,
                 location=export.location,
-                tracks=export.tracks,
+                tracks=export_tracks,
                 dj_cache=session._dj_cache,
                 alias_resolver=config.resolve_artist,
+                youtube_id=persisted_youtube_id,
             )
         return ("skipped", "skipped", "no chapters parsed")
 
@@ -798,9 +874,10 @@ def _fetch_and_embed(
                 dj_artists=export.dj_artists,
                 country=export.country,
                 location=export.location,
-                tracks=export.tracks,
+                tracks=export_tracks,
                 dj_cache=session._dj_cache,
                 alias_resolver=config.resolve_artist,
+                youtube_id=persisted_youtube_id,
             )
         return ("skipped", "skipped", "only 1 chapter")
 
@@ -952,9 +1029,10 @@ def _fetch_and_embed(
                 dj_artists=export.dj_artists,
                 country=export.country,
                 location=export.location,
-                tracks=export.tracks,
+                tracks=export_tracks,
                 dj_cache=session._dj_cache,
                 alias_resolver=config.resolve_artist,
+                youtube_id=persisted_youtube_id,
             )
             if success:
                 return (
@@ -1000,9 +1078,10 @@ def _fetch_and_embed(
         dj_artists=export.dj_artists,
         country=export.country,
         location=export.location,
-        tracks=export.tracks,
+        tracks=export_tracks,
         dj_cache=session._dj_cache,
         alias_resolver=config.resolve_artist,
+        youtube_id=persisted_youtube_id,
     )
     if success:
         return ("updated", "updated", f"{export.title} . {len(chapters)} chapters")

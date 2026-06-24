@@ -597,6 +597,30 @@ def test_analyzer_country_defaults_empty():
     assert mf.source_type == ""
 
 
+def test_analyzer_youtube_id_falls_back_to_stored_tag():
+    """A renamed/organized file with no `[id]` filename suffix recovers its
+    source YouTube id from the stored CRATEDIGGER_1001TL_YOUTUBE_ID tag.
+
+    Fresh downloads carry the id in the filename ([id] suffix); once organized
+    the suffix is gone, so mf.youtube_id must fall back to the persisted tag
+    (surfaced by extract_metadata as `tracklists_youtube_id`). This is what
+    lets a re-run of a renamed multi-source file recover its player by id.
+    """
+    fake_meta = {
+        "tracklists_artists": "Martin Garrix",
+        "tracklists_festival": "Americas Tour",
+        "tracklists_date": "2026-05-15",
+        "tracklists_youtube_id": "p-nL0FjuCPs",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("/library/2026 - Americas Tour - Martin Garrix.mkv"),
+            Path("/library"),
+            CFG,
+        )
+    assert mf.youtube_id == "p-nL0FjuCPs"
+
+
 def test_analyzer_artists_list_b2b():
     """artists list populated from pipe-separated 1001TL tag."""
     fake_meta = {
