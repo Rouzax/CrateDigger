@@ -843,6 +843,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#multi-source-tracklists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-source tracklists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-identification-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1118,6 +1129,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#multi-source-tracklists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-source tracklists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-identification-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1329,6 +1351,16 @@
 <p>The venue and location data that 1001Tracklists provides feeds directly into your <code>places.json</code> registry. If the venue name matches a canonical name or alias in <code>places.json</code>, CrateDigger uses the canonical name for folder and file naming. If it does not match, it uses the raw text from the tracklist page.</p>
 <p>Adding a <code>places.json</code> entry for a venue is all it takes to bring it into the same alias-resolution pipeline as festivals. A set recorded at a club with no <code>places.json</code> entry uses the raw venue name or falls through to the artist folder. A set with no linked venue and no plain-text location always routes by artist. This is the intended behavior when 1001Tracklists has no location data to provide.</p>
 <p>See <a href="../places/">Places</a> for the full registry format and matching rules.</p>
+<h2 id="multi-source-tracklists">Multi-source tracklists</h2>
+<p>Some 1001Tracklists pages are cued against more than one source video. When a DJ performed two separate sets at the same event, or when a stream was split across multiple uploads, the tracklist page lists each source separately as "Player 1", "Player 2", and so on. Each player has its own timeline, so the chapter timestamps for Player 1 do not apply to Player 2.</p>
+<p>When CrateDigger encounters a tracklist with two or more sources, it selects the one that matches your file before embedding chapters. The selection works in this priority order:</p>
+<ol>
+<li><strong>YouTube ID in the filename.</strong> Files downloaded with yt-dlp carry an embedded YouTube ID in a <code>[youtubeid]</code> bracket suffix (for example, <code>Tiesto - Live @ Festival 2026 [dQw4w9WgXcQ].mkv</code>). CrateDigger checks this ID against the source IDs listed on the tracklist page and picks the matching player.</li>
+<li><strong>Stored YouTube ID tag.</strong> If you renamed the file and stripped the <code>[youtubeid]</code> suffix, CrateDigger reads the <code>CRATEDIGGER_1001TL_YOUTUBE_ID</code> tag that was written during a previous <code>identify</code> run and uses that to find the right player.</li>
+<li><strong>Duration match.</strong> If no ID is available, CrateDigger compares your file's duration against the durations listed for each source and picks the closest match.</li>
+</ol>
+<p>If none of these methods produces a match, CrateDigger still writes the album-level metadata tags but does not embed any chapters, and logs a WARNING. Any chapters already in the file are left intact.</p>
+<p>Single-source tracklists are unaffected. The player selection logic only activates when the tracklist lists two or more sources.</p>
 <h2 id="what-identification-looks-like">What identification looks like</h2>
 <p>Interactive selection is the default mode. <code>identify</code> prints a ranked list of results and prompts you to pick the correct match or skip. See <a href="../commands/identify/#step-by-step-what-happens-when-you-run-identify">identify: step-by-step</a> for a sample transcript and auto-mode behavior.</p>
 <h2 id="rate-limiting-and-caching">Rate limiting and caching</h2>

@@ -770,6 +770,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#multi-source-tracklists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-source tracklists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#location-and-country-tags" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1401,6 +1412,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#multi-source-tracklists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-source tracklists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#location-and-country-tags" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1684,13 +1706,21 @@ you skip this step.</p>
 <h2 id="step-by-step-what-happens-when-you-run-identify">Step-by-step: what happens when you run identify</h2>
 <h3 id="1-cratedigger-builds-a-search-query">1. CrateDigger builds a search query</h3>
 <p>If you did not provide <code>--tracklist</code>, CrateDigger builds the search text from the
-<strong>filename only</strong>. It strips noise (codec labels, resolution tags, YouTube IDs in brackets)
-and expands known festival abbreviations. For example, "AMF" becomes
+<strong>filename only</strong>. The <code>[youtubeid]</code> bracket suffix is not discarded: it is used first for
+an exact tracklist lookup (see below) and to pick the right source for multi-source
+tracklists. It is only removed from this fallback <em>text</em> query, along with other noise
+(codec labels, resolution tags). CrateDigger also expands known festival abbreviations
+in the text query. For example, "AMF" becomes
 "Amsterdam Music Festival" and "EDC" becomes "Electric Daisy Carnival". These expansions
 come from your <a href="../festivals.md">festivals.json</a> aliases.</p>
 <p>The file's actual duration (read from the video stream via ffprobe) and year (from an
 embedded date tag if present) are passed separately to help rank results. They are not
 part of the search text.</p>
+<p>For files downloaded with yt-dlp, the <code>[youtubeid]</code> bracket suffix in the filename drives
+an exact tracklist lookup first. CrateDigger queries 1001Tracklists with the full YouTube
+watch URL (<code>https://www.youtube.com/watch?v=&lt;id&gt;</code>), which resolves the tracklist(s) linked
+to that exact video. If multiple tracklists match, they go to the candidate picker. If none
+match, CrateDigger falls back to the normal filename text search.</p>
 <h3 id="2-results-are-ranked-and-shown">2. Results are ranked and shown</h3>
 <p>CrateDigger queries 1001Tracklists and scores each result based on:</p>
 <ul>
@@ -1872,6 +1902,14 @@ the <code>Select</code> line and the following file could stitch onto one visual
 </ul>
 <p>No files are created, moved, or copied. The original video stream and audio are untouched.
 Only the metadata section of the MKV file changes.</p>
+<h3 id="multi-source-tracklists">Multi-source tracklists</h3>
+<p>When the matched tracklist is cued against multiple source videos (Player 1, Player 2, ...),
+CrateDigger identifies which source matches your file before embedding chapters. If no source
+matches, CrateDigger writes the album-level metadata tags but skips chapter embedding and
+logs a WARNING. Any chapters already present in the file are left intact.</p>
+<p>See <a href="../../tracklists/#multi-source-tracklists">Multi-source tracklists</a> for the full
+selection logic (YouTube ID in filename, stored <code>CRATEDIGGER_1001TL_YOUTUBE_ID</code> tag,
+duration fallback) and how to resolve a no-match.</p>
 <h3 id="location-and-country-tags">Location and country tags</h3>
 <p>CrateDigger records the set's venue or city using two separate tags, in this order of
 preference:</p>

@@ -1016,6 +1016,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#why-did-my-file-get-metadata-but-no-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why did my file get metadata but no chapters?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cratedigger-is-rate-limited-by-1001tracklists" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1460,6 +1471,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#why-did-my-file-get-metadata-but-no-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why did my file get metadata but no chapters?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cratedigger-is-rate-limited-by-1001tracklists" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1879,6 +1901,9 @@
 <li><code>mkvpropedit</code> must be installed and on your PATH.</li>
 <li>The matched tracklist must have at least 2 tracks with timing data. Single-track or unresolved tracklists are skipped because they provide no chapter navigation value.</li>
 </ol>
+<h3 id="why-did-my-file-get-metadata-but-no-chapters">Why did my file get metadata but no chapters?</h3>
+<p>The tracklist CrateDigger matched is cued against multiple source videos (Player 1, Player 2, ...) and none of them matched your file. CrateDigger wrote the album-level metadata tags but skipped chapter embedding and logged a WARNING. Any chapters that were already in the file were left intact.</p>
+<p>To fix this, rename the file to include the <code>[youtubeid]</code> suffix from the correct source video (for example, <code>Set Name [dQw4w9WgXcQ].mkv</code>) and re-run <code>identify</code>. Alternatively, if your file's duration is close to one of the listed source durations, CrateDigger may match by duration automatically on the next run. See <a href="../tracklists/#multi-source-tracklists">Multi-source tracklists</a> for the full matching priority.</p>
 <h3 id="cratedigger-is-rate-limited-by-1001tracklists">CrateDigger is rate-limited by 1001Tracklists</h3>
 <p>If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds and retries. If the retry also fails, it stops with a message asking you to solve a captcha at <a href="https://www.1001tracklists.com">1001tracklists.com</a> in your browser. After solving the captcha, re-run identify.</p>
 <p>Increase the delay between files to reduce the chance of hitting rate limits: set <code>tracklists.delay_seconds</code> in your config (default: 5 seconds).</p>
