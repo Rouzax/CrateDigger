@@ -84,6 +84,20 @@ Adding a `places.json` entry for a venue is all it takes to bring it into the sa
 
 See [Places](places.md) for the full registry format and matching rules.
 
+## Multi-source tracklists
+
+Some 1001Tracklists pages are cued against more than one source video. When a DJ performed two separate sets at the same event, or when a stream was split across multiple uploads, the tracklist page lists each source separately as "Player 1", "Player 2", and so on. Each player has its own timeline, so the chapter timestamps for Player 1 do not apply to Player 2.
+
+When CrateDigger encounters a tracklist with two or more sources, it selects the one that matches your file before embedding chapters. The selection works in this priority order:
+
+1. **YouTube ID in the filename.** Files downloaded with yt-dlp carry an embedded YouTube ID in a `[youtubeid]` bracket suffix (for example, `Tiesto - Live @ Festival 2026 [dQw4w9WgXcQ].mkv`). CrateDigger checks this ID against the source IDs listed on the tracklist page and picks the matching player.
+2. **Stored YouTube ID tag.** If you renamed the file and stripped the `[youtubeid]` suffix, CrateDigger reads the `CRATEDIGGER_1001TL_YOUTUBE_ID` tag that was written during a previous `identify` run and uses that to find the right player.
+3. **Duration match.** If no ID is available, CrateDigger compares your file's duration against the durations listed for each source and picks the closest match.
+
+If none of these methods produces a match, CrateDigger still writes the album-level metadata tags but does not embed any chapters, and logs a WARNING. Any chapters already in the file are left intact.
+
+Single-source tracklists are unaffected. The player selection logic only activates when the tracklist lists two or more sources.
+
 ## What identification looks like
 
 Interactive selection is the default mode. `identify` prints a ranked list of results and prompts you to pick the correct match or skip. See [identify: step-by-step](commands/identify.md#step-by-step-what-happens-when-you-run-identify) for a sample transcript and auto-mode behavior.

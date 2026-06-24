@@ -143,6 +143,12 @@ Chapter embedding requires:
 2. `mkvpropedit` must be installed and on your PATH.
 3. The matched tracklist must have at least 2 tracks with timing data. Single-track or unresolved tracklists are skipped because they provide no chapter navigation value.
 
+### Why did my file get metadata but no chapters?
+
+The tracklist CrateDigger matched is cued against multiple source videos (Player 1, Player 2, ...) and none of them matched your file. CrateDigger wrote the album-level metadata tags but skipped chapter embedding and logged a WARNING. Any chapters that were already in the file were left intact.
+
+To fix this, rename the file to include the `[youtubeid]` suffix from the correct source video (for example, `Set Name [dQw4w9WgXcQ].mkv`) and re-run `identify`. Alternatively, if your file's duration is close to one of the listed source durations, CrateDigger may match by duration automatically on the next run. See [Multi-source tracklists](tracklists.md#multi-source-tracklists) for the full matching priority.
+
 ### CrateDigger is rate-limited by 1001Tracklists
 
 If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds and retries. If the retry also fails, it stops with a message asking you to solve a captcha at [1001tracklists.com](https://www.1001tracklists.com) in your browser. After solving the captcha, re-run identify.

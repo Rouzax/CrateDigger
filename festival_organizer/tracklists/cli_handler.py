@@ -10,6 +10,8 @@ Logging:
         - identify.results (DEBUG): Scored result count and top scores
         - identify.auto_select (INFO): Auto-select accept or reject with reason
         - identify.fetch (INFO): Tracklist fetch initiated
+        - identify.player.match (INFO): Multi-source tracklist; selected the source matching this file (by yt_id or duration)
+        - identify.player.no_match (WARNING): Multi-source tracklist; no source matched this file, so metadata is written but chapters are skipped
         - identify.skip (DEBUG): Early return before embed (parse_failed/no_chapters/single_chapter)
         - identify.chapters_match (DEBUG): Chapter identity comparison result
         - identify.chapters_no_stored (DEBUG): Chapters match but no stored tags found

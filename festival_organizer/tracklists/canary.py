@@ -16,6 +16,8 @@ HTML. The labels are phrased for log output, not for code consumers.
 
 from __future__ import annotations
 
+import re
+
 from bs4 import BeautifulSoup
 
 
@@ -42,6 +44,16 @@ def check_tracklist_page(html: str) -> list[str]:
 
     if soup.select_one('meta[itemprop="genre"]') is None:
         missing.append("itemprop=genre meta")
+
+    # Multi-source pages carry "Player N" headers; if those exist but the
+    # media tabs that name each source do not parse, player selection would
+    # silently fall back to wrong-timeline chapters. Surface it.
+    has_player_headers = any(
+        re.match(r"^Player \d+$", el.get_text(strip=True))
+        for el in soup.select("div.bItmH")
+    )
+    if has_player_headers and soup.select_one("li[id^='mediaLinkBtn']") is None:
+        missing.append("media player tabs")
 
     return missing
 

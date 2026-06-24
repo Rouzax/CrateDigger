@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-06-24
+
+### Added
+
+- Player-aware multi-source chaptering. Some 1001Tracklists tracklists are cued against more than one source video (shown on the page as "Player 1", "Player 2", and so on), each with its own timeline. `identify` now selects the source that matches your file and embeds only that source's chapters, instead of blending timelines. Selection prefers the YouTube id embedded in the filename, then the stored `CRATEDIGGER_1001TL_YOUTUBE_ID` tag (so a renamed file still resolves the right source), then a match on the file's duration. When no source matches, CrateDigger writes the metadata tags but skips chapters and logs a warning; any existing chapters are left intact. Single-source tracklists are unaffected and continue to chapter the full timeline.
+- New `CRATEDIGGER_1001TL_YOUTUBE_ID` tag. Records the YouTube id of the source video a file was chaptered against, written for both single- and multi-source matches. Re-enriching a renamed file (one whose `[youtubeid]` suffix was stripped) uses this tag to keep selecting the correct source.
+- YouTube-id-anchored tracklist search. For yt-dlp files, the embedded `[youtubeid]` now drives an exact lookup: CrateDigger queries 1001Tracklists with the YouTube watch-URL, resolving the tracklist(s) linked to that exact video before falling back to filename text search. Multiple hits go to the candidate picker; zero hits fall back to the normal text search.
+
 ## [0.28.2] - 2026-06-22
 
 ### Internal

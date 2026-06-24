@@ -70,6 +70,12 @@ The file's actual duration (read from the video stream via ffprobe) and year (fr
 embedded date tag if present) are passed separately to help rank results. They are not
 part of the search text.
 
+For files downloaded with yt-dlp, the `[youtubeid]` bracket suffix in the filename drives
+an exact tracklist lookup first. CrateDigger queries 1001Tracklists with the full YouTube
+watch URL (`https://www.youtube.com/watch?v=<id>`), which resolves the tracklist(s) linked
+to that exact video. If multiple tracklists match, they go to the candidate picker. If none
+match, CrateDigger falls back to the normal filename text search.
+
 ### 2. Results are ranked and shown
 
 CrateDigger queries 1001Tracklists and scores each result based on:
@@ -207,6 +213,17 @@ the `Select` line and the following file could stitch onto one visual line).
 
 No files are created, moved, or copied. The original video stream and audio are untouched.
 Only the metadata section of the MKV file changes.
+
+### Multi-source tracklists
+
+When the matched tracklist is cued against multiple source videos (Player 1, Player 2, ...),
+CrateDigger identifies which source matches your file before embedding chapters. If no source
+matches, CrateDigger writes the album-level metadata tags but skips chapter embedding and
+logs a WARNING. Any chapters already present in the file are left intact.
+
+See [Multi-source tracklists](../tracklists.md#multi-source-tracklists) for the full
+selection logic (YouTube ID in filename, stored `CRATEDIGGER_1001TL_YOUTUBE_ID` tag,
+duration fallback) and how to resolve a no-match.
 
 ### Location and country tags
 

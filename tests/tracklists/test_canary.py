@@ -58,6 +58,29 @@ def test_canary_tracklist_page_flags_missing_genre_meta():
     assert "itemprop=genre meta" in missing
 
 
+def test_canary_flags_player_headers_without_tabs():
+    from festival_organizer.tracklists.canary import check_tracklist_page
+
+    html = (
+        '<h1>x</h1><div class="tlpItem tlpTog"><input id="a_cue_seconds" value="0">'
+        '<meta itemprop="name" content="A - B"><meta itemprop="genre" content="X"></div>'
+        '<div class="bItmH flex"><span>Player 1</span></div>'
+        '<div class="bItmH flex"><span>Player 2</span></div>'
+    )
+    # Player markers present but no mediaLinkBtn tabs -> structural drift
+    assert "media player tabs" in check_tracklist_page(html)
+
+
+def test_canary_clean_single_player_page_unaffected():
+    from festival_organizer.tracklists.canary import check_tracklist_page
+
+    html = (
+        '<h1>x</h1><div class="tlpItem tlpTog"><input id="a_cue_seconds" value="0">'
+        '<meta itemprop="name" content="A - B"><meta itemprop="genre" content="X"></div>'
+    )
+    assert check_tracklist_page(html) == []
+
+
 # --- check_search_results ---
 
 

@@ -47,6 +47,7 @@ Written by `identify`.
 | `CRATEDIGGER_1001TL_URL` | Permalink to the 1001Tracklists tracklist page | `https://www.1001tracklists.com/tracklist/...` |
 | `CRATEDIGGER_1001TL_TITLE` | Tracklist title as shown on 1001Tracklists | `Armin van Buuren & KIKI @ Two Is One, AMF 2025` |
 | `CRATEDIGGER_1001TL_ID` | Numeric tracklist ID | `1hv3n1nt` |
+| `CRATEDIGGER_1001TL_YOUTUBE_ID` | YouTube id of the source video this file was chaptered against. Recorded so that re-enriching a renamed file (one whose `[youtubeid]` suffix was stripped) still selects the right source on a multi-source tracklist. Written for both single- and multi-source matches. | `dQw4w9WgXcQ` |
 | `CRATEDIGGER_1001TL_DATE` | Event date from 1001Tracklists | `2025-10-25` |
 | `CRATEDIGGER_1001TL_GENRES` | Top 5 most frequent per-track genres, pipe-separated. Compound 1001Tracklists labels are normalized to a compact slash (`Dance/Electro Pop`, not `Dance / Electro Pop`); they are single genres, never split. | `Techno\|Trance\|Hard Dance` |
 | `CRATEDIGGER_1001TL_DJ_ARTWORK` | URL to the DJ photo on the tracklist page | `https://...` |
