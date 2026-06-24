@@ -659,10 +659,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-cratedigger-builds-a-search-query" class="md-nav__link">
+  <a href="#1-re-run-shortcut" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. CrateDigger builds a search query
+        1. Re-run shortcut
       
     </span>
   </a>
@@ -670,10 +670,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-results-are-ranked-and-shown" class="md-nav__link">
+  <a href="#2-finding-the-tracklist" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Results are ranked and shown
+        2. Finding the tracklist
       
     </span>
   </a>
@@ -681,10 +681,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-chapters-and-metadata-are-embedded" class="md-nav__link">
+  <a href="#3-ranking-and-selection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Chapters and metadata are embedded
+        3. Ranking and selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-picking-the-right-source-for-multi-source-tracklists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Picking the right source for multi-source tracklists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-chapters-and-metadata-are-embedded" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Chapters and metadata are embedded
       
     </span>
   </a>
@@ -1301,10 +1323,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-cratedigger-builds-a-search-query" class="md-nav__link">
+  <a href="#1-re-run-shortcut" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. CrateDigger builds a search query
+        1. Re-run shortcut
       
     </span>
   </a>
@@ -1312,10 +1334,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-results-are-ranked-and-shown" class="md-nav__link">
+  <a href="#2-finding-the-tracklist" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Results are ranked and shown
+        2. Finding the tracklist
       
     </span>
   </a>
@@ -1323,10 +1345,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-chapters-and-metadata-are-embedded" class="md-nav__link">
+  <a href="#3-ranking-and-selection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Chapters and metadata are embedded
+        3. Ranking and selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-picking-the-right-source-for-multi-source-tracklists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Picking the right source for multi-source tracklists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-chapters-and-metadata-are-embedded" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Chapters and metadata are embedded
       
     </span>
   </a>
@@ -1704,35 +1748,41 @@ you skip this step.</p>
 </tbody>
 </table>
 <h2 id="step-by-step-what-happens-when-you-run-identify">Step-by-step: what happens when you run identify</h2>
-<h3 id="1-cratedigger-builds-a-search-query">1. CrateDigger builds a search query</h3>
-<p>If you did not provide <code>--tracklist</code>, CrateDigger builds the search text from the
-<strong>filename only</strong>. The <code>[youtubeid]</code> bracket suffix is not discarded: it is used first for
-an exact tracklist lookup (see below) and to pick the right source for multi-source
-tracklists. It is only removed from this fallback <em>text</em> query, along with other noise
-(codec labels, resolution tags). CrateDigger also expands known festival abbreviations
-in the text query. For example, "AMF" becomes
-"Amsterdam Music Festival" and "EDC" becomes "Electric Daisy Carnival". These expansions
-come from your <a href="../festivals.md">festivals.json</a> aliases.</p>
-<p>The file's actual duration (read from the video stream via ffprobe) and year (from an
-embedded date tag if present) are passed separately to help rank results. They are not
-part of the search text.</p>
-<p>For files downloaded with yt-dlp, the <code>[youtubeid]</code> bracket suffix in the filename drives
-an exact tracklist lookup first. CrateDigger queries 1001Tracklists with the full YouTube
-watch URL (<code>https://www.youtube.com/watch?v=&lt;id&gt;</code>), which resolves the tracklist(s) linked
-to that exact video. If multiple tracklists match, they go to the candidate picker. If none
-match, CrateDigger falls back to the normal filename text search.</p>
-<h3 id="2-results-are-ranked-and-shown">2. Results are ranked and shown</h3>
-<p>CrateDigger queries 1001Tracklists and scores each result based on:</p>
+<h3 id="1-re-run-shortcut">1. Re-run shortcut</h3>
+<p>If the file already carries a stored 1001Tracklists URL from a previous <code>identify</code> run,
+CrateDigger reuses that tracklist rather than searching again. In interactive mode it asks
+whether to proceed, skip, or research a new match first. This is how <code>up-to-date</code> and
+self-healing <code>updated</code> results happen without repeating a full search.</p>
+<h3 id="2-finding-the-tracklist">2. Finding the tracklist</h3>
+<p><strong>Primary path (yt-dlp files):</strong> For a file whose name ends with a YouTube video ID in
+brackets, for example <code>[p-nL0FjuCPs]</code>, CrateDigger queries 1001Tracklists with the full
+YouTube watch URL (<code>https://www.youtube.com/watch?v=&lt;id&gt;</code>). 1001Tracklists resolves that
+URL to the tracklist(s) directly linked to that video.</p>
 <ul>
-<li>How well the artist name matches</li>
-<li>How well the festival or event name matches (including alias expansion, e.g. EDC to Electric Daisy Carnival)</li>
-<li>Whether the year matches</li>
-<li>How close the tracklist duration is to your file duration</li>
+<li><strong>Exactly one match</strong> (the common case, roughly 9 in 10 yt-dlp files): CrateDigger uses
+  it immediately, with no scoring and no candidate picker, in both automatic and interactive
+  modes. It behaves as though you had pasted that tracklist URL directly.</li>
+<li><strong>More than one match</strong> (the same video linked from several tracklists): only those
+  video-linked tracklists become the candidate set, which then goes through scoring and
+  selection (see step 3 below).</li>
 </ul>
-<p>Results are ranked by score, highest first. A higher score means a stronger match. The gap
-between the top result and second place matters more than the raw score; a large gap means
-CrateDigger is more confident in the top result.</p>
-<p>In interactive mode you see a numbered table of candidates and a prompt:</p>
+<p><strong>Fallback (text search):</strong> When the filename has no <code>[id]</code> suffix, or the YouTube-ID
+lookup returns no results, CrateDigger builds a text query from the filename. It removes
+the <code>[youtubeid]</code> suffix and other noise (codec labels, resolution tags) and expands known
+festival abbreviations from your <a href="../festivals.md">festivals.json</a> aliases. For example,
+"AMF" becomes "Amsterdam Music Festival" and "EDC" becomes "Electric Daisy Carnival". The
+file's duration (read via ffprobe) and year (from an embedded date tag, if present) are
+passed separately to help rank results; they are not part of the search text.</p>
+<h3 id="3-ranking-and-selection">3. Ranking and selection</h3>
+<p>Selection only applies when scoring is involved: text-search results, or multiple
+video-linked matches from step 2.</p>
+<p>CrateDigger scores each candidate on: artist-name match, festival or event-name match
+(with alias expansion), year match, and how close the tracklist duration is to your file's
+duration. Results are ranked by score, highest first. The gap between the top result and
+the runner-up matters more than the raw score.</p>
+<p>In <strong>automatic mode</strong>, CrateDigger accepts the top result only if its score and its lead
+over second place both clear confidence thresholds. If they do not, the file is skipped.</p>
+<p>In <strong>interactive mode</strong>, you see a numbered table of candidates and a prompt:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Top matches:
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  #   Score  Date        Duration  Title
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  1   314    2026-03-01  2h 19m    Tiësto @ We Belong Here, Miami 2026
@@ -1743,22 +1793,36 @@ CrateDigger is more confident in the top result.</p>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Select (1-5, or 0 to skip): 1
 </code></pre></div>
-<p>Type a number to select that tracklist, or <code>0</code> to skip the file.</p>
-<h3 id="3-chapters-and-metadata-are-embedded">3. Chapters and metadata are embedded</h3>
-<p>Once you confirm a match, CrateDigger:</p>
+<p>Type a number to select that tracklist, or <code>0</code> to skip the file. This prompt does not
+appear for a single exact YouTube-ID match.</p>
+<h3 id="4-picking-the-right-source-for-multi-source-tracklists">4. Picking the right source for multi-source tracklists</h3>
+<p>Some tracklists on 1001Tracklists are cued against more than one video ("Player 1",
+"Player 2"), whose timelines differ. CrateDigger identifies which source your file came
+from, in this priority:</p>
 <ol>
-<li>Fetches the full tracklist from 1001Tracklists</li>
-<li>Parses each track entry into a chapter with a timestamp and name</li>
-<li>Embeds the chapters into your MKV file using <code>mkvpropedit</code></li>
-<li>Writes metadata tags into the file:</li>
-<li><strong>Album-level tags</strong>: tracklist URL, title, ID, date, genres, stage name, venue,
-     festival, country, free-text location, artist names, and DJ artwork URL</li>
-<li><strong>Per-chapter tags</strong>: for each track, performer name(s), track title, label, and genre</li>
+<li>The YouTube ID (from the filename, or from the stored <code>CRATEDIGGER_1001TL_YOUTUBE_ID</code>
+   tag on a re-run of a renamed file).</li>
+<li>If there is no ID: a unique match on video duration.</li>
 </ol>
+<p>CrateDigger builds chapters only from that source's timeline. If no source matches
+confidently (an unknown cut, or an ambiguous duration), CrateDigger writes the file-level
+metadata but skips the chapter embed and logs a warning. It leaves any existing chapters
+untouched and never writes another source's timeline into your file.</p>
+<p>Single-source tracklists are unaffected and chapter normally. See
+<a href="../../tracklists/">Multi-source tracklists</a> for a fuller explanation.</p>
+<h3 id="5-chapters-and-metadata-are-embedded">5. Chapters and metadata are embedded</h3>
+<p>CrateDigger fetches the chosen tracklist, parses the selected source's track list into
+chapters (timestamp and name), and embeds them into the MKV via <code>mkvpropedit</code>. It writes:</p>
+<ul>
+<li><strong>Album-level tags</strong>: tracklist URL, title, ID, date, genres, stage name, venue,
+  festival, country, free-text location, artist names, DJ artwork URL, and the source
+  video ID (<code>CRATEDIGGER_1001TL_YOUTUBE_ID</code>).</li>
+<li><strong>Per-chapter tags</strong>: for each track, performer name(s), track title, label, and genre.</li>
+</ul>
 <p>These tags are later read by the <a href="../enrich/"><code>enrich</code></a> command to generate artwork, NFO
 files, and resolve MusicBrainz artist IDs.</p>
-<p>If the tracklist has fewer than 2 chapters (for example, a tracklist with only a single
-entry), CrateDigger skips the embed. A single chapter provides no navigation value.</p>
+<p>If the chosen source has fewer than 2 chapters, CrateDigger skips the chapter embed.
+A single chapter provides no navigation value.</p>
 <h2 id="what-you-see-when-it-runs">What you see when it runs</h2>
 <p>For each file, CrateDigger prints one verdict line: a padded badge, the file position, the
 filename, a short note, and how long that file took. A transient spinner shows the current
