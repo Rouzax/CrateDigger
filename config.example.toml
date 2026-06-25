@@ -69,6 +69,19 @@ chapter_language = "eng"
 auto_select = false
 # Cap on per-track genres collected into the album-level tag. 0 disables the cap.
 genre_top_n = 5
+# Layered "w/" overlay chapters and mashup metadata (see docs/tracklists.md).
+# overlay_chapters: master switch. false = only main-track chapters (pre-0.30.0).
+overlay_chapters = true
+# overlay_fold_seconds: an overlay entering at least this many seconds after its
+# host main track becomes its own chapter; closer ones fold in as "A vs. B".
+# 0 = every timecoded overlay its own chapter; large = fold everything into the host.
+overlay_fold_seconds = 20
+# mashup_metadata: harvest real per-component artists/genres/labels from "vs."
+# mashup sub-rows into the per-chapter tags (instead of one concatenated artist).
+mashup_metadata = true
+# chapter_title_labels: keep the record-company [Label] in the visible chapter
+# title. false (default) writes the label only to the CRATEDIGGER_TRACK_LABEL tag.
+chapter_title_labels = false
 
 # fanart.tv settings. The project API key is built in.
 # Add your personal key for faster cache updates (get one at https://fanart.tv/get-an-api-key/).
