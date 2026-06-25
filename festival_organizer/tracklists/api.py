@@ -85,6 +85,12 @@ class Track:
     title: track title portion only, without artist prefix or label brackets
     label: record label as plain text (e.g. "WALL"), empty if not listed
     genres: per-track <meta itemprop="genre"> values for this row
+    is_overlay: True for concurrent ("con") rows that layer over a main
+        (timed "w/" overlays and positionless component acappellas/samples)
+    is_subcomponent: True for "tlpSubTog" rows (a mashup main's component
+        breakdown); these are metadata contributors, never their own chapter
+    group_id: the trRow<N> number shared by a mashup main and its tlpSubTog
+        children, used to link sub-components to their parent; -1 when absent
     """
 
     start_ms: int
@@ -96,6 +102,9 @@ class Track:
     label: str = ""
     is_mashup: bool = False
     player: int = 0  # 1001TL "Player N" ordinal; 0 when no per-player marker
+    is_overlay: bool = False
+    is_subcomponent: bool = False
+    group_id: int = -1
 
 
 @dataclass
@@ -163,13 +172,17 @@ def _parse_tracks(html) -> list["Track"]:
     Accepts raw HTML or an already-parsed BeautifulSoup so export_tracklist
     can share one parse with the other tracklist-page parsers.
 
-    Rows with class 'tlpSubTog' are mashup sub-components and always
-    skipped. Rows with class 'con' are concurrent overlays; they are
-    skipped only when their cue is zero (component acappellas/samples
-    with no independent chapter position). Con rows with a non-zero cue
-    are mashup main rows that represent real chapters in the set.
-    Returns Track objects in page order with start_ms taken from the
-    row's cue_seconds input (float seconds * 1000).
+    Every row carrying a cue_seconds input is returned, flagged by row class
+    so downstream overlay assembly can place it:
+      - 'con' rows are concurrent overlays (Track.is_overlay). A non-zero cue
+        is a timed "w/" overlay or mashup main; a zero cue is a positionless
+        component (acappella/sample) that folds into its host.
+      - 'tlpSubTog' rows are a mashup main's component breakdown
+        (Track.is_subcomponent, always 'con' with cue 0). They are metadata
+        contributors, linked to their parent main by the shared trRow<N>
+        group_id, and never become chapters themselves.
+    Returns Track objects in page order with start_ms taken from the row's
+    cue_seconds input (float seconds * 1000).
     """
     from bs4 import BeautifulSoup
 
@@ -193,9 +206,11 @@ def _parse_tracks(html) -> list["Track"]:
             continue
         row = el
         classes = el_classes
-        if "tlpTog" not in classes:
-            continue
-        if "tlpSubTog" in classes:
+        # Main rows carry 'tlpTog'; mashup sub-component rows carry 'tlpSubTog'
+        # instead (no 'tlpTog'). Accept both so sub-components are captured as
+        # metadata contributors; everything else (non-track tlpItem markup) is
+        # skipped.
+        if "tlpTog" not in classes and "tlpSubTog" not in classes:
             continue
         cue_el = row.select_one("input[id$='_cue_seconds']")
         if cue_el is None:
@@ -204,9 +219,14 @@ def _parse_tracks(html) -> list["Track"]:
             start_ms = int(float(_attr_str(cue_el, "value", "0")) * 1000)
         except ValueError:
             continue
-        # con at cue=0 are component overlays (acappellas, samples), not chapters.
-        if "con" in classes and start_ms == 0:
-            continue
+        # group_id ties a mashup main to its tlpSubTog children via the shared
+        # trRow<N> class; -1 when the row has no trRow marker.
+        group_id = -1
+        for cls in classes:
+            gm = re.fullmatch(r"trRow(\d+)", cls)
+            if gm:
+                group_id = int(gm.group(1))
+                break
         name_meta = row.select_one('meta[itemprop="name"]')
         raw_text = fix_mojibake(_attr_str(name_meta, "content")) if name_meta else ""
         genres = [
@@ -330,6 +350,9 @@ def _parse_tracks(html) -> list["Track"]:
                 label=label,
                 is_mashup="subPosTog" in classes,
                 player=current_player,
+                is_overlay="con" in classes,
+                is_subcomponent="tlpSubTog" in classes,
+                group_id=group_id,
             )
         )
     return tracks

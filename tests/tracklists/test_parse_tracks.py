@@ -5,10 +5,17 @@ from festival_organizer.tracklists.api import _parse_tracks
 FIXTURE = Path(__file__).parent / "fixtures" / "afrojack_edc_2025.html"
 
 
-def test_parse_tracks_returns_chapter_aligned_rows_only():
-    """HTML has 77 tlpItem rows but only ~27-30 are chapter-aligned."""
+def test_parse_tracks_chapter_positioned_row_count():
+    """Of the parsed rows, only the chapter-positioned ones (plain mains and
+    mashup mains, i.e. not overlay/sub-component rows) number ~24-35. Overlay
+    and tlpSubTog rows are now also returned (flagged) for later assembly, so
+    the full count is larger."""
     tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
-    assert 24 <= len(tracks) <= 35
+    chapter_rows = [t for t in tracks if not t.is_overlay and not t.is_subcomponent]
+    assert 24 <= len(chapter_rows) <= 35
+    # Overlay/sub-component rows are now captured rather than dropped.
+    assert any(t.is_subcomponent for t in tracks)
+    assert any(t.is_overlay for t in tracks)
 
 
 def test_parse_tracks_extracts_slugs():
@@ -35,8 +42,11 @@ def test_parse_tracks_normalizes_genre_slash_spacing():
 
 
 def test_parse_tracks_start_ms_monotonic():
+    """Chapter-positioned rows (mains/mashup mains) appear in ascending start
+    order. Overlay and sub-component rows carry start_ms 0 / their own cue and
+    sit inline in page order, so they are excluded from this invariant."""
     tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
-    starts = [t.start_ms for t in tracks]
+    starts = [t.start_ms for t in tracks if not t.is_overlay and not t.is_subcomponent]
     assert starts == sorted(starts)
 
 
@@ -364,9 +374,10 @@ def test_parse_tracks_includes_con_row_with_valid_cue():
     assert "Alpha vs. Beta (Mashup)" in titles
 
 
-def test_parse_tracks_excludes_con_row_with_zero_cue():
-    """A row with class 'con' and cue=0 is a mashup component overlay
-    (acappella, sample). It has no chapter position and must stay filtered."""
+def test_parse_tracks_includes_con_row_with_zero_cue_as_overlay():
+    """A row with class 'con' and cue=0 is a positionless mashup component
+    overlay (acappella, sample). It is now parsed (not dropped) and flagged as
+    an overlay so later assembly can fold it into its host main."""
     html = """<div id="tlTab">
 <div class="tlpItem tlpTog trRow1">
 <input id="tlp1_cue_seconds" value="100">
@@ -378,8 +389,13 @@ def test_parse_tracks_excludes_con_row_with_zero_cue():
 </div>
 </div>"""
     tracks = _parse_tracks(html)
-    assert len(tracks) == 1
-    assert tracks[0].title == "Track One"
+    assert len(tracks) == 2
+    main = [t for t in tracks if not t.is_overlay][0]
+    assert main.title == "Track One"
+    overlay = [t for t in tracks if t.is_overlay][0]
+    assert overlay.start_ms == 0
+    assert overlay.is_overlay is True
+    assert overlay.is_subcomponent is False
 
 
 def test_parse_tracks_afrojack_con_mashups_included():
@@ -402,6 +418,121 @@ def test_parse_tracks_sets_is_mashup_on_subPosTog_rows():
         assert "vs." in t.raw_text.lower() or "mashup" in t.raw_text.lower(), (
             f"mashup track doesn't look like a mashup: {t.raw_text}"
         )
+
+
+# --- Overlay / sub-component flags + group_id (Task 2) ---
+
+
+def test_parse_tracks_con_row_with_valid_cue_is_overlay():
+    """A 'con' row with cue>0 is a timed overlay: is_overlay True,
+    is_subcomponent False, and it keeps its non-zero start."""
+    html = """<div id="tlTab">
+<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="100">
+<meta itemprop="name" content="Artist A - Track One">
+</div>
+<div class="tlpItem tlpTog trRow2 con">
+<input id="tlp2_cue_seconds" value="200">
+<meta itemprop="name" content="Artist B - Track Two">
+</div>
+</div>"""
+    tracks = _parse_tracks(html)
+    overlay = [t for t in tracks if t.start_ms == 200000][0]
+    assert overlay.is_overlay is True
+    assert overlay.is_subcomponent is False
+    # The plain main is neither.
+    main = [t for t in tracks if t.start_ms == 100000][0]
+    assert main.is_overlay is False
+    assert main.is_subcomponent is False
+
+
+def test_parse_tracks_con_row_with_zero_cue_is_parsed_as_overlay():
+    """A 'con' row with cue=0 (positionless overlay) is no longer dropped:
+    it is parsed with is_overlay True and start_ms 0."""
+    html = """<div id="tlTab">
+<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="100">
+<meta itemprop="name" content="Artist A - Track One">
+</div>
+<div class="tlpItem tlpTog trRow1 con">
+<input id="tlp2_cue_seconds" value="0">
+<meta itemprop="name" content="Classic Track - Vocals (Acappella)">
+</div>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert len(tracks) == 2
+    overlay = [t for t in tracks if t.start_ms == 0 and t.is_overlay][0]
+    assert overlay.is_overlay is True
+    assert overlay.start_ms == 0
+
+
+def test_parse_tracks_tlpsubtog_row_is_subcomponent_with_group_id():
+    """A 'tlpSubTog' row is a mashup sub-component: is_subcomponent True,
+    is_overlay True (it carries 'con'), start_ms 0, and group_id equal to its
+    trRow<N> number."""
+    html = """<div id="tlTab">
+<div class="tlpItem tlpTog subPosTog trRow7">
+<input id="tlp1_cue_seconds" value="300">
+<meta itemprop="name" content="Artist A vs. Artist B - Alpha vs. Beta (Mashup)">
+</div>
+<div class="tlpItem tlpSubTog con subPos1 trRow7 tgHid">
+<input id="tlp2_cue_seconds" value="0">
+<meta itemprop="name" content="Artist A - Alpha">
+</div>
+<div class="tlpItem tlpSubTog con subPos2 trRow7 tgHid">
+<input id="tlp3_cue_seconds" value="0">
+<meta itemprop="name" content="Artist B - Beta">
+</div>
+</div>"""
+    tracks = _parse_tracks(html)
+    subs = [t for t in tracks if t.is_subcomponent]
+    assert len(subs) == 2
+    for s in subs:
+        assert s.is_subcomponent is True
+        assert s.is_overlay is True
+        assert s.start_ms == 0
+        assert s.group_id == 7
+    # The mashup main shares the group id and is flagged is_mashup.
+    main = [t for t in tracks if t.is_mashup][0]
+    assert main.group_id == 7
+    assert main.is_subcomponent is False
+    assert main.is_overlay is False
+
+
+def test_parse_tracks_plain_main_has_default_overlay_fields():
+    """A plain main row has is_overlay/is_subcomponent/is_mashup False and
+    group_id -1 when it has no trRow class."""
+    html = """<div id="tlTab">
+<div class="tlpItem tlpTog">
+<input id="tlp1_cue_seconds" value="100">
+<meta itemprop="name" content="Artist A - Track One">
+</div>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert len(tracks) == 1
+    t = tracks[0]
+    assert t.is_overlay is False
+    assert t.is_subcomponent is False
+    assert t.is_mashup is False
+    assert t.group_id == -1
+
+
+def test_parse_tracks_afrojack_mashup_mains_and_children_share_group_id():
+    """In the real Afrojack EDC fixture, every tlpSubTog child shares a
+    group_id with a subPosTog mashup main."""
+    tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
+    subs = [t for t in tracks if t.is_subcomponent]
+    mains = [t for t in tracks if t.is_mashup]
+    assert subs, "expected tlpSubTog sub-components in fixture"
+    assert mains, "expected subPosTog mashup mains in fixture"
+    main_group_ids = {t.group_id for t in mains}
+    assert all(s.group_id in main_group_ids for s in subs), (
+        "every sub-component should share a group_id with a mashup main"
+    )
+    # Sub-components carry the con overlay flag and sit at cue 0.
+    for s in subs:
+        assert s.is_overlay is True
+        assert s.start_ms == 0
 
 
 # --- Player ordinal tagging (multi-source pages) ---
