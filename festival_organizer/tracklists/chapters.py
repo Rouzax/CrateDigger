@@ -404,8 +404,6 @@ def chapter_tags_need_refresh(
     filepath: Path,
     assembled: "list[AssembledChapter] | None",
     chapters: list[Chapter],
-    *,
-    mashup_metadata: bool,
 ) -> bool:
     """Return True when the embedded per-chapter tags differ from what the code
     would now produce, so identify can self-heal a tag-derivation change without
@@ -443,9 +441,7 @@ def chapter_tags_need_refresh(
     )
 
     _, chapter_uids = build_chapter_xml(chapters, return_uids=True)
-    desired = build_chapter_tags_from_assembled(
-        assembled, chapter_uids, mashup_metadata=mashup_metadata
-    )
+    desired = build_chapter_tags_from_assembled(assembled, chapter_uids)
     embedded = extract_chapter_tags_by_uid(filepath)
 
     # Disjoint UID sets => the embedded file keys per-chapter tags by UIDs we no
@@ -658,7 +654,6 @@ def embed_chapters(
     dj_cache: "DjCache | None" = None,
     alias_resolver: "Callable[[str], str] | None" = None,
     assembled: list["AssembledChapter"] | None = None,
-    mashup_metadata: bool = True,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
 
@@ -723,7 +718,7 @@ def embed_chapters(
                 from .overlays import build_chapter_tags_from_assembled
 
                 chapter_tags = build_chapter_tags_from_assembled(
-                    assembled, chapter_uids, mashup_metadata=mashup_metadata
+                    assembled, chapter_uids
                 )
             elif tracks and chapters and chapter_uids:
                 chapter_tags = _build_chapter_tags_map(

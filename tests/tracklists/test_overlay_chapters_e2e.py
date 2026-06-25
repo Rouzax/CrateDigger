@@ -1,4 +1,4 @@
-"""End-to-end coverage for overlay-chapter + mashup-metadata wiring in
+"""End-to-end coverage for overlay-chapter and mashup wiring in
 cli_handler._fetch_and_embed.
 
 These drive the real glue (anchor build -> overlays.assemble -> trim -> title
@@ -18,7 +18,6 @@ def _make_config(
     *,
     overlay_chapters: bool = True,
     overlay_fold_seconds: int = 20,
-    mashup_metadata: bool = True,
     chapter_title_labels: bool = False,
 ) -> MagicMock:
     cfg = MagicMock()
@@ -26,7 +25,6 @@ def _make_config(
     cfg.resolve_artist = lambda name: name
     cfg.overlay_chapters = overlay_chapters
     cfg.overlay_fold_seconds = overlay_fold_seconds
-    cfg.mashup_metadata = mashup_metadata
     cfg.chapter_title_labels = chapter_title_labels
     return cfg
 
@@ -168,7 +166,6 @@ def _run(config, tmp_path, *, duration_seconds=600.0):
     def fake_embed(filepath, chapters, **kwargs):
         captured["chapters"] = chapters
         captured["assembled"] = kwargs.get("assembled")
-        captured["mashup_metadata"] = kwargs.get("mashup_metadata")
         captured["tracks"] = kwargs.get("tracks")
         return True
 
@@ -230,8 +227,7 @@ def test_overlays_enabled_folds_breaks_out_and_merges_mashup(tmp_path):
     # Mashup chapter present.
     assert chapters[3].timestamp.startswith("00:04:00")
 
-    # mashup_metadata forwarded and assembled list aligns 1:1 with chapters.
-    assert captured["mashup_metadata"] is True
+    # assembled list aligns 1:1 with chapters.
     assembled = captured["assembled"]
     assert assembled is not None
     assert len(assembled) == len(chapters)
@@ -239,9 +235,7 @@ def test_overlays_enabled_folds_breaks_out_and_merges_mashup(tmp_path):
     # The mashup chapter's merged per-chapter tags carry the component artists,
     # not the junk mega-slug.
     mashup_ac = assembled[3]
-    tags = merge_chapter_tags(
-        mashup_ac.primary, mashup_ac.contributors, mashup_metadata=True
-    )
+    tags = merge_chapter_tags(mashup_ac.primary, mashup_ac.contributors)
     slugs = tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"].split("|")
     names = tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"].split("|")
     assert "component-a" in slugs and "component-b" in slugs
@@ -252,8 +246,8 @@ def test_overlays_enabled_folds_breaks_out_and_merges_mashup(tmp_path):
 
 def test_overlays_disabled_anchor_count_but_mashup_still_merges(tmp_path):
     """overlay_chapters=False: no breakouts, anchor count only, but a mashup
-    chapter still gets merged metadata when mashup_metadata=True."""
-    cfg = _make_config(overlay_chapters=False, mashup_metadata=True)
+    chapter still gets merged per-component metadata."""
+    cfg = _make_config(overlay_chapters=False)
     captured = _run(cfg, tmp_path)
 
     assert captured["status"] == "updated"
@@ -265,9 +259,7 @@ def test_overlays_disabled_anchor_count_but_mashup_still_merges(tmp_path):
     # Mashup still merges component metadata via tlpSubTog children.
     assembled = captured["assembled"]
     mashup_ac = assembled[2]
-    tags = merge_chapter_tags(
-        mashup_ac.primary, mashup_ac.contributors, mashup_metadata=True
-    )
+    tags = merge_chapter_tags(mashup_ac.primary, mashup_ac.contributors)
     slugs = tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"].split("|")
     assert "component-a" in slugs and "component-b" in slugs
     assert "junk-mega-slug" not in slugs

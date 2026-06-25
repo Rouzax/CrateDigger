@@ -350,7 +350,6 @@ def test_overlay_chapter_settings_defaults():
     cfg = Config(DEFAULT_CONFIG)
     assert cfg.overlay_chapters is True
     assert cfg.overlay_fold_seconds == 20
-    assert cfg.mashup_metadata is True
     assert cfg.chapter_title_labels is False
 
 
@@ -359,7 +358,6 @@ def test_overlay_chapter_settings_defaults_when_section_missing():
     cfg = Config({})
     assert cfg.overlay_chapters is True
     assert cfg.overlay_fold_seconds == 20
-    assert cfg.mashup_metadata is True
     assert cfg.chapter_title_labels is False
 
 
@@ -378,7 +376,6 @@ def test_overlay_chapter_settings_overridden_by_config():
     assert cfg.overlay_fold_seconds == 8
     assert cfg.chapter_title_labels is True
     # Unspecified key keeps its default.
-    assert cfg.mashup_metadata is True
 
 
 def test_overlay_fold_seconds_floor_and_coercion():

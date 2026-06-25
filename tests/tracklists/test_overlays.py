@@ -372,10 +372,10 @@ def _meta_track(
 
 
 def test_merge_empty_inputs_returns_empty() -> None:
-    assert merge_chapter_tags(None, [], mashup_metadata=True) == {}
+    assert merge_chapter_tags(None, []) == {}
 
 
-def test_merge_mashup_main_with_subcomponents_metadata_on() -> None:
+def test_merge_mashup_main_with_subcomponents() -> None:
     primary = _meta_track(
         raw_text="A vs. B vs. C - Mega Mashup",
         artist_slugs=["a-vs-b-vs-c-mega"],
@@ -404,7 +404,7 @@ def test_merge_mashup_main_with_subcomponents_metadata_on() -> None:
         is_subcomponent=True,
     )
 
-    tags = merge_chapter_tags(primary, [child_a, child_b], mashup_metadata=True)
+    tags = merge_chapter_tags(primary, [child_a, child_b])
 
     # Children's real slugs/names; mega-slug absent; aligned and equal length.
     assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "artist-a|artist-b"
@@ -418,37 +418,6 @@ def test_merge_mashup_main_with_subcomponents_metadata_on() -> None:
     # Display + title derive from the lead (the primary mashup main).
     assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "A vs. B vs. C"
     assert tags["CRATEDIGGER_TRACK_TITLE"] == "Mega Mashup"
-
-
-def test_merge_mashup_main_with_subcomponents_metadata_off() -> None:
-    primary = _meta_track(
-        raw_text="A vs. B vs. C - Mega Mashup",
-        artist_slugs=["a-vs-b-vs-c-mega"],
-        artist_names=["A vs. B vs. C"],
-        title="Mega Mashup",
-        label="Spinnin",
-        genres=[],
-        is_mashup=True,
-    )
-    child_a = _meta_track(
-        raw_text="Artist A - Part A",
-        artist_slugs=["artist-a"],
-        artist_names=["Artist A"],
-        title="Part A",
-        label="Label A",
-        genres=["House"],
-        is_subcomponent=True,
-    )
-
-    tags = merge_chapter_tags(primary, [child_a], mashup_metadata=False)
-
-    # Legacy: source is primary + contributors, so the mega-slug is present.
-    assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "a-vs-b-vs-c-mega|artist-a"
-    assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "A vs. B vs. C|Artist A"
-    # Genre is the union (only the child has genres; primary has none).
-    assert tags["CRATEDIGGER_TRACK_GENRE"] == "House"
-    # Label still distinct across primary + child.
-    assert tags["CRATEDIGGER_TRACK_LABEL"] == "Spinnin|Label A"
 
 
 def test_merge_normal_anchor_with_folded_overlay() -> None:
@@ -469,7 +438,7 @@ def test_merge_normal_anchor_with_folded_overlay() -> None:
         genres=["Trance"],
     )
 
-    tags = merge_chapter_tags(primary, [overlay], mashup_metadata=True)
+    tags = merge_chapter_tags(primary, [overlay])
 
     # Artists = primary then overlay, deduped, aligned.
     assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "anchor-artist|overlay-artist"
@@ -502,7 +471,7 @@ def test_merge_w_addition_single_value_tags_include_appended_component() -> None
         title="Stephanie (HNTR VIP)",
     )
 
-    tags = merge_chapter_tags(primary, [overlay], mashup_metadata=True)
+    tags = merge_chapter_tags(primary, [overlay])
 
     # The two single-value tags include the appended "vs. ..." component and
     # match the two segments of the display title.
@@ -532,7 +501,7 @@ def test_merge_duplicate_slug_appears_once_names_aligned() -> None:
         title="Title Two",
     )
 
-    tags = merge_chapter_tags(primary, [overlay], mashup_metadata=True)
+    tags = merge_chapter_tags(primary, [overlay])
 
     slugs = tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"].split("|")
     names = tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"].split("|")
@@ -552,7 +521,7 @@ def test_merge_breakout_primary_none_uses_lead_contributor() -> None:
         genres=["Bass"],
     )
 
-    tags = merge_chapter_tags(None, [contributor], mashup_metadata=True)
+    tags = merge_chapter_tags(None, [contributor])
 
     # Display and title derive from the lead (first non-subcomponent contributor).
     assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "Lead Artist"
@@ -672,7 +641,7 @@ def test_build_chapter_tags_from_assembled_maps_uids() -> None:
     empty_chapter = AssembledChapter(start_ms=1, title="x", primary=None)
 
     result = build_chapter_tags_from_assembled(
-        [mashup_chapter, empty_chapter], [111, 222], mashup_metadata=True
+        [mashup_chapter, empty_chapter], [111, 222]
     )
 
     assert set(result.keys()) == {111}

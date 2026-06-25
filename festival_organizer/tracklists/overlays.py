@@ -109,8 +109,6 @@ def combined_title(members: list[Track]) -> str:
 def merge_chapter_tags(
     primary: Track | None,
     contributors: list[Track],
-    *,
-    mashup_metadata: bool,
 ) -> dict[str, str]:
     """Build the TTV=30 per-chapter tag block for one chapter.
 
@@ -118,13 +116,12 @@ def merge_chapter_tags(
     source tracks, deduplicating by slug (first occurrence wins) while keeping
     the parallel name list index-aligned with the slug list.
 
-    For a mashup main WITH ``tlpSubTog`` sub-components and
-    ``mashup_metadata=True`` the artist/genre source is the contributors (the
-    real per-component rows), dropping the mashup primary whose only slug is a
-    junk concatenated mega-slug and whose genres are empty. Otherwise the source
-    is ``[primary] + contributors``. Labels are always the distinct labels
-    across ``[primary] + contributors`` (including a mashup primary's real
-    label), order-preserving.
+    For a mashup main WITH ``tlpSubTog`` sub-components the artist/genre source
+    is the contributors (the real per-component rows), dropping the mashup
+    primary whose only slug is a junk concatenated mega-slug and whose genres
+    are empty. Otherwise the source is ``[primary] + contributors``. Labels are
+    always the distinct labels across ``[primary] + contributors`` (including a
+    mashup primary's real label), order-preserving.
 
     The single-value display tags (``CRATEDIGGER_TRACK_PERFORMER`` and
     ``CRATEDIGGER_TRACK_TITLE``) mirror the display title: they are the artist
@@ -154,7 +151,6 @@ def merge_chapter_tags(
     use_children = (
         primary is not None
         and primary.is_mashup
-        and mashup_metadata
         and any(c.is_subcomponent for c in contributors)
     )
     if use_children:
@@ -216,8 +212,6 @@ def merge_chapter_tags(
 def build_chapter_tags_from_assembled(
     assembled: list[AssembledChapter],
     chapter_uids: list[int],
-    *,
-    mashup_metadata: bool,
 ) -> dict[int, dict[str, str]]:
     """Build the per-chapter TTV=30 tag map keyed by ChapterUID.
 
@@ -228,9 +222,7 @@ def build_chapter_tags_from_assembled(
     """
     result: dict[int, dict[str, str]] = {}
     for ac, uid in zip(assembled, chapter_uids, strict=True):
-        tags = merge_chapter_tags(
-            ac.primary, ac.contributors, mashup_metadata=mashup_metadata
-        )
+        tags = merge_chapter_tags(ac.primary, ac.contributors)
         if tags:
             result[uid] = tags
     return result

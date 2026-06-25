@@ -161,11 +161,9 @@ over a currently-playing main track) are handled according to the `overlay_chapt
   `Artist A vs. Artist B - Title A vs. Title B`.
 
 "vs." mashup rows harvest per-component artist and genre data from the page's expandable
-sub-rows when `mashup_metadata` is `true` (default), giving each mashup chapter real
-multi-artist credits instead of a single concatenated string.
+sub-rows, giving each mashup chapter real multi-artist credits.
 
-Set `overlay_chapters = false` to restore the pre-0.30.0 behaviour where overlays are
-ignored and only main-track chapters are written. See
+Set `overlay_chapters = false` to ignore overlays and write only main-track chapters. See
 [Layered ("w/") tracks and mashups](../tracklists.md#layered-w-tracks-and-mashups) for
 the full model and config options.
 

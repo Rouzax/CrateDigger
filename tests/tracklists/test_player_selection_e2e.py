@@ -201,7 +201,6 @@ def _overlay_config() -> MagicMock:
     cfg = _make_config()
     cfg.overlay_chapters = True
     cfg.overlay_fold_seconds = 20
-    cfg.mashup_metadata = True
     cfg.chapter_title_labels = False
     return cfg
 

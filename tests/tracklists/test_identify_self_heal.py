@@ -65,7 +65,6 @@ def _make_config() -> MagicMock:
     # label-strip pass run with concrete arithmetic, not auto-MagicMocks.
     cfg.overlay_chapters = True
     cfg.overlay_fold_seconds = 20
-    cfg.mashup_metadata = True
     cfg.chapter_title_labels = False
     return cfg
 
@@ -408,7 +407,6 @@ def test_set_genres_capped_via_config_genre_top_n(tmp_path):
     config.resolve_artist = lambda n: n
     config.overlay_chapters = True
     config.overlay_fold_seconds = 20
-    config.mashup_metadata = True
     config.chapter_title_labels = False
 
     captured: dict = {}
@@ -488,7 +486,6 @@ def test_set_genres_uncapped_when_config_zero(tmp_path):
     config.resolve_artist = lambda n: n
     config.overlay_chapters = True
     config.overlay_fold_seconds = 20
-    config.mashup_metadata = True
     config.chapter_title_labels = False
 
     captured: dict = {}
@@ -570,7 +567,6 @@ def test_fetch_and_embed_uses_export_date_when_tracklist_date_none(tmp_path):
     config.resolve_artist = lambda n: n
     config.overlay_chapters = True
     config.overlay_fold_seconds = 20
-    config.mashup_metadata = True
     config.chapter_title_labels = False
 
     captured: dict = {}
@@ -770,7 +766,6 @@ def test_fetch_and_embed_tracklist_date_wins_over_export_date(tmp_path):
     config.resolve_artist = lambda n: n
     config.overlay_chapters = True
     config.overlay_fold_seconds = 20
-    config.mashup_metadata = True
     config.chapter_title_labels = False
 
     captured: dict = {}

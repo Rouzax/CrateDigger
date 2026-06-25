@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-06-25
+
+### Removed
+
+- The `mashup_metadata` config key is removed. Per-component mashup metadata (real artists, genres, and labels) is always harvested from "vs." mashup sub-rows.
+
 ## [0.30.2] - 2026-06-25
 
 ### Fixed

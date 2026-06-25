@@ -109,9 +109,6 @@ DEFAULT_CONFIG = {
         # 0 = every timecoded overlay its own chapter; large = everything
         # folds into its host. Floored at 0.
         "overlay_fold_seconds": 20,
-        # mashup_metadata: harvest tlpSubTog component artists/genres/labels
-        # into mashup chapters' tags.
-        "mashup_metadata": True,
         # chapter_title_labels: when off (default), the record-company label
         # is not written into the visible chapter title; it still goes to the
         # CRATEDIGGER_TRACK_LABEL tag. When on, titles keep the trailing
@@ -430,11 +427,6 @@ class Config:
         """Host-fold cutoff (seconds). Coerced to int and floored at 0."""
         value = self._data.get("tracklists", {}).get("overlay_fold_seconds", 20)
         return max(0, int(value))
-
-    @property
-    def mashup_metadata(self) -> bool:
-        """Harvest tlpSubTog component metadata into mashup chapters' tags."""
-        return bool(self._data.get("tracklists", {}).get("mashup_metadata", True))
 
     @property
     def chapter_title_labels(self) -> bool:

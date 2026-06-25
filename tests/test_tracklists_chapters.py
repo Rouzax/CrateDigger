@@ -390,7 +390,6 @@ def test_embed_chapters_assembled_path_builds_per_chapter_tags(tmp_path):
                         chapters,
                         tracklist_url="https://example.com/tracklist/abc123/",
                         assembled=assembled,
-                        mashup_metadata=True,
                     )
 
     chapter_tags = mock_wmt.call_args.kwargs["chapter_tags"]

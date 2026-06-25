@@ -1098,7 +1098,6 @@ def _fetch_and_embed(
                 filepath,
                 assembled,
                 chapters,
-                mashup_metadata=config.mashup_metadata,
             )
             if missing_chapter_tags:
                 logger.debug(
@@ -1178,7 +1177,6 @@ def _fetch_and_embed(
                 alias_resolver=config.resolve_artist,
                 youtube_id=persisted_youtube_id,
                 assembled=assembled,
-                mashup_metadata=config.mashup_metadata,
             )
             if success:
                 return (
@@ -1229,7 +1227,6 @@ def _fetch_and_embed(
         alias_resolver=config.resolve_artist,
         youtube_id=persisted_youtube_id,
         assembled=assembled,
-        mashup_metadata=config.mashup_metadata,
     )
     if success:
         return ("updated", "updated", f"{export.title} . {len(chapters)} chapters")

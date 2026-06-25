@@ -190,6 +190,9 @@ delay_seconds = 5
 chapter_language = "eng"
 auto_select = false
 genre_top_n = 5
+overlay_chapters = true
+overlay_fold_seconds = 20
+chapter_title_labels = false
 ```
 
 Settings for 1001Tracklists integration. See [Tracklists integration](tracklists.md) for account setup details.
@@ -198,14 +201,13 @@ Settings for 1001Tracklists integration. See [Tracklists integration](tracklists
 |-----|-------------|
 | `email` | 1001Tracklists account email |
 | `password` | 1001Tracklists account password |
-| `delay_seconds` | Pause between files during identify (default: 5 seconds) |
+| `delay_seconds` | Pause between files during identify (default: `5`); override per run with `--delay` |
 | `chapter_language` | Language code embedded in chapter names (default: `"eng"`) |
 | `auto_select` | Set to `true` to make `--auto` the default for `identify` (default: `false`) |
-| `genre_top_n` | Maximum number of genres to write to the album-level genre tag. CrateDigger tallies per-track genres across the set and keeps the top N by frequency. Ties are broken by first appearance. Set to `0` to disable the cap and write every genre. Default: `5`. |
-| `overlay_chapters` | Master switch for "w/" overlay chapter handling. When `true` (default), overlay tracks from the tracklist are processed and either given their own chapter or folded into the host main track. When `false`, overlays are ignored and only main-track chapters are written, restoring pre-0.30.0 behaviour. |
-| `overlay_fold_seconds` | How many seconds after its host main track an overlay must enter to become its own chapter rather than folding in. Default: `20`. An overlay that enters within this window (or shares the exact same second, or has no timecode) is folded into the host, combining both sides into an `Artist A vs. Artist B - Title A vs. Title B` chapter title. Set to `0` to give every timecoded overlay its own chapter; set to a large value to fold everything into the host (fewest chapters). |
-| `mashup_metadata` | When `true` (default), "vs." mashup chapters harvest the real per-component artists, genres, and labels from the page's expandable sub-rows. The component artists then resolve to MusicBrainz IDs via the normal pipeline. When `false`, mashup chapters keep the old single-value (concatenated) metadata and skip the extra lookups. |
-| `chapter_title_labels` | When `false` (default), the record label is omitted from the visible chapter title; the label is still written to `CRATEDIGGER_TRACK_LABEL`. When `true`, chapter titles keep the trailing `[Label]` (for example, `These Are The Times [STMPD]`). |
+| `genre_top_n` | Maximum genres written to the album-level tag; tallied by frequency, ties broken by first appearance; `0` disables the cap (default: `5`) |
+| `overlay_chapters` | When `true` (default), "w/" overlay tracks are processed and either folded into the host chapter or given their own chapter; when `false`, overlays are ignored and only main-track chapters are written |
+| `overlay_fold_seconds` | Seconds after the host main track an overlay must enter to become its own chapter; overlays inside the window fold in as `Artist A vs. Artist B - Title A vs. Title B`; `0` gives every timecoded overlay its own chapter; a large value folds everything (default: `20`) |
+| `chapter_title_labels` | When `false` (default), the record label is omitted from the visible chapter title but still written to `CRATEDIGGER_TRACK_LABEL`; when `true`, chapter titles include the trailing `[Label]` (for example, `These Are The Times [STMPD]`) |
 
 Credentials can also be set via environment variables: `TRACKLISTS_EMAIL` and `TRACKLISTS_PASSWORD`.
 

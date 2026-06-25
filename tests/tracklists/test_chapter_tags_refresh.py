@@ -50,7 +50,7 @@ def _build():
     )
     chapters = [Chapter(timestamp="00:00:00.000", title=ac.title, language="eng")]
     _, uids = build_chapter_xml(chapters, return_uids=True)
-    desired = build_chapter_tags_from_assembled([ac], uids, mashup_metadata=True)
+    desired = build_chapter_tags_from_assembled([ac], uids)
     return [ac], chapters, uids[0], desired[uids[0]]
 
 
@@ -60,9 +60,7 @@ def test_no_refresh_when_embedded_matches_desired():
         "festival_organizer.mkv_tags.extract_chapter_tags_by_uid",
         return_value={uid: dict(desired_block)},
     ):
-        assert not chapter_tags_need_refresh(
-            Path("x.mkv"), assembled, chapters, mashup_metadata=True
-        )
+        assert not chapter_tags_need_refresh(Path("x.mkv"), assembled, chapters)
 
 
 def test_refresh_when_embedded_title_is_truncated():
@@ -75,9 +73,7 @@ def test_refresh_when_embedded_title_is_truncated():
         "festival_organizer.mkv_tags.extract_chapter_tags_by_uid",
         return_value={uid: stale},
     ):
-        assert chapter_tags_need_refresh(
-            Path("x.mkv"), assembled, chapters, mashup_metadata=True
-        )
+        assert chapter_tags_need_refresh(Path("x.mkv"), assembled, chapters)
 
 
 def test_no_refresh_when_only_enrich_managed_mbids_differ():
@@ -91,13 +87,11 @@ def test_no_refresh_when_only_enrich_managed_mbids_differ():
         "festival_organizer.mkv_tags.extract_chapter_tags_by_uid",
         return_value={uid: embedded},
     ):
-        assert not chapter_tags_need_refresh(
-            Path("x.mkv"), assembled, chapters, mashup_metadata=True
-        )
+        assert not chapter_tags_need_refresh(Path("x.mkv"), assembled, chapters)
 
 
 def test_no_refresh_when_nothing_to_compare():
-    assert not chapter_tags_need_refresh(Path("x.mkv"), None, [], mashup_metadata=True)
+    assert not chapter_tags_need_refresh(Path("x.mkv"), None, [])
 
 
 def test_no_refresh_when_uid_sets_disjoint():
@@ -114,9 +108,7 @@ def test_no_refresh_when_uid_sets_disjoint():
         "festival_organizer.mkv_tags.extract_chapter_tags_by_uid",
         return_value={other_uid: dict(desired_block)},
     ):
-        assert not chapter_tags_need_refresh(
-            Path("x.mkv"), assembled, chapters, mashup_metadata=True
-        )
+        assert not chapter_tags_need_refresh(Path("x.mkv"), assembled, chapters)
 
 
 def test_refresh_when_fractional_timestamp_round_trips_same_uid():
@@ -141,16 +133,14 @@ def test_refresh_when_fractional_timestamp_round_trips_same_uid():
         Chapter(timestamp=_ms_to_timestamp(75400), title=ac.title, language="eng")
     ]
     _, uids = build_chapter_xml(chapters, return_uids=True)
-    desired = build_chapter_tags_from_assembled([ac], uids, mashup_metadata=True)
+    desired = build_chapter_tags_from_assembled([ac], uids)
     uid = uids[0]
     # Correct embedded values under the SAME uid -> no drift.
     with patch(
         "festival_organizer.mkv_tags.extract_chapter_tags_by_uid",
         return_value={uid: dict(desired[uid])},
     ):
-        assert not chapter_tags_need_refresh(
-            Path("x.mkv"), [ac], chapters, mashup_metadata=True
-        )
+        assert not chapter_tags_need_refresh(Path("x.mkv"), [ac], chapters)
     # Truncated title under the same uid -> drift detected.
     stale = dict(desired[uid])
     stale["CRATEDIGGER_TRACK_TITLE"] = "Wrong"
@@ -158,6 +148,4 @@ def test_refresh_when_fractional_timestamp_round_trips_same_uid():
         "festival_organizer.mkv_tags.extract_chapter_tags_by_uid",
         return_value={uid: stale},
     ):
-        assert chapter_tags_need_refresh(
-            Path("x.mkv"), [ac], chapters, mashup_metadata=True
-        )
+        assert chapter_tags_need_refresh(Path("x.mkv"), [ac], chapters)

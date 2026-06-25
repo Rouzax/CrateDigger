@@ -106,19 +106,29 @@ You can tune the threshold for your own taste:
 
 - `overlay_fold_seconds = 0`: every timecoded overlay becomes its own chapter (maximum granularity).
 - `overlay_fold_seconds = 999` (or any very large value): everything folds into the host (fewest chapters, cleanest list).
-- `overlay_chapters = false`: overlays are ignored entirely; only main-track chapters are written (pre-0.30.0 behaviour).
+- `overlay_chapters = false`: overlays are ignored entirely; only main-track chapters are written.
 
-### Mashup metadata
+**Worked example: tuning `overlay_fold_seconds`**
 
-When a 1001Tracklists page lists a "vs." mashup, the mashup entry has expandable sub-rows that name each component track individually, with its own artist, genre, and label. CrateDigger now harvests those sub-rows when `mashup_metadata` is `true` (the default).
+A tracklist with one main track and one "w/" overlay that enters 12 seconds later:
 
-What this means for a mashup chapter:
+```
+[00:00] Main Artist - Track One
+w/ Other Artist - Track Two   (enters at 00:12)
+```
 
-- `CRATEDIGGER_TRACK_PERFORMER_SLUGS` and `CRATEDIGGER_TRACK_PERFORMER_NAMES` carry the actual per-component artists (pipe-separated), rather than a single concatenated string. This means the normal `chapter_artist_mbids` enrich operation resolves MusicBrainz IDs for each component artist.
-- `CRATEDIGGER_TRACK_GENRE` carries the genres from each component, de-duplicated and joined.
-- `CRATEDIGGER_TRACK_LABEL` carries the labels from each component, de-duplicated and joined with `|`.
+With `overlay_fold_seconds = 20` (the default): the overlay enters 12 seconds after the host, which is inside the 20-second window, so it folds in. One chapter is produced:
 
-Set `mashup_metadata = false` to skip this extra harvesting and keep the old single-value metadata.
+```
+Main Artist vs. Other Artist - Track One vs. Track Two
+```
+
+With `overlay_fold_seconds = 10`: 12 seconds is past the 10-second window, so the overlay breaks out into its own chapter. Two chapters are produced:
+
+```
+Main Artist - Track One
+w/ Other Artist - Track Two
+```
 
 ### Labels in chapter titles
 
@@ -126,7 +136,7 @@ By default (`chapter_title_labels = false`) the record label is written only to 
 
 ### Effect on existing libraries
 
-After upgrading to 0.30.0, the next `identify` run on a previously identified file rewrites its chapters with the new logic. The chapter count and titles may change. Subsequent runs are stable until the tracklist itself changes on 1001Tracklists.
+Re-running `identify` on a previously identified file rewrites its chapters with the current logic. The chapter count and titles may change. Subsequent runs are stable until the tracklist itself changes on 1001Tracklists.
 
 ## Multi-source tracklists
 
