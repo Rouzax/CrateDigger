@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.30.2] - 2026-06-25
+
 ### Fixed
 
 - Mashup "w/" append now extends the structured single-value chapter tags. When a folded overlay ("w/") track is appended to a chapter, `CRATEDIGGER_TRACK_PERFORMER` and `CRATEDIGGER_TRACK_TITLE` now carry the full mashup (the `vs.`-joined artist and title segments of the chapter title), matching the display title and the `CRATEDIGGER_TRACK_PERFORMER_NAMES`/`_SLUGS` lists. Previously these two tags held only the base track, so the appended component silently disappeared from TrackSplit output. The display title and flat lists are unchanged; only the two single-value tags are corrected.
