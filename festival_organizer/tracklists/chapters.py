@@ -423,6 +423,14 @@ def chapter_tags_need_refresh(
     blocks wholesale, so comparing full blocks would flag every enriched file as
     stale forever. Returns False when there is nothing to compare (no assembled
     chapters or no chapter list).
+
+    A ChapterUID is ``md5(full-timestamp|title)`` while the gating
+    ``chapters_are_identical`` only matches timestamps to mm:ss precision. If a
+    chapter's sub-second timestamp changed since the file was embedded, the
+    recomputed UIDs would not match the embedded ones, every chapter would look
+    drifted, and a needless re-embed would run on every pass. When the desired
+    and embedded UID sets are disjoint we cannot map tags to chapters, and the
+    chapters already matched, so report no drift rather than churn.
     """
     if not assembled or not chapters:
         return False
@@ -439,6 +447,11 @@ def chapter_tags_need_refresh(
         assembled, chapter_uids, mashup_metadata=mashup_metadata
     )
     embedded = extract_chapter_tags_by_uid(filepath)
+
+    # Disjoint UID sets => the embedded file keys per-chapter tags by UIDs we no
+    # longer recompute (timestamp precision drift). Cannot compare; do not churn.
+    if desired and embedded and not (set(desired) & set(embedded)):
+        return False
 
     for uid in set(desired) | set(embedded):
         want = desired.get(uid, {})

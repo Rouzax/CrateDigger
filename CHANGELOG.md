@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.30.4] - 2026-06-25
+
+### Fixed
+
+- The per-chapter tag self-heal can no longer re-embed on every `identify` run if a chapter's sub-second timestamp ever drifts. ChapterUIDs are hashed from the full `HH:MM:SS.mmm` timestamp, while the "already done?" check matches timestamps only to `mm:ss`; a sub-second change would leave the recomputed UIDs disjoint from the embedded ones and make every chapter look stale. The drift check now treats disjoint UID sets as "cannot compare" and reports no drift instead of churning. No effect on current libraries (all cue times are whole seconds); this hardens against future fractional timestamps.
+
 ## [0.30.3] - 2026-06-25
 
 ### Fixed
