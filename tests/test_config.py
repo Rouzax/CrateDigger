@@ -345,6 +345,50 @@ def test_tracklists_credentials_env_override(monkeypatch):
     assert config.tracklists_credentials == ("env@b.com", "envpw")
 
 
+def test_overlay_chapter_settings_defaults():
+    """Overlay/mashup/label keys fall back to documented defaults."""
+    cfg = Config(DEFAULT_CONFIG)
+    assert cfg.overlay_chapters is True
+    assert cfg.overlay_fold_seconds == 20
+    assert cfg.mashup_metadata is True
+    assert cfg.chapter_title_labels is False
+
+
+def test_overlay_chapter_settings_defaults_when_section_missing():
+    """Accessors return defaults even when no [tracklists] block is present."""
+    cfg = Config({})
+    assert cfg.overlay_chapters is True
+    assert cfg.overlay_fold_seconds == 20
+    assert cfg.mashup_metadata is True
+    assert cfg.chapter_title_labels is False
+
+
+def test_overlay_chapter_settings_overridden_by_config():
+    """A [tracklists] block overrides the overlay/label defaults."""
+    cfg = Config(
+        {
+            "tracklists": {
+                "overlay_fold_seconds": 8,
+                "overlay_chapters": False,
+                "chapter_title_labels": True,
+            }
+        }
+    )
+    assert cfg.overlay_chapters is False
+    assert cfg.overlay_fold_seconds == 8
+    assert cfg.chapter_title_labels is True
+    # Unspecified key keeps its default.
+    assert cfg.mashup_metadata is True
+
+
+def test_overlay_fold_seconds_floor_and_coercion():
+    """overlay_fold_seconds is coerced to int and floored at 0."""
+    cfg = Config({"tracklists": {"overlay_fold_seconds": -5}})
+    assert cfg.overlay_fold_seconds == 0
+    cfg = Config({"tracklists": {"overlay_fold_seconds": "12"}})
+    assert cfg.overlay_fold_seconds == 12
+
+
 def test_load_config_malformed_toml(tmp_path, caplog):
     """Malformed user TOML logs warning and falls back to defaults."""
     user_dir = tmp_path / "user"

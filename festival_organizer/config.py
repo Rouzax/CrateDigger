@@ -101,6 +101,22 @@ DEFAULT_CONFIG = {
         # appearance, so the result is deterministic. Set to 0 to disable
         # the cap and write every per-track genre (noisy on some sets).
         "genre_top_n": 5,
+        # Overlay ("w/") chapter handling.
+        # overlay_chapters: master switch. Off => exactly today's behaviour
+        # (no overlay chapters, no folding, no title changes).
+        "overlay_chapters": True,
+        # overlay_fold_seconds: host-fold cutoff and the split<->fold dial.
+        # 0 = every timecoded overlay its own chapter; large = everything
+        # folds into its host. Floored at 0.
+        "overlay_fold_seconds": 20,
+        # mashup_metadata: harvest tlpSubTog component artists/genres/labels
+        # into mashup chapters' tags.
+        "mashup_metadata": True,
+        # chapter_title_labels: when off (default), the record-company label
+        # is not written into the visible chapter title; it still goes to the
+        # CRATEDIGGER_TRACK_LABEL tag. When on, titles keep the trailing
+        # [Label] (legacy).
+        "chapter_title_labels": False,
     },
     "fanart": {
         "project_api_key": "9fb9273dbec3739bd0fdb49f10d6a129",
@@ -403,6 +419,27 @@ class Config:
     def tracklists_settings(self) -> dict:
         """Settings for tracklist chapter operations."""
         return self._data.get("tracklists", {})
+
+    @property
+    def overlay_chapters(self) -> bool:
+        """Master switch for overlay ('w/') chapter handling."""
+        return bool(self._data.get("tracklists", {}).get("overlay_chapters", True))
+
+    @property
+    def overlay_fold_seconds(self) -> int:
+        """Host-fold cutoff (seconds). Coerced to int and floored at 0."""
+        value = self._data.get("tracklists", {}).get("overlay_fold_seconds", 20)
+        return max(0, int(value))
+
+    @property
+    def mashup_metadata(self) -> bool:
+        """Harvest tlpSubTog component metadata into mashup chapters' tags."""
+        return bool(self._data.get("tracklists", {}).get("mashup_metadata", True))
+
+    @property
+    def chapter_title_labels(self) -> bool:
+        """When True, keep the trailing [Label] in the visible chapter title."""
+        return bool(self._data.get("tracklists", {}).get("chapter_title_labels", False))
 
     @property
     def tracklists_credentials(self) -> tuple[str, str]:
