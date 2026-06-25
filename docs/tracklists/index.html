@@ -1459,7 +1459,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Artist A vs. Artist B - Title A vs. Title B
 </code></pre></div>
 <p>Multiple consecutive overlays that all fold into the same host are combined in order, so a three-way mashup reads <code>Artist A vs. B vs. C - Title A vs. B vs. C</code>.</p>
-<p><strong>Standalone overlay chapters</strong> are ones that enter more than <code>overlay_fold_seconds</code> after the host main track starts. They become their own chapters with the <code>w/ Artist - Title</code> label, so media player chapter lists show them as distinct navigation points.</p>
+<p><strong>Standalone overlay chapters</strong> are ones that enter more than <code>overlay_fold_seconds</code> after the host main track starts. They become their own chapters titled by their own track (<code>Artist - Title</code>), so media player chapter lists show them as distinct navigation points.</p>
 <p>You can tune the threshold for your own taste:</p>
 <ul>
 <li><code>overlay_fold_seconds = 0</code>: every timecoded overlay becomes its own chapter (maximum granularity).</li>
@@ -1474,9 +1474,9 @@
 <p>With <code>overlay_fold_seconds = 20</code> (the default): the overlay enters 12 seconds after the host, which is inside the 20-second window, so it folds in. One chapter is produced:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Main Artist vs. Other Artist - Track One vs. Track Two
 </code></pre></div>
-<p>With <code>overlay_fold_seconds = 10</code>: 12 seconds is past the 10-second window, so the overlay breaks out into its own chapter. Two chapters are produced:</p>
+<p>With <code>overlay_fold_seconds = 10</code>: 12 seconds is past the 10-second window, so the overlay breaks out into its own chapter, titled by its own track. Two chapters are produced:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Main Artist - Track One
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>w/ Other Artist - Track Two
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>Other Artist - Track Two
 </code></pre></div>
 <h3 id="labels-in-chapter-titles">Labels in chapter titles</h3>
 <p>By default (<code>chapter_title_labels = false</code>) the record label is written only to <code>CRATEDIGGER_TRACK_LABEL</code> and is not part of the visible chapter title. A chapter reads <code>These Are The Times</code> in your media player's chapter list. Set <code>chapter_title_labels = true</code> to include the label in the title: <code>These Are The Times [STMPD]</code>. The <code>CRATEDIGGER_TRACK_LABEL</code> tag is always written regardless of this setting.</p>
