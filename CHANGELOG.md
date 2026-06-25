@@ -7,25 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [0.30.4] - 2026-06-25
-
-### Fixed
-
-- The per-chapter tag self-heal can no longer re-embed on every `identify` run if a chapter's sub-second timestamp ever drifts. ChapterUIDs are hashed from the full `HH:MM:SS.mmm` timestamp, while the "already done?" check matches timestamps only to `mm:ss`; a sub-second change would leave the recomputed UIDs disjoint from the embedded ones and make every chapter look stale. The drift check now treats disjoint UID sets as "cannot compare" and reports no drift instead of churning. No effect on current libraries (all cue times are whole seconds); this hardens against future fractional timestamps.
-
-## [0.30.3] - 2026-06-25
-
-### Fixed
-
-- Per-artist names in feature credits are no longer duplicated. When two or more artists shared one "ft. A & B" credit on a 1001Tracklists row, every linked artist received the whole combined wrapper text, so `CRATEDIGGER_TRACK_PERFORMER_NAMES` carried entries like `Ne-Yo & Akon|Ne-Yo & Akon` (one per slug, same text). Because `MUSICBRAINZ_ARTISTIDS` is resolved per name and index-aligned to the names list, those featured artists also silently lost their MusicBrainz IDs. The parser now recovers each artist's own name by matching the text immediately before its link against that link's 1001Tracklists slug (e.g. `Play Hard` now yields `David Guetta|Ne-Yo|Akon|MORTEN`), with no language-specific connector list. Primary and remix-credit artists are unchanged, and entries 1001Tracklists registers as a single combined act (e.g. an `A & B pres. C` alias with one slug) are left as-is since they cannot be decomposed. Existing libraries pick this up via the per-chapter self-heal on the next `identify`, then `enrich` realigns the MBIDs.
-
-## [0.30.2] - 2026-06-25
-
 ### Fixed
 
 - Mashup "w/" append now extends the structured single-value chapter tags. When a folded overlay ("w/") track is appended to a chapter, `CRATEDIGGER_TRACK_PERFORMER` and `CRATEDIGGER_TRACK_TITLE` now carry the full mashup (the `vs.`-joined artist and title segments of the chapter title), matching the display title and the `CRATEDIGGER_TRACK_PERFORMER_NAMES`/`_SLUGS` lists. Previously these two tags held only the base track, so the appended component silently disappeared from TrackSplit output. The display title and flat lists are unchanged; only the two single-value tags are corrected.
 - Un-ID'd tracks ("ID - ID", "Artist - ID") no longer blank out. The page parser read the track text only from the `itemprop="name"` meta, which 1001Tracklists omits on un-ID'd rows, so those rows parsed to an empty string: an `ID - ID` main shipped with an empty chapter title and a folded un-ID'd overlay produced a dangling `vs.`. The parser now falls back to the visible `span.trackValue` when the meta is absent, so un-ID'd components render faithfully (e.g. `... vs. ID`). Real titles that merely contain the word `ID` (e.g. `Secret ID`, `... ID (Working Title)`) are unaffected.
-- `identify` now self-heals stale per-chapter tags without `--regenerate`. The "already done?" check only compared chapter titles and timestamps, so a fix that changes how a `CRATEDIGGER_TRACK_*` value is derived (without changing the visible title) was skipped as up-to-date. A new content-aware check re-derives the per-chapter tags and re-embeds when the embedded values drift, so existing libraries pick up the two fixes above on the next normal `identify` run. (`MUSICBRAINZ_ARTISTIDS`, written by `enrich`, is excluded from the comparison; a standalone `identify` re-embed drops it as before and `enrich` restores it.)
+- `identify` now self-heals stale per-chapter tags without `--regenerate`. The "already done?" check only compared chapter titles and timestamps, so a fix that changes how a `CRATEDIGGER_TRACK_*` value is derived (without changing the visible title) was skipped as up-to-date. A new content-aware check re-derives the per-chapter tags and re-embeds when the embedded values drift, so existing libraries pick up the other fixes here on the next normal `identify` run. (`MUSICBRAINZ_ARTISTIDS`, written by `enrich`, is excluded from the comparison; a standalone `identify` re-embed drops it as before and `enrich` restores it.) The drift check treats disjoint per-chapter UID sets as "cannot compare" so a future sub-second timestamp change cannot make it re-embed on every run.
+- Per-artist names in feature credits are no longer duplicated. When two or more artists shared one "ft. A & B" credit on a 1001Tracklists row, every linked artist received the whole combined wrapper text, so `CRATEDIGGER_TRACK_PERFORMER_NAMES` carried entries like `Ne-Yo & Akon|Ne-Yo & Akon` (one per slug, same text). Because `MUSICBRAINZ_ARTISTIDS` is resolved per name and index-aligned to the names list, those featured artists also silently lost their MusicBrainz IDs. The parser now recovers each artist's own name by matching the text immediately before its link against that link's 1001Tracklists slug (e.g. `Play Hard` now yields `David Guetta|Ne-Yo|Akon|MORTEN`), with no language-specific connector list. Primary and remix-credit artists are unchanged, and entries 1001Tracklists registers as a single combined act (e.g. an `A & B pres. C` alias with one slug) are left as-is since they cannot be decomposed. Existing libraries pick this up via the per-chapter self-heal on the next `identify`, then `enrich` realigns the MBIDs.
 
 ## [0.30.1] - 2026-06-25
 
