@@ -1,4 +1,5 @@
 from festival_organizer.normalization import (
+    _artist_key,
     extract_youtube_id,
     fix_mojibake,
     normalise_name,
@@ -8,6 +9,41 @@ from festival_organizer.normalization import (
     strip_noise_words,
     strip_scene_tags,
 )
+
+# --- _artist_key (slug match-key for artist-name reconciliation) ---
+
+
+def test_artist_key_basic_and_hyphen_dot_drop():
+    assert _artist_key("Akon") == "akon"
+    assert _artist_key("Ne-Yo") == _artist_key("ne-yo") == "neyo"
+    assert _artist_key("Young M.A") == _artist_key("young-m.a") == "youngma"
+
+
+def test_artist_key_transliterates_non_decomposing_letters():
+    # NFD drops these; 1001TL maps them to ASCII (Ø -> o).
+    assert (
+        _artist_key("MARTEN HØRGER") == _artist_key("marten-horger") == "martenhorger"
+    )
+    assert _artist_key("ZALEØN") == "zaleon"
+    assert _artist_key("Ørjan Nilsen") == _artist_key("orjan-nilsen") == "orjannilsen"
+
+
+def test_artist_key_expands_known_punctuation():
+    assert _artist_key("W&W") == _artist_key("wandw") == "wandw"
+    assert _artist_key("KI/KI") == _artist_key("kislashki") == "kislashki"
+    assert _artist_key("A$AP Rocky") == _artist_key("asap-rocky") == "asaprocky"
+
+
+def test_artist_key_strips_trailing_disambiguator():
+    assert _artist_key("Omnya (IL)") == _artist_key("omnya") == "omnya"
+    assert _artist_key("VIKE (FR)") == _artist_key("vike") == "vike"
+
+
+def test_artist_key_empty_for_punctuation_only():
+    assert _artist_key("") == ""
+    assert _artist_key("!!!") == ""
+    assert _artist_key("(IL)") == ""
+
 
 # --- normalize_genre ---
 

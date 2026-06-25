@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.30.3] - 2026-06-25
+
+### Fixed
+
+- Per-artist names in feature credits are no longer duplicated. When two or more artists shared one "ft. A & B" credit on a 1001Tracklists row, every linked artist received the whole combined wrapper text, so `CRATEDIGGER_TRACK_PERFORMER_NAMES` carried entries like `Ne-Yo & Akon|Ne-Yo & Akon` (one per slug, same text). Because `MUSICBRAINZ_ARTISTIDS` is resolved per name and index-aligned to the names list, those featured artists also silently lost their MusicBrainz IDs. The parser now recovers each artist's own name by matching the text immediately before its link against that link's 1001Tracklists slug (e.g. `Play Hard` now yields `David Guetta|Ne-Yo|Akon|MORTEN`), with no language-specific connector list. Primary and remix-credit artists are unchanged, and entries 1001Tracklists registers as a single combined act (e.g. an `A & B pres. C` alias with one slug) are left as-is since they cannot be decomposed. Existing libraries pick this up via the per-chapter self-heal on the next `identify`, then `enrich` realigns the MBIDs.
+
 ## [0.30.2] - 2026-06-25
 
 ### Fixed

@@ -186,7 +186,11 @@ def _parse_tracks(html) -> list["Track"]:
     """
     from bs4 import BeautifulSoup
 
-    from festival_organizer.normalization import fix_mojibake, normalize_genre
+    from festival_organizer.normalization import (
+        _artist_key,
+        fix_mojibake,
+        normalize_genre,
+    )
 
     soup = _to_soup(html)
     tracks: list[Track] = []
@@ -302,6 +306,31 @@ def _parse_tracks(html) -> list["Track"]:
                     and "blueTxt" in _attr_classes(prev)
                 ):
                     display = prev.get_text(" ", strip=True)
+            if not display:
+                # Feature-credit members share one wrapper, e.g.
+                #   <span class="notranslate"> ft. Ne-Yo<a/> &amp; Akon<a/></span>
+                # The text node immediately before each anchor holds
+                # "<connector> <name>" (" ft. Ne-Yo", " & Akon"). Pick the
+                # SHORTEST trailing word-run whose key equals this anchor's slug
+                # key, so the connector is excluded without a language-specific
+                # connector list. Only fires on anchors with a preceding text
+                # node: primary (spL) and remix (spR) anchors are the first child
+                # of their wrapper (previous_sibling is None), so this leaves
+                # them to the existing paths. The slug_key guard stops a junk run
+                # from matching an empty-keyed slug.
+                slug_key = _artist_key(slug)
+                prev_text = a.previous_sibling
+                if (
+                    slug_key
+                    and prev_text is not None
+                    and getattr(prev_text, "name", None) is None
+                ):
+                    words = str(prev_text).split()
+                    for k in range(1, len(words) + 1):
+                        run = " ".join(words[-k:])
+                        if _artist_key(run) == slug_key:
+                            display = run
+                            break
             if not display:
                 parent = a
                 for _ in range(4):

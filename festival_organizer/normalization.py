@@ -94,6 +94,58 @@ def slugify(name: str) -> str:
     return re.sub(r"[^a-z0-9]", "", folded)
 
 
+# Letters Unicode NFD does not decompose to ASCII, with the transliteration
+# 1001TL applies when forming /artist/ slugs. Confirmed across real sets:
+# Ø/ø -> o ("MARTEN HØRGER" -> "...horger...", "ZALEØN" -> "zaleon"). NFD alone
+# DROPS these (giving "hrger"/"zalen"), so they need an explicit map. The rest
+# are standard transliterations; if 1001TL ever differs the row just falls back.
+_ARTIST_TRANSLIT = str.maketrans(
+    {
+        "ø": "o",
+        "Ø": "o",
+        "ł": "l",
+        "Ł": "l",
+        "đ": "d",
+        "Đ": "d",
+        "ı": "i",
+        "æ": "ae",
+        "Æ": "ae",
+        "œ": "oe",
+        "Œ": "oe",
+        "ß": "ss",
+    }
+)
+
+_ARTIST_DISAMBIG = re.compile(r"\s*\([^)]*\)\s*$")
+
+
+def _artist_key(text: str) -> str:
+    """Normalized match-key for reconciling a rendered artist name against its
+    1001TL /artist/ href slug.
+
+    This is intentionally NOT :func:`slugify` and must stay separate. ``slugify``
+    mirrors the /dj/ slug form (and TrackSplit keeps a byte-identical copy of
+    it), whereas ``_artist_key`` adds the expansions 1001TL applies to /artist/
+    slugs that ``slugify`` omits, so the display text of a feature-credit member
+    can be matched to its anchor slug:
+
+    - explicit transliteration for letters NFD drops (``HØRGER`` -> ``horger``;
+      ``slugify``/``strip_diacritics`` use NFD and would give ``hrger``);
+    - 1001TL's letter expansions ``&`` -> ``and``, ``/`` -> ``slash``,
+      ``$`` -> ``s`` (``W&W`` -> ``wandw``, ``AC/DC`` -> ``acslashdc``,
+      ``A$AP`` -> ``asap``);
+    - a trailing ``(XX)`` disambiguator is stripped (``Omnya (IL)`` -> ``omnya``).
+
+    Applied to BOTH the candidate name and the slug, then all remaining
+    non-``[a-z0-9]`` is dropped. Returns ``""`` for empty/punctuation-only input.
+    """
+    s = _ARTIST_DISAMBIG.sub("", text)
+    s = s.translate(_ARTIST_TRANSLIT)
+    s = strip_diacritics(s).lower()
+    s = s.replace("&", "and").replace("/", "slash").replace("$", "s")
+    return re.sub(r"[^a-z0-9]", "", s)
+
+
 def folder_slug(slug: str) -> str:
     """Make a real 1001TL slug safe as a directory name.
 

@@ -153,6 +153,77 @@ def test_parse_tracks_track_value_fallback_normalizes_padding():
     assert tracks[0].raw_text == "Artist - Title (Acappella)"
 
 
+FIXTURE_FT_CREDIT = Path(__file__).parent / "fixtures" / "play_hard_ft_credit_row.html"
+FIXTURE_PRES_COMBINED = (
+    Path(__file__).parent / "fixtures" / "pres_combined_artist_row.html"
+)
+
+
+def test_parse_tracks_shared_ft_wrapper_splits_per_anchor():
+    """Real 'David Guetta ft. Ne-Yo & Akon - Play Hard (... MORTEN ... Remix)' row:
+    Ne-Yo and Akon share one feature-credit wrapper. Each anchor must get its own
+    name, not the combined 'Ne-Yo & Akon' twice. The primary (David Guetta, spL)
+    and the remix credit (MORTEN, spR) are unchanged, proving isolation."""
+    tracks = _parse_tracks(FIXTURE_FT_CREDIT.read_text(encoding="utf-8"))
+    t = tracks[0]
+    assert t.artist_slugs == ["david-guetta", "ne-yo", "akon", "morten"]
+    assert t.artist_names == ["David Guetta", "Ne-Yo", "Akon", "MORTEN"]
+    assert len(t.artist_names) == len(t.artist_slugs)
+
+
+def test_parse_tracks_source_combined_anchor_unchanged():
+    """Real 'David Guetta & MARTEN HØRGER pres. Men Machine' row: 1001TL registers
+    the whole pres. act as a single anchor with one combined slug. It is a primary
+    (spL) anchor with no preceding text node, so the slug-anchored path never fires;
+    the combined name is preserved (a source limitation B does not touch)."""
+    tracks = _parse_tracks(FIXTURE_PRES_COMBINED.read_text(encoding="utf-8"))
+    t = tracks[0]
+    assert t.artist_slugs == ["david-guetta-marten-horger-pres.-men-machine"]
+    assert t.artist_names == ["David Guetta & MARTEN HØRGER pres. Men Machine"]
+
+
+def test_parse_tracks_ampersand_in_feature_member_name():
+    """A feature member whose own name contains '&' (W&W, slug 'wandw') resolves to
+    'W&W', and the following '& Akon' member resolves to 'Akon' -- the wrapper '&'
+    separator does not corrupt either, because each anchor's preceding text node is
+    matched against its own slug."""
+    html = (
+        '<div class="tlpItem tlpTog trRow1">'
+        '<input id="tlp1_cue_seconds" value="0">'
+        '<meta itemprop="name" content="Host - Track">'
+        '<span class="trackValue notranslate blueTxt">Host'
+        '<span class="notranslate"> ft. W&amp;W'
+        '<a class="notranslate tgHid" href="/artist/x/wandw/index.html"><i></i></a>'
+        " &amp; Akon"
+        '<a class="notranslate tgHid" href="/artist/y/akon/index.html"><i></i></a>'
+        "</span> - Track</span></div>"
+    )
+    t = _parse_tracks(html)[0]
+    assert t.artist_slugs == ["wandw", "akon"]
+    assert t.artist_names == ["W&W", "Akon"]
+
+
+def test_parse_tracks_empty_keyed_slug_does_not_steal_junk_run():
+    """Empty-key guard: an anchor whose slug normalizes to '' must not let the
+    shortest-run match grab a punctuation-only trailing run (which also keys to
+    '') over the real name. With the guard, slug-anchored is skipped and the
+    existing walk-up keeps the real text; without it, the shortest run '++'
+    (key '') would win."""
+    html = (
+        '<div class="tlpItem tlpTog trRow1">'
+        '<input id="tlp1_cue_seconds" value="0">'
+        '<meta itemprop="name" content="Host - Track">'
+        '<span class="trackValue notranslate blueTxt">Host'
+        '<span class="notranslate"> ft. Real ++'
+        '<a class="notranslate tgHid" href="/artist/x/--/index.html"><i></i></a>'
+        "</span> - Track</span></div>"
+    )
+    t = _parse_tracks(html)[0]
+    assert t.artist_slugs == ["--"]
+    assert t.artist_names[0] != "++"
+    assert "Real" in t.artist_names[0]
+
+
 # --- Edge-case fixtures ---
 
 FIXTURE_B2B = Path(__file__).parent / "fixtures" / "armin_kiki_amf_2025.html"
