@@ -41,6 +41,16 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from festival_organizer.tracklists.api import Track
     from festival_organizer.tracklists.dj_cache import DjCache
+    from festival_organizer.tracklists.overlays import AssembledChapter
+
+
+def strip_chapter_label(title: str) -> str:
+    """Remove a trailing record-company ``[Label]`` bracket from a chapter title.
+
+    Titles without a trailing bracket are returned unchanged. Internal ``(...)``
+    parentheses and non-trailing brackets are left alone.
+    """
+    return re.sub(r"\s*\[[^\]]+\]\s*$", "", title)
 
 
 @dataclass
@@ -622,6 +632,8 @@ def embed_chapters(
     tracks: list["Track"] | None = None,
     dj_cache: "DjCache | None" = None,
     alias_resolver: "Callable[[str], str] | None" = None,
+    assembled: list["AssembledChapter"] | None = None,
+    mashup_metadata: bool = True,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
 
@@ -680,7 +692,15 @@ def embed_chapters(
                 alias_resolver=alias_resolver,
             )
             chapter_tags: dict[int, dict[str, str]] | None = None
-            if tracks and chapters and chapter_uids:
+            if assembled is not None and chapters and chapter_uids:
+                # Function-scope import avoids an import cycle: overlays.py
+                # imports from chapters.py at module top level.
+                from .overlays import build_chapter_tags_from_assembled
+
+                chapter_tags = build_chapter_tags_from_assembled(
+                    assembled, chapter_uids, mashup_metadata=mashup_metadata
+                )
+            elif tracks and chapters and chapter_uids:
                 chapter_tags = _build_chapter_tags_map(
                     chapters, chapter_uids, tracks, dj_cache, alias_resolver
                 )

@@ -171,6 +171,29 @@ def merge_chapter_tags(
     return entry
 
 
+def build_chapter_tags_from_assembled(
+    assembled: list[AssembledChapter],
+    chapter_uids: list[int],
+    *,
+    mashup_metadata: bool,
+) -> dict[int, dict[str, str]]:
+    """Build the per-chapter TTV=30 tag map keyed by ChapterUID.
+
+    ``assembled`` must align 1:1 with ``chapter_uids`` (same order and count);
+    the caller guarantees this. For each pair, :func:`merge_chapter_tags` builds
+    the chapter's tag block from its ``primary`` and ``contributors``. A chapter
+    is included only when its merged tag block is non-empty.
+    """
+    result: dict[int, dict[str, str]] = {}
+    for ac, uid in zip(assembled, chapter_uids, strict=True):
+        tags = merge_chapter_tags(
+            ac.primary, ac.contributors, mashup_metadata=mashup_metadata
+        )
+        if tags:
+            result[uid] = tags
+    return result
+
+
 @dataclass
 class AssembledChapter:
     """A chapter after overlay coalescing.
@@ -193,7 +216,7 @@ def assemble(
     anchor_tracks: dict[int, Track],
     tracks: list[Track],
     *,
-    fold_seconds: int,
+    fold_seconds: int | None,
 ) -> list[AssembledChapter]:
     """Coalesce overlay rows onto anchor chapters by distance to host.
 
@@ -207,6 +230,15 @@ def assemble(
     ``fold_seconds`` of it. Positionless overlays fold into the current anchor.
     ``tlpSubTog`` sub-components attach to the anchor whose mashup-main shares
     their ``group_id``. Returns chapters in ascending ``start_ms`` order.
+
+    When ``fold_seconds is None`` (overlays-disabled mode) both the timed and
+    positionless overlay passes are skipped entirely: no overlay is folded into
+    a title and no breakout chapter is created. Sub-component (``tlpSubTog``)
+    attachment and the title pass still run, so the result is exactly one
+    :class:`AssembledChapter` per anchor, a mashup anchor still carries its
+    sub-components as ``contributors``, and every title equals its anchor's own
+    title. This lets the pipeline harvest mashup metadata even with overlay
+    chapters turned off.
     """
     # 1. One AssembledChapter per anchor, in anchor order.
     anchor_chapters: list[AssembledChapter] = []
@@ -225,74 +257,77 @@ def assemble(
     breakouts: list[AssembledChapter] = []
     anchor_by_ms = {ac.start_ms: ac for ac in anchor_chapters}
 
-    # Positionless overlays (cue 0) carry no time, so they cannot be placed by a
-    # time-ordered pass. They belong to the anchor they sit under in the parsed
-    # row order, so resolve each to the most recent anchor preceding it in the
-    # original ``tracks`` list and fold it there.
-    last_anchor_in_order: AssembledChapter | None = None
-    for t in tracks:
-        if t.is_subcomponent:
-            continue
-        if not t.is_overlay:
-            # Anchor candidate: only count it when it maps to an anchor chapter.
-            ac = anchor_by_ms.get(t.start_ms)
-            if ac is not None:
-                last_anchor_in_order = ac
-            continue
-        if t.start_ms == 0 and last_anchor_in_order is not None:
-            last_anchor_in_order.contributors.append(t)
+    # In overlays-disabled mode (fold_seconds is None) we skip both the
+    # positionless-overlay fold pass and the timed-overlay fold/breakout pass.
+    if fold_seconds is not None:
+        # Positionless overlays (cue 0) carry no time, so they cannot be placed
+        # by a time-ordered pass. They belong to the anchor they sit under in
+        # the parsed row order, so resolve each to the most recent anchor
+        # preceding it in the original ``tracks`` list and fold it there.
+        last_anchor_in_order: AssembledChapter | None = None
+        for t in tracks:
+            if t.is_subcomponent:
+                continue
+            if not t.is_overlay:
+                # Anchor candidate: only count it when it maps to an anchor.
+                ac = anchor_by_ms.get(t.start_ms)
+                if ac is not None:
+                    last_anchor_in_order = ac
+                continue
+            if t.start_ms == 0 and last_anchor_in_order is not None:
+                last_anchor_in_order.contributors.append(t)
 
-    # 2. Walk anchors + timed overlays in time order. On a tie the anchor sorts
-    # before the overlay so an overlay on a main's exact second folds INTO that
-    # main rather than starting a breakout.
-    overlays = sorted(
-        (
-            t
-            for t in tracks
-            if t.is_overlay and not t.is_subcomponent and t.start_ms != 0
-        ),
-        key=lambda t: t.start_ms,
-    )
+        # 2. Walk anchors + timed overlays in time order. On a tie the anchor
+        # sorts before the overlay so an overlay on a main's exact second folds
+        # INTO that main rather than starting a breakout.
+        overlays = sorted(
+            (
+                t
+                for t in tracks
+                if t.is_overlay and not t.is_subcomponent and t.start_ms != 0
+            ),
+            key=lambda t: t.start_ms,
+        )
 
-    # event: (start_ms, kind_rank, payload) where kind_rank 0 = anchor, 1 = overlay.
-    events: list[tuple[int, int, object]] = []
-    for ac in anchor_chapters:
-        events.append((ac.start_ms, 0, ac))
-    for ov in overlays:
-        events.append((ov.start_ms, 1, ov))
-    events.sort(key=lambda e: (e[0], e[1]))
+        # event: (start_ms, kind_rank, payload); kind_rank 0 = anchor, 1 = overlay.
+        events: list[tuple[int, int, object]] = []
+        for ac in anchor_chapters:
+            events.append((ac.start_ms, 0, ac))
+        for ov in overlays:
+            events.append((ov.start_ms, 1, ov))
+        events.sort(key=lambda e: (e[0], e[1]))
 
-    cur_anchor: AssembledChapter | None = None
-    cur_breakout: AssembledChapter | None = None
+        cur_anchor: AssembledChapter | None = None
+        cur_breakout: AssembledChapter | None = None
 
-    for _start_ms, kind, payload in events:
-        if kind == 0:
-            cur_anchor = payload  # type: ignore[assignment]
-            cur_breakout = None
-            continue
+        for _start_ms, kind, payload in events:
+            if kind == 0:
+                cur_anchor = payload  # type: ignore[assignment]
+                cur_breakout = None
+                continue
 
-        overlay = payload  # type: ignore[assignment]
-        assert isinstance(overlay, Track)
+            overlay = payload  # type: ignore[assignment]
+            assert isinstance(overlay, Track)
 
-        host = cur_anchor
-        if host is not None and (
-            overlay.start_ms == host.start_ms
-            or (overlay.start_ms - host.start_ms) / 1000 < fold_seconds
-        ):
-            host.contributors.append(overlay)
-        elif (
-            cur_breakout is not None
-            and (overlay.start_ms - cur_breakout.start_ms) / 1000 < fold_seconds
-        ):
-            cur_breakout.contributors.append(overlay)
-        else:
-            cur_breakout = AssembledChapter(
-                start_ms=overlay.start_ms,
-                title="",
-                primary=None,
-                contributors=[overlay],
-            )
-            breakouts.append(cur_breakout)
+            host = cur_anchor
+            if host is not None and (
+                overlay.start_ms == host.start_ms
+                or (overlay.start_ms - host.start_ms) / 1000 < fold_seconds
+            ):
+                host.contributors.append(overlay)
+            elif (
+                cur_breakout is not None
+                and (overlay.start_ms - cur_breakout.start_ms) / 1000 < fold_seconds
+            ):
+                cur_breakout.contributors.append(overlay)
+            else:
+                cur_breakout = AssembledChapter(
+                    start_ms=overlay.start_ms,
+                    title="",
+                    primary=None,
+                    contributors=[overlay],
+                )
+                breakouts.append(cur_breakout)
 
     # 3. Sub-components attach to the anchor whose mashup-main shares group_id.
     for t in tracks:

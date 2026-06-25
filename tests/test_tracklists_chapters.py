@@ -20,6 +20,7 @@ from festival_organizer.tracklists.chapters import (
     extract_existing_chapters,
     normalize_timestamp,
     parse_tracklist_lines,
+    strip_chapter_label,
     supplement_chapters_from_tracks,
     trim_chapters_to_duration,
 )
@@ -364,6 +365,92 @@ def test_extract_chapters_failure_logged(tmp_path, caplog):
 
 
 # --- embed_chapters ---
+
+
+# --- strip_chapter_label ---
+
+
+def test_strip_chapter_label_removes_trailing_bracket():
+    assert strip_chapter_label("A - B [STMPD]") == "A - B"
+
+
+def test_strip_chapter_label_removes_trailing_bracket_with_slash():
+    assert strip_chapter_label("A vs. B - T1 vs. T2 [L1/L2]") == "A vs. B - T1 vs. T2"
+
+
+def test_strip_chapter_label_leaves_internal_parens():
+    assert strip_chapter_label("A - B (Remix)") == "A - B (Remix)"
+
+
+def test_strip_chapter_label_no_bracket_unchanged():
+    assert strip_chapter_label("A - B") == "A - B"
+
+
+# --- embed_chapters assembled-path ---
+
+
+def test_embed_chapters_assembled_path_builds_per_chapter_tags(tmp_path):
+    """When assembled is provided, per-chapter tags come from the assembled list."""
+    from festival_organizer.tracklists.overlays import AssembledChapter
+
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    chapters = [Chapter("00:00:00.000", "A vs. B - Mega")]
+
+    primary = Track(
+        start_ms=0,
+        raw_text="A vs. B - Mega",
+        artist_slugs=["a-vs-b-mega"],
+        artist_names=["A vs. B"],
+        genres=[],
+        title="Mega",
+        is_mashup=True,
+    )
+    child = Track(
+        start_ms=0,
+        raw_text="Artist A - Part A",
+        artist_slugs=["artist-a"],
+        artist_names=["Artist A"],
+        genres=["House"],
+        title="Part A",
+        is_subcomponent=True,
+    )
+    assembled = [
+        AssembledChapter(
+            start_ms=0,
+            title="A vs. B - Mega",
+            primary=primary,
+            contributors=[child],
+        )
+    ]
+
+    with patch(
+        "festival_organizer.tracklists.chapters.write_merged_tags", return_value=True
+    ) as mock_wmt:
+        with patch(
+            "festival_organizer.tracklists.chapters.metadata.MKVPROPEDIT_PATH",
+            "/usr/bin/mkvpropedit",
+        ):
+            with patch(
+                "festival_organizer.tracklists.chapters.tracked_run"
+            ) as mock_run:
+                mock_run.return_value = MagicMock(returncode=0)
+                with patch(
+                    "festival_organizer.tracklists.chapters.build_chapter_xml",
+                    return_value=("<xml/>", [555]),
+                ):
+                    embed_chapters(
+                        video,
+                        chapters,
+                        tracklist_url="https://example.com/tracklist/abc123/",
+                        assembled=assembled,
+                        mashup_metadata=True,
+                    )
+
+    chapter_tags = mock_wmt.call_args.kwargs["chapter_tags"]
+    assert chapter_tags is not None
+    # Mashup metadata harvested from the child sub-component, keyed by ChapterUID.
+    assert chapter_tags[555]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "artist-a"
 
 
 def test_embed_chapters_uses_merged_tags(tmp_path):

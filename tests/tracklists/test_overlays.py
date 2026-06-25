@@ -5,6 +5,7 @@ from festival_organizer.tracklists.chapters import Chapter, _ms_to_timestamp
 from festival_organizer.tracklists.overlays import (
     AssembledChapter,
     assemble,
+    build_chapter_tags_from_assembled,
     combined_title,
     merge_chapter_tags,
 )
@@ -519,3 +520,120 @@ def test_merge_breakout_primary_none_uses_lead_contributor() -> None:
     assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Lead Artist"
     assert tags["CRATEDIGGER_TRACK_LABEL"] == "Lead Label"
     assert tags["CRATEDIGGER_TRACK_GENRE"] == "Bass"
+
+
+# --- assemble(fold_seconds=None) overlays-disabled mode ------------------
+
+
+def _mashup_anchor_track(start_ms: int, raw_text: str, group_id: int) -> Track:
+    return Track(
+        start_ms=start_ms,
+        raw_text=raw_text,
+        artist_slugs=[],
+        genres=[],
+        is_mashup=True,
+        group_id=group_id,
+    )
+
+
+def test_assemble_fold_none_skips_overlays_keeps_subcomponents() -> None:
+    # Anchors: a plain main and a mashup main with two tlpSubTog children.
+    plain = _anchor_track(0, "Opener - Intro")
+    mashup = _mashup_anchor_track(60_000, "A vs. B - Mega", group_id=7)
+    anchors = [
+        _anchor_chapter(0, "Opener - Intro"),
+        _anchor_chapter(60_000, "A vs. B - Mega"),
+    ]
+    anchor_tracks = {0: plain, 60_000: mashup}
+    # A timed overlay near the plain main (would fold @20) and a far overlay
+    # (would break out @20). Plus the mashup's two sub-components.
+    timed_overlay = _overlay(5_000, "Overlay - Acapella")
+    far_overlay = _overlay(120_000, "Far - Solo")
+    sub_a = _subcomponent(0, "Artist A - Part A", group_id=7)
+    sub_b = _subcomponent(0, "Artist B - Part B", group_id=7)
+    tracks = [plain, timed_overlay, mashup, sub_a, sub_b, far_overlay]
+
+    result = assemble(anchors, anchor_tracks, tracks, fold_seconds=None)
+
+    # One chapter per anchor: no breakout, no overlay folding.
+    assert len(result) == len(anchors)
+    # No overlay appears as a contributor anywhere.
+    all_contributors = [c for ac in result for c in ac.contributors]
+    assert timed_overlay not in all_contributors
+    assert far_overlay not in all_contributors
+    # Titles equal each anchor's own title (combined_title(primary, [primary])).
+    assert result[0].title == "Opener - Intro"
+    assert result[1].title == "A vs. B - Mega"
+    # The mashup anchor's contributors are exactly its sub-components.
+    mashup_chapter = next(ac for ac in result if ac.start_ms == 60_000)
+    assert mashup_chapter.contributors == [sub_a, sub_b]
+
+
+def test_assemble_fold_20_on_same_data_still_folds_and_breaks_out() -> None:
+    plain = _anchor_track(0, "Opener - Intro")
+    mashup = _mashup_anchor_track(60_000, "A vs. B - Mega", group_id=7)
+    anchors = [
+        _anchor_chapter(0, "Opener - Intro"),
+        _anchor_chapter(60_000, "A vs. B - Mega"),
+    ]
+    anchor_tracks = {0: plain, 60_000: mashup}
+    timed_overlay = _overlay(5_000, "Overlay - Acapella")
+    far_overlay = _overlay(120_000, "Far - Solo")
+    sub_a = _subcomponent(0, "Artist A - Part A", group_id=7)
+    sub_b = _subcomponent(0, "Artist B - Part B", group_id=7)
+    tracks = [plain, timed_overlay, mashup, sub_a, sub_b, far_overlay]
+
+    result = assemble(anchors, anchor_tracks, tracks, fold_seconds=20)
+
+    # far_overlay broke out: one more chapter than anchors.
+    assert len(result) == len(anchors) + 1
+    # timed_overlay folded into the plain opener.
+    opener = next(ac for ac in result if ac.start_ms == 0)
+    assert timed_overlay in opener.contributors
+    # mashup still keeps its sub-components.
+    mashup_chapter = next(ac for ac in result if ac.start_ms == 60_000)
+    assert sub_a in mashup_chapter.contributors
+    assert sub_b in mashup_chapter.contributors
+
+
+# --- build_chapter_tags_from_assembled() ---------------------------------
+
+
+def test_build_chapter_tags_from_assembled_maps_uids() -> None:
+    primary = _meta_track(
+        raw_text="A vs. B - Mega",
+        artist_slugs=["a-vs-b-mega"],
+        artist_names=["A vs. B"],
+        title="Mega",
+        is_mashup=True,
+    )
+    child_a = _meta_track(
+        raw_text="Artist A - Part A",
+        artist_slugs=["artist-a"],
+        artist_names=["Artist A"],
+        title="Part A",
+        is_subcomponent=True,
+    )
+    child_b = _meta_track(
+        raw_text="Artist B - Part B",
+        artist_slugs=["artist-b"],
+        artist_names=["Artist B"],
+        title="Part B",
+        is_subcomponent=True,
+    )
+    mashup_chapter = AssembledChapter(
+        start_ms=0,
+        title="A vs. B - Mega",
+        primary=primary,
+        contributors=[child_a, child_b],
+    )
+    # An empty chapter: no primary, no contributors -> merge returns {} -> omitted.
+    empty_chapter = AssembledChapter(start_ms=1, title="x", primary=None)
+
+    result = build_chapter_tags_from_assembled(
+        [mashup_chapter, empty_chapter], [111, 222], mashup_metadata=True
+    )
+
+    assert set(result.keys()) == {111}
+    assert result[111]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "artist-a|artist-b"
+    assert 222 not in result
