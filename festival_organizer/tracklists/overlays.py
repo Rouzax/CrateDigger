@@ -73,6 +73,104 @@ def combined_title(primary: Track | None, members: list[Track]) -> str:
     return result
 
 
+def merge_chapter_tags(
+    primary: Track | None,
+    contributors: list[Track],
+    *,
+    mashup_metadata: bool,
+) -> dict[str, str]:
+    """Build the TTV=30 per-chapter tag block for one chapter.
+
+    Unions the ``(slug, name)`` artist pairs and genres across the chapter's
+    source tracks, deduplicating by slug (first occurrence wins) while keeping
+    the parallel name list index-aligned with the slug list.
+
+    For a mashup main WITH ``tlpSubTog`` sub-components and
+    ``mashup_metadata=True`` the artist/genre source is the contributors (the
+    real per-component rows), dropping the mashup primary whose only slug is a
+    junk concatenated mega-slug and whose genres are empty. Otherwise the source
+    is ``[primary] + contributors``. Labels are always the distinct labels
+    across ``[primary] + contributors`` (including a mashup primary's real
+    label), order-preserving.
+
+    The single-value display tags (``CRATEDIGGER_TRACK_PERFORMER`` and
+    ``CRATEDIGGER_TRACK_TITLE``) derive from the lead: ``primary`` when present,
+    else the first non-subcomponent contributor. Keys are emitted only when
+    their value is non-empty. ``MUSICBRAINZ_ARTISTIDS`` and the legacy
+    unprefixed PERFORMER/LABEL/GENRE tags are intentionally never written here.
+    Returns ``{}`` when there is no primary and no contributor.
+    """
+    if primary is None and not contributors:
+        return {}
+
+    # lead drives the single-value display tags only.
+    lead: Track | None = primary
+    if lead is None:
+        lead = next((c for c in contributors if not c.is_subcomponent), None)
+
+    use_children = (
+        primary is not None
+        and primary.is_mashup
+        and mashup_metadata
+        and any(c.is_subcomponent for c in contributors)
+    )
+    if use_children:
+        artist_genre_source = contributors
+    else:
+        artist_genre_source = ([primary] if primary is not None else []) + contributors
+
+    slugs: list[str] = []
+    names: list[str] = []
+    seen_slugs: set[str] = set()
+    for track in artist_genre_source:
+        for slug, name in zip(track.artist_slugs, track.artist_names, strict=True):
+            if slug in seen_slugs:
+                continue
+            seen_slugs.add(slug)
+            slugs.append(slug)
+            names.append(name)
+
+    genres: list[str] = []
+    seen_genres: set[str] = set()
+    for track in artist_genre_source:
+        for genre in track.genres:
+            if genre in seen_genres:
+                continue
+            seen_genres.add(genre)
+            genres.append(genre)
+
+    # Labels always come from primary + contributors (even a mashup primary's).
+    label_source = ([primary] if primary is not None else []) + contributors
+    labels: list[str] = []
+    seen_labels: set[str] = set()
+    for track in label_source:
+        label = track.label
+        if label and label not in seen_labels:
+            seen_labels.add(label)
+            labels.append(label)
+
+    entry: dict[str, str] = {}
+    if slugs:
+        entry["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] = "|".join(slugs)
+        # names is built in lockstep with slugs, so lengths always match.
+        entry["CRATEDIGGER_TRACK_PERFORMER_NAMES"] = "|".join(names)
+        if lead is not None:
+            if " - " in lead.raw_text:
+                display = lead.raw_text.rsplit(" - ", 1)[0].strip()
+            else:
+                display = lead.raw_text.strip() or slugs[0]
+        else:
+            display = slugs[0]
+        entry["CRATEDIGGER_TRACK_PERFORMER"] = display
+    if lead is not None and lead.title:
+        entry["CRATEDIGGER_TRACK_TITLE"] = lead.title
+    if labels:
+        entry["CRATEDIGGER_TRACK_LABEL"] = "|".join(labels)
+    if genres:
+        entry["CRATEDIGGER_TRACK_GENRE"] = "|".join(genres)
+    return entry
+
+
 @dataclass
 class AssembledChapter:
     """A chapter after overlay coalescing.

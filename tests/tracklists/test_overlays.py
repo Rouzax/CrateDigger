@@ -6,6 +6,7 @@ from festival_organizer.tracklists.overlays import (
     AssembledChapter,
     assemble,
     combined_title,
+    merge_chapter_tags,
 )
 
 
@@ -337,3 +338,184 @@ def test_assembled_chapter_default_fields() -> None:
     chapter = AssembledChapter(start_ms=0, title="t", primary=None)
     assert chapter.contributors == []
     assert chapter.language == "eng"
+
+
+# --- merge_chapter_tags() ------------------------------------------------
+
+
+def _meta_track(
+    *,
+    raw_text: str,
+    artist_slugs: list[str],
+    artist_names: list[str],
+    title: str = "",
+    label: str = "",
+    genres: list[str] | None = None,
+    is_mashup: bool = False,
+    is_subcomponent: bool = False,
+) -> Track:
+    return Track(
+        start_ms=0,
+        raw_text=raw_text,
+        artist_slugs=artist_slugs,
+        artist_names=artist_names,
+        genres=genres if genres is not None else [],
+        title=title,
+        label=label,
+        is_mashup=is_mashup,
+        is_subcomponent=is_subcomponent,
+    )
+
+
+def test_merge_empty_inputs_returns_empty() -> None:
+    assert merge_chapter_tags(None, [], mashup_metadata=True) == {}
+
+
+def test_merge_mashup_main_with_subcomponents_metadata_on() -> None:
+    primary = _meta_track(
+        raw_text="A vs. B vs. C - Mega Mashup",
+        artist_slugs=["a-vs-b-vs-c-mega"],
+        artist_names=["A vs. B vs. C"],
+        title="Mega Mashup",
+        label="Spinnin",
+        genres=[],
+        is_mashup=True,
+    )
+    child_a = _meta_track(
+        raw_text="Artist A - Part A",
+        artist_slugs=["artist-a"],
+        artist_names=["Artist A"],
+        title="Part A",
+        label="Label A",
+        genres=["House", "Tech House"],
+        is_subcomponent=True,
+    )
+    child_b = _meta_track(
+        raw_text="Artist B - Part B",
+        artist_slugs=["artist-b"],
+        artist_names=["Artist B"],
+        title="Part B",
+        label="Label B",
+        genres=["Tech House", "Techno"],
+        is_subcomponent=True,
+    )
+
+    tags = merge_chapter_tags(primary, [child_a, child_b], mashup_metadata=True)
+
+    # Children's real slugs/names; mega-slug absent; aligned and equal length.
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "artist-a|artist-b"
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Artist A|Artist B"
+    assert "a-vs-b-vs-c-mega" not in tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"]
+    # Genre = order-preserving union of children genres.
+    assert tags["CRATEDIGGER_TRACK_GENRE"] == "House|Tech House|Techno"
+    # Label = distinct labels across primary + children (mashup primary's real
+    # label IS included).
+    assert tags["CRATEDIGGER_TRACK_LABEL"] == "Spinnin|Label A|Label B"
+    # Display + title derive from the lead (the primary mashup main).
+    assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "A vs. B vs. C"
+    assert tags["CRATEDIGGER_TRACK_TITLE"] == "Mega Mashup"
+
+
+def test_merge_mashup_main_with_subcomponents_metadata_off() -> None:
+    primary = _meta_track(
+        raw_text="A vs. B vs. C - Mega Mashup",
+        artist_slugs=["a-vs-b-vs-c-mega"],
+        artist_names=["A vs. B vs. C"],
+        title="Mega Mashup",
+        label="Spinnin",
+        genres=[],
+        is_mashup=True,
+    )
+    child_a = _meta_track(
+        raw_text="Artist A - Part A",
+        artist_slugs=["artist-a"],
+        artist_names=["Artist A"],
+        title="Part A",
+        label="Label A",
+        genres=["House"],
+        is_subcomponent=True,
+    )
+
+    tags = merge_chapter_tags(primary, [child_a], mashup_metadata=False)
+
+    # Legacy: source is primary + contributors, so the mega-slug is present.
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "a-vs-b-vs-c-mega|artist-a"
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "A vs. B vs. C|Artist A"
+    # Genre is the union (only the child has genres; primary has none).
+    assert tags["CRATEDIGGER_TRACK_GENRE"] == "House"
+    # Label still distinct across primary + child.
+    assert tags["CRATEDIGGER_TRACK_LABEL"] == "Spinnin|Label A"
+
+
+def test_merge_normal_anchor_with_folded_overlay() -> None:
+    primary = _meta_track(
+        raw_text="Anchor Artist - Anchor Title",
+        artist_slugs=["anchor-artist"],
+        artist_names=["Anchor Artist"],
+        title="Anchor Title",
+        label="Anchor Label",
+        genres=["House"],
+    )
+    overlay = _meta_track(
+        raw_text="Overlay Artist - Overlay Title",
+        artist_slugs=["overlay-artist"],
+        artist_names=["Overlay Artist"],
+        title="Overlay Title",
+        label="Overlay Label",
+        genres=["Trance"],
+    )
+
+    tags = merge_chapter_tags(primary, [overlay], mashup_metadata=True)
+
+    # Artists = primary then overlay, deduped, aligned.
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "anchor-artist|overlay-artist"
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Anchor Artist|Overlay Artist"
+    assert tags["CRATEDIGGER_TRACK_GENRE"] == "House|Trance"
+    assert tags["CRATEDIGGER_TRACK_LABEL"] == "Anchor Label|Overlay Label"
+    assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "Anchor Artist"
+    assert tags["CRATEDIGGER_TRACK_TITLE"] == "Anchor Title"
+
+
+def test_merge_duplicate_slug_appears_once_names_aligned() -> None:
+    primary = _meta_track(
+        raw_text="Shared Artist - Title One",
+        artist_slugs=["shared", "solo-a"],
+        artist_names=["Shared Artist", "Solo A"],
+        title="Title One",
+    )
+    overlay = _meta_track(
+        raw_text="Shared Artist - Title Two",
+        artist_slugs=["shared", "solo-b"],
+        artist_names=["Shared Artist", "Solo B"],
+        title="Title Two",
+    )
+
+    tags = merge_chapter_tags(primary, [overlay], mashup_metadata=True)
+
+    slugs = tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"].split("|")
+    names = tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"].split("|")
+    # "shared" appears once (first occurrence wins); names stay index-aligned.
+    assert slugs == ["shared", "solo-a", "solo-b"]
+    assert names == ["Shared Artist", "Solo A", "Solo B"]
+    assert len(slugs) == len(names)
+
+
+def test_merge_breakout_primary_none_uses_lead_contributor() -> None:
+    contributor = _meta_track(
+        raw_text="Lead Artist - Lead Title",
+        artist_slugs=["lead-artist"],
+        artist_names=["Lead Artist"],
+        title="Lead Title",
+        label="Lead Label",
+        genres=["Bass"],
+    )
+
+    tags = merge_chapter_tags(None, [contributor], mashup_metadata=True)
+
+    # Display and title derive from the lead (first non-subcomponent contributor).
+    assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "Lead Artist"
+    assert tags["CRATEDIGGER_TRACK_TITLE"] == "Lead Title"
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "lead-artist"
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Lead Artist"
+    assert tags["CRATEDIGGER_TRACK_LABEL"] == "Lead Label"
+    assert tags["CRATEDIGGER_TRACK_GENRE"] == "Bass"
