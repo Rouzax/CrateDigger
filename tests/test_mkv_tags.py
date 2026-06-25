@@ -882,3 +882,43 @@ def test_write_merged_tags_skips_debug_when_no_changes(tmp_path, caplog):
     assert ok is True
     joined = "\n".join(r.message for r in caplog.records)
     assert "tags.write" not in joined
+
+
+def test_extract_chapter_tags_by_uid_reads_ttv30_blocks(monkeypatch):
+    """Returns each TTV=30 block keyed by ChapterUID as {name: value}; global
+    (TTV=50/70) blocks are excluded."""
+    import xml.etree.ElementTree as ET
+    from pathlib import Path
+
+    import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import extract_chapter_tags_by_uid
+
+    xml = """<Tags>
+<Tag><Targets><TargetTypeValue>50</TargetTypeValue></Targets>
+<Simple><Name>ARTIST</Name><String>global</String></Simple></Tag>
+<Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>111</ChapterUID></Targets>
+<Simple><Name>CRATEDIGGER_TRACK_PERFORMER</Name><String>House Of Pain</String></Simple>
+<Simple><Name>CRATEDIGGER_TRACK_TITLE</Name><String>Jump Around</String></Simple></Tag>
+<Tag><Targets><TargetTypeValue>30</TargetTypeValue><ChapterUID>222</ChapterUID></Targets>
+<Simple><Name>MUSICBRAINZ_ARTISTIDS</Name><String>mbid-1</String></Simple></Tag>
+</Tags>"""
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: ET.fromstring(xml))
+
+    result = extract_chapter_tags_by_uid(Path("/x.mkv"))
+    assert result == {
+        111: {
+            "CRATEDIGGER_TRACK_PERFORMER": "House Of Pain",
+            "CRATEDIGGER_TRACK_TITLE": "Jump Around",
+        },
+        222: {"MUSICBRAINZ_ARTISTIDS": "mbid-1"},
+    }
+
+
+def test_extract_chapter_tags_by_uid_empty_when_no_tags(monkeypatch):
+    from pathlib import Path
+
+    import festival_organizer.mkv_tags as mod
+    from festival_organizer.mkv_tags import extract_chapter_tags_by_uid
+
+    monkeypatch.setattr(mod, "extract_all_tags", lambda p: None)
+    assert extract_chapter_tags_by_uid(Path("/x.mkv")) == {}

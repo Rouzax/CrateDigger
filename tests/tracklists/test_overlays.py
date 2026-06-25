@@ -23,20 +23,19 @@ def _track(raw_text: str, label: str = "") -> Track:
 
 def test_single_member_artist_title_label() -> None:
     member = _track("4B - Bass Drop", label="DIM MAK")
-    assert combined_title(member, [member]) == "4B - Bass Drop [DIM MAK]"
+    assert combined_title([member]) == "4B - Bass Drop [DIM MAK]"
 
 
 def test_single_member_no_label_omits_brackets() -> None:
     member = _track("4B - Bass Drop")
-    assert combined_title(member, [member]) == "4B - Bass Drop"
+    assert combined_title([member]) == "4B - Bass Drop"
 
 
 def test_two_members_vs_title_and_labels() -> None:
     a = _track("Artist A - Title A", label="L1")
     b = _track("Artist B - Title B", label="L2")
     assert (
-        combined_title(a, [a, b])
-        == "Artist A vs. Artist B - Title A vs. Title B [L1/L2]"
+        combined_title([a, b]) == "Artist A vs. Artist B - Title A vs. Title B [L1/L2]"
     )
 
 
@@ -44,58 +43,62 @@ def test_duplicate_artist_deduped_order_preserving() -> None:
     a = _track("Marshmello - Alone", label="Joytime")
     b = _track("Marshmello - Happier", label="Joytime")
     # Artist deduped to one Marshmello; titles kept in order; label deduped.
-    assert combined_title(a, [a, b]) == "Marshmello - Alone vs. Happier [Joytime]"
+    assert combined_title([a, b]) == "Marshmello - Alone vs. Happier [Joytime]"
 
 
 def test_duplicate_label_deduped() -> None:
     a = _track("Artist A - Title A", label="STMPD")
     b = _track("Artist B - Title B", label="STMPD")
     assert (
-        combined_title(a, [a, b])
-        == "Artist A vs. Artist B - Title A vs. Title B [STMPD]"
+        combined_title([a, b]) == "Artist A vs. Artist B - Title A vs. Title B [STMPD]"
     )
 
 
 def test_missing_label_omitted_when_no_labels() -> None:
     a = _track("Artist A - Title A")
     b = _track("Artist B - Title B")
-    assert combined_title(a, [a, b]) == "Artist A vs. Artist B - Title A vs. Title B"
+    assert combined_title([a, b]) == "Artist A vs. Artist B - Title A vs. Title B"
 
 
 def test_member_without_separator_keeps_raw_text_as_title() -> None:
     # No " - " in raw_text: artist empty, whole raw_text is the title segment.
     member = _track("ID")
-    assert combined_title(member, [member]) == "ID"
+    assert combined_title([member]) == "ID"
 
 
 def test_member_without_separator_in_combination() -> None:
     a = _track("Artist A - Title A", label="L1")
     b = _track("ID")
     # b has no artist; only a contributes an artist segment.
-    assert combined_title(a, [a, b]) == "Artist A - Title A vs. ID [L1]"
+    assert combined_title([a, b]) == "Artist A - Title A vs. ID [L1]"
 
 
 def test_split_on_last_separator() -> None:
     # Artist is everything before the LAST " - "; title is the remainder.
     member = _track("A - B - Title", label="L")
-    assert combined_title(member, [member]) == "A - B - Title [L]"
+    assert combined_title([member]) == "A - B - Title [L]"
 
 
 def test_partial_labels_only_distinct_present() -> None:
     a = _track("Artist A - Title A", label="L1")
     b = _track("Artist B - Title B")  # no label
-    assert (
-        combined_title(a, [a, b]) == "Artist A vs. Artist B - Title A vs. Title B [L1]"
-    )
+    assert combined_title([a, b]) == "Artist A vs. Artist B - Title A vs. Title B [L1]"
 
 
-def test_primary_none_uses_members_in_order() -> None:
+def test_members_joined_in_order() -> None:
     a = _track("Artist A - Title A", label="L1")
     b = _track("Artist B - Title B", label="L2")
     assert (
-        combined_title(None, [a, b])
-        == "Artist A vs. Artist B - Title A vs. Title B [L1/L2]"
+        combined_title([a, b]) == "Artist A vs. Artist B - Title A vs. Title B [L1/L2]"
     )
+
+
+def test_empty_member_skipped_no_dangling_vs() -> None:
+    # A contentless row (empty raw_text) contributes nothing and must not emit a
+    # dangling "vs." in the combined title.
+    a = _track("Lola Young - Messy (AFROJACK Remix)")
+    blank = _track("")
+    assert combined_title([a, blank]) == "Lola Young - Messy (AFROJACK Remix)"
 
 
 # --- assemble() ----------------------------------------------------------
@@ -473,8 +476,46 @@ def test_merge_normal_anchor_with_folded_overlay() -> None:
     assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Anchor Artist|Overlay Artist"
     assert tags["CRATEDIGGER_TRACK_GENRE"] == "House|Trance"
     assert tags["CRATEDIGGER_TRACK_LABEL"] == "Anchor Label|Overlay Label"
-    assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "Anchor Artist"
-    assert tags["CRATEDIGGER_TRACK_TITLE"] == "Anchor Title"
+    # Single-value display tags mirror the vs.-joined display title, so the
+    # folded "w/" overlay component is present (not just the anchor).
+    assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "Anchor Artist vs. Overlay Artist"
+    assert tags["CRATEDIGGER_TRACK_TITLE"] == "Anchor Title vs. Overlay Title"
+
+
+def test_merge_w_addition_single_value_tags_include_appended_component() -> None:
+    """A chapter built with a "w/" addition (an overlay folded onto an anchor)
+    must carry the appended component in the single-value CRATEDIGGER_TRACK_TITLE
+    and CRATEDIGGER_TRACK_PERFORMER, matching the display title, not just the
+    flat _NAMES/_SLUGS lists. Regression for the mashup append dropping the
+    appended track from the structured single-value tags.
+    """
+    primary = _meta_track(
+        raw_text="House Of Pain - Jump Around",
+        artist_slugs=["house-of-pain"],
+        artist_names=["House Of Pain"],
+        title="Jump Around",
+    )
+    overlay = _meta_track(
+        raw_text="Cloonee & InntRaw & Young M.A - Stephanie (HNTR VIP)",
+        artist_slugs=["cloonee", "inntraw", "young-m.a", "hntr"],
+        artist_names=["Cloonee", "InntRaw", "Young M.A", "HNTR"],
+        title="Stephanie (HNTR VIP)",
+    )
+
+    tags = merge_chapter_tags(primary, [overlay], mashup_metadata=True)
+
+    # The two single-value tags include the appended "vs. ..." component and
+    # match the two segments of the display title.
+    assert (
+        tags["CRATEDIGGER_TRACK_PERFORMER"]
+        == "House Of Pain vs. Cloonee & InntRaw & Young M.A"
+    )
+    assert tags["CRATEDIGGER_TRACK_TITLE"] == "Jump Around vs. Stephanie (HNTR VIP)"
+    # ...and stay consistent with the granular flat list.
+    assert (
+        tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"]
+        == "House Of Pain|Cloonee|InntRaw|Young M.A|HNTR"
+    )
 
 
 def test_merge_duplicate_slug_appears_once_names_aligned() -> None:

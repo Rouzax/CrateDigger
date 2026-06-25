@@ -247,6 +247,41 @@ def has_album_artist_display_tags(filepath: Path) -> bool:
     return False
 
 
+def extract_chapter_tags_by_uid(filepath: Path) -> dict[int, dict[str, str]]:
+    """Return TTV=30 per-chapter tag blocks keyed by ChapterUID. Empty if none.
+
+    Each value maps tag Name -> String for one chapter's Simple elements. Used
+    by the enrich MBID step and by identify's content-aware self-heal to read
+    back what is currently embedded and diff it against what the code would now
+    produce.
+    """
+    root = extract_all_tags(filepath)
+    if root is None:
+        return {}
+    result: dict[int, dict[str, str]] = {}
+    for tag in root.iter("Tag"):
+        targets = tag.find("Targets")
+        if targets is None:
+            continue
+        ttv = targets.find("TargetTypeValue")
+        uid_el = targets.find("ChapterUID")
+        if ttv is None or uid_el is None or int(ttv.text or "0") != 30:
+            continue
+        try:
+            uid = int(uid_el.text or "0")
+        except ValueError:
+            continue
+        block: dict[str, str] = {}
+        for simple in tag.iter("Simple"):
+            name_el = simple.find("Name")
+            string_el = simple.find("String")
+            if name_el is not None and string_el is not None and name_el.text:
+                block[name_el.text] = string_el.text or ""
+        if block:
+            result[uid] = block
+    return result
+
+
 def has_duplicate_global_blocks(root: ET.Element) -> bool:
     """Return True when the root carries more than one global Tag block at any TTV.
 

@@ -28,19 +28,39 @@ def _split_artist_title(raw_text: str) -> tuple[str, str]:
     return artist, title
 
 
-def combined_title(primary: Track | None, members: list[Track]) -> str:
-    """Build ``A vs. B - TitleA vs. TitleB [LabelA/LabelB]`` for a chapter.
+# The per-chapter tags that identify owns and merge_chapter_tags can emit.
+# MUSICBRAINZ_ARTISTIDS is deliberately excluded: it is written per-chapter by
+# the enrich pipeline, not here, so any drift check over identify-managed tags
+# must ignore it (otherwise every enriched file looks perpetually stale).
+CHAPTER_TAG_KEYS: frozenset[str] = frozenset(
+    {
+        "CRATEDIGGER_TRACK_PERFORMER",
+        "CRATEDIGGER_TRACK_TITLE",
+        "CRATEDIGGER_TRACK_PERFORMER_SLUGS",
+        "CRATEDIGGER_TRACK_PERFORMER_NAMES",
+        "CRATEDIGGER_TRACK_LABEL",
+        "CRATEDIGGER_TRACK_GENRE",
+    }
+)
 
-    ``members`` are the tracks that make up the chapter, in order (anchor
-    first, then folded contributors). ``primary`` is the anchor (informational
-    only here; ``members`` already carries the ordered rows and may begin with
-    the lead when ``primary`` is ``None``).
 
-    Artists are joined with ``vs.``, deduplicated and order-preserving (so a
-    repeated artist such as ``Marshmello`` collapses to one). Titles are joined
-    with ``vs.`` in member order and are never deduplicated. The distinct
-    labels across members are slash-joined inside ``[...]``; the bracket is
-    omitted entirely when no member has a label. No ``w/`` prefix is emitted.
+def _title_segments(members: list[Track]) -> tuple[str, str, list[str]]:
+    """Split chapter members into ``(artist_segment, title_segment, labels)``.
+
+    ``members`` are the tracks that make up the chapter, in order (anchor first,
+    then folded contributors). Artists are joined with ``vs.``, deduplicated and
+    order-preserving (so a repeated artist such as ``Marshmello`` collapses to
+    one). Titles are joined with ``vs.`` in member order and are never
+    deduplicated. ``labels`` are the distinct member labels in order.
+
+    Members with empty ``raw_text`` are skipped: a contentless row carries no
+    artist or title to join, so including it would emit a dangling ``vs.``. This
+    is a data-void guard, not ``ID``-placeholder handling; an un-ID'd row parses
+    to a real ``"ID - ID"`` and joins faithfully.
+
+    Shared by :func:`combined_title` (the display string) and
+    :func:`merge_chapter_tags` (the single-value performer/title tags) so the
+    two can never disagree about how a chapter's mashup is rendered.
     """
     artists: list[str] = []
     seen_artists: set[str] = set()
@@ -49,6 +69,8 @@ def combined_title(primary: Track | None, members: list[Track]) -> str:
     seen_labels: set[str] = set()
 
     for member in members:
+        if not member.raw_text.strip():
+            continue
         artist, title = _split_artist_title(member.raw_text)
         if artist and artist not in seen_artists:
             seen_artists.add(artist)
@@ -59,8 +81,19 @@ def combined_title(primary: Track | None, members: list[Track]) -> str:
             seen_labels.add(label)
             labels.append(label)
 
-    artist_segment = _VS.join(artists)
-    title_segment = _VS.join(titles)
+    return _VS.join(artists), _VS.join(titles), labels
+
+
+def combined_title(members: list[Track]) -> str:
+    """Build ``A vs. B - TitleA vs. TitleB [LabelA/LabelB]`` for a chapter.
+
+    ``members`` are the tracks that make up the chapter, in order (anchor first,
+    then folded contributors). Artists, titles, and labels come from
+    :func:`_title_segments`. The distinct labels are slash-joined inside
+    ``[...]``; the bracket is omitted entirely when no member has a label. No
+    ``w/`` prefix is emitted.
+    """
+    artist_segment, title_segment, labels = _title_segments(members)
 
     if artist_segment:
         result = f"{artist_segment}{_SEPARATOR}{title_segment}"
@@ -94,16 +127,26 @@ def merge_chapter_tags(
     label), order-preserving.
 
     The single-value display tags (``CRATEDIGGER_TRACK_PERFORMER`` and
-    ``CRATEDIGGER_TRACK_TITLE``) derive from the lead: ``primary`` when present,
-    else the first non-subcomponent contributor. Keys are emitted only when
-    their value is non-empty. ``MUSICBRAINZ_ARTISTIDS`` and the legacy
-    unprefixed PERFORMER/LABEL/GENRE tags are intentionally never written here.
-    Returns ``{}`` when there is no primary and no contributor.
+    ``CRATEDIGGER_TRACK_TITLE``) mirror the display title: they are the artist
+    and title segments of :func:`_title_segments` over the same members the
+    title pass uses (``primary`` plus the non-subcomponent contributors). So a
+    folded ``w/`` overlay appears in these tags exactly as it does in the
+    chapter title, never just in the flat ``_NAMES``/``_SLUGS`` lists. Keys are
+    emitted only when their value is non-empty. ``MUSICBRAINZ_ARTISTIDS`` and
+    the legacy unprefixed PERFORMER/LABEL/GENRE tags are intentionally never
+    written here. Returns ``{}`` when there is no primary and no contributor.
     """
     if primary is None and not contributors:
         return {}
 
-    # lead drives the single-value display tags only.
+    # The members the title pass renders (see assemble step 4): primary plus the
+    # non-subcomponent contributors. The single-value tags derive from these so
+    # they always match combined_title.
+    title_members = ([primary] if primary is not None else []) + [
+        c for c in contributors if not c.is_subcomponent
+    ]
+    artist_segment, title_segment, _ = _title_segments(title_members)
+    # lead is only a fallback for the performer tag when no member has an artist.
     lead: Track | None = primary
     if lead is None:
         lead = next((c for c in contributors if not c.is_subcomponent), None)
@@ -154,19 +197,15 @@ def merge_chapter_tags(
         entry["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] = "|".join(slugs)
         # names is built in lockstep with slugs, so lengths always match.
         entry["CRATEDIGGER_TRACK_PERFORMER_NAMES"] = "|".join(names)
-        if lead is not None:
-            artist, _ = _split_artist_title(lead.raw_text)
-            if artist:
-                display = artist.strip()
-            elif _SEPARATOR in lead.raw_text:
-                display = lead.raw_text.rsplit(_SEPARATOR, 1)[0].strip()
-            else:
-                display = lead.raw_text.strip() or slugs[0]
+        if artist_segment:
+            display = artist_segment
+        elif lead is not None:
+            display = lead.raw_text.strip() or slugs[0]
         else:
             display = slugs[0]
         entry["CRATEDIGGER_TRACK_PERFORMER"] = display
-    if lead is not None and lead.title:
-        entry["CRATEDIGGER_TRACK_TITLE"] = lead.title
+    if title_segment:
+        entry["CRATEDIGGER_TRACK_TITLE"] = title_segment
     if labels:
         entry["CRATEDIGGER_TRACK_LABEL"] = "|".join(labels)
     if genres:
@@ -350,7 +389,7 @@ def assemble(
         title_members = ([ac.primary] if ac.primary is not None else []) + [
             c for c in ac.contributors if not c.is_subcomponent
         ]
-        ac.title = combined_title(ac.primary, title_members)
+        ac.title = combined_title(title_members)
 
     # 5. Time order: anchors interleaved with breakouts by start_ms.
     return sorted(anchor_chapters + breakouts, key=lambda ac: ac.start_ms)

@@ -874,10 +874,8 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
         compute_chapter_mbid_tags,
         lookup_mbid,
     )
-    from festival_organizer.operations import (
-        _extract_chapter_tags_by_uid,
-        write_chapter_mbid_tags,
-    )
+    from festival_organizer.mkv_tags import extract_chapter_tags_by_uid
+    from festival_organizer.operations import write_chapter_mbid_tags
 
     assert TIESTO_MKV is not None
     mkv = tmp_path / "test.mkv"
@@ -886,7 +884,7 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
     # Step 1: normal enrichment to seed PERFORMER_NAMES on each chapter.
     _run_enrich(mkv, TIESTO_ID, tmp_path, tracklist_date="2026-03-01")
 
-    existing = _extract_chapter_tags_by_uid(mkv)
+    existing = extract_chapter_tags_by_uid(mkv)
     assert existing, "expected chapter-scoped tags after enrich"
 
     # Collect the set of unique PERFORMER_NAMES entries from the file. The
@@ -939,7 +937,7 @@ def test_chapter_artist_mbids_end_to_end(tmp_path, caplog):
         write_chapter_mbid_tags(mkv, merged)
 
     # Step 4: re-extract and assert the invariants.
-    after = _extract_chapter_tags_by_uid(mkv)
+    after = extract_chapter_tags_by_uid(mkv)
     assert after, "chapter tags disappeared after MBID write"
 
     # (a) slot alignment: every chapter with PERFORMER_NAMES must have

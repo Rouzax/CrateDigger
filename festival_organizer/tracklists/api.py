@@ -229,6 +229,19 @@ def _parse_tracks(html) -> list["Track"]:
                 break
         name_meta = row.select_one('meta[itemprop="name"]')
         raw_text = fix_mojibake(_attr_str(name_meta, "content")) if name_meta else ""
+        if not raw_text:
+            # Un-ID'd rows (e.g. "ID - ID") carry no itemprop="name" meta, so the
+            # line above leaves raw_text empty. Recover the visible track text
+            # from span.trackValue; otherwise the row is silently blanked and
+            # assemble would drop the chapter title (ID mains) or dangle a "vs."
+            # (folded ID overlays). span.trackValue renders inner padding such as
+            # "Title ( Remix )", so collapse it to the meta form "Title (Remix)".
+            value_el = row.select_one("span.trackValue")
+            if value_el is not None:
+                recovered = re.sub(r"\s+", " ", value_el.get_text(" ", strip=True))
+                recovered = recovered.replace("( ", "(").replace(" )", ")")
+                recovered = recovered.replace("[ ", "[").replace(" ]", "]")
+                raw_text = fix_mojibake(recovered.strip())
         genres = [
             normalize_genre(fix_mojibake(_attr_str(m, "content")))
             for m in row.select('meta[itemprop="genre"]')

@@ -99,6 +99,7 @@ def _patch_identify_internals(**overrides):
         ),
         "has_chapter_tags": MagicMock(return_value=True),
         "has_album_artist_display_tags": MagicMock(return_value=True),
+        "chapter_tags_need_refresh": MagicMock(return_value=False),
         "embed_chapters": MagicMock(return_value=True),
     }
     defaults.update(overrides)
@@ -118,6 +119,7 @@ def test_up_to_date_when_ttv30_present_and_tags_match(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
+        chapter_tags_need_refresh=mocks["chapter_tags_need_refresh"],
     ):
         status, _, _ = _fetch_and_embed(
             _make_session(),
@@ -149,6 +151,7 @@ def test_self_heal_triggers_when_ttv30_missing(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
+        chapter_tags_need_refresh=mocks["chapter_tags_need_refresh"],
     ):
         status, _, _ = _fetch_and_embed(
             _make_session(),
@@ -185,6 +188,7 @@ def test_self_heal_triggers_when_album_artist_display_missing(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
+        chapter_tags_need_refresh=mocks["chapter_tags_need_refresh"],
     ):
         status, _, _ = _fetch_and_embed(
             _make_session(),
@@ -243,6 +247,7 @@ def test_album_artist_check_skipped_when_no_dj_artists(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
+        chapter_tags_need_refresh=mocks["chapter_tags_need_refresh"],
     ):
         status, _, _ = _fetch_and_embed(
             session,
@@ -274,6 +279,7 @@ def test_regenerate_forces_retag_even_when_up_to_date(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
+        chapter_tags_need_refresh=mocks["chapter_tags_need_refresh"],
     ):
         status, _, _ = _fetch_and_embed(
             _make_session(),
@@ -327,6 +333,7 @@ def test_ttv70_tag_diff_also_routes_through_embed_chapters(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
+        chapter_tags_need_refresh=mocks["chapter_tags_need_refresh"],
     ):
         status, _, _ = _fetch_and_embed(
             _make_session(),
@@ -665,6 +672,7 @@ def test_youtube_id_backfilled_when_otherwise_up_to_date(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
+        chapter_tags_need_refresh=mocks["chapter_tags_need_refresh"],
     ):
         status, _, _ = _fetch_and_embed(
             session,
@@ -712,6 +720,7 @@ def test_no_churn_when_youtube_id_already_present(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
+        chapter_tags_need_refresh=mocks["chapter_tags_need_refresh"],
     ):
         status, _, _ = _fetch_and_embed(
             session,

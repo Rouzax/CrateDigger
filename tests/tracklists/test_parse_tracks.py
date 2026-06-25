@@ -116,6 +116,43 @@ def test_parse_tracks_title_handles_no_separator():
     assert tracks[0].title == "Intro Music"
 
 
+def test_parse_tracks_unid_row_falls_back_to_track_value():
+    """An un-ID'd row ("ID - ID") has no itemprop=name meta; raw_text must be
+    recovered from span.trackValue rather than left empty (which would blank the
+    chapter title / dangle a 'vs.' downstream)."""
+    html = """<div class="tlpItem tlpTog trRow1 con">
+<input id="tlp1_cue_seconds" value="10.0">
+<span class="trackValue notranslate blueTxt">ID - ID</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert len(tracks) == 1
+    assert tracks[0].raw_text == "ID - ID"
+    assert tracks[0].title == "ID"
+
+
+def test_parse_tracks_name_meta_wins_over_track_value():
+    """When the itemprop=name meta is present it is authoritative; the spaced
+    span.trackValue fallback is not used."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="20.0">
+<meta itemprop="name" content="Real Artist - Real Title (Remix)">
+<span class="trackValue notranslate blueTxt">Real Artist - Real Title ( Remix )</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].raw_text == "Real Artist - Real Title (Remix)"
+
+
+def test_parse_tracks_track_value_fallback_normalizes_padding():
+    """The span.trackValue fallback collapses 1001TL's inner padding so a
+    recovered parenthetical matches the meta form 'Title (Acappella)'."""
+    html = """<div class="tlpItem tlpTog trRow1 con">
+<input id="tlp1_cue_seconds" value="30.0">
+<span class="trackValue notranslate blueTxt">Artist - Title ( Acappella )</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].raw_text == "Artist - Title (Acappella)"
+
+
 # --- Edge-case fixtures ---
 
 FIXTURE_B2B = Path(__file__).parent / "fixtures" / "armin_kiki_amf_2025.html"

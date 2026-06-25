@@ -1205,37 +1205,6 @@ class TagsOperation(Operation):
             return OperationResult(self.name, "error", str(e))
 
 
-def _extract_chapter_tags_by_uid(filepath: Path) -> dict[int, dict[str, str]]:
-    """Return TTV=30 chapter tag blocks keyed by ChapterUID. Empty dict if none."""
-    from festival_organizer.mkv_tags import extract_all_tags
-
-    root = extract_all_tags(filepath)
-    if root is None:
-        return {}
-    result: dict[int, dict[str, str]] = {}
-    for tag in root.iter("Tag"):
-        targets = tag.find("Targets")
-        if targets is None:
-            continue
-        ttv = targets.find("TargetTypeValue")
-        uid_el = targets.find("ChapterUID")
-        if ttv is None or uid_el is None or int(ttv.text or "0") != 30:
-            continue
-        try:
-            uid = int(uid_el.text or "0")
-        except ValueError:
-            continue
-        block: dict[str, str] = {}
-        for simple in tag.iter("Simple"):
-            name_el = simple.find("Name")
-            string_el = simple.find("String")
-            if name_el is not None and string_el is not None and name_el.text:
-                block[name_el.text] = string_el.text or ""
-        if block:
-            result[uid] = block
-    return result
-
-
 def write_chapter_mbid_tags(
     filepath: Path,
     merged_chapter_tags: dict[int, dict[str, str]],
@@ -1304,8 +1273,9 @@ class ChapterArtistMbidsOperation(Operation):
 
     def execute(self, file_path: Path, media_file) -> OperationResult:
         from festival_organizer.fanart import compute_chapter_mbid_tags
+        from festival_organizer.mkv_tags import extract_chapter_tags_by_uid
 
-        existing = _extract_chapter_tags_by_uid(file_path)
+        existing = extract_chapter_tags_by_uid(file_path)
         if not existing:
             return OperationResult(self.name, "skipped", "no chapter tags")
         if not any(

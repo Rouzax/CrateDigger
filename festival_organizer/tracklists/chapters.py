@@ -400,6 +400,54 @@ def chapters_are_identical(existing: list[Chapter] | None, new: list[Chapter]) -
     return True
 
 
+def chapter_tags_need_refresh(
+    filepath: Path,
+    assembled: "list[AssembledChapter] | None",
+    chapters: list[Chapter],
+    *,
+    mashup_metadata: bool,
+) -> bool:
+    """Return True when the embedded per-chapter tags differ from what the code
+    would now produce, so identify can self-heal a tag-derivation change without
+    ``--regenerate``.
+
+    ``chapters_are_identical`` only compares chapter count, timestamps, and
+    titles, so a fix that changes how the per-chapter ``CRATEDIGGER_TRACK_*``
+    values are derived (without changing the visible title) would otherwise be
+    skipped as up-to-date. This recomputes the desired per-chapter tag block from
+    ``assembled`` and diffs it against the embedded block, restricted to
+    :data:`CHAPTER_TAG_KEYS`.
+
+    The restriction is essential: ``MUSICBRAINZ_ARTISTIDS`` is written per-chapter
+    by the enrich pipeline (not here) and ``write_merged_tags`` replaces TTV=30
+    blocks wholesale, so comparing full blocks would flag every enriched file as
+    stale forever. Returns False when there is nothing to compare (no assembled
+    chapters or no chapter list).
+    """
+    if not assembled or not chapters:
+        return False
+
+    # Function-scope import: overlays imports from chapters at module top level.
+    from festival_organizer.mkv_tags import extract_chapter_tags_by_uid
+    from festival_organizer.tracklists.overlays import (
+        CHAPTER_TAG_KEYS,
+        build_chapter_tags_from_assembled,
+    )
+
+    _, chapter_uids = build_chapter_xml(chapters, return_uids=True)
+    desired = build_chapter_tags_from_assembled(
+        assembled, chapter_uids, mashup_metadata=mashup_metadata
+    )
+    embedded = extract_chapter_tags_by_uid(filepath)
+
+    for uid in set(desired) | set(embedded):
+        want = desired.get(uid, {})
+        have = {k: v for k, v in embedded.get(uid, {}).items() if k in CHAPTER_TAG_KEYS}
+        if want != have:
+            return True
+    return False
+
+
 def _build_chapter_tags_map(
     chapters: list[Chapter],
     chapter_uids: list[int],

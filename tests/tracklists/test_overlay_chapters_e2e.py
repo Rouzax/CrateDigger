@@ -350,6 +350,10 @@ def test_idempotent_second_run_is_up_to_date(tmp_path):
             return_value=False,
         ),
         patch(
+            "festival_organizer.tracklists.cli_handler.chapter_tags_need_refresh",
+            return_value=False,
+        ),
+        patch(
             "festival_organizer.tracklists.cli_handler.build_1001tl_tags",
             return_value={},
         ),
@@ -367,3 +371,70 @@ def test_idempotent_second_run_is_up_to_date(tmp_path):
         )
 
     assert (status, vstatus) == ("up_to_date", "up-to-date")
+
+
+def test_stale_per_chapter_tags_self_heal_without_regenerate(tmp_path):
+    """When the embedded chapters match but the per-chapter tag derivation drifted
+    (chapter_tags_need_refresh -> True), identify re-embeds on a plain run and
+    reports updated with the stale-tags reason. No --regenerate required."""
+    cfg = _make_config()
+    first = _run(cfg, tmp_path)
+    embedded = first["chapters"]
+
+    export = _make_export()
+    session = _make_session(export)
+    fake_mkv = tmp_path / "dj.mkv"
+
+    stored = {"url": export.url, "title": export.title, "id": "", "youtube_id": ""}
+
+    def fake_embed(filepath, chapters, **kwargs):
+        return True
+
+    with (
+        patch(
+            "festival_organizer.tracklists.cli_handler.embed_chapters",
+            side_effect=fake_embed,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_existing_chapters",
+            return_value=embedded,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_stored_tracklist_info",
+            return_value=stored,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.has_chapter_tags",
+            return_value=True,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.has_album_artist_display_tags",
+            return_value=True,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.has_legacy_chapter_title",
+            return_value=False,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.chapter_tags_need_refresh",
+            return_value=True,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.build_1001tl_tags",
+            return_value={},
+        ),
+    ):
+        status, vstatus, reason = _fetch_and_embed(
+            session,
+            export.url,
+            fake_mkv,
+            cfg,
+            preview=True,  # preview short-circuits before the real embed write
+            quiet=True,
+            language="eng",
+            duration_seconds=600.0,
+            youtube_id="",
+        )
+
+    assert status == "updated"
+    assert "refreshed stale per-chapter tags" in reason

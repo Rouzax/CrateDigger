@@ -65,6 +65,7 @@ from festival_organizer.tracklists.chapters import (
     Chapter,
     _ms_to_timestamp,
     build_1001tl_tags,
+    chapter_tags_need_refresh,
     chapters_are_identical,
     embed_chapters,
     extract_existing_chapters,
@@ -1086,6 +1087,19 @@ def _fetch_and_embed(
                 export.dj_artists
             ) and not has_album_artist_display_tags(filepath)
             legacy_chapter_title = has_legacy_chapter_title(filepath)
+            # Fourth self-heal: the per-chapter CRATEDIGGER_TRACK_* values are
+            # present and current-contract, but their derivation changed in code
+            # (e.g. a folded "w/" overlay now extends PERFORMER/TITLE). The
+            # chapters_are_identical check above only compares titles/timestamps,
+            # so without this a tag-only fix would report up-to-date and skip.
+            # Only checked when the embed has the current tag contract already
+            # (missing_chapter_tags routes through the full populate path).
+            stale_chapter_tags = not missing_chapter_tags and chapter_tags_need_refresh(
+                filepath,
+                assembled,
+                chapters,
+                mashup_metadata=config.mashup_metadata,
+            )
             if missing_chapter_tags:
                 logger.debug(
                     "identify.self_heal: file=%s reason=missing_chapter_tags",
@@ -1101,11 +1115,17 @@ def _fetch_and_embed(
                     "identify.self_heal: file=%s reason=legacy_chapter_title",
                     filepath.name,
                 )
+            elif stale_chapter_tags:
+                logger.debug(
+                    "identify.self_heal: file=%s reason=stale_chapter_tags",
+                    filepath.name,
+                )
             if (
                 not tags_to_update
                 and not missing_chapter_tags
                 and not missing_album_tags
                 and not legacy_chapter_title
+                and not stale_chapter_tags
                 and not regenerate
             ):
                 return ("up_to_date", "up-to-date", "")
@@ -1118,6 +1138,8 @@ def _fetch_and_embed(
                 reason = "populated album-artist tags"
             elif legacy_chapter_title:
                 reason = "renamed legacy TITLE to CRATEDIGGER_TRACK_TITLE"
+            elif stale_chapter_tags:
+                reason = "refreshed stale per-chapter tags"
             elif tags_to_update:
                 friendly = ", ".join(
                     _FRIENDLY_TAG_NAMES.get(k, k) for k in tags_to_update

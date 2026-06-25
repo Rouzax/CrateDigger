@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.30.2] - 2026-06-25
+
+### Fixed
+
+- Mashup "w/" append now extends the structured single-value chapter tags. When a folded overlay ("w/") track is appended to a chapter, `CRATEDIGGER_TRACK_PERFORMER` and `CRATEDIGGER_TRACK_TITLE` now carry the full mashup (the `vs.`-joined artist and title segments of the chapter title), matching the display title and the `CRATEDIGGER_TRACK_PERFORMER_NAMES`/`_SLUGS` lists. Previously these two tags held only the base track, so the appended component silently disappeared from TrackSplit output. The display title and flat lists are unchanged; only the two single-value tags are corrected.
+- Un-ID'd tracks ("ID - ID", "Artist - ID") no longer blank out. The page parser read the track text only from the `itemprop="name"` meta, which 1001Tracklists omits on un-ID'd rows, so those rows parsed to an empty string: an `ID - ID` main shipped with an empty chapter title and a folded un-ID'd overlay produced a dangling `vs.`. The parser now falls back to the visible `span.trackValue` when the meta is absent, so un-ID'd components render faithfully (e.g. `... vs. ID`). Real titles that merely contain the word `ID` (e.g. `Secret ID`, `... ID (Working Title)`) are unaffected.
+- `identify` now self-heals stale per-chapter tags without `--regenerate`. The "already done?" check only compared chapter titles and timestamps, so a fix that changes how a `CRATEDIGGER_TRACK_*` value is derived (without changing the visible title) was skipped as up-to-date. A new content-aware check re-derives the per-chapter tags and re-embeds when the embedded values drift, so existing libraries pick up the two fixes above on the next normal `identify` run. (`MUSICBRAINZ_ARTISTIDS`, written by `enrich`, is excluded from the comparison; a standalone `identify` re-embed drops it as before and `enrich` restores it.)
+
 ## [0.30.1] - 2026-06-25
 
 ### Fixed
