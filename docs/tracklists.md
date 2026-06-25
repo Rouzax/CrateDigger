@@ -92,7 +92,7 @@ Some 1001Tracklists pages include "w/" rows: tracks that a DJ layers on top of t
 
 The key question for each overlay is whether it enters early enough after the host main track to feel like part of the same moment, or late enough that it deserves its own chapter for navigation. The `overlay_fold_seconds` setting (default: 20 seconds) controls this threshold.
 
-**Folded overlays** are ones that enter within `overlay_fold_seconds` of the host main track's start, share the exact same timestamp, or have no timestamp at all. They are merged into the host track's chapter title:
+**Folded overlays** are ones that enter less than `overlay_fold_seconds` after the host main track's start, share the exact same timestamp, or have no timestamp at all. They are merged into the host track's chapter title:
 
 ```
 Artist A vs. Artist B - Title A vs. Title B
@@ -100,13 +100,13 @@ Artist A vs. Artist B - Title A vs. Title B
 
 Multiple consecutive overlays that all fold into the same host are combined in order, so a three-way mashup reads `Artist A vs. B vs. C - Title A vs. B vs. C`.
 
-**Standalone overlay chapters** are ones that enter more than `overlay_fold_seconds` after the host main track starts. They become their own chapters titled by their own track (`Artist - Title`), so media player chapter lists show them as distinct navigation points.
+**Standalone overlay chapters** are ones that enter at least `overlay_fold_seconds` after the host main track starts. They become their own chapters titled by their own track (`Artist - Title`), so media player chapter lists show them as distinct navigation points.
 
 You can tune the threshold for your own taste:
 
-- `overlay_fold_seconds = 0`: every timecoded overlay becomes its own chapter (maximum granularity).
+- `overlay_fold_seconds = 0`: every timecoded overlay becomes its own chapter, except any that share the host's exact second (maximum granularity).
 - `overlay_fold_seconds = 999` (or any very large value): everything folds into the host (fewest chapters, cleanest list).
-- `overlay_chapters = false`: overlays are ignored entirely; only main-track chapters are written.
+- `overlay_chapters = false`: no overlay chapters are created; only main-track chapters are written.
 
 **Worked example: tuning `overlay_fold_seconds`**
 
