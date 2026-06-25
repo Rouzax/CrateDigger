@@ -56,20 +56,24 @@ from festival_organizer.tracklists.api import (
     AuthenticationError,
     ExportError,
     RateLimitError,
+    Track,
     TracklistError,
     TracklistSession,
     top_genres_by_frequency,
 )
 from festival_organizer.tracklists.chapters import (
+    Chapter,
+    _ms_to_timestamp,
     build_1001tl_tags,
     chapters_are_identical,
     embed_chapters,
     extract_existing_chapters,
     extract_stored_tracklist_info,
     parse_tracklist_lines,
+    strip_chapter_label,
     supplement_chapters_from_tracks,
-    trim_chapters_to_duration,
 )
+from festival_organizer.tracklists.overlays import assemble
 from festival_organizer.tracklists.players import (
     partition_lines_by_player,
     select_player,
@@ -888,11 +892,10 @@ def _fetch_and_embed(
         )
 
     try:
-        chapters = parse_tracklist_lines(export_lines, language=language)
-        chapters = supplement_chapters_from_tracks(
-            chapters, export_tracks, language=language
+        anchors = parse_tracklist_lines(export_lines, language=language)
+        anchors = supplement_chapters_from_tracks(
+            anchors, export_tracks, language=language
         )
-        chapters = trim_chapters_to_duration(chapters, duration_seconds)
     except ValueError:
         logger.debug("identify.skip: file=%s reason=parse_failed", filepath.name)
         if not preview:
@@ -917,6 +920,46 @@ def _fetch_and_embed(
                 youtube_id=persisted_youtube_id,
             )
         return ("skipped", "skipped", "no chapters parsed")
+
+    # Assemble overlay ("w/") chapters on top of the anchor chapters, then trim
+    # to the media duration and derive the final Chapter list. With
+    # overlay_chapters off, assemble (fold_seconds=None) returns one chapter per
+    # anchor but still attaches a mashup main's tlpSubTog sub-components as
+    # contributors, so mashup metadata can still be harvested. assembled and
+    # chapters stay aligned 1:1 (same order/length) for the per-chapter tag merge.
+    anchor_tracks: dict[int, Track] = {}
+    for t in export_tracks:
+        if not t.is_overlay and not t.is_subcomponent:
+            anchor_tracks.setdefault(t.start_ms, t)
+    fold = config.overlay_fold_seconds if config.overlay_chapters else None
+    assembled = assemble(anchors, anchor_tracks, export_tracks, fold_seconds=fold)
+
+    # Trim assembled chapters past the media end, mirroring
+    # trim_chapters_to_duration (cutoff = duration - epsilon, epsilon 2.0s).
+    if duration_seconds is not None:
+        cutoff = duration_seconds - 2.0
+        kept = [ac for ac in assembled if ac.start_ms / 1000.0 < cutoff]
+        dropped = len(assembled) - len(kept)
+        if dropped:
+            logger.info(
+                "chapters.trim: dropped=%d duration=%.1fs",
+                dropped,
+                duration_seconds,
+            )
+        assembled = kept
+
+    chapters = [
+        Chapter(
+            timestamp=_ms_to_timestamp(ac.start_ms),
+            title=(
+                ac.title
+                if config.chapter_title_labels
+                else strip_chapter_label(ac.title)
+            ),
+            language=ac.language,
+        )
+        for ac in assembled
+    ]
 
     if not chapters:
         logger.debug("identify.skip: file=%s reason=no_chapters", filepath.name)
@@ -1104,6 +1147,8 @@ def _fetch_and_embed(
                 dj_cache=session._dj_cache,
                 alias_resolver=config.resolve_artist,
                 youtube_id=persisted_youtube_id,
+                assembled=assembled,
+                mashup_metadata=config.mashup_metadata,
             )
             if success:
                 return (
@@ -1153,6 +1198,8 @@ def _fetch_and_embed(
         dj_cache=session._dj_cache,
         alias_resolver=config.resolve_artist,
         youtube_id=persisted_youtube_id,
+        assembled=assembled,
+        mashup_metadata=config.mashup_metadata,
     )
     if success:
         return ("updated", "updated", f"{export.title} . {len(chapters)} chapters")

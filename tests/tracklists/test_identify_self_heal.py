@@ -61,6 +61,12 @@ def _make_session() -> MagicMock:
 def _make_config() -> MagicMock:
     cfg = MagicMock()
     cfg.resolve_artist.side_effect = lambda name: name
+    # Real values for the overlay-chapter config keys so assemble() and the
+    # label-strip pass run with concrete arithmetic, not auto-MagicMocks.
+    cfg.overlay_chapters = True
+    cfg.overlay_fold_seconds = 20
+    cfg.mashup_metadata = True
+    cfg.chapter_title_labels = False
     return cfg
 
 
@@ -94,7 +100,6 @@ def _patch_identify_internals(**overrides):
         "has_chapter_tags": MagicMock(return_value=True),
         "has_album_artist_display_tags": MagicMock(return_value=True),
         "embed_chapters": MagicMock(return_value=True),
-        "trim_chapters_to_duration": lambda chapters, duration: chapters,
     }
     defaults.update(overrides)
     return defaults
@@ -113,7 +118,6 @@ def test_up_to_date_when_ttv30_present_and_tags_match(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
-        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
             _make_session(),
@@ -145,7 +149,6 @@ def test_self_heal_triggers_when_ttv30_missing(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
-        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
             _make_session(),
@@ -182,7 +185,6 @@ def test_self_heal_triggers_when_album_artist_display_missing(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
-        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
             _make_session(),
@@ -241,7 +243,6 @@ def test_album_artist_check_skipped_when_no_dj_artists(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
-        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
             session,
@@ -273,7 +274,6 @@ def test_regenerate_forces_retag_even_when_up_to_date(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
-        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
             _make_session(),
@@ -327,7 +327,6 @@ def test_ttv70_tag_diff_also_routes_through_embed_chapters(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
-        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
             _make_session(),
@@ -400,6 +399,10 @@ def test_set_genres_capped_via_config_genre_top_n(tmp_path):
     config = MagicMock()
     config.tracklists_settings = {"genre_top_n": 3}  # cap at 3
     config.resolve_artist = lambda n: n
+    config.overlay_chapters = True
+    config.overlay_fold_seconds = 20
+    config.mashup_metadata = True
+    config.chapter_title_labels = False
 
     captured: dict = {}
 
@@ -417,10 +420,6 @@ def test_set_genres_capped_via_config_genre_top_n(tmp_path):
                 MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
                 for i in range(len(tracks))
             ],
-        ),
-        patch(
-            "festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
-            side_effect=lambda chs, dur: chs,
         ),
         patch(
             "festival_organizer.tracklists.cli_handler.extract_existing_chapters",
@@ -480,6 +479,10 @@ def test_set_genres_uncapped_when_config_zero(tmp_path):
     config = MagicMock()
     config.tracklists_settings = {"genre_top_n": 0}
     config.resolve_artist = lambda n: n
+    config.overlay_chapters = True
+    config.overlay_fold_seconds = 20
+    config.mashup_metadata = True
+    config.chapter_title_labels = False
 
     captured: dict = {}
 
@@ -493,10 +496,6 @@ def test_set_genres_uncapped_when_config_zero(tmp_path):
         patch(
             "festival_organizer.tracklists.cli_handler.parse_tracklist_lines",
             return_value=[MagicMock(timestamp="00:00:00.000", title="t")],
-        ),
-        patch(
-            "festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
-            side_effect=lambda chs, dur: chs,
         ),
         patch(
             "festival_organizer.tracklists.cli_handler.extract_existing_chapters",
@@ -562,6 +561,10 @@ def test_fetch_and_embed_uses_export_date_when_tracklist_date_none(tmp_path):
     config = MagicMock()
     config.tracklists_settings = {"genre_top_n": 0}
     config.resolve_artist = lambda n: n
+    config.overlay_chapters = True
+    config.overlay_fold_seconds = 20
+    config.mashup_metadata = True
+    config.chapter_title_labels = False
 
     captured: dict = {}
 
@@ -578,10 +581,6 @@ def test_fetch_and_embed_uses_export_date_when_tracklist_date_none(tmp_path):
                 MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
                 for i in range(3)
             ],
-        ),
-        patch(
-            "festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
-            side_effect=lambda chs, dur: chs,
         ),
         patch(
             "festival_organizer.tracklists.cli_handler.extract_existing_chapters",
@@ -666,7 +665,6 @@ def test_youtube_id_backfilled_when_otherwise_up_to_date(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
-        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
             session,
@@ -714,7 +712,6 @@ def test_no_churn_when_youtube_id_already_present(tmp_path):
         has_chapter_tags=mocks["has_chapter_tags"],
         has_album_artist_display_tags=mocks["has_album_artist_display_tags"],
         embed_chapters=mocks["embed_chapters"],
-        trim_chapters_to_duration=mocks["trim_chapters_to_duration"],
     ):
         status, _, _ = _fetch_and_embed(
             session,
@@ -762,6 +759,10 @@ def test_fetch_and_embed_tracklist_date_wins_over_export_date(tmp_path):
     config = MagicMock()
     config.tracklists_settings = {"genre_top_n": 0}
     config.resolve_artist = lambda n: n
+    config.overlay_chapters = True
+    config.overlay_fold_seconds = 20
+    config.mashup_metadata = True
+    config.chapter_title_labels = False
 
     captured: dict = {}
 
@@ -778,10 +779,6 @@ def test_fetch_and_embed_tracklist_date_wins_over_export_date(tmp_path):
                 MagicMock(timestamp=f"00:{i:02d}:00.000", title=f"t{i}")
                 for i in range(3)
             ],
-        ),
-        patch(
-            "festival_organizer.tracklists.cli_handler.trim_chapters_to_duration",
-            side_effect=lambda chs, dur: chs,
         ),
         patch(
             "festival_organizer.tracklists.cli_handler.extract_existing_chapters",
