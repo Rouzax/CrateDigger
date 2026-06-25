@@ -100,7 +100,7 @@ Artist A vs. Artist B - Title A vs. Title B
 
 Multiple consecutive overlays that all fold into the same host are combined in order, so a three-way mashup reads `Artist A vs. B vs. C - Title A vs. B vs. C`.
 
-**Standalone overlay chapters** are ones that enter more than `overlay_fold_seconds` after the host main track starts. They become their own chapters with the `w/ Artist - Title` label, so media player chapter lists show them as distinct navigation points.
+**Standalone overlay chapters** are ones that enter more than `overlay_fold_seconds` after the host main track starts. They become their own chapters titled by their own track (`Artist - Title`), so media player chapter lists show them as distinct navigation points.
 
 You can tune the threshold for your own taste:
 
@@ -123,11 +123,11 @@ With `overlay_fold_seconds = 20` (the default): the overlay enters 12 seconds af
 Main Artist vs. Other Artist - Track One vs. Track Two
 ```
 
-With `overlay_fold_seconds = 10`: 12 seconds is past the 10-second window, so the overlay breaks out into its own chapter. Two chapters are produced:
+With `overlay_fold_seconds = 10`: 12 seconds is past the 10-second window, so the overlay breaks out into its own chapter, titled by its own track. Two chapters are produced:
 
 ```
 Main Artist - Track One
-w/ Other Artist - Track Two
+Other Artist - Track Two
 ```
 
 ### Labels in chapter titles
