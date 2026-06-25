@@ -1472,13 +1472,13 @@
 <tr>
 <td><code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code></td>
 <td>identify</td>
-<td>Pipe-separated 1001Tracklists slugs for every artist on the track</td>
+<td>Pipe-separated 1001Tracklists slugs for every artist on the track. For mashup chapters, all per-component artists are listed when <code>mashup_metadata</code> is enabled.</td>
 <td><code>afrojack\|oliver-heldens</code></td>
 </tr>
 <tr>
 <td><code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code></td>
 <td>identify</td>
-<td>Pipe-separated display names for every artist, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code></td>
+<td>Pipe-separated display names for every artist, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code>. Mashup chapters carry the real per-component names instead of a single concatenated string.</td>
 <td><code>Afrojack\|Oliver Heldens</code></td>
 </tr>
 <tr>
@@ -1496,13 +1496,13 @@
 <tr>
 <td><code>CRATEDIGGER_TRACK_LABEL</code></td>
 <td>identify</td>
-<td>Record label</td>
-<td><code>WALL</code></td>
+<td>Record label(s), pipe-separated and de-duplicated. Single-track chapters carry one value; mashup and folded-overlay chapters may carry labels from multiple component tracks joined with <code>\|</code>. The label is not included in the visible chapter title by default (see <code>chapter_title_labels</code>).</td>
+<td><code>WALL</code> or <code>STMPD\|Musical Freedom</code></td>
 </tr>
 <tr>
 <td><code>CRATEDIGGER_TRACK_GENRE</code></td>
 <td>identify</td>
-<td>Pipe-separated per-track genres</td>
+<td>Pipe-separated per-track genres. Mashup chapters aggregate genres from all component tracks when <code>mashup_metadata</code> is enabled.</td>
 <td><code>Big Room\|Electro House</code></td>
 </tr>
 </tbody>

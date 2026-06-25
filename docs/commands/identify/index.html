@@ -711,6 +711,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="5. Chapters and metadata are embedded">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-becomes-a-chapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What becomes a chapter
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -1375,6 +1392,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="5. Chapters and metadata are embedded">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-becomes-a-chapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What becomes a chapter
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -1821,6 +1855,24 @@ chapters (timestamp and name), and embeds them into the MKV via <code>mkvpropedi
 </ul>
 <p>These tags are later read by the <a href="../enrich/"><code>enrich</code></a> command to generate artwork, NFO
 files, and resolve MusicBrainz artist IDs.</p>
+<h4 id="what-becomes-a-chapter">What becomes a chapter</h4>
+<p>Each main track on the tracklist becomes one chapter. "w/" overlay rows (tracks layered
+over a currently-playing main track) are handled according to the <code>overlay_chapters</code> and
+<code>overlay_fold_seconds</code> config keys:</p>
+<ul>
+<li>An overlay that enters more than <code>overlay_fold_seconds</code> (default: 20) seconds after its
+  host main track starts becomes its own chapter.</li>
+<li>An overlay that enters within that window, shares the exact start second, or has no
+  timestamp is folded into the host main track. The combined chapter title takes the form
+  <code>Artist A vs. Artist B - Title A vs. Title B</code>.</li>
+</ul>
+<p>"vs." mashup rows harvest per-component artist and genre data from the page's expandable
+sub-rows when <code>mashup_metadata</code> is <code>true</code> (default), giving each mashup chapter real
+multi-artist credits instead of a single concatenated string.</p>
+<p>Set <code>overlay_chapters = false</code> to restore the pre-0.30.0 behaviour where overlays are
+ignored and only main-track chapters are written. See
+<a href="../../tracklists/#layered-w-tracks-and-mashups">Layered ("w/") tracks and mashups</a> for
+the full model and config options.</p>
 <p>If the chosen source has fewer than 2 chapters, CrateDigger skips the chapter embed.
 A single chapter provides no navigation value.</p>
 <h2 id="what-you-see-when-it-runs">What you see when it runs</h2>

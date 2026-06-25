@@ -1813,6 +1813,22 @@
 <td><code>genre_top_n</code></td>
 <td>Maximum number of genres to write to the album-level genre tag. CrateDigger tallies per-track genres across the set and keeps the top N by frequency. Ties are broken by first appearance. Set to <code>0</code> to disable the cap and write every genre. Default: <code>5</code>.</td>
 </tr>
+<tr>
+<td><code>overlay_chapters</code></td>
+<td>Master switch for "w/" overlay chapter handling. When <code>true</code> (default), overlay tracks from the tracklist are processed and either given their own chapter or folded into the host main track. When <code>false</code>, overlays are ignored and only main-track chapters are written, restoring pre-0.30.0 behaviour.</td>
+</tr>
+<tr>
+<td><code>overlay_fold_seconds</code></td>
+<td>How many seconds after its host main track an overlay must enter to become its own chapter rather than folding in. Default: <code>20</code>. An overlay that enters within this window (or shares the exact same second, or has no timecode) is folded into the host, combining both sides into an <code>Artist A vs. Artist B - Title A vs. Title B</code> chapter title. Set to <code>0</code> to give every timecoded overlay its own chapter; set to a large value to fold everything into the host (fewest chapters).</td>
+</tr>
+<tr>
+<td><code>mashup_metadata</code></td>
+<td>When <code>true</code> (default), "vs." mashup chapters harvest the real per-component artists, genres, and labels from the page's expandable sub-rows. The component artists then resolve to MusicBrainz IDs via the normal pipeline. When <code>false</code>, mashup chapters keep the old single-value (concatenated) metadata and skip the extra lookups.</td>
+</tr>
+<tr>
+<td><code>chapter_title_labels</code></td>
+<td>When <code>false</code> (default), the record label is omitted from the visible chapter title; the label is still written to <code>CRATEDIGGER_TRACK_LABEL</code>. When <code>true</code>, chapter titles keep the trailing <code>[Label]</code> (for example, <code>These Are The Times [STMPD]</code>).</td>
+</tr>
 </tbody>
 </table>
 <p>Credentials can also be set via environment variables: <code>TRACKLISTS_EMAIL</code> and <code>TRACKLISTS_PASSWORD</code>.</p>
