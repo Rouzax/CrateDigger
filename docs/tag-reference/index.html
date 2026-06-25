@@ -1472,13 +1472,13 @@
 <tr>
 <td><code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code></td>
 <td>identify</td>
-<td>Pipe-separated 1001Tracklists slugs for every artist on the track. For mashup chapters, all per-component artists are listed when <code>mashup_metadata</code> is enabled.</td>
+<td>Pipe-separated 1001Tracklists slugs for every artist on the track. For mashup chapters, all per-component artists are listed.</td>
 <td><code>afrojack\|oliver-heldens</code></td>
 </tr>
 <tr>
 <td><code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code></td>
 <td>identify</td>
-<td>Pipe-separated display names for every artist, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code>. Mashup chapters carry the real per-component names instead of a single concatenated string. Artists sharing one <code>ft. A &amp; B</code> credit each get their own name (not the combined text repeated). Acts 1001Tracklists registers as a single combined entity (e.g. an <code>A &amp; B pres. C</code> alias with one slug) remain one combined name.</td>
+<td>Pipe-separated display names for every artist, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code>. For mashup chapters, each component artist is listed individually. Artists sharing one <code>ft. A &amp; B</code> credit each get their own name (not the combined text repeated). Acts 1001Tracklists registers as a single combined entity (e.g. an <code>A &amp; B pres. C</code> alias with one slug) remain one combined name.</td>
 <td><code>Afrojack\|Oliver Heldens</code></td>
 </tr>
 <tr>
@@ -1502,7 +1502,7 @@
 <tr>
 <td><code>CRATEDIGGER_TRACK_GENRE</code></td>
 <td>identify</td>
-<td>Pipe-separated per-track genres. Mashup chapters aggregate genres from all component tracks when <code>mashup_metadata</code> is enabled.</td>
+<td>Pipe-separated per-track genres. For mashup chapters, genres from all component tracks are aggregated and de-duplicated.</td>
 <td><code>Big Room\|Electro House</code></td>
 </tr>
 </tbody>

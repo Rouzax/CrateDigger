@@ -1867,10 +1867,8 @@ over a currently-playing main track) are handled according to the <code>overlay_
   <code>Artist A vs. Artist B - Title A vs. Title B</code>.</li>
 </ul>
 <p>"vs." mashup rows harvest per-component artist and genre data from the page's expandable
-sub-rows when <code>mashup_metadata</code> is <code>true</code> (default), giving each mashup chapter real
-multi-artist credits instead of a single concatenated string.</p>
-<p>Set <code>overlay_chapters = false</code> to restore the pre-0.30.0 behaviour where overlays are
-ignored and only main-track chapters are written. See
+sub-rows, giving each mashup chapter real multi-artist credits.</p>
+<p>Set <code>overlay_chapters = false</code> to ignore overlays and write only main-track chapters. See
 <a href="../../tracklists/#layered-w-tracks-and-mashups">Layered ("w/") tracks and mashups</a> for
 the full model and config options.</p>
 <p>If the chosen source has fewer than 2 chapters, CrateDigger skips the chapter embed.

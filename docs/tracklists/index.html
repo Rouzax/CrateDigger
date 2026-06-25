@@ -866,17 +866,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#mashup-metadata" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mashup metadata
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#labels-in-chapter-titles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1213,17 +1202,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#mashup-metadata" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mashup metadata
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#labels-in-chapter-titles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1486,21 +1464,24 @@
 <ul>
 <li><code>overlay_fold_seconds = 0</code>: every timecoded overlay becomes its own chapter (maximum granularity).</li>
 <li><code>overlay_fold_seconds = 999</code> (or any very large value): everything folds into the host (fewest chapters, cleanest list).</li>
-<li><code>overlay_chapters = false</code>: overlays are ignored entirely; only main-track chapters are written (pre-0.30.0 behaviour).</li>
+<li><code>overlay_chapters = false</code>: overlays are ignored entirely; only main-track chapters are written.</li>
 </ul>
-<h3 id="mashup-metadata">Mashup metadata</h3>
-<p>When a 1001Tracklists page lists a "vs." mashup, the mashup entry has expandable sub-rows that name each component track individually, with its own artist, genre, and label. CrateDigger now harvests those sub-rows when <code>mashup_metadata</code> is <code>true</code> (the default).</p>
-<p>What this means for a mashup chapter:</p>
-<ul>
-<li><code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code> and <code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code> carry the actual per-component artists (pipe-separated), rather than a single concatenated string. This means the normal <code>chapter_artist_mbids</code> enrich operation resolves MusicBrainz IDs for each component artist.</li>
-<li><code>CRATEDIGGER_TRACK_GENRE</code> carries the genres from each component, de-duplicated and joined.</li>
-<li><code>CRATEDIGGER_TRACK_LABEL</code> carries the labels from each component, de-duplicated and joined with <code>|</code>.</li>
-</ul>
-<p>Set <code>mashup_metadata = false</code> to skip this extra harvesting and keep the old single-value metadata.</p>
+<p><strong>Worked example: tuning <code>overlay_fold_seconds</code></strong></p>
+<p>A tracklist with one main track and one "w/" overlay that enters 12 seconds later:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>[00:00] Main Artist - Track One
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>w/ Other Artist - Track Two   (enters at 00:12)
+</code></pre></div>
+<p>With <code>overlay_fold_seconds = 20</code> (the default): the overlay enters 12 seconds after the host, which is inside the 20-second window, so it folds in. One chapter is produced:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Main Artist vs. Other Artist - Track One vs. Track Two
+</code></pre></div>
+<p>With <code>overlay_fold_seconds = 10</code>: 12 seconds is past the 10-second window, so the overlay breaks out into its own chapter. Two chapters are produced:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Main Artist - Track One
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>w/ Other Artist - Track Two
+</code></pre></div>
 <h3 id="labels-in-chapter-titles">Labels in chapter titles</h3>
 <p>By default (<code>chapter_title_labels = false</code>) the record label is written only to <code>CRATEDIGGER_TRACK_LABEL</code> and is not part of the visible chapter title. A chapter reads <code>These Are The Times</code> in your media player's chapter list. Set <code>chapter_title_labels = true</code> to include the label in the title: <code>These Are The Times [STMPD]</code>. The <code>CRATEDIGGER_TRACK_LABEL</code> tag is always written regardless of this setting.</p>
 <h3 id="effect-on-existing-libraries">Effect on existing libraries</h3>
-<p>After upgrading to 0.30.0, the next <code>identify</code> run on a previously identified file rewrites its chapters with the new logic. The chapter count and titles may change. Subsequent runs are stable until the tracklist itself changes on 1001Tracklists.</p>
+<p>Re-running <code>identify</code> on a previously identified file rewrites its chapters with the current logic. The chapter count and titles may change. Subsequent runs are stable until the tracklist itself changes on 1001Tracklists.</p>
 <h2 id="multi-source-tracklists">Multi-source tracklists</h2>
 <p>Some 1001Tracklists pages are cued against more than one source video. When a DJ performed two separate sets at the same event, or when a stream was split across multiple uploads, the tracklist page lists each source separately as "Player 1", "Player 2", and so on. Each player has its own timeline, so the chapter timestamps for Player 1 do not apply to Player 2.</p>
 <p>When CrateDigger encounters a tracklist with two or more sources, it selects the one that matches your file before embedding chapters. The selection works in this priority order:</p>
@@ -1530,7 +1511,7 @@
 <h2 id="troubleshooting">Troubleshooting</h2>
 <h3 id="a-scraping-canary-warning-appears-in-the-output">A "Scraping canary" WARNING appears in the output</h3>
 <p>You may see a line like this:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>WARNING  Scraping canary: tracklist page missing selectors [&#39;tlpItem row&#39;, &#39;cue_seconds input&#39;] at https://www.1001tracklists.com/tracklist/abc123/some-set/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>WARNING  Scraping canary: tracklist page missing selectors [&#39;tlpItem row&#39;, &#39;cue_seconds input&#39;] at https://www.1001tracklists.com/tracklist/abc123/some-set/
 </code></pre></div>
 <p>This means 1001tracklists.com has changed its page structure in a way that the parser no longer finds the expected data. Enrichment for that page type is likely to be incomplete until CrateDigger is updated to match the new layout. Affected fields may include genres, event date, stage name, or DJ artwork, depending on which selectors are missing.</p>
 <p><strong>What to do:</strong></p>

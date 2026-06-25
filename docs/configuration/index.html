@@ -1779,6 +1779,9 @@
 <a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">chapter_language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;eng&quot;</span>
 <a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="n">auto_select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 <a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="n">genre_top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="n">overlay_chapters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="n">overlay_fold_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="n">chapter_title_labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 <p>Settings for 1001Tracklists integration. See <a href="../tracklists/">Tracklists integration</a> for account setup details.</p>
 <table>
@@ -1799,7 +1802,7 @@
 </tr>
 <tr>
 <td><code>delay_seconds</code></td>
-<td>Pause between files during identify (default: 5 seconds)</td>
+<td>Pause between files during identify (default: <code>5</code>); override per run with <code>--delay</code></td>
 </tr>
 <tr>
 <td><code>chapter_language</code></td>
@@ -1811,23 +1814,19 @@
 </tr>
 <tr>
 <td><code>genre_top_n</code></td>
-<td>Maximum number of genres to write to the album-level genre tag. CrateDigger tallies per-track genres across the set and keeps the top N by frequency. Ties are broken by first appearance. Set to <code>0</code> to disable the cap and write every genre. Default: <code>5</code>.</td>
+<td>Maximum genres written to the album-level tag; tallied by frequency, ties broken by first appearance; <code>0</code> disables the cap (default: <code>5</code>)</td>
 </tr>
 <tr>
 <td><code>overlay_chapters</code></td>
-<td>Master switch for "w/" overlay chapter handling. When <code>true</code> (default), overlay tracks from the tracklist are processed and either given their own chapter or folded into the host main track. When <code>false</code>, overlays are ignored and only main-track chapters are written, restoring pre-0.30.0 behaviour.</td>
+<td>When <code>true</code> (default), "w/" overlay tracks are processed and either folded into the host chapter or given their own chapter; when <code>false</code>, overlays are ignored and only main-track chapters are written</td>
 </tr>
 <tr>
 <td><code>overlay_fold_seconds</code></td>
-<td>How many seconds after its host main track an overlay must enter to become its own chapter rather than folding in. Default: <code>20</code>. An overlay that enters within this window (or shares the exact same second, or has no timecode) is folded into the host, combining both sides into an <code>Artist A vs. Artist B - Title A vs. Title B</code> chapter title. Set to <code>0</code> to give every timecoded overlay its own chapter; set to a large value to fold everything into the host (fewest chapters).</td>
-</tr>
-<tr>
-<td><code>mashup_metadata</code></td>
-<td>When <code>true</code> (default), "vs." mashup chapters harvest the real per-component artists, genres, and labels from the page's expandable sub-rows. The component artists then resolve to MusicBrainz IDs via the normal pipeline. When <code>false</code>, mashup chapters keep the old single-value (concatenated) metadata and skip the extra lookups.</td>
+<td>Seconds after the host main track an overlay must enter to become its own chapter; overlays inside the window fold in as <code>Artist A vs. Artist B - Title A vs. Title B</code>; <code>0</code> gives every timecoded overlay its own chapter; a large value folds everything (default: <code>20</code>)</td>
 </tr>
 <tr>
 <td><code>chapter_title_labels</code></td>
-<td>When <code>false</code> (default), the record label is omitted from the visible chapter title; the label is still written to <code>CRATEDIGGER_TRACK_LABEL</code>. When <code>true</code>, chapter titles keep the trailing <code>[Label]</code> (for example, <code>These Are The Times [STMPD]</code>).</td>
+<td>When <code>false</code> (default), the record label is omitted from the visible chapter title but still written to <code>CRATEDIGGER_TRACK_LABEL</code>; when <code>true</code>, chapter titles include the trailing <code>[Label]</code> (for example, <code>These Are The Times [STMPD]</code>)</td>
 </tr>
 </tbody>
 </table>
