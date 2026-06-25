@@ -89,12 +89,12 @@ Written by `identify`, except `MUSICBRAINZ_ARTISTIDS` which is written by `enric
 | Tag | Written by | Content | Example |
 |-----|-----------|---------|---------|
 | `CRATEDIGGER_TRACK_PERFORMER` | identify | Primary artist display name of the track, exactly as 1001Tracklists renders it | `AFROJACK ft. Eva Simons` |
-| `CRATEDIGGER_TRACK_PERFORMER_SLUGS` | identify | Pipe-separated 1001Tracklists slugs for every artist on the track | `afrojack\|oliver-heldens` |
-| `CRATEDIGGER_TRACK_PERFORMER_NAMES` | identify | Pipe-separated display names for every artist, aligned with `CRATEDIGGER_TRACK_PERFORMER_SLUGS` | `Afrojack\|Oliver Heldens` |
+| `CRATEDIGGER_TRACK_PERFORMER_SLUGS` | identify | Pipe-separated 1001Tracklists slugs for every artist on the track. For mashup chapters, all per-component artists are listed when `mashup_metadata` is enabled. | `afrojack\|oliver-heldens` |
+| `CRATEDIGGER_TRACK_PERFORMER_NAMES` | identify | Pipe-separated display names for every artist, aligned with `CRATEDIGGER_TRACK_PERFORMER_SLUGS`. Mashup chapters carry the real per-component names instead of a single concatenated string. | `Afrojack\|Oliver Heldens` |
 | `MUSICBRAINZ_ARTISTIDS` | enrich | Pipe-separated MusicBrainz artist IDs, aligned with `CRATEDIGGER_TRACK_PERFORMER_NAMES`. Empty slot `""` for unresolved names. | `<afrojack-mbid>\|<heldens-mbid>` |
 | `CRATEDIGGER_TRACK_TITLE` | identify | Track title with the artist prefix stripped | `Take Over Control` |
-| `CRATEDIGGER_TRACK_LABEL` | identify | Record label | `WALL` |
-| `CRATEDIGGER_TRACK_GENRE` | identify | Pipe-separated per-track genres | `Big Room\|Electro House` |
+| `CRATEDIGGER_TRACK_LABEL` | identify | Record label(s), pipe-separated and de-duplicated. Single-track chapters carry one value; mashup and folded-overlay chapters may carry labels from multiple component tracks joined with `\|`. The label is not included in the visible chapter title by default (see `chapter_title_labels`). | `WALL` or `STMPD\|Musical Freedom` |
+| `CRATEDIGGER_TRACK_GENRE` | identify | Pipe-separated per-track genres. Mashup chapters aggregate genres from all component tracks when `mashup_metadata` is enabled. | `Big Room\|Electro House` |
 
 The `CRATEDIGGER_TRACK_*` prefix is deliberate: it keeps these per-chapter tags out of mediainfo's flattened "General" section. Unprefixed standard Matroska names (`PERFORMER`, `LABEL`, `GENRE`, `TITLE`) at TTV=30 get promoted into mediainfo's file-level display (last chapter wins), making files look like they carry the last chapter's values at file scope. The prefix avoids that without changing playback behaviour in Matroska-aware readers (Kodi uses the chapter's `ChapterString` for the title, not these tags).
 

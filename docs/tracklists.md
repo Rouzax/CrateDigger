@@ -84,6 +84,50 @@ Adding a `places.json` entry for a venue is all it takes to bring it into the sa
 
 See [Places](places.md) for the full registry format and matching rules.
 
+## Layered ("w/") tracks and mashups
+
+### Overlay chapters
+
+Some 1001Tracklists pages include "w/" rows: tracks that a DJ layers on top of the currently-playing track rather than replacing it. CrateDigger processes these when `overlay_chapters` is `true` (the default).
+
+The key question for each overlay is whether it enters early enough after the host main track to feel like part of the same moment, or late enough that it deserves its own chapter for navigation. The `overlay_fold_seconds` setting (default: 20 seconds) controls this threshold.
+
+**Folded overlays** are ones that enter within `overlay_fold_seconds` of the host main track's start, share the exact same timestamp, or have no timestamp at all. They are merged into the host track's chapter title:
+
+```
+Artist A vs. Artist B - Title A vs. Title B
+```
+
+Multiple consecutive overlays that all fold into the same host are combined in order, so a three-way mashup reads `Artist A vs. B vs. C - Title A vs. B vs. C`.
+
+**Standalone overlay chapters** are ones that enter more than `overlay_fold_seconds` after the host main track starts. They become their own chapters with the `w/ Artist - Title` label, so media player chapter lists show them as distinct navigation points.
+
+You can tune the threshold for your own taste:
+
+- `overlay_fold_seconds = 0`: every timecoded overlay becomes its own chapter (maximum granularity).
+- `overlay_fold_seconds = 999` (or any very large value): everything folds into the host (fewest chapters, cleanest list).
+- `overlay_chapters = false`: overlays are ignored entirely; only main-track chapters are written (pre-0.30.0 behaviour).
+
+### Mashup metadata
+
+When a 1001Tracklists page lists a "vs." mashup, the mashup entry has expandable sub-rows that name each component track individually, with its own artist, genre, and label. CrateDigger now harvests those sub-rows when `mashup_metadata` is `true` (the default).
+
+What this means for a mashup chapter:
+
+- `CRATEDIGGER_TRACK_PERFORMER_SLUGS` and `CRATEDIGGER_TRACK_PERFORMER_NAMES` carry the actual per-component artists (pipe-separated), rather than a single concatenated string. This means the normal `chapter_artist_mbids` enrich operation resolves MusicBrainz IDs for each component artist.
+- `CRATEDIGGER_TRACK_GENRE` carries the genres from each component, de-duplicated and joined.
+- `CRATEDIGGER_TRACK_LABEL` carries the labels from each component, de-duplicated and joined with `|`.
+
+Set `mashup_metadata = false` to skip this extra harvesting and keep the old single-value metadata.
+
+### Labels in chapter titles
+
+By default (`chapter_title_labels = false`) the record label is written only to `CRATEDIGGER_TRACK_LABEL` and is not part of the visible chapter title. A chapter reads `These Are The Times` in your media player's chapter list. Set `chapter_title_labels = true` to include the label in the title: `These Are The Times [STMPD]`. The `CRATEDIGGER_TRACK_LABEL` tag is always written regardless of this setting.
+
+### Effect on existing libraries
+
+After upgrading to 0.30.0, the next `identify` run on a previously identified file rewrites its chapters with the new logic. The chapter count and titles may change. Subsequent runs are stable until the tracklist itself changes on 1001Tracklists.
+
 ## Multi-source tracklists
 
 Some 1001Tracklists pages are cued against more than one source video. When a DJ performed two separate sets at the same event, or when a stream was split across multiple uploads, the tracklist page lists each source separately as "Player 1", "Player 2", and so on. Each player has its own timeline, so the chapter timestamps for Player 1 do not apply to Player 2.

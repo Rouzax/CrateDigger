@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-06-25
+
+### Added
+
+- Layered ("w/") overlay chapters. When a 1001Tracklists tracklist contains "w/" rows (tracks a DJ layers over a currently-playing track), `identify` now handles them explicitly instead of dropping them. An overlay whose timestamp falls more than `overlay_fold_seconds` (default 20) seconds after its host main track starts becomes its own chapter. Overlays that enter within that window, share the exact same second as the host, or have no timestamp at all are folded into the host main track; the resulting chapter title combines both sides as `Artist A vs. Artist B - Title A vs. Title B`. Consecutive distinct overlays cluster together. The `overlay_chapters` config key (default `true`) is the master switch; setting it to `false` restores the previous behaviour where only main-track chapters are written and overlays are ignored.
+- Mashup metadata harvest. "vs." mashup chapters now harvest the real per-component artists, genres, and labels from the page's expandable sub-rows instead of carrying a single concatenated artist string and no genre. The per-component artists resolve to MusicBrainz IDs via the normal `chapter_artist_mbids` operation, and the collected genres populate the per-chapter genre tag. The `mashup_metadata` config key (default `true`) controls this harvest; setting it to `false` keeps the old single-value metadata and skips the extra lookups.
+- Four new `[tracklists]` config keys:
+  - `overlay_chapters` (bool, default `true`): master switch for "w/" overlay chapter handling. Off restores previous behaviour.
+  - `overlay_fold_seconds` (int, default `20`): how many seconds after its host main track an overlay must enter to earn its own chapter. `0` makes every timecoded overlay its own chapter; a large value folds everything into the host.
+  - `mashup_metadata` (bool, default `true`): harvest per-component artists, genres, and labels from mashup sub-rows.
+  - `chapter_title_labels` (bool, default `false`): when `false` (default), the record label is omitted from the visible chapter title; the label still goes to `CRATEDIGGER_TRACK_LABEL`. When `true`, chapter titles keep the trailing `[Label]` as before.
+
+### Changed
+
+- `CRATEDIGGER_TRACK_LABEL` is now a multi-value, `|`-joined, de-duplicated tag. Mashup chapters may carry labels from multiple component tracks; the tag joins them. Previously the tag held only a single value.
+- Record labels are no longer written into chapter titles by default. The label moves solely to the `CRATEDIGGER_TRACK_LABEL` tag; chapter titles read as `These Are The Times` rather than `These Are The Times [STMPD]`. Set `chapter_title_labels = true` to restore the label in chapter titles.
+- Mashup chapters now populate `CRATEDIGGER_TRACK_PERFORMER_SLUGS`, `CRATEDIGGER_TRACK_PERFORMER_NAMES`, and `CRATEDIGGER_TRACK_GENRE` with real per-component values harvested from the mashup sub-rows. Previously these tags carried one unusable concatenated string and an empty genre.
+- Existing libraries re-chapter once on the next `identify` run (chapter titles and counts change); subsequent runs are stable.
+
 ## [0.29.0] - 2026-06-24
 
 ### Added

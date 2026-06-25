@@ -148,6 +148,27 @@ chapters (timestamp and name), and embeds them into the MKV via `mkvpropedit`. I
 These tags are later read by the [`enrich`](enrich.md) command to generate artwork, NFO
 files, and resolve MusicBrainz artist IDs.
 
+#### What becomes a chapter
+
+Each main track on the tracklist becomes one chapter. "w/" overlay rows (tracks layered
+over a currently-playing main track) are handled according to the `overlay_chapters` and
+`overlay_fold_seconds` config keys:
+
+- An overlay that enters more than `overlay_fold_seconds` (default: 20) seconds after its
+  host main track starts becomes its own chapter.
+- An overlay that enters within that window, shares the exact start second, or has no
+  timestamp is folded into the host main track. The combined chapter title takes the form
+  `Artist A vs. Artist B - Title A vs. Title B`.
+
+"vs." mashup rows harvest per-component artist and genre data from the page's expandable
+sub-rows when `mashup_metadata` is `true` (default), giving each mashup chapter real
+multi-artist credits instead of a single concatenated string.
+
+Set `overlay_chapters = false` to restore the pre-0.30.0 behaviour where overlays are
+ignored and only main-track chapters are written. See
+[Layered ("w/") tracks and mashups](../tracklists.md#layered-w-tracks-and-mashups) for
+the full model and config options.
+
 If the chosen source has fewer than 2 chapters, CrateDigger skips the chapter embed.
 A single chapter provides no navigation value.
 
