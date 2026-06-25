@@ -820,7 +820,14 @@ def _fetch_and_embed(
     # source matches (would otherwise embed another video's timeline).
     # Single-source tracklists are unaffected (chapter the whole timeline).
     selected_player = 0
-    is_multiplayer = len(export.players) >= 2
+    # Only scope by player when the body actually interleaves multiple timelines
+    # ("Player N" markers -> partition buckets beyond {0}). A tracklist can list
+    # two video sources (two ytPlayer blocks) yet share ONE unmarked timeline;
+    # that body sits entirely in bucket 0 (every Track.player == 0) and must use
+    # the FULL timeline, not be narrowed to the matched ordinal and wiped to zero
+    # ("no chapters parsed"). Prod case: 2wrmg6f1 (AFROJACK EDC 2025).
+    line_buckets = partition_lines_by_player(export.lines)
+    is_multiplayer = len(export.players) >= 2 and set(line_buckets) != {0}
     if is_multiplayer:
         if matched_ordinal is None:
             logger.warning(
@@ -859,11 +866,12 @@ def _fetch_and_embed(
             persisted_youtube_id or youtube_id or "",
         )
 
-    # Scope tracks and lines to the selected source. Only multi-source
-    # selection narrows them; single-source keeps the full timeline.
-    if selected_player:  # only set for multi-source matches
+    # Scope tracks and lines to the selected source. Only a multi-source,
+    # timeline-partitioned tracklist narrows them; single-source and
+    # single-unmarked-timeline sets keep the full timeline.
+    if selected_player:  # only set for partitioned multi-source matches
         export_tracks = [t for t in export.tracks if t.player == selected_player]
-        export_lines = partition_lines_by_player(export.lines).get(selected_player, [])
+        export_lines = line_buckets.get(selected_player, [])
     else:
         export_tracks = export.tracks
         export_lines = export.lines

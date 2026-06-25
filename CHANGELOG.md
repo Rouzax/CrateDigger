@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.30.1] - 2026-06-25
+
+### Fixed
+
+- Tracklists with two video sources but a single shared timeline no longer skip with "no chapters parsed". A 1001Tracklists page can list two YouTube sources (two ytPlayer blocks) while its track list is a single timeline with no "Player N" markers. `identify` treated the two sources as separate timelines, scoped the body to the matched source, found nothing, and skipped. It now scopes by source only when the body is actually partitioned by "Player N" markers, and chapters the full timeline otherwise. Genuine multi-timeline tracklists (with "Player N" markers) are unchanged. Affected sets re-chapter on the next `identify` run.
+
 ## [0.30.0] - 2026-06-25
 
 ### Added

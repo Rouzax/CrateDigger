@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from festival_organizer.tracklists.api import (
     PlayerInfo,
+    Track,
     TracklistExport,
     _parse_tracks,
 )
@@ -192,3 +193,115 @@ def test_fetch_and_embed_no_match_multisource_skips_without_erasing(tmp_path):
     # left intact (warn-and-skip, not erase).
     assert "chapters" in captured, "embed_chapters should still write metadata"
     assert captured["chapters"] == []
+
+
+def _overlay_config() -> MagicMock:
+    """Config with real overlay-key values (a bare MagicMock's auto-attrs would
+    break assemble()'s fold_seconds arithmetic)."""
+    cfg = _make_config()
+    cfg.overlay_chapters = True
+    cfg.overlay_fold_seconds = 20
+    cfg.mashup_metadata = True
+    cfg.chapter_title_labels = False
+    return cfg
+
+
+def test_fetch_and_embed_two_sources_one_unmarked_timeline_chapters_full_body(tmp_path):
+    """Regression: a tracklist with TWO video sources (two ytPlayer blocks) but a
+    SINGLE, unmarked timeline (no "Player N" markers in the body, every Track
+    .player == 0) must chapter the FULL body, not be scoped to the matched
+    ordinal and wiped to zero ("no chapters parsed"). Mirrors prod 2wrmg6f1."""
+    lines = [
+        "AFROJACK @ kineticFIELD, EDC Las Vegas",
+        "[00:00] AFROJACK - Track A [STMPD]",
+        "[02:00] AFROJACK - Track B [WALL]",
+        "[05:00] AFROJACK - Track C",
+    ]
+    tracks = [
+        Track(
+            start_ms=0,
+            raw_text="AFROJACK - Track A",
+            artist_slugs=["afrojack"],
+            genres=[],
+            artist_names=["AFROJACK"],
+            title="Track A",
+            label="STMPD",
+        ),
+        Track(
+            start_ms=120000,
+            raw_text="AFROJACK - Track B",
+            artist_slugs=["afrojack"],
+            genres=[],
+            artist_names=["AFROJACK"],
+            title="Track B",
+            label="WALL",
+        ),
+        Track(
+            start_ms=300000,
+            raw_text="AFROJACK - Track C",
+            artist_slugs=["afrojack"],
+            genres=[],
+            artist_names=["AFROJACK"],
+            title="Track C",
+        ),
+    ]
+    assert all(t.player == 0 for t in tracks)  # body is unmarked
+    export = TracklistExport(
+        lines=lines,
+        url="https://www.1001tracklists.com/tracklist/2wrmg6f1/afrojack.html",
+        title="AFROJACK @ EDC Las Vegas",
+        tracks=tracks,
+        # Two sources: file (~4068s) uniquely matches ordinal 1 (4069s); 2521s is far.
+        players=[
+            PlayerInfo(1, "trXRltKkl1g", 4069),
+            PlayerInfo(2, "twqRcHCbvEE", 2521),
+        ],
+    )
+    # Sanity: no "Player N" markers, so the body is a single bucket 0.
+    assert set(partition_lines_by_player(lines)) == {0}
+
+    session = _make_session(export)
+    config = _overlay_config()
+    captured: dict = {}
+
+    def fake_embed(filepath, chapters, **kwargs):
+        captured["chapters"] = chapters
+        captured["youtube_id"] = kwargs.get("youtube_id")
+        return True
+
+    fake_mkv = tmp_path / "afrojack.mkv"
+    fake_mkv.write_bytes(b"")
+
+    with (
+        patch(
+            "festival_organizer.tracklists.cli_handler.embed_chapters",
+            side_effect=fake_embed,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.extract_existing_chapters",
+            return_value=None,
+        ),
+        patch(
+            "festival_organizer.tracklists.cli_handler.chapters_are_identical",
+            return_value=False,
+        ),
+    ):
+        status, vstatus, _ = _fetch_and_embed(
+            session,
+            export.url,
+            fake_mkv,
+            config,
+            preview=False,
+            quiet=True,
+            language="eng",
+            duration_seconds=4068,  # uniquely matches ordinal 1 (4069s)
+            youtube_id="",
+        )
+
+    # Must NOT skip with "no chapters parsed": the full body is chaptered.
+    assert (status, vstatus) == ("updated", "updated")
+    titles = [c.title for c in captured["chapters"]]
+    assert any("Track A" in t for t in titles)
+    assert any("Track C" in t for t in titles)
+    # Matched ordinal 1's source id is still persisted.
+    assert captured["youtube_id"] == "trXRltKkl1g"
