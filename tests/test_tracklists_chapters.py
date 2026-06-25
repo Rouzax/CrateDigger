@@ -22,7 +22,6 @@ from festival_organizer.tracklists.chapters import (
     parse_tracklist_lines,
     strip_chapter_label,
     supplement_chapters_from_tracks,
-    trim_chapters_to_duration,
 )
 
 # --- normalize_timestamp ---
@@ -196,9 +195,6 @@ def test_parse_tracklist_mashup_filter_logs(caplog):
     assert "Mashup Intro" in caplog.text
 
 
-# --- trim_chapters_to_duration ---
-
-
 def _chs(*seconds: float) -> list[Chapter]:
     """Build chapters from seconds: _chs(0, 60, 120) -> 3 chapters at those times."""
     out = []
@@ -209,56 +205,6 @@ def _chs(*seconds: float) -> list[Chapter]:
             Chapter(timestamp=f"{h:02d}:{m:02d}:{sec:02d}.000", title=f"Track {s:.0f}s")
         )
     return out
-
-
-def test_trim_no_duration_passes_through():
-    chapters = _chs(0, 60, 120)
-    assert trim_chapters_to_duration(chapters, None) == chapters
-
-
-def test_trim_duration_covers_all_no_change():
-    chapters = _chs(0, 60, 120)
-    # Duration well past last chapter
-    assert trim_chapters_to_duration(chapters, 300.0) == chapters
-
-
-def test_trim_drops_chapters_past_end():
-    # Video is 100s long; chapters at 0, 60, 120, 180 should keep only first two
-    chapters = _chs(0, 60, 120, 180)
-    result = trim_chapters_to_duration(chapters, 100.0)
-    assert len(result) == 2
-    assert result[0].title == "Track 0s"
-    assert result[1].title == "Track 60s"
-
-
-def test_trim_drops_chapter_within_epsilon():
-    # Chapter at 99s, duration 100s, default epsilon 2s -> cutoff 98s -> drop 99s chapter
-    chapters = _chs(0, 60, 99)
-    result = trim_chapters_to_duration(chapters, 100.0)
-    assert len(result) == 2
-    assert all(ch.title != "Track 99s" for ch in result)
-
-
-def test_trim_keeps_chapter_before_epsilon():
-    # Chapter at 90s, duration 100s, epsilon 2s -> cutoff 98s -> keep 90s chapter
-    chapters = _chs(0, 60, 90)
-    result = trim_chapters_to_duration(chapters, 100.0)
-    assert len(result) == 3
-
-
-def test_trim_logs_when_dropping(caplog):
-    chapters = _chs(0, 60, 120, 180)
-    with caplog.at_level(logging.INFO, logger="festival_organizer.tracklists.chapters"):
-        trim_chapters_to_duration(chapters, 100.0)
-    assert "dropped=2" in caplog.text
-    assert "duration=100.0" in caplog.text
-
-
-def test_trim_no_log_when_nothing_dropped(caplog):
-    chapters = _chs(0, 60, 120)
-    with caplog.at_level(logging.INFO, logger="festival_organizer.tracklists.chapters"):
-        trim_chapters_to_duration(chapters, 300.0)
-    assert "chapters.trim" not in caplog.text
 
 
 # --- build_chapter_xml ---

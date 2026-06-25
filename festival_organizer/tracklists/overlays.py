@@ -155,8 +155,11 @@ def merge_chapter_tags(
         # names is built in lockstep with slugs, so lengths always match.
         entry["CRATEDIGGER_TRACK_PERFORMER_NAMES"] = "|".join(names)
         if lead is not None:
-            if " - " in lead.raw_text:
-                display = lead.raw_text.rsplit(" - ", 1)[0].strip()
+            artist, _ = _split_artist_title(lead.raw_text)
+            if artist:
+                display = artist.strip()
+            elif _SEPARATOR in lead.raw_text:
+                display = lead.raw_text.rsplit(_SEPARATOR, 1)[0].strip()
             else:
                 display = lead.raw_text.strip() or slugs[0]
         else:

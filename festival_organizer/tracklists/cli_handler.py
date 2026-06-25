@@ -934,8 +934,8 @@ def _fetch_and_embed(
     fold = config.overlay_fold_seconds if config.overlay_chapters else None
     assembled = assemble(anchors, anchor_tracks, export_tracks, fold_seconds=fold)
 
-    # Trim assembled chapters past the media end, mirroring
-    # trim_chapters_to_duration (cutoff = duration - epsilon, epsilon 2.0s).
+    # Drop assembled chapters at or within 2.0s of the media end
+    # (cutoff = duration - epsilon, epsilon 2.0s).
     if duration_seconds is not None:
         cutoff = duration_seconds - 2.0
         kept = [ac for ac in assembled if ac.start_ms / 1000.0 < cutoff]
