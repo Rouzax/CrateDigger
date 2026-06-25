@@ -1466,8 +1466,8 @@
 <tr>
 <td><code>CRATEDIGGER_TRACK_PERFORMER</code></td>
 <td>identify</td>
-<td>Primary artist display name of the track, exactly as 1001Tracklists renders it</td>
-<td><code>AFROJACK ft. Eva Simons</code></td>
+<td>Primary artist display name of the track, exactly as 1001Tracklists renders it. For a mashup or folded-overlay ("w/") chapter this is the <code>vs.</code>-joined artist segment of the chapter title (the appended component included), not just the base track. Un-ID'd components render as <code>ID</code>.</td>
+<td><code>AFROJACK ft. Eva Simons</code> or <code>House Of Pain vs. Cloonee</code></td>
 </tr>
 <tr>
 <td><code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code></td>
@@ -1478,7 +1478,7 @@
 <tr>
 <td><code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code></td>
 <td>identify</td>
-<td>Pipe-separated display names for every artist, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code>. Mashup chapters carry the real per-component names instead of a single concatenated string.</td>
+<td>Pipe-separated display names for every artist, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code>. Mashup chapters carry the real per-component names instead of a single concatenated string. Artists sharing one <code>ft. A &amp; B</code> credit each get their own name (not the combined text repeated). Acts 1001Tracklists registers as a single combined entity (e.g. an <code>A &amp; B pres. C</code> alias with one slug) remain one combined name.</td>
 <td><code>Afrojack\|Oliver Heldens</code></td>
 </tr>
 <tr>
@@ -1490,8 +1490,8 @@
 <tr>
 <td><code>CRATEDIGGER_TRACK_TITLE</code></td>
 <td>identify</td>
-<td>Track title with the artist prefix stripped</td>
-<td><code>Take Over Control</code></td>
+<td>Track title with the artist prefix stripped. For a mashup or folded-overlay ("w/") chapter this is the <code>vs.</code>-joined title segment of the chapter title (the appended component included), matching <code>CRATEDIGGER_TRACK_PERFORMER</code>.</td>
+<td><code>Take Over Control</code> or <code>Jump Around vs. Stephanie (HNTR VIP)</code></td>
 </tr>
 <tr>
 <td><code>CRATEDIGGER_TRACK_LABEL</code></td>
