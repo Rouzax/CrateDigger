@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-06-27
+
+### Fixed
+
+- Track titles containing `" - "` no longer spill into the performer field. The 1001Tracklists `Artist - Title` parser split on the **last** `" - "`, so a title with its own `" - "` (subtitles, `- Extended Mix`, `- Radio Edit`, `... reimagined`) put the trailing fragment in `CRATEDIGGER_TRACK_TITLE` and left the rest stuck on `CRATEDIGGER_TRACK_PERFORMER` (e.g. `Kölsch ft. Troels Abrahamsen - All that Matters (Symphony of Unity` / `strings reimagined)`). The split now happens on the **first** `" - "`, which is the real artist/title boundary: mashup acts are joined with `" vs. "` (not `" - "`), and 1001Tracklists hyphenated names carry no surrounding spaces, so both stay intact. The three previously divergent split sites (page parse, per-chapter tag map, overlay merge) now share one `split_artist_title` helper. Existing libraries pick this up via the per-chapter self-heal on the next `identify`; affected `.opus` tags refresh on the next TrackSplit run.
+
 ## [0.31.0] - 2026-06-25
 
 ### Removed

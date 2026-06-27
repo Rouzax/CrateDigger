@@ -166,6 +166,24 @@ def top_genres_by_frequency(tracks: list["Track"], n: int = 5) -> list[str]:
     return ordered[:n]
 
 
+def split_artist_title(raw_text: str) -> tuple[str, str]:
+    """Split a 1001TL ``"Artist - Title"`` row into ``(artist, title)``.
+
+    The boundary is the FIRST ``" - "``. 1001TL titles frequently contain their
+    own ``" - "`` (subtitles, ``- Extended Mix``, ``- Radio Edit``,
+    ``... reimagined``), so splitting on the last separator spills title text
+    into the artist field. Mashup acts are joined with ``" vs. "`` rather than
+    ``" - "``, so the first separator is still the artist/title boundary for
+    composites such as ``"A vs. B - Title (Mashup)"``. Both parts are stripped.
+    With no ``" - "`` the artist is empty and the whole (stripped) text is the
+    title (e.g. ``"ID"`` or a label-less acapella).
+    """
+    artist, sep, title = raw_text.partition(" - ")
+    if not sep:
+        return "", raw_text.strip()
+    return artist.strip(), title.strip()
+
+
 def _parse_tracks(html) -> list["Track"]:
     """Extract chapter-aligned per-track rows from a 1001TL tracklist page.
 
@@ -353,15 +371,10 @@ def _parse_tracks(html) -> list["Track"]:
                 display = slug.replace("-", " ").title()
             slugs.append(slug)
             names.append(fix_mojibake(display))
-        # Title: split raw_text on the last " - " to drop the artist prefix.
-        # Many tracks are formatted "Artist - Title" on 1001TL; mashups use
-        # "A vs. B - Title (Mashup)" with the hyphen still delimiting the
-        # title. rsplit on the last ' - ' handles both.
-        title = ""
-        if " - " in raw_text:
-            title = raw_text.rsplit(" - ", 1)[1].strip()
-        elif raw_text:
-            title = raw_text.strip()
+        # Title: the part after the FIRST " - " (see split_artist_title). 1001TL
+        # titles can carry their own " - " (subtitles, remix suffixes), so the
+        # first separator is the artist/title boundary, not the last.
+        _, title = split_artist_title(raw_text)
         # Label: the first <span class="trackLabel">LABEL<a>...</a></span> in
         # the row. The label text is the span's content before the nested
         # icon-only <a>. Some rows omit the label entirely.

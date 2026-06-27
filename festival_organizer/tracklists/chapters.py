@@ -34,6 +34,7 @@ from festival_organizer.mkv_tags import (
     write_merged_tags,
 )
 from festival_organizer.subprocess_utils import tracked_run
+from festival_organizer.tracklists.api import split_artist_title
 from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
 
 logger = logging.getLogger(__name__)
@@ -500,8 +501,9 @@ def _build_chapter_tags_map(
                     track.artist_names
                 )
             # CRATEDIGGER_TRACK_PERFORMER is the full artist display line
-            # exactly as 1001TL renders it: everything before the final
-            # " - " in raw_text. Covers solo ("AFROJACK ft. Eva Simons"),
+            # exactly as 1001TL renders it: everything before the FIRST
+            # " - " in raw_text (see split_artist_title; the title may carry
+            # its own " - "). Covers solo ("AFROJACK ft. Eva Simons"),
             # multi-artist ("Fred again.. & Jamie T"), and mashup composites
             # ("NLW & MureKian vs. ... vs. RÜFÜS DU SOL") in one rule.
             # Alias resolution is deliberately NOT applied here: this tag
@@ -509,10 +511,8 @@ def _build_chapter_tags_map(
             # DJ / crowd knows the track as. Alias -> canonical substitution
             # (e.g. SOMETHING ELSE -> ALOK) is only for filesystem routing
             # and happens at the top-level ARTIST tag, not here.
-            if " - " in track.raw_text:
-                display = track.raw_text.rsplit(" - ", 1)[0].strip()
-            else:
-                display = track.raw_text.strip() or track.artist_slugs[0]
+            artist, title = split_artist_title(track.raw_text)
+            display = artist or title or track.artist_slugs[0]
             entry["CRATEDIGGER_TRACK_PERFORMER"] = display
         if track.title:
             entry["CRATEDIGGER_TRACK_TITLE"] = track.title

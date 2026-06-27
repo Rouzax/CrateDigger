@@ -73,10 +73,37 @@ def test_member_without_separator_in_combination() -> None:
     assert combined_title([a, b]) == "Artist A - Title A vs. ID [L1]"
 
 
-def test_split_on_last_separator() -> None:
-    # Artist is everything before the LAST " - "; title is the remainder.
+def test_combined_title_round_trips_embedded_separator() -> None:
+    # combined_title rejoins artist + " - " + title, so a title that itself
+    # contains " - " comes back whole regardless of where the split lands.
     member = _track("A - B - Title", label="L")
     assert combined_title([member]) == "A - B - Title [L]"
+
+
+def _track_with_artist(raw_text: str) -> Track:
+    return Track(
+        start_ms=0,
+        raw_text=raw_text,
+        artist_slugs=["a"],
+        artist_names=["A"],
+        genres=[],
+    )
+
+
+def test_merge_chapter_tags_splits_performer_on_first_separator() -> None:
+    # The single-value PERFORMER/TITLE tags expose the split direction (unlike
+    # combined_title, which rejoins). A title with an embedded " - " must stay
+    # whole in TITLE and never bleed into PERFORMER.
+    member = _track_with_artist(
+        "Kölsch ft. Troels Abrahamsen - "
+        "All that Matters (Symphony of Unity - strings reimagined)"
+    )
+    tags = merge_chapter_tags(member, [])
+    assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "Kölsch ft. Troels Abrahamsen"
+    assert (
+        tags["CRATEDIGGER_TRACK_TITLE"]
+        == "All that Matters (Symphony of Unity - strings reimagined)"
+    )
 
 
 def test_partial_labels_only_distinct_present() -> None:

@@ -9,23 +9,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .api import Track
+from .api import Track, split_artist_title
 from .chapters import Chapter, _timestamp_to_seconds
 
 _SEPARATOR = " - "
 _VS = " vs. "
-
-
-def _split_artist_title(raw_text: str) -> tuple[str, str]:
-    """Split a track label into (artist, title) on the LAST ``" - "``.
-
-    With no ``" - "`` the artist is empty and the whole text is the title
-    segment (e.g. ``"ID"`` or a label-less acapella).
-    """
-    artist, sep, title = raw_text.rpartition(_SEPARATOR)
-    if not sep:
-        return "", raw_text
-    return artist, title
 
 
 # The per-chapter tags that identify owns and merge_chapter_tags can emit.
@@ -71,7 +59,7 @@ def _title_segments(members: list[Track]) -> tuple[str, str, list[str]]:
     for member in members:
         if not member.raw_text.strip():
             continue
-        artist, title = _split_artist_title(member.raw_text)
+        artist, title = split_artist_title(member.raw_text)
         if artist and artist not in seen_artists:
             seen_artists.add(artist)
             artists.append(artist)

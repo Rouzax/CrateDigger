@@ -116,6 +116,20 @@ def test_parse_tracks_title_handles_no_separator():
     assert tracks[0].title == "Intro Music"
 
 
+def test_parse_tracks_title_with_embedded_separator_splits_on_first():
+    """A title that itself contains ' - ' (subtitle / remix suffix) stays whole:
+    the artist/title boundary is the FIRST ' - ', not the last."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="Kölsch ft. Troels Abrahamsen - All that Matters (Symphony of Unity - strings reimagined)">
+</div>"""
+    tracks = _parse_tracks(html)
+    assert len(tracks) == 1
+    assert (
+        tracks[0].title == "All that Matters (Symphony of Unity - strings reimagined)"
+    )
+
+
 def test_parse_tracks_unid_row_falls_back_to_track_value():
     """An un-ID'd row ("ID - ID") has no itemprop=name meta; raw_text must be
     recovered from span.trackValue rather than left empty (which would blank the
