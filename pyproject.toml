@@ -40,7 +40,7 @@ dependencies = [
     "platformdirs>=4.10.0",
     "requests>=2.34.2",
     "rich>=15.0.0",
-    "typer>=0.26.7",
+    "typer>=0.26.8",
 ]
 
 [project.urls]
