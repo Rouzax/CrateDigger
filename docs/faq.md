@@ -71,7 +71,7 @@ Files are named `{command}-{timestamp}-{hex}.log`, for example `identify-2026-05
 
 ### My CrateDigger tags don't show up in MediaInfo
 
-They are almost certainly still there. MediaInfo does a fast, partial scan and can miss the Matroska Tags element, which often ends up late in the file after CrateDigger writes tags and embeds cover attachments. When that happens, MediaInfo shows none of the `CRATEDIGGER_*` tags even though the file carries them. This is a MediaInfo display limitation, not missing data, and it is exactly why CrateDigger reads metadata with ffprobe instead.
+They are almost certainly still there. MediaInfo does a fast, partial scan and can miss the Matroska Tags element, which often ends up late in the file after CrateDigger writes tags (and, for MKV files, embeds cover attachments). When that happens, MediaInfo shows none of the `CRATEDIGGER_*` tags even though the file carries them. This is a MediaInfo display limitation, not missing data, and it is exactly why CrateDigger reads metadata with ffprobe instead.
 
 To see the tags reliably, use ffprobe or mkvextract:
 

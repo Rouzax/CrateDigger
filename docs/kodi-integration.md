@@ -85,7 +85,9 @@ kodi = "smb://server/music/Library/"
 
 ## Embedded MKV cover attachments
 
-CrateDigger embeds the set poster directly into each MKV or WEBM file as a named cover attachment. This lets video players that read embedded cover art show a proper portrait poster instead of a landscape video frame.
+CrateDigger embeds the set poster directly into each MKV file as a named cover attachment. This lets video players that read embedded cover art show a proper portrait poster instead of a landscape video frame.
+
+WebM files cannot carry attachments (the WebM specification has no Attachments element), so CrateDigger does not embed cover art into `.webm` files and strips any image attachments a previous version or the source left behind. WebM cover art is served from the `{stem}-poster.jpg` and `{stem}-thumb.jpg` sidecar files instead. Tag writes and chapter markers are unaffected: both are part of the WebM specification and continue to work exactly as they do for MKV.
 
 ### What is embedded and where it comes from
 
@@ -122,14 +124,14 @@ cratedigger enrich ~/Music/Library/ --only cover --regenerate
 |----------------|-------------|
 | **Kodi** | `{stem}-poster.jpg` sidecar via the `<thumb aspect="poster">` reference in the NFO. Unaffected by the embedded attachment. |
 | **Jellyfin** | NFO sidecar references, same as Kodi. |
-| **Plex** and generic players | The embedded `cover.jpg` attachment. These players now get a portrait poster instead of a landscape video frame. |
-| **TrackSplit** | The embedded `cover_land.<ext>` attachment, which it reads as the background for the square music covers it builds. |
+| **Plex** and generic players | For MKV files, the embedded `cover.jpg` attachment, so these players get a portrait poster instead of a landscape video frame. WebM files carry no such attachment; a player showing cover art for WebM must be reading the `{stem}-poster.jpg` sidecar instead. |
+| **TrackSplit** | For MKV files, the embedded `cover_land.<ext>` attachment, which it reads as the background for the square music covers it builds. WebM files carry no such attachment. |
 
 ## Jellyfin and Plex
 
 **Jellyfin** reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, album grouping, posters, thumbs, and fanart from the sidecar files automatically.
 
-**Plex** can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run. With the embedded `cover.jpg` attachment in place, Plex shows the portrait set poster as the thumbnail.
+**Plex** can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run. For MKV files, the embedded `cover.jpg` attachment gives Plex the portrait set poster as the thumbnail; WebM files carry no such attachment, so Plex falls back to whatever cover art its agent picks up from the sidecar files.
 
 ## Chapter Notify
 

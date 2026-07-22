@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- CrateDigger no longer embeds cover art into `.webm` files. WebM is a restricted Matroska subset whose specification has no Attachments element, so writing a `cover.jpg`/`cover_land.<ext>` attachment (via `mkvpropedit --add-attachment`) produced an out-of-spec WebM that strict demuxers reject. The `cover` operation now embeds attachments only in `.mkv` files; for `.webm` it strips any image attachments present, self-healing files a previous version already broke on the next `cover` run. WebM cover art is served from the `{stem}-poster.jpg` and `{stem}-thumb.jpg` sidecar files. Tag and chapter writes to `.webm` are unchanged (both are WebM-legal). WebM posters are now stamped at generation time so they no longer regenerate on every run.
+
 ## [0.31.1] - 2026-06-27
 
 ### Fixed

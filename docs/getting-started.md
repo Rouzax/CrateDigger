@@ -337,9 +337,13 @@ cratedigger enrich ~/Music/Library/
 - Downloads artist artwork from [fanart.tv](https://fanart.tv) (a community site with
   high-quality artist logos and backgrounds), if available
 - Generates a poster image for each recording and each folder
-- Embeds the set poster into each MKV as the primary `cover.jpg` attachment (portrait,
+- Embeds the set poster into each MKV file as the primary `cover.jpg` attachment (portrait,
   1000x1500), so players like Plex display a portrait thumbnail. The original landscape
-  thumbnail is preserved as a second `cover_land` attachment and as the sidecar files.
+  thumbnail is preserved as a second `cover_land` attachment and as the sidecar files. WebM
+  files cannot carry attachments at all (the WebM spec has no Attachments element), so
+  CrateDigger strips any image attachments from `.webm` files instead of embedding a cover,
+  and WebM cover art is served from the `{stem}-poster.jpg` and `{stem}-thumb.jpg` sidecar
+  files.
 - Writes an NFO file alongside each video. An NFO is a small XML file that media players
   like [Kodi](https://kodi.tv), Plex, and Jellyfin read to display title, artist, genre,
   and artwork.
