@@ -29,6 +29,12 @@ logger = logging.getLogger(__name__)
 
 MATROSKA_EXTS = frozenset({".mkv", ".webm"})
 
+# Containers that can legally hold the Matroska Attachments element (cover art).
+# WebM is a Matroska subset whose spec excludes Attachments, so .webm is
+# intentionally NOT here even though it is in MATROSKA_EXTS (Tags and Chapters
+# are WebM-legal; Attachments are not).
+ATTACHMENT_EXTS = frozenset({".mkv"})
+
 # Sentinel value: pass as a tag value to explicitly clear an existing tag.
 # Regular empty string "" preserves the existing value (backward compatible).
 # Typed as Any so it can flow through dict[str, str] tag containers without

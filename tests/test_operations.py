@@ -2004,6 +2004,58 @@ def test_cover_op_execute_refuses_non_portrait_poster(tmp_path):
     assert result.status == "error"
 
 
+def test_cover_op_webm_needed_when_image_attachments_present(tmp_path):
+    video = tmp_path / "t.webm"
+    video.write_bytes(b"")
+    with patch(
+        "festival_organizer.mkv_attachments.list_image_attachments",
+        return_value=[
+            {"id": 1, "file_name": "cover.jpg", "content_type": "image/jpeg"}
+        ],
+    ):
+        assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is True
+
+
+def test_cover_op_webm_not_needed_when_no_attachments(tmp_path):
+    video = tmp_path / "t.webm"
+    video.write_bytes(b"")
+    _portrait(tmp_path / "t-poster.jpg")  # poster present must not force an embed
+    with patch(
+        "festival_organizer.mkv_attachments.list_image_attachments", return_value=[]
+    ):
+        assert CoverEmbedOperation(load_config()).is_needed(video, _make_mf()) is False
+
+
+def test_cover_op_webm_execute_strips_and_does_not_stamp(tmp_path):
+    from festival_organizer.poster import read_poster_stamp
+
+    video = tmp_path / "t.webm"
+    video.write_bytes(b"")
+    poster = tmp_path / "t-poster.jpg"
+    _portrait(poster)
+    with (
+        patch(
+            "festival_organizer.cover_embed.strip_cover_attachments", return_value=True
+        ) as strip,
+        patch("festival_organizer.cover_embed.converge_cover_attachments") as conv,
+    ):
+        result = CoverEmbedOperation(load_config()).execute(video, _make_mf())
+    strip.assert_called_once_with(video)
+    conv.assert_not_called()
+    assert result.status == "done"
+    assert read_poster_stamp(poster) is None  # webm has no embed step, no stamp
+
+
+def test_cover_op_webm_execute_errors_on_strip_failure(tmp_path):
+    video = tmp_path / "t.webm"
+    video.write_bytes(b"")
+    with patch(
+        "festival_organizer.cover_embed.strip_cover_attachments", return_value=False
+    ):
+        result = CoverEmbedOperation(load_config()).execute(video, _make_mf())
+    assert result.status == "error"
+
+
 def test_poster_op_passes_billed_artists_not_resolved(tmp_path):
     """PosterOperation must pass the billed list (alias), never the resolved one."""
     mf = _make_mf(

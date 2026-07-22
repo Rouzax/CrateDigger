@@ -382,9 +382,15 @@ class CoverEmbedOperation(Operation):
         self.force = force
 
     def is_needed(self, file_path: Path, media_file: MediaFile) -> bool:
-        from festival_organizer.mkv_tags import MATROSKA_EXTS
+        from festival_organizer.mkv_attachments import list_image_attachments
+        from festival_organizer.mkv_tags import ATTACHMENT_EXTS
 
-        if file_path.suffix.lower() not in MATROSKA_EXTS:
+        ext = file_path.suffix.lower()
+        if ext == ".webm":
+            # WebM cannot hold the Matroska Attachments element; this op exists
+            # only to strip cover art a prior version (or the source) embedded.
+            return bool(list_image_attachments(file_path))
+        if ext not in ATTACHMENT_EXTS:
             return False
         poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
         if not poster.exists():
@@ -408,6 +414,16 @@ class CoverEmbedOperation(Operation):
         from festival_organizer import cover_embed
         from festival_organizer.mkv_attachments import image_ratio_class
         from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
+
+        if file_path.suffix.lower() == ".webm":
+            # WebM: strip cover attachments instead of embedding (the spec has no
+            # Attachments element). No poster/portrait check, no sidecar stamp.
+            try:
+                if cover_embed.strip_cover_attachments(file_path):
+                    return OperationResult(self.name, "done")
+                return OperationResult(self.name, "error", "attachment strip failed")
+            except (OSError, subprocess.SubprocessError) as e:
+                return OperationResult(self.name, "error", str(e))
 
         poster = file_path.with_name(f"{file_path.stem}-poster.jpg")
         thumb = file_path.with_name(f"{file_path.stem}-thumb.jpg")
