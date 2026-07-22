@@ -132,3 +132,25 @@ def test_converge_aborts_when_landscape_not_preserved(tmp_path):
         )
     setp.assert_not_called()
     assert ok is False
+
+
+def test_strip_cover_attachments_noop_when_none(tmp_path):
+    target = tmp_path / "v.webm"
+    target.touch()
+    with patch.object(cover_embed, "delete_all_image_attachments", return_value=0) as d:
+        assert cover_embed.strip_cover_attachments(target) is True
+    d.assert_called_once_with(target)
+
+
+def test_strip_cover_attachments_true_when_removed(tmp_path):
+    target = tmp_path / "v.webm"
+    target.touch()
+    with patch.object(cover_embed, "delete_all_image_attachments", return_value=2):
+        assert cover_embed.strip_cover_attachments(target) is True
+
+
+def test_strip_cover_attachments_false_on_failure(tmp_path):
+    target = tmp_path / "v.webm"
+    target.touch()
+    with patch.object(cover_embed, "delete_all_image_attachments", return_value=-1):
+        assert cover_embed.strip_cover_attachments(target) is False

@@ -19,6 +19,7 @@ from pathlib import Path
 from festival_organizer.mkv_attachments import (
     IMAGE_MIME,
     add_attachment,
+    delete_all_image_attachments,
     delete_attachment,
     extract_attachment,
     image_ratio_class,
@@ -109,4 +110,22 @@ def converge_cover_attachments(
     has_land = any(a["file_name"].lower().startswith("cover_land") for a in atts)
     if has_land and any(a["file_name"] == "cover.png" for a in atts):
         delete_attachment(target, "cover.png")
+    return True
+
+
+def strip_cover_attachments(target: Path) -> bool:
+    """Remove all image (cover) attachments from a container that cannot carry them.
+
+    WebM is a restricted Matroska subset whose spec excludes the Attachments
+    element, so any cover art embedded in a .webm makes it non-conformant.
+    Convergence for WebM is therefore "zero image attachments": strip whatever is
+    present. Returns True if none remained or all were removed, False on a delete
+    failure.
+    """
+    removed = delete_all_image_attachments(target)
+    if removed < 0:
+        logger.warning("cover.strip: file=%s reason=delete_failed", target.name)
+        return False
+    if removed:
+        logger.info("cover.strip: file=%s removed=%d", target.name, removed)
     return True
