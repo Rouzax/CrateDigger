@@ -3,13 +3,17 @@
 Target invariant per MKV: one portrait `cover.jpg` (the set poster) and one
 landscape `cover_land.<ext>` (the original YouTube thumbnail). The landscape is
 always preserved as cover_land BEFORE the primary cover slot is overwritten, so the
-original thumb is never lost.
+original thumb is never lost. WebM cannot carry the Matroska Attachments element,
+so its target invariant is zero image attachments (see strip_cover_attachments).
 
 Logging:
     Logger: 'festival_organizer.cover_embed'
     Key events:
         - cover.preserve (INFO): landscape preserved as cover_land
         - cover.land_missing (WARNING): no landscape source available
+        - cover.skip (WARNING): convergence aborted (landscape not preserved or
+          cover write failed)
+        - cover.strip (INFO): image attachments removed from a WebM container
 """
 
 import logging
