@@ -159,3 +159,61 @@ def test_write_helpers_return_false_without_tool(tmp_path):
         assert att.delete_attachment(target, "cover.jpg") is False
     with patch("festival_organizer.metadata.MKVEXTRACT_PATH", None):
         assert att.extract_attachment(target, 1, tmp_path / "o.png") is False
+
+
+def test_delete_all_image_attachments_builds_single_multi_delete_call(tmp_path):
+    target = tmp_path / "v.webm"
+    target.touch()
+    calls = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        return _proc("", rc=0)
+
+    atts = [
+        {"id": 1, "file_name": "cover.jpg", "content_type": "image/jpeg"},
+        {"id": 2, "file_name": "cover_land.png", "content_type": "image/png"},
+    ]
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"),
+        patch.object(att, "list_image_attachments", return_value=atts),
+        patch("festival_organizer.mkv_attachments.tracked_run", side_effect=fake_run),
+    ):
+        removed = att.delete_all_image_attachments(target)
+
+    assert removed == 2
+    assert len(calls) == 1  # one mkvpropedit invocation, not one per attachment
+    assert calls[0] == [
+        "/usr/bin/mkvpropedit",
+        str(target),
+        "--delete-attachment",
+        "name:cover.jpg",
+        "--delete-attachment",
+        "name:cover_land.png",
+    ]
+
+
+def test_delete_all_image_attachments_noop_when_none(tmp_path):
+    target = tmp_path / "v.webm"
+    target.touch()
+    with (
+        patch.object(att, "list_image_attachments", return_value=[]),
+        patch("festival_organizer.mkv_attachments.tracked_run") as run,
+    ):
+        assert att.delete_all_image_attachments(target) == 0
+    run.assert_not_called()
+
+
+def test_delete_all_image_attachments_returns_minus_one_on_write_failure(tmp_path):
+    target = tmp_path / "v.webm"
+    target.touch()
+    atts = [{"id": 1, "file_name": "cover.jpg", "content_type": "image/jpeg"}]
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/usr/bin/mkvpropedit"),
+        patch.object(att, "list_image_attachments", return_value=atts),
+        patch(
+            "festival_organizer.mkv_attachments.tracked_run",
+            side_effect=lambda cmd, **k: _proc("", rc=2),
+        ),
+    ):
+        assert att.delete_all_image_attachments(target) == -1

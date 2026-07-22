@@ -147,6 +147,30 @@ def delete_attachment(target: Path, name: str) -> bool:
     return _run_propedit(target, ["--delete-attachment", f"name:{name}"])
 
 
+def delete_all_image_attachments(target: Path) -> int:
+    """Delete every image attachment from target in a single mkvpropedit call.
+
+    Returns the number of image attachments removed, 0 if there were none (no
+    mkvpropedit call is made), or -1 if the delete failed. Used to strip cover
+    art from containers that cannot legally carry it (WebM has no Attachments
+    element); deleting by name removes every attachment with that name.
+    """
+    atts = list_image_attachments(target)
+    if not atts:
+        return 0
+    seen: set[str] = set()
+    args: list[str] = []
+    for a in atts:
+        name = a["file_name"]
+        if name in seen:
+            continue
+        seen.add(name)
+        args += ["--delete-attachment", f"name:{name}"]
+    if _run_propedit(target, args):
+        return len(atts)
+    return -1
+
+
 def _run_propedit(target: Path, args: list[str]) -> bool:
     if not metadata.MKVPROPEDIT_PATH:
         return False
