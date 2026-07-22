@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1411,7 +1411,8 @@
 </tbody>
 </table>
 <h2 id="embedded-mkv-cover-attachments">Embedded MKV cover attachments</h2>
-<p>CrateDigger embeds the set poster directly into each MKV or WEBM file as a named cover attachment. This lets video players that read embedded cover art show a proper portrait poster instead of a landscape video frame.</p>
+<p>CrateDigger embeds the set poster directly into each MKV file as a named cover attachment. This lets video players that read embedded cover art show a proper portrait poster instead of a landscape video frame.</p>
+<p>WebM files cannot carry attachments (the WebM specification has no Attachments element), so CrateDigger does not embed cover art into <code>.webm</code> files and strips any image attachments a previous version or the source left behind. WebM cover art is served from the <code>{stem}-poster.jpg</code> and <code>{stem}-thumb.jpg</code> sidecar files instead. Tag writes and chapter markers are unaffected: both are part of the WebM specification and continue to work exactly as they do for MKV.</p>
 <h3 id="what-is-embedded-and-where-it-comes-from">What is embedded and where it comes from</h3>
 <p>After the <code>posters</code> operation generates <code>{stem}-poster.jpg</code>, the <code>cover</code> operation embeds it into the MKV as the primary <code>cover.jpg</code> attachment (portrait, 1000x1500 pixels). This is the same image as the <code>{stem}-poster.jpg</code> sidecar on disk.</p>
 <p>The original landscape thumbnail that yt-dlp embeds (a YouTube video thumbnail) is moved to a second attachment named <code>cover_land.&lt;ext&gt;</code>, preserving the original bytes. The extension matches what yt-dlp wrote (for example <code>cover_land.png</code>). This follows the Matroska cover-art convention: primary <code>cover</code> is portrait, <code>cover_land</code> is landscape.</p>
@@ -1451,17 +1452,17 @@
 </tr>
 <tr>
 <td><strong>Plex</strong> and generic players</td>
-<td>The embedded <code>cover.jpg</code> attachment. These players now get a portrait poster instead of a landscape video frame.</td>
+<td>For MKV files, the embedded <code>cover.jpg</code> attachment, so these players get a portrait poster instead of a landscape video frame. WebM files carry no such attachment; a player showing cover art for WebM must be reading the <code>{stem}-poster.jpg</code> sidecar instead.</td>
 </tr>
 <tr>
 <td><strong>TrackSplit</strong></td>
-<td>The embedded <code>cover_land.&lt;ext&gt;</code> attachment, which it reads as the background for the square music covers it builds.</td>
+<td>For MKV files, the embedded <code>cover_land.&lt;ext&gt;</code> attachment, which it reads as the background for the square music covers it builds. WebM files carry no such attachment.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="jellyfin-and-plex">Jellyfin and Plex</h2>
 <p><strong>Jellyfin</strong> reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, album grouping, posters, thumbs, and fanart from the sidecar files automatically.</p>
-<p><strong>Plex</strong> can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run. With the embedded <code>cover.jpg</code> attachment in place, Plex shows the portrait set poster as the thumbnail.</p>
+<p><strong>Plex</strong> can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run. For MKV files, the embedded <code>cover.jpg</code> attachment gives Plex the portrait set poster as the thumbnail; WebM files carry no such attachment, so Plex falls back to whatever cover art its agent picks up from the sidecar files.</p>
 <h2 id="chapter-notify">Chapter Notify</h2>
 <p><a href="https://github.com/Rouzax/service.chapternotify">Chapter Notify</a> is a Kodi service addon that complements CrateDigger's chapter markers. When you play a CrateDigger video in Kodi, Chapter Notify watches for chapter changes and displays a brief on-screen notification showing the artist name, track title, and label for the set you are watching.</p>
 <p>It reads the chapter markers and MKV tags that CrateDigger already writes, so it works without any extra metadata preparation. You can configure it to trigger automatically on chapter changes, on a manual keypress, or both.</p>
@@ -1540,7 +1541,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

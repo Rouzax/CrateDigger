@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1534,9 +1534,15 @@ metadata. Curated festival logos can be added to improve festival folder posters
 background image is available, so every recording and every folder gets a poster regardless
 of whether a thumbnail exists. Use <code>--regenerate</code> to rebuild existing posters.</p>
 <h3 id="cover-embedded-mkv-cover-attachment">cover: embedded MKV cover attachment</h3>
-<p>Embeds the set poster into each MKV or WEBM file as the primary <code>cover.jpg</code> attachment
+<p>Embeds the set poster into each MKV file as the primary <code>cover.jpg</code> attachment
 (portrait, 1000x1500), so video players that read embedded cover art show a portrait poster
 instead of a landscape video frame.</p>
+<p>WebM files cannot carry attachments (the WebM specification has no Attachments element), so
+<code>cover</code> does not embed cover art into <code>.webm</code> files. Instead it strips any image attachments a
+previous version or the source left behind, keeping the file spec-compliant. WebM cover art is
+served from the <code>{name}-poster.jpg</code> and <code>{name}-thumb.jpg</code> sidecar files instead. Tag and
+chapter embedding are unaffected: both are part of the WebM specification and continue to work
+exactly as they do for MKV.</p>
 <p>Before embedding, <code>cover</code> preserves the original landscape thumbnail (the YouTube thumbnail
 embedded by yt-dlp) as a second attachment named <code>cover_land.&lt;ext&gt;</code>, keeping the original
 bytes intact (for example <code>cover_land.png</code>). This follows the Matroska cover-art convention:
@@ -1776,7 +1782,7 @@ and which are missing them.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

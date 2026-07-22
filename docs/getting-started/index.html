@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1635,9 +1635,13 @@ This marker is required before you can run <code>enrich</code>.</p>
 <li>Downloads artist artwork from <a href="https://fanart.tv">fanart.tv</a> (a community site with
   high-quality artist logos and backgrounds), if available</li>
 <li>Generates a poster image for each recording and each folder</li>
-<li>Embeds the set poster into each MKV as the primary <code>cover.jpg</code> attachment (portrait,
+<li>Embeds the set poster into each MKV file as the primary <code>cover.jpg</code> attachment (portrait,
   1000x1500), so players like Plex display a portrait thumbnail. The original landscape
-  thumbnail is preserved as a second <code>cover_land</code> attachment and as the sidecar files.</li>
+  thumbnail is preserved as a second <code>cover_land</code> attachment and as the sidecar files. WebM
+  files cannot carry attachments at all (the WebM spec has no Attachments element), so
+  CrateDigger strips any image attachments from <code>.webm</code> files instead of embedding a cover,
+  and WebM cover art is served from the <code>{stem}-poster.jpg</code> and <code>{stem}-thumb.jpg</code> sidecar
+  files.</li>
 <li>Writes an NFO file alongside each video. An NFO is a small XML file that media players
   like <a href="https://kodi.tv">Kodi</a>, Plex, and Jellyfin read to display title, artist, genre,
   and artwork.</li>
@@ -1744,7 +1748,7 @@ aliases help normalize artist names.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
