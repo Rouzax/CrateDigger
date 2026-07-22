@@ -114,9 +114,16 @@ of whether a thumbnail exists. Use `--regenerate` to rebuild existing posters.
 
 ### cover: embedded MKV cover attachment
 
-Embeds the set poster into each MKV or WEBM file as the primary `cover.jpg` attachment
+Embeds the set poster into each MKV file as the primary `cover.jpg` attachment
 (portrait, 1000x1500), so video players that read embedded cover art show a portrait poster
 instead of a landscape video frame.
+
+WebM files cannot carry attachments (the WebM specification has no Attachments element), so
+`cover` does not embed cover art into `.webm` files. Instead it strips any image attachments a
+previous version or the source left behind, keeping the file spec-compliant. WebM cover art is
+served from the `{name}-poster.jpg` and `{name}-thumb.jpg` sidecar files instead. Tag and
+chapter embedding are unaffected: both are part of the WebM specification and continue to work
+exactly as they do for MKV.
 
 Before embedding, `cover` preserves the original landscape thumbnail (the YouTube thumbnail
 embedded by yt-dlp) as a second attachment named `cover_land.<ext>`, keeping the original
