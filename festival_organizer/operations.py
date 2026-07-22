@@ -353,12 +353,14 @@ class PosterOperation(Operation):
                 venue=f["venue"],
                 artists_1001tl=media_file.artists_1001tl,
             )
-            # Matroska files are stamped by CoverEmbedOperation after the embed (the
-            # stamp means "embed is current"). Non-Matroska files have no embed step,
-            # so stamp the sidecar here to enable the same content-aware regeneration.
-            from festival_organizer.mkv_tags import MATROSKA_EXTS
+            # Files that get a cover embed step (.mkv) are stamped by
+            # CoverEmbedOperation after the embed (the stamp means "embed is
+            # current"). Files with no embed step (.webm, which cannot hold
+            # attachments, and non-Matroska formats) are stamped here so the same
+            # content-aware regeneration works.
+            from festival_organizer.mkv_tags import ATTACHMENT_EXTS
 
-            if file_path.suffix.lower() not in MATROSKA_EXTS:
+            if file_path.suffix.lower() not in ATTACHMENT_EXTS:
                 from festival_organizer.poster import (
                     build_cover_stamp,
                     inject_poster_stamp,

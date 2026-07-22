@@ -271,6 +271,18 @@ def test_poster_op_execute_stamps_non_matroska(tmp_path):
     assert op.is_needed(video, mf) is False
 
 
+def test_poster_op_execute_stamps_webm(tmp_path):
+    """WebM has no cover embed step, so PosterOperation stamps its sidecar itself."""
+    video = tmp_path / "test.webm"
+    video.write_bytes(b"")
+    Image.new("RGB", (1280, 720), (50, 60, 90)).save(str(tmp_path / "test-thumb.jpg"))
+    cfg = load_config()
+    op = PosterOperation(cfg)
+    mf = _make_mf()
+    assert op.execute(video, mf).status == "done"
+    assert op.is_needed(video, mf) is False  # stamped -> second run is a no-op
+
+
 def test_poster_op_needed_when_field_changes(tmp_path):
     from festival_organizer.poster import build_cover_stamp, inject_poster_stamp
 
