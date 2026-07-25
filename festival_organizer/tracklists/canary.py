@@ -25,12 +25,36 @@ def _soup(html: str) -> BeautifulSoup:
     return BeautifulSoup(html, "html.parser")
 
 
+def check_challenge_page(html: str) -> list[str]:
+    """Detect the Cloudflare Turnstile interstitial served to unauthenticated
+    or challenged clients.
+
+    The interstitial carries a real <h1> ("Please wait, you will be
+    forwarded"), so structural probes pass on it while every parser
+    silently returns nothing; probe for the challenge script and the
+    forwarding copy instead.
+    """
+    soup = _soup(html)
+    if soup.select_one('script[src*="challenges.cloudflare.com"]') is not None:
+        return ["cloudflare challenge interstitial"]
+    h1 = soup.find("h1")
+    if h1 is not None and "you will be forwarded" in h1.get_text(" ", strip=True):
+        return ["cloudflare challenge interstitial"]
+    return []
+
+
 def check_tracklist_page(html: str) -> list[str]:
     """Check a /tracklist/{ID}/ page for markers the tracklist parsers need.
 
     Covers _parse_tracks, _parse_h1_structure, and _extract_genres in
     one probe since they all consume the same page HTML.
     """
+    # A challenge page fails every other probe; one precise label beats
+    # five noisy ones.
+    challenge = check_challenge_page(html)
+    if challenge:
+        return challenge
+
     soup = _soup(html)
     missing: list[str] = []
 
@@ -39,8 +63,27 @@ def check_tracklist_page(html: str) -> list[str]:
     if soup.select_one("input[id$='_cue_seconds']") is None:
         missing.append("cue_seconds input")
 
-    if soup.find("h1") is None:
+    h1_el = soup.find("h1")
+    if h1_el is None:
         missing.append("h1 element")
+    elif "@" in h1_el.get_text():
+        # The before-@ fragment must link the DJs (/dj/ pre-2026, /artist/
+        # after the redesign). An h1 with an @ but no artist anchor is the
+        # exact shape that silently cleared ARTISTS tags library-wide when
+        # the 2026 redesign landed.
+        has_artist_anchor = any(
+            str(a.get("href", "")).startswith(("/dj/", "/artist/"))
+            for a in h1_el.select("a")
+        )
+        if not has_artist_anchor:
+            missing.append("h1 artist anchor")
+
+    if soup.select_one("div.tlpItem.tlpTog") is not None:
+        row_anchor = soup.select_one(
+            'div.tlpItem a[href^="/artist/"], div.tlpItem a[href^="/dj/"]'
+        )
+        if row_anchor is None:
+            missing.append("track artist anchor")
 
     if soup.select_one('meta[itemprop="genre"]') is None:
         missing.append("itemprop=genre meta")
@@ -74,8 +117,12 @@ def check_search_results(html: str) -> list[str]:
 
 
 def check_dj_profile(html: str) -> list[str]:
-    """Check a /dj/{slug}/ page for the og:image meta that _parse_dj_profile
+    """Check an artist profile page (/artist/{slug}/tracklists.html, or the
+    legacy /dj/{slug}/ shape) for the og:image meta that _parse_dj_profile
     reads as the primary artwork source."""
+    challenge = check_challenge_page(html)
+    if challenge:
+        return challenge
     soup = _soup(html)
     missing: list[str] = []
     if soup.select_one('meta[property="og:image"]') is None:
