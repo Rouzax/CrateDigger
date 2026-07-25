@@ -74,8 +74,11 @@ def test_canary_flags_player_headers_without_tabs():
 def test_canary_clean_single_player_page_unaffected():
     from festival_organizer.tracklists.canary import check_tracklist_page
 
+    # The row carries an artist anchor so the track-artist-anchor probe
+    # stays quiet; this test's concern is the media-player-tab probe only.
     html = (
         '<h1>x</h1><div class="tlpItem tlpTog"><input id="a_cue_seconds" value="0">'
+        '<a href="/artist/a/tracks.html">A</a>'
         '<meta itemprop="name" content="A - B"><meta itemprop="genre" content="X"></div>'
     )
     assert check_tracklist_page(html) == []
@@ -166,3 +169,66 @@ def test_canary_source_info_flags_missing_country_flag():
     """
     missing = canary.check_source_info(html)
     assert "country flag img" in missing
+
+
+CHALLENGE_HTML = (
+    '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>'
+    '<h1 class="fontL flex c">Please wait, you will be forwarded to the requested page</h1>'
+)
+
+
+def test_canary_flags_cloudflare_challenge_page():
+    from festival_organizer.tracklists import canary
+
+    missing = canary.check_tracklist_page(CHALLENGE_HTML)
+    assert missing == ["cloudflare challenge interstitial"]
+
+
+def test_canary_dj_profile_flags_cloudflare_challenge_page():
+    from festival_organizer.tracklists import canary
+
+    missing = canary.check_dj_profile(CHALLENGE_HTML)
+    assert missing == ["cloudflare challenge interstitial"]
+
+
+def test_canary_tracklist_flags_h1_without_artist_anchors():
+    """h1 exists and has an @, but no /dj/ or /artist/ anchors: exactly the
+    failure mode that silently drained ARTISTS tags across the library after
+    the 2026 redesign."""
+    from festival_organizer.tracklists import canary
+
+    html = (
+        "<div class='tlpItem tlpTog'><a href='/artist/x/tracks.html'>x</a></div>"
+        "<input id='tl1_cue_seconds'/>"
+        "<h1>Martin Garrix @ <a href='/source/n4qht3/red-rocks/index.html'>Red Rocks</a></h1>"
+        "<meta itemprop='genre' content='House'/>"
+    )
+    missing = canary.check_tracklist_page(html)
+    assert "h1 artist anchor" in missing
+
+
+def test_canary_tracklist_accepts_new_artist_anchor_in_h1():
+    from festival_organizer.tracklists import canary
+
+    html = (
+        "<div class='tlpItem tlpTog'><a href='/artist/x/tracks.html'>x</a></div>"
+        "<input id='tl1_cue_seconds'/>"
+        "<h1><a href='/artist/martin-garrix/tracklists.html'>Martin Garrix</a> @ "
+        "<a href='/source/n4qht3/red-rocks/index.html'>Red Rocks</a></h1>"
+        "<meta itemprop='genre' content='House'/>"
+    )
+    missing = canary.check_tracklist_page(html)
+    assert "h1 artist anchor" not in missing
+
+
+def test_canary_tracklist_flags_rows_without_artist_anchors():
+    from festival_organizer.tracklists import canary
+
+    html = (
+        "<div class='tlpItem tlpTog'>no artist link here</div>"
+        "<input id='tl1_cue_seconds'/>"
+        "<h1><a href='/artist/mg/tracklists.html'>MG</a> @ x</h1>"
+        "<meta itemprop='genre' content='House'/>"
+    )
+    missing = canary.check_tracklist_page(html)
+    assert "track artist anchor" in missing

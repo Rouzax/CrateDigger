@@ -402,6 +402,26 @@ def test_extract_dj_slugs_index_html():
     assert slugs == ["afrojack", "nlw"]
 
 
+def test_extract_dj_slugs_new_artist_hrefs():
+    """2026 redesign: DJ links are /artist/{slug}/tracklists.html."""
+    html = (
+        '<div><a href="/artist/martin-garrix/tracklists.html">Martin Garrix</a>'
+        '<a href="/artist/alesso/tracklists.html">Alesso</a>'
+        '<a href="/artist/martin-garrix/tracklists.html">dup</a>'
+        '<a href="/source/n4qht3/red-rocks-amphitheatre/index.html">venue</a></div>'
+    )
+    assert _extract_dj_slugs(html) == ["martin-garrix", "alesso"]
+
+
+def test_extract_dj_slugs_ignores_track_row_leaf():
+    """Track rows use the tracks.html leaf; performers are not DJs."""
+    html = (
+        '<a href="/artist/martin-garrix/tracklists.html">MG</a>'
+        '<a href="/artist/some-performer/tracks.html">perf</a>'
+    )
+    assert _extract_dj_slugs(html) == ["martin-garrix"]
+
+
 def test_extract_dj_slugs_group():
     """Group DJs like DVLM have group slug first, then individual members."""
     html = """<a href="/dj/dimitrivegasandlikemike/index.html">Dimitri Vegas &amp; Like Mike</a>
@@ -719,6 +739,22 @@ def test_fetch_source_info_falls_back_to_slug_when_name_missing():
     assert info["country"] == ""
 
 
+def test_fetch_dj_profile_uses_artist_url():
+    """2026 redesign: profiles are fetched from /artist/{slug}/tracklists.html.
+    The '&' in slugs like matisse-&-sadko stays raw: it is what the site
+    itself emits in hrefs and a legal path character."""
+    session = TracklistSession()
+    html = '<meta property="og:image" content="https://cdn.1001tracklists.com/images/dj/a.jpg">'
+    mock_resp = MagicMock()
+    mock_resp.text = html
+    with patch.object(session, "_request", return_value=mock_resp) as mock_req:
+        result = session._fetch_dj_profile("matisse-&-sadko")
+    assert mock_req.call_args[0][1] == (
+        "https://www.1001tracklists.com/artist/matisse-&-sadko/tracklists.html"
+    )
+    assert result["artwork_url"].startswith("https://cdn.1001tracklists.com/")
+
+
 def test_fetch_dj_profile_rejects_logo_url():
     """DJ profile filter rejects URLs containing 'logo' (case-insensitive)."""
     session = TracklistSession()
@@ -833,6 +869,47 @@ def test_parse_dj_profile_extracts_aliases_and_member_of():
     result = _parse_dj_profile(html)
     assert result["aliases"] == [{"slug": "alt-name", "name": "Alt Name"}]
     assert result["member_of"] == [{"slug": "some-group", "name": "Some Group"}]
+
+
+def test_parse_dj_profile_new_artist_page_sections():
+    """2026 redesign: profile lives on /artist/{slug}/tracklists.html with
+    renamed section headers and /artist/ member links. Mirrors the real
+    Martin Garrix page captured 2026-07-25."""
+    html = (
+        '<meta property="og:image" content="https://img.example/mg.jpg"/>'
+        '<div class="h">Aliases</div>'
+        '<div><a href="/artist/grx/tracks.html">GRX</a>'
+        '<a href="/artist/ytram/tracklists.html">YTRAM</a></div>'
+        '<div class="h">Member Of Projects</div>'
+        '<div><a href="/artist/area21/tracklists.html">AREA21</a></div>'
+        '<div class="h">Likes</div>'
+    )
+    result = _parse_dj_profile(html)
+    assert result["aliases"] == [
+        {"slug": "grx", "name": "GRX"},
+        {"slug": "ytram", "name": "YTRAM"},
+    ]
+    assert result["member_of"] == [{"slug": "area21", "name": "AREA21"}]
+    assert result["members"] == []
+
+
+def test_parse_dj_profile_new_group_page_members():
+    """Group pages renamed "Group Members" to "Project Members". Mirrors the
+    real Swedish House Mafia page captured 2026-07-25."""
+    html = (
+        '<meta property="og:image" content="https://img.example/shm.jpg"/>'
+        '<div class="h">Project Members</div>'
+        '<div><a href="/artist/axwell/tracklists.html">Axwell</a>'
+        '<a href="/artist/steve-angello/tracklists.html">Steve Angello</a>'
+        '<a href="/artist/sebastian-ingrosso/tracklists.html">Sebastian Ingrosso</a></div>'
+        '<div class="h">Likes</div>'
+    )
+    result = _parse_dj_profile(html)
+    assert result["members"] == [
+        {"slug": "axwell", "name": "Axwell"},
+        {"slug": "steve-angello", "name": "Steve Angello"},
+        {"slug": "sebastian-ingrosso", "name": "Sebastian Ingrosso"},
+    ]
 
 
 def test_parse_dj_profile_finds_og_image_with_reordered_attrs():

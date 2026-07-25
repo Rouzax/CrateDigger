@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Artist parsing works again after the 1001tracklists.com redesign moved every artist link from `/dj/{slug}/` (concatenated slugs like `martingarrix`) to `/artist/{slug}/` (hyphenated slugs like `martin-garrix`). Before this fix, every `identify` since the redesign silently cleared `CRATEDIGGER_1001TL_ARTISTS`, `CRATEDIGGER_ALBUMARTIST_SLUGS`, and `CRATEDIGGER_ALBUMARTIST_DISPLAY` (b2b sets lost their second artist), stopped writing per-track `CRATEDIGGER_TRACK_PERFORMER_*` tags, and stopped fetching DJ artwork, aliases, and group members. DJ names (b2b included), per-track performers, and profile data all parse again; profile pages are fetched from `/artist/{slug}/tracklists.html`, and the renamed profile sections ("Member Of Projects", "Project Members") are recognised alongside their legacy names. A plain `identify` pass over an affected library restores the cleared tags (no `--regenerate` needed) and rewrites embedded `CRATEDIGGER_ALBUMARTIST_SLUGS` in the new hyphenated form.
+
+### Added
+
+- New structural canaries: a Cloudflare Turnstile challenge interstitial is now detected by name (it carries a real `<h1>`, so the old h1-presence probe passed on a page with no data), and tracklist pages missing artist anchors in the h1 or in track rows now log a WARNING instead of silently draining artist tags on re-identify.
+
 ## [0.31.2] - 2026-07-22
 
 ### Fixed
