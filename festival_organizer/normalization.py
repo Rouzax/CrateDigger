@@ -82,12 +82,15 @@ def strip_diacritics(text: str) -> str:
 
 
 def slugify(name: str) -> str:
-    """1001TL-style slug from a display name: ASCII-fold, '&'->'and', keep [a-z0-9].
+    """Legacy /dj/-era 1001TL slug from a display name: ASCII-fold, '&'->'and', keep [a-z0-9].
 
-    Used as the deterministic fallback cache key for artists with no 1001TL slug,
-    and to normalise display names when matching them to cached slugs. Mirrors how
-    1001TL forms /dj/<slug>/ (lowercase, ampersand expanded, punctuation dropped).
-    TrackSplit must keep an identical implementation.
+    Mirrors how 1001TL formed /dj/<slug>/ before the 2026 redesign
+    (lowercase, ampersand expanded, punctuation dropped). The site now
+    serves hyphenated /artist/ slugs that are taken verbatim from hrefs,
+    but this function remains the deterministic fallback cache key for
+    artists with no embedded slug, so pre-redesign cache folders stay
+    reachable, and it still normalises display names when matching them
+    to cached slugs. TrackSplit must keep an identical implementation.
     """
     folded = strip_diacritics(name).lower()
     folded = folded.replace("&", "and")
@@ -124,10 +127,12 @@ def _artist_key(text: str) -> str:
     1001TL /artist/ href slug.
 
     This is intentionally NOT :func:`slugify` and must stay separate. ``slugify``
-    mirrors the /dj/ slug form (and TrackSplit keeps a byte-identical copy of
-    it), whereas ``_artist_key`` adds the expansions 1001TL applies to /artist/
-    slugs that ``slugify`` omits, so the display text of a feature-credit member
-    can be matched to its anchor slug:
+    mirrors the retired /dj/ slug form (and TrackSplit keeps a byte-identical
+    copy of it), whereas ``_artist_key`` adds the expansions 1001TL applies to
+    /artist/ slugs that ``slugify`` omits, so the display text of a
+    feature-credit member can be matched to its anchor slug. Hyphens are
+    stripped by the final character filter on both sides, so the key is
+    indifferent to the 2026 switch to hyphenated slugs:
 
     - explicit transliteration for letters NFD drops (``HØRGER`` -> ``horger``;
       ``slugify``/``strip_diacritics`` use NFD and would give ``hrger``);
