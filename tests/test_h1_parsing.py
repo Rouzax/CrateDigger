@@ -300,3 +300,46 @@ def test_parse_h1_date_empty_when_no_at_sign():
     h1 = "Mysteryland - Aftermovie 2025-09-15"
     result = _parse_h1_structure(h1)
     assert result["date"] == ""
+
+
+def test_h1_extracts_djs_from_new_artist_hrefs():
+    """Real h1 shape observed 2026-07-25 after the 1001TL redesign."""
+    h1 = (
+        '<a class="notranslate" href="/artist/martin-garrix/tracklists.html">Martin Garrix</a>'
+        ' &amp; <a class="notranslate" href="/artist/alesso/tracklists.html">Alesso</a>'
+        ' @ <a href="/source/n4qht3/red-rocks-amphitheatre/index.html">Red Rocks Amphitheatre</a>,'
+        " United States 2025-10-24"
+    )
+    result = _parse_h1_structure(h1)
+    assert result["dj_artists"] == [
+        ("martin-garrix", "Martin Garrix"),
+        ("alesso", "Alesso"),
+    ]
+    assert ("n4qht3", "red-rocks-amphitheatre", "Red Rocks Amphitheatre") in result[
+        "sources"
+    ]
+    assert result["country"] == "United States"
+
+
+def test_h1_new_artist_href_slug_with_ampersand_and_double_hyphen():
+    h1 = (
+        '<a href="/artist/matisse-&-sadko/tracklists.html">Matisse &amp; Sadko</a>'
+        ' &amp; <a href="/artist/third--party/tracks.html">Third Party</a>'
+        ' @ <a href="/source/fgcfkm/tomorrowland/index.html">Tomorrowland</a>'
+    )
+    result = _parse_h1_structure(h1)
+    assert result["dj_artists"] == [
+        ("matisse-&-sadko", "Matisse & Sadko"),
+        ("third--party", "Third Party"),
+    ]
+
+
+def test_h1_artist_hrefs_after_at_are_not_djs():
+    """Artist links can appear in the after-@ tail; only before-@ anchors are DJs."""
+    h1 = (
+        '<a href="/artist/tiesto/tracklists.html">Ti&euml;sto</a>'
+        ' @ Mainstage, <a href="/source/fgcfkm/tomorrowland/index.html">Tomorrowland</a>,'
+        ' <a href="/artist/alesso/tracklists.html">Alesso</a> takeover'
+    )
+    result = _parse_h1_structure(h1)
+    assert result["dj_artists"] == [("tiesto", "Tiësto")]

@@ -683,3 +683,21 @@ def test_parse_tracks_single_player_defaults_to_zero():
     )
     tracks = _parse_tracks(html)
     assert tracks[0].player == 0
+
+
+def test_track_row_artists_from_new_2segment_hrefs():
+    """2026 redesign: track-row artist links are /artist/{slug}/tracks.html
+    (2 segments, no ID). Display-name extraction is unchanged."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="AFROJACK ft. Eva Simons - Take Over Control">
+<span class="trackValue notranslate blueTxt">
+  <span class="notranslate blueTxt">AFROJACK<span class="tgHid spL"><a href="/artist/afrojack/tracks.html"></a></span></span>
+  ft.
+  <span class="notranslate blueTxt">Eva Simons<span class="tgHid spL"><a href="/artist/eva-simons/tracks.html"></a></span></span>
+  - Take Over Control
+</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].artist_slugs == ["afrojack", "eva-simons"]
+    assert tracks[0].artist_names == ["AFROJACK", "Eva Simons"]

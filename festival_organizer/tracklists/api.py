@@ -49,6 +49,14 @@ USER_AGENT = (
 )
 BASE_URL = "https://www.1001tracklists.com"
 
+# New-form artist href introduced by the 2026 site redesign:
+# /artist/{slug}/{leaf}.html, 2 path segments, leaf varies
+# (tracklists.html on h1/profile links, tracks.html on track rows).
+# Slugs are hyphenated and may contain '&' (matisse-&-sadko) or doubled
+# hyphens (third--party). Old 3-segment /artist/{id}/{slug}/index.html
+# track hrefs do not match (the extra '/' breaks the leaf pattern).
+_ARTIST_HREF_RE = re.compile(r"/artist/([^/]+)/[^/]+\.html$")
+
 # Short pause between consecutive 1001TL requests inside one file's processing
 # (page GET, ajax export POST, per-source and per-DJ fetches). Keeps the
 # post-selection burst modest without dominating wall-clock time on fresh
@@ -275,7 +283,10 @@ def _parse_tracks(html) -> list["Track"]:
         slugs: list[str] = []
         names: list[str] = []
         for a in row.select("a[href^='/artist/']"):
-            m = re.match(r"/artist/[^/]+/([^/]+)/", _attr_str(a, "href"))
+            href = _attr_str(a, "href")
+            # Legacy 3-segment /artist/{id}/{slug}/index.html first, then the
+            # 2026 2-segment /artist/{slug}/tracks.html form.
+            m = re.match(r"/artist/[^/]+/([^/]+)/", href) or _ARTIST_HREF_RE.match(href)
             if not m:
                 continue
             slug = m.group(1)
@@ -943,13 +954,18 @@ class TracklistSession:
         return {"name": name, "slug": slug, "type": source_type, "country": country}
 
     def _fetch_dj_profile(self, dj_slug: str) -> dict:
-        """Fetch and parse a /dj/ profile page for artwork, aliases, and groups.
+        """Fetch and parse an /artist/ profile page for artwork, aliases, and groups.
+
+        New-form hyphenated slugs are canonical since the 2026 redesign. A
+        legacy concatenated slug may 404 here; the except branch degrades to
+        empty defaults, and after a re-identify pass all embedded slugs are
+        new-form.
 
         Returns dict with artwork_url, aliases, and member_of.
         On failure returns empty defaults.
         """
         empty = {"artwork_url": "", "aliases": [], "member_of": [], "members": []}
-        url = f"{BASE_URL}/dj/{dj_slug}/index.html"
+        url = f"{BASE_URL}/artist/{dj_slug}/tracklists.html"
         try:
             resp = self._request("GET", url, max_retries=2)
             self._run_canary(
@@ -1026,7 +1042,7 @@ class TracklistSession:
                 expires = cookie_data.get("Expires")
                 if (
                     expires
-                    and isinstance(expires, (int, float))
+                    and isinstance(expires, int | float)
                     and time.time() > expires
                 ):
                     return False
@@ -1167,12 +1183,14 @@ def _parse_h1_structure(h1_html: str) -> dict:
 
     from bs4 import BeautifulSoup
 
-    # DJ anchors in the before-@ fragment
+    # DJ anchors in the before-@ fragment. The 2026 redesign moved DJ links
+    # from /dj/{slug}/index.html to /artist/{slug}/tracklists.html; accept
+    # both so cached/legacy pages keep parsing.
     before_soup = BeautifulSoup(before_at, "html.parser")
-    for a in before_soup.select('a[href^="/dj/"]'):
+    for a in before_soup.select('a[href^="/dj/"], a[href^="/artist/"]'):
         href_raw = a.get("href", "")
         href = href_raw if isinstance(href_raw, str) else ""
-        m = re.match(r"/dj/([^/]+)/", href)
+        m = re.match(r"/dj/([^/]+)/", href) or _ARTIST_HREF_RE.match(href)
         if not m:
             continue
         result["dj_artists"].append((m.group(1), _html_decode(a.get_text(strip=True))))
@@ -1302,9 +1320,10 @@ def _parse_dj_profile(html: str) -> dict:
             artwork_url = _maximize_artwork_url(url)
 
     def _extract_section(section_header: str) -> list[dict]:
-        """Collect /dj/ links from the siblings between this section's
-        <div class="h">HEADER</div> and the next <div class="h">, which
-        frames every section on the profile page."""
+        """Collect artist links (legacy /dj/ or new /artist/ hrefs) from the
+        siblings between this section's <div class="h">HEADER</div> and the
+        next <div class="h">, which frames every section on the profile
+        page."""
         header = None
         for h in soup.select("div.h"):
             if h.get_text(strip=True) == section_header:
@@ -1317,10 +1336,12 @@ def _parse_dj_profile(html: str) -> dict:
         for sib in header.find_next_siblings():
             if getattr(sib, "name", None) == "div" and "h" in (sib.get("class") or []):
                 break
-            for a in sib.select('a[href^="/dj/"]'):
+            for a in sib.select('a[href^="/dj/"], a[href^="/artist/"]'):
                 href_raw = a.get("href", "")
                 href = href_raw if isinstance(href_raw, str) else ""
-                m = re.match(r"/dj/([^/]+)/index\.html", href)
+                m = re.match(r"/dj/([^/]+)/index\.html", href) or _ARTIST_HREF_RE.match(
+                    href
+                )
                 if not m:
                     continue
                 slug = m.group(1)
@@ -1335,27 +1356,44 @@ def _parse_dj_profile(html: str) -> dict:
                 )
         return entries
 
+    def _first_nonempty(*headers: str) -> list[dict]:
+        """Try each section header in order; the 2026 redesign renamed
+        "Member Of" to "Member Of Projects" and "Group Members" to
+        "Project Members", while archived /dj/ pages keep the old names."""
+        for h in headers:
+            entries = _extract_section(h)
+            if entries:
+                return entries
+        return []
+
     return {
         "artwork_url": artwork_url,
         "aliases": _extract_section("Aliases"),
-        "member_of": _extract_section("Member Of"),
-        "members": _extract_section("Group Members"),
+        "member_of": _first_nonempty("Member Of Projects", "Member Of"),
+        "members": _first_nonempty("Project Members", "Group Members"),
     }
 
 
 def _extract_dj_slugs(html) -> list[str]:
-    """Extract DJ slugs from /dj/<slug>/ or /dj/<slug>/index.html links, deduplicated.
+    """Extract DJ slugs from /dj/<slug>/ or /artist/<slug>/tracklists.html links, deduplicated.
 
     Accepts raw HTML or an already-parsed BeautifulSoup so export_tracklist
     can share one parse with the other tracklist-page parsers.
+
+    The new form is restricted to the tracklists.html leaf on purpose: this
+    is a page-wide fallback used when the h1 gave no DJs, and track rows
+    link performers with the tracks.html leaf, which must not be promoted
+    to DJs.
     """
     soup = _to_soup(html)
     slugs: list[str] = []
     seen: set[str] = set()
-    for a in soup.select('a[href^="/dj/"]'):
+    for a in soup.select('a[href^="/dj/"], a[href^="/artist/"]'):
         href_raw = a.get("href", "")
         href = href_raw if isinstance(href_raw, str) else ""
-        m = re.match(r"/dj/([^/]+)/(?:index\.html)?$", href)
+        m = re.match(r"/dj/([^/]+)/(?:index\.html)?$", href) or re.match(
+            r"/artist/([^/]+)/tracklists\.html$", href
+        )
         if not m:
             continue
         slug = m.group(1)
