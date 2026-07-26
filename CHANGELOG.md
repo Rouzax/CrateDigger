@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.32.1] - 2026-07-26
+
+### Added
+
+- `enrich` now removes obsolete duplicate DJ-cache entries automatically. The 2026 1001Tracklists redesign renamed artist slugs (`martingarrix` became `martin-garrix`), so a re-identified library caches each multi-word artist twice: once under the old key and once under the new one. The stale old-form keys kept their orphaned artwork folders alive forever and doubled image downloads. On every enrich run, entries whose artist names match and whose keys reduce to the same alphanumeric base are now deduplicated (the freshest entry wins; two genuinely different artists that share a display name are never merged), and the artwork-folder reconciler then prunes the freed directories in the same run. Logged as `enrich.dj_cache_dedupe`. No manual cache deletion is needed when upgrading across the redesign.
+
 ## [0.32.0] - 2026-07-25
 
 ### Fixed

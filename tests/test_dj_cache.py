@@ -6,6 +6,85 @@ from festival_organizer.tracklists.dj_cache import DjCache
 # -- DjCache tests --
 
 
+def _write_cache(path, entries):
+    import json
+
+    path.write_text(json.dumps(entries, indent=2) + "\n", encoding="utf-8")
+
+
+def test_dedupe_removes_old_slug_form_duplicate(tmp_path):
+    """The 2026 slug-form change leaves 'martingarrix' and 'martin-garrix'
+    entries for the same artist; the freshest (new-form) one wins."""
+    path = tmp_path / "dj_cache.json"
+    _write_cache(
+        path,
+        {
+            "martingarrix": {"name": "Martin Garrix", "ts": 100, "ttl": 999999},
+            "martin-garrix": {"name": "Martin Garrix", "ts": 200, "ttl": 999999},
+        },
+    )
+    cache = DjCache(path)
+    removed = cache.dedupe_by_name()
+    assert removed == ["martingarrix"]
+    assert cache.slugs() == {"martin-garrix"}
+    # Persisted: a reload sees only the survivor.
+    assert DjCache(path).slugs() == {"martin-garrix"}
+
+
+def test_dedupe_prefers_hyphenated_key_on_ts_tie(tmp_path):
+    path = tmp_path / "dj_cache.json"
+    _write_cache(
+        path,
+        {
+            "fredagain..": {"name": "Fred again..", "ts": 100, "ttl": 999999},
+            "fred-again..": {"name": "Fred again..", "ts": 100, "ttl": 999999},
+        },
+    )
+    cache = DjCache(path)
+    assert cache.dedupe_by_name() == ["fredagain.."]
+    assert cache.slugs() == {"fred-again.."}
+
+
+def test_dedupe_groups_names_case_insensitively(tmp_path):
+    """1001TL casing artifacts ('SOMETHING ELSE' vs 'Something Else') must
+    not protect an obsolete key from removal."""
+    path = tmp_path / "dj_cache.json"
+    _write_cache(
+        path,
+        {
+            "somethingelse": {"name": "SOMETHING ELSE", "ts": 100, "ttl": 999999},
+            "something-else": {"name": "Something Else", "ts": 200, "ttl": 999999},
+        },
+    )
+    cache = DjCache(path)
+    assert cache.dedupe_by_name() == ["somethingelse"]
+
+
+def test_dedupe_keeps_distinct_artists_sharing_display_name(tmp_path):
+    """Two different artists with the same display name have keys that do not
+    reduce to the same alphanumeric base; both must survive."""
+    path = tmp_path / "dj_cache.json"
+    _write_cache(
+        path,
+        {
+            "omnya": {"name": "Omnya", "ts": 100, "ttl": 999999},
+            "omnya-il": {"name": "Omnya", "ts": 200, "ttl": 999999},
+        },
+    )
+    cache = DjCache(path)
+    assert cache.dedupe_by_name() == []
+    assert cache.slugs() == {"omnya", "omnya-il"}
+
+
+def test_dedupe_noop_does_not_rewrite_file(tmp_path):
+    path = tmp_path / "dj_cache.json"
+    _write_cache(path, {"tiesto": {"name": "Tiesto", "ts": 100, "ttl": 999999}})
+    before = path.read_bytes()
+    cache = DjCache(path)
+    assert cache.dedupe_by_name() == []
+    assert path.read_bytes() == before
+
+
 def test_dj_cache_put_get(tmp_path):
     cache = DjCache(tmp_path / "dj_cache.json")
     cache.put(

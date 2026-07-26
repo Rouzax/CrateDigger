@@ -978,7 +978,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
         )
     use_contract = isinstance(
         progress,
-        (OrganizeContractProgress, EnrichContractProgress, OrganizeEnrichProgress),
+        OrganizeContractProgress | EnrichContractProgress | OrganizeEnrichProgress,
     )
     all_tools = {
         "ffprobe": metadata.FFPROBE_PATH,
@@ -1158,7 +1158,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
                 tgt_rel,
                 src_rel == tgt_rel,
             )
-            if isinstance(progress, (OrganizeContractProgress, OrganizeEnrichProgress)):
+            if isinstance(progress, OrganizeContractProgress | OrganizeEnrichProgress):
                 # file_preview is only defined on the organize-side progress
                 # types. The outer `args.dry_run` guard ensures we are in
                 # `organize` here (enrich/identify/audit-logos have no
@@ -1285,7 +1285,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
         return 0
 
     # Run pipeline
-    if isinstance(progress, (EnrichContractProgress, OrganizeEnrichProgress)):
+    if isinstance(progress, EnrichContractProgress | OrganizeEnrichProgress):
         from festival_organizer.console import StepProgress, suppression_enabled
 
         suppressed = suppression_enabled(
@@ -1334,6 +1334,16 @@ def _run_command(args: types.SimpleNamespace) -> int:
         from festival_organizer.normalization import folder_slug
 
         if dj_cache is not None:
+            # Drop obsolete duplicate cache keys first (old /dj/-form slugs
+            # superseded by hyphenated /artist/-form ones), so the valid set
+            # below stops covering them and reconcile prunes their dirs.
+            _removed = dj_cache.dedupe_by_name()
+            if _removed:
+                logger.info(
+                    "enrich.dj_cache_dedupe: removed=%d slugs=%s",
+                    len(_removed),
+                    "|".join(_removed),
+                )
             # Create the canonical per-artist dirs for every cached DJ that has
             # artwork (the CREATE counterpart to reconcile below). This makes the
             # cache self-healing: DJs identified after the last enrich, or whose

@@ -11,6 +11,7 @@ Logging:
 
 import json
 import logging
+import re
 import time
 from pathlib import Path
 
@@ -77,6 +78,51 @@ class DjCache:
     def slugs(self) -> set[str]:
         """All cached slugs (dict keys), regardless of freshness."""
         return set(self._data.keys())
+
+    def dedupe_by_name(self) -> list[str]:
+        """Remove obsolete duplicate entries left behind by a 1001TL
+        slug-form change (the 2026 redesign renamed '/dj/'-era keys like
+        ``martingarrix`` to hyphenated ``martin-garrix``; identify then
+        caches the artist a second time under the new key).
+
+        Two entries are duplicates only when their artist names match
+        case-insensitively AND their keys reduce to the same string once
+        every non-alphanumeric character is stripped, so two genuinely
+        different artists that happen to share a display name are never
+        merged. Within a duplicate group the freshest entry wins; on a
+        timestamp tie the hyphenated (current site form) key is preferred,
+        then the lexicographically last for determinism.
+
+        Returns the removed keys (sorted); saves only when something was
+        removed. Run before reconcile_artist_cache so the artwork-dir
+        valid set stops covering the obsolete keys and their orphaned
+        dirs get pruned on the same run.
+        """
+        from festival_organizer.normalization import fix_mojibake
+
+        def key_base(slug: str) -> str:
+            return re.sub(r"[^a-z0-9]", "", slug.lower())
+
+        groups: dict[tuple[str, str], list[str]] = {}
+        for slug, entry in self._data.items():
+            name = fix_mojibake(str(entry.get("name", ""))).casefold()
+            groups.setdefault((name, key_base(slug)), []).append(slug)
+
+        removed: list[str] = []
+        for slugs in groups.values():
+            if len(slugs) < 2:
+                continue
+            keeper = max(
+                slugs,
+                key=lambda s: (self._data[s].get("ts", 0), "-" in s, s),
+            )
+            for s in slugs:
+                if s != keeper:
+                    del self._data[s]
+                    removed.append(s)
+        if removed:
+            self._save()
+        return sorted(removed)
 
     def all_artwork_urls(self) -> dict[str, str]:
         """Map slug -> artwork_url for every cached entry that has one.
