@@ -809,10 +809,12 @@ def test_generate_set_poster_accepts_artists_1001tl_kwarg(tmp_path):
     assert result.exists()
 
 
-def test_cover_poster_version_is_2():
+def test_cover_poster_version_is_3():
+    """Tripwire: bumping the version regenerates every poster on the next
+    enrich, so it must be a deliberate act. v3 = accent-slot comma split."""
     from festival_organizer.poster import COVER_POSTER_VERSION
 
-    assert COVER_POSTER_VERSION == 2
+    assert COVER_POSTER_VERSION == 3
 
 
 # --- year badge tests (Phase A) ---
@@ -941,3 +943,39 @@ def test_build_folder_stamp_version_bump(monkeypatch):
         poster_type="year", name="N", year="2025", edition=""
     )
     assert before != after
+
+
+# --- accent-slot comma split ---
+
+
+def test_split_accent_slot_splits_free_text_location():
+    from festival_organizer.poster import _split_accent_slot
+
+    head, tail = _split_accent_slot("Portal do Amanhã, Parque Villa-Lobos São Paulo")
+    assert head == "Portal do Amanhã"
+    assert tail == "Parque Villa-Lobos São Paulo"
+
+
+def test_split_accent_slot_passes_official_names_through():
+    from festival_organizer.poster import _split_accent_slot
+
+    assert _split_accent_slot("Tomorrowland Winter") == ("Tomorrowland Winter", "")
+    assert _split_accent_slot("") == ("", "")
+
+
+def test_generate_set_poster_long_location_smoke(tmp_path):
+    """A comma free-text location renders without error; the tail flows into
+    the gray venue block (visual assertion covered by _split_accent_slot)."""
+    src = tmp_path / "source.png"
+    Image.new("RGB", (1280, 720), (100, 50, 200)).save(str(src))
+
+    output = tmp_path / "poster.jpg"
+    generate_set_poster(
+        source_image_path=src,
+        output_path=output,
+        artist="ALOK",
+        festival="Portal do Amanhã, Parque Villa-Lobos São Paulo",
+        date="2026-05-01",
+        year="2026",
+    )
+    assert output.exists()

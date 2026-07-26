@@ -69,7 +69,7 @@ CrateDigger generates two types of poster: a per-video set poster (`{stem}-poste
 
 #### Per-video poster
 
-The video's thumb image forms the background, blurred and darkened across the full poster. A sharpened crop of the same image is pinned to the top with a fade. Metadata text is centered below: artist name, festival name, date, stage, and venue. The accent color is derived from the source image.
+The video's thumb image forms the background, blurred and darkened across the full poster. A sharpened crop of the same image is pinned to the top with a fade. Metadata text is centered below: artist name, festival name, date, stage, and venue. The accent color is derived from the source image. When the festival-slot text contains a comma (free-text locations from sets without a registered 1001Tracklists source), only the part before the first comma renders as the festival line, and the remainder joins the gray venue text below.
 
 Background image tried in order: DJ artwork from 1001Tracklists, then fanart.tv artist background, then the thumb itself.
 

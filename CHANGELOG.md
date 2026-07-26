@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.32.2] - 2026-07-26
+
+### Fixed
+
+- Long free-text locations no longer overflow and clip on set posters. The festival slot now splits at the first comma, keeping the event name big and moving the venue/city remainder into the gray venue block. The poster layout version was bumped, so every existing set poster re-renders once on the next enrich run.
+
 ## [0.32.1] - 2026-07-26
 
 ### Added

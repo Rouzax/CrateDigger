@@ -29,7 +29,9 @@ logger = logging.getLogger(__name__)
 # --- Cover sidecar stamp (staleness tracking; see plans/2026-06-12-mkv-cover-attachment-naming.md) ---
 # Bump COVER_POSTER_VERSION whenever the set-poster composition changes so existing
 # posters are re-rendered and re-embedded on the next enrich run.
-COVER_POSTER_VERSION = 2
+# v3: comma free-text locations split at the first comma (head in the accent
+# slot, tail in the gray venue block) instead of overflowing the canvas.
+COVER_POSTER_VERSION = 3
 
 _STAMP_PREFIX = "CDPOSTER"
 _STAMP_SEP = "\x1f"  # unit separator: never appears in the resolved field values
@@ -427,6 +429,20 @@ def format_date_display(date: str, year: str) -> str:
     return year or ""
 
 
+def _split_accent_slot(festival: str) -> tuple[str, str]:
+    """Split a festival-slot string at its first comma.
+
+    Sets without a registered 1001TL source route their whole free-text
+    location into the accent slot ("Portal do Amanhã, Parque Villa-Lobos
+    São Paulo"), which overflows the poster even at the minimum accent
+    font. The head keeps the accent slot; the tail flows into the gray
+    venue block below. Official festival and venue names carry no comma,
+    so they pass through unchanged.
+    """
+    head, _, tail = festival.partition(",")
+    return head.strip(), tail.strip()
+
+
 def _filter_venue_parts(venue: str, detail: str, festival: str = "") -> list[str]:
     """Return venue parts not already covered by a detail or festival part."""
     if not venue:
@@ -694,6 +710,12 @@ def generate_set_poster(
 
     draw = ImageDraw.Draw(bg)
     max_w = POSTER_W - 100
+
+    # Free-text locations comma-split: head keeps the accent slot, the tail
+    # joins the gray venue block (deduped by _filter_venue_parts below).
+    festival, fest_tail = _split_accent_slot(festival)
+    if fest_tail:
+        venue = f"{fest_tail}, {venue}" if venue else fest_tail
 
     # Split artist name into lines, word-wrap any that don't fit
     artist_lines = [
