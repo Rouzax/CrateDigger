@@ -4,6 +4,7 @@ from festival_organizer.config import Config
 from festival_organizer.parsers import (
     parse_filename,
     parse_parent_dirs,
+    weekend_set_title,
 )
 from tests.conftest import TEST_CONFIG
 
@@ -232,3 +233,43 @@ def test_filename_legacy_festival_artist_order_preserved():
     r = parse_filename(Path("2025 - AMF - Armin van Buuren.mkv"), CFG)
     assert r["festival"] == "AMF"
     assert r["artist"] == "Armin van Buuren"
+
+
+# --- weekend_set_title (tag-derived WE1/WE2 for identified files) ---
+
+
+def test_weekend_set_title_from_location():
+    assert weekend_set_title("Weekend 1") == "WE1"
+    assert weekend_set_title("Weekend 2") == "WE2"
+
+
+def test_weekend_set_title_location_case_insensitive():
+    assert weekend_set_title("weekend 2") == "WE2"
+
+
+def test_weekend_set_title_falls_back_to_tracklists_title():
+    title = "Alesso @ Mainstage, Tomorrowland Weekend 1, Belgium 2026-07-19"
+    assert weekend_set_title("", title) == "WE1"
+
+
+def test_weekend_set_title_title_fallback_coachella():
+    title = (
+        "AFROJACK & Shimza @ Quasar, Coachella Festival Weekend 2,"
+        " United States 2026-04-17"
+    )
+    assert weekend_set_title("", title) == "WE2"
+
+
+def test_weekend_set_title_location_wins_over_title():
+    title = "Alesso @ Mainstage, Tomorrowland Weekend 1, Belgium 2026-07-19"
+    assert weekend_set_title("Weekend 2", title) == "WE2"
+
+
+def test_weekend_set_title_ignores_weekend_named_festival():
+    # "Weekend Festival" (Finland) has no ordinal; must not produce a WE tag.
+    assert weekend_set_title("", "Alesso @ Weekend Festival, Finland 2026-08-07") == ""
+
+
+def test_weekend_set_title_freeform_location_yields_empty():
+    assert weekend_set_title("Alexandra Palace London") == ""
+    assert weekend_set_title("") == ""

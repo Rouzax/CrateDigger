@@ -924,3 +924,51 @@ def test_analyse_populates_artists_1001tl_billed_list():
             CFG,
         )
     assert mf.artists_1001tl == ["Dimitri Vegas & Like Mike", "Martin Garrix"]
+
+
+def test_analyse_identified_file_derives_weekend_set_title_from_location():
+    """Identified files derive set_title (WE1/WE2) from the tag-backed
+    1001TL location field, not the filename, so multi-weekend festivals
+    (Tomorrowland, Coachella) keep distinct canonical names without
+    breaking render idempotency."""
+    fake_meta = {
+        "title": "",
+        "tracklists_title": "Alesso @ Mainstage, Tomorrowland Weekend 1, Belgium 2026-07-19",
+        "tracklists_url": "https://www.1001tracklists.com/tracklist/dr4mczt/",
+        "tracklists_artists": "Alesso",
+        "tracklists_stage": "Mainstage",
+        "tracklists_festival": "Tomorrowland",
+        "tracklists_location": "Weekend 1",
+        "tracklists_date": "2026-07-19",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("//lib/2026 - Alesso - Tomorrowland [Mainstage].mkv"),
+            Path("//lib"),
+            CFG,
+        )
+    assert mf.metadata_source == "1001tracklists"
+    assert mf.set_title == "WE1"
+
+
+def test_analyse_identified_file_derives_weekend_set_title_from_title_tag():
+    """Files identified before LOCATION carried the weekend (pre-fix
+    library) still heal: the weekend is salvaged from the embedded 1001TL
+    title when the location tag is absent."""
+    fake_meta = {
+        "title": "",
+        "tracklists_title": "Armin van Buuren @ Mainstage, Tomorrowland Weekend 2, Belgium 2026-07-25",
+        "tracklists_url": "https://www.1001tracklists.com/tracklist/2s558yl9/",
+        "tracklists_artists": "Armin van Buuren",
+        "tracklists_stage": "Mainstage",
+        "tracklists_festival": "Tomorrowland",
+        "tracklists_date": "2026-07-25",
+    }
+    with patch("festival_organizer.analyzer.extract_metadata", return_value=fake_meta):
+        mf = analyse_file(
+            Path("//lib/2026 - Armin van Buuren - Tomorrowland [Mainstage].mkv"),
+            Path("//lib"),
+            CFG,
+        )
+    assert mf.metadata_source == "1001tracklists"
+    assert mf.set_title == "WE2"

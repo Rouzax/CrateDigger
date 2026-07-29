@@ -17,6 +17,7 @@ from festival_organizer.normalization import normalise_name, normalize_genre
 from festival_organizer.parsers import (
     parse_filename,
     parse_parent_dirs,
+    weekend_set_title,
 )
 
 logger = logging.getLogger(__name__)
@@ -231,10 +232,18 @@ def analyse_file(filepath: Path, root: Path, config: Config) -> MediaFile:
     # from the embedded tags, not from filename parsing. set_title and title are
     # filename-only salvage fields: keeping them for identified files breaks
     # render idempotency because the filename shape mutates between runs while
-    # the tags stay put. Gate them on the identified-ness signal so renders
-    # converge after one organize.
-    set_title = "" if identified else normalise_name(info.get("set_title", ""))
-    title_field = "" if identified else normalise_name(info.get("title", ""))
+    # the tags stay put. The one canonical set_title an identified file can
+    # have is the weekend designator (WE1/WE2) of multi-weekend festivals,
+    # derived from the tag-backed 1001TL location/title, so it is stable
+    # across renders and keeps same-artist same-stage sets from colliding.
+    if identified:
+        set_title = weekend_set_title(
+            info.get("location", ""), meta.get("tracklists_title", "")
+        )
+        title_field = ""
+    else:
+        set_title = normalise_name(info.get("set_title", ""))
+        title_field = normalise_name(info.get("title", ""))
 
     mf = MediaFile(
         source_path=filepath,

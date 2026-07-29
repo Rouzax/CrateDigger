@@ -255,3 +255,67 @@ def test_reidentify_writes_location_when_no_linked_location_source(tmp_path):
     # No venue / festival / conference / radio applies, so they are cleared
     # by the blanket managed-tag sweep.
     assert album_tags["CRATEDIGGER_1001TL_VENUE"] is CLEAR_TAG
+
+
+def test_export_keeps_weekend_designator_despite_linked_festival(tmp_path):
+    """Sub-event designators ("Weekend 1"/"Weekend 2") in the h1 tail are
+    NOT redundant with the linked festival source: Tomorrowland and
+    Coachella run the same lineup twice and the weekend is the only
+    disambiguator. The suppression rule must keep them in
+    export.location (and hence CRATEDIGGER_1001TL_LOCATION) while
+    continuing to drop freeform venue tails (covered by the cleanup test
+    above)."""
+    h1_inner = (
+        '<a href="/dj/alesso/index.html" class="notranslate ">Alesso</a>'
+        ' @ Mainstage, <a href="/source/fgcfkm/tomorrowland/index.html">Tomorrowland</a>'
+        " Weekend 1, Belgium 2026-07-19"
+    )
+    page_html = _build_minimal_page_html(h1_inner)
+
+    cache = _StubSourceCache(
+        {
+            "fgcfkm": {
+                "name": "Tomorrowland",
+                "type": "Open Air / Festival",
+                "country": "Belgium",
+            },
+        }
+    )
+    session = TracklistSession(source_cache=cache)
+
+    with (
+        patch.object(
+            session, "_request", side_effect=_build_export_mock_responses(page_html)
+        ),
+        patch.object(session, "_fetch_dj_profile", return_value={"artwork_url": ""}),
+    ):
+        export = session.export_tracklist("dr4mczt")
+
+    assert export.location == "Weekend 1"
+    assert export.sources_by_type == {"Open Air / Festival": ["Tomorrowland"]}
+
+    chapters = parse_tracklist_lines(export.lines)
+    fake_mkv = tmp_path / "alesso-tml-we1.mkv"
+    fake_mkv.write_bytes(b"")
+
+    with (
+        patch("festival_organizer.metadata.MKVPROPEDIT_PATH", "/bin/true"),
+        patch("festival_organizer.tracklists.chapters.write_merged_tags") as mock_write,
+        patch("subprocess.run") as mock_run,
+    ):
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        mock_write.return_value = True
+        embed_chapters(
+            fake_mkv,
+            chapters,
+            tracklist_url=export.url,
+            tracklist_title=export.title,
+            sources_by_type=export.sources_by_type,
+            country=export.country,
+            location=export.location,
+            tracks=export.tracks,
+        )
+
+    album_tags = mock_write.call_args[0][1][70]
+    assert album_tags["CRATEDIGGER_1001TL_LOCATION"] == "Weekend 1"
+    assert album_tags["CRATEDIGGER_1001TL_FESTIVAL"] == "Tomorrowland"

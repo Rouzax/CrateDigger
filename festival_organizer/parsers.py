@@ -13,6 +13,7 @@ from pathlib import Path
 
 from festival_organizer.config import Config
 from festival_organizer.normalization import (
+    SUB_EVENT_WEEKEND,
     UNICODE_SLASHES,
     extract_youtube_id,
     normalize_pipes,
@@ -282,3 +283,19 @@ def _split_trailing_stage(text: str) -> tuple[str, str]:
     if m:
         return text[: m.start()].strip(), m.group(1).strip()
     return text, ""
+
+
+def weekend_set_title(location: str, tracklists_title: str = "") -> str:
+    """Derive the WE<n> set_title for a 1001TL-identified file.
+
+    Multi-weekend festivals (Tomorrowland, Coachella) repeat artist and
+    stage across weekends, so the weekend ordinal is the only canonical
+    disambiguator between otherwise identical sets. Prefers the structured
+    1001TL location field ("Weekend 1"); falls back to scanning the
+    embedded 1001TL title for files identified before LOCATION carried the
+    weekend. Returns "" when neither carries a weekend designator.
+    """
+    m = SUB_EVENT_WEEKEND.fullmatch(location.strip())
+    if not m:
+        m = SUB_EVENT_WEEKEND.search(tracklists_title)
+    return f"WE{int(m.group(1))}" if m else ""

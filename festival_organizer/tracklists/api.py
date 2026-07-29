@@ -39,6 +39,7 @@ from pathlib import Path
 import requests
 
 from festival_organizer import paths
+from festival_organizer.normalization import SUB_EVENT_WEEKEND
 from festival_organizer.tracklists import canary
 from festival_organizer.tracklists.scoring import SearchResult
 
@@ -771,7 +772,13 @@ class TracklistSession:
         # Suppress the h1-derived location when a linked source already
         # carries authoritative location info (festival, venue, conference,
         # radio channel). The cached source entry wins in those cases.
-        if any(t in sources_by_type for t in LOCATION_BEARING_TYPES):
+        # Exception: a sub-event weekend designator ("Weekend 1") is NOT
+        # redundant with the linked source; multi-weekend festivals repeat
+        # artist and stage across weekends, so the designator must survive
+        # into CRATEDIGGER_1001TL_LOCATION to disambiguate the sets.
+        if any(
+            t in sources_by_type for t in LOCATION_BEARING_TYPES
+        ) and not SUB_EVENT_WEEKEND.fullmatch(location.strip()):
             location = ""
 
         players = _parse_players(page_resp.text)

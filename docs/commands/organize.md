@@ -389,7 +389,7 @@ entire token is removed.
 | `year` | Event year |
 | `date` | Full event date |
 | `stage` | Stage name (from 1001Tracklists metadata if identified) |
-| `set_title` | Set title or description |
+| `set_title` | Set title or description. For 1001Tracklists-identified sets at multi-weekend festivals (Tomorrowland, Coachella), this is the weekend designator (`WE1`, `WE2`) derived from the tracklist metadata, so both weekends of the same artist and stage get distinct filenames. For unidentified files it is salvaged from the filename tail. |
 | `title` | Full title (used mainly for concert recordings) |
 
 ### Default templates

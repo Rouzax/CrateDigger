@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.33.0] - 2026-07-29
+
+### Fixed
+
+- Multi-weekend festival sets (Tomorrowland, Coachella) keep their weekend designator again. Identified sets now derive a `WE1`/`WE2` set title from 1001Tracklists metadata (the structured location field, falling back to the stored tracklist title for files identified before this fix), so two sets by the same artist on the same stage in different weekends no longer target the same filename. The weekend designator also survives into `CRATEDIGGER_1001TL_LOCATION`: it is exempt from the rule that suppresses the freeform header location when a linked festival source is present, because the linked source (plain "Tomorrowland") does not carry the weekend. Existing libraries self-heal on the next organize run with no re-identification needed; affected sets are renamed once (e.g. `2026 - Hardwell - Tomorrowland [Mainstage].mkv` becomes `2026 - Hardwell - Tomorrowland [Mainstage] - WE2.mkv`), which media centers see as new items.
+
 ## [0.32.2] - 2026-07-26
 
 ### Fixed

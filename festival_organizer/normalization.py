@@ -17,6 +17,12 @@ FULLWIDTH_PIPE = re.compile(r"\uFF5C")
 # Fullwidth colon ： (U+FF1A) used in YouTube filenames where : is illegal
 FULLWIDTH_COLON = re.compile(r"\uFF1A")
 
+# Sub-event weekend designator ("Weekend 1") used by multi-weekend festivals
+# (Tomorrowland, Coachella). Shared by the 1001TL location-suppression rule
+# (api.py) and the WE<n> set_title derivation (parsers.weekend_set_title) so
+# both layers agree on what counts as a weekend designator.
+SUB_EVENT_WEEKEND = re.compile(r"weekend\s+(\d+)", re.IGNORECASE)
+
 # Scene-release technical tags
 SCENE_TAGS = re.compile(
     r"\b("
