@@ -5,7 +5,7 @@ Logging:
     Key events:
         - identify.search.params (DEBUG): Search parameters sent to API
         - identify.search.response (DEBUG): Search response status and size
-        - identify.export.decode_failed (DEBUG): Export JSON parse failure
+        - identify.lines.synthesized (DEBUG): Lines rebuilt from page rows
         - identify.export.genres (INFO): Genres extracted from tracklist page
         - identify.cache.source (INFO): Source page metadata cached
         - identify.cache.dj (INFO): DJ profile cached
@@ -59,11 +59,10 @@ BASE_URL = "https://www.1001tracklists.com"
 _ARTIST_HREF_RE = re.compile(r"/artist/([^/]+)/[^/]+\.html$")
 
 # Short pause between consecutive 1001TL requests inside one file's processing
-# (page GET, ajax export POST, per-source and per-DJ fetches). Keeps the
-# post-selection burst modest without dominating wall-clock time on fresh
-# caches. Between-files politeness is handled by the CLI orchestrator, not
-# here, so this value is deliberately much smaller than the user-configurable
-# tracklists.delay_seconds.
+# (page GET, per-source and per-DJ fetches). Keeps the post-selection burst
+# modest without dominating wall-clock time on fresh caches. Between-files
+# politeness is handled by the CLI orchestrator, not here, so this value is
+# deliberately much smaller than the user-configurable tracklists.delay_seconds.
 INTRA_REQUEST_DELAY = 0.5
 
 
@@ -77,10 +76,6 @@ class AuthenticationError(TracklistError):
 
 class RateLimitError(TracklistError):
     """Too many requests, captcha required."""
-
-
-class ExportError(TracklistError):
-    """Failed to export tracklist data."""
 
 
 @dataclass
@@ -100,6 +95,16 @@ class Track:
         breakdown); these are metadata contributors, never their own chapter
     group_id: the trRow<N> number shared by a mashup main and its tlpSubTog
         children, used to link sub-components to their parent; -1 when absent
+    qualifier: page-only annotation spans appended to the export text:
+        span.trackStatus ("(ID Remix)") and span.trackEditData
+        ("(Intro Edit)", "(Bad Girls)"), joined in document order
+    cue_unset: True when the row's visible cue display div is empty, i.e.
+        nobody has cued this row yet. The hidden cue_seconds input reads
+        "0" in that case, indistinguishable from a genuine 00:00 cue,
+        so the display div is the discriminator.
+    label_full: every span.trackLabel on the row joined with "/", as the
+        export renders multi-label rows. `label` keeps first-span-only
+        semantics because CRATEDIGGER_TRACK_LABEL is written from it.
     """
 
     start_ms: int
@@ -114,6 +119,9 @@ class Track:
     is_overlay: bool = False
     is_subcomponent: bool = False
     group_id: int = -1
+    qualifier: str = ""
+    cue_unset: bool = False
+    label_full: str = ""
 
 
 @dataclass
@@ -211,8 +219,6 @@ def _parse_tracks(html) -> list["Track"]:
     Returns Track objects in page order with start_ms taken from the row's
     cue_seconds input (float seconds * 1000).
     """
-    from bs4 import BeautifulSoup
-
     from festival_organizer.normalization import (
         _artist_key,
         fix_mojibake,
@@ -387,25 +393,29 @@ def _parse_tracks(html) -> list["Track"]:
         # titles can carry their own " - " (subtitles, remix suffixes), so the
         # first separator is the artist/title boundary, not the last.
         _, title = split_artist_title(raw_text)
-        # Label: the first <span class="trackLabel">LABEL<a>...</a></span> in
-        # the row. The label text is the span's content before the nested
-        # icon-only <a>. Some rows omit the label entirely.
-        label = ""
-        label_span = row.select_one("span.trackLabel")
-        if label_span is not None:
-            # Clone and strip nested <a> icons so only the plain label text remains.
-            label_copy = BeautifulSoup(str(label_span), "html.parser").select_one(
-                "span.trackLabel"
+        # Label: `label` keeps the first <span class="trackLabel"> only (it
+        # feeds CRATEDIGGER_TRACK_LABEL); `label_full` joins every label span
+        # the way the export renders multi-label rows. Some rows omit labels.
+        label_texts = _label_span_texts(row)
+        label = label_texts[0] if label_texts else ""
+        label_full = "/".join(label_texts)
+        # Export-only annotations: trackStatus carries un-ID remix status
+        # ("(ID Remix)"), trackEditData carries editor notes ("(Intro
+        # Edit)", "(Bad Girls)"). Neither reaches meta itemprop=name, but
+        # the export appends both to the visible label text.
+        qualifier = fix_mojibake(
+            " ".join(
+                s.get_text(" ", strip=True)
+                for s in row.select("span.trackStatus, span.trackEditData")
+                if s.get_text(strip=True)
             )
-            if label_copy is not None:
-                for sub in label_copy.select("a"):
-                    sub.decompose()
-                # No separator between text nodes: when 1001TL nests an icon
-                # <a> inside the label span (e.g. the external-link chevron),
-                # using a space separator inserts a stray space where the <a>
-                # was, producing 'SHEFFIELD TUNES (KONTOR )'. Concatenating
-                # without a separator gives us 'SHEFFIELD TUNES (KONTOR)'.
-                label = fix_mojibake(label_copy.get_text(strip=True))
+        )
+        # cue_seconds defaults to "0" when nobody cued the row; the empty
+        # visible display div is the only uncued signal. Fail open (False)
+        # when the div is missing so markup drift keeps rows instead of
+        # dropping them; the canary flags the drift.
+        cue_display = row.select_one("div[onclick*='toggleCue']")
+        cue_unset = cue_display is not None and not cue_display.get_text(strip=True)
         tracks.append(
             Track(
                 start_ms=start_ms,
@@ -420,9 +430,96 @@ def _parse_tracks(html) -> list["Track"]:
                 is_overlay="con" in classes,
                 is_subcomponent="tlpSubTog" in classes,
                 group_id=group_id,
+                qualifier=qualifier,
+                cue_unset=cue_unset,
+                label_full=label_full,
             )
         )
     return tracks
+
+
+def _label_span_texts(row) -> list[str]:
+    """Plain text of every span.trackLabel on a row, in document order.
+
+    Nested icon <a> elements are dropped and the remaining text nodes are
+    concatenated with no added separator: a space separator would insert a
+    stray gap where the icon anchor sat ('KONTOR )' instead of 'KONTOR)').
+    Whitespace already present in the markup is kept (collapsed to single
+    spaces), because the export preserves it: a parent-label row reads
+    'ARMIND (ARMADA)', not 'ARMIND(ARMADA)'.
+    """
+    from bs4 import BeautifulSoup
+
+    from festival_organizer.normalization import fix_mojibake
+
+    texts: list[str] = []
+    for span in row.select("span.trackLabel"):
+        copy = BeautifulSoup(str(span), "html.parser").select_one("span.trackLabel")
+        if copy is None:
+            continue
+        for sub in copy.select("a"):
+            sub.decompose()
+        text = fix_mojibake(re.sub(r"\s+", " ", copy.get_text()).strip())
+        if text:
+            texts.append(text)
+    return texts
+
+
+def _line_text(t: "Track") -> str:
+    """Visible label text of a row as the export API rendered it."""
+    text = t.raw_text
+    if t.qualifier:
+        text = f"{text} {t.qualifier}"
+    if t.label_full:
+        text = f"{text} [{t.label_full}]"
+    return text
+
+
+def _format_cue(ms: int) -> str:
+    """Milliseconds to HH:MM:SS.mmm, the format parse_tracklist_lines eats."""
+    total_s, millis = divmod(ms, 1000)
+    hours, rem = divmod(total_s, 3600)
+    minutes, seconds = divmod(rem, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{millis:03d}"
+
+
+def _synthesize_export_lines(tracks: list["Track"]) -> list[str]:
+    """Rebuild export_data.php-format lines from parsed page tracks.
+
+    Replaces the retired AJAX export call (1001TL put a 30/month quota on
+    it in 2026-07). Validated against real exports on seven paired
+    snapshots at timed-row parity: same player bucket, same second, same
+    visible text. The rules below mirror the export exactly:
+
+      - mains only (mashup mains included; overlays and tlpSubTog
+        sub-components never appear as timed lines)
+      - the document-first main is emitted at 00:00 even when uncued (a
+        set's opening track implicitly starts at zero); every later
+        uncued main is dropped, regardless of player
+      - a fully uncued tracklist yields numbered lines so
+        parse_tracklist_lines raises its "no timestamps yet" ValueError
+      - "Player N" marker lines are emitted on ordinal transitions, but
+        only when the page actually partitions the timeline (any
+        Track.player != 0)
+    """
+    mains = [t for t in tracks if not t.is_overlay and not t.is_subcomponent]
+    if not mains:
+        return []
+    if all(t.cue_unset for t in mains):
+        return [f"{i + 1}. {_line_text(t)}" for i, t in enumerate(mains)]
+
+    multi = any(t.player for t in mains)
+    lines: list[str] = []
+    prev_player = 0
+    for i, t in enumerate(mains):
+        if t.cue_unset and i > 0:
+            continue
+        if multi and t.player and t.player != prev_player:
+            lines.append(f"Player {t.player}")
+        prev_player = t.player
+        start_ms = 0 if t.cue_unset else t.start_ms
+        lines.append(f"[{_format_cue(start_ms)}] {_line_text(t)}")
+    return lines
 
 
 def _parse_players(html: str) -> list["PlayerInfo"]:
@@ -606,14 +703,15 @@ class TracklistSession:
         full_url: str | None = None,
         on_progress: Callable[[str], None] | None = None,
     ) -> TracklistExport:
-        """Fetch tracklist data (timestamps + track titles).
+        """Fetch the tracklist page and derive all tracklist data from it.
+
+        Lines are synthesized from the page's track rows in the retired
+        export API's format, so downstream parsing is unchanged.
 
         If *on_progress* is provided it's invoked exactly once, after the
         tracklist page HTML has been parsed and the linked DJ list is known,
         before any per-DJ profile fetch. The message format is
         "Fetching tracklist ({N} DJs)".
-
-        Raises ExportError on failure.
         """
         # First fetch the tracklist page to get the actual URL
         page_url = full_url or f"{BASE_URL}/tracklist/{tracklist_id}/"
@@ -623,45 +721,43 @@ class TracklistSession:
         # Parse the page once; all four tracklist-page parsers share this soup.
         page_soup = _to_soup(page_resp.text)
 
+        # A logged-out session gets a page shell with no track rows at all
+        # (1001TL only renders tracklist content to signed-in users). Every
+        # logged-in page carries a logout affordance; a rows-less page
+        # without one means the session died, so fail loudly instead of
+        # skipping file after file with empty chapters.
+        if (
+            "logout.html" not in page_resp.text
+            and page_soup.select_one("div.tlpItem.tlpTog") is None
+        ):
+            raise AuthenticationError(
+                "1001Tracklists session is not logged in; tracklist pages "
+                "render without track data"
+            )
+
         # Structural canary: flag up-front if 1001TL changed the markup
         # in ways that would silently drain data from the parsers below.
         self._run_canary(
             "tracklist page", canary.check_tracklist_page(page_resp.text), actual_url
         )
 
-        # Export via AJAX
-        resp = self._request(
-            "POST",
-            f"{BASE_URL}/ajax/export_data.php",
-            data={
-                "object": "tracklist",
-                "idTL": tracklist_id,
-            },
-            headers={
-                "X-Requested-With": "XMLHttpRequest",
-                "Referer": actual_url,
-                "Accept": "application/json, text/javascript, */*; q=0.01",
-                "Origin": BASE_URL,
-                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            },
+        # Tracklist lines come from the page itself. The AJAX export API
+        # (/ajax/export_data.php) was retired here in 2026-07 when 1001TL
+        # capped it at 30 calls/month; _synthesize_export_lines rebuilds
+        # its timed rows exactly from the parsed rows.
+        tracks = _parse_tracks(page_soup)
+        lines = _synthesize_export_lines(tracks)
+        uncued_dropped = sum(
+            1
+            for t in tracks
+            if t.cue_unset and not t.is_overlay and not t.is_subcomponent
         )
-
-        try:
-            result = resp.json()
-        except (json.JSONDecodeError, ValueError) as e:
-            logger.debug(
-                'identify.export.decode_failed: id=%s url=%s error="%s"',
-                tracklist_id,
-                resp.url,
-                e,
-            )
-            raise ExportError("Invalid JSON response from export API") from e
-
-        if not result.get("success"):
-            raise ExportError(result.get("message", "Export failed"))
-
-        raw_data = result.get("data", "")
-        lines = [line for line in raw_data.split("\n") if line.strip()]
+        logger.debug(
+            "identify.lines.synthesized: tracks=%d lines=%d uncued=%d",
+            len(tracks),
+            len(lines),
+            uncued_dropped,
+        )
 
         # Extract title from first line or page
         title_match = re.search(r"<title>([^<]+)</title>", page_resp.text)
@@ -766,8 +862,6 @@ class TracklistSession:
             if i == 0 and profile.get("artwork_url"):
                 dj_artwork_url = profile["artwork_url"]
                 logger.info("identify.export.dj_artwork: url=%s", dj_artwork_url)
-
-        tracks = _parse_tracks(page_soup)
 
         # Suppress the h1-derived location when a linked source already
         # carries authoritative location info (festival, venue, conference,

@@ -169,13 +169,13 @@ def supplement_chapters_from_tracks(
     tracks: list["Track"],
     language: str = "eng",
 ) -> list[Chapter]:
-    """Add chapters for mashup main rows the export missed.
+    """Add chapters for mashup main rows missing from the line list.
 
-    The 1001TL export API omits mashup main rows (they appear as w/ lines
-    without timestamps). The HTML page carries valid cue times for these
-    rows, and _parse_tracks() already extracts them with is_mashup=True.
-    This function fills the gaps by creating Chapter entries from those
-    tracks when their position does not collide with an existing chapter.
+    Historical: the pre-2026 export API omitted mashup main rows (they
+    appeared as w/ lines without timestamps) and this function filled the
+    gaps from the HTML rows. Synthesized lines now include mashup mains,
+    so this is a no-op safety net that only fires if a mashup main with a
+    valid cue is absent from the anchor list.
     """
     existing_seconds = {_timestamp_to_seconds(ch.timestamp) for ch in chapters}
     existing_list = sorted(existing_seconds)

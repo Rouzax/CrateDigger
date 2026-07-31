@@ -31,13 +31,33 @@ from festival_organizer.tracklists.chapters import (
 )
 
 
+def _track_row(index: int, cue_seconds: int, cue_display: str, name: str) -> str:
+    """One cued main row, the minimum markup _parse_tracks needs."""
+    return (
+        f'<div class="tlpTog bItm tlpItem trRow{index}">'
+        f'<input id="tlp{index}_cue_seconds" value="{cue_seconds}">'
+        f'<div class="cue" onclick="toggleCue(event);">{cue_display}</div>'
+        f'<meta itemprop="name" content="{name}"></div>'
+    )
+
+
+# Three cued mains, so the synthesized lines carry real timestamps for
+# parse_tracklist_lines (the exporter derives lines from these rows now).
+_TRACK_ROWS = (
+    _track_row(1, 0, "00:00", "Opening Artist - Opener")
+    + _track_row(2, 60, "01:00", "Second Artist - Second")
+    + _track_row(3, 120, "02:00", "Third Artist - Third")
+)
+
+
 def _build_minimal_page_html(h1_inner: str) -> str:
-    """Minimal HTML document the exporter can parse: it only needs
-    <title> and <h1>."""
+    """Minimal HTML document the exporter can parse: <title>, <h1>, and
+    the cued track rows the lines are synthesized from."""
     return (
         "<html><head><title>Fred again.. @ Alexandra Palace | 1001Tracklists</title>"
         "</head><body>"
         f'<h1 class="notranslate">{h1_inner}</h1>'
+        f"{_TRACK_ROWS}"
         "</body></html>"
     )
 
@@ -71,8 +91,11 @@ class _StubSourceCache:
 
 
 def _build_export_mock_responses(page_html: str):
-    """Return a _request side_effect that plays back a page GET then an
-    AJAX export POST with a tiny but valid tracklist payload."""
+    """Return a _request side_effect that serves the tracklist page.
+
+    export_tracklist fetches only that page now; the tracklist lines are
+    synthesized from its rows rather than pulled from the export API.
+    """
     page_resp = MagicMock()
     page_resp.text = page_html
     page_resp.url = (
@@ -80,24 +103,8 @@ def _build_export_mock_responses(page_html: str):
         "fred-again-alexandra-palace-2026.html"
     )
 
-    ajax_resp = MagicMock()
-    ajax_resp.json.return_value = {
-        "success": True,
-        "data": "[00:00] Opener\n[01:00] Second\n[02:00] Third\n",
-    }
-
-    responses = [page_resp, ajax_resp]
-    calls = {"i": 0}
-
     def _side_effect(method, url, *args, **kwargs):
-        i = calls["i"]
-        calls["i"] += 1
-        if i < len(responses):
-            return responses[i]
-        extra = MagicMock()
-        extra.text = ""
-        extra.json.return_value = {"success": False, "message": "unexpected"}
-        return extra
+        return page_resp
 
     return _side_effect
 

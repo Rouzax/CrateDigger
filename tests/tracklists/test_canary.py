@@ -74,10 +74,11 @@ def test_canary_flags_player_headers_without_tabs():
 def test_canary_clean_single_player_page_unaffected():
     from festival_organizer.tracklists.canary import check_tracklist_page
 
-    # The row carries an artist anchor so the track-artist-anchor probe
-    # stays quiet; this test's concern is the media-player-tab probe only.
+    # The row carries an artist anchor and a cue display div so those probes
+    # stay quiet; this test's concern is the media-player-tab probe only.
     html = (
         '<h1>x</h1><div class="tlpItem tlpTog"><input id="a_cue_seconds" value="0">'
+        '<div class="cue" onclick="toggleCue(event);">00:00</div>'
         '<a href="/artist/a/tracks.html">A</a>'
         '<meta itemprop="name" content="A - B"><meta itemprop="genre" content="X"></div>'
     )
@@ -232,3 +233,89 @@ def test_canary_tracklist_flags_rows_without_artist_anchors():
     )
     missing = canary.check_tracklist_page(html)
     assert "track artist anchor" in missing
+
+
+def test_tracklist_page_missing_cue_display_div_is_flagged():
+    from festival_organizer.tracklists import canary
+
+    html = (
+        '<html><body><h1><a href="/artist/x/">X</a> @ Y</h1>'
+        '<div class="tlpItem tlpTog">'
+        '<input id="tlp1_cue_seconds" value="145">'
+        '<a href="/artist/x/">X</a>'
+        '<meta itemprop="name" content="A - B">'
+        "</div></body></html>"
+    )
+    assert "cue display div" in canary.check_tracklist_page(html)
+
+
+def test_tracklist_page_with_cue_display_div_passes():
+    from festival_organizer.tracklists import canary
+
+    html = (
+        '<html><body><h1><a href="/artist/x/">X</a> @ Y</h1>'
+        '<div class="tlpItem tlpTog">'
+        '<input id="tlp1_cue_seconds" value="145">'
+        '<div class="cue" onclick="toggleCue(event);">02:25</div>'
+        '<a href="/artist/x/">X</a>'
+        '<meta itemprop="name" content="A - B">'
+        "</div></body></html>"
+    )
+    assert "cue display div" not in canary.check_tracklist_page(html)
+
+
+def test_canary_cue_display_probe_quiet_on_page_without_rows():
+    """The probe keys off track rows; a page with no tlpItem row (already
+    flagged by the tlpItem probe) must not also report a missing cue
+    display div."""
+    from festival_organizer.tracklists import canary
+
+    html = (
+        '<html><body><h1><a href="/artist/x/">X</a> @ Y</h1>'
+        "<p>no track rows on this page</p></body></html>"
+    )
+    assert "cue display div" not in canary.check_tracklist_page(html)
+
+
+def test_tracklist_page_rows_without_any_name_source_are_flagged():
+    """_parse_tracks reads the track name from meta itemprop=name, falling
+    back to span.trackValue. Rows carrying neither would silently yield
+    nameless chapters, so the probe must fire."""
+    from festival_organizer.tracklists import canary
+
+    html = (
+        '<html><body><h1><a href="/artist/x/">X</a> @ Y</h1>'
+        '<div class="tlpItem tlpTog">'
+        '<input id="tlp1_cue_seconds" value="145">'
+        '<div class="cue" onclick="toggleCue(event);">02:25</div>'
+        '<a href="/artist/x/">X</a>'
+        "</div></body></html>"
+    )
+    assert "track name source" in canary.check_tracklist_page(html)
+
+
+def test_tracklist_page_with_meta_name_passes_name_source_probe():
+    from festival_organizer.tracklists import canary
+
+    html = (
+        '<html><body><h1><a href="/artist/x/">X</a> @ Y</h1>'
+        '<div class="tlpItem tlpTog">'
+        '<input id="tlp1_cue_seconds" value="145">'
+        '<div class="cue" onclick="toggleCue(event);">02:25</div>'
+        '<a href="/artist/x/">X</a>'
+        '<meta itemprop="name" content="A - B">'
+        "</div></body></html>"
+    )
+    assert "track name source" not in canary.check_tracklist_page(html)
+
+
+def test_canary_name_source_probe_quiet_on_page_without_rows():
+    """Like the cue-display probe, this one keys off track rows so a
+    row-less page reports "tlpItem row" alone."""
+    from festival_organizer.tracklists import canary
+
+    html = (
+        '<html><body><h1><a href="/artist/x/">X</a> @ Y</h1>'
+        "<p>no track rows on this page</p></body></html>"
+    )
+    assert "track name source" not in canary.check_tracklist_page(html)

@@ -54,7 +54,6 @@ from festival_organizer.mkv_tags import (
 from festival_organizer.scanner import scan_folder
 from festival_organizer.tracklists.api import (
     AuthenticationError,
-    ExportError,
     RateLimitError,
     Track,
     TracklistError,
@@ -333,7 +332,6 @@ def run_identify(args, config: Config, console: Console | None = None) -> int:
                 TracklistError,
                 AuthenticationError,
                 RateLimitError,
-                ExportError,
             ) as e:
                 stat_key, vstatus, detail = "error", "error", f"{type(e).__name__}: {e}"
             except Exception as e:

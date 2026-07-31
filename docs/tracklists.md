@@ -27,6 +27,8 @@ Short answer: no, but the feature gap is significant.
 
 **With an account**, every row in the table is filled in. `identify` matches your recording against 1001Tracklists, and embeds per-chapter metadata plus album-level event context directly into the MKV.
 
+**Why the login is required:** 1001Tracklists only renders tracklist content, the actual tracks and timestamps, to signed-in users; a logged-out request for a tracklist page gets back a page shell with no track rows and no timing data at all, even though site search still works without an account. This is why `identify` needs a login: without a session there is no track data to read, not merely a reduced feature set. Current versions read the tracklist page directly instead of calling the 1001Tracklists export API, so CrateDigger never draws on the account's monthly tracklist-export allowance; the "Monthly export limit (30) exceeded" quota does not apply to CrateDigger runs.
+
 ## Account setup
 
 You need a free account at [1001Tracklists](https://www.1001tracklists.com/). Configure your credentials in one of two ways.
@@ -181,7 +183,7 @@ Each cache entry's actual lifetime jitters by ±20% around the configured base (
 You may see a line like this:
 
 ```
-WARNING  Scraping canary: tracklist page missing selectors ['tlpItem row', 'cue_seconds input'] at https://www.1001tracklists.com/tracklist/abc123/some-set/
+WARNING  Scraping canary: tracklist page missing selectors ['cue_seconds input', 'cue display div'] at https://www.1001tracklists.com/tracklist/abc123/some-set/
 ```
 
 This means 1001tracklists.com has changed its page structure in a way that the parser no longer finds the expected data. Enrichment for that page type is likely to be incomplete until CrateDigger is updated to match the new layout. Affected fields may include genres, event date, stage name, or DJ artwork, depending on which selectors are missing.

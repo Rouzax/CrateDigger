@@ -11,7 +11,6 @@ import requests
 
 from festival_organizer.tracklists.api import (
     AuthenticationError,
-    ExportError,
     TracklistError,
     TracklistSession,
     _extract_dj_slugs,
@@ -588,17 +587,20 @@ def test_search_does_not_fire_canary_on_zero_hits_with_skeleton(caplog):
 
 def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
     """When the tracklist page is missing must-exist markers, the canary
-    fires before the AJAX export path even runs."""
+    fires before any line synthesis even runs."""
     session = TracklistSession()
-    broken_html = "<html><body>no tlpItem, no h1, no genre meta</body></html>"
+    # The logout anchor keeps this a logged-in page, so the broken markup
+    # reaches the canary instead of tripping the logged-out session check.
+    broken_html = (
+        '<html><body>no tlpItem, no h1, no genre meta<a href="/logout.html"></a>'
+        "</body></html>"
+    )
     page_resp = MagicMock(
         text=broken_html, url="https://www.1001tracklists.com/tracklist/xxx/"
     )
-    ajax_resp = MagicMock(text='{"success": true, "data": ""}')
-    ajax_resp.json = lambda: {"success": True, "data": ""}
 
     def fake_request(method, url, **kwargs):
-        return ajax_resp if "export_data.php" in url else page_resp
+        return page_resp
 
     with patch.object(session, "_request", side_effect=fake_request):
         with patch.object(
@@ -618,6 +620,62 @@ def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
     assert "tracklist page" in msg
     assert "tlpItem row" in msg
     assert "https://www.1001tracklists.com/tracklist/xxx/" in msg
+
+
+# --- logged-out session detection ---
+
+
+_LOGOUT_MARKER = '<a href="/logout.html">logout</a>'
+
+
+def _page_with_body(body: str) -> str:
+    return (
+        "<html><head><title>Someone @ Somewhere | 1001Tracklists</title></head>"
+        f"<body>{body}</body></html>"
+    )
+
+
+_TRACK_ROW = (
+    '<div class="tlpItem tlpTog" id="tlp1_content">'
+    '<meta itemprop="name" content="Someone - Some Track">'
+    "</div>"
+)
+
+
+def _export_with_page(session, page_html: str):
+    page_resp = MagicMock(
+        text=page_html, url="https://www.1001tracklists.com/tracklist/xxx/"
+    )
+    with patch.object(session, "_request", return_value=page_resp):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
+            return session.export_tracklist("xxx")
+
+
+def test_export_tracklist_raises_when_no_rows_and_no_logout_marker():
+    """A rows-less page without a logout affordance means the session died;
+    identify must fail loudly instead of skipping the file with no chapters."""
+    session = TracklistSession()
+    with pytest.raises(AuthenticationError, match="not logged in"):
+        _export_with_page(session, _page_with_body("<p>please sign in</p>"))
+
+
+def test_export_tracklist_allows_rows_without_logout_marker():
+    """Rows prove the session works, so a missing logout affordance (markup
+    may change) must not be treated as a dead session."""
+    session = TracklistSession()
+    export = _export_with_page(session, _page_with_body(_TRACK_ROW))
+    assert export is not None
+
+
+def test_export_tracklist_allows_empty_tracklist_when_logged_in():
+    """A genuinely empty tracklist on a logged-in page keeps the existing
+    skip path: no rows, no error, no lines."""
+    session = TracklistSession()
+    export = _export_with_page(session, _page_with_body(_LOGOUT_MARKER))
+    assert export is not None
+    assert export.lines == []
 
 
 # --- _run_canary dedupe helper ---
@@ -995,33 +1053,15 @@ _ARMIN_MARLON_FIXTURE = (
 def _build_export_mock_responses(page_html: str):
     """Return a callable suitable for patching TracklistSession._request.
 
-    First call (GET page) returns a response carrying the fixture HTML.
-    Second call (POST export AJAX) returns a JSON-shaped response with a
-    minimal successful export payload.
+    export_tracklist only fetches the tracklist page now (lines are
+    synthesized from its rows), so every request yields the fixture HTML.
     """
     page_resp = MagicMock()
     page_resp.text = page_html
     page_resp.url = "https://www.1001tracklists.com/tracklist/abc123/armin-marlon-ultra-miami-2026.html"
 
-    ajax_resp = MagicMock()
-    ajax_resp.json.return_value = {
-        "success": True,
-        "data": "00:00 Track One\n01:00 Track Two\n",
-    }
-
-    responses = [page_resp, ajax_resp]
-    calls = {"i": 0}
-
     def _side_effect(method, url, *args, **kwargs):
-        i = calls["i"]
-        calls["i"] += 1
-        if i < len(responses):
-            return responses[i]
-        # Any additional calls (e.g. stray requests) get an empty response
-        extra = MagicMock()
-        extra.text = ""
-        extra.json.return_value = {"success": False, "message": "unexpected"}
-        return extra
+        return page_resp
 
     return _side_effect
 
@@ -1117,11 +1157,16 @@ def test_export_tracklist_no_callback_does_not_crash():
 
 def _build_minimal_page_html(h1_inner: str) -> str:
     """Wrap a bare h1 payload in a minimal HTML document that the exporter
-    can parse (the exporter only needs <title> and <h1>)."""
+    can parse (the exporter only needs <title> and <h1>).
+
+    The logout anchor marks the page as logged in; without it a row-less
+    page trips the logged-out session check before any h1 parsing.
+    """
     return (
         "<html><head><title>Fred again.. @ USB002 | 1001Tracklists</title>"
         "</head><body>"
         f'<h1 class="notranslate">{h1_inner}</h1>'
+        '<a href="/logout.html"></a>'
         "</body></html>"
     )
 
@@ -1298,7 +1343,7 @@ def test_export_tracklist_date_empty_when_h1_has_no_date():
     assert export.date == ""
 
 
-# --- Tier 2 DEBUG logging for retry loop and export JSON decode ---
+# --- Tier 2 DEBUG logging for the retry loop ---
 
 
 def test_request_retry_429_logs_debug_with_reason_and_wait(caplog):
@@ -1378,36 +1423,3 @@ def test_request_retry_network_exception_logs_debug_with_exc_and_wait(caplog):
     assert "session.network_error:" in joined
     assert "conn reset" in joined
     assert "retry=1/3" in joined
-
-
-def test_export_tracklist_logs_debug_on_invalid_json(caplog):
-    """ExportError on malformed JSON response includes a DEBUG trail before raise."""
-    session = TracklistSession()
-
-    page_resp = MagicMock()
-    page_resp.url = "https://www.1001tracklists.com/tracklist/abc123/"
-    page_resp.text = "<html><title>Test</title></html>"
-
-    export_resp = MagicMock()
-    export_resp.url = "https://www.1001tracklists.com/ajax/export_data.php"
-    export_resp.json.side_effect = ValueError("malformed")
-
-    with patch.object(session, "_request", side_effect=[page_resp, export_resp]):
-        with patch.object(session, "_run_canary"):
-            with caplog.at_level(
-                logging.DEBUG, logger="festival_organizer.tracklists.api"
-            ):
-                with pytest.raises(ExportError, match="Invalid JSON"):
-                    session.export_tracklist("abc123")
-
-    joined = "\n".join(r.message for r in caplog.records)
-    assert "identify.export.decode_failed:" in joined
-    assert "malformed" in joined
-    # The log must identify the actual failing request (the AJAX export
-    # endpoint + tracklist id), NOT the incoming tracklist page URL. The
-    # tracklist page HTML was already parsed successfully before this
-    # point; attributing the JSON decode failure to the page would mislead
-    # anyone reading the log.
-    assert "abc123" in joined
-    assert "export_data.php" in joined
-    assert "tracklist/abc123/" not in joined
