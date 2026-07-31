@@ -1538,9 +1538,13 @@ same folder as your config:</p>
 </div>
 </div>
 </div>
-<p>If you have an existing <code>festivals.json</code> from a previous version, you do not need to
-rename it right away. CrateDigger reads it automatically when <code>places.json</code> is absent
-and prints a one-time deprecation notice.</p>
+<p>If you have an existing <code>festivals.json</code> from a previous version and have not already
+created a <code>places.json</code> there, you do not need to rename it: on the next run CrateDigger
+copies it to <code>places.json</code> once, silently, and leaves the old file in place for you to
+delete afterwards. If a <code>places.json</code> already exists (because you just copied the example
+file, for example), no copy happens and the old <code>festivals.json</code> is ignored, so merge
+anything you still need out of it yourself. Only this shared data folder is migrated, so
+a library-local <code>.cratedigger/festivals.json</code> needs a manual rename.</p>
 <p>See <a href="../places/">Places</a> for how to add entries and what the file format looks like.</p>
 <h2 id="preparing-your-recordings">Preparing your recordings</h2>
 <p>CrateDigger works best with MKV files that have an embedded thumbnail. If you are

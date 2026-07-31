@@ -1400,7 +1400,7 @@
 </tr>
 </tbody>
 </table>
-<p>The gradient color comes from the festival's <code>color</code> field in <a href="festivals.md"><code>festivals.json</code></a> if set, otherwise from the dominant color across the folder's thumb images.</p>
+<p>The gradient color comes from the place's <code>color</code> field in <a href="../places/"><code>places.json</code></a> if set (an edition's own <code>color</code> wins over the place-level one), otherwise from the dominant color across the folder's thumb images.</p>
 <hr />
 <h2 id="nfo-files">NFO files</h2>
 <p>CrateDigger writes Kodi-compatible musicvideo NFO files. Jellyfin reads the same format. Plex can read them via musicvideo-compatible agents.</p>
@@ -1494,12 +1494,12 @@
 <p>Without a 1001Tracklists account, the NFO still populates from filename parsing and embedded tags: title, primary artist, album, year, and fallback genre. The multi-artist list, 1001Tracklists-sourced genres, stage, set title, and any field the filename parser cannot infer are omitted.</p>
 <hr />
 <h2 id="festival-logos">Festival logos</h2>
-<p>For festival-style folder posters, CrateDigger looks for a curated logo image to place as the centered mark. The filename convention is <code>logo.&lt;ext&gt;</code> inside a folder named after the canonical festival display name (for example <code>Tomorrowland</code>, <code>Tomorrowland Winter</code>, <code>EDC Las Vegas</code>).</p>
+<p>For festival-style folder posters, CrateDigger looks for a curated logo image to place as the centered mark. The filename convention is <code>logo.&lt;ext&gt;</code> inside a folder named after the canonical place display name (for example <code>Tomorrowland</code>, <code>Tomorrowland Winter</code>, <code>EDC Las Vegas</code>). An edition gets its own folder next to the canonical one, never a subfolder inside it.</p>
 <p><strong>Supported formats:</strong> JPG, PNG, WebP. SVG, GIF, BMP, and TIFF are not supported.</p>
 <h3 id="where-to-place-logo-files">Where to place logo files</h3>
 <p>CrateDigger searches two locations, library-local first:</p>
 <ol>
-<li><code>{library}/.cratedigger/festivals/{FestivalName}/logo.&lt;ext&gt;</code>: travels with the library; takes precedence when both locations have a file</li>
+<li><code>{library}/.cratedigger/places/{PlaceName}/logo.&lt;ext&gt;</code>: travels with the library; takes precedence when both locations have a file</li>
 <li>User-level, shared across all your libraries:</li>
 </ol>
 <table>
@@ -1512,15 +1512,15 @@
 <tbody>
 <tr>
 <td>Linux</td>
-<td><code>~/CrateDigger/festivals/{FestivalName}/logo.&lt;ext&gt;</code></td>
+<td><code>~/CrateDigger/places/{PlaceName}/logo.&lt;ext&gt;</code></td>
 </tr>
 <tr>
 <td>macOS</td>
-<td><code>~/CrateDigger/festivals/{FestivalName}/logo.&lt;ext&gt;</code></td>
+<td><code>~/CrateDigger/places/{PlaceName}/logo.&lt;ext&gt;</code></td>
 </tr>
 <tr>
 <td>Windows</td>
-<td><code>Documents\CrateDigger\festivals\{FestivalName}\logo.&lt;ext&gt;</code></td>
+<td><code>Documents\CrateDigger\places\{PlaceName}\logo.&lt;ext&gt;</code></td>
 </tr>
 </tbody>
 </table>

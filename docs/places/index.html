@@ -1543,16 +1543,25 @@
 <h2 id="curated-assets-logos-and-artwork">Curated assets: logos and artwork</h2>
 <p>CrateDigger looks for logo and background artwork in a per-place directory inside your library:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>{library}/.cratedigger/places/&lt;canonical-name&gt;/logo.png
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>{library}/.cratedigger/places/&lt;canonical-name&gt;/&lt;edition&gt;/logo.png
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>{library}/.cratedigger/places/&lt;canonical-name&gt; &lt;edition&gt;/logo.png
 </code></pre></div>
-<p>Where <code>&lt;canonical-name&gt;</code> is the top-level key from <code>places.json</code> (for example, <code>Tomorrowland</code> or <code>Printworks</code>) and <code>&lt;edition&gt;</code> is the edition name when applicable (for example, <code>Winter</code> or <code>Las Vegas</code>).</p>
+<p>Where <code>&lt;canonical-name&gt;</code> is the top-level key from <code>places.json</code> (for example, <code>Tomorrowland</code> or <code>Printworks</code>) and <code>&lt;edition&gt;</code> is the edition name when applicable (for example, <code>Winter</code> or <code>Las Vegas</code>). An edition logo lives in its own folder named after the edition display name, <code>Tomorrowland Winter</code> or <code>EDC Las Vegas</code>, alongside the canonical folder rather than nested inside it. CrateDigger looks for the edition folder first and falls back to the canonical name when it finds nothing.</p>
 <p>Place the logo file in the matching directory, and CrateDigger will use it instead of generating a gradient poster. Run <a href="../commands/audit-logos/"><code>audit-logos</code></a> to see which entries in your library have curated logos and which do not.</p>
 <h2 id="backward-compatibility-existing-festivalsjson-files">Backward compatibility: existing <code>festivals.json</code> files</h2>
-<p>If you have an existing <code>festivals.json</code>, you do not need to do anything for 0.15.0. The system reads <code>festivals.json</code> when <code>places.json</code> is absent, and logs a single deprecation notice per process to tell you the new filename. Your festival entries continue to work exactly as before.</p>
-<p>When you are ready to migrate, rename the file:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>mv<span class="w"> </span>~/.cratedigger/festivals.json<span class="w"> </span>~/.cratedigger/places.json
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="c1"># or for a library-local file:</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>mv<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/festivals.json<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/places.json
+<p>Nothing reads <code>festivals.json</code> when CrateDigger looks up a place. Instead, a one-time copy-forward runs on startup so an existing file keeps working:</p>
+<ul>
+<li>If your shared data folder (<code>~/CrateDigger/</code> on Linux and macOS, <code>Documents\CrateDigger\</code> on Windows) holds a <code>festivals.json</code> and no <code>places.json</code>, CrateDigger copies it to <code>places.json</code>. The copy runs before logging starts, so it prints nothing; the new file appearing is how you know it happened.</li>
+<li>The same happens for curated logos: each <code>festivals/&lt;Name&gt;/</code> subfolder in that data folder is copied to <code>places/&lt;Name&gt;/</code>.</li>
+<li>The copy runs once per process, never overwrites an existing target, and leaves the original files untouched, so it is safe to repeat and safe to roll back to an older release.</li>
+</ul>
+<p>After the first run you can delete the old <code>festivals.json</code> and the old <code>festivals/</code> logo folder. Check that <code>places.json</code> exists first:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>ls<span class="w"> </span>~/CrateDigger/places.json
+</code></pre></div>
+<p>Two locations are <strong>not</strong> migrated for you, because the copy-forward only covers the shared data folder:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># library-local places file</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>mv<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/festivals.json<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/places.json
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="c1"># library-local curated logos</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>mv<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/festivals<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/places
 </code></pre></div>
 <h3 id="renamed-in-0150-old-name-to-new-name">Renamed in 0.15.0: old name to new name</h3>
 <table>
@@ -1596,10 +1605,11 @@
 </tr>
 </tbody>
 </table>
-<p>Two of these rows need extra care, because the old name does not behave like the new one:</p>
+<p>Only the first and last rows are copied forward automatically, and only in the shared data folder as described above. The other four need you to make the change:</p>
 <ul>
 <li><strong><code>{festival}</code> no longer works.</strong> The token was removed in 0.15.0, not deprecated. A template that still contains <code>{festival}</code> renders the fallback text "Unknown" where the place name should be, so update every custom template to <code>{place}</code>.</li>
 <li><strong>The old layout names work only as <code>default_layout</code> values.</strong> <code>festival_flat</code> and <code>festival_nested</code> are mapped silently to <code>place_flat</code> and <code>place_nested</code> when read from <code>default_layout</code> in <code>config.toml</code>. Nothing else accepts them: a custom <code>[layouts.festival_flat]</code> or <code>[layouts.festival_nested]</code> section is ignored after that mapping, and the <code>--layout</code> command-line flag accepts only <code>artist_flat</code>, <code>place_flat</code>, <code>artist_nested</code>, and <code>place_nested</code>.</li>
+<li><strong><code>festival_background_priority</code> and <code>unknown_festival</code> are silent no-ops.</strong> Neither key is read any more. The value is not copied into its replacement and nothing is logged, so a config that still sets the old key falls back to the default <code>place_background_priority</code> chain or the default <code>unknown_place</code> text. Rename both keys in <code>config.toml</code>.</li>
 </ul>
 <p>No old name announces itself with a deprecation warning at runtime, so migrate by checking your config file, templates, and curated asset folders directly rather than by watching the logs.</p>
 <h2 id="related">Related</h2>
