@@ -100,6 +100,16 @@ class Track:
         breakdown); these are metadata contributors, never their own chapter
     group_id: the trRow<N> number shared by a mashup main and its tlpSubTog
         children, used to link sub-components to their parent; -1 when absent
+    qualifier: page-only annotation spans appended to the export text:
+        span.trackStatus ("(ID Remix)") and span.trackEditData
+        ("(Intro Edit)", "(Bad Girls)"), joined in document order
+    cue_unset: True when the row's visible cue display div is empty, i.e.
+        nobody has cued this row yet. The hidden cue_seconds input reads
+        "0" in that case, indistinguishable from a genuine 00:00 cue,
+        so the display div is the discriminator.
+    label_full: every span.trackLabel on the row joined with "/", as the
+        export renders multi-label rows. `label` keeps first-span-only
+        semantics because CRATEDIGGER_TRACK_LABEL is written from it.
     """
 
     start_ms: int
@@ -114,6 +124,9 @@ class Track:
     is_overlay: bool = False
     is_subcomponent: bool = False
     group_id: int = -1
+    qualifier: str = ""
+    cue_unset: bool = False
+    label_full: str = ""
 
 
 @dataclass
@@ -211,8 +224,6 @@ def _parse_tracks(html) -> list["Track"]:
     Returns Track objects in page order with start_ms taken from the row's
     cue_seconds input (float seconds * 1000).
     """
-    from bs4 import BeautifulSoup
-
     from festival_organizer.normalization import (
         _artist_key,
         fix_mojibake,
@@ -387,25 +398,29 @@ def _parse_tracks(html) -> list["Track"]:
         # titles can carry their own " - " (subtitles, remix suffixes), so the
         # first separator is the artist/title boundary, not the last.
         _, title = split_artist_title(raw_text)
-        # Label: the first <span class="trackLabel">LABEL<a>...</a></span> in
-        # the row. The label text is the span's content before the nested
-        # icon-only <a>. Some rows omit the label entirely.
-        label = ""
-        label_span = row.select_one("span.trackLabel")
-        if label_span is not None:
-            # Clone and strip nested <a> icons so only the plain label text remains.
-            label_copy = BeautifulSoup(str(label_span), "html.parser").select_one(
-                "span.trackLabel"
+        # Label: `label` keeps the first <span class="trackLabel"> only (it
+        # feeds CRATEDIGGER_TRACK_LABEL); `label_full` joins every label span
+        # the way the export renders multi-label rows. Some rows omit labels.
+        label_texts = _label_span_texts(row)
+        label = label_texts[0] if label_texts else ""
+        label_full = "/".join(label_texts)
+        # Export-only annotations: trackStatus carries un-ID remix status
+        # ("(ID Remix)"), trackEditData carries editor notes ("(Intro
+        # Edit)", "(Bad Girls)"). Neither reaches meta itemprop=name, but
+        # the export appends both to the visible label text.
+        qualifier = fix_mojibake(
+            " ".join(
+                s.get_text(" ", strip=True)
+                for s in row.select("span.trackStatus, span.trackEditData")
+                if s.get_text(strip=True)
             )
-            if label_copy is not None:
-                for sub in label_copy.select("a"):
-                    sub.decompose()
-                # No separator between text nodes: when 1001TL nests an icon
-                # <a> inside the label span (e.g. the external-link chevron),
-                # using a space separator inserts a stray space where the <a>
-                # was, producing 'SHEFFIELD TUNES (KONTOR )'. Concatenating
-                # without a separator gives us 'SHEFFIELD TUNES (KONTOR)'.
-                label = fix_mojibake(label_copy.get_text(strip=True))
+        )
+        # cue_seconds defaults to "0" when nobody cued the row; the empty
+        # visible display div is the only uncued signal. Fail open (False)
+        # when the div is missing so markup drift keeps rows instead of
+        # dropping them; the canary flags the drift.
+        cue_display = row.select_one("div[onclick*='toggleCue']")
+        cue_unset = cue_display is not None and not cue_display.get_text(strip=True)
         tracks.append(
             Track(
                 start_ms=start_ms,
@@ -420,9 +435,36 @@ def _parse_tracks(html) -> list["Track"]:
                 is_overlay="con" in classes,
                 is_subcomponent="tlpSubTog" in classes,
                 group_id=group_id,
+                qualifier=qualifier,
+                cue_unset=cue_unset,
+                label_full=label_full,
             )
         )
     return tracks
+
+
+def _label_span_texts(row) -> list[str]:
+    """Plain text of every span.trackLabel on a row, in document order.
+
+    Nested icon <a> elements are stripped and text nodes are concatenated
+    without a separator: a space separator would insert a stray gap where
+    the icon anchor sat ('KONTOR )' instead of 'KONTOR)').
+    """
+    from bs4 import BeautifulSoup
+
+    from festival_organizer.normalization import fix_mojibake
+
+    texts: list[str] = []
+    for span in row.select("span.trackLabel"):
+        copy = BeautifulSoup(str(span), "html.parser").select_one("span.trackLabel")
+        if copy is None:
+            continue
+        for sub in copy.select("a"):
+            sub.decompose()
+        text = fix_mojibake(copy.get_text(strip=True))
+        if text:
+            texts.append(text)
+    return texts
 
 
 def _parse_players(html: str) -> list["PlayerInfo"]:

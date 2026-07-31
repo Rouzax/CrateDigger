@@ -701,3 +701,77 @@ def test_track_row_artists_from_new_2segment_hrefs():
     tracks = _parse_tracks(html)
     assert tracks[0].artist_slugs == ["afrojack", "eva-simons"]
     assert tracks[0].artist_names == ["AFROJACK", "Eva Simons"]
+
+
+def _row(inner: str, cue: str = "145", cue_display: str = "02:25") -> str:
+    """Minimal real-shaped tracklist page with one main row."""
+    return (
+        "<html><body><div>"
+        '<div class="tlpTog bItm tlpItem trRow1">'
+        f'<input id="tlp1_cue_seconds" value="{cue}">'
+        f'<div class="cue noWrap action mt5" onclick="toggleCue(event);">{cue_display}</div>'
+        f"{inner}"
+        "</div></div></body></html>"
+    )
+
+
+def test_parse_tracks_captures_trackstatus_and_trackeditdata_qualifiers():
+    html = _row(
+        '<meta itemprop="name" content="Afrojack - Pacha On Acid">'
+        '<span class="italic redTxt trackStatus spL notranslate"> (ID Remix) </span>'
+        '<span class="italic trackEditData spL">(Bad Girls)</span>'
+    )
+    tracks = _parse_tracks(html)
+    assert len(tracks) == 1
+    assert tracks[0].raw_text == "Afrojack - Pacha On Acid"
+    assert tracks[0].qualifier == "(ID Remix) (Bad Girls)"
+
+
+def test_parse_tracks_qualifier_empty_when_no_spans():
+    html = _row('<meta itemprop="name" content="A - B">')
+    tracks = _parse_tracks(html)
+    assert tracks[0].qualifier == ""
+
+
+def test_parse_tracks_cue_unset_when_display_empty():
+    html = _row('<meta itemprop="name" content="A - B">', cue="0", cue_display="")
+    tracks = _parse_tracks(html)
+    assert tracks[0].cue_unset is True
+    assert tracks[0].start_ms == 0
+
+
+def test_parse_tracks_cue_set_when_display_populated():
+    html = _row('<meta itemprop="name" content="A - B">', cue="0", cue_display="00:00")
+    tracks = _parse_tracks(html)
+    assert tracks[0].cue_unset is False
+
+
+def test_parse_tracks_cue_not_unset_when_display_div_missing():
+    # Fail-open: markup drift removing the display div must not drop rows.
+    html = (
+        '<html><body><div><div class="tlpTog bItm tlpItem trRow1">'
+        '<input id="tlp1_cue_seconds" value="145">'
+        '<meta itemprop="name" content="A - B">'
+        "</div></div></body></html>"
+    )
+    tracks = _parse_tracks(html)
+    assert tracks[0].cue_unset is False
+
+
+def test_parse_tracks_label_full_joins_all_label_spans():
+    html = _row(
+        '<meta itemprop="name" content="A - B">'
+        '<span class="trackLabel noWrap blueTxt">STMPD'
+        '<a href="/label/x/stmpd/index.html"><i class="fa"></i></a></span>'
+        '<span class="trackLabel noWrap blueTxt">BIG BEAT (ATLANTIC'
+        '<a href="/label/y/bigbeat/index.html"><i class="fa"></i></a>)</span>'
+    )
+    tracks = _parse_tracks(html)
+    assert tracks[0].label == "STMPD"  # unchanged single-label semantics
+    assert tracks[0].label_full == "STMPD/BIG BEAT (ATLANTIC)"
+
+
+def test_parse_tracks_label_full_empty_without_labels():
+    html = _row('<meta itemprop="name" content="A - B">')
+    tracks = _parse_tracks(html)
+    assert tracks[0].label_full == ""
