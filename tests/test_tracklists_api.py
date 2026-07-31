@@ -589,7 +589,12 @@ def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
     """When the tracklist page is missing must-exist markers, the canary
     fires before any line synthesis even runs."""
     session = TracklistSession()
-    broken_html = "<html><body>no tlpItem, no h1, no genre meta</body></html>"
+    # The logout anchor keeps this a logged-in page, so the broken markup
+    # reaches the canary instead of tripping the logged-out session check.
+    broken_html = (
+        '<html><body>no tlpItem, no h1, no genre meta<a href="/logout.html"></a>'
+        "</body></html>"
+    )
     page_resp = MagicMock(
         text=broken_html, url="https://www.1001tracklists.com/tracklist/xxx/"
     )
@@ -615,6 +620,62 @@ def test_export_tracklist_fires_canary_on_structurally_broken_page(caplog):
     assert "tracklist page" in msg
     assert "tlpItem row" in msg
     assert "https://www.1001tracklists.com/tracklist/xxx/" in msg
+
+
+# --- logged-out session detection ---
+
+
+_LOGOUT_MARKER = '<a href="/logout.html">logout</a>'
+
+
+def _page_with_body(body: str) -> str:
+    return (
+        "<html><head><title>Someone @ Somewhere | 1001Tracklists</title></head>"
+        f"<body>{body}</body></html>"
+    )
+
+
+_TRACK_ROW = (
+    '<div class="tlpItem tlpTog" id="tlp1_content">'
+    '<meta itemprop="name" content="Someone - Some Track">'
+    "</div>"
+)
+
+
+def _export_with_page(session, page_html: str):
+    page_resp = MagicMock(
+        text=page_html, url="https://www.1001tracklists.com/tracklist/xxx/"
+    )
+    with patch.object(session, "_request", return_value=page_resp):
+        with patch.object(
+            session, "_fetch_dj_profile", return_value={"artwork_url": ""}
+        ):
+            return session.export_tracklist("xxx")
+
+
+def test_export_tracklist_raises_when_no_rows_and_no_logout_marker():
+    """A rows-less page without a logout affordance means the session died;
+    identify must fail loudly instead of skipping the file with no chapters."""
+    session = TracklistSession()
+    with pytest.raises(AuthenticationError, match="not logged in"):
+        _export_with_page(session, _page_with_body("<p>please sign in</p>"))
+
+
+def test_export_tracklist_allows_rows_without_logout_marker():
+    """Rows prove the session works, so a missing logout affordance (markup
+    may change) must not be treated as a dead session."""
+    session = TracklistSession()
+    export = _export_with_page(session, _page_with_body(_TRACK_ROW))
+    assert export is not None
+
+
+def test_export_tracklist_allows_empty_tracklist_when_logged_in():
+    """A genuinely empty tracklist on a logged-in page keeps the existing
+    skip path: no rows, no error, no lines."""
+    session = TracklistSession()
+    export = _export_with_page(session, _page_with_body(_LOGOUT_MARKER))
+    assert export is not None
+    assert export.lines == []
 
 
 # --- _run_canary dedupe helper ---
@@ -1096,11 +1157,16 @@ def test_export_tracklist_no_callback_does_not_crash():
 
 def _build_minimal_page_html(h1_inner: str) -> str:
     """Wrap a bare h1 payload in a minimal HTML document that the exporter
-    can parse (the exporter only needs <title> and <h1>)."""
+    can parse (the exporter only needs <title> and <h1>).
+
+    The logout anchor marks the page as logged in; without it a row-less
+    page trips the logged-out session check before any h1 parsing.
+    """
     return (
         "<html><head><title>Fred again.. @ USB002 | 1001Tracklists</title>"
         "</head><body>"
         f'<h1 class="notranslate">{h1_inner}</h1>'
+        '<a href="/logout.html"></a>'
         "</body></html>"
     )
 

@@ -721,6 +721,20 @@ class TracklistSession:
         # Parse the page once; all four tracklist-page parsers share this soup.
         page_soup = _to_soup(page_resp.text)
 
+        # A logged-out session gets a page shell with no track rows at all
+        # (1001TL only renders tracklist content to signed-in users). Every
+        # logged-in page carries a logout affordance; a rows-less page
+        # without one means the session died, so fail loudly instead of
+        # skipping file after file with empty chapters.
+        if (
+            "logout.html" not in page_resp.text
+            and page_soup.select_one("div.tlpItem.tlpTog") is None
+        ):
+            raise AuthenticationError(
+                "1001Tracklists session is not logged in; tracklist pages "
+                "render without track data"
+            )
+
         # Structural canary: flag up-front if 1001TL changed the markup
         # in ways that would silently drain data from the parsers below.
         self._run_canary(

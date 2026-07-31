@@ -69,6 +69,15 @@ def check_tracklist_page(html: str) -> list[str]:
     # row-less page reports "tlpItem row" alone instead of two labels.
     if has_rows and soup.select_one("div.tlpItem div[onclick*='toggleCue']") is None:
         missing.append("cue display div")
+    # _parse_tracks names a track from meta itemprop=name, falling back to
+    # span.trackValue. If neither survives a redesign every chapter would
+    # come out nameless. Gated on rows for the same reason as above.
+    if (
+        has_rows
+        and soup.select_one("div.tlpItem meta[itemprop='name']") is None
+        and soup.select_one("div.tlpItem span.trackValue") is None
+    ):
+        missing.append("track name source")
 
     h1_el = soup.find("h1")
     if h1_el is None:

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `identify` now derives tracklist lines from the tracklist page itself instead of calling the 1001Tracklists export API. 1001Tracklists introduced a 30-exports-per-month account limit in July 2026 that a single library re-verification run could exhaust; identify now consumes zero exports while producing identical chapters, including the "(ID Remix)"-style annotations and record-label suffixes the export carried. Stored-URL re-verification of every file remains safe to run on a schedule.
 - `CRATEDIGGER_TRACK_LABEL` values on rows whose label span carries a parenthesized sub-label now keep the space in front of it (`ARMIND (ARMADA)` instead of the previous `ARMIND(ARMADA)`); already-tagged files re-tag once on their next `identify` or `enrich` pass.
 - A tracklist page with no parseable rows now reports the file as skipped (`no chapters parsed`) instead of an error; the structural canary WARNING remains the loud signal for that page shape.
+- `identify` now stops with a session error when 1001Tracklists serves a logged-out page shell (a page with no track rows and no logout link), because previously those files were silently skipped with empty chapters.
 
 ### Fixed
 
