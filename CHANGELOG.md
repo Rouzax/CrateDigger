@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- New `{month}` and `{day}` filename/folder template tokens, zero-padded and sliced from the event date. They stay empty when only the year is known, so the optional-token form degrades gracefully: `{year}{-month}{-day}` renders `2024-06-15 - ...` for a fully dated set and `2024 - ...` otherwise. Any order or separator works (`{day-}{month-}{year}`, `{year}{.month}{.day}`).
+
+### Fixed
+
+- Template and layout documentation matches the code again. The docs claimed the `{festival}` token still worked as a deprecated alias; it was removed in 0.15.0 and renders "Unknown". The token table now documents `{place}` (plus the new date tokens), the default-template tables show the shipped `{place}` defaults, the `--layout` flag docs list the accepted `place_flat`/`place_nested` names, and the deprecated-layout-name notes describe the actual silent mapping behavior.
+
 ## [0.33.0] - 2026-07-29
 
 ### Fixed
