@@ -27,7 +27,7 @@ recognized media files and processes each one.
 | Option | Short | Default | Description |
 |--------|-------|---------|-------------|
 | `--output <path>` | `-o` | (see below) | Destination library folder |
-| `--layout <name>` | | config default | Folder layout: `artist_flat`, `festival_flat`, `artist_nested`, `festival_nested` |
+| `--layout <name>` | | config default | Folder layout: `artist_flat`, `place_flat`, `artist_nested`, `place_nested` |
 | `--move` | | off | Move files instead of copying when importing from a separate folder. Ignored for in-place operations. |
 | `--dry-run` | | off | Preview what would happen without changing any files |
 | `--enrich` | | off | Run all enrichment operations immediately after organizing |
@@ -222,10 +222,10 @@ Library/
     2023 - Armin van Buuren - ASOT.mkv
 ```
 
-### festival_flat
+### place_flat
 
-Festival sets are grouped by festival name. Concert recordings go into an artist folder.
-Good when you primarily browse by festival.
+Festival sets are grouped by place: the canonical festival, venue, or location name.
+Concert recordings go into an artist folder. Good when you primarily browse by event.
 
 ```
 Library/
@@ -254,9 +254,9 @@ Library/
         Coldplay - Live at Wembley (2023).mkv
 ```
 
-### festival_nested
+### place_nested
 
-Deep hierarchy: festival, then year, then artist. Good for large libraries where you
+Deep hierarchy: place, then year, then artist. Good for large libraries where you
 browse by event and want all artists at a given festival in one place.
 
 ```
@@ -321,7 +321,7 @@ cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/ --dry-run
 **Import with a specific layout:**
 
 ```bash
-cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/ --layout festival_nested
+cratedigger organize ~/Downloads/sets/ --output ~/Music/Library/ --layout place_nested
 ```
 
 **Organize and enrich in one pass:**
@@ -373,10 +373,15 @@ used (e.g., "Unknown Artist").
 inside the braces is included only when the field has a value. If the field is empty, the
 entire token is removed.
 
+Field names are recognized by substring inside the braces, so literal decoration text
+must not contain a field name: a token like `{Saturday}` parses as the `day` field with a
+`Satur` prefix, not as a literal.
+
 ```
-{festival}{ edition}         -> "Tomorrowland Winter"  or  "Tomorrowland"
-{artist}{ - set_title}       -> "Tiesto - Closing Set" or  "Tiesto"
-{year} - {artist}{ [stage]}  -> "2024 - Tiesto [Mainstage]" or "2024 - Tiesto"
+{place}{ edition}                -> "Tomorrowland Winter"  or  "Tomorrowland"
+{artist}{ - set_title}           -> "Tiesto - Closing Set" or  "Tiesto"
+{year} - {artist}{ [stage]}      -> "2024 - Tiesto [Mainstage]" or "2024 - Tiesto"
+{year}{-month}{-day} - {artist}  -> "2024-06-15 - Tiesto" or "2024 - Tiesto"
 ```
 
 ### Available fields
@@ -384,13 +389,20 @@ entire token is removed.
 | Field | Description |
 |-------|-------------|
 | `artist` | Artist name (alias-resolved; for B2B sets, the first artist) |
-| `festival` | Canonical festival name |
+| `place` | Canonical name of the associated place: festival, venue, club, or free-text location |
 | `edition` | Festival edition (e.g., "Winter", "SoCal") |
 | `year` | Event year |
-| `date` | Full event date |
+| `date` | Full event date in ISO `yyyy-mm-dd` form; empty when only the year is known |
+| `month` | Zero-padded event month (`06`), sliced from `date`; empty when only the year is known |
+| `day` | Zero-padded event day (`15`), sliced from `date`; empty when only the year is known |
 | `stage` | Stage name (from 1001Tracklists metadata if identified) |
 | `set_title` | Set title or description. For 1001Tracklists-identified sets at multi-weekend festivals (Tomorrowland, Coachella), this is the weekend designator (`WE1`, `WE2`) derived from the tracklist metadata, so both weekends of the same artist and stage get distinct filenames. For unidentified files it is salvaged from the filename tail. |
 | `title` | Full title (used mainly for concert recordings) |
+
+For date-based naming, prefer optional tokens so files with only a year still get a
+clean name: `{year}{-month}{-day}` renders `2024-06-15` when the full date is known
+and `2024` when it is not. A required `{date}` token renders the `unknown_date`
+fallback (default "Unknown") for year-only files.
 
 ### Default templates
 
@@ -399,15 +411,15 @@ entire token is removed.
 | Layout | Festival set | Concert |
 |--------|-------------|---------|
 | artist_flat | `{artist}` | `{artist}` |
-| festival_flat | `{festival}{ edition}` | `{artist}` |
-| artist_nested | `{artist}/{festival}{ edition}/{year}` | `{artist}/{year} - {title}` |
-| festival_nested | `{festival}{ edition}/{year}/{artist}` | `{artist}/{year} - {title}` |
+| place_flat | `{place}{ edition}` | `{artist}` |
+| artist_nested | `{artist}/{place}{ edition}/{year}` | `{artist}/{year} - {title}` |
+| place_nested | `{place}{ edition}/{year}/{artist}` | `{artist}/{year} - {title}` |
 
 **Filename templates:**
 
 | Content type | Template |
 |-------------|----------|
-| festival_set | `{year} - {artist} - {festival}{ edition}{ [stage]}{ - set_title}` |
+| festival_set | `{year} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}` |
 | concert_film | `{artist} - {title}{ (year)}` |
 
 Templates are configurable in your [config](../configuration.md#filename-templates).
