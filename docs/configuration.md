@@ -78,7 +78,7 @@ Or, if you have cloned the repository:
 default_layout = "artist_flat"
 ```
 
-The folder layout used by `organize` when `--layout` is not specified. Available values: `artist_flat`, `place_flat`, `artist_nested`, `place_nested`. The older names `festival_flat` and `festival_nested` are deprecated aliases for `place_flat` and `place_nested`; they continue to work until 1.0.0 but log a one-shot deprecation warning. See [Organize: layouts](commands/organize.md#layouts) for what each looks like.
+The folder layout used by `organize` when `--layout` is not specified. Available values: `artist_flat`, `place_flat`, `artist_nested`, `place_nested`. The older names `festival_flat` and `festival_nested` are silently mapped to `place_flat` and `place_nested` when read from this key; the `--layout` command-line flag accepts only the current names. See [Organize: layouts](commands/organize.md#layouts) for what each looks like.
 
 ### Layouts
 
@@ -102,7 +102,7 @@ concert_film = "{artist}/{year} - {title}"
 
 Folder path templates for each layout and content type. The `{place}` token resolves to the canonical name of the festival, club, or venue associated with the set. See [Organize: template syntax](commands/organize.md#filename-template-syntax) for how optional tokens work.
 
-**Deprecated layout names:** `festival_flat` and `festival_nested` are aliases for `place_flat` and `place_nested`. They resolve to the same layouts and use the same templates. If you have customised a `[layouts.festival_flat]` or `[layouts.festival_nested]` section in your config, CrateDigger uses your custom section unchanged and logs a one-shot deprecation warning. Support for the deprecated names will be removed in 1.0.0.
+**Deprecated layout names:** a `default_layout` value of `festival_flat` or `festival_nested` is silently mapped to `place_flat` or `place_nested` at load time. Custom `[layouts.festival_flat]` or `[layouts.festival_nested]` sections are NOT consulted after that mapping; if you carry one in your config, rename the section to the current layout name or your customisations are ignored.
 
 ### Filename templates
 
@@ -114,7 +114,16 @@ concert_film = "{artist} - {title}{ (year)}"
 
 Templates for generated filenames. The original file extension is preserved automatically. The `{ - place}` token is optional: it is included only when a place name is available. See [Organize: template syntax](commands/organize.md#filename-template-syntax) for field names and optional token syntax.
 
-**Template tokens:** `{place}` is the primary routing token for the associated festival, club, or venue. The older `{festival}` token continues to work as a deprecated alias rendering the same value, and will be removed in 1.0.0.
+**Template tokens:** `{place}` is the routing token for the associated festival, club, or venue. The older `{festival}` token was removed in 0.15.0: templates that still contain it render the fallback text "Unknown" in its place, so update any custom template to `{place}`.
+
+**Date tokens:** `{date}` renders the full event date in ISO `yyyy-mm-dd` form when known. `{month}` and `{day}` render the zero-padded components sliced from that date and stay empty when only the year is known, so the optional-token form degrades gracefully:
+
+```toml
+[filename_templates]
+festival_set = "{year}{-month}{-day} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}"
+```
+
+renders `2024-06-15 - Tiesto - Tomorrowland [Mainstage]` for a fully dated set and `2024 - Tiesto - Tomorrowland [Mainstage]` when only the year is known. Any order or separator works (`{day-}{month-}{year}`, `{year}{.month}{.day}`). See [Organize: template syntax](commands/organize.md#filename-template-syntax) for the full field list.
 
 ### Content type rules
 

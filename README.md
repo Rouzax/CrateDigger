@@ -48,7 +48,7 @@ Match recordings against 1001Tracklists to retrieve full tracklist metadata. Cha
 
 ### Organize
 
-Sort your library using four folder layouts: `artist_flat`, `place_flat`, `artist_nested`, and `place_nested`. Sonarr-style collapsing tokens let you group events under a single folder (for example, grouping all Ultra stages together). Files can be copied, moved, or renamed in place. The older names `festival_flat` and `festival_nested` continue to work as deprecated aliases.
+Sort your library using four folder layouts: `artist_flat`, `place_flat`, `artist_nested`, and `place_nested`. Sonarr-style collapsing tokens let you group events under a single folder (for example, grouping all Ultra stages together). Files can be copied, moved, or renamed in place. The older layout names `festival_flat` and `festival_nested` are still accepted in the config file and mapped to the new names.
 
 ### Enrich
 
