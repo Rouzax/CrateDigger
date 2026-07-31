@@ -155,6 +155,16 @@ If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds an
 
 Increase the delay between files to reduce the chance of hitting rate limits: set `tracklists.delay_seconds` in your config (default: 5 seconds).
 
+### "Monthly export limit (30) exceeded"
+
+Older versions fetched tracklist data through the 1001Tracklists export
+API, which is limited to 30 calls per account per month. One `identify`
+run over a tagged library could exhaust the limit in a single pass.
+Current versions read the tracklist page directly and do not use the
+export API at all, so this error no longer occurs. If you see it,
+upgrade CrateDigger. The limit is per account and resets monthly; no
+action on your 1001Tracklists account is needed.
+
 ### identify updated but enrich still shows old metadata
 
 After re-running `identify` to pick up updated tracklist data, run `enrich` again:
