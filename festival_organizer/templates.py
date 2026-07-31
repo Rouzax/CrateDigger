@@ -19,6 +19,8 @@ _KNOWN_FIELDS = frozenset(
         "place",
         "year",
         "date",
+        "month",
+        "day",
         "edition",
         "stage",
         "set_title",
@@ -28,6 +30,9 @@ _KNOWN_FIELDS = frozenset(
 
 # Regex that matches a single ``{...}`` token (non-greedy).
 _TOKEN_RE = re.compile(r"\{([^}]+)\}")
+
+# Full ISO event date, as normalized by the analyzer (yyyy-mm-dd).
+_ISO_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 
 def render_folder(
@@ -97,11 +102,20 @@ def _build_values(
     if for_filename and media_file.display_artist:
         artist = media_file.display_artist
 
+    # month/day are sliced from the ISO date; empty unless a full date is known
+    month = ""
+    day = ""
+    if _ISO_DATE_RE.fullmatch(media_file.date):
+        month = media_file.date[5:7]
+        day = media_file.date[8:10]
+
     return {
         "artist": safe_filename(artist),
         "place": safe_filename(place),
         "year": media_file.year,
         "date": media_file.date,
+        "month": month,
+        "day": day,
         "edition": safe_filename(edition),
         "stage": safe_filename(media_file.stage),
         "set_title": safe_filename(media_file.set_title),

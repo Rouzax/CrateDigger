@@ -613,3 +613,101 @@ def test_render_filename_stage_equals_place_suppressed():
     )
     result = render_filename(mf, CFG)
     assert result == "2026 - FISHER - Bay Oval Park.mkv"
+
+
+# --- {month} and {day} tokens ---
+
+
+def _cfg_with_filename_template(template: str) -> Config:
+    """Config whose festival_set filename template is overridden."""
+    cfg_data = {
+        **TEST_CONFIG,
+        "filename_templates": {
+            **TEST_CONFIG.get("filename_templates", {}),
+            "festival_set": template,
+        },
+    }
+    return Config(cfg_data)
+
+
+def test_render_date_tokens_full_date():
+    values = {"year": "2024", "month": "06", "day": "15", "artist": "Tiesto"}
+    result = _render("{year}{-month}{-day} - {artist}", values, {})
+    assert result == "2024-06-15 - Tiesto"
+
+
+def test_render_date_tokens_collapse_year_only():
+    """Empty month/day collapse, leaving a clean year-only name."""
+    values = {"year": "2024", "month": "", "day": "", "artist": "Tiesto"}
+    result = _render("{year}{-month}{-day} - {artist}", values, {})
+    assert result == "2024 - Tiesto"
+
+
+def test_render_date_tokens_custom_order_and_separator():
+    values = {"year": "2024", "month": "06", "day": "15"}
+    assert _render("{day}{-month}-{year}", values, {}) == "15-06-2024"
+    assert _render("{year}{.month}{.day}", values, {}) == "2024.06.15"
+
+
+def test_render_month_required_uses_unknown_month_fallback():
+    """Required {month} honors the generic unknown_<field> fallback."""
+    values = {"year": "2024", "month": ""}
+    fallbacks = {"unknown_month": "XX"}
+    assert _render("{year}-{month}", values, fallbacks) == "2024-XX"
+
+
+def test_render_month_required_without_fallback_renders_unknown():
+    assert (
+        _render("{year}-{month}", {"year": "2024", "month": ""}, {}) == "2024-Unknown"
+    )
+
+
+def test_render_filename_month_day_from_media_date():
+    """month/day are sliced from the ISO MediaFile.date."""
+    cfg = _cfg_with_filename_template("{year}{-month}{-day} - {artist}{ - place}")
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Tiesto",
+        festival="Tomorrowland",
+        year="2024",
+        date="2024-06-15",
+        extension=".mkv",
+        content_type="festival_set",
+    )
+    assert render_filename(mf, cfg) == "2024-06-15 - Tiesto - Tomorrowland.mkv"
+
+
+def test_render_filename_month_day_year_only_degrades():
+    """A file with no full date renders the year alone."""
+    cfg = _cfg_with_filename_template("{year}{-month}{-day} - {artist}{ - place}")
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Tiesto",
+        festival="Tomorrowland",
+        year="2024",
+        date="",
+        extension=".mkv",
+        content_type="festival_set",
+    )
+    assert render_filename(mf, cfg) == "2024 - Tiesto - Tomorrowland.mkv"
+
+
+def test_render_filename_month_day_malformed_date_degrades():
+    """A non-ISO date value leaves month/day empty instead of crashing."""
+    cfg = _cfg_with_filename_template("{year}{-month}{-day} - {artist}{ - place}")
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Tiesto",
+        festival="Tomorrowland",
+        year="2024",
+        date="June 2024",
+        extension=".mkv",
+        content_type="festival_set",
+    )
+    assert render_filename(mf, cfg) == "2024 - Tiesto - Tomorrowland.mkv"
+
+
+def test_date_token_still_parses_over_day():
+    """Longest-first field matching: {date} must not parse as prefix+day."""
+    values = {"date": "2024-06-15", "day": "15"}
+    assert _render("{date}", values, {}) == "2024-06-15"
