@@ -1684,7 +1684,7 @@
 <h3 id="default-layout">Default layout</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">default_layout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;artist_flat&quot;</span>
 </code></pre></div>
-<p>The folder layout used by <code>organize</code> when <code>--layout</code> is not specified. Available values: <code>artist_flat</code>, <code>place_flat</code>, <code>artist_nested</code>, <code>place_nested</code>. The older names <code>festival_flat</code> and <code>festival_nested</code> are deprecated aliases for <code>place_flat</code> and <code>place_nested</code>; they continue to work until 1.0.0 but log a one-shot deprecation warning. See <a href="../commands/organize/#layouts">Organize: layouts</a> for what each looks like.</p>
+<p>The folder layout used by <code>organize</code> when <code>--layout</code> is not specified. Available values: <code>artist_flat</code>, <code>place_flat</code>, <code>artist_nested</code>, <code>place_nested</code>. The older names <code>festival_flat</code> and <code>festival_nested</code> are silently mapped to <code>place_flat</code> and <code>place_nested</code> when read from this key; the <code>--layout</code> command-line flag accepts only the current names. See <a href="../commands/organize/#layouts">Organize: layouts</a> for what each looks like.</p>
 <h3 id="layouts">Layouts</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[layouts.artist_flat]</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
@@ -1703,44 +1703,49 @@
 <a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}/{year} - {title}&quot;</span>
 </code></pre></div>
 <p>Folder path templates for each layout and content type. The <code>{place}</code> token resolves to the canonical name of the festival, club, or venue associated with the set. See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for how optional tokens work.</p>
-<p><strong>Deprecated layout names:</strong> <code>festival_flat</code> and <code>festival_nested</code> are aliases for <code>place_flat</code> and <code>place_nested</code>. They resolve to the same layouts and use the same templates. If you have customised a <code>[layouts.festival_flat]</code> or <code>[layouts.festival_nested]</code> section in your config, CrateDigger uses your custom section unchanged and logs a one-shot deprecation warning. Support for the deprecated names will be removed in 1.0.0.</p>
+<p><strong>Deprecated layout names:</strong> a <code>default_layout</code> value of <code>festival_flat</code> or <code>festival_nested</code> is silently mapped to <code>place_flat</code> or <code>place_nested</code> at load time. Custom <code>[layouts.festival_flat]</code> or <code>[layouts.festival_nested]</code> sections are NOT consulted after that mapping; if you carry one in your config, rename the section to the current layout name or your customisations are ignored.</p>
 <h3 id="filename-templates">Filename templates</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">[filename_templates]</span>
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{year} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}&quot;</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist} - {title}{ (year)}&quot;</span>
 </code></pre></div>
 <p>Templates for generated filenames. The original file extension is preserved automatically. The <code>{ - place}</code> token is optional: it is included only when a place name is available. See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for field names and optional token syntax.</p>
-<p><strong>Template tokens:</strong> <code>{place}</code> is the primary routing token for the associated festival, club, or venue. The older <code>{festival}</code> token continues to work as a deprecated alias rendering the same value, and will be removed in 1.0.0.</p>
+<p><strong>Template tokens:</strong> <code>{place}</code> is the routing token for the associated festival, club, or venue. The older <code>{festival}</code> token was removed in 0.15.0: templates that still contain it render the fallback text "Unknown" in its place, so update any custom template to <code>{place}</code>.</p>
+<p><strong>Date tokens:</strong> <code>{date}</code> renders the full event date in ISO <code>yyyy-mm-dd</code> form when known. <code>{month}</code> and <code>{day}</code> render the zero-padded components sliced from that date and stay empty when only the year is known, so the optional-token form degrades gracefully:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">[filename_templates]</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{year}{-month}{-day} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}&quot;</span>
+</code></pre></div>
+<p>renders <code>2024-06-15 - Tiesto - Tomorrowland [Mainstage]</code> for a fully dated set and <code>2024 - Tiesto - Tomorrowland [Mainstage]</code> when only the year is known. Any order works, and any punctuation separator (<code>{day-}{month-}{year}</code>, <code>{year}{.month}{.day}</code>). See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for the full field list.</p>
 <h3 id="content-type-rules">Content type rules</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">[content_type_rules]</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">force_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Adele/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Coldplay/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;U2/*&quot;</span><span class="p">]</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">force_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">[content_type_rules]</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">force_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Adele/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Coldplay/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;U2/*&quot;</span><span class="p">]</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">force_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
 </code></pre></div>
 <p>Path rules that force a file to be classified as <code>concert_film</code> or <code>festival_set</code>, bypassing automatic classification. Each rule is a pattern matched against the file's path relative to the source root. Use <code>*</code> to match anything within a single folder name, or <code>/*</code> after a folder name to match everything inside it. For example, <code>Coldplay/*</code> matches any file directly inside a <code>Coldplay</code> folder.</p>
 <h3 id="skip-patterns">Skip patterns</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">skip_patterns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;*/BDMV/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Dolby*&quot;</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">skip_patterns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;*/BDMV/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Dolby*&quot;</span><span class="p">]</span>
 </code></pre></div>
 <p>Path patterns for files and folders to skip during scanning. Matched against the relative path. Useful for ignoring Blu-ray disc structures (<code>*/BDMV/*</code>) or demo content.</p>
 <h3 id="media-extensions">Media extensions</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">[media_extensions]</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">video</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.mp4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.mkv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.webm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.avi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.mov&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.m2ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.ts&quot;</span><span class="p">]</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">audio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.mp3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.m4a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.flac&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.wav&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.aac&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.ogg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.opus&quot;</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">[media_extensions]</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">video</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.mp4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.mkv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.webm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.avi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.mov&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.m2ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.ts&quot;</span><span class="p">]</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">audio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.mp3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.m4a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.flac&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.wav&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.aac&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.ogg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.opus&quot;</span><span class="p">]</span>
 </code></pre></div>
 <p>File extensions recognized as media files, grouped by type. Add extensions here if CrateDigger is not picking up a file type you use.</p>
 <h3 id="fallback-values">Fallback values</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">[fallback_values]</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">unknown_artist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Artist&quot;</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">unknown_place</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;_Needs Review&quot;</span>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="n">unknown_year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Year&quot;</span>
-<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="n">unknown_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Title&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">[fallback_values]</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">unknown_artist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Artist&quot;</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">unknown_place</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;_Needs Review&quot;</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">unknown_year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Year&quot;</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="n">unknown_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Title&quot;</span>
 </code></pre></div>
 <p>Placeholder values used in folder and filename templates when metadata is missing. <code>_Needs Review</code> sorts near the top in most file managers, making unclassified files easy to find.</p>
 <p><strong>Deprecated key:</strong> <code>unknown_festival</code> is a deprecated alias for <code>unknown_place</code>. If you set <code>unknown_festival</code> without also setting <code>unknown_place</code>, CrateDigger copies your value into <code>unknown_place</code> and logs a one-shot deprecation warning. Setting <code>unknown_place</code> directly is preferred. Support for <code>unknown_festival</code> will be removed in 1.0.0.</p>
 <h3 id="poster-settings">Poster settings</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">[poster_settings]</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">artist_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;dj_artwork&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;fanart_tv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">place_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;curated_logo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">year_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">[poster_settings]</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">artist_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;dj_artwork&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;fanart_tv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">place_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;curated_logo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">year_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
 </code></pre></div>
 <p>Priority chains for poster background image selection. CrateDigger tries each source in order and uses the first one available.</p>
 <table>
@@ -1772,16 +1777,16 @@
 <p><code>place_background_priority</code> controls background selection for festival sets routed by a named place (festival, club, or venue). When the set has no linked place, the <code>artist_background_priority</code> chain is used instead, so the poster comes out as a proper artist poster rather than a plain gradient.</p>
 <p><strong>Deprecated key:</strong> <code>festival_background_priority</code> is a deprecated alias for <code>place_background_priority</code>. If you set <code>festival_background_priority</code> without also setting <code>place_background_priority</code>, CrateDigger copies your value into <code>place_background_priority</code> and logs a one-shot deprecation warning. Support for <code>festival_background_priority</code> will be removed in 1.0.0.</p>
 <h3 id="tracklists">Tracklists</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">[tracklists]</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">delay_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">chapter_language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;eng&quot;</span>
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="n">auto_select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="n">genre_top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
-<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="n">overlay_chapters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="n">overlay_fold_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
-<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="n">chapter_title_labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">[tracklists]</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">delay_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">chapter_language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;eng&quot;</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="n">auto_select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="n">genre_top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="n">overlay_chapters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="n">overlay_fold_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="n">chapter_title_labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 <p>Settings for 1001Tracklists integration. See <a href="../tracklists/">Tracklists integration</a> for account setup details.</p>
 <table>
@@ -1832,9 +1837,9 @@
 </table>
 <p>Credentials can also be set via environment variables: <code>TRACKLISTS_EMAIL</code> and <code>TRACKLISTS_PASSWORD</code>.</p>
 <h3 id="fanart">Fanart</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">[fanart]</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">personal_api_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">[fanart]</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">personal_api_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 </code></pre></div>
 <p>Settings for fanart.tv artist artwork lookups. A project API key is built into CrateDigger. Adding your own personal key improves rate limits for large libraries.</p>
 <p>Get a personal API key at <a href="https://fanart.tv/get-an-api-key/">fanart.tv</a>.</p>
@@ -1858,12 +1863,12 @@
 </table>
 <p>Environment variable overrides: <code>FANART_PERSONAL_API_KEY</code>, <code>FANART_PROJECT_API_KEY</code> (for the built-in project key).</p>
 <h3 id="kodi">Kodi</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">[kodi]</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;localhost&quot;</span>
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8080</span>
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;kodi&quot;</span>
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">[kodi]</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;localhost&quot;</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8080</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;kodi&quot;</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 </code></pre></div>
 <p>Kodi JSON-RPC connection settings for automatic library refresh after <code>enrich</code> or <code>organize</code>. See <a href="../kodi-integration/">Kodi integration</a> for setup instructions.</p>
 <table>
@@ -1931,26 +1936,26 @@
 <h4 id="prerequisites">Prerequisites</h4>
 <p>You need an SMTP server that accepts authenticated submissions. A local relay, a self-hosted mail server, or any provider that supports STARTTLS or SSL on port 587/465 works. Gmail, Fastmail, and similar providers work if you generate an app password.</p>
 <h4 id="configuration_1">Configuration</h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">[email]</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">smtp_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mail.example.lan&quot;</span>
-<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">smtp_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">587</span>
-<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">smtp_security</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;starttls&quot;</span><span class="w">   </span><span class="c1"># starttls | ssl | none</span>
-<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">smtp_user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cratedigger&quot;</span>
-<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="n">smtp_password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w">           </span><span class="c1"># leave blank; use CRATEDIGGER_SMTP_PASSWORD instead</span>
-<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="n">from_address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cratedigger@example.lan&quot;</span>
-<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="n">thumbnail_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">140</span>
-<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>
-<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="k">[email.new_sets]</span>
-<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;other@example.com&quot;</span><span class="p">]</span>
-<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>
-<a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="k">[email.updated_sets]</span>
-<a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">]</span>
-<a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>
-<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a><span class="k">[email.update_reminder]</span>
-<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="k">[email]</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">smtp_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mail.example.lan&quot;</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">smtp_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">587</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">smtp_security</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;starttls&quot;</span><span class="w">   </span><span class="c1"># starttls | ssl | none</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">smtp_user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cratedigger&quot;</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">smtp_password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w">           </span><span class="c1"># leave blank; use CRATEDIGGER_SMTP_PASSWORD instead</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="n">from_address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cratedigger@example.lan&quot;</span>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="n">thumbnail_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">140</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="k">[email.new_sets]</span>
+<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;other@example.com&quot;</span><span class="p">]</span>
+<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>
+<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="k">[email.updated_sets]</span>
+<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">]</span>
+<a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a>
+<a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="k">[email.update_reminder]</span>
+<a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">]</span>
 </code></pre></div>
 <table>
 <thead>
@@ -2022,18 +2027,18 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Linux / macOS</label><label for="__tabbed_4_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CRATEDIGGER_SMTP_PASSWORD</span><span class="o">=</span>your-app-password
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CRATEDIGGER_SMTP_PASSWORD</span><span class="o">=</span>your-app-password
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nv">$env:CRATEDIGGER_SMTP_PASSWORD</span> <span class="p">=</span> <span class="s2">&quot;your-app-password&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nv">$env:CRATEDIGGER_SMTP_PASSWORD</span> <span class="p">=</span> <span class="s2">&quot;your-app-password&quot;</span>
 </code></pre></div>
 </div>
 </div>
 </div>
 <h4 id="verifying-delivery">Verifying delivery</h4>
 <p>Run <code>cratedigger --email-test</code> to send a sample email and confirm your SMTP settings and rendering work. It takes no path, does not touch your library, and reports whether the message was sent or why it failed (for example, no recipients configured, or a connection error). It sends to the <code>[email.new_sets]</code> recipient list and works even while that channel is disabled, so you can test before turning it on.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>cratedigger<span class="w"> </span>--email-test
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>cratedigger<span class="w"> </span>--email-test
 </code></pre></div>
 <p>You can also force or suppress an email for a single run without changing your config:</p>
 <ul>
@@ -2044,25 +2049,25 @@
 <h4 id="example">Example</h4>
 <p><img alt="Example CrateDigger run-summary email" src="../assets/example-email.png" /></p>
 <h3 id="nfo-settings">NFO settings</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="k">[nfo_settings]</span>
-<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">genre_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Electronic&quot;</span>
-<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="n">genre_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Live&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">[nfo_settings]</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">genre_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Electronic&quot;</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="n">genre_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Live&quot;</span>
 </code></pre></div>
 <p>Genre written into NFO files when no genre is available from 1001Tracklists metadata. <code>genre_festival</code> applies to festival sets; <code>genre_concert</code> applies to concert recordings.</p>
 <h3 id="tool-paths">Tool paths</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># [tool_paths]</span>
-<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="c1"># ffprobe = &quot;C:/Program Files/ffmpeg/bin/ffprobe.exe&quot;</span>
-<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="c1"># mkvextract = &quot;&quot;</span>
-<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># mkvpropedit = &quot;&quot;</span>
-<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="c1"># mkvmerge = &quot;&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># [tool_paths]</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="c1"># ffprobe = &quot;C:/Program Files/ffmpeg/bin/ffprobe.exe&quot;</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="c1"># mkvextract = &quot;&quot;</span>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1"># mkvpropedit = &quot;&quot;</span>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="c1"># mkvmerge = &quot;&quot;</span>
 </code></pre></div>
 <p>Explicit paths to external tools. Set these only if the tools are installed somewhere not on your system PATH. Omit a key (or leave an empty string) to let CrateDigger find them automatically via PATH.</p>
 <h3 id="cache-ttl">Cache TTL</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="k">[cache_ttl]</span>
-<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">mbid_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
-<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="n">dj_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
-<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="n">source_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">365</span>
-<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="n">images_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="k">[cache_ttl]</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">mbid_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">dj_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">source_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">365</span>
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="n">images_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
 </code></pre></div>
 <p>Base lifetimes for CrateDigger's caches, in days. When a cache entry expires, CrateDigger refreshes it on the next lookup.</p>
 <table>
@@ -2128,18 +2133,18 @@
 <h3 id="artist-aliases">artists.json</h3>
 <p>Controls artist name aliases and B2B group definitions.</p>
 <p>Place it in the folder above (<code>~/CrateDigger/artists.json</code> on Linux or macOS, <code>Documents\CrateDigger\artists.json</code> on Windows). Example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="p">{</span>
-<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="w">    </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">        </span><span class="nt">&quot;Armin van Buuren&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Rising Star&quot;</span><span class="p">],</span>
-<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">        </span><span class="nt">&quot;Martin Garrix&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;GRX&quot;</span><span class="p">],</span>
-<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="w">        </span><span class="nt">&quot;Nicky Romero&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Monocule&quot;</span><span class="p">]</span>
-<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="w">    </span><span class="nt">&quot;groups&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="w">        </span><span class="s2">&quot;Above &amp; Beyond&quot;</span><span class="p">,</span>
-<a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="w">        </span><span class="s2">&quot;Swedish House Mafia&quot;</span><span class="p">,</span>
-<a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a><span class="w">        </span><span class="s2">&quot;W&amp;W&quot;</span>
-<a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a><span class="w">    </span><span class="p">]</span>
-<a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">{</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">        </span><span class="nt">&quot;Armin van Buuren&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Rising Star&quot;</span><span class="p">],</span>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">        </span><span class="nt">&quot;Martin Garrix&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;GRX&quot;</span><span class="p">],</span>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">        </span><span class="nt">&quot;Nicky Romero&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Monocule&quot;</span><span class="p">]</span>
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="w">    </span><span class="nt">&quot;groups&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="w">        </span><span class="s2">&quot;Above &amp; Beyond&quot;</span><span class="p">,</span>
+<a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="w">        </span><span class="s2">&quot;Swedish House Mafia&quot;</span><span class="p">,</span>
+<a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="w">        </span><span class="s2">&quot;W&amp;W&quot;</span>
+<a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="w">    </span><span class="p">]</span>
+<a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong><code>aliases</code>:</strong> maps a canonical artist name to a list of aliases. When CrateDigger encounters an alias in a filename or tag, it substitutes the canonical name. Matching is case-insensitive and diacritics-insensitive.</p>
 <p><strong><code>groups</code>:</strong> a manual list of act names that should be kept as-is even when they contain <code>&amp;</code>, <code>B2B</code>, <code>vs.</code>, or <code>x</code> separators. As of v0.21.0, any act with a 1001Tracklists profile is kept whole automatically (resolved to its canonical name via the DJ cache), so you do not need a manual entry for those acts. This includes single acts whose name contains <code>&amp;</code> (for example, "Above &amp; Beyond") and named groups (for example, "Swedish House Mafia"). Manual entries are mainly useful for acts with no 1001Tracklists profile (for example, <code>"W&amp;W"</code> if it has no profile) or to correct a name the DJ cache gets wrong. When an act is neither in <code>groups</code> nor known to 1001Tracklists, CrateDigger splits on the separator and uses only the first artist as the folder name.</p>
@@ -2168,10 +2173,10 @@
 </tbody>
 </table>
 <p>It is checked first by both the <code>chapter_artist_mbids</code> and <code>album_artist_mbids</code> enrich operations, before the auto cache and any live MusicBrainz search.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">{</span>
-<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span><span class="p">,</span>
-<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">    </span><span class="nt">&quot;Oliver Heldens&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6e7dde91-4c02-47ea-a2b4-2222222222bb&quot;</span>
-<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="p">{</span>
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span><span class="p">,</span>
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">    </span><span class="nt">&quot;Oliver Heldens&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6e7dde91-4c02-47ea-a2b4-2222222222bb&quot;</span>
+<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="p">}</span>
 </code></pre></div>
 <table>
 <thead>

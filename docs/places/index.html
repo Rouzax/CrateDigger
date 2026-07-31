@@ -905,10 +905,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#deprecated-names-that-still-work-until-100" class="md-nav__link">
+  <a href="#renamed-in-0150-old-name-to-new-name" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deprecated names that still work until 1.0.0
+        Renamed in 0.15.0: old name to new name
       
     </span>
   </a>
@@ -1262,10 +1262,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#deprecated-names-that-still-work-until-100" class="md-nav__link">
+  <a href="#renamed-in-0150-old-name-to-new-name" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deprecated names that still work until 1.0.0
+        Renamed in 0.15.0: old name to new name
       
     </span>
   </a>
@@ -1554,13 +1554,13 @@
 <a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="c1"># or for a library-local file:</span>
 <a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>mv<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/festivals.json<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/places.json
 </code></pre></div>
-<h3 id="deprecated-names-that-still-work-until-100">Deprecated names that still work until 1.0.0</h3>
+<h3 id="renamed-in-0150-old-name-to-new-name">Renamed in 0.15.0: old name to new name</h3>
 <table>
 <thead>
 <tr>
 <th>What</th>
-<th>Old (deprecated)</th>
-<th>New</th>
+<th>Old name</th>
+<th>New name</th>
 </tr>
 </thead>
 <tbody>
@@ -1596,7 +1596,12 @@
 </tr>
 </tbody>
 </table>
-<p>Each deprecated name logs a one-shot warning the first time it is used in a process. If you run <code>cratedigger --check</code>, any triggered deprecations appear in the output so you can find them without scanning logs manually.</p>
+<p>Two of these rows need extra care, because the old name does not behave like the new one:</p>
+<ul>
+<li><strong><code>{festival}</code> no longer works.</strong> The token was removed in 0.15.0, not deprecated. A template that still contains <code>{festival}</code> renders the fallback text "Unknown" where the place name should be, so update every custom template to <code>{place}</code>.</li>
+<li><strong>The old layout names work only as <code>default_layout</code> values.</strong> <code>festival_flat</code> and <code>festival_nested</code> are mapped silently to <code>place_flat</code> and <code>place_nested</code> when read from <code>default_layout</code> in <code>config.toml</code>. Nothing else accepts them: a custom <code>[layouts.festival_flat]</code> or <code>[layouts.festival_nested]</code> section is ignored after that mapping, and the <code>--layout</code> command-line flag accepts only <code>artist_flat</code>, <code>place_flat</code>, <code>artist_nested</code>, and <code>place_nested</code>.</li>
+</ul>
+<p>No old name announces itself with a deprecation warning at runtime, so migrate by checking your config file, templates, and curated asset folders directly rather than by watching the logs.</p>
 <h2 id="related">Related</h2>
 <ul>
 <li><a href="../configuration/#artist-aliases">Configuration: artists.json</a>: artist name aliases and B2B group definitions</li>
