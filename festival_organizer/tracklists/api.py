@@ -467,6 +467,62 @@ def _label_span_texts(row) -> list[str]:
     return texts
 
 
+def _line_text(t: "Track") -> str:
+    """Visible label text of a row as the export API rendered it."""
+    text = t.raw_text
+    if t.qualifier:
+        text = f"{text} {t.qualifier}"
+    if t.label_full:
+        text = f"{text} [{t.label_full}]"
+    return text
+
+
+def _format_cue(ms: int) -> str:
+    """Milliseconds to HH:MM:SS.mmm, the format parse_tracklist_lines eats."""
+    total_s, millis = divmod(ms, 1000)
+    hours, rem = divmod(total_s, 3600)
+    minutes, seconds = divmod(rem, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{millis:03d}"
+
+
+def _synthesize_export_lines(tracks: list["Track"]) -> list[str]:
+    """Rebuild export_data.php-format lines from parsed page tracks.
+
+    Replaces the retired AJAX export call (1001TL put a 30/month quota on
+    it in 2026-07). Validated byte-equivalent against real exports on
+    seven paired snapshots; the rules below mirror the export exactly:
+
+      - mains only (mashup mains included; overlays and tlpSubTog
+        sub-components never appear as timed lines)
+      - the document-first main is emitted at 00:00 even when uncued (a
+        set's opening track implicitly starts at zero); every later
+        uncued main is dropped, regardless of player
+      - a fully uncued tracklist yields numbered lines so
+        parse_tracklist_lines raises its "no timestamps yet" ValueError
+      - "Player N" marker lines are emitted on ordinal transitions, but
+        only when the page actually partitions the timeline (any
+        Track.player != 0)
+    """
+    mains = [t for t in tracks if not t.is_overlay and not t.is_subcomponent]
+    if not mains:
+        return []
+    if all(t.cue_unset for t in mains):
+        return [f"{i + 1}. {_line_text(t)}" for i, t in enumerate(mains)]
+
+    multi = any(t.player for t in mains)
+    lines: list[str] = []
+    prev_player = 0
+    for i, t in enumerate(mains):
+        if t.cue_unset and i > 0:
+            continue
+        if multi and t.player and t.player != prev_player:
+            lines.append(f"Player {t.player}")
+        prev_player = t.player
+        start_ms = 0 if t.cue_unset else t.start_ms
+        lines.append(f"[{_format_cue(start_ms)}] {_line_text(t)}")
+    return lines
+
+
 def _parse_players(html: str) -> list["PlayerInfo"]:
     """Build the ordered YouTube-source list from a tracklist page.
 
