@@ -5,7 +5,7 @@ Logging:
     Key events:
         - identify.search.params (DEBUG): Search parameters sent to API
         - identify.search.response (DEBUG): Search response status and size
-        - identify.export.decode_failed (DEBUG): Export JSON parse failure
+        - identify.lines.synthesized (DEBUG): Lines rebuilt from page rows
         - identify.export.genres (INFO): Genres extracted from tracklist page
         - identify.cache.source (INFO): Source page metadata cached
         - identify.cache.dj (INFO): DJ profile cached
@@ -59,11 +59,10 @@ BASE_URL = "https://www.1001tracklists.com"
 _ARTIST_HREF_RE = re.compile(r"/artist/([^/]+)/[^/]+\.html$")
 
 # Short pause between consecutive 1001TL requests inside one file's processing
-# (page GET, ajax export POST, per-source and per-DJ fetches). Keeps the
-# post-selection burst modest without dominating wall-clock time on fresh
-# caches. Between-files politeness is handled by the CLI orchestrator, not
-# here, so this value is deliberately much smaller than the user-configurable
-# tracklists.delay_seconds.
+# (page GET, per-source and per-DJ fetches). Keeps the post-selection burst
+# modest without dominating wall-clock time on fresh caches. Between-files
+# politeness is handled by the CLI orchestrator, not here, so this value is
+# deliberately much smaller than the user-configurable tracklists.delay_seconds.
 INTRA_REQUEST_DELAY = 0.5
 
 
@@ -77,10 +76,6 @@ class AuthenticationError(TracklistError):
 
 class RateLimitError(TracklistError):
     """Too many requests, captcha required."""
-
-
-class ExportError(TracklistError):
-    """Failed to export tracklist data."""
 
 
 @dataclass
@@ -704,14 +699,15 @@ class TracklistSession:
         full_url: str | None = None,
         on_progress: Callable[[str], None] | None = None,
     ) -> TracklistExport:
-        """Fetch tracklist data (timestamps + track titles).
+        """Fetch the tracklist page and derive all tracklist data from it.
+
+        Lines are synthesized from the page's track rows in the retired
+        export API's format, so downstream parsing is unchanged.
 
         If *on_progress* is provided it's invoked exactly once, after the
         tracklist page HTML has been parsed and the linked DJ list is known,
         before any per-DJ profile fetch. The message format is
         "Fetching tracklist ({N} DJs)".
-
-        Raises ExportError on failure.
         """
         # First fetch the tracklist page to get the actual URL
         page_url = full_url or f"{BASE_URL}/tracklist/{tracklist_id}/"
@@ -727,39 +723,23 @@ class TracklistSession:
             "tracklist page", canary.check_tracklist_page(page_resp.text), actual_url
         )
 
-        # Export via AJAX
-        resp = self._request(
-            "POST",
-            f"{BASE_URL}/ajax/export_data.php",
-            data={
-                "object": "tracklist",
-                "idTL": tracklist_id,
-            },
-            headers={
-                "X-Requested-With": "XMLHttpRequest",
-                "Referer": actual_url,
-                "Accept": "application/json, text/javascript, */*; q=0.01",
-                "Origin": BASE_URL,
-                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            },
+        # Tracklist lines come from the page itself. The AJAX export API
+        # (/ajax/export_data.php) was retired here in 2026-07 when 1001TL
+        # capped it at 30 calls/month; _synthesize_export_lines rebuilds
+        # its output byte-for-byte from the parsed rows.
+        tracks = _parse_tracks(page_soup)
+        lines = _synthesize_export_lines(tracks)
+        uncued_dropped = sum(
+            1
+            for t in tracks
+            if t.cue_unset and not t.is_overlay and not t.is_subcomponent
         )
-
-        try:
-            result = resp.json()
-        except (json.JSONDecodeError, ValueError) as e:
-            logger.debug(
-                'identify.export.decode_failed: id=%s url=%s error="%s"',
-                tracklist_id,
-                resp.url,
-                e,
-            )
-            raise ExportError("Invalid JSON response from export API") from e
-
-        if not result.get("success"):
-            raise ExportError(result.get("message", "Export failed"))
-
-        raw_data = result.get("data", "")
-        lines = [line for line in raw_data.split("\n") if line.strip()]
+        logger.debug(
+            "identify.lines.synthesized: tracks=%d lines=%d uncued=%d",
+            len(tracks),
+            len(lines),
+            uncued_dropped,
+        )
 
         # Extract title from first line or page
         title_match = re.search(r"<title>([^<]+)</title>", page_resp.text)
@@ -864,8 +844,6 @@ class TracklistSession:
             if i == 0 and profile.get("artwork_url"):
                 dj_artwork_url = profile["artwork_url"]
                 logger.info("identify.export.dj_artwork: url=%s", dj_artwork_url)
-
-        tracks = _parse_tracks(page_soup)
 
         # Suppress the h1-derived location when a linked source already
         # carries authoritative location info (festival, venue, conference,
