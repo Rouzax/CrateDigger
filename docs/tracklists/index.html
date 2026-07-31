@@ -1407,6 +1407,7 @@
 </table>
 <p><strong>Without an account</strong>, CrateDigger still produces a usable library. Metadata comes from parsing your filenames using your <code>places.json</code> entries and <code>artists.json</code> rules, reading any embedded MKV tags, looking up artist artwork from fanart.tv via a resolved MusicBrainz ID, and extracting cover art from embedded attachments or sampled video frames. You get organized folders, reasonable posters, and NFO files. What you lose is everything tied to the authoritative tracklist: chapter markers, per-track metadata (title, label, genre, artist MBIDs), canonical DJ naming beyond your manual aliases, and the stage and venue context tags.</p>
 <p><strong>With an account</strong>, every row in the table is filled in. <code>identify</code> matches your recording against 1001Tracklists, and embeds per-chapter metadata plus album-level event context directly into the MKV.</p>
+<p><strong>Why the login is required:</strong> 1001Tracklists only renders tracklist content, the actual tracks and timestamps, to signed-in users; a logged-out request for a tracklist page gets back a page shell with no track rows and no timing data at all, even though site search still works without an account. This is why <code>identify</code> needs a login: without a session there is no track data to read, not merely a reduced feature set. Current versions read the tracklist page directly instead of calling the 1001Tracklists export API, so CrateDigger never draws on the account's monthly tracklist-export allowance; the "Monthly export limit (30) exceeded" quota does not apply to CrateDigger runs.</p>
 <h2 id="account-setup">Account setup</h2>
 <p>You need a free account at <a href="https://www.1001tracklists.com/">1001Tracklists</a>. Configure your credentials in one of two ways.</p>
 <h3 id="config-file">Config file</h3>
@@ -1511,7 +1512,7 @@
 <h2 id="troubleshooting">Troubleshooting</h2>
 <h3 id="a-scraping-canary-warning-appears-in-the-output">A "Scraping canary" WARNING appears in the output</h3>
 <p>You may see a line like this:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>WARNING  Scraping canary: tracklist page missing selectors [&#39;tlpItem row&#39;, &#39;cue_seconds input&#39;] at https://www.1001tracklists.com/tracklist/abc123/some-set/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>WARNING  Scraping canary: tracklist page missing selectors [&#39;cue_seconds input&#39;, &#39;cue display div&#39;] at https://www.1001tracklists.com/tracklist/abc123/some-set/
 </code></pre></div>
 <p>This means 1001tracklists.com has changed its page structure in a way that the parser no longer finds the expected data. Enrichment for that page type is likely to be incomplete until CrateDigger is updated to match the new layout. Affected fields may include genres, event date, stage name, or DJ artwork, depending on which selectors are missing.</p>
 <p><strong>What to do:</strong></p>

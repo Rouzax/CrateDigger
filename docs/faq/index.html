@@ -1038,6 +1038,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#monthly-export-limit-30-exceeded" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Monthly export limit (30) exceeded"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#identify-updated-but-enrich-still-shows-old-metadata" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1493,6 +1504,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#monthly-export-limit-30-exceeded" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Monthly export limit (30) exceeded"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#identify-updated-but-enrich-still-shows-old-metadata" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1907,6 +1929,14 @@
 <h3 id="cratedigger-is-rate-limited-by-1001tracklists">CrateDigger is rate-limited by 1001Tracklists</h3>
 <p>If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds and retries. If the retry also fails, it stops with a message asking you to solve a captcha at <a href="https://www.1001tracklists.com">1001tracklists.com</a> in your browser. After solving the captcha, re-run identify.</p>
 <p>Increase the delay between files to reduce the chance of hitting rate limits: set <code>tracklists.delay_seconds</code> in your config (default: 5 seconds).</p>
+<h3 id="monthly-export-limit-30-exceeded">"Monthly export limit (30) exceeded"</h3>
+<p>Older versions fetched tracklist data through the 1001Tracklists export
+API, which is limited to 30 calls per account per month. One <code>identify</code>
+run over a tagged library could exhaust the limit in a single pass.
+Current versions read the tracklist page directly and do not use the
+export API at all, so this error no longer occurs. If you see it,
+upgrade CrateDigger. The limit is per account and resets monthly; no
+action on your 1001Tracklists account is needed.</p>
 <h3 id="identify-updated-but-enrich-still-shows-old-metadata">identify updated but enrich still shows old metadata</h3>
 <p>After re-running <code>identify</code> to pick up updated tracklist data, run <code>enrich</code> again:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/

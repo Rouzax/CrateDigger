@@ -1680,8 +1680,10 @@ logs exactly which tracks DJs played during sets, with timestamps) and embeds th
 information into your MKV file. The result is a file with named chapter markers, one per
 track, so media players can jump to any track in the set, and so the rest of the CrateDigger
 pipeline has rich metadata to work with.</p>
-<p><strong>A 1001Tracklists account is required.</strong> The <code>identify</code> command always logs in before
-processing. Without credentials, it exits with an error. See
+<p><strong>A 1001Tracklists account is required.</strong> 1001Tracklists only renders tracklist content,
+the tracks and timestamps, to signed-in users, so a logged-out request returns a page
+with no track data to parse. The <code>identify</code> command always logs in before processing.
+Without credentials, it exits with an error. See
 <a href="../../tracklists/#do-i-need-an-account">Do I need an account?</a> for what you still get if
 you skip this step.</p>
 <h2 id="before-you-start">Before you start</h2>
