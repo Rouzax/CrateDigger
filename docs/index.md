@@ -69,7 +69,7 @@ See [Getting Started](getting-started.md) for required tools, upgrade commands, 
 | [enrich](commands/enrich.md) | Artwork, posters, NFO, MBIDs |
 | [audit-logos](commands/audit-logos.md) | Check festival logo coverage |
 | [Configuration](configuration.md) | All config options |
-| [Festivals](festivals.md) | Festival names, aliases, editions |
+| [Places](places.md) | Place names, aliases, editions |
 | [1001Tracklists](tracklists.md) | Account setup, caching, what you get |
 | [Library layout](library-layout.md) | Every file CrateDigger writes and why |
 | [Tag reference](tag-reference.md) | Every MKV tag CrateDigger writes |

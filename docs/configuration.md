@@ -165,7 +165,7 @@ unknown_title = "Unknown Title"
 
 Placeholder values used in folder and filename templates when metadata is missing. `_Needs Review` sorts near the top in most file managers, making unclassified files easy to find.
 
-**Deprecated key:** `unknown_festival` is a deprecated alias for `unknown_place`. If you set `unknown_festival` without also setting `unknown_place`, CrateDigger copies your value into `unknown_place` and logs a one-shot deprecation warning. Setting `unknown_place` directly is preferred. Support for `unknown_festival` will be removed in 1.0.0.
+**Removed key:** `unknown_festival` was replaced by `unknown_place` in 0.15.0 and is no longer read. Leaving it in your config has no effect on `unknown_place` and produces no warning, so set `unknown_place` directly.
 
 ### Poster settings
 
@@ -187,7 +187,7 @@ Priority chains for poster background image selection. CrateDigger tries each so
 
 `place_background_priority` controls background selection for festival sets routed by a named place (festival, club, or venue). When the set has no linked place, the `artist_background_priority` chain is used instead, so the poster comes out as a proper artist poster rather than a plain gradient.
 
-**Deprecated key:** `festival_background_priority` is a deprecated alias for `place_background_priority`. If you set `festival_background_priority` without also setting `place_background_priority`, CrateDigger copies your value into `place_background_priority` and logs a one-shot deprecation warning. Support for `festival_background_priority` will be removed in 1.0.0.
+**Removed key:** `festival_background_priority` was replaced by `place_background_priority` in 0.15.0 and is no longer read. Setting it is a silent no-op: the value is not copied into `place_background_priority` and no warning is logged, so rename the key in your `config.toml`.
 
 ### Tracklists
 
@@ -416,9 +416,9 @@ Three JSON files can live alongside your `config.toml` and control name resoluti
 
 Controls place name recognition, aliases, and editions. Places include festivals, clubs, venues, and any other named entities that host DJ sets in your library. CrateDigger includes built-in place knowledge. To add your own entries or customize aliases, place a `places.json` in the folder above. See [Places](places.md) for the file format and how to add entries.
 
-**Curated assets directory:** logo and background images for each place go in `.cratedigger/places/<canonical-name>/logo.png` inside your library, or `.cratedigger/places/<canonical-name>/<edition>/logo.png` for edition-specific logos. CrateDigger also checks the old `.cratedigger/festivals/<name>/` path as a fallback and logs a one-shot deprecation notice on first use.
+**Curated assets directory:** logo images for each place go in `.cratedigger/places/<canonical-name>/logo.<ext>` inside your library, or in `places/<canonical-name>/logo.<ext>` under the folder above for logos shared across every library. Edition-specific logos live in a sibling folder named after the edition display name, `places/<canonical-name> <edition>/logo.<ext>` (for example `places/EDC Las Vegas/`), not in a subfolder of the canonical name. CrateDigger tries the edition folder first, then the canonical name, and checks the library-local location before the shared one. Accepted extensions are `jpg`, `jpeg`, `png`, and `webp`.
 
-**Deprecated file:** `festivals.json` is a deprecated alias for `places.json`. When `places.json` is absent, CrateDigger reads `festivals.json` instead and logs a one-shot deprecation warning. Rename the file to `places.json` when you are ready to migrate. Support for `festivals.json` will be removed in 1.0.0.
+**Legacy file:** `festivals.json` was renamed to `places.json` in 0.15.0, and nothing reads `festivals.json` when looking up a place. On startup, if the folder above still holds a `festivals.json` and has no `places.json`, CrateDigger copies the old file to `places.json` once. The copy happens before logging starts, so nothing is printed about it; check that `places.json` exists in the folder above to confirm it ran. The original file is left untouched, so you can delete it once the copy is in place. Only this shared folder is migrated: a library-local `.cratedigger/festivals.json` is never copied and never read, so rename that one yourself.
 
 ### artists.json {#artist-aliases}
 

@@ -234,9 +234,13 @@ Or from a cloned repo:
     Copy-Item places.example.json "$env:USERPROFILE\Documents\CrateDigger\places.json"
     ```
 
-If you have an existing `festivals.json` from a previous version, you do not need to
-rename it right away. CrateDigger reads it automatically when `places.json` is absent
-and prints a one-time deprecation notice.
+If you have an existing `festivals.json` from a previous version and have not already
+created a `places.json` there, you do not need to rename it: on the next run CrateDigger
+copies it to `places.json` once, silently, and leaves the old file in place for you to
+delete afterwards. If a `places.json` already exists (because you just copied the example
+file, for example), no copy happens and the old `festivals.json` is ignored, so merge
+anything you still need out of it yourself. Only this shared data folder is migrated, so
+a library-local `.cratedigger/festivals.json` needs a manual rename.
 
 See [Places](places.md) for how to add entries and what the file format looks like.
 

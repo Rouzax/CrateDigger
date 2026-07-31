@@ -82,7 +82,7 @@ URL to the tracklist(s) directly linked to that video.
 **Fallback (text search):** When the filename has no `[id]` suffix, or the YouTube-ID
 lookup returns no results, CrateDigger builds a text query from the filename. It removes
 the `[youtubeid]` suffix and other noise (codec labels, resolution tags) and expands known
-festival abbreviations from your [festivals.json](../festivals.md) aliases. For example,
+festival abbreviations from your [places.json](../places.md) aliases. For example,
 "AMF" becomes "Amsterdam Music Festival" and "EDC" becomes "Electric Daisy Carnival". The
 file's duration (read via ffprobe) and year (from an embedded date tag, if present) are
 passed separately to help rank results; they are not part of the search text.

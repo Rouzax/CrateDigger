@@ -267,23 +267,34 @@ CrateDigger looks for logo and background artwork in a per-place directory insid
 
 ```
 {library}/.cratedigger/places/<canonical-name>/logo.png
-{library}/.cratedigger/places/<canonical-name>/<edition>/logo.png
+{library}/.cratedigger/places/<canonical-name> <edition>/logo.png
 ```
 
-Where `<canonical-name>` is the top-level key from `places.json` (for example, `Tomorrowland` or `Printworks`) and `<edition>` is the edition name when applicable (for example, `Winter` or `Las Vegas`).
+Where `<canonical-name>` is the top-level key from `places.json` (for example, `Tomorrowland` or `Printworks`) and `<edition>` is the edition name when applicable (for example, `Winter` or `Las Vegas`). An edition logo lives in its own folder named after the edition display name, `Tomorrowland Winter` or `EDC Las Vegas`, alongside the canonical folder rather than nested inside it. CrateDigger looks for the edition folder first and falls back to the canonical name when it finds nothing.
 
 Place the logo file in the matching directory, and CrateDigger will use it instead of generating a gradient poster. Run [`audit-logos`](commands/audit-logos.md) to see which entries in your library have curated logos and which do not.
 
 ## Backward compatibility: existing `festivals.json` files
 
-If you have an existing `festivals.json`, you do not need to do anything for 0.15.0. The system reads `festivals.json` when `places.json` is absent, and logs a single deprecation notice per process to tell you the new filename. Your festival entries continue to work exactly as before.
+Nothing reads `festivals.json` when CrateDigger looks up a place. Instead, a one-time copy-forward runs on startup so an existing file keeps working:
 
-When you are ready to migrate, rename the file:
+- If your shared data folder (`~/CrateDigger/` on Linux and macOS, `Documents\CrateDigger\` on Windows) holds a `festivals.json` and no `places.json`, CrateDigger copies it to `places.json`. The copy runs before logging starts, so it prints nothing; the new file appearing is how you know it happened.
+- The same happens for curated logos: each `festivals/<Name>/` subfolder in that data folder is copied to `places/<Name>/`.
+- The copy runs once per process, never overwrites an existing target, and leaves the original files untouched, so it is safe to repeat and safe to roll back to an older release.
+
+After the first run you can delete the old `festivals.json` and the old `festivals/` logo folder. Check that `places.json` exists first:
 
 ```bash
-mv ~/.cratedigger/festivals.json ~/.cratedigger/places.json
-# or for a library-local file:
+ls ~/CrateDigger/places.json
+```
+
+Two locations are **not** migrated for you, because the copy-forward only covers the shared data folder:
+
+```bash
+# library-local places file
 mv {library}/.cratedigger/festivals.json {library}/.cratedigger/places.json
+# library-local curated logos
+mv {library}/.cratedigger/festivals {library}/.cratedigger/places
 ```
 
 ### Renamed in 0.15.0: old name to new name
@@ -297,10 +308,11 @@ mv {library}/.cratedigger/festivals.json {library}/.cratedigger/places.json
 | Fallback value key | `unknown_festival` | `unknown_place` |
 | Curated assets directory | `.cratedigger/festivals/<name>/` | `.cratedigger/places/<name>/` |
 
-Two of these rows need extra care, because the old name does not behave like the new one:
+Only the first and last rows are copied forward automatically, and only in the shared data folder as described above. The other four need you to make the change:
 
 - **`{festival}` no longer works.** The token was removed in 0.15.0, not deprecated. A template that still contains `{festival}` renders the fallback text "Unknown" where the place name should be, so update every custom template to `{place}`.
 - **The old layout names work only as `default_layout` values.** `festival_flat` and `festival_nested` are mapped silently to `place_flat` and `place_nested` when read from `default_layout` in `config.toml`. Nothing else accepts them: a custom `[layouts.festival_flat]` or `[layouts.festival_nested]` section is ignored after that mapping, and the `--layout` command-line flag accepts only `artist_flat`, `place_flat`, `artist_nested`, and `place_nested`.
+- **`festival_background_priority` and `unknown_festival` are silent no-ops.** Neither key is read any more. The value is not copied into its replacement and nothing is logged, so a config that still sets the old key falls back to the default `place_background_priority` chain or the default `unknown_place` text. Rename both keys in `config.toml`.
 
 No old name announces itself with a deprecation warning at runtime, so migrate by checking your config file, templates, and curated asset folders directly rather than by watching the logs.
 

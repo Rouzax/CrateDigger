@@ -98,7 +98,7 @@ For multi-artist folders (multiple DJs sharing one directory), CrateDigger treat
 | Artist folder | DJ artwork from 1001Tracklists, then fanart.tv artist background, then gradient |
 | Year folder | Gradient + colorful year badge |
 
-The gradient color comes from the festival's `color` field in [`festivals.json`](festivals.md) if set, otherwise from the dominant color across the folder's thumb images.
+The gradient color comes from the place's `color` field in [`places.json`](places.md) if set (an edition's own `color` wins over the place-level one), otherwise from the dominant color across the folder's thumb images.
 
 ---
 
@@ -156,7 +156,7 @@ Without a 1001Tracklists account, the NFO still populates from filename parsing 
 
 ## Festival logos
 
-For festival-style folder posters, CrateDigger looks for a curated logo image to place as the centered mark. The filename convention is `logo.<ext>` inside a folder named after the canonical festival display name (for example `Tomorrowland`, `Tomorrowland Winter`, `EDC Las Vegas`).
+For festival-style folder posters, CrateDigger looks for a curated logo image to place as the centered mark. The filename convention is `logo.<ext>` inside a folder named after the canonical place display name (for example `Tomorrowland`, `Tomorrowland Winter`, `EDC Las Vegas`). An edition gets its own folder next to the canonical one, never a subfolder inside it.
 
 **Supported formats:** JPG, PNG, WebP. SVG, GIF, BMP, and TIFF are not supported.
 
@@ -164,14 +164,14 @@ For festival-style folder posters, CrateDigger looks for a curated logo image to
 
 CrateDigger searches two locations, library-local first:
 
-1. `{library}/.cratedigger/festivals/{FestivalName}/logo.<ext>`: travels with the library; takes precedence when both locations have a file
+1. `{library}/.cratedigger/places/{PlaceName}/logo.<ext>`: travels with the library; takes precedence when both locations have a file
 2. User-level, shared across all your libraries:
 
 | Platform | Path |
 |----------|------|
-| Linux | `~/CrateDigger/festivals/{FestivalName}/logo.<ext>` |
-| macOS | `~/CrateDigger/festivals/{FestivalName}/logo.<ext>` |
-| Windows | `Documents\CrateDigger\festivals\{FestivalName}\logo.<ext>` |
+| Linux | `~/CrateDigger/places/{PlaceName}/logo.<ext>` |
+| macOS | `~/CrateDigger/places/{PlaceName}/logo.<ext>` |
+| Windows | `Documents\CrateDigger\places\{PlaceName}\logo.<ext>` |
 
 ### Checking coverage
 
