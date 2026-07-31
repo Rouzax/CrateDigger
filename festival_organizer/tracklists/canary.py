@@ -58,10 +58,17 @@ def check_tracklist_page(html: str) -> list[str]:
     soup = _soup(html)
     missing: list[str] = []
 
-    if soup.select_one("div.tlpItem.tlpTog") is None:
+    has_rows = soup.select_one("div.tlpItem.tlpTog") is not None
+    if not has_rows:
         missing.append("tlpItem row")
     if soup.select_one("input[id$='_cue_seconds']") is None:
         missing.append("cue_seconds input")
+    # _parse_tracks reads the visible cue display to tell an unset cue
+    # (empty div) from a genuine 00:00; if the div vanishes, uncued rows
+    # silently become phantom 00:00 chapters. Gated on rows existing so a
+    # row-less page reports "tlpItem row" alone instead of two labels.
+    if has_rows and soup.select_one("div.tlpItem div[onclick*='toggleCue']") is None:
+        missing.append("cue display div")
 
     h1_el = soup.find("h1")
     if h1_el is None:
@@ -78,7 +85,7 @@ def check_tracklist_page(html: str) -> list[str]:
         if not has_artist_anchor:
             missing.append("h1 artist anchor")
 
-    if soup.select_one("div.tlpItem.tlpTog") is not None:
+    if has_rows:
         row_anchor = soup.select_one(
             'div.tlpItem a[href^="/artist/"], div.tlpItem a[href^="/dj/"]'
         )
