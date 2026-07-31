@@ -346,6 +346,19 @@ def test_parse_tracks_label_no_stray_space_around_nested_icon():
     assert tracks[0].label == "SHEFFIELD TUNES (KONTOR)"
 
 
+def test_parse_tracks_label_keeps_space_before_parent_label():
+    """A sublabel linking its parent keeps the markup's space: the export
+    renders 'ARMIND (ARMADA)', never 'ARMIND(ARMADA)'."""
+    html = """<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="Some Artist - Some Title">
+<span class="trackLabel">ARMIND<a href="/label/armind/index.html" title="open label page"><i class="fa fa-external-link"></i></a> (ARMADA<a href="/label/armada/index.html" title="open label page"><i class="fa fa-external-link"></i></a>)</span>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert len(tracks) == 1
+    assert tracks[0].label == "ARMIND (ARMADA)"
+
+
 # --- artist_names cleanliness: per-artist wrapper vs. trackValue fallback ---
 
 

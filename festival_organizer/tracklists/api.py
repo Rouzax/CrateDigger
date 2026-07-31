@@ -441,9 +441,12 @@ def _parse_tracks(html) -> list["Track"]:
 def _label_span_texts(row) -> list[str]:
     """Plain text of every span.trackLabel on a row, in document order.
 
-    Nested icon <a> elements are stripped and text nodes are concatenated
-    without a separator: a space separator would insert a stray gap where
-    the icon anchor sat ('KONTOR )' instead of 'KONTOR)').
+    Nested icon <a> elements are dropped and the remaining text nodes are
+    concatenated with no added separator: a space separator would insert a
+    stray gap where the icon anchor sat ('KONTOR )' instead of 'KONTOR)').
+    Whitespace already present in the markup is kept (collapsed to single
+    spaces), because the export preserves it: a parent-label row reads
+    'ARMIND (ARMADA)', not 'ARMIND(ARMADA)'.
     """
     from bs4 import BeautifulSoup
 
@@ -456,7 +459,7 @@ def _label_span_texts(row) -> list[str]:
             continue
         for sub in copy.select("a"):
             sub.decompose()
-        text = fix_mojibake(copy.get_text(strip=True))
+        text = fix_mojibake(re.sub(r"\s+", " ", copy.get_text()).strip())
         if text:
             texts.append(text)
     return texts
