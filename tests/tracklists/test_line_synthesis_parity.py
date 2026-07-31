@@ -1,10 +1,14 @@
-"""Byte-parity net: synthesized lines vs real export_data.php output.
+"""Timed-row parity net: synthesized lines vs real export_data.php output.
 
 Each fixture pair holds a tracklist page and the real export API response
 captured at the same moment (2026-07-31, before the API was retired from
 the pipeline). Synthesis must reproduce the export's timed rows exactly:
 same player buckets, same second, same visible text including qualifiers
 and the joined [Label] suffix.
+
+Parity is scoped to those timed rows. Header, blank, backlink, and
+untimed "w/" lines are not compared, and neither are the literal
+timestamp bytes; downstream parsing is insensitive to all of those.
 
 Timestamps compare at second granularity because the export renders
 minute-precision-friendly forms ("[02:25]", "[2:14:27]") while synthesis
@@ -51,7 +55,9 @@ def test_synthesized_lines_match_real_export(pair_id):
     export_lines = [ln for ln in export_raw.split("\n") if ln.strip()]
     synthesized = _synthesize_export_lines(_parse_tracks(html))
 
-    assert _timed_rows(synthesized) == _timed_rows(export_lines)
+    exp_rows = _timed_rows(export_lines)
+    assert exp_rows, "fixture yielded no timed rows"
+    assert _timed_rows(synthesized) == exp_rows
 
 
 @pytest.mark.parametrize("pair_id", PAIR_IDS)
@@ -72,4 +78,5 @@ def test_synthesized_player_buckets_match_export(pair_id):
         for p, b in partition_lines_by_player(synthesized).items()
         if any(_TS_RE.match(ln) for ln in b)
     }
+    assert exp_buckets, "fixture yielded no timed player buckets"
     assert syn_buckets == exp_buckets

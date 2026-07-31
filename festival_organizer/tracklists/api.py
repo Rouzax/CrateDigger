@@ -487,8 +487,9 @@ def _synthesize_export_lines(tracks: list["Track"]) -> list[str]:
     """Rebuild export_data.php-format lines from parsed page tracks.
 
     Replaces the retired AJAX export call (1001TL put a 30/month quota on
-    it in 2026-07). Validated byte-equivalent against real exports on
-    seven paired snapshots; the rules below mirror the export exactly:
+    it in 2026-07). Validated against real exports on seven paired
+    snapshots at timed-row parity: same player bucket, same second, same
+    visible text. The rules below mirror the export exactly:
 
       - mains only (mashup mains included; overlays and tlpSubTog
         sub-components never appear as timed lines)
@@ -729,7 +730,7 @@ class TracklistSession:
         # Tracklist lines come from the page itself. The AJAX export API
         # (/ajax/export_data.php) was retired here in 2026-07 when 1001TL
         # capped it at 30 calls/month; _synthesize_export_lines rebuilds
-        # its output byte-for-byte from the parsed rows.
+        # its timed rows exactly from the parsed rows.
         tracks = _parse_tracks(page_soup)
         lines = _synthesize_export_lines(tracks)
         uncued_dropped = sum(
