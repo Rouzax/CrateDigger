@@ -226,6 +226,8 @@ Library/
 
 Festival sets are grouped by place: the canonical festival, venue, or location name.
 Concert recordings go into an artist folder. Good when you primarily browse by event.
+A set with no routable place falls back to the artist name as its place, which is why
+sets CrateDigger could not tie to an event still appear under an artist-named folder here.
 
 ```
 Library/
@@ -239,7 +241,7 @@ Library/
 
 ### artist_nested
 
-Deep hierarchy: artist, then festival, then year. Good for large libraries where you
+Deep hierarchy: artist, then place, then year. Good for large libraries where you
 browse by artist and want sets organized by event and year within each artist folder.
 
 ```
@@ -389,7 +391,7 @@ must not contain a field name: a token like `{Saturday}` parses as the `day` fie
 | Field | Description |
 |-------|-------------|
 | `artist` | Artist name (alias-resolved; for B2B sets, the first artist) |
-| `place` | Canonical name of the associated place: festival, venue, club, or free-text location |
+| `place` | Canonical name of the associated place, resolved in order: festival, venue, free-text location, and finally the artist name when none of those is known |
 | `edition` | Festival edition (e.g., "Winter", "SoCal") |
 | `year` | Event year |
 | `date` | Full event date in ISO `yyyy-mm-dd` form; empty when only the year is known |

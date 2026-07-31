@@ -286,10 +286,10 @@ mv ~/.cratedigger/festivals.json ~/.cratedigger/places.json
 mv {library}/.cratedigger/festivals.json {library}/.cratedigger/places.json
 ```
 
-### Deprecated names that still work until 1.0.0
+### Renamed in 0.15.0: old name to new name
 
-| What | Old (deprecated) | New |
-|------|-----------------|-----|
+| What | Old name | New name |
+|------|----------|----------|
 | Config file | `festivals.json` | `places.json` |
 | Template token | `{festival}` | `{place}` |
 | Layout names | `festival_flat`, `festival_nested` | `place_flat`, `place_nested` |
@@ -297,7 +297,12 @@ mv {library}/.cratedigger/festivals.json {library}/.cratedigger/places.json
 | Fallback value key | `unknown_festival` | `unknown_place` |
 | Curated assets directory | `.cratedigger/festivals/<name>/` | `.cratedigger/places/<name>/` |
 
-Each deprecated name logs a one-shot warning the first time it is used in a process. If you run `cratedigger --check`, any triggered deprecations appear in the output so you can find them without scanning logs manually.
+Two of these rows need extra care, because the old name does not behave like the new one:
+
+- **`{festival}` no longer works.** The token was removed in 0.15.0, not deprecated. A template that still contains `{festival}` renders the fallback text "Unknown" where the place name should be, so update every custom template to `{place}`.
+- **The old layout names work only as `default_layout` values.** `festival_flat` and `festival_nested` are mapped silently to `place_flat` and `place_nested` when read from `default_layout` in `config.toml`. Nothing else accepts them: a custom `[layouts.festival_flat]` or `[layouts.festival_nested]` section is ignored after that mapping, and the `--layout` command-line flag accepts only `artist_flat`, `place_flat`, `artist_nested`, and `place_nested`.
+
+No old name announces itself with a deprecation warning at runtime, so migrate by checking your config file, templates, and curated asset folders directly rather than by watching the logs.
 
 ## Related
 

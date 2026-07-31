@@ -645,8 +645,10 @@ def test_render_date_tokens_collapse_year_only():
 
 def test_render_date_tokens_custom_order_and_separator():
     values = {"year": "2024", "month": "06", "day": "15"}
-    assert _render("{day}{-month}-{year}", values, {}) == "15-06-2024"
+    assert _render("{day-}{month-}{year}", values, {}) == "15-06-2024"
     assert _render("{year}{.month}{.day}", values, {}) == "2024.06.15"
+    year_only = {"year": "2024", "month": "", "day": ""}
+    assert _render("{day-}{month-}{year}", year_only, {}) == "2024"
 
 
 def test_render_month_required_uses_unknown_month_fallback():
@@ -708,6 +710,6 @@ def test_render_filename_month_day_malformed_date_degrades():
 
 
 def test_date_token_still_parses_over_day():
-    """Longest-first field matching: {date} must not parse as prefix+day."""
+    """{date} keeps rendering the full date now that {day} is also a field."""
     values = {"date": "2024-06-15", "day": "15"}
     assert _render("{date}", values, {}) == "2024-06-15"

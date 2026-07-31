@@ -123,7 +123,7 @@ Templates for generated filenames. The original file extension is preserved auto
 festival_set = "{year}{-month}{-day} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}"
 ```
 
-renders `2024-06-15 - Tiesto - Tomorrowland [Mainstage]` for a fully dated set and `2024 - Tiesto - Tomorrowland [Mainstage]` when only the year is known. Any order or separator works (`{day-}{month-}{year}`, `{year}{.month}{.day}`). See [Organize: template syntax](commands/organize.md#filename-template-syntax) for the full field list.
+renders `2024-06-15 - Tiesto - Tomorrowland [Mainstage]` for a fully dated set and `2024 - Tiesto - Tomorrowland [Mainstage]` when only the year is known. Any order works, and any punctuation separator (`{day-}{month-}{year}`, `{year}{.month}{.day}`). See [Organize: template syntax](commands/organize.md#filename-template-syntax) for the full field list.
 
 ### Content type rules
 

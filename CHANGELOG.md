@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- New `{month}` and `{day}` filename/folder template tokens, zero-padded and sliced from the event date. They stay empty when only the year is known, so the optional-token form degrades gracefully: `{year}{-month}{-day}` renders `2024-06-15 - ...` for a fully dated set and `2024 - ...` otherwise. Any order or separator works (`{day-}{month-}{year}`, `{year}{.month}{.day}`).
+- New `{month}` and `{day}` filename/folder template tokens, zero-padded and sliced from the event date. They stay empty when only the year is known, so the optional-token form degrades gracefully: `{year}{-month}{-day}` renders `2024-06-15 - ...` for a fully dated set and `2024 - ...` otherwise. Any order works, and any punctuation separator (`{day-}{month-}{year}`, `{year}{.month}{.day}`).
 
 ### Fixed
 
