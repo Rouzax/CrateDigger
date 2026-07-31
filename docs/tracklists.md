@@ -27,6 +27,8 @@ Short answer: no, but the feature gap is significant.
 
 **With an account**, every row in the table is filled in. `identify` matches your recording against 1001Tracklists, and embeds per-chapter metadata plus album-level event context directly into the MKV.
 
+**Why the login is required:** 1001Tracklists only renders tracklist content, the actual tracks and timestamps, to signed-in users; a logged-out request for a tracklist page gets back a page shell with no track rows and no timing data at all, even though site search still works without an account. This is why `identify` needs a login: without a session there is no track data to read, not merely a reduced feature set. Current versions read the tracklist page directly instead of calling the 1001Tracklists export API, so CrateDigger never draws on the account's monthly tracklist-export allowance; the "Monthly export limit (30) exceeded" quota does not apply to CrateDigger runs.
+
 ## Account setup
 
 You need a free account at [1001Tracklists](https://www.1001tracklists.com/). Configure your credentials in one of two ways.

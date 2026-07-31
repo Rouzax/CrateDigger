@@ -14,8 +14,10 @@ information into your MKV file. The result is a file with named chapter markers,
 track, so media players can jump to any track in the set, and so the rest of the CrateDigger
 pipeline has rich metadata to work with.
 
-**A 1001Tracklists account is required.** The `identify` command always logs in before
-processing. Without credentials, it exits with an error. See
+**A 1001Tracklists account is required.** 1001Tracklists only renders tracklist content,
+the tracks and timestamps, to signed-in users, so a logged-out request returns a page
+with no track data to parse. The `identify` command always logs in before processing.
+Without credentials, it exits with an error. See
 [Do I need an account?](../tracklists.md#do-i-need-an-account) for what you still get if
 you skip this step.
 
