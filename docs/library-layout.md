@@ -113,7 +113,7 @@ CrateDigger writes Kodi-compatible musicvideo NFO files. Jellyfin reads the same
 | `<album>` | For festival sets: `Festival Year` (e.g., `Amsterdam Music Festival 2025`). For concerts: concert title or festival name. |
 | `<premiered>` | Release date (`YYYY-MM-DD`), or `YYYY-01-01` if only a year is known. |
 | `<genre>` | One element per genre extracted from 1001Tracklists track data. Falls back to the genre configured in [`nfo_settings`](configuration.md#nfo-settings). |
-| `<tag>` | Content type, festival name, each artist name, plus expanded group members. Used for Kodi smart playlists. |
+| `<tag>` | Content type, place name, edition, a combined `Place Year` tag, each artist name, plus expanded group members. Used for Kodi smart playlists and Jellyfin tag filters. See [selecting one festival edition](#selecting-one-festival-edition). |
 | `<studio>` | Stage name for festival sets; venue for concerts. |
 | `<plot>` | Stage, edition, and set title, one per line. Only lines with data are included. |
 | `<runtime>` | Duration in whole minutes. |
@@ -136,6 +136,7 @@ Sample NFO for the Armin b2b KI/KI example:
   <genre>Hard Dance</genre>
   <tag>festival_set</tag>
   <tag>AMF</tag>
+  <tag>AMF 2025</tag>
   <tag>Armin van Buuren</tag>
   <tag>KIKI</tag>
   <studio>Two Is One</studio>
@@ -151,6 +152,27 @@ Sample NFO for the Armin b2b KI/KI example:
 ```
 
 Without a 1001Tracklists account, the NFO still populates from filename parsing and embedded tags: title, primary artist, album, year, and fallback genre. The multi-artist list, 1001Tracklists-sourced genres, stage, set title, and any field the filename parser cannot infer are omitted.
+
+### Selecting one festival edition
+
+A common thing to want is every set from a single edition, such as all of Tomorrowland 2026. CrateDigger writes two fields that answer this, because Kodi and Jellyfin reach it differently.
+
+**In Kodi**, use **Videos → Music Videos → Albums**. Each festival edition appears as its own album, because `<album>` is written as `Place Year`. Nothing extra is needed. Kodi also indexes `<tag>`, `<artist>`, `<studio>`, and `<genre>` as browsable nodes under Music Videos, and its smart playlists can combine rules with AND, so `Tag is Tomorrowland` AND `Year is 2026` works too.
+
+**In Jellyfin**, use the library's **Filter → Tags** and pick `Tomorrowland 2026`. This is what the combined `Place Year` tag exists for. Jellyfin stores `<album>` for music videos but offers no album browse for them, and when you select several tags it returns items matching *any* of them rather than all, so a separate place tag plus a year tag cannot be combined into one edition. The pre-combined tag sidesteps both limits.
+
+The Tags filter for music-video libraries requires **Jellyfin 12.0 or newer**. On older versions the filter is not offered for this library type; use a [collection](kodi-integration.md#jellyfin-and-plex) instead.
+
+The combined tag is written only when all three hold:
+
+- the item is a festival set (not a concert film)
+- a place resolved (festival, venue, or location; a bare stage does not count)
+- the year is known
+
+It uses the edition-qualified display name, matching `<album>`, so `Dreamstate SoCal 2026` stays distinct from other Dreamstate editions that year. When the place name already contains the year, no duplicate tag is written.
+
+!!! note "Existing libraries"
+    NFO files are only rewritten when `enrich` runs. Sets enriched before this tag existed keep their old NFO until you re-run `enrich nfo` over them.
 
 ---
 

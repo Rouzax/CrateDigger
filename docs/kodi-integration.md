@@ -129,7 +129,14 @@ cratedigger enrich ~/Music/Library/ --only cover --regenerate
 
 ## Jellyfin and Plex
 
-**Jellyfin** reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, album grouping, posters, thumbs, and fanart from the sidecar files automatically.
+**Jellyfin** reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, tags, posters, thumbs, and fanart from the sidecar files automatically. Set the library's content type to **Music videos**; it is the only type that indexes artists, which is what makes an artist-based library browsable.
+
+Two Jellyfin limits are worth knowing, because neither applies to Kodi:
+
+- **No album browse for music videos.** Jellyfin stores `<album>` but never surfaces it for this library type, so festival editions do not appear as albums the way they do in Kodi. Use the combined `Place Year` tag instead: **Filter → Tags → `Tomorrowland 2026`**. This needs Jellyfin 12.0 or newer, which is when tag filtering arrived for music-video libraries. See [selecting one festival edition](library-layout.md#selecting-one-festival-edition).
+- **`<studio>` is not browsable.** The stage name is stored but Jellyfin offers no studio filter or tab for music videos, so stage data only pays off in Kodi.
+
+On Jellyfin releases older than 12.0, or if you want festival editions pinned as browsable entries with their own artwork, create a **collection** per edition. Collections accept music videos and appear in a separate Collections library. They are static, so new sets need adding as they arrive.
 
 **Plex** can read the same files via musicvideo-compatible agents. Plex does not have an equivalent of the JSON-RPC sync, so run a manual library refresh in Plex after a CrateDigger run. For MKV files, the embedded `cover.jpg` attachment gives Plex the portrait set poster as the thumbnail; WebM files carry no such attachment, so Plex falls back to whatever cover art its agent picks up from the sidecar files.
 

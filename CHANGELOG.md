@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.35.0] - 2026-08-01
+
+### Added
+
+- Festival sets now get a combined `Place Year` NFO `<tag>` (for example `Tomorrowland 2026`) alongside the existing place and edition tags, so a single festival edition can be selected in one click. This is aimed at Jellyfin: it stores `<album>` for music videos but exposes no album browse for them, and selecting several tags matches *any* of them rather than all, so a place tag plus a year filter cannot be intersected. Kodi already reached the same set through its Music Videos → Albums node and is unaffected. The tag uses the edition-qualified display name, matching `<album>`, so `Dreamstate SoCal 2026` stays distinct from other editions that year; it is written only for festival sets that resolved a place and know their year, and is skipped when the place name already contains the year. Affected NFOs regenerate on the next enrich run.
+
 ## [0.34.2] - 2026-08-01
 
 ### Fixed

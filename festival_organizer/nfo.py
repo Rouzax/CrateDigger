@@ -56,6 +56,7 @@ def generate_nfo_xml(
         else:
             album = base or mf.year
     else:
+        place_name = ""
         album = mf.title or mf.festival or ""
     if album:
         _add(root, "album", album)
@@ -92,6 +93,18 @@ def generate_nfo_xml(
     if mf.edition:
         _add(root, "tag", mf.edition)
         existing_tags.add(mf.edition.lower())
+    # Combined "{place} {year}" tag, mirroring <album>. Kodi already reaches a
+    # single edition via its Music Videos > Albums node, but Jellyfin exposes no
+    # album browse for music videos and ORs multiple selected tags together, so
+    # one pre-combined tag is the only way to select an edition in a single
+    # click there. Uses the edition-qualified display name (like <album>), not
+    # the raw place tag above, so "Dreamstate SoCal 2026" stays distinct from
+    # the other Dreamstate editions that year.
+    if mf.content_type == "festival_set" and place_name and mf.year:
+        place_year = place_name if mf.year in place_name else f"{place_name} {mf.year}"
+        if place_year.lower() not in existing_tags:
+            _add(root, "tag", place_year)
+            existing_tags.add(place_year.lower())
 
     if mf.artists:
         group_members = dj_cache.derive_group_members() if dj_cache else {}

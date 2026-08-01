@@ -199,6 +199,103 @@ def test_nfo_tags_for_smart_playlists(tmp_path):
     assert "Belgium" in tags
 
 
+def test_nfo_tag_place_year_combined(tmp_path):
+    """Festival sets get a combined '{place} {year}' tag for one-click edition filters."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="Tomorrowland",
+        year="2026",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert "Tomorrowland 2026" in tags
+
+
+def test_nfo_tag_place_year_venue_routed(tmp_path):
+    """The combined tag follows the resolved place, so venue-routed sets get one too."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        venue="Red Rocks",
+        year="2026",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert "Red Rocks 2026" in tags
+
+
+def test_nfo_tag_place_year_no_duplicate_when_place_has_year(tmp_path):
+    """No duplicate tag when the place name already carries the year."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        venue="Red Rocks 2026",
+        year="2026",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert tags.count("Red Rocks 2026") == 1
+
+
+def test_nfo_tag_place_year_absent_without_place(tmp_path):
+    """No combined tag when nothing routable exists; a bare year tag is useless."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        stage="Mainstage",
+        year="2026",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert "2026" not in tags
+    assert "Mainstage 2026" not in tags
+
+
+def test_nfo_tag_place_year_absent_for_concert_film(tmp_path):
+    """Only festival sets get the combined tag; concert films have no edition axis."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        title="Live At Wembley",
+        venue="Wembley",
+        year="2026",
+        content_type="concert_film",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert "Wembley 2026" not in tags
+
+
+def test_nfo_tag_place_year_absent_without_year(tmp_path):
+    """No combined tag when the year is unknown."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        festival="Tomorrowland",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert tags.count("Tomorrowland") == 1
+
+
 def test_nfo_studio_is_stage(tmp_path):
     """studio = stage name for festival sets."""
     mf = MediaFile(
