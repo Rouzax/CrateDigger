@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.34.2] - 2026-08-01
+
+### Fixed
+
+- The "new version available" notice no longer crashes when output is piped on Windows. The notice used a Unicode arrow; when stdout is a pipe (scheduled tasks, log capture), Python encodes with the legacy codepage (cp1252) and the arrow raised UnicodeEncodeError, killing the command exactly when an update was available. The arrow is now ASCII ("0.34.1 -> 0.34.2"), and the CLI additionally reconfigures stdout/stderr at startup so any unencodable character anywhere in the output (exotic track titles included) degrades to "?" instead of crashing.
+
 ## [0.34.1] - 2026-08-01
 
 ### Fixed
