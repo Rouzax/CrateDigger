@@ -1114,10 +1114,11 @@
 
 
 <h1 id="audit-logos">audit-logos</h1>
-<p>Check which festivals in your library have curated logo files for poster generation.</p>
+<p>Check which places in your library have curated logo files for poster generation.</p>
 <h2 id="what-this-is-for">What this is for</h2>
-<p>When <code>enrich</code> generates a <code>folder.jpg</code> poster for a festival folder, it uses a curated logo if one is available. Without a logo, the poster falls back to a color gradient. <code>audit-logos</code> shows you exactly which festivals in your library have logos and which do not, and tells you where to place a logo file for any that are missing.</p>
-<p>Run this any time you want to improve poster quality for a specific festival, or after adding a new logo to verify it was picked up correctly.</p>
+<p>When <code>enrich</code> generates a <code>folder.jpg</code> poster for a place folder, it uses a curated logo if one is available. Without a logo, the poster falls back to a color gradient. <code>audit-logos</code> shows you exactly which places in your library have logos and which do not, and tells you where to place a logo file for any that are missing.</p>
+<p>A "place" here is any event location CrateDigger routes a set by: a festival (Tomorrowland), a standalone venue (Red Rocks), or a free-text location from the tracklist page. Artist-routed sets are not listed; their posters use artist artwork, not place logos.</p>
+<p>Run this any time you want to improve poster quality for a specific place, or after adding a new logo to verify it was picked up correctly.</p>
 <h2 id="before-you-start">Before you start</h2>
 <p><code>audit-logos</code> requires a CrateDigger library. Run <a href="../organize/"><code>organize</code></a> first. Without the <code>.cratedigger/</code> marker folder that <code>organize</code> creates, <code>audit-logos</code> exits with an error.</p>
 <h2 id="usage">Usage</h2>
@@ -1151,13 +1152,13 @@
 </tbody>
 </table>
 <h2 id="what-it-reports">What it reports</h2>
-<p><code>audit-logos</code> scans your library for all recognized festival names, then checks whether a logo file exists for each one.</p>
-<p><strong>Festivals with logos:</strong> the festival name and the path to the logo file being used.</p>
-<p><strong>Festivals missing logos:</strong> the festival name and two suggested paths where you can place a logo file (library-local or user-level).</p>
-<p><strong>Unmatched logo folders:</strong> folders that exist inside your logo directories but do not match any festival currently in your library. Usually these are leftovers from files you removed.</p>
+<p><code>audit-logos</code> scans your library for all recognized place names (festivals, venues, and locations), then checks whether a logo file exists for each one.</p>
+<p><strong>Places with logos:</strong> the place name and the path to the logo file being used.</p>
+<p><strong>Places missing logos:</strong> the place name and two suggested paths where you can place a logo file (library-local or user-level).</p>
+<p><strong>Unmatched logo folders:</strong> folders that exist inside your logo directories but do not match any place currently in your library. Usually these are leftovers from files you removed.</p>
 <p><strong>Unsupported formats:</strong> any logo files using a format CrateDigger cannot read (SVG, GIF, BMP, TIFF). Rename or convert them to a supported format.</p>
 <h2 id="where-to-place-logo-files">Where to place logo files</h2>
-<p>Logo files go in a folder named after the festival, inside one of two locations:</p>
+<p>Logo files go in a folder named after the place, inside one of two locations:</p>
 <table>
 <thead>
 <tr>
@@ -1185,14 +1186,14 @@
 </tbody>
 </table>
 <p>The library-local location takes precedence over the user-level location if both exist.</p>
-<p>The festival folder name must match the canonical display name CrateDigger uses for that festival (the same name shown in the audit output).</p>
+<p>The place folder name must match the canonical display name CrateDigger uses for that place (the same name shown in the audit output).</p>
 <p><strong>Supported formats:</strong> JPG, PNG, WebP.</p>
 <h2 id="example">Example</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cratedigger<span class="w"> </span>audit-logos<span class="w"> </span>~/Music/Library/
 </code></pre></div>
 <p>Sample output:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Library: /home/user/Music/Library
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Festivals found: 12
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Places found: 12
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>With curated logo (8):
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  Tomorrowland: /home/user/CrateDigger/places/Tomorrowland/logo.png
@@ -1200,12 +1201,12 @@
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  ...
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>Missing curated logo (4):
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>  Awakenings
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    -&gt; place logo at: /home/user/Music/Library/.cratedigger/places/Awakenings/logo.png
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>       or user-level: /home/user/CrateDigger/places/Awakenings/logo.png
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>  Red Rocks
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    -&gt; place logo at: /home/user/Music/Library/.cratedigger/places/Red Rocks/logo.png
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>       or user-level: /home/user/CrateDigger/places/Red Rocks/logo.png
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>  ...
 </code></pre></div>
-<p>After adding a logo for a missing festival, regenerate its poster:</p>
+<p>After adding a logo for a missing place, regenerate its poster:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
 </code></pre></div>
 <h2 id="related">Related</h2>

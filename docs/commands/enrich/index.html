@@ -1569,8 +1569,10 @@ genre, year, and artwork references. CrateDigger follows the Kodi musicvideo NFO
 <li>Title, artist(s), album, year, runtime</li>
 <li>Genre (from 1001Tracklists if identified; otherwise from <code>nfo_settings</code> in your config)</li>
 <li>Stage or venue</li>
+<li>Tags for the content type, the place (festival, venue, or location), the edition, and each artist</li>
 <li>References to the thumbnail, poster, and fanart images</li>
 </ul>
+<p>The album is the place name plus the year ("Tomorrowland 2026", "Red Rocks 2026"), which is what Kodi and Jellyfin group sets by. Festival sets use the festival name with its edition folded in; sets at a standalone venue or location use that place name instead. When no place is known at all, the album falls back to the stage name plus year, or the bare year as a last resort.</p>
 <p><strong>Skipped if:</strong> an existing NFO already reflects the current metadata. If any of the following have changed since the NFO was last written, it is regenerated automatically: artist, genre, stage, edition, title, or DJ group members. The original <code>dateadded</code> timestamp is preserved when regenerating. Use <code>--regenerate</code> to force regeneration regardless of whether the metadata has changed.</p>
 <h3 id="tags-mkv-metadata-tags">tags: MKV metadata tags</h3>
 <p>Writes structured metadata tags into each MKV file at the file level. These are the
