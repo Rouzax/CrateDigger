@@ -1139,3 +1139,50 @@ def test_collect_place_displays_covers_all_routed_kinds(tmp_path):
         "Red Rocks",
         "Alexandra Palace London",
     }
+
+
+def test_stdio_encoding_safe_survives_cp1252_pipe(monkeypatch):
+    """_make_stdio_encoding_safe degrades unencodable glyphs to '?' instead of
+    letting a cp1252 pipe raise UnicodeEncodeError (unattended Windows runs
+    capture output through a pipe, where Python uses the legacy codepage)."""
+    import io
+    import sys
+
+    from festival_organizer.cli import _make_stdio_encoding_safe
+
+    raw = io.BytesIO()
+    monkeypatch.setattr(
+        sys, "stdout", io.TextIOWrapper(raw, encoding="cp1252", write_through=True)
+    )
+    monkeypatch.setattr(
+        sys,
+        "stderr",
+        io.TextIOWrapper(io.BytesIO(), encoding="cp1252", write_through=True),
+    )
+    _make_stdio_encoding_safe()
+    sys.stdout.write("0.34.0 → 0.34.1")
+    sys.stdout.flush()
+    assert b"?" in raw.getvalue()
+
+
+def test_version_update_notice_survives_cp1252_stream(monkeypatch):
+    """The new-version notice renders through a strict cp1252 stream without
+    raising, i.e. it contains no non-ASCII glyphs like the old arrow."""
+    import io
+
+    from festival_organizer import cli, update_check
+
+    monkeypatch.setattr(update_check, "refresh_update_cache", lambda force=False: None)
+    monkeypatch.setattr(
+        update_check, "_read_cache", lambda: {"latest_version": "999.0.0"}
+    )
+    monkeypatch.setattr(update_check, "_is_suppressed_explicit", lambda: False)
+
+    buf = io.BytesIO()
+    stream = io.TextIOWrapper(buf, encoding="cp1252", write_through=True)
+    console = Console(file=stream, force_terminal=False, width=100)
+    cli._print_version_with_freshness(console)
+    stream.flush()
+    out = buf.getvalue().decode("cp1252")
+    assert "->" in out
+    assert "999.0.0" in out

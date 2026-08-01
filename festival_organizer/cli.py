@@ -176,9 +176,12 @@ def _print_version_with_freshness(console: Console) -> None:
         return
     if _is_newer(installed=installed, candidate=latest):
         cmd = _upgrade_command()
+        # ASCII "->" on purpose: this line must survive cp1252 pipes
+        # (scheduled runs capture output), where a Unicode arrow raises
+        # UnicodeEncodeError.
         console.print(
             f"[yellow]![/yellow] A new cratedigger version is available: "
-            f"{installed} → {latest}"
+            f"{installed} -> {latest}"
         )
         console.print(f"  Upgrade: [cyan]{cmd}[/cyan]")
     else:
@@ -629,6 +632,25 @@ def audit_logos(
 _SAVED_CONSOLE_MODE: int | None = None
 
 
+def _make_stdio_encoding_safe() -> None:
+    """Degrade unencodable output to '?' instead of crashing.
+
+    When stdout/stderr is a pipe on Windows, Python encodes with the legacy
+    ANSI codepage (e.g. cp1252) rather than UTF-8, so any glyph outside it
+    (the update notice's old arrow, track titles with exotic characters)
+    raised UnicodeEncodeError from deep inside a print and killed the
+    command. Unattended scheduled runs always capture output through a
+    pipe, so replacement characters are strictly better than a crash.
+    """
+    import contextlib
+
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            with contextlib.suppress(OSError, ValueError):
+                reconfigure(errors="replace")
+
+
 def _save_win32_console_mode() -> None:
     """Snapshot the console output mode before Rich touches it."""
     global _SAVED_CONSOLE_MODE
@@ -679,6 +701,7 @@ def _cleanup_console() -> None:
 
 def run(argv: list[str] | None = None) -> int:
     """Main entry point. Returns exit code."""
+    _make_stdio_encoding_safe()
     if sys.platform == "win32":
         _save_win32_console_mode()
     try:
