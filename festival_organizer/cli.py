@@ -1547,6 +1547,23 @@ def _run_kodi_sync(
             console.print(f"[yellow]Kodi sync failed: {e}[/yellow]")
 
 
+def _collect_place_displays(
+    analyzed: list[tuple[Path, MediaFile]], config: Config
+) -> set[str]:
+    """Resolved place display names (edition folded) for logo auditing.
+
+    Includes festival-, venue-, and location-routed sets, matching the
+    places the poster pipeline's curated-logo lookup routes through.
+    Artist-kind fallbacks are excluded: they use artist artwork, not
+    place logos.
+    """
+    found: set[str] = set()
+    for _fp, mf in analyzed:
+        if mf.place_kind in ("festival", "venue", "location") and mf.place:
+            found.add(config.get_place_display(mf.place, mf.edition))
+    return found
+
+
 def _run_audit_logos(
     root: Path,
     config: Config,
@@ -1555,7 +1572,7 @@ def _run_audit_logos(
     verbose: bool = False,
     debug: bool = False,
 ) -> int:
-    """Audit curated festival logo coverage for a library."""
+    """Audit curated place logo coverage for a library."""
     from festival_organizer.library import find_library_root
 
     library_root = find_library_root(root) if root.exists() else None
@@ -1563,7 +1580,7 @@ def _run_audit_logos(
         print_error(f"not a CrateDigger library: {root}", console)
         return 1
 
-    # Scan all media files for canonical festival names
+    # Scan all media files for canonical place names
     if not verbose and not debug:
         with console.status("Scanning for media files..."):
             videos = [
@@ -1573,30 +1590,27 @@ def _run_audit_logos(
             ]
     else:
         if verbose or debug:
-            console.print("Scanning library for festivals...")
+            console.print("Scanning library for places...")
         videos = [
             v
             for v in root.rglob("*")
             if v.suffix.lower() in (".mkv", ".mp4", ".webm") and v.is_file()
         ]
 
-    festivals_found: set[str] = set()
+    places_found: set[str] = set()
     if videos:
         analyzed = _analyse_parallel(videos, root, config)
-        for _fp, mf in analyzed:
-            if mf.festival:
-                display = config.get_place_display(mf.festival, mf.edition)
-                festivals_found.add(display)
+        places_found = _collect_place_displays(analyzed, config)
 
-    # Check logo availability for each festival
+    # Check logo availability for each place
     logo_dirs = [
         library_root / ".cratedigger" / "places",
         paths.places_logo_dir(),
     ]
 
-    def find_logo(festival: str) -> Path | None:
+    def find_logo(place: str) -> Path | None:
         for base in logo_dirs:
-            d = base / festival
+            d = base / place
             for ext in ("jpg", "jpeg", "png", "webp"):
                 candidate = d / f"logo.{ext}"
                 if candidate.exists():
@@ -1606,30 +1620,30 @@ def _run_audit_logos(
     # Report
     have_logo: list[tuple[str, Path]] = []
     missing_logo: list[str] = []
-    for fest in sorted(festivals_found):
-        logo = find_logo(fest)
+    for place in sorted(places_found):
+        logo = find_logo(place)
         if logo:
-            have_logo.append((fest, logo))
+            have_logo.append((place, logo))
         else:
-            missing_logo.append(fest)
+            missing_logo.append(place)
 
     console.print(f"[bold]Library:[/bold] {escape(str(library_root))}")
-    console.print(f"[bold]Festivals found:[/bold] {len(festivals_found)}")
+    console.print(f"[bold]Places found:[/bold] {len(places_found)}")
     console.print()
 
     if have_logo:
         console.print(f"[green]With curated logo ({len(have_logo)}):[/green]")
-        for fest, path in have_logo:
-            console.print(f"  {escape(fest)}: [dim]{escape(str(path))}[/dim]")
+        for place, path in have_logo:
+            console.print(f"  {escape(place)}: [dim]{escape(str(path))}[/dim]")
         console.print()
 
     if missing_logo:
         user_places = paths.places_logo_dir()
         console.print(f"[yellow]Missing curated logo ({len(missing_logo)}):[/yellow]")
-        for fest in missing_logo:
-            lib_path = library_root / ".cratedigger" / "places" / fest
-            usr_path = user_places / fest
-            console.print(f"  {escape(fest)}")
+        for place in missing_logo:
+            lib_path = library_root / ".cratedigger" / "places" / place
+            usr_path = user_places / place
+            console.print(f"  {escape(place)}")
             console.print(
                 f"    [dim]-> place logo at: {escape(str(lib_path))}/logo.png[/dim]"
             )
@@ -1642,7 +1656,7 @@ def _run_audit_logos(
     for base in logo_dirs:
         if base.is_dir():
             for d in sorted(base.iterdir()):
-                if d.is_dir() and d.name not in festivals_found:
+                if d.is_dir() and d.name not in places_found:
                     has_logo = any(
                         (d / f"logo.{ext}").exists()
                         for ext in ("jpg", "jpeg", "png", "webp")

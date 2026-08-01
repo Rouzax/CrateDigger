@@ -70,7 +70,7 @@ def _console_handler_level():
 
     logger = logging.getLogger("festival_organizer")
     for h in logger.handlers:
-        if not isinstance(h, (logging.handlers.MemoryHandler, logging.FileHandler)):
+        if not isinstance(h, logging.handlers.MemoryHandler | logging.FileHandler):
             return h.level
     raise AssertionError("no console handler found")
 
@@ -1091,3 +1091,51 @@ def test_check_clean_install_reports_all_passed(monkeypatch, tmp_path):
     assert "All checks passed" in out, (
         f"expected 'All checks passed' in output, got:\n{out}"
     )
+
+
+def test_collect_place_displays_covers_all_routed_kinds(tmp_path):
+    """audit-logos place collection includes festival-, venue-, and
+    location-routed sets (the same places the poster logo lookup uses),
+    and excludes artist-kind fallbacks."""
+    from festival_organizer.cli import _collect_place_displays
+    from tests.conftest import make_mediafile
+
+    config = Config(TEST_CONFIG)
+    festival_mf = make_mediafile(
+        source_path=Path("a.mkv"),
+        artist="Artist A",
+        festival="Tomorrowland",
+        year="2026",
+        content_type="festival_set",
+    )
+    venue_mf = make_mediafile(
+        source_path=Path("b.mkv"),
+        artist="Artist B",
+        venue="Red Rocks",
+        year="2026",
+        content_type="festival_set",
+    )
+    location_mf = make_mediafile(
+        source_path=Path("c.mkv"),
+        artist="Artist C",
+        location="Alexandra Palace London",
+        year="2025",
+        content_type="festival_set",
+    )
+    artist_mf = make_mediafile(
+        source_path=Path("d.mkv"),
+        artist="Artist D",
+        year="2026",
+        content_type="festival_set",
+    )
+    analyzed = [
+        (Path("a.mkv"), festival_mf),
+        (Path("b.mkv"), venue_mf),
+        (Path("c.mkv"), location_mf),
+        (Path("d.mkv"), artist_mf),
+    ]
+    assert _collect_place_displays(analyzed, config) == {
+        "Tomorrowland",
+        "Red Rocks",
+        "Alexandra Palace London",
+    }

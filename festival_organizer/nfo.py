@@ -39,15 +39,22 @@ def generate_nfo_xml(
         _add(root, "artist", mf.artist or "Unknown Artist")
 
     if mf.content_type == "festival_set":
-        album_parts = []
-        festival_display = mf.festival
-        if mf.edition:
-            festival_display = config.get_place_display(mf.festival, mf.edition)
-        if festival_display:
-            album_parts.append(festival_display)
-        if mf.year:
-            album_parts.append(mf.year)
-        album = " ".join(album_parts) if album_parts else ""
+        # Route through the resolved place like build_display_title, so
+        # venue- and location-routed sets (empty mf.festival) still get a
+        # named album. The mf.festival fallback covers MediaFile instances
+        # built without the analyzer's place resolution. Stage is the last
+        # resort before a bare year, mirroring TrackSplit's album fallback.
+        if mf.place_kind in ("festival", "venue", "location") and mf.place:
+            place_name = config.get_place_display(mf.place, mf.edition)
+        else:
+            place_name = (
+                config.get_place_display(mf.festival, mf.edition) if mf.festival else ""
+            )
+        base = place_name or mf.stage
+        if base and mf.year and mf.year not in base:
+            album = f"{base} {mf.year}"
+        else:
+            album = base or mf.year
     else:
         album = mf.title or mf.festival or ""
     if album:
@@ -70,9 +77,18 @@ def generate_nfo_xml(
     if mf.content_type:
         _add(root, "tag", mf.content_type)
         existing_tags.add(mf.content_type.lower())
-    if mf.festival:
-        _add(root, "tag", mf.festival)
-        existing_tags.add(mf.festival.lower())
+    # Tag the resolved place (festival, venue, or location) so smart
+    # playlists can find venue-routed sets too; raw name, edition is its
+    # own tag below. Falls back to mf.festival for MediaFile instances
+    # built without the analyzer's place resolution.
+    place_tag = (
+        mf.place
+        if mf.place_kind in ("festival", "venue", "location") and mf.place
+        else mf.festival
+    )
+    if place_tag:
+        _add(root, "tag", place_tag)
+        existing_tags.add(place_tag.lower())
     if mf.edition:
         _add(root, "tag", mf.edition)
         existing_tags.add(mf.edition.lower())

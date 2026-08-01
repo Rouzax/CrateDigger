@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- Venue- and location-routed sets (a standalone show at Red Rocks, a club night at Alexandra Palace) no longer get a bare year as their NFO album. The album now derives from the same resolved place the display title uses, so Kodi and Jellyfin group them as "Red Rocks 2026" instead of "2026". When nothing routable exists, the album falls back to the stage and then the year, mirroring TrackSplit's FLAC album fallback. Affected NFOs regenerate automatically on the next enrich run.
+- Venue- and location-routed sets now get their place as an NFO `<tag>` (previously only festival names were tagged), so Kodi smart playlists and tag filters can find them by venue.
+- `audit-logos` now reports venue- and location-routed places, not just festivals. The poster pipeline already used curated logos for these places when present; the audit just never listed them, so coverage was undercounted. The report heading changed from "Festivals found:" to "Places found:".
+
 ## [0.34.0] - 2026-07-31
 
 ### Added

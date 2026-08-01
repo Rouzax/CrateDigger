@@ -161,7 +161,10 @@ The NFO includes:
 - Title, artist(s), album, year, runtime
 - Genre (from 1001Tracklists if identified; otherwise from `nfo_settings` in your config)
 - Stage or venue
+- Tags for the content type, the place (festival, venue, or location), the edition, and each artist
 - References to the thumbnail, poster, and fanart images
+
+The album is the place name plus the year ("Tomorrowland 2026", "Red Rocks 2026"), which is what Kodi and Jellyfin group sets by. Festival sets use the festival name with its edition folded in; sets at a standalone venue or location use that place name instead. When no place is known at all, the album falls back to the stage name plus year, or the bare year as a last resort.
 
 **Skipped if:** an existing NFO already reflects the current metadata. If any of the following have changed since the NFO was last written, it is regenerated automatically: artist, genre, stage, edition, title, or DJ group members. The original `dateadded` timestamp is preserved when regenerating. Use `--regenerate` to force regeneration regardless of whether the metadata has changed.
 

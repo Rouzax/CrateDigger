@@ -45,6 +45,112 @@ def test_nfo_album_is_festival_plus_year(tmp_path):
     assert root.find("album").text == "Tomorrowland 2024"
 
 
+def test_nfo_album_venue_routed(tmp_path):
+    """album = venue + year when the set is venue-routed (no festival)."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        venue="Red Rocks",
+        year="2026",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("album").text == "Red Rocks 2026"
+
+
+def test_nfo_album_location_routed(tmp_path):
+    """album = location + year when the set is location-routed."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Eric Prydz",
+        location="Alexandra Palace London",
+        year="2025",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("album").text == "Alexandra Palace London 2025"
+
+
+def test_nfo_album_stage_fallback(tmp_path):
+    """album falls back to stage + year when no festival/venue/location."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        stage="Mainstage",
+        year="2026",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("album").text == "Mainstage 2026"
+
+
+def test_nfo_album_year_only_when_no_place_or_stage(tmp_path):
+    """album = bare year when nothing else is routable (artist-kind, no stage)."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        year="2026",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("album").text == "2026"
+
+
+def test_nfo_album_no_year_duplication(tmp_path):
+    """album does not append the year when the place name already contains it."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Test",
+        venue="Red Rocks 2026",
+        year="2026",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    assert root.find("album").text == "Red Rocks 2026"
+
+
+def test_nfo_tag_venue_routed(tmp_path):
+    """Venue-routed sets get the venue as a <tag> for smart playlists."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Martin Garrix",
+        venue="Red Rocks",
+        year="2026",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert "Red Rocks" in tags
+
+
+def test_nfo_tag_location_routed(tmp_path):
+    """Location-routed sets get the location as a <tag>."""
+    mf = make_mediafile(
+        source_path=Path("test.mkv"),
+        artist="Eric Prydz",
+        location="Alexandra Palace London",
+        year="2025",
+        content_type="festival_set",
+    )
+    video = tmp_path / "test.mkv"
+    video.write_bytes(b"")
+    root = _parse_nfo(generate_nfo(mf, video, load_config()))
+    tags = [t.text for t in root.findall("tag")]
+    assert "Alexandra Palace London" in tags
+
+
 def test_nfo_title_artist_at_festival_when_no_stage(tmp_path):
     """title = 'Artist @ Festival' when no stage available for festival sets."""
     mf = make_mediafile(

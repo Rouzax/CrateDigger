@@ -175,7 +175,7 @@ CrateDigger searches two locations, library-local first:
 
 ### Checking coverage
 
-Use [`audit-logos`](commands/audit-logos.md) to see which festivals in your library have logos and which are missing them. The command shows the suggested placement path for each missing festival.
+Use [`audit-logos`](commands/audit-logos.md) to see which places in your library have logos and which are missing them. The command shows the suggested placement path for each missing place.
 
 When a logo is missing, the folder poster falls back to a gradient layout.
 
@@ -185,6 +185,6 @@ When a logo is missing, the folder poster falls back to a gradient layout.
 
 - [Tag reference](tag-reference.md): metadata tags written inside the MKV
 - [enrich command](commands/enrich.md): the operations that produce these files
-- [audit-logos command](commands/audit-logos.md): check festival logo coverage
+- [audit-logos command](commands/audit-logos.md): check place logo coverage
 - [Kodi integration](kodi-integration.md): how Kodi and Jellyfin consume these files
 - [Configuration](configuration.md): `poster_settings`, `nfo_settings`, layout templates

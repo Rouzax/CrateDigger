@@ -1,12 +1,14 @@
 # audit-logos
 
-Check which festivals in your library have curated logo files for poster generation.
+Check which places in your library have curated logo files for poster generation.
 
 ## What this is for
 
-When `enrich` generates a `folder.jpg` poster for a festival folder, it uses a curated logo if one is available. Without a logo, the poster falls back to a color gradient. `audit-logos` shows you exactly which festivals in your library have logos and which do not, and tells you where to place a logo file for any that are missing.
+When `enrich` generates a `folder.jpg` poster for a place folder, it uses a curated logo if one is available. Without a logo, the poster falls back to a color gradient. `audit-logos` shows you exactly which places in your library have logos and which do not, and tells you where to place a logo file for any that are missing.
 
-Run this any time you want to improve poster quality for a specific festival, or after adding a new logo to verify it was picked up correctly.
+A "place" here is any event location CrateDigger routes a set by: a festival (Tomorrowland), a standalone venue (Red Rocks), or a free-text location from the tracklist page. Artist-routed sets are not listed; their posters use artist artwork, not place logos.
+
+Run this any time you want to improve poster quality for a specific place, or after adding a new logo to verify it was picked up correctly.
 
 ## Before you start
 
@@ -28,19 +30,19 @@ cratedigger audit-logos <library> [options]
 
 ## What it reports
 
-`audit-logos` scans your library for all recognized festival names, then checks whether a logo file exists for each one.
+`audit-logos` scans your library for all recognized place names (festivals, venues, and locations), then checks whether a logo file exists for each one.
 
-**Festivals with logos:** the festival name and the path to the logo file being used.
+**Places with logos:** the place name and the path to the logo file being used.
 
-**Festivals missing logos:** the festival name and two suggested paths where you can place a logo file (library-local or user-level).
+**Places missing logos:** the place name and two suggested paths where you can place a logo file (library-local or user-level).
 
-**Unmatched logo folders:** folders that exist inside your logo directories but do not match any festival currently in your library. Usually these are leftovers from files you removed.
+**Unmatched logo folders:** folders that exist inside your logo directories but do not match any place currently in your library. Usually these are leftovers from files you removed.
 
 **Unsupported formats:** any logo files using a format CrateDigger cannot read (SVG, GIF, BMP, TIFF). Rename or convert them to a supported format.
 
 ## Where to place logo files
 
-Logo files go in a folder named after the festival, inside one of two locations:
+Logo files go in a folder named after the place, inside one of two locations:
 
 | Location | Path | Scope |
 |----------|------|-------|
@@ -50,7 +52,7 @@ Logo files go in a folder named after the festival, inside one of two locations:
 
 The library-local location takes precedence over the user-level location if both exist.
 
-The festival folder name must match the canonical display name CrateDigger uses for that festival (the same name shown in the audit output).
+The place folder name must match the canonical display name CrateDigger uses for that place (the same name shown in the audit output).
 
 **Supported formats:** JPG, PNG, WebP.
 
@@ -64,7 +66,7 @@ Sample output:
 
 ```
 Library: /home/user/Music/Library
-Festivals found: 12
+Places found: 12
 
 With curated logo (8):
   Tomorrowland: /home/user/CrateDigger/places/Tomorrowland/logo.png
@@ -72,13 +74,13 @@ With curated logo (8):
   ...
 
 Missing curated logo (4):
-  Awakenings
-    -> place logo at: /home/user/Music/Library/.cratedigger/places/Awakenings/logo.png
-       or user-level: /home/user/CrateDigger/places/Awakenings/logo.png
+  Red Rocks
+    -> place logo at: /home/user/Music/Library/.cratedigger/places/Red Rocks/logo.png
+       or user-level: /home/user/CrateDigger/places/Red Rocks/logo.png
   ...
 ```
 
-After adding a logo for a missing festival, regenerate its poster:
+After adding a logo for a missing place, regenerate its poster:
 
 ```bash
 cratedigger enrich ~/Music/Library/ --only posters --regenerate

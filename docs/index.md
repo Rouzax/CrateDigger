@@ -67,7 +67,7 @@ See [Getting Started](getting-started.md) for required tools, upgrade commands, 
 | [identify](commands/identify.md) | Match tracklists, embed chapters |
 | [organize](commands/organize.md) | Library layouts, move vs. copy, templates |
 | [enrich](commands/enrich.md) | Artwork, posters, NFO, MBIDs |
-| [audit-logos](commands/audit-logos.md) | Check festival logo coverage |
+| [audit-logos](commands/audit-logos.md) | Check place logo coverage |
 | [Configuration](configuration.md) | All config options |
 | [Places](places.md) | Place names, aliases, editions |
 | [1001Tracklists](tracklists.md) | Account setup, caching, what you get |
