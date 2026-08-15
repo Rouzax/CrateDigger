@@ -222,7 +222,7 @@ def test_performer_preserves_full_display_line_from_raw_text(tmp_path):
             genres=[],
         )
     ]
-    result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
+    result = _build_chapter_tags_map(chapters, uids, tracks, None)
     # Full display artist line, multi-artist preserved, no drop.
     assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "Fred again.. & Jamie T"
     assert (
@@ -249,22 +249,20 @@ def test_performer_handles_mashup_composite_display():
             genres=[],
         )
     ]
-    result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
+    result = _build_chapter_tags_map(chapters, uids, tracks, None)
     assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == (
         "NLW & MureKian vs. Ivan Gough & Feenixpawl & Georgi Kay vs. RÜFÜS DU SOL"
     )
 
 
 def test_performer_preserves_1001tl_display_form_not_alias():
-    """Per-chapter PERFORMER keeps the 1001TL display form; alias resolution
-    (e.g. SOMETHING ELSE -> ALOK) is only applied to the top-level ARTIST
-    tag for filesystem routing, NOT to per-chapter tags which document what
-    the DJ / crowd knows the track as."""
-    aliases = {"SOMETHING ELSE": "ALOK"}
+    """Per-chapter PERFORMER keeps the 1001TL display form.
 
-    def resolver(name: str) -> str:
-        return aliases.get(name, name)
-
+    Alias resolution (e.g. SOMETHING ELSE -> ALOK) is never applied to any
+    per-chapter tag. It is a filesystem-routing concern handled at the
+    top-level ARTIST tag, and a persona is its own MusicBrainz artist, so
+    per-chapter tags document what the DJ and crowd know the track as.
+    """
     chapters = [Chapter(timestamp="00:00:00.000", title="x")]
     uids = [111]
     tracks = [
@@ -275,7 +273,7 @@ def test_performer_preserves_1001tl_display_form_not_alias():
             genres=[],
         )
     ]
-    result = _build_chapter_tags_map(chapters, uids, tracks, None, resolver)
+    result = _build_chapter_tags_map(chapters, uids, tracks, None)
     # Display form preserved. ALOK would only be correct for filesystem
     # routing (top-level ARTIST tag handled elsewhere).
     assert result[111]["CRATEDIGGER_TRACK_PERFORMER"] == "SOMETHING ELSE"
@@ -295,7 +293,7 @@ def test_chapter_tags_include_title_and_label():
             label="WALL",
         )
     ]
-    result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
+    result = _build_chapter_tags_map(chapters, uids, tracks, None)
     assert result[111]["CRATEDIGGER_TRACK_TITLE"] == "Take Over Control"
     assert result[111]["CRATEDIGGER_TRACK_LABEL"] == "WALL"
 
@@ -314,7 +312,7 @@ def test_chapter_tags_omit_title_and_label_when_empty():
             label="",
         )
     ]
-    result = _build_chapter_tags_map(chapters, uids, tracks, None, None)
+    result = _build_chapter_tags_map(chapters, uids, tracks, None)
     assert "CRATEDIGGER_TRACK_TITLE" not in result[111]
     assert "CRATEDIGGER_TRACK_LABEL" not in result[111]
 

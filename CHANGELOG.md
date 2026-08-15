@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Removed the unused `alias_resolver` parameter from the chapter-tag builders. It was threaded from the CLI through three functions and never once invoked, while its docstring claimed per-chapter performer names were canonicalised through it. No behaviour changes, since nothing called it: this only deletes dead wiring and corrects the documentation. The decision it documented is now explicit, and deliberate: alias resolution is never applied to per-chapter tags. A persona is its own artist on MusicBrainz, with `NLW`, `Kapuchon`, `Cirez D` and `Pryda` all holding IDs distinct from `AFROJACK` and `Eric Prydz`, so folding a track credit into the primary act would merge separate artists and leave the written name disagreeing with the MusicBrainz ID beside it. Alias to canonical substitution stays a library-routing concern applied to the top-level artist, where one DJ maps to one folder.
+
 ## [0.35.1] - 2026-08-15
 
 ### Fixed

@@ -853,7 +853,6 @@ def _fetch_and_embed(
                     location=export.location,
                     tracks=export.tracks,
                     dj_cache=session._dj_cache,
-                    alias_resolver=config.resolve_artist,
                     youtube_id=persisted_youtube_id,
                 )
             return ("skipped", "skipped", "no matching player")
@@ -923,7 +922,6 @@ def _fetch_and_embed(
                 location=export.location,
                 tracks=export_tracks,
                 dj_cache=session._dj_cache,
-                alias_resolver=config.resolve_artist,
                 youtube_id=persisted_youtube_id,
             )
         return ("skipped", "skipped", "no chapters parsed")
@@ -995,7 +993,6 @@ def _fetch_and_embed(
                 location=export.location,
                 tracks=export_tracks,
                 dj_cache=session._dj_cache,
-                alias_resolver=config.resolve_artist,
                 youtube_id=persisted_youtube_id,
             )
         return ("skipped", "skipped", "only 1 chapter")
@@ -1172,7 +1169,6 @@ def _fetch_and_embed(
                 location=export.location,
                 tracks=export_tracks,
                 dj_cache=session._dj_cache,
-                alias_resolver=config.resolve_artist,
                 youtube_id=persisted_youtube_id,
                 assembled=assembled,
             )
@@ -1222,7 +1218,6 @@ def _fetch_and_embed(
         location=export.location,
         tracks=export_tracks,
         dj_cache=session._dj_cache,
-        alias_resolver=config.resolve_artist,
         youtube_id=persisted_youtube_id,
         assembled=assembled,
     )

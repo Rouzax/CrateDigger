@@ -265,7 +265,6 @@ def _run_enrich(
         country=export.country,
         tracks=export.tracks,
         dj_cache=dj_cache,
-        alias_resolver=cfg.resolve_artist,
     )
     assert ok, "embed_chapters returned False"
 

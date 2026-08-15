@@ -21,7 +21,6 @@ import re
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
-from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, overload
@@ -463,7 +462,6 @@ def _build_chapter_tags_map(
     chapter_uids: list[int],
     tracks: list["Track"],
     dj_cache: "DjCache | None",
-    alias_resolver: "Callable[[str], str] | None" = None,
 ) -> dict[int, dict[str, str]]:
     """Match each chapter to a track by exact start_ms; build TTV=30 tag map.
 
@@ -471,9 +469,13 @@ def _build_chapter_tags_map(
     Track whose start_ms equals the chapter's timestamp-in-ms. Unmatched
     chapters produce no tag block. The returned dict is keyed by ChapterUID.
 
-    PERFORMER names resolve via DjCache, then through alias_resolver
-    (typically Config.resolve_artist) so per-chapter names match the
-    canonicalised top-level ARTIST tag.
+    Alias resolution is deliberately not applied to any per-chapter tag.
+    A persona is its own artist: MusicBrainz gives NLW, Kapuchon, Cirez D
+    and Pryda MBIDs distinct from AFROJACK's and Eric Prydz's, so folding a
+    track credit into the primary act would merge separate artists and
+    leave the name disagreeing with the MBID written beside it. Alias to
+    canonical substitution is a library-routing concern and happens at the
+    album level (Config.resolve_artist), not here.
     """
     tracks_by_ms: dict[int, Track] = {}
     for t in tracks:
@@ -564,7 +566,6 @@ def build_1001tl_tags(
     location: str = "",
     dj_artists: list[tuple[str, str]] | None = None,
     dj_cache: "DjCache | None" = None,
-    alias_resolver: "Callable[[str], str] | None" = None,
 ) -> dict[str, str]:
     """Build the TTV=70 tag dict for a 1001Tracklists identification.
 
@@ -652,7 +653,6 @@ def embed_chapters(
     location: str = "",
     tracks: list["Track"] | None = None,
     dj_cache: "DjCache | None" = None,
-    alias_resolver: "Callable[[str], str] | None" = None,
     assembled: list["AssembledChapter"] | None = None,
 ) -> bool:
     """Write chapters and optional tags to an MKV file.
@@ -709,7 +709,6 @@ def embed_chapters(
                 location=location,
                 dj_artists=dj_artists,
                 dj_cache=dj_cache,
-                alias_resolver=alias_resolver,
             )
             chapter_tags: dict[int, dict[str, str]] | None = None
             if assembled is not None and chapters and chapter_uids:
@@ -722,7 +721,7 @@ def embed_chapters(
                 )
             elif tracks and chapters and chapter_uids:
                 chapter_tags = _build_chapter_tags_map(
-                    chapters, chapter_uids, tracks, dj_cache, alias_resolver
+                    chapters, chapter_uids, tracks, dj_cache
                 )
             return write_merged_tags(filepath, {70: tags}, chapter_tags=chapter_tags)
 

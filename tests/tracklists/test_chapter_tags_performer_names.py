@@ -73,3 +73,30 @@ def test_performer_names_omitted_when_slug_and_name_lengths_mismatch():
     entry = out[111]
     assert entry["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "afrojack|oliver-heldens"
     assert "CRATEDIGGER_TRACK_PERFORMER_NAMES" not in entry
+
+
+def test_performer_names_keep_persona_aliases_uncanonicalised():
+    """A persona credit stays as released; it is not folded into the primary act.
+
+    MusicBrainz models personas as separate artists: NLW and Kapuchon each
+    have their own MBID, distinct from AFROJACK's, as do Cirez D and Pryda
+    against Eric Prydz. Rewriting the per-track name to the primary act
+    would merge three real artists into one and leave the name disagreeing
+    with the MBID written beside it.
+
+    Alias resolution is a library-routing concern and belongs at the album
+    level (Config.resolve_artist), not here. This test exists to stop that
+    behaviour being introduced at track level.
+    """
+    track = Track(
+        raw_text="NLW - Tropic Thunder",
+        title="Tropic Thunder",
+        label="",
+        genres=[],
+        artist_slugs=["nlw"],
+        start_ms=0,
+        artist_names=["NLW"],
+    )
+    out = _build_chapter_tags_map([_chapter()], [111], [track], dj_cache=None)
+    assert out[111]["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "NLW"
+    assert out[111]["CRATEDIGGER_TRACK_PERFORMER"] == "NLW"
