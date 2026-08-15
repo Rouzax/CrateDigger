@@ -474,6 +474,8 @@ It is checked first by both the `chapter_artist_mbids` and `album_artist_mbids` 
 
 **Distinction from the auto MBID cache:** the auto cache is populated from MusicBrainz search results and expires after `cache_ttl.mbid_days`. It can be deleted and will refill. `artist_mbids.json` is your curated override list for artists that MusicBrainz searches misidentify or fail to find.
 
+**When a lookup fails:** a search that finds nothing is remembered as a miss until the TTL expires, so CrateDigger does not re-query the same unknown name on every run. Two things are deliberately excluded from that. A lookup that could not be completed at all (MusicBrainz returning 503 after its retries) is never remembered, so a temporary outage cannot pin an artist to "no ID" for the next 90 days; it is logged as a warning and retried on the following run. And remembered misses are discarded automatically whenever the matching logic improves, so artists that a previous version could not resolve are looked up again rather than waiting out the TTL.
+
 See [enrich: chapter_artist_mbids](commands/enrich.md#chapter_artist_mbids-per-track-artist-ids) for the fix workflow.
 
 ## Environment variables

@@ -139,3 +139,24 @@ def test_resolve_mbids_aligned_warns_once_per_miss(caplog):
     resolve_mbids_aligned(["Mystery", "Mystery", "Mystery"], lambda n: None)
     mystery_warnings = [r for r in caplog.records if "Mystery" in r.message]
     assert len(mystery_warnings) == 1
+
+
+def test_resolve_mbids_aligned_does_not_report_id_placeholder_as_unresolved():
+    """An unidentified track is not an artist we failed to look up.
+
+    "ID" reaching the unresolved-artists summary invites the user to add a
+    curated override for it, which is exactly the wrong fix: the track has
+    no artist, so its slot should stay empty and stay quiet.
+    """
+    from festival_organizer.fanart import unresolved_artist_names
+
+    unresolved_artist_names.clear()
+    try:
+        out = resolve_mbids_aligned(
+            ["Afrojack", "ID", "Oliver Heldens"],
+            lambda n: {"Afrojack": "A", "Oliver Heldens": "O"}.get(n),
+        )
+        assert out == ["A", "", "O"]
+        assert "ID" not in unresolved_artist_names
+    finally:
+        unresolved_artist_names.clear()

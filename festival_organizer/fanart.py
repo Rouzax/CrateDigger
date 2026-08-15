@@ -29,6 +29,41 @@ USER_AGENT = "CrateDigger/1.0 (festival set organizer)"
 # --- Exceptions ---
 
 
+# MusicBrainz frequently stores typographic punctuation where a tracklist
+# uses the ASCII equivalent: its canonical spelling of A-Trak, Ne-Yo and
+# D-Block & S-te-Fan all use U+2010 HYPHEN rather than U+002D. No Unicode
+# normal form unifies those (NFKD leaves U+2010 alone), so the fold is
+# explicit. Kept deliberately narrow: punctuation only, never letters.
+_PUNCT_FOLD = {
+    **dict.fromkeys(map(ord, "‐‑‒–—―−"), "-"),
+    ord("‘"): "'",
+    ord("’"): "'",
+    ord("“"): '"',
+    ord("”"): '"',
+}
+
+
+def _fold_name(name: str) -> str:
+    """Casefold a name for comparison, ignoring diacritics and punctuation style.
+
+    Used only to compare a query against MusicBrainz's own candidate names,
+    never to rewrite a name we store.
+    """
+    return strip_diacritics(name).translate(_PUNCT_FOLD).casefold().strip()
+
+
+def is_unidentified_artist(name: str) -> bool:
+    """True when a credit is 1001Tracklists' "nobody knows" placeholder.
+
+    Matched exactly, because MusicBrainz contains real artists whose names
+    merely start with it: searching "ID" returns an exact score-100 hit for
+    the techno producer Eddy L., and "ID ID" is a Brazilian producer. A
+    prefix or substring rule would stamp every unidentified track in the
+    library with one of those people's identities.
+    """
+    return name.strip().casefold() == "id"
+
+
 class FanartError(Exception):
     """Base error for fanart operations."""
 
@@ -42,6 +77,15 @@ class FanartAPIError(FanartError):
 
 
 # --- MBID Cache ---
+
+# Bump whenever a change to _mb_search can turn a previous miss into a hit.
+# Negative entries stamped with an older version are ignored so the improved
+# lookup runs for them instead of waiting out the TTL. Positive entries are
+# always kept: better matching cannot improve an MBID we already hold.
+#
+# 2: punctuation-folded name matching (U+2010 vs ASCII hyphen) and alias
+#    matching, which resolve names that previously cached as misses.
+MBID_RESOLVER_VERSION = 2
 
 
 class MBIDCache:
@@ -89,19 +133,27 @@ class MBIDCache:
     def _is_fresh(self, entry: dict) -> bool:
         return is_fresh(entry, self._ttl_seconds)
 
+    def _is_usable(self, entry: dict) -> bool:
+        """Fresh, and not a miss recorded by a superseded resolver."""
+        if not self._is_fresh(entry):
+            return False
+        return not (
+            entry.get("mbid") is None and entry.get("rv", 0) < MBID_RESOLVER_VERSION
+        )
+
     def get(self, artist: str) -> str | None:
-        """Return cached MBID or None. Raises KeyError if not cached or expired."""
+        """Return cached MBID or None. Raises KeyError if not usable."""
         key = artist.lower()
         entry = self._data.get(key)
-        if entry is None or not self._is_fresh(entry):
+        if entry is None or not self._is_usable(entry):
             raise KeyError(artist)
         return entry["mbid"]
 
     def has(self, artist: str) -> bool:
-        """True if artist is cached and not expired."""
+        """True if artist is cached, unexpired, and not a superseded miss."""
         key = artist.lower()
         entry = self._data.get(key)
-        return entry is not None and self._is_fresh(entry)
+        return entry is not None and self._is_usable(entry)
 
     def put(self, artist: str, mbid: str | None) -> None:
         """Cache an artist-to-MBID mapping. None = not found (negative cache)."""
@@ -109,6 +161,7 @@ class MBIDCache:
             "mbid": mbid,
             "ts": time.time(),
             "ttl": jittered_ttl_seconds(self._ttl_days),
+            "rv": MBID_RESOLVER_VERSION,
         }
         self._save()
 
@@ -194,6 +247,13 @@ def lookup_mbid(
             )
             return pinned
 
+    # A placeholder is not a name to look up. Checked after overrides so an
+    # explicit pin still wins, and before the cache so no search is issued
+    # and no entry is written for it.
+    if is_unidentified_artist(artist_name):
+        logger.debug('fanart.mbid: source=placeholder artist="%s"', artist_name)
+        return None
+
     if cache.has(artist_name):
         mbid = cache.get(artist_name)
         if not mbid:
@@ -201,7 +261,18 @@ def lookup_mbid(
         return mbid
 
     logger.info('fanart.mbid_lookup: artist="%s" status=searching', artist_name)
-    mbid = _mb_search(artist_name)
+    try:
+        mbid = _mb_search(artist_name)
+    except MusicBrainzError as e:
+        # Degrade rather than abort the run, and deliberately do not cache:
+        # a lookup we could not complete must be retried next time, not
+        # remembered as "no such artist" for the TTL.
+        logger.warning(
+            'fanart.mbid_lookup: artist="%s" status=unavailable error="%s"',
+            artist_name,
+            e,
+        )
+        return None
     cache.put(artist_name, mbid)
     if mbid:
         logger.info(
@@ -227,7 +298,11 @@ def _mb_search(artist_name: str) -> str | None:
     # clause would drop MB entries whose type field is null, which is common
     # for mid-profile DJs whose MB entry has never been type-tagged (e.g.
     # Hannah Laing, score 100 exact match, but type:null -> excluded).
-    query = f'artist:"{artist_name}"'
+    # Search names AND aliases. MusicBrainz renames artists but keeps the
+    # old name as an alias, so an artist:-only query misses them entirely:
+    # artist:"Kanye West" returns a tribute band and a collaboration, while
+    # alias:"Kanye West" returns "Ye", the artist actually wanted.
+    query = f'artist:"{artist_name}" OR alias:"{artist_name}"'
     params = {"query": query, "fmt": "json", "limit": "25"}
     headers = {"User-Agent": USER_AGENT}
 
@@ -286,16 +361,31 @@ def _mb_search(artist_name: str) -> str | None:
                     )
                     return a["id"]
 
-            # Tier 3: diacritics-insensitive match
-            query_stripped = strip_diacritics(artist_name).lower()
+            # Tier 3: diacritics- and punctuation-insensitive match
+            query_folded = _fold_name(artist_name)
             for a in candidates:
-                if strip_diacritics(a.get("name", "")).lower() == query_stripped:
+                if _fold_name(a.get("name", "")) == query_folded:
                     logger.debug(
-                        'fanart.mb_match: artist="%s" mbid=%s tier=diacritics',
+                        'fanart.mb_match: artist="%s" mbid=%s tier=folded',
                         a["name"],
                         a["id"],
                     )
                     return a["id"]
+
+            # Tier 4: exact alias match, last so any canonical-name hit wins.
+            # Compared whole, never as a substring: MusicBrainz lists
+            # '¥$, Kanye West & Ty Dolla $ign' as an alias of the duo '¥$',
+            # and a substring rule would bind Kanye West to it.
+            for a in candidates:
+                for alias in a.get("aliases") or []:
+                    if _fold_name(alias.get("name") or "") == query_folded:
+                        logger.debug(
+                            'fanart.mb_match: artist="%s" mbid=%s tier=alias alias="%s"',
+                            a["name"],
+                            a["id"],
+                            alias.get("name"),
+                        )
+                        return a["id"]
 
             logger.debug(
                 'fanart.mb_search: status=no_match candidates=%d artist="%s"',
@@ -310,7 +400,12 @@ def _mb_search(artist_name: str) -> str | None:
             raise MusicBrainzError(
                 f"MusicBrainz lookup failed for '{artist_name}': {e}"
             ) from e
-    return None
+    # Every attempt returned 503. This is "we do not know", not "no such
+    # artist": returning None here would let the caller negative-cache a
+    # rate limit for the full TTL.
+    raise MusicBrainzError(
+        f"MusicBrainz unavailable (503) after retries for '{artist_name}'"
+    )
 
 
 # --- fanart.tv Client ---
@@ -583,7 +678,9 @@ def resolve_mbids_aligned(
             unique[name] = resolver(name)
 
     for name, mbid in unique.items():
-        if mbid is None:
+        # A placeholder has no ID to find, so reporting it as unresolved
+        # would invite a curated override for a track that has no artist.
+        if mbid is None and not is_unidentified_artist(name):
             logger.info(
                 'fanart.mbid_unresolved: artist="%s" overrides_path=%s',
                 name,

@@ -314,6 +314,176 @@ def test_lookup_mbid_diacritics_match(mock_get):
 
 
 @patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_matches_unicode_hyphen_in_name(mock_get):
+    """MusicBrainz spells A-Trak with U+2010 HYPHEN; 1001TL gives U+002D.
+
+    NFD, NFKD and NFKC all leave those two codepoints distinct, so the
+    diacritics tier cannot bridge them and the artist stayed unresolved
+    even though MusicBrainz returned it as an exact score-100 hit.
+    """
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "artists": [{"id": "mbid-atrak", "score": 100, "name": "A‐Trak"}]
+    }
+    mock_resp.raise_for_status = MagicMock()
+    mock_get.return_value = mock_resp
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        assert lookup_mbid("A-Trak", cache) == "mbid-atrak"
+
+
+def _mb_response(artists):
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.json.return_value = {"artists": artists}
+    resp.raise_for_status = MagicMock()
+    return resp
+
+
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_matches_via_alias(mock_get):
+    """MusicBrainz renamed Kanye West to 'Ye'; the old name survives only as
+    an alias, so matching the canonical name alone never finds the artist."""
+    mock_get.return_value = _mb_response(
+        [
+            {
+                "id": "mbid-ye",
+                "score": 100,
+                "name": "Ye",
+                "aliases": [{"name": "Kanye West"}, {"name": "Kanye"}],
+            }
+        ]
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        assert lookup_mbid("Kanye West", cache) == "mbid-ye"
+
+
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_alias_match_must_be_exact(mock_get):
+    """A composite alias that merely contains the query must not match.
+
+    MusicBrainz lists '¥$, Kanye West & Ty Dolla $ign' as an alias of the
+    duo '¥$'. A substring rule would bind Kanye West to that duo's MBID.
+    """
+    mock_get.return_value = _mb_response(
+        [
+            {
+                "id": "mbid-yen-dollar",
+                "score": 100,
+                "name": "¥$",
+                "aliases": [{"name": "¥$, Kanye West & Ty Dolla $ign"}],
+            }
+        ]
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        assert lookup_mbid("Kanye West", cache) is None
+
+
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_prefers_canonical_name_over_alias(mock_get):
+    """An exact canonical-name hit wins over another candidate's alias."""
+    mock_get.return_value = _mb_response(
+        [
+            {
+                "id": "mbid-alias-holder",
+                "score": 100,
+                "name": "Someone Else",
+                "aliases": [{"name": "Hardwell"}],
+            },
+            {"id": "mbid-hardwell", "score": 100, "name": "Hardwell"},
+        ]
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        assert lookup_mbid("Hardwell", cache) == "mbid-hardwell"
+
+
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_query_searches_alias_field(mock_get):
+    """The search must ask for alias hits, not just name hits.
+
+    'Kanye West' returns only a tribute band and a collaboration when the
+    query is restricted to artist:, so the alias field is what surfaces 'Ye'.
+    """
+    mock_get.return_value = _mb_response([])
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        lookup_mbid("Kanye West", cache)
+    query = mock_get.call_args.kwargs["params"]["query"]
+    assert 'artist:"Kanye West"' in query
+    assert 'alias:"Kanye West"' in query
+
+
+@patch("festival_organizer.fanart.time.sleep")
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_does_not_cache_a_rate_limited_lookup(mock_get, _sleep):
+    """A 503 that outlives its retries must not be remembered as 'not found'.
+
+    Caching it writes a negative entry with a jittered 90-day TTL, so one
+    MusicBrainz outage silently strips IDs from every artist in that run
+    and keeps doing so for months. Leaving it uncached retries next run.
+    """
+    resp = MagicMock()
+    resp.status_code = 503
+    mock_get.return_value = resp
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        assert lookup_mbid("Some Artist", cache) is None
+        assert not cache.has("Some Artist")
+
+
+@patch("festival_organizer.fanart.time.sleep")
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_still_caches_a_genuine_miss(mock_get, _sleep):
+    """A clean 'no such artist' answer is still negative-cached."""
+    mock_get.return_value = _mb_response([])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        assert lookup_mbid("Nobody At All", cache) is None
+        assert cache.has("Nobody At All")
+
+
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_never_resolves_the_id_placeholder(mock_get):
+    """On 1001Tracklists, ID means "nobody knows", not an artist name.
+
+    MusicBrainz has a real artist called exactly "ID" (techno producer
+    Eddy L.), so a search would return an exact tier-1 hit and stamp every
+    unidentified track with a real person's identity.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        assert lookup_mbid("ID", cache) is None
+    mock_get.assert_not_called()
+
+
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_id_placeholder_is_case_insensitive(mock_get):
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        assert lookup_mbid("id", cache) is None
+        assert lookup_mbid(" ID ", cache) is None
+    mock_get.assert_not_called()
+
+
+@patch("festival_organizer.fanart.requests.get")
+def test_lookup_mbid_still_resolves_the_real_artist_id_id(mock_get):
+    """The name ID ID belongs to a real MusicBrainz artist, not the guard."""
+    mock_get.return_value = _mb_response(
+        [{"id": "mbid-id-id", "score": 100, "name": "ID ID"}]
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = MBIDCache(cache_dir=Path(tmp))
+        assert lookup_mbid("ID ID", cache) == "mbid-id-id"
+
+
+@patch("festival_organizer.fanart.requests.get")
 def test_lookup_mbid_no_name_match_returns_none(mock_get):
     """Returns None when no candidate name matches the query."""
     mock_resp = MagicMock()

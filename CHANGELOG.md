@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.35.1] - 2026-08-15
+
+### Fixed
+
+- MusicBrainz artist lookups now match names whose punctuation differs only in style. MusicBrainz spells `A-Trak`, `Ne-Yo` and `D-Block & S-te-Fan` with `U+2010 HYPHEN` where a tracklist uses the ASCII `-`, and no Unicode normal form unifies the two, so those artists were returned by the search as exact score-100 hits and then discarded as non-matches. Dashes and typographic quotes are now folded before comparison, alongside the existing diacritics folding.
+- MusicBrainz artist lookups now consider aliases. MusicBrainz renames artists and keeps the old name only as an alias, so a name-only search could never find them: `artist:"Kanye West"` returns a tribute band and a collaboration, while the artist actually wanted is `Ye`. The search now queries names and aliases, and an alias hit is accepted only as a whole-name match and only after every canonical-name tier has been tried, so a composite alias such as `¥$, Kanye West & Ty Dolla $ign` cannot capture a query for `Kanye West`.
+- A MusicBrainz lookup that fails with repeated 503s is no longer remembered as "artist not found". It was cached as a miss with a jittered 90-day TTL, so one period of rate limiting could silently strip IDs from every artist looked up during that run, for months. Such a lookup is now logged as a warning and left uncached so the next run retries it. A genuine "no such artist" answer is still cached as before, and a failed lookup no longer aborts the run.
+- `ID`, the 1001Tracklists placeholder for an unidentified track, is no longer looked up on MusicBrainz. Nothing had ever stopped it, and MusicBrainz contains a real artist named exactly `ID` (the techno producer Eddy L.) that a search returns as an exact top-scoring hit, so any unidentified credit reaching the resolver would have been stamped with that person's identity across every affected track. The guard matches the placeholder exactly, so the real artists `ID ID` and similar names still resolve normally, and it sits after the `artist_mbids.json` override so an explicit pin still wins. Placeholders also no longer appear in the unresolved-artists summary, where they invited a curated override for a track that has no artist.
+- Remembered misses are now discarded when the matching logic changes. The cache stamps the resolver version that produced each entry, and a miss recorded by an older resolver is looked up again instead of waiting out the TTL. Successful lookups are always kept, since better matching cannot improve an ID already held.
+
 ## [0.35.0] - 2026-08-01
 
 ### Added

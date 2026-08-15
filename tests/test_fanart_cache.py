@@ -19,6 +19,38 @@ def test_get_honours_per_entry_ttl(tmp_path):
     assert not cache.has("Afrojack")
 
 
+def test_negative_entry_from_an_older_resolver_is_retried(tmp_path):
+    """A cached miss is only as good as the resolver that produced it.
+
+    The punctuation fold and alias matching resolve names that previously
+    came back empty, but those names already hold a fresh negative entry.
+    Without invalidation the improved lookup would not run for them until
+    the 90-day TTL expired.
+    """
+    raw = {"a-trak": {"mbid": None, "ts": time.time(), "ttl": 90 * 86400}}
+    (tmp_path / "mbid_cache.json").write_text(json.dumps(raw))
+    cache = MBIDCache(cache_dir=tmp_path, ttl_days=90)
+    assert not cache.has("A-Trak")
+
+
+def test_positive_entry_from_an_older_resolver_is_kept(tmp_path):
+    """A hit stays valid: better matching cannot improve an MBID we have,
+    so there is no reason to re-query thousands of good entries."""
+    raw = {"afrojack": {"mbid": "abc-mbid", "ts": time.time(), "ttl": 90 * 86400}}
+    (tmp_path / "mbid_cache.json").write_text(json.dumps(raw))
+    cache = MBIDCache(cache_dir=tmp_path, ttl_days=90)
+    assert cache.has("Afrojack")
+    assert cache.get("Afrojack") == "abc-mbid"
+
+
+def test_negative_entry_from_the_current_resolver_is_honoured(tmp_path):
+    """Once re-checked by the current resolver, a miss is cached normally."""
+    cache = MBIDCache(cache_dir=tmp_path, ttl_days=90)
+    cache.put("Nobody", None)
+    assert cache.has("Nobody")
+    assert cache.get("Nobody") is None
+
+
 def test_legacy_migration_treated_as_expired(tmp_path):
     raw = {"afrojack": "bare-mbid-string"}
     (tmp_path / "mbid_cache.json").write_text(json.dumps(raw))
