@@ -1446,7 +1446,7 @@
 <h2 id="what-this-is-for">What this is for<a class="headerlink" href="#what-this-is-for" title="Permanent link">&para;</a></h2>
 <p>After your files are organized into a library, <code>enrich</code> fills in everything that makes
 the library usable in a media player. It generates the cover art thumbnails, poster
-images, and NFO files that Kodi, Plex, and Jellyfin read to display your recordings
+images, and <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files that Kodi, Plex, and Jellyfin read to display your recordings
 correctly. It also embeds structured metadata tags into the MKV files themselves.</p>
 <p>You can run <code>enrich</code> as many times as you like. It skips files that already have
 up-to-date artifacts, so re-running it is fast and safe.</p>
@@ -1532,14 +1532,14 @@ how to install the <code>vision</code> extra.</p>
 site with artist logos, backgrounds, and thumbnails). These are saved to a shared cache
 folder (<code>~/.cache/CrateDigger/artists/{artist}/</code> on Linux, <code>~/Library/Caches/CrateDigger/artists/{artist}/</code> on macOS, <code>$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\</code> on Windows) and used as backgrounds in poster generation.</p>
 <p>To find an artist's images on fanart.tv, CrateDigger first resolves their MusicBrainz ID.
-It uses the same lookup chain as the MBID operations: your override file first, then the
+It uses the same lookup chain as the <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> operations: your override file first, then the
 auto-cache, then a live MusicBrainz search. This lookup is used only for image retrieval
 and is not written to your MKV files. For that, see <code>chapter_artist_mbids</code> and
 <code>album_artist_mbids</code> below. Artists whose name cannot be resolved to a MusicBrainz ID
 are skipped.</p>
 <p>Requires <code>fanart.enabled: true</code> in your config (the default). A built-in API key is
 included; you can optionally add your own personal key for faster lookups.</p>
-<p><strong>Skipped if:</strong> artwork is already cached and not expired. Cache lifetimes use the TTL
+<p><strong>Skipped if:</strong> artwork is already cached and not expired. Cache lifetimes use the <abbr title="Time to live, how long a cached entry stays valid before it is fetched again">TTL</abbr>
 you configure (default 90 days) with a ±20% random spread per entry, so individual
 artists may refresh slightly earlier or later than the exact configured value. This
 prevents all cached items from expiring at the same time on large libraries.</p>
@@ -1601,8 +1601,8 @@ bytes intact (for example <code>cover_land.png</code>). This follows the Matrosk
 primary <code>cover</code> is portrait, <code>cover_land</code> is landscape.</p>
 <p>The landscape thumbnail is never lost: it is already saved as <code>{name}-thumb.jpg</code> and
 <code>{name}-fanart.jpg</code> by the <code>art</code> operation, and it also lives in the <code>cover_land</code> attachment.</p>
-<p>The <code>{name}-poster.jpg</code> sidecar and its <code>&lt;thumb aspect="poster"&gt;</code> reference in the NFO are
-unchanged. Kodi reads the sidecar poster via the NFO and is not affected.</p>
+<p>The <code>{name}-poster.jpg</code> sidecar and its <code>&lt;thumb aspect="poster"&gt;</code> reference in the <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> are
+unchanged. Kodi reads the sidecar poster via the <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> and is not affected.</p>
 <p><strong>Refresh behavior:</strong> the embedded cover refreshes automatically when the poster's inputs
 change (for example, a re-<code>identify</code> that changes the artist, festival, date, stage, or
 venue, or an internal change to the poster layout). Use <code>--regenerate</code> to re-embed
@@ -1613,10 +1613,10 @@ unconditionally:</p>
 without a poster are skipped.</p>
 <p>No new MKV tags are introduced by this operation.</p>
 <h3 id="nfo-metadata-files">nfo: metadata files<a class="headerlink" href="#nfo-metadata-files" title="Permanent link">&para;</a></h3>
-<p>Writes an NFO file alongside each video. An NFO file is a small XML file that media
+<p>Writes an <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> file alongside each video. An <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> file is a small XML file that media
 players like Kodi, Plex, and Jellyfin read to display the recording's title, artist,
-genre, year, and artwork references. CrateDigger follows the Kodi musicvideo NFO format.</p>
-<p>The NFO includes:</p>
+genre, year, and artwork references. CrateDigger follows the Kodi musicvideo <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> format.</p>
+<p>The <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> includes:</p>
 <ul>
 <li>Title, artist(s), album, year, runtime</li>
 <li>Genre (from 1001Tracklists if identified; otherwise from <code>nfo_settings</code> in your config)</li>
@@ -1625,7 +1625,7 @@ genre, year, and artwork references. CrateDigger follows the Kodi musicvideo NFO
 <li>References to the thumbnail, poster, and fanart images</li>
 </ul>
 <p>The album is the place name plus the year ("Tomorrowland 2026", "Red Rocks 2026"), which is what Kodi and Jellyfin group sets by. Festival sets use the festival name with its edition folded in; sets at a standalone venue or location use that place name instead. When no place is known at all, the album falls back to the stage name plus year, or the bare year as a last resort.</p>
-<p><strong>Skipped if:</strong> an existing NFO already reflects the current metadata. If any of the following have changed since the NFO was last written, it is regenerated automatically: artist, genre, stage, edition, title, or DJ group members. The original <code>dateadded</code> timestamp is preserved when regenerating. Use <code>--regenerate</code> to force regeneration regardless of whether the metadata has changed.</p>
+<p><strong>Skipped if:</strong> an existing <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> already reflects the current metadata. If any of the following have changed since the <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> was last written, it is regenerated automatically: artist, genre, stage, edition, title, or DJ group members. The original <code>dateadded</code> timestamp is preserved when regenerating. Use <code>--regenerate</code> to force regeneration regardless of whether the metadata has changed.</p>
 <h3 id="tags-mkv-metadata-tags">tags: MKV metadata tags<a class="headerlink" href="#tags-mkv-metadata-tags" title="Permanent link">&para;</a></h3>
 <p>Writes structured metadata tags into each MKV file at the file level. These are the
 tags that general media players and tag editors read, covering artist, title, date, and
@@ -1716,7 +1716,7 @@ directly into the MKV file's metadata section. The video and audio streams are n
 <p><strong>Regenerate all posters (for example, after adding a festival logo):</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
 </span></code></pre></div>
-<p><strong>Update only NFO files:</strong></p>
+<p><strong>Update only <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files:</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>nfo<span class="w"> </span>--regenerate
 </span></code></pre></div>
 <p><strong>Fix unresolved MusicBrainz IDs after updating the override file:</strong></p>
@@ -1762,7 +1762,7 @@ from the 1001Tracklists community, run <code>enrich</code> again afterward to ap
 to your MKV tags and posters:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
 </span></code></pre></div>
-<p>NFO files are updated automatically whenever the underlying metadata has changed, so you
+<p><abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files are updated automatically whenever the underlying metadata has changed, so you
 do not need <code>--regenerate</code> for that. Updated artist names, genres, stage information, and
 other tracklist fields are picked up from the newly embedded tags.</p>
 <h2 id="optional-curated-festival-logos">Optional: curated festival logos<a class="headerlink" href="#optional-curated-festival-logos" title="Permanent link">&para;</a></h2>

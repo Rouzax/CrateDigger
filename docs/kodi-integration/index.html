@@ -1328,8 +1328,8 @@
 
 
 <h1 id="kodi-integration">Kodi Integration<a class="headerlink" href="#kodi-integration" title="Permanent link">&para;</a></h1>
-<p>CrateDigger writes Kodi-compatible NFO files and sidecar artwork alongside each MKV. Kodi and Jellyfin both read the same musicvideo NFO format and the same artwork sidecar conventions, so most of this page applies to both. Plex can read these files via agents that support musicvideo NFOs.</p>
-<p>This page covers the Kodi-specific parts: enabling the JSON-RPC sync that refreshes your Kodi library after a CrateDigger run, path mapping when CrateDigger and Kodi access the library through different paths, and troubleshooting. For the NFO contents, artwork files, and poster layouts, see <a href="../library-layout/">library layout</a>.</p>
+<p>CrateDigger writes Kodi-compatible <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files and sidecar artwork alongside each MKV. Kodi and Jellyfin both read the same musicvideo <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> format and the same artwork sidecar conventions, so most of this page applies to both. Plex can read these files via agents that support musicvideo NFOs.</p>
+<p>This page covers the Kodi-specific parts: enabling the JSON-RPC sync that refreshes your Kodi library after a CrateDigger run, path mapping when CrateDigger and Kodi access the library through different paths, and troubleshooting. For the <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> contents, artwork files, and poster layouts, see <a href="../library-layout/">library layout</a>.</p>
 <h2 id="enabling-kodi-sync">Enabling Kodi sync<a class="headerlink" href="#enabling-kodi-sync" title="Permanent link">&para;</a></h2>
 <h3 id="always-on-config">Always on (config)<a class="headerlink" href="#always-on-config" title="Permanent link">&para;</a></h3>
 <p>Set <code>enabled</code> to <code>true</code> in the <code>[kodi]</code> section of your <code>config.toml</code> (<code>~/CrateDigger/config.toml</code> on Linux and macOS, <code>Documents\CrateDigger\config.toml</code> on Windows):</p>
@@ -1358,7 +1358,7 @@
 <h2 id="how-the-sync-works">How the sync works<a class="headerlink" href="#how-the-sync-works" title="Permanent link">&para;</a></h2>
 <p>After the <code>organize</code> or <code>enrich</code> pipeline completes, CrateDigger checks which files had relevant changes and tells Kodi to refresh only those specific items. Changes that trigger a refresh:</p>
 <ul>
-<li>NFO file created or updated</li>
+<li><abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> file created or updated</li>
 <li>Cover art (<code>{stem}-thumb.jpg</code>, <code>{stem}-fanart.jpg</code>) changed</li>
 <li>Per-video poster (<code>{stem}-poster.jpg</code>) generated</li>
 <li>Album poster (<code>folder.jpg</code>) changed; when this happens, every video in that folder is refreshed so Kodi picks up the new folder artwork</li>
@@ -1415,7 +1415,7 @@
 <p>The original landscape thumbnail that yt-dlp embeds (a YouTube video thumbnail) is moved to a second attachment named <code>cover_land.&lt;ext&gt;</code>, preserving the original bytes. The extension matches what yt-dlp wrote (for example <code>cover_land.png</code>). This follows the Matroska cover-art convention: primary <code>cover</code> is portrait, <code>cover_land</code> is landscape.</p>
 <h3 id="what-is-not-changed">What is not changed<a class="headerlink" href="#what-is-not-changed" title="Permanent link">&para;</a></h3>
 <ul>
-<li>The <code>{stem}-poster.jpg</code> sidecar on disk is unchanged. Kodi reads the poster via the <code>&lt;thumb aspect="poster"&gt;</code> reference in the NFO and is not affected by the embedded attachment at all.</li>
+<li>The <code>{stem}-poster.jpg</code> sidecar on disk is unchanged. Kodi reads the poster via the <code>&lt;thumb aspect="poster"&gt;</code> reference in the <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> and is not affected by the embedded attachment at all.</li>
 <li>The <code>{stem}-thumb.jpg</code> and <code>{stem}-fanart.jpg</code> sidecars are unchanged. These are extracted from the landscape thumbnail before the cover operation runs.</li>
 <li>No new MKV tags are introduced. Staleness is tracked by a small marker inside the poster sidecar JPEG itself, not by a new tag.</li>
 </ul>
@@ -1441,11 +1441,11 @@
 <tbody>
 <tr>
 <td><strong>Kodi</strong></td>
-<td><code>{stem}-poster.jpg</code> sidecar via the <code>&lt;thumb aspect="poster"&gt;</code> reference in the NFO. Unaffected by the embedded attachment.</td>
+<td><code>{stem}-poster.jpg</code> sidecar via the <code>&lt;thumb aspect="poster"&gt;</code> reference in the <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr>. Unaffected by the embedded attachment.</td>
 </tr>
 <tr>
 <td><strong>Jellyfin</strong></td>
-<td>NFO sidecar references, same as Kodi.</td>
+<td><abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> sidecar references, same as Kodi.</td>
 </tr>
 <tr>
 <td><strong>Plex</strong> and generic players</td>
@@ -1458,7 +1458,7 @@
 </tbody>
 </table>
 <h2 id="jellyfin-and-plex">Jellyfin and Plex<a class="headerlink" href="#jellyfin-and-plex" title="Permanent link">&para;</a></h2>
-<p><strong>Jellyfin</strong> reads the same musicvideo NFO spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, tags, posters, thumbs, and fanart from the sidecar files automatically. Set the library's content type to <strong>Music videos</strong>; it is the only type that indexes artists, which is what makes an artist-based library browsable.</p>
+<p><strong>Jellyfin</strong> reads the same musicvideo <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> spec and artwork sidecars CrateDigger writes. No Jellyfin-specific setup is needed. Point Jellyfin at the library folder and it picks up titles, artists, genres, tags, posters, thumbs, and fanart from the sidecar files automatically. Set the library's content type to <strong>Music videos</strong>; it is the only type that indexes artists, which is what makes an artist-based library browsable.</p>
 <p>Two Jellyfin limits are worth knowing, because neither applies to Kodi:</p>
 <ul>
 <li><strong>No album browse for music videos.</strong> Jellyfin stores <code>&lt;album&gt;</code> but never surfaces it for this library type, so festival editions do not appear as albums the way they do in Kodi. Use the combined <code>Place Year</code> tag instead: <strong>Filter → Tags → <code>Tomorrowland 2026</code></strong>. This needs Jellyfin 12.0 or newer, which is when tag filtering arrived for music-video libraries. See <a href="../library-layout/#selecting-one-festival-edition">selecting one festival edition</a>.</li>
@@ -1481,8 +1481,8 @@
 <p>CrateDigger only refreshes items that had actual changes in that run. If all artifacts were already up to date, no sync request is sent. Use <code>--regenerate</code> to force regeneration of artifacts, which will trigger a sync.</p>
 <h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../library-layout/">Library layout</a>: NFO contents, sidecar files, poster layouts, and artwork sources</li>
-<li><a href="../tag-reference/">Tag reference</a>: MKV tags that Kodi and Jellyfin surface alongside NFO data</li>
+<li><a href="../library-layout/">Library layout</a>: <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> contents, sidecar files, poster layouts, and artwork sources</li>
+<li><a href="../tag-reference/">Tag reference</a>: MKV tags that Kodi and Jellyfin surface alongside <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> data</li>
 <li><a href="../commands/enrich/">enrich command</a>: the <code>--kodi-sync</code> flag and operations that trigger a refresh</li>
 <li><a href="../configuration/">Configuration</a>: full Kodi config reference</li>
 </ul>

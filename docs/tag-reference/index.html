@@ -1218,11 +1218,11 @@
 
 
 <h1 id="tag-reference">Tag reference<a class="headerlink" href="#tag-reference" title="Permanent link">&para;</a></h1>
-<p>CrateDigger writes structured metadata into each MKV file using Matroska tags. Tags are grouped by scope level (called <code>TargetTypeValue</code> or TTV), which determines what the tag applies to:</p>
+<p>CrateDigger writes structured metadata into each MKV file using Matroska tags. Tags are grouped by scope level (called <code>TargetTypeValue</code> or <abbr title="TargetTypeValue, the Matroska tag scope level that decides what a tag applies to">TTV</abbr>), which determines what the tag applies to:</p>
 <table>
 <thead>
 <tr>
-<th style="text-align: right;">TTV</th>
+<th style="text-align: right;"><abbr title="TargetTypeValue, the Matroska tag scope level that decides what a tag applies to">TTV</abbr></th>
 <th>Scope</th>
 <th>Used for</th>
 </tr>
@@ -1249,15 +1249,15 @@
 <p>The three-step workflow maps cleanly onto the three tag scopes:</p>
 <ul>
 <li>
-<p><strong><code>identify</code></strong> writes TTV=70 and TTV=30. It embeds everything downstream needs: the 1001Tracklists identifiers, album-level artist names and slugs, and per-chapter performer names, track titles, labels, and genres. <code>organize</code> reads these tags to build folder and file names.</p>
+<p><strong><code>identify</code></strong> writes <abbr title="TargetTypeValue, the Matroska tag scope level that decides what a tag applies to">TTV</abbr>=70 and <abbr title="TargetTypeValue, the Matroska tag scope level that decides what a tag applies to">TTV</abbr>=30. It embeds everything downstream needs: the 1001Tracklists identifiers, album-level artist names and slugs, and per-chapter performer names, track titles, labels, and genres. <code>organize</code> reads these tags to build folder and file names.</p>
 </li>
 <li>
-<p><strong><code>enrich</code></strong> writes TTV=50. It reads the rich metadata that <code>identify</code> embedded, resolves aliases, and produces the clean display-layer tags (ARTIST, TITLE, DATE_RELEASED, SYNOPSIS) that media players and NFO consumers use. It also resolves MusicBrainz IDs and writes them positionally aligned with the slugs and names <code>identify</code> already placed.</p>
+<p><strong><code>enrich</code></strong> writes <abbr title="TargetTypeValue, the Matroska tag scope level that decides what a tag applies to">TTV</abbr>=50. It reads the rich metadata that <code>identify</code> embedded, resolves aliases, and produces the clean display-layer tags (ARTIST, TITLE, DATE_RELEASED, SYNOPSIS) that media players and <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> consumers use. It also resolves MusicBrainz IDs and writes them positionally aligned with the slugs and names <code>identify</code> already placed.</p>
 </li>
 </ul>
 <p>This is why the order matters: <code>enrich</code> depends on what <code>identify</code> wrote.</p>
 <hr />
-<h2 id="file-level-tags-ttv50">File-level tags (TTV=50)<a class="headerlink" href="#file-level-tags-ttv50" title="Permanent link">&para;</a></h2>
+<h2 id="file-level-tags-ttv50">File-level tags (<abbr title="TargetTypeValue, the Matroska tag scope level that decides what a tag applies to">TTV</abbr>=50)<a class="headerlink" href="#file-level-tags-ttv50" title="Permanent link">&para;</a></h2>
 <p>Written by <code>enrich</code> (<code>tags</code> operation). These are the tags any MKV-aware media player reads and displays.</p>
 <table>
 <thead>
@@ -1296,7 +1296,7 @@
 </tbody>
 </table>
 <hr />
-<h2 id="collection-level-tags-ttv70">Collection-level tags (TTV=70)<a class="headerlink" href="#collection-level-tags-ttv70" title="Permanent link">&para;</a></h2>
+<h2 id="collection-level-tags-ttv70">Collection-level tags (<abbr title="TargetTypeValue, the Matroska tag scope level that decides what a tag applies to">TTV</abbr>=70)<a class="headerlink" href="#collection-level-tags-ttv70" title="Permanent link">&para;</a></h2>
 <p>The <code>CRATEDIGGER_*</code> namespace carries enrichment identifiers and multi-value artist data. Written at collection scope so consumers that ignore per-chapter tags still see them.</p>
 <h3 id="1001tracklists-identifiers">1001Tracklists identifiers<a class="headerlink" href="#1001tracklists-identifiers" title="Permanent link">&para;</a></h3>
 <p>Written by <code>identify</code>.</p>
@@ -1410,7 +1410,7 @@
 </tbody>
 </table>
 <h3 id="album-level-artist-tags">Album-level artist tags<a class="headerlink" href="#album-level-artist-tags" title="Permanent link">&para;</a></h3>
-<p>Written by <code>identify</code> (names, display, slugs) and <code>enrich</code> (<code>album_artist_mbids</code> operation for MBIDs). These mirror the per-chapter multi-artist pattern at the album level for downstream tools that need a full multi-value artist credit.</p>
+<p>Written by <code>identify</code> (names, display, slugs) and <code>enrich</code> (<code>album_artist_mbids</code> operation for <abbr title="MusicBrainz Identifiers, the stable IDs MusicBrainz assigns to artists and recordings">MBIDs</abbr>). These mirror the per-chapter multi-artist pattern at the album level for downstream tools that need a full multi-value artist credit.</p>
 <table>
 <thead>
 <tr>
@@ -1448,7 +1448,7 @@
 </tbody>
 </table>
 <hr />
-<h2 id="per-chapter-tags-ttv30">Per-chapter tags (TTV=30)<a class="headerlink" href="#per-chapter-tags-ttv30" title="Permanent link">&para;</a></h2>
+<h2 id="per-chapter-tags-ttv30">Per-chapter tags (<abbr title="TargetTypeValue, the Matroska tag scope level that decides what a tag applies to">TTV</abbr>=30)<a class="headerlink" href="#per-chapter-tags-ttv30" title="Permanent link">&para;</a></h2>
 <p>Written by <code>identify</code>, except <code>MUSICBRAINZ_ARTISTIDS</code> which is written by <code>enrich</code> (<code>chapter_artist_mbids</code> operation). These tags are attached to each chapter (track) in the MKV.</p>
 <table>
 <thead>
@@ -1504,10 +1504,10 @@
 </tr>
 </tbody>
 </table>
-<p>The <code>CRATEDIGGER_TRACK_*</code> prefix is deliberate: it keeps these per-chapter tags out of mediainfo's flattened "General" section. Unprefixed standard Matroska names (<code>PERFORMER</code>, <code>LABEL</code>, <code>GENRE</code>, <code>TITLE</code>) at TTV=30 get promoted into mediainfo's file-level display (last chapter wins), making files look like they carry the last chapter's values at file scope. The prefix avoids that without changing playback behaviour in Matroska-aware readers (Kodi uses the chapter's <code>ChapterString</code> for the title, not these tags).</p>
+<p>The <code>CRATEDIGGER_TRACK_*</code> prefix is deliberate: it keeps these per-chapter tags out of mediainfo's flattened "General" section. Unprefixed standard Matroska names (<code>PERFORMER</code>, <code>LABEL</code>, <code>GENRE</code>, <code>TITLE</code>) at <abbr title="TargetTypeValue, the Matroska tag scope level that decides what a tag applies to">TTV</abbr>=30 get promoted into mediainfo's file-level display (last chapter wins), making files look like they carry the last chapter's values at file scope. The prefix avoids that without changing playback behaviour in Matroska-aware readers (Kodi uses the chapter's <code>ChapterString</code> for the title, not these tags).</p>
 <hr />
 <h2 id="pipe-alignment">Pipe alignment<a class="headerlink" href="#pipe-alignment" title="Permanent link">&para;</a></h2>
-<p>Two tag families use pipe-separated values that are positionally aligned. You can zip them by index to produce multi-value credits with MBIDs attached.</p>
+<p>Two tag families use pipe-separated values that are positionally aligned. You can zip them by index to produce multi-value credits with <abbr title="MusicBrainz Identifiers, the stable IDs MusicBrainz assigns to artists and recordings">MBIDs</abbr> attached.</p>
 <p><strong>Per-chapter:</strong></p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>CRATEDIGGER_TRACK_PERFORMER_SLUGS  |  CRATEDIGGER_TRACK_PERFORMER_NAMES  |  MUSICBRAINZ_ARTISTIDS
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>              slot 0                |               slot 0                 |         slot 0
@@ -1519,7 +1519,7 @@
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>          slot 1             |              slot 1              |              slot 1
 </span></code></pre></div>
 <p><code>CRATEDIGGER_ALBUMARTIST_DISPLAY</code> is the human-readable version of the album-level list and is not pipe-separated.</p>
-<p>Unresolved MBIDs are preserved as empty slots (<code>""</code>), never dropped. This keeps the alignment intact even when a MusicBrainz lookup fails.</p>
+<p>Unresolved <abbr title="MusicBrainz Identifiers, the stable IDs MusicBrainz assigns to artists and recordings">MBIDs</abbr> are preserved as empty slots (<code>""</code>), never dropped. This keeps the alignment intact even when a MusicBrainz lookup fails.</p>
 <hr />
 <h2 id="worked-example-armin-van-buuren-b2b-kiki-at-amf-2025">Worked example: Armin van Buuren b2b KIKI at AMF 2025<a class="headerlink" href="#worked-example-armin-van-buuren-b2b-kiki-at-amf-2025" title="Permanent link">&para;</a></h2>
 <h3 id="after-identify">After <code>identify</code><a class="headerlink" href="#after-identify" title="Permanent link">&para;</a></h3>
@@ -1550,17 +1550,17 @@
 </span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a># Per chapter (TTV=30) additions:
 </span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>#   MUSICBRAINZ_ARTISTIDS (aligned with CRATEDIGGER_TRACK_PERFORMER_NAMES)
 </span></code></pre></div>
-<p>If KIKI's MBID is not yet in the cache, her slot in <code>CRATEDIGGER_ALBUMARTIST_MBIDS</code> and the per-chapter <code>MUSICBRAINZ_ARTISTIDS</code> will be an empty string. Add her to your <code>artist_mbids.json</code> (<code>~/CrateDigger/artist_mbids.json</code> on Linux and macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows) and re-run:</p>
+<p>If KIKI's <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> is not yet in the cache, her slot in <code>CRATEDIGGER_ALBUMARTIST_MBIDS</code> and the per-chapter <code>MUSICBRAINZ_ARTISTIDS</code> will be an empty string. Add her to your <code>artist_mbids.json</code> (<code>~/CrateDigger/artist_mbids.json</code> on Linux and macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows) and re-run:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids,album_artist_mbids
 </span></code></pre></div>
 <p>No <code>--regenerate</code> needed. CrateDigger detects that the resolved ID has changed and writes the update automatically.</p>
 <hr />
 <h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../commands/enrich/#chapter_artist_mbids-per-track-artist-ids">enrich: chapter_artist_mbids</a>: per-chapter MBID resolution and fix workflow</li>
-<li><a href="../commands/enrich/#album_artist_mbids-set-level-artist-ids">enrich: album_artist_mbids</a>: album-level MBID resolution</li>
+<li><a href="../commands/enrich/#chapter_artist_mbids-per-track-artist-ids">enrich: chapter_artist_mbids</a>: per-chapter <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> resolution and fix workflow</li>
+<li><a href="../commands/enrich/#album_artist_mbids-set-level-artist-ids">enrich: album_artist_mbids</a>: album-level <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> resolution</li>
 <li><a href="../tracklists/">1001Tracklists integration</a>: how identify extracts per-chapter metadata</li>
-<li><a href="../configuration/#artist-mbid-override-file">Configuration: artist MBID override file</a>: user-curated MBID overrides</li>
+<li><a href="../configuration/#artist-mbid-override-file">Configuration: artist <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> override file</a>: user-curated <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> overrides</li>
 <li><a href="../kodi-integration/">Kodi integration</a>: how these tags surface in Kodi</li>
 </ul>
 

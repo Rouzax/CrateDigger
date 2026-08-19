@@ -1420,7 +1420,7 @@ where to find them. See <a href="../configuration/#tool-paths">Configuration: To
 <p>Use it after a fresh install to confirm the setup is complete, after updating a <a href="../configuration/">config file</a> to verify the new paths are valid, or in CI to validate the environment before a scheduled run.</p>
 <h3 id="optional-video-frame-sampling">Optional: video frame sampling<a class="headerlink" href="#optional-video-frame-sampling" title="Permanent link">&para;</a></h3>
 <p>By default, CrateDigger reads artwork that is already embedded in your video files. Files
-without embedded artwork get no thumbnail, and their posters and NFO images are lower
+without embedded artwork get no thumbnail, and their posters and <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> images are lower
 quality or missing as a result.</p>
 <p>The <code>vision</code> extra adds a fallback: when a file has no embedded artwork, CrateDigger
 extracts a still frame from the video and uses that as cover art instead. This is an
@@ -1643,7 +1643,7 @@ This marker is required before you can run <code>enrich</code>.</p>
   CrateDigger strips any image attachments from <code>.webm</code> files instead of embedding a cover,
   and WebM cover art is served from the <code>{stem}-poster.jpg</code> and <code>{stem}-thumb.jpg</code> sidecar
   files.</li>
-<li>Writes an NFO file alongside each video. An NFO is a small XML file that media players
+<li>Writes an <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> file alongside each video. An <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> is a small XML file that media players
   like <a href="https://kodi.tv">Kodi</a>, Plex, and Jellyfin read to display title, artist, genre,
   and artwork.</li>
 <li>Embeds structured metadata tags into MKV files</li>
@@ -1670,7 +1670,7 @@ aliases help normalize artist names.</p>
 <li>An organized library with consistent folder and file names</li>
 <li>Cover art and poster images</li>
 <li>Artist artwork from fanart.tv</li>
-<li>NFO files for Kodi, Plex, and Jellyfin</li>
+<li><abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files for Kodi, Plex, and Jellyfin</li>
 <li>Structured MKV metadata tags</li>
 </ul>
 <p><strong>What requires a 1001Tracklists account:</strong></p>
@@ -1686,7 +1686,7 @@ aliases help normalize artist names.</p>
 <ul>
 <li><a href="../commands/identify/">identify</a>: detailed options for matching and embedding</li>
 <li><a href="../commands/organize/">organize</a>: layouts, templates, move vs. copy, dry-run</li>
-<li><a href="../commands/enrich/">enrich</a>: artwork, posters, MBIDs, selective operations</li>
+<li><a href="../commands/enrich/">enrich</a>: artwork, posters, <abbr title="MusicBrainz Identifiers, the stable IDs MusicBrainz assigns to artists and recordings">MBIDs</abbr>, selective operations</li>
 <li><a href="../configuration/">Configuration</a>: all config settings explained</li>
 <li><a href="../tracklists/">Tracklists integration</a>: 1001Tracklists account setup and what it adds</li>
 <li><a href="../places/">Places</a>: how to add and customize festival and venue definitions</li>

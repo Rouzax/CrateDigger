@@ -1907,7 +1907,7 @@ chapters (timestamp and name), and embeds them into the MKV via <code>mkvpropedi
   video ID (<code>CRATEDIGGER_1001TL_YOUTUBE_ID</code>).</li>
 <li><strong>Per-chapter tags</strong>: for each track, performer name(s), track title, label, and genre.</li>
 </ul>
-<p>These tags are later read by the <a href="../enrich/"><code>enrich</code></a> command to generate artwork, NFO
+<p>These tags are later read by the <a href="../enrich/"><code>enrich</code></a> command to generate artwork, <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr>
 files, and resolve MusicBrainz artist IDs.</p>
 <h4 id="what-becomes-a-chapter">What becomes a chapter<a class="headerlink" href="#what-becomes-a-chapter" title="Permanent link">&para;</a></h4>
 <p>Each main track on the tracklist becomes one chapter. "w/" overlay rows (tracks layered
@@ -2103,7 +2103,7 @@ for this; the normal re-identify path handles it.</p>
 <p><code>CRATEDIGGER_1001TL_COUNTRY</code> is always populated when the page heading carries a
 recognised country name, whether a linked source is present or not. Earlier versions only
 set the country when no source link existed; now it is extracted unconditionally so
-country-derived downstream logic (organize folder layout, NFO country field) has the
+country-derived downstream logic (organize folder layout, <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> country field) has the
 same signal regardless of whether the tracklist links a dedicated source.</p>
 <h2 id="auto-mode">Auto mode<a class="headerlink" href="#auto-mode" title="Permanent link">&para;</a></h2>
 <p>With <code>--auto</code>, CrateDigger picks the top result automatically without prompting. It only
@@ -2244,7 +2244,7 @@ these tags later to resolve MusicBrainz IDs. See the
 limits. Change this with <code>--delay &lt;seconds&gt;</code> or by setting <code>delay_seconds</code> in your config.</p>
 <h2 id="what-to-do-next">What to do next<a class="headerlink" href="#what-to-do-next" title="Permanent link">&para;</a></h2>
 <p>After identifying your files, run <a href="../organize/"><code>organize</code></a> to move them into your library
-structure, then <a href="../enrich/"><code>enrich</code></a> to add artwork, posters, and NFO files.</p>
+structure, then <a href="../enrich/"><code>enrich</code></a> to add artwork, posters, and <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files.</p>
 
 
 

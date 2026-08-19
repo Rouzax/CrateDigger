@@ -1938,7 +1938,7 @@ action on your 1001Tracklists account is needed.</p>
 <p>After re-running <code>identify</code> to pick up updated tracklist data, run <code>enrich</code> again:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
 </span></code></pre></div>
-<p>NFO files are automatically regenerated when metadata changes, so no extra flag is needed for tags and NFOs. If you also want to rebuild posters and artwork, which use existence-only checks, add <code>--regenerate</code> to force those files to be overwritten as well.</p>
+<p><abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files are automatically regenerated when metadata changes, so no extra flag is needed for tags and NFOs. If you also want to rebuild posters and artwork, which use existence-only checks, add <code>--regenerate</code> to force those files to be overwritten as well.</p>
 <hr />
 <h2 id="organize">organize<a class="headerlink" href="#organize" title="Permanent link">&para;</a></h2>
 <h3 id="-dry-run-and-move-cannot-be-used-together">"--dry-run and --move cannot be used together"<a class="headerlink" href="#-dry-run-and-move-cannot-be-used-together" title="Permanent link">&para;</a></h3>
@@ -1979,22 +1979,22 @@ action on your 1001Tracklists account is needed.</p>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters
 </span></code></pre></div>
 <h3 id="artist-artwork-from-fanarttv-is-not-downloading">Artist artwork from fanart.tv is not downloading<a class="headerlink" href="#artist-artwork-from-fanarttv-is-not-downloading" title="Permanent link">&para;</a></h3>
-<p>Fanart.tv artwork requires a MusicBrainz ID to be resolved for the artist. If <code>fanart</code> runs before <code>chapter_artist_mbids</code>, or if the artist's MBID has not been resolved yet, the lookup is skipped.</p>
-<p>Run <code>chapter_artist_mbids</code> first to resolve MBIDs, then rerun enrich:</p>
+<p>Fanart.tv artwork requires a MusicBrainz ID to be resolved for the artist. If <code>fanart</code> runs before <code>chapter_artist_mbids</code>, or if the artist's <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> has not been resolved yet, the lookup is skipped.</p>
+<p>Run <code>chapter_artist_mbids</code> first to resolve <abbr title="MusicBrainz Identifiers, the stable IDs MusicBrainz assigns to artists and recordings">MBIDs</abbr>, then rerun enrich:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
 </span></code></pre></div>
-<p>If the artist still has no MBID after that, they may not be in the MusicBrainz database or the search may be returning the wrong result. Add the correct MBID to <code>artist_mbids.json</code> manually (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows):</p>
+<p>If the artist still has no <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> after that, they may not be in the MusicBrainz database or the search may be returning the wrong result. Add the correct <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> to <code>artist_mbids.json</code> manually (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows):</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nt">"Artist Name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"</span>
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Find the correct MBID at <a href="https://musicbrainz.org">musicbrainz.org</a>.</p>
+<p>Find the correct <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> at <a href="https://musicbrainz.org">musicbrainz.org</a>.</p>
 <h3 id="musicbrainz-ids-are-not-resolving-for-some-artists">MusicBrainz IDs are not resolving for some artists<a class="headerlink" href="#musicbrainz-ids-are-not-resolving-for-some-artists" title="Permanent link">&para;</a></h3>
-<p>CrateDigger looks up MBIDs in this order: your override file (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows), the auto cache, then a live MusicBrainz search. If an artist is not resolving:</p>
+<p>CrateDigger looks up <abbr title="MusicBrainz Identifiers, the stable IDs MusicBrainz assigns to artists and recordings">MBIDs</abbr> in this order: your override file (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows), the auto cache, then a live MusicBrainz search. If an artist is not resolving:</p>
 <ol>
 <li>Check if the search is returning the wrong artist (a name collision). Run with <code>--verbose</code> to see what MusicBrainz returns.</li>
-<li>Look up the correct MBID at <a href="https://musicbrainz.org">musicbrainz.org</a> and add it to your override file:</li>
+<li>Look up the correct <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> at <a href="https://musicbrainz.org">musicbrainz.org</a> and add it to your override file:</li>
 </ol>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="nt">"Afrojack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3abb6f9f-5b6a-4f1f-8a2d-1111111111aa"</span>
@@ -2006,7 +2006,7 @@ action on your 1001Tracklists account is needed.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids,album_artist_mbids
 </span></code></pre></div>
 <p>CrateDigger detects that the resolved ID has changed and writes the update automatically.</p>
-<p>See <a href="../configuration/#artist-mbid-override-file">Configuration: artist MBID override file</a> for details.</p>
+<p>See <a href="../configuration/#artist-mbid-override-file">Configuration: artist <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> override file</a> for details.</p>
 <h3 id="place-folder-posters-show-a-plain-gradient-instead-of-a-logo">Place folder posters show a plain gradient instead of a logo<a class="headerlink" href="#place-folder-posters-show-a-plain-gradient-instead-of-a-logo" title="Permanent link">&para;</a></h3>
 <p>Add a curated logo for the place and regenerate:</p>
 <ol>
@@ -2023,7 +2023,7 @@ action on your 1001Tracklists account is needed.</p>
 <p>Requirements for fanart.tv lookups:</p>
 <ul>
 <li><code>fanart.enabled</code> must be <code>true</code> in your config (this is the default)</li>
-<li>The artist must have a MusicBrainz ID resolved. Run <code>--only chapter_artist_mbids</code> first if MBIDs are missing.</li>
+<li>The artist must have a MusicBrainz ID resolved. Run <code>--only chapter_artist_mbids</code> first if <abbr title="MusicBrainz Identifiers, the stable IDs MusicBrainz assigns to artists and recordings">MBIDs</abbr> are missing.</li>
 <li>A built-in project API key is included. If you are being rate-limited on large libraries, add your own personal key from <a href="https://fanart.tv/get-an-api-key/">fanart.tv/get-an-api-key</a> to <code>fanart.personal_api_key</code> in your config.</li>
 </ul>
 <p>Run with <code>--verbose</code> to see the lookup process and any errors.</p>

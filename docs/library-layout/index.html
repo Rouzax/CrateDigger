@@ -1290,7 +1290,7 @@
 <p>For the metadata tags written inside MKV files, see the <a href="../tag-reference/">tag reference</a>.</p>
 <hr />
 <h2 id="what-the-library-looks-like">What the library looks like<a class="headerlink" href="#what-the-library-looks-like" title="Permanent link">&para;</a></h2>
-<p>A B2B set (Armin van Buuren &amp; KIKI at AMF 2025, Two Is One stage) after a full <code>identify</code> → <code>organize</code> → <code>enrich</code> pass looks like this:</p>
+<p>A <abbr title="Back to back, a set performed by two or more DJs together">B2B</abbr> set (Armin van Buuren &amp; KIKI at AMF 2025, Two Is One stage) after a full <code>identify</code> → <code>organize</code> → <code>enrich</code> pass looks like this:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Music/Library/
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>└── Armin van Buuren/
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ├── folder.jpg
@@ -1300,7 +1300,7 @@
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ├── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One]-poster.jpg
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    └── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One]-fanart.jpg
 </span></code></pre></div>
-<p>For B2B sets, CrateDigger uses the primary artist's name for folder routing. The B2B partner is carried in the MKV tags and NFO, not in the folder or filename.</p>
+<p>For <abbr title="Back to back, a set performed by two or more DJs together">B2B</abbr> sets, CrateDigger uses the primary artist's name for folder routing. The <abbr title="Back to back, a set performed by two or more DJs together">B2B</abbr> partner is carried in the MKV tags and <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr>, not in the folder or filename.</p>
 <p>Named acts that perform together permanently (such as "Axwell &amp; Ingrosso" or "Swedish House Mafia") are treated as a single artist and get their own dedicated folder. CrateDigger learns these group names automatically from 1001Tracklists, or you can define them manually in <a href="../configuration/#artist-aliases"><code>artists.json</code></a>.</p>
 <hr />
 <h2 id="files-written-per-video">Files written per video<a class="headerlink" href="#files-written-per-video" title="Permanent link">&para;</a></h2>
@@ -1433,8 +1433,8 @@
 </table>
 <p>The gradient color comes from the place's <code>color</code> field in <a href="../places/"><code>places.json</code></a> if set (an edition's own <code>color</code> wins over the place-level one), otherwise from the dominant color across the folder's thumb images.</p>
 <hr />
-<h2 id="nfo-files">NFO files<a class="headerlink" href="#nfo-files" title="Permanent link">&para;</a></h2>
-<p>CrateDigger writes Kodi-compatible musicvideo NFO files. Jellyfin reads the same format. Plex can read them via musicvideo-compatible agents.</p>
+<h2 id="nfo-files"><abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files<a class="headerlink" href="#nfo-files" title="Permanent link">&para;</a></h2>
+<p>CrateDigger writes Kodi-compatible musicvideo <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files. Jellyfin reads the same format. Plex can read them via musicvideo-compatible agents.</p>
 <table>
 <thead>
 <tr>
@@ -1497,7 +1497,7 @@
 </tr>
 </tbody>
 </table>
-<p>Sample NFO for the Armin b2b KI/KI example:</p>
+<p>Sample <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> for the Armin b2b KI/KI example:</p>
 <div class="language-xml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">&lt;musicvideo&gt;</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&lt;title&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KI/KI<span class="w"> </span>@<span class="w"> </span>Two<span class="w"> </span>Is<span class="w"> </span>One,<span class="w"> </span>AMF<span class="nt">&lt;/title&gt;</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&lt;artist&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="nt">&lt;/artist&gt;</span>
@@ -1523,7 +1523,7 @@
 </span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">  </span><span class="nt">&lt;dateadded&gt;</span>2026-04-13<span class="w"> </span>19:27:27<span class="nt">&lt;/dateadded&gt;</span>
 </span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="nt">&lt;/musicvideo&gt;</span>
 </span></code></pre></div>
-<p>Without a 1001Tracklists account, the NFO still populates from filename parsing and embedded tags: title, primary artist, album, year, and fallback genre. The multi-artist list, 1001Tracklists-sourced genres, stage, set title, and any field the filename parser cannot infer are omitted.</p>
+<p>Without a 1001Tracklists account, the <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> still populates from filename parsing and embedded tags: title, primary artist, album, year, and fallback genre. The multi-artist list, 1001Tracklists-sourced genres, stage, set title, and any field the filename parser cannot infer are omitted.</p>
 <h3 id="selecting-one-festival-edition">Selecting one festival edition<a class="headerlink" href="#selecting-one-festival-edition" title="Permanent link">&para;</a></h3>
 <p>A common thing to want is every set from a single edition, such as all of Tomorrowland 2026. CrateDigger writes two fields that answer this, because Kodi and Jellyfin reach it differently.</p>
 <p><strong>In Kodi</strong>, use <strong>Videos → Music Videos → Albums</strong>. Each festival edition appears as its own album, because <code>&lt;album&gt;</code> is written as <code>Place Year</code>. Nothing extra is needed. Kodi also indexes <code>&lt;tag&gt;</code>, <code>&lt;artist&gt;</code>, <code>&lt;studio&gt;</code>, and <code>&lt;genre&gt;</code> as browsable nodes under Music Videos, and its smart playlists can combine rules with AND, so <code>Tag is Tomorrowland</code> AND <code>Year is 2026</code> works too.</p>
@@ -1538,7 +1538,7 @@
 <p>It uses the edition-qualified display name, matching <code>&lt;album&gt;</code>, so <code>Dreamstate SoCal 2026</code> stays distinct from other Dreamstate editions that year. When the place name already contains the year, no duplicate tag is written.</p>
 <div class="admonition note">
 <p class="admonition-title">Existing libraries</p>
-<p>NFO files are only rewritten when <code>enrich</code> runs. Sets enriched before this tag existed keep their old NFO until you re-run <code>enrich nfo</code> over them.</p>
+<p><abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files are only rewritten when <code>enrich</code> runs. Sets enriched before this tag existed keep their old <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> until you re-run <code>enrich nfo</code> over them.</p>
 </div>
 <hr />
 <h2 id="festival-logos">Festival logos<a class="headerlink" href="#festival-logos" title="Permanent link">&para;</a></h2>
