@@ -1,0 +1,3 @@
+# Docs tooling (pinned). The docs deploy workflow installs from this file.
+# Zensical reads mkdocs.yml natively; see the note at the top of that file.
+zensical==0.0.55
