@@ -68,7 +68,11 @@ markdown_extensions:
       repo_url_shorthand: true
       user: Rouzax
       repo: CrateDigger
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      # Appended to every page so the glossary is defined once. Terms are
+      # matched in prose only; occurrences inside code spans are left alone.
+      auto_append:
+        - includes/abbreviations.md
   - pymdownx.tabbed:
       alternate_style: true
       combine_header_slug: true
