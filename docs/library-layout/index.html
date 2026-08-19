@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -29,10 +29,15 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.20815dad.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -46,14 +51,14 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
       <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -64,6 +69,8 @@
   
     
     
+      
+    
     
     
     
@@ -72,7 +79,7 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
         
@@ -90,14 +97,14 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -117,63 +124,48 @@
     </div>
     
       
+        <form class="md-header__option" data-md-component="palette">
+  
     
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
       
       
-        <label class="md-header__button md-icon" for="__search">
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -194,11 +186,8 @@
   
   
     <li class="md-tabs__item">
-      <a href=".." class="md-tabs__link">
+      <a href="./.." class="md-tabs__link">
         
-  
-  
-    
   
   Home
 
@@ -216,9 +205,6 @@
       <a href="../getting-started/" class="md-tabs__link">
         
   
-  
-    
-  
   Getting Started
 
       </a>
@@ -232,11 +218,23 @@
   
   
     
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
     
       <li class="md-tabs__item">
         <a href="../commands/identify/" class="md-tabs__link">
           
-  
   
   Commands
 
@@ -255,9 +253,6 @@
       <a href="../configuration/" class="md-tabs__link">
         
   
-  
-    
-  
   Configuration
 
       </a>
@@ -273,9 +268,6 @@
     <li class="md-tabs__item">
       <a href="../places/" class="md-tabs__link">
         
-  
-  
-    
   
   Places
 
@@ -293,9 +285,6 @@
       <a href="../tracklists/" class="md-tabs__link">
         
   
-  
-    
-  
   1001Tracklists
 
       </a>
@@ -312,9 +301,6 @@
       <a href="../tag-reference/" class="md-tabs__link">
         
   
-  
-    
-  
   Tag reference
 
       </a>
@@ -330,11 +316,8 @@
   
   
     <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+      <a href="././" class="md-tabs__link">
         
-  
-  
-    
   
   Library layout
 
@@ -352,9 +335,6 @@
       <a href="../kodi-integration/" class="md-tabs__link">
         
   
-  
-    
-  
   Kodi Integration
 
       </a>
@@ -370,9 +350,6 @@
     <li class="md-tabs__item">
       <a href="../faq/" class="md-tabs__link">
         
-  
-  
-    
   
   FAQ
 
@@ -403,9 +380,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
     CrateDigger
@@ -415,7 +392,7 @@
       <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
@@ -432,15 +409,14 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="./.." class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
-  
+  Home
 
     
   </span>
@@ -466,8 +442,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
-  
+  Getting Started
 
     
   </span>
@@ -486,6 +461,16 @@
   
   
     
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -509,8 +494,7 @@
   <span class="md-ellipsis">
     
   
-    Commands
-  
+  Commands
 
     
   </span>
@@ -525,8 +509,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Commands
-  
+  Commands
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -545,8 +528,7 @@
   <span class="md-ellipsis">
     
   
-    Identify
-  
+  Identify
 
     
   </span>
@@ -573,8 +555,7 @@
   <span class="md-ellipsis">
     
   
-    Organize
-  
+  Organize
 
     
   </span>
@@ -601,8 +582,7 @@
   <span class="md-ellipsis">
     
   
-    Enrich
-  
+  Enrich
 
     
   </span>
@@ -629,8 +609,7 @@
   <span class="md-ellipsis">
     
   
-    Audit Logos
-  
+  Audit Logos
 
     
   </span>
@@ -664,8 +643,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
-  
+  Configuration
 
     
   </span>
@@ -691,8 +669,7 @@
   <span class="md-ellipsis">
     
   
-    Places
-  
+  Places
 
     
   </span>
@@ -718,8 +695,7 @@
   <span class="md-ellipsis">
     
   
-    1001Tracklists
-  
+  1001Tracklists
 
     
   </span>
@@ -745,8 +721,7 @@
   <span class="md-ellipsis">
     
   
-    Tag reference
-  
+  Tag reference
 
     
   </span>
@@ -768,7 +743,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
         
@@ -781,8 +756,7 @@
   <span class="md-ellipsis">
     
   
-    Library layout
-  
+  Library layout
 
     
   </span>
@@ -792,15 +766,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Library layout
-  
+  Library layout
 
     
   </span>
@@ -811,7 +784,8 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -820,16 +794,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#what-the-library-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What the library looks like
-      
+      </span>
     </span>
   </a>
   
@@ -838,9 +812,9 @@
         <li class="md-nav__item">
   <a href="#files-written-per-video" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Files written per video
-      
+      </span>
     </span>
   </a>
   
@@ -849,9 +823,9 @@
         <li class="md-nav__item">
   <a href="#files-written-per-folder" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Files written per folder
-      
+      </span>
     </span>
   </a>
   
@@ -860,9 +834,9 @@
         <li class="md-nav__item">
   <a href="#artwork" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Artwork
-      
+      </span>
     </span>
   </a>
   
@@ -872,9 +846,9 @@
           <li class="md-nav__item">
   <a href="#cover-art-sources" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Cover art sources
-      
+      </span>
     </span>
   </a>
   
@@ -883,9 +857,9 @@
           <li class="md-nav__item">
   <a href="#poster-layouts" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Poster layouts
-      
+      </span>
     </span>
   </a>
   
@@ -895,9 +869,9 @@
           <li class="md-nav__item">
   <a href="#per-video-poster" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Per-video poster
-      
+      </span>
     </span>
   </a>
   
@@ -906,9 +880,9 @@
           <li class="md-nav__item">
   <a href="#album-poster-folderjpg" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Album poster (folder.jpg)
-      
+      </span>
     </span>
   </a>
   
@@ -927,9 +901,9 @@
         <li class="md-nav__item">
   <a href="#nfo-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         NFO files
-      
+      </span>
     </span>
   </a>
   
@@ -939,9 +913,9 @@
           <li class="md-nav__item">
   <a href="#selecting-one-festival-edition" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Selecting one festival edition
-      
+      </span>
     </span>
   </a>
   
@@ -955,9 +929,9 @@
         <li class="md-nav__item">
   <a href="#festival-logos" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Festival logos
-      
+      </span>
     </span>
   </a>
   
@@ -967,9 +941,9 @@
           <li class="md-nav__item">
   <a href="#where-to-place-logo-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Where to place logo files
-      
+      </span>
     </span>
   </a>
   
@@ -978,9 +952,9 @@
           <li class="md-nav__item">
   <a href="#checking-coverage" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Checking coverage
-      
+      </span>
     </span>
   </a>
   
@@ -994,9 +968,9 @@
         <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         See also
-      
+      </span>
     </span>
   </a>
   
@@ -1024,8 +998,7 @@
   <span class="md-ellipsis">
     
   
-    Kodi Integration
-  
+  Kodi Integration
 
     
   </span>
@@ -1051,8 +1024,7 @@
   <span class="md-ellipsis">
     
   
-    FAQ
-  
+  FAQ
 
     
   </span>
@@ -1074,10 +1046,24 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1086,16 +1072,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#what-the-library-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What the library looks like
-      
+      </span>
     </span>
   </a>
   
@@ -1104,9 +1090,9 @@
         <li class="md-nav__item">
   <a href="#files-written-per-video" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Files written per video
-      
+      </span>
     </span>
   </a>
   
@@ -1115,9 +1101,9 @@
         <li class="md-nav__item">
   <a href="#files-written-per-folder" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Files written per folder
-      
+      </span>
     </span>
   </a>
   
@@ -1126,9 +1112,9 @@
         <li class="md-nav__item">
   <a href="#artwork" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Artwork
-      
+      </span>
     </span>
   </a>
   
@@ -1138,9 +1124,9 @@
           <li class="md-nav__item">
   <a href="#cover-art-sources" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Cover art sources
-      
+      </span>
     </span>
   </a>
   
@@ -1149,9 +1135,9 @@
           <li class="md-nav__item">
   <a href="#poster-layouts" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Poster layouts
-      
+      </span>
     </span>
   </a>
   
@@ -1161,9 +1147,9 @@
           <li class="md-nav__item">
   <a href="#per-video-poster" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Per-video poster
-      
+      </span>
     </span>
   </a>
   
@@ -1172,9 +1158,9 @@
           <li class="md-nav__item">
   <a href="#album-poster-folderjpg" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Album poster (folder.jpg)
-      
+      </span>
     </span>
   </a>
   
@@ -1193,9 +1179,9 @@
         <li class="md-nav__item">
   <a href="#nfo-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         NFO files
-      
+      </span>
     </span>
   </a>
   
@@ -1205,9 +1191,9 @@
           <li class="md-nav__item">
   <a href="#selecting-one-festival-edition" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Selecting one festival edition
-      
+      </span>
     </span>
   </a>
   
@@ -1221,9 +1207,9 @@
         <li class="md-nav__item">
   <a href="#festival-logos" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Festival logos
-      
+      </span>
     </span>
   </a>
   
@@ -1233,9 +1219,9 @@
           <li class="md-nav__item">
   <a href="#where-to-place-logo-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Where to place logo files
-      
+      </span>
     </span>
   </a>
   
@@ -1244,9 +1230,9 @@
           <li class="md-nav__item">
   <a href="#checking-coverage" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Checking coverage
-      
+      </span>
     </span>
   </a>
   
@@ -1260,9 +1246,9 @@
         <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         See also
-      
+      </span>
     </span>
   </a>
   
@@ -1279,34 +1265,45 @@
           
             <div class="md-content" data-md-component="content">
               
+                
+
+
+
+  
+
+
+              
               <article class="md-content__inner md-typeset">
                 
                   
-
-
+  
+    <a href="https://github.com/Rouzax/CrateDigger/edit/main/docs/library-layout.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
   
   
 
 
-<h1 id="library-layout">Library layout</h1>
+<h1 id="library-layout">Library layout<a class="headerlink" href="#library-layout" title="Permanent link">&para;</a></h1>
 <p>After running <code>organize</code> and <code>enrich</code>, your library is more than a folder tree of video files. Each video has sidecar files placed beside it, each folder has album-level artwork, and a cache of downloaded artist artwork lives in your home directory. This page maps every file CrateDigger writes and where the content comes from.</p>
 <p>For the metadata tags written inside MKV files, see the <a href="../tag-reference/">tag reference</a>.</p>
 <hr />
-<h2 id="what-the-library-looks-like">What the library looks like</h2>
+<h2 id="what-the-library-looks-like">What the library looks like<a class="headerlink" href="#what-the-library-looks-like" title="Permanent link">&para;</a></h2>
 <p>A B2B set (Armin van Buuren &amp; KIKI at AMF 2025, Two Is One stage) after a full <code>identify</code> → <code>organize</code> → <code>enrich</code> pass looks like this:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Music/Library/
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>└── Armin van Buuren/
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ├── folder.jpg
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ├── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One].mkv
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ├── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One].nfo
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ├── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One]-thumb.jpg
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ├── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One]-poster.jpg
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    └── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One]-fanart.jpg
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Music/Library/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>└── Armin van Buuren/
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ├── folder.jpg
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ├── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One].mkv
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ├── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One].nfo
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ├── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One]-thumb.jpg
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ├── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One]-poster.jpg
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    └── 2025 - Armin van Buuren &amp; KIKI - AMF [Two Is One]-fanart.jpg
+</span></code></pre></div>
 <p>For B2B sets, CrateDigger uses the primary artist's name for folder routing. The B2B partner is carried in the MKV tags and NFO, not in the folder or filename.</p>
 <p>Named acts that perform together permanently (such as "Axwell &amp; Ingrosso" or "Swedish House Mafia") are treated as a single artist and get their own dedicated folder. CrateDigger learns these group names automatically from 1001Tracklists, or you can define them manually in <a href="../configuration/#artist-aliases"><code>artists.json</code></a>.</p>
 <hr />
-<h2 id="files-written-per-video">Files written per video</h2>
+<h2 id="files-written-per-video">Files written per video<a class="headerlink" href="#files-written-per-video" title="Permanent link">&para;</a></h2>
 <p>These files are written into the same folder as the video, sharing the video's base name:</p>
 <table>
 <thead>
@@ -1340,7 +1337,7 @@
 </tbody>
 </table>
 <hr />
-<h2 id="files-written-per-folder">Files written per folder</h2>
+<h2 id="files-written-per-folder">Files written per folder<a class="headerlink" href="#files-written-per-folder" title="Permanent link">&para;</a></h2>
 <p>These files represent the whole folder and are shared by all videos in it:</p>
 <table>
 <thead>
@@ -1365,20 +1362,20 @@
 </table>
 <p>Artist artwork downloaded from fanart.tv is stored in the cache folder (<code>~/.cache/CrateDigger/artists/{Artist}/</code> on Linux, <code>~/Library/Caches/CrateDigger/artists/{Artist}/</code> on macOS, <code>$env:LOCALAPPDATA\CrateDigger\Cache\artists\{Artist}\</code> on Windows) and used by the poster pipeline. It is not copied into the library tree itself.</p>
 <hr />
-<h2 id="artwork">Artwork</h2>
-<h3 id="cover-art-sources">Cover art sources</h3>
+<h2 id="artwork">Artwork<a class="headerlink" href="#artwork" title="Permanent link">&para;</a></h2>
+<h3 id="cover-art-sources">Cover art sources<a class="headerlink" href="#cover-art-sources" title="Permanent link">&para;</a></h3>
 <p>CrateDigger tries three sources in order when generating <code>{stem}-thumb.jpg</code>:</p>
 <ol>
 <li><strong>Embedded artwork:</strong> if the MKV file has an image attachment (for example, a thumbnail embedded by yt-dlp), it is extracted and used directly. This is the best quality source.</li>
 <li><strong>Video frame sample:</strong> if no embedded artwork exists and the <code>vision</code> extra is installed, CrateDigger samples a still frame from the video. See <a href="../getting-started/#optional-video-frame-sampling">getting started</a> for installation.</li>
 <li><strong>Generated gradient:</strong> if neither source is available, a color gradient image is generated from the available metadata. This ensures a thumbnail always exists so the rest of the pipeline can continue, but it contains no imagery from the actual video.</li>
 </ol>
-<h3 id="poster-layouts">Poster layouts</h3>
+<h3 id="poster-layouts">Poster layouts<a class="headerlink" href="#poster-layouts" title="Permanent link">&para;</a></h3>
 <p>CrateDigger generates two types of poster: a per-video set poster (<code>{stem}-poster.jpg</code>) and a per-folder album poster (<code>folder.jpg</code>).</p>
-<h4 id="per-video-poster">Per-video poster</h4>
+<h4 id="per-video-poster">Per-video poster<a class="headerlink" href="#per-video-poster" title="Permanent link">&para;</a></h4>
 <p>The video's thumb image forms the background, blurred and darkened across the full poster. A sharpened crop of the same image is pinned to the top with a fade. Metadata text is centered below: artist name, festival name, date, stage, and venue. The accent color is derived from the source image. When the festival-slot text contains a comma (free-text locations from sets without a registered 1001Tracklists source), only the part before the first comma renders as the festival line, and the remainder joins the gray venue text below.</p>
 <p>Background image tried in order: DJ artwork from 1001Tracklists, then fanart.tv artist background, then the thumb itself.</p>
-<h4 id="album-poster-folderjpg">Album poster (folder.jpg)</h4>
+<h4 id="album-poster-folderjpg">Album poster (folder.jpg)<a class="headerlink" href="#album-poster-folderjpg" title="Permanent link">&para;</a></h4>
 <p>The album poster layout is selected automatically based on what images are available and what type of folder it is:</p>
 <blockquote>
 <p>See the <a href="https://rouzax.github.io/CrateDigger/#library-browser">interactive library browser</a> to switch folder layouts and click through real enriched sets, posters, and tracklists.</p>
@@ -1436,7 +1433,7 @@
 </table>
 <p>The gradient color comes from the place's <code>color</code> field in <a href="../places/"><code>places.json</code></a> if set (an edition's own <code>color</code> wins over the place-level one), otherwise from the dominant color across the folder's thumb images.</p>
 <hr />
-<h2 id="nfo-files">NFO files</h2>
+<h2 id="nfo-files">NFO files<a class="headerlink" href="#nfo-files" title="Permanent link">&para;</a></h2>
 <p>CrateDigger writes Kodi-compatible musicvideo NFO files. Jellyfin reads the same format. Plex can read them via musicvideo-compatible agents.</p>
 <table>
 <thead>
@@ -1501,33 +1498,33 @@
 </tbody>
 </table>
 <p>Sample NFO for the Armin b2b KI/KI example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">&lt;musicvideo&gt;</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&lt;title&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KI/KI<span class="w"> </span>@<span class="w"> </span>Two<span class="w"> </span>Is<span class="w"> </span>One,<span class="w"> </span>AMF<span class="nt">&lt;/title&gt;</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&lt;artist&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="nt">&lt;/artist&gt;</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">&lt;artist&gt;</span>KIKI<span class="nt">&lt;/artist&gt;</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">&lt;album&gt;</span>AMF<span class="w"> </span>2025<span class="nt">&lt;/album&gt;</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">&lt;premiered&gt;</span>2025-10-25<span class="nt">&lt;/premiered&gt;</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">&lt;genre&gt;</span>Techno<span class="nt">&lt;/genre&gt;</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">&lt;genre&gt;</span>Trance<span class="nt">&lt;/genre&gt;</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">&lt;genre&gt;</span>Hard<span class="w"> </span>Dance<span class="nt">&lt;/genre&gt;</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>festival_set<span class="nt">&lt;/tag&gt;</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>AMF<span class="nt">&lt;/tag&gt;</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>AMF<span class="w"> </span>2025<span class="nt">&lt;/tag&gt;</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="nt">&lt;/tag&gt;</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>KIKI<span class="nt">&lt;/tag&gt;</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="nt">&lt;studio&gt;</span>Two<span class="w"> </span>Is<span class="w"> </span>One<span class="nt">&lt;/studio&gt;</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nt">&lt;plot&gt;</span>Stage:<span class="w"> </span>Two<span class="w"> </span>Is<span class="w"> </span>One<span class="nt">&lt;/plot&gt;</span>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">  </span><span class="nt">&lt;runtime&gt;</span>47<span class="nt">&lt;/runtime&gt;</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">  </span><span class="nt">&lt;thumb</span><span class="w"> </span><span class="na">aspect=</span><span class="s">&quot;thumb&quot;</span><span class="nt">&gt;</span>2025<span class="w"> </span>-<span class="w"> </span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KIKI<span class="w"> </span>-<span class="w"> </span>AMF<span class="w"> </span>[Two<span class="w"> </span>Is<span class="w"> </span>One]-thumb.jpg<span class="nt">&lt;/thumb&gt;</span>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="nt">&lt;thumb</span><span class="w"> </span><span class="na">aspect=</span><span class="s">&quot;poster&quot;</span><span class="nt">&gt;</span>2025<span class="w"> </span>-<span class="w"> </span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KIKI<span class="w"> </span>-<span class="w"> </span>AMF<span class="w"> </span>[Two<span class="w"> </span>Is<span class="w"> </span>One]-poster.jpg<span class="nt">&lt;/thumb&gt;</span>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">  </span><span class="nt">&lt;fanart&gt;</span>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="nt">&lt;thumb&gt;</span>2025<span class="w"> </span>-<span class="w"> </span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KIKI<span class="w"> </span>-<span class="w"> </span>AMF<span class="w"> </span>[Two<span class="w"> </span>Is<span class="w"> </span>One]-fanart.jpg<span class="nt">&lt;/thumb&gt;</span>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">  </span><span class="nt">&lt;/fanart&gt;</span>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">  </span><span class="nt">&lt;dateadded&gt;</span>2026-04-13<span class="w"> </span>19:27:27<span class="nt">&lt;/dateadded&gt;</span>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="nt">&lt;/musicvideo&gt;</span>
-</code></pre></div>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">&lt;musicvideo&gt;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&lt;title&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KI/KI<span class="w"> </span>@<span class="w"> </span>Two<span class="w"> </span>Is<span class="w"> </span>One,<span class="w"> </span>AMF<span class="nt">&lt;/title&gt;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&lt;artist&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="nt">&lt;/artist&gt;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">&lt;artist&gt;</span>KIKI<span class="nt">&lt;/artist&gt;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">&lt;album&gt;</span>AMF<span class="w"> </span>2025<span class="nt">&lt;/album&gt;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">&lt;premiered&gt;</span>2025-10-25<span class="nt">&lt;/premiered&gt;</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">&lt;genre&gt;</span>Techno<span class="nt">&lt;/genre&gt;</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">&lt;genre&gt;</span>Trance<span class="nt">&lt;/genre&gt;</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">&lt;genre&gt;</span>Hard<span class="w"> </span>Dance<span class="nt">&lt;/genre&gt;</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>festival_set<span class="nt">&lt;/tag&gt;</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>AMF<span class="nt">&lt;/tag&gt;</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>AMF<span class="w"> </span>2025<span class="nt">&lt;/tag&gt;</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="nt">&lt;/tag&gt;</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="nt">&lt;tag&gt;</span>KIKI<span class="nt">&lt;/tag&gt;</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="nt">&lt;studio&gt;</span>Two<span class="w"> </span>Is<span class="w"> </span>One<span class="nt">&lt;/studio&gt;</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nt">&lt;plot&gt;</span>Stage:<span class="w"> </span>Two<span class="w"> </span>Is<span class="w"> </span>One<span class="nt">&lt;/plot&gt;</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">  </span><span class="nt">&lt;runtime&gt;</span>47<span class="nt">&lt;/runtime&gt;</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">  </span><span class="nt">&lt;thumb</span><span class="w"> </span><span class="na">aspect=</span><span class="s">"thumb"</span><span class="nt">&gt;</span>2025<span class="w"> </span>-<span class="w"> </span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KIKI<span class="w"> </span>-<span class="w"> </span>AMF<span class="w"> </span>[Two<span class="w"> </span>Is<span class="w"> </span>One]-thumb.jpg<span class="nt">&lt;/thumb&gt;</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="nt">&lt;thumb</span><span class="w"> </span><span class="na">aspect=</span><span class="s">"poster"</span><span class="nt">&gt;</span>2025<span class="w"> </span>-<span class="w"> </span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KIKI<span class="w"> </span>-<span class="w"> </span>AMF<span class="w"> </span>[Two<span class="w"> </span>Is<span class="w"> </span>One]-poster.jpg<span class="nt">&lt;/thumb&gt;</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">  </span><span class="nt">&lt;fanart&gt;</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="nt">&lt;thumb&gt;</span>2025<span class="w"> </span>-<span class="w"> </span>Armin<span class="w"> </span>van<span class="w"> </span>Buuren<span class="w"> </span><span class="ni">&amp;amp;</span><span class="w"> </span>KIKI<span class="w"> </span>-<span class="w"> </span>AMF<span class="w"> </span>[Two<span class="w"> </span>Is<span class="w"> </span>One]-fanart.jpg<span class="nt">&lt;/thumb&gt;</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">  </span><span class="nt">&lt;/fanart&gt;</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">  </span><span class="nt">&lt;dateadded&gt;</span>2026-04-13<span class="w"> </span>19:27:27<span class="nt">&lt;/dateadded&gt;</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="nt">&lt;/musicvideo&gt;</span>
+</span></code></pre></div>
 <p>Without a 1001Tracklists account, the NFO still populates from filename parsing and embedded tags: title, primary artist, album, year, and fallback genre. The multi-artist list, 1001Tracklists-sourced genres, stage, set title, and any field the filename parser cannot infer are omitted.</p>
-<h3 id="selecting-one-festival-edition">Selecting one festival edition</h3>
+<h3 id="selecting-one-festival-edition">Selecting one festival edition<a class="headerlink" href="#selecting-one-festival-edition" title="Permanent link">&para;</a></h3>
 <p>A common thing to want is every set from a single edition, such as all of Tomorrowland 2026. CrateDigger writes two fields that answer this, because Kodi and Jellyfin reach it differently.</p>
 <p><strong>In Kodi</strong>, use <strong>Videos → Music Videos → Albums</strong>. Each festival edition appears as its own album, because <code>&lt;album&gt;</code> is written as <code>Place Year</code>. Nothing extra is needed. Kodi also indexes <code>&lt;tag&gt;</code>, <code>&lt;artist&gt;</code>, <code>&lt;studio&gt;</code>, and <code>&lt;genre&gt;</code> as browsable nodes under Music Videos, and its smart playlists can combine rules with AND, so <code>Tag is Tomorrowland</code> AND <code>Year is 2026</code> works too.</p>
 <p><strong>In Jellyfin</strong>, use the library's <strong>Filter → Tags</strong> and pick <code>Tomorrowland 2026</code>. This is what the combined <code>Place Year</code> tag exists for. Jellyfin stores <code>&lt;album&gt;</code> for music videos but offers no album browse for them, and when you select several tags it returns items matching <em>any</em> of them rather than all, so a separate place tag plus a year tag cannot be combined into one edition. The pre-combined tag sidesteps both limits.</p>
@@ -1544,10 +1541,10 @@
 <p>NFO files are only rewritten when <code>enrich</code> runs. Sets enriched before this tag existed keep their old NFO until you re-run <code>enrich nfo</code> over them.</p>
 </div>
 <hr />
-<h2 id="festival-logos">Festival logos</h2>
+<h2 id="festival-logos">Festival logos<a class="headerlink" href="#festival-logos" title="Permanent link">&para;</a></h2>
 <p>For festival-style folder posters, CrateDigger looks for a curated logo image to place as the centered mark. The filename convention is <code>logo.&lt;ext&gt;</code> inside a folder named after the canonical place display name (for example <code>Tomorrowland</code>, <code>Tomorrowland Winter</code>, <code>EDC Las Vegas</code>). An edition gets its own folder next to the canonical one, never a subfolder inside it.</p>
 <p><strong>Supported formats:</strong> JPG, PNG, WebP. SVG, GIF, BMP, and TIFF are not supported.</p>
-<h3 id="where-to-place-logo-files">Where to place logo files</h3>
+<h3 id="where-to-place-logo-files">Where to place logo files<a class="headerlink" href="#where-to-place-logo-files" title="Permanent link">&para;</a></h3>
 <p>CrateDigger searches two locations, library-local first:</p>
 <ol>
 <li><code>{library}/.cratedigger/places/{PlaceName}/logo.&lt;ext&gt;</code>: travels with the library; takes precedence when both locations have a file</li>
@@ -1575,11 +1572,11 @@
 </tr>
 </tbody>
 </table>
-<h3 id="checking-coverage">Checking coverage</h3>
+<h3 id="checking-coverage">Checking coverage<a class="headerlink" href="#checking-coverage" title="Permanent link">&para;</a></h3>
 <p>Use <a href="../commands/audit-logos/"><code>audit-logos</code></a> to see which places in your library have logos and which are missing them. The command shows the suggested placement path for each missing place.</p>
 <p>When a logo is missing, the folder poster falls back to a gradient layout.</p>
 <hr />
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../tag-reference/">Tag reference</a>: metadata tags written inside the MKV</li>
 <li><a href="../commands/enrich/">enrich command</a>: the operations that produce these files</li>
@@ -1599,17 +1596,21 @@
 
 
 
+
+
                 
               </article>
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
   Back to top
 </button>
         
@@ -1617,14 +1618,54 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../tag-reference/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Tag reference">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Tag reference
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../kodi-integration/" class="md-footer__link md-footer__link--next" aria-label="Next: Kodi Integration">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Kodi Integration
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -1642,10 +1683,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.tabs","navigation.sections","navigation.top","navigation.footer","navigation.path","navigation.indexes","search.highlight","search.suggest","content.code.copy","content.code.select","content.code.annotate","content.action.edit","content.tabs.link","content.tooltips"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
     
   </body>

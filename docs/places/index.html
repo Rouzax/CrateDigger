@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -29,10 +29,15 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.20815dad.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -46,14 +51,14 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
       <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -64,6 +69,8 @@
   
     
     
+      
+    
     
     
     
@@ -72,7 +79,7 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
         
@@ -90,14 +97,14 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -117,63 +124,48 @@
     </div>
     
       
+        <form class="md-header__option" data-md-component="palette">
+  
     
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
       
       
-        <label class="md-header__button md-icon" for="__search">
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -194,11 +186,8 @@
   
   
     <li class="md-tabs__item">
-      <a href=".." class="md-tabs__link">
+      <a href="./.." class="md-tabs__link">
         
-  
-  
-    
   
   Home
 
@@ -216,9 +205,6 @@
       <a href="../getting-started/" class="md-tabs__link">
         
   
-  
-    
-  
   Getting Started
 
       </a>
@@ -232,11 +218,23 @@
   
   
     
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
     
       <li class="md-tabs__item">
         <a href="../commands/identify/" class="md-tabs__link">
           
-  
   
   Commands
 
@@ -255,9 +253,6 @@
       <a href="../configuration/" class="md-tabs__link">
         
   
-  
-    
-  
   Configuration
 
       </a>
@@ -273,11 +268,8 @@
   
   
     <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+      <a href="././" class="md-tabs__link">
         
-  
-  
-    
   
   Places
 
@@ -295,9 +287,6 @@
       <a href="../tracklists/" class="md-tabs__link">
         
   
-  
-    
-  
   1001Tracklists
 
       </a>
@@ -313,9 +302,6 @@
     <li class="md-tabs__item">
       <a href="../tag-reference/" class="md-tabs__link">
         
-  
-  
-    
   
   Tag reference
 
@@ -333,9 +319,6 @@
       <a href="../library-layout/" class="md-tabs__link">
         
   
-  
-    
-  
   Library layout
 
       </a>
@@ -352,9 +335,6 @@
       <a href="../kodi-integration/" class="md-tabs__link">
         
   
-  
-    
-  
   Kodi Integration
 
       </a>
@@ -370,9 +350,6 @@
     <li class="md-tabs__item">
       <a href="../faq/" class="md-tabs__link">
         
-  
-  
-    
   
   FAQ
 
@@ -403,9 +380,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
     CrateDigger
@@ -415,7 +392,7 @@
       <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
@@ -432,15 +409,14 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="./.." class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
-  
+  Home
 
     
   </span>
@@ -466,8 +442,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
-  
+  Getting Started
 
     
   </span>
@@ -486,6 +461,16 @@
   
   
     
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -509,8 +494,7 @@
   <span class="md-ellipsis">
     
   
-    Commands
-  
+  Commands
 
     
   </span>
@@ -525,8 +509,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Commands
-  
+  Commands
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -545,8 +528,7 @@
   <span class="md-ellipsis">
     
   
-    Identify
-  
+  Identify
 
     
   </span>
@@ -573,8 +555,7 @@
   <span class="md-ellipsis">
     
   
-    Organize
-  
+  Organize
 
     
   </span>
@@ -601,8 +582,7 @@
   <span class="md-ellipsis">
     
   
-    Enrich
-  
+  Enrich
 
     
   </span>
@@ -629,8 +609,7 @@
   <span class="md-ellipsis">
     
   
-    Audit Logos
-  
+  Audit Logos
 
     
   </span>
@@ -664,8 +643,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
-  
+  Configuration
 
     
   </span>
@@ -687,7 +665,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
         
@@ -700,8 +678,7 @@
   <span class="md-ellipsis">
     
   
-    Places
-  
+  Places
 
     
   </span>
@@ -711,15 +688,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Places
-  
+  Places
 
     
   </span>
@@ -730,7 +706,8 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -739,16 +716,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#what-counts-as-a-place" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What counts as a place?
-      
+      </span>
     </span>
   </a>
   
@@ -757,9 +734,9 @@
         <li class="md-nav__item">
   <a href="#what-this-file-controls" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What this file controls
-      
+      </span>
     </span>
   </a>
   
@@ -768,9 +745,9 @@
         <li class="md-nav__item">
   <a href="#file-location" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         File location
-      
+      </span>
     </span>
   </a>
   
@@ -779,9 +756,9 @@
         <li class="md-nav__item">
   <a href="#format" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Format
-      
+      </span>
     </span>
   </a>
   
@@ -791,9 +768,9 @@
           <li class="md-nav__item">
   <a href="#fields" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Fields
-      
+      </span>
     </span>
   </a>
   
@@ -802,9 +779,9 @@
           <li class="md-nav__item">
   <a href="#editions" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Editions
-      
+      </span>
     </span>
   </a>
   
@@ -813,9 +790,9 @@
           <li class="md-nav__item">
   <a href="#venues-and-the-editions-block" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Venues and the editions block
-      
+      </span>
     </span>
   </a>
   
@@ -824,9 +801,9 @@
           <li class="md-nav__item">
   <a href="#minimal-entries" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Minimal entries
-      
+      </span>
     </span>
   </a>
   
@@ -840,9 +817,9 @@
         <li class="md-nav__item">
   <a href="#how-matching-works" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         How matching works
-      
+      </span>
     </span>
   </a>
   
@@ -851,9 +828,9 @@
         <li class="md-nav__item">
   <a href="#alias-rules-and-pitfalls" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Alias rules and pitfalls
-      
+      </span>
     </span>
   </a>
   
@@ -862,9 +839,9 @@
         <li class="md-nav__item">
   <a href="#adding-your-own-entries" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Adding your own entries
-      
+      </span>
     </span>
   </a>
   
@@ -873,9 +850,9 @@
         <li class="md-nav__item">
   <a href="#what-the-example-file-includes" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What the example file includes
-      
+      </span>
     </span>
   </a>
   
@@ -884,9 +861,9 @@
         <li class="md-nav__item">
   <a href="#curated-assets-logos-and-artwork" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Curated assets: logos and artwork
-      
+      </span>
     </span>
   </a>
   
@@ -895,9 +872,9 @@
         <li class="md-nav__item">
   <a href="#backward-compatibility-existing-festivalsjson-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        Backward compatibility: existing festivals.json files
-      
+      <span class="md-typeset">
+        Backward compatibility: existing <code>festivals.json</code> files
+      </span>
     </span>
   </a>
   
@@ -907,9 +884,9 @@
           <li class="md-nav__item">
   <a href="#renamed-in-0150-old-name-to-new-name" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Renamed in 0.15.0: old name to new name
-      
+      </span>
     </span>
   </a>
   
@@ -923,9 +900,9 @@
         <li class="md-nav__item">
   <a href="#related" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Related
-      
+      </span>
     </span>
   </a>
   
@@ -953,8 +930,7 @@
   <span class="md-ellipsis">
     
   
-    1001Tracklists
-  
+  1001Tracklists
 
     
   </span>
@@ -980,8 +956,7 @@
   <span class="md-ellipsis">
     
   
-    Tag reference
-  
+  Tag reference
 
     
   </span>
@@ -1007,8 +982,7 @@
   <span class="md-ellipsis">
     
   
-    Library layout
-  
+  Library layout
 
     
   </span>
@@ -1034,8 +1008,7 @@
   <span class="md-ellipsis">
     
   
-    Kodi Integration
-  
+  Kodi Integration
 
     
   </span>
@@ -1061,8 +1034,7 @@
   <span class="md-ellipsis">
     
   
-    FAQ
-  
+  FAQ
 
     
   </span>
@@ -1084,10 +1056,24 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1096,16 +1082,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#what-counts-as-a-place" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What counts as a place?
-      
+      </span>
     </span>
   </a>
   
@@ -1114,9 +1100,9 @@
         <li class="md-nav__item">
   <a href="#what-this-file-controls" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What this file controls
-      
+      </span>
     </span>
   </a>
   
@@ -1125,9 +1111,9 @@
         <li class="md-nav__item">
   <a href="#file-location" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         File location
-      
+      </span>
     </span>
   </a>
   
@@ -1136,9 +1122,9 @@
         <li class="md-nav__item">
   <a href="#format" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Format
-      
+      </span>
     </span>
   </a>
   
@@ -1148,9 +1134,9 @@
           <li class="md-nav__item">
   <a href="#fields" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Fields
-      
+      </span>
     </span>
   </a>
   
@@ -1159,9 +1145,9 @@
           <li class="md-nav__item">
   <a href="#editions" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Editions
-      
+      </span>
     </span>
   </a>
   
@@ -1170,9 +1156,9 @@
           <li class="md-nav__item">
   <a href="#venues-and-the-editions-block" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Venues and the editions block
-      
+      </span>
     </span>
   </a>
   
@@ -1181,9 +1167,9 @@
           <li class="md-nav__item">
   <a href="#minimal-entries" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Minimal entries
-      
+      </span>
     </span>
   </a>
   
@@ -1197,9 +1183,9 @@
         <li class="md-nav__item">
   <a href="#how-matching-works" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         How matching works
-      
+      </span>
     </span>
   </a>
   
@@ -1208,9 +1194,9 @@
         <li class="md-nav__item">
   <a href="#alias-rules-and-pitfalls" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Alias rules and pitfalls
-      
+      </span>
     </span>
   </a>
   
@@ -1219,9 +1205,9 @@
         <li class="md-nav__item">
   <a href="#adding-your-own-entries" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Adding your own entries
-      
+      </span>
     </span>
   </a>
   
@@ -1230,9 +1216,9 @@
         <li class="md-nav__item">
   <a href="#what-the-example-file-includes" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What the example file includes
-      
+      </span>
     </span>
   </a>
   
@@ -1241,9 +1227,9 @@
         <li class="md-nav__item">
   <a href="#curated-assets-logos-and-artwork" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Curated assets: logos and artwork
-      
+      </span>
     </span>
   </a>
   
@@ -1252,9 +1238,9 @@
         <li class="md-nav__item">
   <a href="#backward-compatibility-existing-festivalsjson-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        Backward compatibility: existing festivals.json files
-      
+      <span class="md-typeset">
+        Backward compatibility: existing <code>festivals.json</code> files
+      </span>
     </span>
   </a>
   
@@ -1264,9 +1250,9 @@
           <li class="md-nav__item">
   <a href="#renamed-in-0150-old-name-to-new-name" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Renamed in 0.15.0: old name to new name
-      
+      </span>
     </span>
   </a>
   
@@ -1280,9 +1266,9 @@
         <li class="md-nav__item">
   <a href="#related" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Related
-      
+      </span>
     </span>
   </a>
   
@@ -1299,18 +1285,29 @@
           
             <div class="md-content" data-md-component="content">
               
+                
+
+
+
+  
+
+
+              
               <article class="md-content__inner md-typeset">
                 
                   
-
-
+  
+    <a href="https://github.com/Rouzax/CrateDigger/edit/main/docs/places.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
   
   
 
 
-<h1 id="places">Places</h1>
+<h1 id="places">Places<a class="headerlink" href="#places" title="Permanent link">&para;</a></h1>
 <p>CrateDigger uses a <code>places.json</code> file to recognise named, branded entities that host DJ sets. What you put in this file directly affects how your library is organised and named.</p>
-<h2 id="what-counts-as-a-place">What counts as a place?</h2>
+<h2 id="what-counts-as-a-place">What counts as a place?<a class="headerlink" href="#what-counts-as-a-place" title="Permanent link">&para;</a></h2>
 <p>A "place" in CrateDigger is any named entity that a DJ set is associated with, other than the artist performing it. That includes:</p>
 <ul>
 <li><strong>Recurring festivals</strong> such as Tomorrowland, EDC, or Coachella.</li>
@@ -1319,13 +1316,13 @@
 <li><strong>Venue brands</strong> such as Hï Ibiza or Ushuaïa Ibiza, where multiple physical locations share a brand identity.</li>
 </ul>
 <p>All of these live in the same <code>places.json</code> file and use the same schema. There is no structural difference between a festival entry and a venue entry.</p>
-<h2 id="what-this-file-controls">What this file controls</h2>
+<h2 id="what-this-file-controls">What this file controls<a class="headerlink" href="#what-this-file-controls" title="Permanent link">&para;</a></h2>
 <p><strong>Name recognition and folder names.</strong> When CrateDigger sees <code>AMF</code> in a filename, it looks it up in the places database and finds it is <code>Amsterdam Music Festival</code>. The canonical name (<code>AMF</code>) is what appears in your folder and file names. Without an entry for a place, CrateDigger can only use whatever text appears literally in the filename or metadata.</p>
 <p><strong>Edition detection.</strong> When a filename contains <code>"Dreamstate SoCal"</code>, CrateDigger splits it into place <code>"Dreamstate"</code> and edition <code>"SoCal"</code>. This powers the <code>{edition}</code> field in your folder and filename templates, so edition-specific events get their own folders in nested layouts. See <a href="#editions">Editions</a> below for when editions apply and when they do not.</p>
 <p><strong>Poster brand colors.</strong> The <code>color</code> field sets the gradient base and accent color used in poster generation when no logo or fanart image is available. Without a color, CrateDigger derives a generic gradient from the metadata.</p>
 <p><strong>Search query expansion.</strong> Short uppercase abbreviations (like <code>AMF</code>, <code>EDC</code>, <code>ASOT</code>) are expanded to their full names when CrateDigger searches 1001Tracklists for a match. This improves match quality without affecting your folder names.</p>
 <p><strong>Venue and location routing.</strong> When a set has no linked festival on 1001Tracklists, CrateDigger looks for a linked venue or a plain-text location instead. If the venue or location matches an entry in <code>places.json</code>, the set routes by the canonical place name. If not, CrateDigger uses the raw text. Adding a <code>places.json</code> entry for a venue is all it takes to get clean canonical folder names for that venue.</p>
-<h2 id="file-location">File location</h2>
+<h2 id="file-location">File location<a class="headerlink" href="#file-location" title="Permanent link">&para;</a></h2>
 <p>CrateDigger looks for <code>places.json</code> in two places, checking the library-local location first:</p>
 <ol>
 <li><code>{library}/.cratedigger/places.json</code> (library-specific overrides, travels with the library)</li>
@@ -1354,15 +1351,15 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Linux</label><label for="__tabbed_1_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/CrateDigger/places.json<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/CrateDigger/places.json<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json&quot;</span> <span class="p">`</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\places.json&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  <span class="n">-Uri</span> <span class="s2">"https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json"</span> <span class="p">`</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  <span class="n">-OutFile</span> <span class="s2">"$env:USERPROFILE\Documents\CrateDigger\places.json"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
@@ -1370,29 +1367,29 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Linux</label><label for="__tabbed_2_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cp<span class="w"> </span>places.example.json<span class="w"> </span>~/CrateDigger/places.json
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cp<span class="w"> </span>places.example.json<span class="w"> </span>~/CrateDigger/places.json
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">Copy-Item</span> <span class="n">places</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">json</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\places.json&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">Copy-Item</span> <span class="n">places</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">json</span> <span class="s2">"$env:USERPROFILE\Documents\CrateDigger\places.json"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
-<h2 id="format">Format</h2>
+<h2 id="format">Format<a class="headerlink" href="#format" title="Permanent link">&para;</a></h2>
 <p>Each top-level key is the canonical place name. This is the name that appears in your folder structure and filenames. The value is an object with optional fields:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nt">&quot;Tomorrowland&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;TML&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tomorrowland Weekend 1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tomorrowland Weekend 2&quot;</span><span class="p">],</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">        </span><span class="nt">&quot;editions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">            </span><span class="nt">&quot;Brasil&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#2A9D8F&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">            </span><span class="nt">&quot;Winter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#5B9BD5&quot;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">        </span><span class="p">},</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#9B1B5A&quot;</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">}</span>
-</code></pre></div>
-<h3 id="fields">Fields</h3>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nt">"Tomorrowland"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"TML"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Tomorrowland Weekend 1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Tomorrowland Weekend 2"</span><span class="p">],</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">        </span><span class="nt">"editions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">            </span><span class="nt">"Brasil"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#2A9D8F"</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">            </span><span class="nt">"Winter"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#5B9BD5"</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">        </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#9B1B5A"</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="fields">Fields<a class="headerlink" href="#fields" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1420,30 +1417,30 @@
 </tbody>
 </table>
 <p>If an edition has its own <code>color</code>, that edition color takes priority over the place-level color.</p>
-<h3 id="editions">Editions</h3>
+<h3 id="editions">Editions<a class="headerlink" href="#editions" title="Permanent link">&para;</a></h3>
 <p>Editions represent distinct spin-off variants of a place, not individual yearly instances. A festival's annual edition in the same country is the same festival; Tomorrowland Brasil is a genuinely separate event with its own look and feel. Use the <code>editions</code> block for that kind of split.</p>
 <p>Real examples from <code>places.example.json</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="nt">&quot;Tomorrowland&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;TML&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tomorrowland Weekend 1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tomorrowland Weekend 2&quot;</span><span class="p">],</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">        </span><span class="nt">&quot;editions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">            </span><span class="nt">&quot;Brasil&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#2A9D8F&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">            </span><span class="nt">&quot;Winter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#5B9BD5&quot;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">        </span><span class="p">},</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#9B1B5A&quot;</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="nt">&quot;EDC&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Electric Daisy Carnival&quot;</span><span class="p">],</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="nt">&quot;editions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">            </span><span class="nt">&quot;Las Vegas&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;EDC Las Vegas&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">            </span><span class="nt">&quot;Mexico&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">            </span><span class="nt">&quot;Orlando&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">            </span><span class="nt">&quot;Thailand&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">        </span><span class="p">},</span>
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#ED3895&quot;</span>
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="p">}</span>
-</code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="nt">"Tomorrowland"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">        </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"TML"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Tomorrowland Weekend 1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Tomorrowland Weekend 2"</span><span class="p">],</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">        </span><span class="nt">"editions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">            </span><span class="nt">"Brasil"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#2A9D8F"</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">            </span><span class="nt">"Winter"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#5B9BD5"</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">        </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#9B1B5A"</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="nt">"EDC"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">        </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Electric Daisy Carnival"</span><span class="p">],</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="nt">"editions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">            </span><span class="nt">"Las Vegas"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"EDC Las Vegas"</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">            </span><span class="nt">"Mexico"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">            </span><span class="nt">"Orlando"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">            </span><span class="nt">"Thailand"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">        </span><span class="p">},</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">        </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#ED3895"</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="p">}</span>
+</span></code></pre></div>
 <p>When CrateDigger encounters "EDC Las Vegas" in a filename, it resolves to place <code>"EDC"</code> with edition <code>"Las Vegas"</code>. The edition name appears in folder paths and filenames wherever <code>{edition}</code> is used in your templates.</p>
 <p><strong>How an edition is chosen.</strong> CrateDigger picks the edition from the festival <strong>name</strong> first: a per-edition alias (for example <code>"EDC Las Vegas"</code>), or the name ending in the edition (for example <code>"Tomorrowland Winter"</code>). If the name yields no edition, it falls back to the scraped <strong>country</strong>: if the country matches one of that place's edition names (or an edition alias), that edition is used. This is what lets geographic editions resolve when 1001Tracklists names every variant the same. For example, every Dreamstate event's source is named just "Dreamstate", so a set in Australia resolves to place <code>"Dreamstate"</code>, edition <code>"Australia"</code> purely from its country.</p>
 <p>The name always wins, and the country is only matched against the resolved place's own editions. So <code>Tomorrowland Winter</code> (country France) stays edition <code>Winter</code> from its name, and the main <code>Tomorrowland</code> (country Belgium) stays editionless because there is no <code>Belgium</code> edition. Two consequences worth knowing:</p>
@@ -1452,48 +1449,48 @@
 <li>Do not name an edition after the main edition's host country, or the main edition's sets would route into it.</li>
 </ul>
 <p><strong>Do not create an edition for each year.</strong> The year is always tracked separately via the <code>{year}</code> token. An entry like <code>"editions": { "2023": {}, "2024": {} }</code> creates an unnecessary folder level and defeats the purpose of the field.</p>
-<h3 id="venues-and-the-editions-block">Venues and the editions block</h3>
+<h3 id="venues-and-the-editions-block">Venues and the editions block<a class="headerlink" href="#venues-and-the-editions-block" title="Permanent link">&para;</a></h3>
 <p>For most venues, no <code>editions</code> block is needed. A standalone entry with aliases and a color is all you need:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nt">&quot;Printworks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#1A1A1A&quot;</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">&quot;Alexandra Palace&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Alexandra Palace London&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Ally Pally&quot;</span><span class="p">]</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="p">}</span>
-</code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nt">"Printworks"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">        </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#1A1A1A"</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">"Alexandra Palace"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">        </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Alexandra Palace London"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Ally Pally"</span><span class="p">]</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="p">}</span>
+</span></code></pre></div>
 <p>When a venue brand has genuinely distinct physical locations with their own identity, you can model them in two ways. The choice is yours as curator.</p>
 <p><strong>Option A: siblings</strong> (each location is its own top-level entry):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="nt">&quot;Hï Ibiza&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#D4A017&quot;</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="nt">&quot;Ushuaïa Ibiza&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#00A3CC&quot;</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="p">}</span>
-</code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="nt">"Hï Ibiza"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">        </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#D4A017"</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="nt">"Ushuaïa Ibiza"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">        </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#00A3CC"</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="p">}</span>
+</span></code></pre></div>
 <p><strong>Option B: editions of a shared parent</strong> (useful if you want all sets from this brand under one canonical name):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">{</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="nt">&quot;Ibiza Group&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">        </span><span class="nt">&quot;editions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">            </span><span class="nt">&quot;Hï Ibiza&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">            </span><span class="nt">&quot;Ushuaïa Ibiza&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">        </span><span class="p">}</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="p">}</span>
-</code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">{</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="nt">"Ibiza Group"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">        </span><span class="nt">"editions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">            </span><span class="nt">"Hï Ibiza"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">            </span><span class="nt">"Ushuaïa Ibiza"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="p">}</span>
+</span></code></pre></div>
 <p>With Option B, a set recorded at Hï Ibiza would produce a folder named <code>Ibiza Group Hï Ibiza</code> in a flat layout, or <code>Ibiza Group Hï Ibiza/{year}/{artist}</code> in a nested layout. With Option A, you get <code>Hï Ibiza/{year}/{artist}</code>. Neither is wrong; choose whichever fits how you want to browse your library.</p>
-<h3 id="minimal-entries">Minimal entries</h3>
+<h3 id="minimal-entries">Minimal entries<a class="headerlink" href="#minimal-entries" title="Permanent link">&para;</a></h3>
 <p>A place with no aliases, editions, or color can be an empty object. CrateDigger still recognises the name during analysis and routing:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="nt">&quot;Awakenings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nt">&quot;Glastonbury&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="nt">&quot;Creamfields&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">}</span>
-</code></pre></div>
-<h2 id="how-matching-works">How matching works</h2>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="nt">"Awakenings"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nt">"Glastonbury"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="nt">"Creamfields"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<h2 id="how-matching-works">How matching works<a class="headerlink" href="#how-matching-works" title="Permanent link">&para;</a></h2>
 <p>When CrateDigger analyses a filename or tag, it checks against the places database in this order:</p>
 <ol>
 <li><strong>Exact match</strong> against canonical names</li>
@@ -1502,52 +1499,52 @@
 <li><strong>Diacritics-insensitive match</strong> handles accented characters</li>
 </ol>
 <p>If no festival is present on 1001Tracklists, CrateDigger then tries the linked venue, then a plain-text location from the page heading, and finally falls back to the artist name. Adding a place entry for a venue brings it into the same alias-resolution pipeline as festivals.</p>
-<h2 id="alias-rules-and-pitfalls">Alias rules and pitfalls</h2>
+<h2 id="alias-rules-and-pitfalls">Alias rules and pitfalls<a class="headerlink" href="#alias-rules-and-pitfalls" title="Permanent link">&para;</a></h2>
 <p>The canonical name is automatically recognised without needing to be listed as its own alias. CrateDigger adds a self-mapping for every canonical key, so <code>"EDC"</code> already resolves to <code>"EDC"</code> the moment you add it as a top-level key.</p>
 <p><strong>Do not add a canonical name as an alias for another entry.</strong> If your file has:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">{</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="nt">&quot;Electric Daisy Carnival&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;EDC&quot;</span><span class="p">]</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">}</span>
-</code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">{</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="nt">"Electric Daisy Carnival"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">        </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"EDC"</span><span class="p">]</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">}</span>
+</span></code></pre></div>
 <p>...then <code>"EDC"</code> will resolve to <code>"Electric Daisy Carnival"</code> instead of itself. Any files with <code>"EDC"</code> in their name would be named after the full name, which may not be what you want. CrateDigger will also log a warning if two entries point at each other.</p>
 <p><strong>Do not list the same name as a canonical key in one entry and as an alias in another.</strong> The second definition silently wins. Choose one entry as the canonical and list all alternative names under its <code>aliases</code>.</p>
 <p><strong>Wrong:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">{</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="nt">&quot;EDC&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="nt">&quot;Electric Daisy Carnival&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;EDC&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="p">}</span>
-</code></pre></div></p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">{</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="nt">"EDC"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="nt">"Electric Daisy Carnival"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"EDC"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="p">}</span>
+</span></code></pre></div></p>
 <p><strong>Correct:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">{</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="nt">&quot;EDC&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Electric Daisy Carnival&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">}</span>
-</code></pre></div></p>
-<h2 id="adding-your-own-entries">Adding your own entries</h2>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">{</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="nt">"EDC"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Electric Daisy Carnival"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">}</span>
+</span></code></pre></div></p>
+<h2 id="adding-your-own-entries">Adding your own entries<a class="headerlink" href="#adding-your-own-entries" title="Permanent link">&para;</a></h2>
 <p>Add new entries by editing your <code>places.json</code>. You can add festivals, clubs, venues, or any other named entity that hosts sets in your library. For example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nt">&quot;Printworks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Printworks London&quot;</span><span class="p">],</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#1A1A1A&quot;</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="nt">&quot;My Local Festival&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">        </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;MLF&quot;</span><span class="p">],</span>
-<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">        </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#FF6600&quot;</span>
-<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="p">}</span>
-</code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nt">"Printworks"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">        </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Printworks London"</span><span class="p">],</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">        </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#1A1A1A"</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="nt">"My Local Festival"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">        </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"MLF"</span><span class="p">],</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">        </span><span class="nt">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#FF6600"</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="p">}</span>
+</span></code></pre></div>
 <p>CrateDigger picks up new entries on the next run.</p>
-<h2 id="what-the-example-file-includes">What the example file includes</h2>
+<h2 id="what-the-example-file-includes">What the example file includes<a class="headerlink" href="#what-the-example-file-includes" title="Permanent link">&para;</a></h2>
 <p><code>places.example.json</code> covers major electronic music festivals including Tomorrowland, Ultra Music Festival, EDC, ASOT, AMF, Dreamstate, and more, plus selected venues and clubs such as Laroc Club, [UNVRS] Ibiza, and Red Rocks Amphitheatre. It is a good starting point for most libraries. Add your own entries for any festivals, venues, or clubs it does not cover.</p>
-<h2 id="curated-assets-logos-and-artwork">Curated assets: logos and artwork</h2>
+<h2 id="curated-assets-logos-and-artwork">Curated assets: logos and artwork<a class="headerlink" href="#curated-assets-logos-and-artwork" title="Permanent link">&para;</a></h2>
 <p>CrateDigger looks for logo and background artwork in a per-place directory inside your library:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>{library}/.cratedigger/places/&lt;canonical-name&gt;/logo.png
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>{library}/.cratedigger/places/&lt;canonical-name&gt; &lt;edition&gt;/logo.png
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>{library}/.cratedigger/places/&lt;canonical-name&gt;/logo.png
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>{library}/.cratedigger/places/&lt;canonical-name&gt; &lt;edition&gt;/logo.png
+</span></code></pre></div>
 <p>Where <code>&lt;canonical-name&gt;</code> is the top-level key from <code>places.json</code> (for example, <code>Tomorrowland</code> or <code>Printworks</code>) and <code>&lt;edition&gt;</code> is the edition name when applicable (for example, <code>Winter</code> or <code>Las Vegas</code>). An edition logo lives in its own folder named after the edition display name, <code>Tomorrowland Winter</code> or <code>EDC Las Vegas</code>, alongside the canonical folder rather than nested inside it. CrateDigger looks for the edition folder first and falls back to the canonical name when it finds nothing.</p>
 <p>Place the logo file in the matching directory, and CrateDigger will use it instead of generating a gradient poster. Run <a href="../commands/audit-logos/"><code>audit-logos</code></a> to see which entries in your library have curated logos and which do not.</p>
-<h2 id="backward-compatibility-existing-festivalsjson-files">Backward compatibility: existing <code>festivals.json</code> files</h2>
+<h2 id="backward-compatibility-existing-festivalsjson-files">Backward compatibility: existing <code>festivals.json</code> files<a class="headerlink" href="#backward-compatibility-existing-festivalsjson-files" title="Permanent link">&para;</a></h2>
 <p>Nothing reads <code>festivals.json</code> when CrateDigger looks up a place. Instead, a one-time copy-forward runs on startup so an existing file keeps working:</p>
 <ul>
 <li>If your shared data folder (<code>~/CrateDigger/</code> on Linux and macOS, <code>Documents\CrateDigger\</code> on Windows) holds a <code>festivals.json</code> and no <code>places.json</code>, CrateDigger copies it to <code>places.json</code>. The copy runs before logging starts, so it prints nothing; the new file appearing is how you know it happened.</li>
@@ -1555,15 +1552,15 @@
 <li>The copy runs once per process, never overwrites an existing target, and leaves the original files untouched, so it is safe to repeat and safe to roll back to an older release.</li>
 </ul>
 <p>After the first run you can delete the old <code>festivals.json</code> and the old <code>festivals/</code> logo folder. Check that <code>places.json</code> exists first:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>ls<span class="w"> </span>~/CrateDigger/places.json
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>ls<span class="w"> </span>~/CrateDigger/places.json
+</span></code></pre></div>
 <p>Two locations are <strong>not</strong> migrated for you, because the copy-forward only covers the shared data folder:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># library-local places file</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>mv<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/festivals.json<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/places.json
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="c1"># library-local curated logos</span>
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>mv<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/festivals<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/places
-</code></pre></div>
-<h3 id="renamed-in-0150-old-name-to-new-name">Renamed in 0.15.0: old name to new name</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># library-local places file</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>mv<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/festivals.json<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/places.json
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="c1"># library-local curated logos</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>mv<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/festivals<span class="w"> </span><span class="o">{</span>library<span class="o">}</span>/.cratedigger/places
+</span></code></pre></div>
+<h3 id="renamed-in-0150-old-name-to-new-name">Renamed in 0.15.0: old name to new name<a class="headerlink" href="#renamed-in-0150-old-name-to-new-name" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1612,11 +1609,13 @@
 <li><strong><code>festival_background_priority</code> and <code>unknown_festival</code> are silent no-ops.</strong> Neither key is read any more. The value is not copied into its replacement and nothing is logged, so a config that still sets the old key falls back to the default <code>place_background_priority</code> chain or the default <code>unknown_place</code> text. Rename both keys in <code>config.toml</code>.</li>
 </ul>
 <p>No old name announces itself with a deprecation warning at runtime, so migrate by checking your config file, templates, and curated asset folders directly rather than by watching the logs.</p>
-<h2 id="related">Related</h2>
+<h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../configuration/#artist-aliases">Configuration: artists.json</a>: artist name aliases and B2B group definitions</li>
 <li><a href="../commands/audit-logos/">audit-logos</a>: check which places in your library have curated poster logos</li>
 </ul>
+
+
 
 
 
@@ -1634,12 +1633,14 @@
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
   Back to top
 </button>
         
@@ -1647,14 +1648,54 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../configuration/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Configuration">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Configuration
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../tracklists/" class="md-footer__link md-footer__link--next" aria-label="Next: 1001Tracklists">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                1001Tracklists
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -1672,10 +1713,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.tabs","navigation.sections","navigation.top","navigation.footer","navigation.path","navigation.indexes","search.highlight","search.suggest","content.code.copy","content.code.select","content.code.annotate","content.action.edit","content.tabs.link","content.tooltips"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
     
   </body>

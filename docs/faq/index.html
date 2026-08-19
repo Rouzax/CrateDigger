@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -27,10 +27,15 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.20815dad.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -44,14 +49,14 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
       <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -62,6 +67,8 @@
   
     
     
+      
+    
     
     
     
@@ -70,7 +77,7 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
         
@@ -88,14 +95,14 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -115,63 +122,48 @@
     </div>
     
       
+        <form class="md-header__option" data-md-component="palette">
+  
     
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
       
       
-        <label class="md-header__button md-icon" for="__search">
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -192,11 +184,8 @@
   
   
     <li class="md-tabs__item">
-      <a href=".." class="md-tabs__link">
+      <a href="./.." class="md-tabs__link">
         
-  
-  
-    
   
   Home
 
@@ -214,9 +203,6 @@
       <a href="../getting-started/" class="md-tabs__link">
         
   
-  
-    
-  
   Getting Started
 
       </a>
@@ -230,11 +216,23 @@
   
   
     
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
     
       <li class="md-tabs__item">
         <a href="../commands/identify/" class="md-tabs__link">
           
-  
   
   Commands
 
@@ -253,9 +251,6 @@
       <a href="../configuration/" class="md-tabs__link">
         
   
-  
-    
-  
   Configuration
 
       </a>
@@ -271,9 +266,6 @@
     <li class="md-tabs__item">
       <a href="../places/" class="md-tabs__link">
         
-  
-  
-    
   
   Places
 
@@ -291,9 +283,6 @@
       <a href="../tracklists/" class="md-tabs__link">
         
   
-  
-    
-  
   1001Tracklists
 
       </a>
@@ -309,9 +298,6 @@
     <li class="md-tabs__item">
       <a href="../tag-reference/" class="md-tabs__link">
         
-  
-  
-    
   
   Tag reference
 
@@ -329,9 +315,6 @@
       <a href="../library-layout/" class="md-tabs__link">
         
   
-  
-    
-  
   Library layout
 
       </a>
@@ -348,9 +331,6 @@
       <a href="../kodi-integration/" class="md-tabs__link">
         
   
-  
-    
-  
   Kodi Integration
 
       </a>
@@ -366,11 +346,8 @@
   
   
     <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+      <a href="././" class="md-tabs__link">
         
-  
-  
-    
   
   FAQ
 
@@ -401,9 +378,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
     CrateDigger
@@ -413,7 +390,7 @@
       <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
@@ -430,15 +407,14 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="./.." class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
-  
+  Home
 
     
   </span>
@@ -464,8 +440,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
-  
+  Getting Started
 
     
   </span>
@@ -484,6 +459,16 @@
   
   
     
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -507,8 +492,7 @@
   <span class="md-ellipsis">
     
   
-    Commands
-  
+  Commands
 
     
   </span>
@@ -523,8 +507,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Commands
-  
+  Commands
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -543,8 +526,7 @@
   <span class="md-ellipsis">
     
   
-    Identify
-  
+  Identify
 
     
   </span>
@@ -571,8 +553,7 @@
   <span class="md-ellipsis">
     
   
-    Organize
-  
+  Organize
 
     
   </span>
@@ -599,8 +580,7 @@
   <span class="md-ellipsis">
     
   
-    Enrich
-  
+  Enrich
 
     
   </span>
@@ -627,8 +607,7 @@
   <span class="md-ellipsis">
     
   
-    Audit Logos
-  
+  Audit Logos
 
     
   </span>
@@ -662,8 +641,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
-  
+  Configuration
 
     
   </span>
@@ -689,8 +667,7 @@
   <span class="md-ellipsis">
     
   
-    Places
-  
+  Places
 
     
   </span>
@@ -716,8 +693,7 @@
   <span class="md-ellipsis">
     
   
-    1001Tracklists
-  
+  1001Tracklists
 
     
   </span>
@@ -743,8 +719,7 @@
   <span class="md-ellipsis">
     
   
-    Tag reference
-  
+  Tag reference
 
     
   </span>
@@ -770,8 +745,7 @@
   <span class="md-ellipsis">
     
   
-    Library layout
-  
+  Library layout
 
     
   </span>
@@ -797,8 +771,7 @@
   <span class="md-ellipsis">
     
   
-    Kodi Integration
-  
+  Kodi Integration
 
     
   </span>
@@ -820,7 +793,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
         
@@ -833,8 +806,7 @@
   <span class="md-ellipsis">
     
   
-    FAQ
-  
+  FAQ
 
     
   </span>
@@ -844,15 +816,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    FAQ
-  
+  FAQ
 
     
   </span>
@@ -863,7 +834,8 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -872,16 +844,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#general" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         General
-      
+      </span>
     </span>
   </a>
   
@@ -891,9 +863,9 @@
           <li class="md-nav__item">
   <a href="#a-required-tool-is-not-found" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         A required tool is not found
-      
+      </span>
     </span>
   </a>
   
@@ -902,9 +874,9 @@
           <li class="md-nav__item">
   <a href="#what-is-the-yellow-message-on-startup" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What is the yellow "!" message on startup?
-      
+      </span>
     </span>
   </a>
   
@@ -913,9 +885,9 @@
           <li class="md-nav__item">
   <a href="#cratedigger-skips-some-of-my-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         CrateDigger skips some of my files
-      
+      </span>
     </span>
   </a>
   
@@ -924,9 +896,9 @@
           <li class="md-nav__item">
   <a href="#a-file-is-classified-as-the-wrong-type" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         A file is classified as the wrong type
-      
+      </span>
     </span>
   </a>
   
@@ -935,9 +907,9 @@
           <li class="md-nav__item">
   <a href="#where-are-my-logs" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Where are my logs?
-      
+      </span>
     </span>
   </a>
   
@@ -946,9 +918,9 @@
           <li class="md-nav__item">
   <a href="#my-cratedigger-tags-dont-show-up-in-mediainfo" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         My CrateDigger tags don't show up in MediaInfo
-      
+      </span>
     </span>
   </a>
   
@@ -962,9 +934,9 @@
         <li class="md-nav__item">
   <a href="#identify" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         identify
-      
+      </span>
     </span>
   </a>
   
@@ -974,9 +946,9 @@
           <li class="md-nav__item">
   <a href="#error-credentials-required" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "Error: credentials required"
-      
+      </span>
     </span>
   </a>
   
@@ -985,9 +957,9 @@
           <li class="md-nav__item">
   <a href="#no-results-found-for-a-file" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         No results found for a file
-      
+      </span>
     </span>
   </a>
   
@@ -996,9 +968,9 @@
           <li class="md-nav__item">
   <a href="#a-file-is-skipped-in-auto-mode" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         A file is skipped in auto mode
-      
+      </span>
     </span>
   </a>
   
@@ -1007,9 +979,9 @@
           <li class="md-nav__item">
   <a href="#chapters-are-not-embedding" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Chapters are not embedding
-      
+      </span>
     </span>
   </a>
   
@@ -1018,9 +990,9 @@
           <li class="md-nav__item">
   <a href="#why-did-my-file-get-metadata-but-no-chapters" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Why did my file get metadata but no chapters?
-      
+      </span>
     </span>
   </a>
   
@@ -1029,9 +1001,9 @@
           <li class="md-nav__item">
   <a href="#cratedigger-is-rate-limited-by-1001tracklists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         CrateDigger is rate-limited by 1001Tracklists
-      
+      </span>
     </span>
   </a>
   
@@ -1040,9 +1012,9 @@
           <li class="md-nav__item">
   <a href="#monthly-export-limit-30-exceeded" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "Monthly export limit (30) exceeded"
-      
+      </span>
     </span>
   </a>
   
@@ -1051,9 +1023,9 @@
           <li class="md-nav__item">
   <a href="#identify-updated-but-enrich-still-shows-old-metadata" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         identify updated but enrich still shows old metadata
-      
+      </span>
     </span>
   </a>
   
@@ -1067,9 +1039,9 @@
         <li class="md-nav__item">
   <a href="#organize" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         organize
-      
+      </span>
     </span>
   </a>
   
@@ -1079,9 +1051,9 @@
           <li class="md-nav__item">
   <a href="#-dry-run-and-move-cannot-be-used-together" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "--dry-run and --move cannot be used together"
-      
+      </span>
     </span>
   </a>
   
@@ -1090,9 +1062,9 @@
           <li class="md-nav__item">
   <a href="#not-a-cratedigger-library-after-organize" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "not a CrateDigger library" after organize
-      
+      </span>
     </span>
   </a>
   
@@ -1101,9 +1073,9 @@
           <li class="md-nav__item">
   <a href="#why-is-my-set-in-an-artist-folder-instead-of-a-venue-folder" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Why is my set in an artist folder instead of a venue folder?
-      
+      </span>
     </span>
   </a>
   
@@ -1112,9 +1084,9 @@
           <li class="md-nav__item">
   <a href="#what-is-the-difference-between-a-festival-and-a-venue-in-cratedigger" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What is the difference between a festival and a venue in CrateDigger?
-      
+      </span>
     </span>
   </a>
   
@@ -1128,9 +1100,9 @@
         <li class="md-nav__item">
   <a href="#enrich" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         enrich
-      
+      </span>
     </span>
   </a>
   
@@ -1140,9 +1112,9 @@
           <li class="md-nav__item">
   <a href="#not-a-cratedigger-library" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "not a CrateDigger library"
-      
+      </span>
     </span>
   </a>
   
@@ -1151,9 +1123,9 @@
           <li class="md-nav__item">
   <a href="#no-thumbnail-is-produced-for-some-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         No thumbnail is produced for some files
-      
+      </span>
     </span>
   </a>
   
@@ -1162,9 +1134,9 @@
           <li class="md-nav__item">
   <a href="#posters-are-not-generated-for-some-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Posters are not generated for some files
-      
+      </span>
     </span>
   </a>
   
@@ -1173,9 +1145,9 @@
           <li class="md-nav__item">
   <a href="#artist-artwork-from-fanarttv-is-not-downloading" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Artist artwork from fanart.tv is not downloading
-      
+      </span>
     </span>
   </a>
   
@@ -1184,9 +1156,9 @@
           <li class="md-nav__item">
   <a href="#musicbrainz-ids-are-not-resolving-for-some-artists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         MusicBrainz IDs are not resolving for some artists
-      
+      </span>
     </span>
   </a>
   
@@ -1195,9 +1167,9 @@
           <li class="md-nav__item">
   <a href="#place-folder-posters-show-a-plain-gradient-instead-of-a-logo" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Place folder posters show a plain gradient instead of a logo
-      
+      </span>
     </span>
   </a>
   
@@ -1211,9 +1183,9 @@
         <li class="md-nav__item">
   <a href="#fanarttv" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         fanart.tv
-      
+      </span>
     </span>
   </a>
   
@@ -1223,9 +1195,9 @@
           <li class="md-nav__item">
   <a href="#fanart-lookups-fail-or-return-no-images" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Fanart lookups fail or return no images
-      
+      </span>
     </span>
   </a>
   
@@ -1234,9 +1206,9 @@
           <li class="md-nav__item">
   <a href="#fanart-images-are-stale-or-outdated" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Fanart images are stale or outdated
-      
+      </span>
     </span>
   </a>
   
@@ -1250,9 +1222,9 @@
         <li class="md-nav__item">
   <a href="#kodi" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Kodi
-      
+      </span>
     </span>
   </a>
   
@@ -1262,9 +1234,9 @@
           <li class="md-nav__item">
   <a href="#kodi-sync-failed-connection-refused" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "Kodi sync failed: connection refused"
-      
+      </span>
     </span>
   </a>
   
@@ -1273,9 +1245,9 @@
           <li class="md-nav__item">
   <a href="#kodi-sync-failed-401-unauthorized" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "Kodi sync failed: 401 Unauthorized"
-      
+      </span>
     </span>
   </a>
   
@@ -1284,9 +1256,9 @@
           <li class="md-nav__item">
   <a href="#items-are-not-updating-in-kodi-after-a-sync" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Items are not updating in Kodi after a sync
-      
+      </span>
     </span>
   </a>
   
@@ -1295,9 +1267,9 @@
           <li class="md-nav__item">
   <a href="#sync-runs-but-nothing-changes-in-kodi" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Sync runs but nothing changes in Kodi
-      
+      </span>
     </span>
   </a>
   
@@ -1326,10 +1298,24 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1338,16 +1324,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#general" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         General
-      
+      </span>
     </span>
   </a>
   
@@ -1357,9 +1343,9 @@
           <li class="md-nav__item">
   <a href="#a-required-tool-is-not-found" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         A required tool is not found
-      
+      </span>
     </span>
   </a>
   
@@ -1368,9 +1354,9 @@
           <li class="md-nav__item">
   <a href="#what-is-the-yellow-message-on-startup" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What is the yellow "!" message on startup?
-      
+      </span>
     </span>
   </a>
   
@@ -1379,9 +1365,9 @@
           <li class="md-nav__item">
   <a href="#cratedigger-skips-some-of-my-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         CrateDigger skips some of my files
-      
+      </span>
     </span>
   </a>
   
@@ -1390,9 +1376,9 @@
           <li class="md-nav__item">
   <a href="#a-file-is-classified-as-the-wrong-type" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         A file is classified as the wrong type
-      
+      </span>
     </span>
   </a>
   
@@ -1401,9 +1387,9 @@
           <li class="md-nav__item">
   <a href="#where-are-my-logs" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Where are my logs?
-      
+      </span>
     </span>
   </a>
   
@@ -1412,9 +1398,9 @@
           <li class="md-nav__item">
   <a href="#my-cratedigger-tags-dont-show-up-in-mediainfo" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         My CrateDigger tags don't show up in MediaInfo
-      
+      </span>
     </span>
   </a>
   
@@ -1428,9 +1414,9 @@
         <li class="md-nav__item">
   <a href="#identify" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         identify
-      
+      </span>
     </span>
   </a>
   
@@ -1440,9 +1426,9 @@
           <li class="md-nav__item">
   <a href="#error-credentials-required" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "Error: credentials required"
-      
+      </span>
     </span>
   </a>
   
@@ -1451,9 +1437,9 @@
           <li class="md-nav__item">
   <a href="#no-results-found-for-a-file" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         No results found for a file
-      
+      </span>
     </span>
   </a>
   
@@ -1462,9 +1448,9 @@
           <li class="md-nav__item">
   <a href="#a-file-is-skipped-in-auto-mode" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         A file is skipped in auto mode
-      
+      </span>
     </span>
   </a>
   
@@ -1473,9 +1459,9 @@
           <li class="md-nav__item">
   <a href="#chapters-are-not-embedding" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Chapters are not embedding
-      
+      </span>
     </span>
   </a>
   
@@ -1484,9 +1470,9 @@
           <li class="md-nav__item">
   <a href="#why-did-my-file-get-metadata-but-no-chapters" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Why did my file get metadata but no chapters?
-      
+      </span>
     </span>
   </a>
   
@@ -1495,9 +1481,9 @@
           <li class="md-nav__item">
   <a href="#cratedigger-is-rate-limited-by-1001tracklists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         CrateDigger is rate-limited by 1001Tracklists
-      
+      </span>
     </span>
   </a>
   
@@ -1506,9 +1492,9 @@
           <li class="md-nav__item">
   <a href="#monthly-export-limit-30-exceeded" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "Monthly export limit (30) exceeded"
-      
+      </span>
     </span>
   </a>
   
@@ -1517,9 +1503,9 @@
           <li class="md-nav__item">
   <a href="#identify-updated-but-enrich-still-shows-old-metadata" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         identify updated but enrich still shows old metadata
-      
+      </span>
     </span>
   </a>
   
@@ -1533,9 +1519,9 @@
         <li class="md-nav__item">
   <a href="#organize" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         organize
-      
+      </span>
     </span>
   </a>
   
@@ -1545,9 +1531,9 @@
           <li class="md-nav__item">
   <a href="#-dry-run-and-move-cannot-be-used-together" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "--dry-run and --move cannot be used together"
-      
+      </span>
     </span>
   </a>
   
@@ -1556,9 +1542,9 @@
           <li class="md-nav__item">
   <a href="#not-a-cratedigger-library-after-organize" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "not a CrateDigger library" after organize
-      
+      </span>
     </span>
   </a>
   
@@ -1567,9 +1553,9 @@
           <li class="md-nav__item">
   <a href="#why-is-my-set-in-an-artist-folder-instead-of-a-venue-folder" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Why is my set in an artist folder instead of a venue folder?
-      
+      </span>
     </span>
   </a>
   
@@ -1578,9 +1564,9 @@
           <li class="md-nav__item">
   <a href="#what-is-the-difference-between-a-festival-and-a-venue-in-cratedigger" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What is the difference between a festival and a venue in CrateDigger?
-      
+      </span>
     </span>
   </a>
   
@@ -1594,9 +1580,9 @@
         <li class="md-nav__item">
   <a href="#enrich" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         enrich
-      
+      </span>
     </span>
   </a>
   
@@ -1606,9 +1592,9 @@
           <li class="md-nav__item">
   <a href="#not-a-cratedigger-library" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "not a CrateDigger library"
-      
+      </span>
     </span>
   </a>
   
@@ -1617,9 +1603,9 @@
           <li class="md-nav__item">
   <a href="#no-thumbnail-is-produced-for-some-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         No thumbnail is produced for some files
-      
+      </span>
     </span>
   </a>
   
@@ -1628,9 +1614,9 @@
           <li class="md-nav__item">
   <a href="#posters-are-not-generated-for-some-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Posters are not generated for some files
-      
+      </span>
     </span>
   </a>
   
@@ -1639,9 +1625,9 @@
           <li class="md-nav__item">
   <a href="#artist-artwork-from-fanarttv-is-not-downloading" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Artist artwork from fanart.tv is not downloading
-      
+      </span>
     </span>
   </a>
   
@@ -1650,9 +1636,9 @@
           <li class="md-nav__item">
   <a href="#musicbrainz-ids-are-not-resolving-for-some-artists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         MusicBrainz IDs are not resolving for some artists
-      
+      </span>
     </span>
   </a>
   
@@ -1661,9 +1647,9 @@
           <li class="md-nav__item">
   <a href="#place-folder-posters-show-a-plain-gradient-instead-of-a-logo" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Place folder posters show a plain gradient instead of a logo
-      
+      </span>
     </span>
   </a>
   
@@ -1677,9 +1663,9 @@
         <li class="md-nav__item">
   <a href="#fanarttv" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         fanart.tv
-      
+      </span>
     </span>
   </a>
   
@@ -1689,9 +1675,9 @@
           <li class="md-nav__item">
   <a href="#fanart-lookups-fail-or-return-no-images" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Fanart lookups fail or return no images
-      
+      </span>
     </span>
   </a>
   
@@ -1700,9 +1686,9 @@
           <li class="md-nav__item">
   <a href="#fanart-images-are-stale-or-outdated" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Fanart images are stale or outdated
-      
+      </span>
     </span>
   </a>
   
@@ -1716,9 +1702,9 @@
         <li class="md-nav__item">
   <a href="#kodi" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Kodi
-      
+      </span>
     </span>
   </a>
   
@@ -1728,9 +1714,9 @@
           <li class="md-nav__item">
   <a href="#kodi-sync-failed-connection-refused" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "Kodi sync failed: connection refused"
-      
+      </span>
     </span>
   </a>
   
@@ -1739,9 +1725,9 @@
           <li class="md-nav__item">
   <a href="#kodi-sync-failed-401-unauthorized" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         "Kodi sync failed: 401 Unauthorized"
-      
+      </span>
     </span>
   </a>
   
@@ -1750,9 +1736,9 @@
           <li class="md-nav__item">
   <a href="#items-are-not-updating-in-kodi-after-a-sync" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Items are not updating in Kodi after a sync
-      
+      </span>
     </span>
   </a>
   
@@ -1761,9 +1747,9 @@
           <li class="md-nav__item">
   <a href="#sync-runs-but-nothing-changes-in-kodi" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Sync runs but nothing changes in Kodi
-      
+      </span>
     </span>
   </a>
   
@@ -1785,19 +1771,30 @@
           
             <div class="md-content" data-md-component="content">
               
+                
+
+
+
+  
+
+
+              
               <article class="md-content__inner md-typeset">
                 
                   
-
-
+  
+    <a href="https://github.com/Rouzax/CrateDigger/edit/main/docs/faq.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
   
   
 
 
-<h1 id="faq">FAQ</h1>
+<h1 id="faq">FAQ<a class="headerlink" href="#faq" title="Permanent link">&para;</a></h1>
 <hr />
-<h2 id="general">General</h2>
-<h3 id="a-required-tool-is-not-found">A required tool is not found</h3>
+<h2 id="general">General<a class="headerlink" href="#general" title="Permanent link">&para;</a></h2>
+<h3 id="a-required-tool-is-not-found">A required tool is not found<a class="headerlink" href="#a-required-tool-is-not-found" title="Permanent link">&para;</a></h3>
 <p>CrateDigger relies on two external tools. If either is missing or not on your system PATH, you will see an error on startup.</p>
 <table>
 <thead>
@@ -1818,14 +1815,14 @@
 </tbody>
 </table>
 <p>If the tools are installed but not on your PATH (for example, a custom install location), tell CrateDigger where to find them in your <code>config.toml</code> (<code>~/CrateDigger/config.toml</code> on Linux or macOS, <code>Documents\CrateDigger\config.toml</code> on Windows):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[tool_paths]</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">ffprobe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/ffprobe&quot;</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">mkvpropedit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvpropedit&quot;</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">mkvextract</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvextract&quot;</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">mkvmerge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/local/bin/mkvmerge&quot;</span>
-</code></pre></div>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[tool_paths]</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">ffprobe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/usr/local/bin/ffprobe"</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">mkvpropedit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/usr/local/bin/mkvpropedit"</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">mkvextract</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/usr/local/bin/mkvextract"</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">mkvmerge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/usr/local/bin/mkvmerge"</span>
+</span></code></pre></div>
 <p>See <a href="../getting-started/#required-tools">getting started</a> for full installation instructions.</p>
-<h3 id="what-is-the-yellow-message-on-startup">What is the yellow "!" message on startup?</h3>
+<h3 id="what-is-the-yellow-message-on-startup">What is the yellow "!" message on startup?<a class="headerlink" href="#what-is-the-yellow-message-on-startup" title="Permanent link">&para;</a></h3>
 <p>CrateDigger checks GitHub Releases at startup and prints a brief notice when a newer version is available. The yellow <code>!</code> line tells you which version is out; the cyan line below it gives you the exact upgrade command to run.</p>
 <p>The printed command is already correct for your install method. The three typical variants are:</p>
 <ul>
@@ -1835,17 +1832,17 @@
 </ul>
 <p>To suppress the notice, set <code>CRATEDIGGER_NO_UPDATE_CHECK=1</code> in your environment. The check is also silent automatically when stdout is not a TTY (pipes, cron jobs, CI systems).</p>
 <p>The check is designed to stay out of your way. Results are cached locally at <code>~/.cache/CrateDigger/update-check.json</code> (Linux), <code>~/Library/Caches/CrateDigger/update-check.json</code> (macOS), or <code>$env:LOCALAPPDATA\CrateDigger\Cache\update-check.json</code> (Windows) for 24 hours on success, so it does not hit the network on every run. The network timeout is 2 seconds, and any failure is silently ignored. No usage data is sent; the check is a standard read-only request to the GitHub Releases API.</p>
-<h3 id="cratedigger-skips-some-of-my-files">CrateDigger skips some of my files</h3>
+<h3 id="cratedigger-skips-some-of-my-files">CrateDigger skips some of my files<a class="headerlink" href="#cratedigger-skips-some-of-my-files" title="Permanent link">&para;</a></h3>
 <p>CrateDigger only processes files with recognized media extensions. The defaults include <code>.mp4</code>, <code>.mkv</code>, <code>.webm</code>, <code>.avi</code>, <code>.mov</code>, <code>.m2ts</code>, <code>.ts</code> for video and common audio formats. Add extensions in the <code>media_extensions</code> config section if your files use something else.</p>
 <p>Also check <code>skip_patterns</code> in your config. Files matching any skip pattern are excluded. The defaults skip <code>*/BDMV/*</code> (Blu-ray disc structures) and <code>Dolby*</code> (demo content).</p>
-<h3 id="a-file-is-classified-as-the-wrong-type">A file is classified as the wrong type</h3>
+<h3 id="a-file-is-classified-as-the-wrong-type">A file is classified as the wrong type<a class="headerlink" href="#a-file-is-classified-as-the-wrong-type" title="Permanent link">&para;</a></h3>
 <p>CrateDigger classified a concert as a festival set, or vice versa. Force the correct classification using path rules in <code>content_type_rules</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[content_type_rules]</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">force_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Coldplay/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Pink Floyd/*&quot;</span><span class="p">]</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">force_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;*/Ultra Miami/*&quot;</span><span class="p">]</span>
-</code></pre></div>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[content_type_rules]</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">force_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"Coldplay/*"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Pink Floyd/*"</span><span class="p">]</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">force_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"*/Ultra Miami/*"</span><span class="p">]</span>
+</span></code></pre></div>
 <p>Each rule is matched against the file's path relative to the source root. <code>Coldplay/*</code> matches any file directly inside a <code>Coldplay</code> folder. See <a href="../configuration/#content-type-rules">Configuration: content type rules</a> for more examples.</p>
-<h3 id="where-are-my-logs">Where are my logs?</h3>
+<h3 id="where-are-my-logs">Where are my logs?<a class="headerlink" href="#where-are-my-logs" title="Permanent link">&para;</a></h3>
 <p>Each CrateDigger invocation writes its own log file to a per-platform directory:</p>
 <table>
 <thead>
@@ -1870,66 +1867,66 @@
 </tbody>
 </table>
 <p>Files are named <code>{command}-{timestamp}-{hex}.log</code>, for example <code>identify-2026-05-07T13-44-01-a3f2.log</code>. Every file captures DEBUG-level detail regardless of whether you pass <code>--verbose</code> or <code>--debug</code> on the command line. Log files older than 7 days are deleted automatically at startup. Because each run gets its own file, concurrent runs never conflict or interleave.</p>
-<h3 id="my-cratedigger-tags-dont-show-up-in-mediainfo">My CrateDigger tags don't show up in MediaInfo</h3>
+<h3 id="my-cratedigger-tags-dont-show-up-in-mediainfo">My CrateDigger tags don't show up in MediaInfo<a class="headerlink" href="#my-cratedigger-tags-dont-show-up-in-mediainfo" title="Permanent link">&para;</a></h3>
 <p>They are almost certainly still there. MediaInfo does a fast, partial scan and can miss the Matroska Tags element, which often ends up late in the file after CrateDigger writes tags (and, for MKV files, embeds cover attachments). When that happens, MediaInfo shows none of the <code>CRATEDIGGER_*</code> tags even though the file carries them. This is a MediaInfo display limitation, not missing data, and it is exactly why CrateDigger reads metadata with ffprobe instead.</p>
 <p>To see the tags reliably, use ffprobe or mkvextract:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># all container tags, including CRATEDIGGER_*</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>ffprobe<span class="w"> </span>-v<span class="w"> </span>error<span class="w"> </span>-show_entries<span class="w"> </span>format_tags<span class="w"> </span>-of<span class="w"> </span><span class="nv">default</span><span class="o">=</span><span class="nv">noprint_wrappers</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="s2">&quot;your-file.mkv&quot;</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># or dump the raw Matroska tags to XML</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>mkvextract<span class="w"> </span><span class="s2">&quot;your-file.mkv&quot;</span><span class="w"> </span>tags<span class="w"> </span>tags.xml
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># all container tags, including CRATEDIGGER_*</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>ffprobe<span class="w"> </span>-v<span class="w"> </span>error<span class="w"> </span>-show_entries<span class="w"> </span>format_tags<span class="w"> </span>-of<span class="w"> </span><span class="nv">default</span><span class="o">=</span><span class="nv">noprint_wrappers</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="s2">"your-file.mkv"</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># or dump the raw Matroska tags to XML</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>mkvextract<span class="w"> </span><span class="s2">"your-file.mkv"</span><span class="w"> </span>tags<span class="w"> </span>tags.xml
+</span></code></pre></div>
 <p>(MediaInfo's full-parse mode, <code>mediainfo --ParseSpeed=1.0</code>, also finds them, but it reads most of the file and is slow on large videos.)</p>
 <hr />
-<h2 id="identify">identify</h2>
-<h3 id="error-credentials-required">"Error: credentials required"</h3>
+<h2 id="identify">identify<a class="headerlink" href="#identify" title="Permanent link">&para;</a></h2>
+<h3 id="error-credentials-required">"Error: credentials required"<a class="headerlink" href="#error-credentials-required" title="Permanent link">&para;</a></h3>
 <p>Your 1001Tracklists email and password are not configured. Add them to your <code>config.toml</code> (<code>~/CrateDigger/config.toml</code> on Linux or macOS, <code>Documents\CrateDigger\config.toml</code> on Windows):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[tracklists]</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your@email.com&quot;</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-password&quot;</span>
-</code></pre></div>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[tracklists]</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"your@email.com"</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"your-password"</span>
+</span></code></pre></div>
 <p>Or set them as environment variables:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Linux / macOS</label><label for="__tabbed_1_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_EMAIL</span><span class="o">=</span><span class="s2">&quot;your@email.com&quot;</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_PASSWORD</span><span class="o">=</span><span class="s2">&quot;your-password&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_EMAIL</span><span class="o">=</span><span class="s2">"your@email.com"</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_PASSWORD</span><span class="o">=</span><span class="s2">"your-password"</span>
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">$env:TRACKLISTS_EMAIL</span> <span class="p">=</span> <span class="s2">&quot;your@email.com&quot;</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nv">$env:TRACKLISTS_PASSWORD</span> <span class="p">=</span> <span class="s2">&quot;your-password&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">$env:TRACKLISTS_EMAIL</span> <span class="p">=</span> <span class="s2">"your@email.com"</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nv">$env:TRACKLISTS_PASSWORD</span> <span class="p">=</span> <span class="s2">"your-password"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
-<h3 id="no-results-found-for-a-file">No results found for a file</h3>
+<h3 id="no-results-found-for-a-file">No results found for a file<a class="headerlink" href="#no-results-found-for-a-file" title="Permanent link">&para;</a></h3>
 <p>CrateDigger builds the search query from the filename only. If the filename does not contain recognizable artist and event names, the search may return no results. Try:</p>
 <ul>
 <li>Pass a manual search query: <code>cratedigger identify recording.mkv --tracklist "Tiesto Ultra Miami 2025"</code></li>
 <li>Pass the tracklist URL directly if you find it on 1001Tracklists: <code>cratedigger identify recording.mkv --tracklist "https://www.1001tracklists.com/tracklist/..."</code></li>
 <li>Rename the file to include the artist name and festival name before running identify</li>
 </ul>
-<h3 id="a-file-is-skipped-in-auto-mode">A file is skipped in auto mode</h3>
+<h3 id="a-file-is-skipped-in-auto-mode">A file is skipped in auto mode<a class="headerlink" href="#a-file-is-skipped-in-auto-mode" title="Permanent link">&para;</a></h3>
 <p>Auto mode requires the top result to score 150 or higher and the gap to the second result to be at least 20. If either threshold is not met, the file is skipped rather than guessing.</p>
 <p>To handle skipped files, run the same folder interactively (without <code>--auto</code>) and pick manually:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
+</span></code></pre></div>
 <p>For files that are consistently hard to match automatically, use <code>--tracklist</code> to provide the URL directly.</p>
-<h3 id="chapters-are-not-embedding">Chapters are not embedding</h3>
+<h3 id="chapters-are-not-embedding">Chapters are not embedding<a class="headerlink" href="#chapters-are-not-embedding" title="Permanent link">&para;</a></h3>
 <p>Chapter embedding requires:</p>
 <ol>
 <li>The file must be MKV or WEBM format. MP4 and other formats are not supported. Convert with FFmpeg or MKVToolNix if needed.</li>
 <li><code>mkvpropedit</code> must be installed and on your PATH.</li>
 <li>The matched tracklist must have at least 2 tracks with timing data. Single-track or unresolved tracklists are skipped because they provide no chapter navigation value.</li>
 </ol>
-<h3 id="why-did-my-file-get-metadata-but-no-chapters">Why did my file get metadata but no chapters?</h3>
+<h3 id="why-did-my-file-get-metadata-but-no-chapters">Why did my file get metadata but no chapters?<a class="headerlink" href="#why-did-my-file-get-metadata-but-no-chapters" title="Permanent link">&para;</a></h3>
 <p>The tracklist CrateDigger matched is cued against multiple source videos (Player 1, Player 2, ...) and none of them matched your file. CrateDigger wrote the album-level metadata tags but skipped chapter embedding and logged a WARNING. Any chapters that were already in the file were left intact.</p>
 <p>To fix this, rename the file to include the <code>[youtubeid]</code> suffix from the correct source video (for example, <code>Set Name [dQw4w9WgXcQ].mkv</code>) and re-run <code>identify</code>. Alternatively, if your file's duration is close to one of the listed source durations, CrateDigger may match by duration automatically on the next run. See <a href="../tracklists/#multi-source-tracklists">Multi-source tracklists</a> for the full matching priority.</p>
-<h3 id="cratedigger-is-rate-limited-by-1001tracklists">CrateDigger is rate-limited by 1001Tracklists</h3>
+<h3 id="cratedigger-is-rate-limited-by-1001tracklists">CrateDigger is rate-limited by 1001Tracklists<a class="headerlink" href="#cratedigger-is-rate-limited-by-1001tracklists" title="Permanent link">&para;</a></h3>
 <p>If 1001Tracklists returns a rate-limit response, CrateDigger waits 30 seconds and retries. If the retry also fails, it stops with a message asking you to solve a captcha at <a href="https://www.1001tracklists.com">1001tracklists.com</a> in your browser. After solving the captcha, re-run identify.</p>
 <p>Increase the delay between files to reduce the chance of hitting rate limits: set <code>tracklists.delay_seconds</code> in your config (default: 5 seconds).</p>
-<h3 id="monthly-export-limit-30-exceeded">"Monthly export limit (30) exceeded"</h3>
+<h3 id="monthly-export-limit-30-exceeded">"Monthly export limit (30) exceeded"<a class="headerlink" href="#monthly-export-limit-30-exceeded" title="Permanent link">&para;</a></h3>
 <p>Older versions fetched tracklist data through the 1001Tracklists export
 API, which is limited to 30 calls per account per month. One <code>identify</code>
 run over a tagged library could exhaust the limit in a single pass.
@@ -1937,32 +1934,32 @@ Current versions read the tracklist page directly and do not use the
 export API at all, so this error no longer occurs. If you see it,
 upgrade CrateDigger. The limit is per account and resets monthly; no
 action on your 1001Tracklists account is needed.</p>
-<h3 id="identify-updated-but-enrich-still-shows-old-metadata">identify updated but enrich still shows old metadata</h3>
+<h3 id="identify-updated-but-enrich-still-shows-old-metadata">identify updated but enrich still shows old metadata<a class="headerlink" href="#identify-updated-but-enrich-still-shows-old-metadata" title="Permanent link">&para;</a></h3>
 <p>After re-running <code>identify</code> to pick up updated tracklist data, run <code>enrich</code> again:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
+</span></code></pre></div>
 <p>NFO files are automatically regenerated when metadata changes, so no extra flag is needed for tags and NFOs. If you also want to rebuild posters and artwork, which use existence-only checks, add <code>--regenerate</code> to force those files to be overwritten as well.</p>
 <hr />
-<h2 id="organize">organize</h2>
-<h3 id="-dry-run-and-move-cannot-be-used-together">"--dry-run and --move cannot be used together"</h3>
+<h2 id="organize">organize<a class="headerlink" href="#organize" title="Permanent link">&para;</a></h2>
+<h3 id="-dry-run-and-move-cannot-be-used-together">"--dry-run and --move cannot be used together"<a class="headerlink" href="#-dry-run-and-move-cannot-be-used-together" title="Permanent link">&para;</a></h3>
 <p>These two flags are mutually exclusive. Use <code>--dry-run</code> first to preview what would happen, then run again with <code>--move</code> (without <code>--dry-run</code>) to actually move the files.</p>
-<h3 id="not-a-cratedigger-library-after-organize">"not a CrateDigger library" after organize</h3>
+<h3 id="not-a-cratedigger-library-after-organize">"not a CrateDigger library" after organize<a class="headerlink" href="#not-a-cratedigger-library-after-organize" title="Permanent link">&para;</a></h3>
 <p>If <code>enrich</code> says the folder is not a CrateDigger library, check that <code>organize</code> completed successfully. It creates the <code>.cratedigger/</code> marker folder that <code>enrich</code> requires. If you pointed <code>enrich</code> at a subfolder rather than the library root, point it at the root instead.</p>
-<h3 id="why-is-my-set-in-an-artist-folder-instead-of-a-venue-folder">Why is my set in an artist folder instead of a venue folder?</h3>
+<h3 id="why-is-my-set-in-an-artist-folder-instead-of-a-venue-folder">Why is my set in an artist folder instead of a venue folder?<a class="headerlink" href="#why-is-my-set-in-an-artist-folder-instead-of-a-venue-folder" title="Permanent link">&para;</a></h3>
 <p>Without a <code>places.json</code> entry for the venue, CrateDigger has no way to recognise it as a curated place, and the set falls through the routing chain to the artist as a last resort. Add an entry to <code>places.json</code> for the venue (with optional aliases, color, and curated logo). After re-running <code>cratedigger</code>, the set routes by the venue name.</p>
 <p>Note: if 1001Tracklists has no linked venue and no plain-text location for the set, the artist fallback is the only available routing target regardless of what is in your <code>places.json</code>. This is intended behavior when the tracklist page has no location data.</p>
 <p>See <a href="../places/">Places</a> for the file format, and <a href="../tracklists/#how-venue-and-location-data-affects-routing">1001Tracklists integration: how venue and location data affects routing</a> for the full routing chain.</p>
-<h3 id="what-is-the-difference-between-a-festival-and-a-venue-in-cratedigger">What is the difference between a festival and a venue in CrateDigger?</h3>
+<h3 id="what-is-the-difference-between-a-festival-and-a-venue-in-cratedigger">What is the difference between a festival and a venue in CrateDigger?<a class="headerlink" href="#what-is-the-difference-between-a-festival-and-a-venue-in-cratedigger" title="Permanent link">&para;</a></h3>
 <p>Nothing structural. Both live in <code>places.json</code> and use the same schema: a canonical name, optional aliases, optional color, optional editions, and an optional curated logo. The distinction is conceptual: a festival is typically a recurring branded event, a venue is typically a permanent physical location. CrateDigger treats both as "places" — named entities that host DJ sets. Use the same fields for both.</p>
 <p>See <a href="../places/">Places</a> for examples of festivals, clubs, and venue brands side by side.</p>
 <hr />
-<h2 id="enrich">enrich</h2>
-<h3 id="not-a-cratedigger-library">"not a CrateDigger library"</h3>
+<h2 id="enrich">enrich<a class="headerlink" href="#enrich" title="Permanent link">&para;</a></h2>
+<h3 id="not-a-cratedigger-library">"not a CrateDigger library"<a class="headerlink" href="#not-a-cratedigger-library" title="Permanent link">&para;</a></h3>
 <p>The folder you passed to <code>enrich</code> does not have a <code>.cratedigger/</code> marker. Run <code>organize</code> on your library first:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
-</code></pre></div>
-<h3 id="no-thumbnail-is-produced-for-some-files">No thumbnail is produced for some files</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
+</span></code></pre></div>
+<h3 id="no-thumbnail-is-produced-for-some-files">No thumbnail is produced for some files<a class="headerlink" href="#no-thumbnail-is-produced-for-some-files" title="Permanent link">&para;</a></h3>
 <p>CrateDigger tries three sources for cover art, in order:</p>
 <ol>
 <li>Embedded artwork in the MKV file (embedded by yt-dlp with <code>--embed-thumbnail</code>)</li>
@@ -1971,58 +1968,58 @@ action on your 1001Tracklists account is needed.</p>
 </ol>
 <p>If you are getting gradient thumbnails and want actual artwork, either embed a thumbnail when downloading (see <a href="../getting-started/#preparing-your-recordings">getting started: preparing your recordings</a>) or install the <code>vision</code> extra:</p>
 <p><strong>pipx</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">"cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"</span>
+</span></code></pre></div></p>
 <p><strong>pip</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
-</code></pre></div></p>
-<h3 id="posters-are-not-generated-for-some-files">Posters are not generated for some files</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"</span>
+</span></code></pre></div></p>
+<h3 id="posters-are-not-generated-for-some-files">Posters are not generated for some files<a class="headerlink" href="#posters-are-not-generated-for-some-files" title="Permanent link">&para;</a></h3>
 <p>The per-video poster (<code>{stem}-poster.jpg</code>) requires <code>{stem}-thumb.jpg</code> to exist first. If you ran <code>--only posters</code> without running <code>art</code> first, no thumb exists yet. Either run the full enrich (without <code>--only</code>) so <code>art</code> runs before <code>posters</code>, or run them in sequence:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>art
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters
-</code></pre></div>
-<h3 id="artist-artwork-from-fanarttv-is-not-downloading">Artist artwork from fanart.tv is not downloading</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>art
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters
+</span></code></pre></div>
+<h3 id="artist-artwork-from-fanarttv-is-not-downloading">Artist artwork from fanart.tv is not downloading<a class="headerlink" href="#artist-artwork-from-fanarttv-is-not-downloading" title="Permanent link">&para;</a></h3>
 <p>Fanart.tv artwork requires a MusicBrainz ID to be resolved for the artist. If <code>fanart</code> runs before <code>chapter_artist_mbids</code>, or if the artist's MBID has not been resolved yet, the lookup is skipped.</p>
 <p>Run <code>chapter_artist_mbids</code> first to resolve MBIDs, then rerun enrich:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
+</span></code></pre></div>
 <p>If the artist still has no MBID after that, they may not be in the MusicBrainz database or the search may be returning the wrong result. Add the correct MBID to <code>artist_mbids.json</code> manually (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nt">&quot;Artist Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&quot;</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">}</span>
-</code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="nt">"Artist Name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">}</span>
+</span></code></pre></div>
 <p>Find the correct MBID at <a href="https://musicbrainz.org">musicbrainz.org</a>.</p>
-<h3 id="musicbrainz-ids-are-not-resolving-for-some-artists">MusicBrainz IDs are not resolving for some artists</h3>
+<h3 id="musicbrainz-ids-are-not-resolving-for-some-artists">MusicBrainz IDs are not resolving for some artists<a class="headerlink" href="#musicbrainz-ids-are-not-resolving-for-some-artists" title="Permanent link">&para;</a></h3>
 <p>CrateDigger looks up MBIDs in this order: your override file (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows), the auto cache, then a live MusicBrainz search. If an artist is not resolving:</p>
 <ol>
 <li>Check if the search is returning the wrong artist (a name collision). Run with <code>--verbose</code> to see what MusicBrainz returns.</li>
 <li>Look up the correct MBID at <a href="https://musicbrainz.org">musicbrainz.org</a> and add it to your override file:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="p">}</span>
-</code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="nt">"Afrojack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3abb6f9f-5b6a-4f1f-8a2d-1111111111aa"</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="p">}</span>
+</span></code></pre></div>
 <ol>
 <li>Rerun (no <code>--regenerate</code> needed):</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids,album_artist_mbids
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>chapter_artist_mbids,album_artist_mbids
+</span></code></pre></div>
 <p>CrateDigger detects that the resolved ID has changed and writes the update automatically.</p>
 <p>See <a href="../configuration/#artist-mbid-override-file">Configuration: artist MBID override file</a> for details.</p>
-<h3 id="place-folder-posters-show-a-plain-gradient-instead-of-a-logo">Place folder posters show a plain gradient instead of a logo</h3>
+<h3 id="place-folder-posters-show-a-plain-gradient-instead-of-a-logo">Place folder posters show a plain gradient instead of a logo<a class="headerlink" href="#place-folder-posters-show-a-plain-gradient-instead-of-a-logo" title="Permanent link">&para;</a></h3>
 <p>Add a curated logo for the place and regenerate:</p>
 <ol>
 <li>Find out which places are missing logos: <code>cratedigger audit-logos ~/Music/Library/</code></li>
 <li>Place a logo file at the path the command suggests (for example, <code>~/CrateDigger/places/Tomorrowland/logo.png</code> on Linux or macOS, <code>Documents\CrateDigger\places\Tomorrowland\logo.png</code> on Windows)</li>
 <li>Regenerate the folder posters:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>posters<span class="w"> </span>--regenerate
+</span></code></pre></div>
 <p>See <a href="../commands/audit-logos/">audit-logos</a> and <a href="../places/#curated-assets-logos-and-artwork">Places: curated assets</a> for supported formats and placement paths.</p>
 <hr />
-<h2 id="fanarttv">fanart.tv</h2>
-<h3 id="fanart-lookups-fail-or-return-no-images">Fanart lookups fail or return no images</h3>
+<h2 id="fanarttv">fanart.tv<a class="headerlink" href="#fanarttv" title="Permanent link">&para;</a></h2>
+<h3 id="fanart-lookups-fail-or-return-no-images">Fanart lookups fail or return no images<a class="headerlink" href="#fanart-lookups-fail-or-return-no-images" title="Permanent link">&para;</a></h3>
 <p>Requirements for fanart.tv lookups:</p>
 <ul>
 <li><code>fanart.enabled</code> must be <code>true</code> in your config (this is the default)</li>
@@ -2030,42 +2027,44 @@ action on your 1001Tracklists account is needed.</p>
 <li>A built-in project API key is included. If you are being rate-limited on large libraries, add your own personal key from <a href="https://fanart.tv/get-an-api-key/">fanart.tv/get-an-api-key</a> to <code>fanart.personal_api_key</code> in your config.</li>
 </ul>
 <p>Run with <code>--verbose</code> to see the lookup process and any errors.</p>
-<h3 id="fanart-images-are-stale-or-outdated">Fanart images are stale or outdated</h3>
+<h3 id="fanart-images-are-stale-or-outdated">Fanart images are stale or outdated<a class="headerlink" href="#fanart-images-are-stale-or-outdated" title="Permanent link">&para;</a></h3>
 <p>The fanart cache expires after the number of days configured in <code>cache_ttl.images_days</code> (default: 90 days, with ±20% jitter per entry). To force a fresh download for all artists, delete the artist cache folder and rerun:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Linux</label><label for="__tabbed_2_2">macOS</label><label for="__tabbed_2_3">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.cache/CrateDigger/artists/
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.cache/CrateDigger/artists/
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/Library/Caches/CrateDigger/artists/
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/Library/Caches/CrateDigger/artists/
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/<span class="w"> </span>--only<span class="w"> </span>fanart
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">Remove-Item</span> <span class="n">-Recurse</span> <span class="s2">&quot;$env:LOCALAPPDATA\CrateDigger\Cache\artists&quot;</span>
-<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">cratedigger</span> <span class="n">enrich</span> <span class="p">~/</span><span class="n">Music</span><span class="p">/</span><span class="n">Library</span><span class="p">/</span> <span class="p">-</span><span class="n">-only</span> <span class="n">fanart</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">Remove-Item</span> <span class="n">-Recurse</span> <span class="s2">"$env:LOCALAPPDATA\CrateDigger\Cache\artists"</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">cratedigger</span> <span class="n">enrich</span> <span class="p">~/</span><span class="n">Music</span><span class="p">/</span><span class="n">Library</span><span class="p">/</span> <span class="p">-</span><span class="n">-only</span> <span class="n">fanart</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
 <hr />
-<h2 id="kodi">Kodi</h2>
-<h3 id="kodi-sync-failed-connection-refused">"Kodi sync failed: connection refused"</h3>
+<h2 id="kodi">Kodi<a class="headerlink" href="#kodi" title="Permanent link">&para;</a></h2>
+<h3 id="kodi-sync-failed-connection-refused">"Kodi sync failed: connection refused"<a class="headerlink" href="#kodi-sync-failed-connection-refused" title="Permanent link">&para;</a></h3>
 <p>Kodi is not running, or the JSON-RPC web server is not enabled. Check <strong>Settings</strong> &gt; <strong>Services</strong> &gt; <strong>Control</strong> in Kodi and verify that <strong>Allow remote control via HTTP</strong> is on. Also confirm that the host and port in your config match.</p>
-<h3 id="kodi-sync-failed-401-unauthorized">"Kodi sync failed: 401 Unauthorized"</h3>
+<h3 id="kodi-sync-failed-401-unauthorized">"Kodi sync failed: 401 Unauthorized"<a class="headerlink" href="#kodi-sync-failed-401-unauthorized" title="Permanent link">&para;</a></h3>
 <p>The username or password does not match Kodi's web server credentials. Check the <code>kodi.username</code> and <code>kodi.password</code> values in your config against the Kodi settings.</p>
-<h3 id="items-are-not-updating-in-kodi-after-a-sync">Items are not updating in Kodi after a sync</h3>
+<h3 id="items-are-not-updating-in-kodi-after-a-sync">Items are not updating in Kodi after a sync<a class="headerlink" href="#items-are-not-updating-in-kodi-after-a-sync" title="Permanent link">&para;</a></h3>
 <p>The library path that Kodi uses may not match the path CrateDigger is using. If they differ (for example, Kodi accesses the library over a network share while CrateDigger uses a local path), configure path mapping in your <code>kodi</code> config:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">[kodi.path_mapping]</span>
-<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/home/user/Music/Library/&quot;</span>
-<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="n">kodi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;smb://server/music/Library/&quot;</span>
-</code></pre></div>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">[kodi.path_mapping]</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">local</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/home/user/Music/Library/"</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="n">kodi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"smb://server/music/Library/"</span>
+</span></code></pre></div>
 <p>See <a href="../kodi-integration/#path-mapping">Kodi integration: path mapping</a> for details.</p>
-<h3 id="sync-runs-but-nothing-changes-in-kodi">Sync runs but nothing changes in Kodi</h3>
+<h3 id="sync-runs-but-nothing-changes-in-kodi">Sync runs but nothing changes in Kodi<a class="headerlink" href="#sync-runs-but-nothing-changes-in-kodi" title="Permanent link">&para;</a></h3>
 <p>CrateDigger only sends a refresh for files that had actual changes in that run. If all artifacts were already up to date (skipped), no sync request is sent. Use <code>--regenerate</code> to force re-creation of artifacts, which will trigger a sync. Check the log file for that run to confirm whether the sync pathway fired (see <a href="#where-are-my-logs">Where are my logs?</a> above).</p>
+
+
 
 
 
@@ -2083,12 +2082,14 @@ action on your 1001Tracklists account is needed.</p>
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
   Back to top
 </button>
         
@@ -2096,14 +2097,38 @@ action on your 1001Tracklists account is needed.</p>
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../kodi-integration/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Kodi Integration">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Kodi Integration
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -2121,10 +2146,10 @@ action on your 1001Tracklists account is needed.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.tabs","navigation.sections","navigation.top","navigation.footer","navigation.path","navigation.indexes","search.highlight","search.suggest","content.code.copy","content.code.select","content.code.annotate","content.action.edit","content.tabs.link","content.tooltips"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
     
   </body>

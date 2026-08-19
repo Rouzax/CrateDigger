@@ -21,18 +21,23 @@
       
       
       <link rel="icon" href="../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
-        <title>1001Tracklists - CrateDigger</title>
+        <title>1001Tracklists Integration - CrateDigger</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.20815dad.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -46,14 +51,14 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
       <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -64,6 +69,8 @@
   
     
     
+      
+    
     
     
     
@@ -72,7 +79,7 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
         
@@ -90,14 +97,14 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -109,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              1001Tracklists
+              1001Tracklists Integration
             
           </span>
         </div>
@@ -117,63 +124,48 @@
     </div>
     
       
+        <form class="md-header__option" data-md-component="palette">
+  
     
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
       
       
-        <label class="md-header__button md-icon" for="__search">
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -194,11 +186,8 @@
   
   
     <li class="md-tabs__item">
-      <a href=".." class="md-tabs__link">
+      <a href="./.." class="md-tabs__link">
         
-  
-  
-    
   
   Home
 
@@ -216,9 +205,6 @@
       <a href="../getting-started/" class="md-tabs__link">
         
   
-  
-    
-  
   Getting Started
 
       </a>
@@ -232,11 +218,23 @@
   
   
     
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
     
       <li class="md-tabs__item">
         <a href="../commands/identify/" class="md-tabs__link">
           
-  
   
   Commands
 
@@ -255,9 +253,6 @@
       <a href="../configuration/" class="md-tabs__link">
         
   
-  
-    
-  
   Configuration
 
       </a>
@@ -274,9 +269,6 @@
       <a href="../places/" class="md-tabs__link">
         
   
-  
-    
-  
   Places
 
       </a>
@@ -292,11 +284,8 @@
   
   
     <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+      <a href="././" class="md-tabs__link">
         
-  
-  
-    
   
   1001Tracklists
 
@@ -314,9 +303,6 @@
       <a href="../tag-reference/" class="md-tabs__link">
         
   
-  
-    
-  
   Tag reference
 
       </a>
@@ -332,9 +318,6 @@
     <li class="md-tabs__item">
       <a href="../library-layout/" class="md-tabs__link">
         
-  
-  
-    
   
   Library layout
 
@@ -352,9 +335,6 @@
       <a href="../kodi-integration/" class="md-tabs__link">
         
   
-  
-    
-  
   Kodi Integration
 
       </a>
@@ -370,9 +350,6 @@
     <li class="md-tabs__item">
       <a href="../faq/" class="md-tabs__link">
         
-  
-  
-    
   
   FAQ
 
@@ -403,9 +380,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
     CrateDigger
@@ -415,7 +392,7 @@
       <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
@@ -432,15 +409,14 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="./.." class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
-  
+  Home
 
     
   </span>
@@ -466,8 +442,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
-  
+  Getting Started
 
     
   </span>
@@ -486,6 +461,16 @@
   
   
     
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -509,8 +494,7 @@
   <span class="md-ellipsis">
     
   
-    Commands
-  
+  Commands
 
     
   </span>
@@ -525,8 +509,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Commands
-  
+  Commands
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -545,8 +528,7 @@
   <span class="md-ellipsis">
     
   
-    Identify
-  
+  Identify
 
     
   </span>
@@ -573,8 +555,7 @@
   <span class="md-ellipsis">
     
   
-    Organize
-  
+  Organize
 
     
   </span>
@@ -601,8 +582,7 @@
   <span class="md-ellipsis">
     
   
-    Enrich
-  
+  Enrich
 
     
   </span>
@@ -629,8 +609,7 @@
   <span class="md-ellipsis">
     
   
-    Audit Logos
-  
+  Audit Logos
 
     
   </span>
@@ -664,8 +643,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
-  
+  Configuration
 
     
   </span>
@@ -691,8 +669,7 @@
   <span class="md-ellipsis">
     
   
-    Places
-  
+  Places
 
     
   </span>
@@ -714,7 +691,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
         
@@ -727,8 +704,7 @@
   <span class="md-ellipsis">
     
   
-    1001Tracklists
-  
+  1001Tracklists
 
     
   </span>
@@ -738,15 +714,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    1001Tracklists
-  
+  1001Tracklists
 
     
   </span>
@@ -757,7 +732,8 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -766,16 +742,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#do-i-need-an-account" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Do I need an account?
-      
+      </span>
     </span>
   </a>
   
@@ -784,9 +760,9 @@
         <li class="md-nav__item">
   <a href="#account-setup" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Account setup
-      
+      </span>
     </span>
   </a>
   
@@ -796,9 +772,9 @@
           <li class="md-nav__item">
   <a href="#config-file" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Config file
-      
+      </span>
     </span>
   </a>
   
@@ -807,9 +783,9 @@
           <li class="md-nav__item">
   <a href="#environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Environment variables
-      
+      </span>
     </span>
   </a>
   
@@ -823,9 +799,9 @@
         <li class="md-nav__item">
   <a href="#what-cratedigger-extracts-from-a-tracklist" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What CrateDigger extracts from a tracklist
-      
+      </span>
     </span>
   </a>
   
@@ -834,9 +810,9 @@
         <li class="md-nav__item">
   <a href="#how-venue-and-location-data-affects-routing" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         How venue and location data affects routing
-      
+      </span>
     </span>
   </a>
   
@@ -845,21 +821,21 @@
         <li class="md-nav__item">
   <a href="#layered-w-tracks-and-mashups" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Layered ("w/") tracks and mashups
-      
+      </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Layered (&#34;w/&#34;) tracks and mashups">
+    <nav class="md-nav" aria-label="Layered (&quot;w&#x2f;&quot;) tracks and mashups">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#overlay-chapters" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Overlay chapters
-      
+      </span>
     </span>
   </a>
   
@@ -868,9 +844,9 @@
           <li class="md-nav__item">
   <a href="#labels-in-chapter-titles" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Labels in chapter titles
-      
+      </span>
     </span>
   </a>
   
@@ -879,9 +855,9 @@
           <li class="md-nav__item">
   <a href="#effect-on-existing-libraries" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Effect on existing libraries
-      
+      </span>
     </span>
   </a>
   
@@ -895,9 +871,9 @@
         <li class="md-nav__item">
   <a href="#multi-source-tracklists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Multi-source tracklists
-      
+      </span>
     </span>
   </a>
   
@@ -906,9 +882,9 @@
         <li class="md-nav__item">
   <a href="#what-identification-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What identification looks like
-      
+      </span>
     </span>
   </a>
   
@@ -917,9 +893,9 @@
         <li class="md-nav__item">
   <a href="#rate-limiting-and-caching" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Rate limiting and caching
-      
+      </span>
     </span>
   </a>
   
@@ -928,9 +904,9 @@
         <li class="md-nav__item">
   <a href="#troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Troubleshooting
-      
+      </span>
     </span>
   </a>
   
@@ -940,9 +916,9 @@
           <li class="md-nav__item">
   <a href="#a-scraping-canary-warning-appears-in-the-output" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         A "Scraping canary" WARNING appears in the output
-      
+      </span>
     </span>
   </a>
   
@@ -956,9 +932,9 @@
         <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         See also
-      
+      </span>
     </span>
   </a>
   
@@ -986,8 +962,7 @@
   <span class="md-ellipsis">
     
   
-    Tag reference
-  
+  Tag reference
 
     
   </span>
@@ -1013,8 +988,7 @@
   <span class="md-ellipsis">
     
   
-    Library layout
-  
+  Library layout
 
     
   </span>
@@ -1040,8 +1014,7 @@
   <span class="md-ellipsis">
     
   
-    Kodi Integration
-  
+  Kodi Integration
 
     
   </span>
@@ -1067,8 +1040,7 @@
   <span class="md-ellipsis">
     
   
-    FAQ
-  
+  FAQ
 
     
   </span>
@@ -1090,10 +1062,24 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1102,16 +1088,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#do-i-need-an-account" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Do I need an account?
-      
+      </span>
     </span>
   </a>
   
@@ -1120,9 +1106,9 @@
         <li class="md-nav__item">
   <a href="#account-setup" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Account setup
-      
+      </span>
     </span>
   </a>
   
@@ -1132,9 +1118,9 @@
           <li class="md-nav__item">
   <a href="#config-file" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Config file
-      
+      </span>
     </span>
   </a>
   
@@ -1143,9 +1129,9 @@
           <li class="md-nav__item">
   <a href="#environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Environment variables
-      
+      </span>
     </span>
   </a>
   
@@ -1159,9 +1145,9 @@
         <li class="md-nav__item">
   <a href="#what-cratedigger-extracts-from-a-tracklist" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What CrateDigger extracts from a tracklist
-      
+      </span>
     </span>
   </a>
   
@@ -1170,9 +1156,9 @@
         <li class="md-nav__item">
   <a href="#how-venue-and-location-data-affects-routing" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         How venue and location data affects routing
-      
+      </span>
     </span>
   </a>
   
@@ -1181,21 +1167,21 @@
         <li class="md-nav__item">
   <a href="#layered-w-tracks-and-mashups" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Layered ("w/") tracks and mashups
-      
+      </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Layered (&#34;w/&#34;) tracks and mashups">
+    <nav class="md-nav" aria-label="Layered (&quot;w&#x2f;&quot;) tracks and mashups">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#overlay-chapters" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Overlay chapters
-      
+      </span>
     </span>
   </a>
   
@@ -1204,9 +1190,9 @@
           <li class="md-nav__item">
   <a href="#labels-in-chapter-titles" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Labels in chapter titles
-      
+      </span>
     </span>
   </a>
   
@@ -1215,9 +1201,9 @@
           <li class="md-nav__item">
   <a href="#effect-on-existing-libraries" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Effect on existing libraries
-      
+      </span>
     </span>
   </a>
   
@@ -1231,9 +1217,9 @@
         <li class="md-nav__item">
   <a href="#multi-source-tracklists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Multi-source tracklists
-      
+      </span>
     </span>
   </a>
   
@@ -1242,9 +1228,9 @@
         <li class="md-nav__item">
   <a href="#what-identification-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What identification looks like
-      
+      </span>
     </span>
   </a>
   
@@ -1253,9 +1239,9 @@
         <li class="md-nav__item">
   <a href="#rate-limiting-and-caching" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Rate limiting and caching
-      
+      </span>
     </span>
   </a>
   
@@ -1264,9 +1250,9 @@
         <li class="md-nav__item">
   <a href="#troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Troubleshooting
-      
+      </span>
     </span>
   </a>
   
@@ -1276,9 +1262,9 @@
           <li class="md-nav__item">
   <a href="#a-scraping-canary-warning-appears-in-the-output" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         A "Scraping canary" WARNING appears in the output
-      
+      </span>
     </span>
   </a>
   
@@ -1292,9 +1278,9 @@
         <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         See also
-      
+      </span>
     </span>
   </a>
   
@@ -1311,18 +1297,29 @@
           
             <div class="md-content" data-md-component="content">
               
+                
+
+
+
+  
+
+
+              
               <article class="md-content__inner md-typeset">
                 
                   
-
-
+  
+    <a href="https://github.com/Rouzax/CrateDigger/edit/main/docs/tracklists.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
   
   
 
 
-<h1 id="1001tracklists-integration">1001Tracklists Integration</h1>
+<h1 id="1001tracklists-integration">1001Tracklists Integration<a class="headerlink" href="#1001tracklists-integration" title="Permanent link">&para;</a></h1>
 <p>CrateDigger integrates with <a href="https://www.1001tracklists.com/">1001Tracklists</a> to match your recordings against known tracklists, embed chapter markers, and populate rich per-track and per-set metadata. 1001Tracklists is a community website that logs exactly what tracks DJs played during sets, including timestamps. It is the source of everything in CrateDigger that goes beyond what a filename and embedded video tags can provide.</p>
-<h2 id="do-i-need-an-account">Do I need an account?</h2>
+<h2 id="do-i-need-an-account">Do I need an account?<a class="headerlink" href="#do-i-need-an-account" title="Permanent link">&para;</a></h2>
 <p>Short answer: no, but the feature gap is significant.</p>
 <table>
 <thead>
@@ -1408,31 +1405,31 @@
 <p><strong>Without an account</strong>, CrateDigger still produces a usable library. Metadata comes from parsing your filenames using your <code>places.json</code> entries and <code>artists.json</code> rules, reading any embedded MKV tags, looking up artist artwork from fanart.tv via a resolved MusicBrainz ID, and extracting cover art from embedded attachments or sampled video frames. You get organized folders, reasonable posters, and NFO files. What you lose is everything tied to the authoritative tracklist: chapter markers, per-track metadata (title, label, genre, artist MBIDs), canonical DJ naming beyond your manual aliases, and the stage and venue context tags.</p>
 <p><strong>With an account</strong>, every row in the table is filled in. <code>identify</code> matches your recording against 1001Tracklists, and embeds per-chapter metadata plus album-level event context directly into the MKV.</p>
 <p><strong>Why the login is required:</strong> 1001Tracklists only renders tracklist content, the actual tracks and timestamps, to signed-in users; a logged-out request for a tracklist page gets back a page shell with no track rows and no timing data at all, even though site search still works without an account. This is why <code>identify</code> needs a login: without a session there is no track data to read, not merely a reduced feature set. Current versions read the tracklist page directly instead of calling the 1001Tracklists export API, so CrateDigger never draws on the account's monthly tracklist-export allowance; the "Monthly export limit (30) exceeded" quota does not apply to CrateDigger runs.</p>
-<h2 id="account-setup">Account setup</h2>
+<h2 id="account-setup">Account setup<a class="headerlink" href="#account-setup" title="Permanent link">&para;</a></h2>
 <p>You need a free account at <a href="https://www.1001tracklists.com/">1001Tracklists</a>. Configure your credentials in one of two ways.</p>
-<h3 id="config-file">Config file</h3>
+<h3 id="config-file">Config file<a class="headerlink" href="#config-file" title="Permanent link">&para;</a></h3>
 <p>Add your email and password under the <code>[tracklists]</code> section in your <code>config.toml</code> (<code>~/CrateDigger/config.toml</code> on Linux and macOS, <code>Documents\CrateDigger\config.toml</code> on Windows):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[tracklists]</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your@email.com&quot;</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your-password&quot;</span>
-</code></pre></div>
-<h3 id="environment-variables">Environment variables</h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[tracklists]</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"your@email.com"</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"your-password"</span>
+</span></code></pre></div>
+<h3 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h3>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Linux / macOS</label><label for="__tabbed_1_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_EMAIL</span><span class="o">=</span><span class="s2">&quot;your@email.com&quot;</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_PASSWORD</span><span class="o">=</span><span class="s2">&quot;your-password&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_EMAIL</span><span class="o">=</span><span class="s2">"your@email.com"</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TRACKLISTS_PASSWORD</span><span class="o">=</span><span class="s2">"your-password"</span>
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">$env:TRACKLISTS_EMAIL</span> <span class="p">=</span> <span class="s2">&quot;your@email.com&quot;</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">$env:TRACKLISTS_PASSWORD</span> <span class="p">=</span> <span class="s2">&quot;your-password&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">$env:TRACKLISTS_EMAIL</span> <span class="p">=</span> <span class="s2">"your@email.com"</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">$env:TRACKLISTS_PASSWORD</span> <span class="p">=</span> <span class="s2">"your-password"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
 <p>Environment variables override config file values. If your email is not configured at all, CrateDigger prompts for both credentials interactively before starting. If your email is set but your password is missing, it exits with an error.</p>
-<h2 id="what-cratedigger-extracts-from-a-tracklist">What CrateDigger extracts from a tracklist</h2>
+<h2 id="what-cratedigger-extracts-from-a-tracklist">What CrateDigger extracts from a tracklist<a class="headerlink" href="#what-cratedigger-extracts-from-a-tracklist" title="Permanent link">&para;</a></h2>
 <p>For each identified tracklist, CrateDigger captures:</p>
 <ul>
 <li><strong>Chapter markers:</strong> one per track with timestamp and title, written directly into the MKV as Matroska chapters. See <a href="../tag-reference/#per-chapter-tags-ttv30">per-chapter tags</a>.</li>
@@ -1441,7 +1438,7 @@
 <li><strong>DJ list and album-artist MBIDs:</strong> canonical DJ names, 1001Tracklists slugs, and aligned MusicBrainz IDs for multi-value album-artist credits. See <a href="../tag-reference/#album-level-artist-tags">album-level artist tags</a>.</li>
 <li><strong>DJ artwork URL:</strong> the DJ photo from the tracklist page, used as a background source in the <a href="../library-layout/#poster-layouts">poster pipeline</a>.</li>
 </ul>
-<h2 id="how-venue-and-location-data-affects-routing">How venue and location data affects routing</h2>
+<h2 id="how-venue-and-location-data-affects-routing">How venue and location data affects routing<a class="headerlink" href="#how-venue-and-location-data-affects-routing" title="Permanent link">&para;</a></h2>
 <p>When 1001Tracklists has a linked festival for a set, CrateDigger uses that as the primary routing target. When no festival is present, it works down a chain:</p>
 <ol>
 <li><strong>Festival</strong> (linked on the tracklist page)</li>
@@ -1452,13 +1449,13 @@
 <p>The venue and location data that 1001Tracklists provides feeds directly into your <code>places.json</code> registry. If the venue name matches a canonical name or alias in <code>places.json</code>, CrateDigger uses the canonical name for folder and file naming. If it does not match, it uses the raw text from the tracklist page.</p>
 <p>Adding a <code>places.json</code> entry for a venue is all it takes to bring it into the same alias-resolution pipeline as festivals. A set recorded at a club with no <code>places.json</code> entry uses the raw venue name or falls through to the artist folder. A set with no linked venue and no plain-text location always routes by artist. This is the intended behavior when 1001Tracklists has no location data to provide.</p>
 <p>See <a href="../places/">Places</a> for the full registry format and matching rules.</p>
-<h2 id="layered-w-tracks-and-mashups">Layered ("w/") tracks and mashups</h2>
-<h3 id="overlay-chapters">Overlay chapters</h3>
+<h2 id="layered-w-tracks-and-mashups">Layered ("w/") tracks and mashups<a class="headerlink" href="#layered-w-tracks-and-mashups" title="Permanent link">&para;</a></h2>
+<h3 id="overlay-chapters">Overlay chapters<a class="headerlink" href="#overlay-chapters" title="Permanent link">&para;</a></h3>
 <p>Some 1001Tracklists pages include "w/" rows: tracks that a DJ layers on top of the currently-playing track rather than replacing it. CrateDigger processes these when <code>overlay_chapters</code> is <code>true</code> (the default).</p>
 <p>The key question for each overlay is whether it enters early enough after the host main track to feel like part of the same moment, or late enough that it deserves its own chapter for navigation. The <code>overlay_fold_seconds</code> setting (default: 20 seconds) controls this threshold.</p>
 <p><strong>Folded overlays</strong> are ones that enter less than <code>overlay_fold_seconds</code> after the host main track's start, share the exact same timestamp, or have no timestamp at all. They are merged into the host track's chapter title:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Artist A vs. Artist B - Title A vs. Title B
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Artist A vs. Artist B - Title A vs. Title B
+</span></code></pre></div>
 <p>Multiple consecutive overlays that all fold into the same host are combined in order, so a three-way mashup reads <code>Artist A vs. B vs. C - Title A vs. B vs. C</code>.</p>
 <p><strong>Standalone overlay chapters</strong> are ones that enter at least <code>overlay_fold_seconds</code> after the host main track starts. They become their own chapters titled by their own track (<code>Artist - Title</code>), so media player chapter lists show them as distinct navigation points.</p>
 <p>You can tune the threshold for your own taste:</p>
@@ -1469,21 +1466,21 @@
 </ul>
 <p><strong>Worked example: tuning <code>overlay_fold_seconds</code></strong></p>
 <p>A tracklist with one main track and one "w/" overlay that enters 12 seconds later:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>[00:00] Main Artist - Track One
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>w/ Other Artist - Track Two   (enters at 00:12)
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>[00:00] Main Artist - Track One
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>w/ Other Artist - Track Two   (enters at 00:12)
+</span></code></pre></div>
 <p>With <code>overlay_fold_seconds = 20</code> (the default): the overlay enters 12 seconds after the host, which is inside the 20-second window, so it folds in. One chapter is produced:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Main Artist vs. Other Artist - Track One vs. Track Two
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Main Artist vs. Other Artist - Track One vs. Track Two
+</span></code></pre></div>
 <p>With <code>overlay_fold_seconds = 10</code>: 12 seconds is past the 10-second window, so the overlay breaks out into its own chapter, titled by its own track. Two chapters are produced:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Main Artist - Track One
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>Other Artist - Track Two
-</code></pre></div>
-<h3 id="labels-in-chapter-titles">Labels in chapter titles</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Main Artist - Track One
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>Other Artist - Track Two
+</span></code></pre></div>
+<h3 id="labels-in-chapter-titles">Labels in chapter titles<a class="headerlink" href="#labels-in-chapter-titles" title="Permanent link">&para;</a></h3>
 <p>By default (<code>chapter_title_labels = false</code>) the record label is written only to <code>CRATEDIGGER_TRACK_LABEL</code> and is not part of the visible chapter title. A chapter reads <code>These Are The Times</code> in your media player's chapter list. Set <code>chapter_title_labels = true</code> to include the label in the title: <code>These Are The Times [STMPD]</code>. The <code>CRATEDIGGER_TRACK_LABEL</code> tag is always written regardless of this setting.</p>
-<h3 id="effect-on-existing-libraries">Effect on existing libraries</h3>
+<h3 id="effect-on-existing-libraries">Effect on existing libraries<a class="headerlink" href="#effect-on-existing-libraries" title="Permanent link">&para;</a></h3>
 <p>Re-running <code>identify</code> on a previously identified file rewrites its chapters with the current logic. The chapter count and titles may change. Subsequent runs are stable until the tracklist itself changes on 1001Tracklists.</p>
-<h2 id="multi-source-tracklists">Multi-source tracklists</h2>
+<h2 id="multi-source-tracklists">Multi-source tracklists<a class="headerlink" href="#multi-source-tracklists" title="Permanent link">&para;</a></h2>
 <p>Some 1001Tracklists pages are cued against more than one source video. When a DJ performed two separate sets at the same event, or when a stream was split across multiple uploads, the tracklist page lists each source separately as "Player 1", "Player 2", and so on. Each player has its own timeline, so the chapter timestamps for Player 1 do not apply to Player 2.</p>
 <p>When CrateDigger encounters a tracklist with two or more sources, it selects the one that matches your file before embedding chapters. The selection works in this priority order:</p>
 <ol>
@@ -1494,9 +1491,9 @@
 <p>If none of these methods produces a match, CrateDigger still writes the album-level metadata tags but does not embed any chapters, and logs a WARNING. Any chapters already in the file are left intact.</p>
 <p>This source selection is automatic. You do not pick Player 1 versus Player 2 yourself: if the interactive picker appears during <code>identify</code>, it is for choosing the tracklist, not the source video within it. The matching source is then resolved by the priority above.</p>
 <p>Single-source tracklists are unaffected. The player selection logic only activates when the tracklist lists two or more sources.</p>
-<h2 id="what-identification-looks-like">What identification looks like</h2>
+<h2 id="what-identification-looks-like">What identification looks like<a class="headerlink" href="#what-identification-looks-like" title="Permanent link">&para;</a></h2>
 <p>Interactive selection is the default mode. <code>identify</code> prints a ranked list of results and prompts you to pick the correct match or skip. See <a href="../commands/identify/#step-by-step-what-happens-when-you-run-identify">identify: step-by-step</a> for a sample transcript and auto-mode behavior.</p>
-<h2 id="rate-limiting-and-caching">Rate limiting and caching</h2>
+<h2 id="rate-limiting-and-caching">Rate limiting and caching<a class="headerlink" href="#rate-limiting-and-caching" title="Permanent link">&para;</a></h2>
 <p>CrateDigger paces its 1001Tracklists traffic in two ways:</p>
 <ul>
 <li><strong>Between files:</strong> after one file finishes, CrateDigger waits so that at least <code>tracklists.delay_seconds</code> (default 5s) has passed since that file's processing began. Time already spent on the previous file counts, so if interactive selection or fetching took longer than <code>delay_seconds</code> the next file starts immediately. You can override the value per run with <code>--delay</code>.</li>
@@ -1509,11 +1506,11 @@
 <li><strong>Source cache:</strong> festival, venue, radio, and conference names. Used to classify tracklists by source type.</li>
 </ul>
 <p>Each cache entry's actual lifetime jitters by ±20% around the configured base (see <a href="../configuration/#cache-ttl">Configuration: cache TTL</a>), so a bulk first-run fill does not cause all entries to expire at the same time.</p>
-<h2 id="troubleshooting">Troubleshooting</h2>
-<h3 id="a-scraping-canary-warning-appears-in-the-output">A "Scraping canary" WARNING appears in the output</h3>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="a-scraping-canary-warning-appears-in-the-output">A "Scraping canary" WARNING appears in the output<a class="headerlink" href="#a-scraping-canary-warning-appears-in-the-output" title="Permanent link">&para;</a></h3>
 <p>You may see a line like this:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>WARNING  Scraping canary: tracklist page missing selectors [&#39;cue_seconds input&#39;, &#39;cue display div&#39;] at https://www.1001tracklists.com/tracklist/abc123/some-set/
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>WARNING  Scraping canary: tracklist page missing selectors ['cue_seconds input', 'cue display div'] at https://www.1001tracklists.com/tracklist/abc123/some-set/
+</span></code></pre></div>
 <p>This means 1001tracklists.com has changed its page structure in a way that the parser no longer finds the expected data. Enrichment for that page type is likely to be incomplete until CrateDigger is updated to match the new layout. Affected fields may include genres, event date, stage name, or DJ artwork, depending on which selectors are missing.</p>
 <p><strong>What to do:</strong></p>
 <ol>
@@ -1521,7 +1518,7 @@
 <li>Expect that files processed after this point may be missing some enrichment fields until a patched version is released.</li>
 </ol>
 <p><strong>What you do not need to worry about:</strong> the scraper still tries to extract whatever it can, so chapter markers and core tracklist data may still be present even when the canary fires. One WARNING is emitted per unique breakage per run, regardless of how many files are processed, so a single warning does not mean every file in the batch is broken.</p>
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../commands/identify/">identify command</a>: command reference, flags, interactive and auto selection, examples</li>
 <li><a href="../tag-reference/">Tag reference</a>: every tag written into the MKV</li>
@@ -1540,17 +1537,21 @@
 
 
 
+
+
                 
               </article>
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
   Back to top
 </button>
         
@@ -1558,14 +1559,54 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../places/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Places">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Places
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../tag-reference/" class="md-footer__link md-footer__link--next" aria-label="Next: Tag reference">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Tag reference
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -1583,10 +1624,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.tabs","navigation.sections","navigation.top","navigation.footer","navigation.path","navigation.indexes","search.highlight","search.suggest","content.code.copy","content.code.select","content.code.annotate","content.action.edit","content.tabs.link","content.tooltips"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
     
   </body>

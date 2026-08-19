@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://rouzax.github.io/CrateDigger/docs/getting-started/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="./..">
       
       
         <link rel="next" href="../commands/identify/">
@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -29,10 +29,15 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.20815dad.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -46,14 +51,14 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
       <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -64,6 +69,8 @@
   
     
     
+      
+    
     
     
     
@@ -72,7 +79,7 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
         
@@ -90,14 +97,14 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -117,63 +124,48 @@
     </div>
     
       
+        <form class="md-header__option" data-md-component="palette">
+  
     
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
       
       
-        <label class="md-header__button md-icon" for="__search">
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -194,11 +186,8 @@
   
   
     <li class="md-tabs__item">
-      <a href=".." class="md-tabs__link">
+      <a href="./.." class="md-tabs__link">
         
-  
-  
-    
   
   Home
 
@@ -215,11 +204,8 @@
   
   
     <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+      <a href="././" class="md-tabs__link">
         
-  
-  
-    
   
   Getting Started
 
@@ -234,11 +220,23 @@
   
   
     
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
     
       <li class="md-tabs__item">
         <a href="../commands/identify/" class="md-tabs__link">
           
-  
   
   Commands
 
@@ -257,9 +255,6 @@
       <a href="../configuration/" class="md-tabs__link">
         
   
-  
-    
-  
   Configuration
 
       </a>
@@ -275,9 +270,6 @@
     <li class="md-tabs__item">
       <a href="../places/" class="md-tabs__link">
         
-  
-  
-    
   
   Places
 
@@ -295,9 +287,6 @@
       <a href="../tracklists/" class="md-tabs__link">
         
   
-  
-    
-  
   1001Tracklists
 
       </a>
@@ -313,9 +302,6 @@
     <li class="md-tabs__item">
       <a href="../tag-reference/" class="md-tabs__link">
         
-  
-  
-    
   
   Tag reference
 
@@ -333,9 +319,6 @@
       <a href="../library-layout/" class="md-tabs__link">
         
   
-  
-    
-  
   Library layout
 
       </a>
@@ -352,9 +335,6 @@
       <a href="../kodi-integration/" class="md-tabs__link">
         
   
-  
-    
-  
   Kodi Integration
 
       </a>
@@ -370,9 +350,6 @@
     <li class="md-tabs__item">
       <a href="../faq/" class="md-tabs__link">
         
-  
-  
-    
   
   FAQ
 
@@ -403,9 +380,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
     CrateDigger
@@ -415,7 +392,7 @@
       <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
@@ -432,15 +409,14 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="./.." class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
-  
+  Home
 
     
   </span>
@@ -462,7 +438,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
         
@@ -475,8 +451,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
-  
+  Getting Started
 
     
   </span>
@@ -486,15 +461,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Getting Started
-  
+  Getting Started
 
     
   </span>
@@ -505,7 +479,8 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -514,16 +489,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#before-you-start" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Before you start
-      
+      </span>
     </span>
   </a>
   
@@ -533,9 +508,9 @@
           <li class="md-nav__item">
   <a href="#python" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Python
-      
+      </span>
     </span>
   </a>
   
@@ -544,9 +519,9 @@
           <li class="md-nav__item">
   <a href="#required-tools" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Required tools
-      
+      </span>
     </span>
   </a>
   
@@ -560,9 +535,9 @@
         <li class="md-nav__item">
   <a href="#install-cratedigger" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Install CrateDigger
-      
+      </span>
     </span>
   </a>
   
@@ -572,9 +547,9 @@
           <li class="md-nav__item">
   <a href="#verify-your-environment-with-check" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        Verify your environment with --check
-      
+      <span class="md-typeset">
+        Verify your environment with <code>--check</code>
+      </span>
     </span>
   </a>
   
@@ -583,9 +558,9 @@
           <li class="md-nav__item">
   <a href="#optional-video-frame-sampling" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Optional: video frame sampling
-      
+      </span>
     </span>
   </a>
   
@@ -599,9 +574,9 @@
         <li class="md-nav__item">
   <a href="#set-up-your-config-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Set up your config files
-      
+      </span>
     </span>
   </a>
   
@@ -611,9 +586,9 @@
           <li class="md-nav__item">
   <a href="#place-definitions" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Place definitions
-      
+      </span>
     </span>
   </a>
   
@@ -627,9 +602,9 @@
         <li class="md-nav__item">
   <a href="#preparing-your-recordings" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Preparing your recordings
-      
+      </span>
     </span>
   </a>
   
@@ -638,9 +613,9 @@
         <li class="md-nav__item">
   <a href="#the-three-step-workflow" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         The three-step workflow
-      
+      </span>
     </span>
   </a>
   
@@ -650,9 +625,9 @@
           <li class="md-nav__item">
   <a href="#step-1-identify" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Step 1: Identify
-      
+      </span>
     </span>
   </a>
   
@@ -661,9 +636,9 @@
           <li class="md-nav__item">
   <a href="#step-2-organize" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Step 2: Organize
-      
+      </span>
     </span>
   </a>
   
@@ -672,9 +647,9 @@
           <li class="md-nav__item">
   <a href="#step-3-enrich" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Step 3: Enrich
-      
+      </span>
     </span>
   </a>
   
@@ -683,9 +658,9 @@
           <li class="md-nav__item">
   <a href="#one-step-organize-enrich" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         One-step organize + enrich
-      
+      </span>
     </span>
   </a>
   
@@ -699,9 +674,9 @@
         <li class="md-nav__item">
   <a href="#without-a-1001tracklists-account" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Without a 1001Tracklists account
-      
+      </span>
     </span>
   </a>
   
@@ -710,9 +685,9 @@
         <li class="md-nav__item">
   <a href="#what-to-do-next" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What to do next
-      
+      </span>
     </span>
   </a>
   
@@ -733,6 +708,16 @@
   
   
     
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -756,8 +741,7 @@
   <span class="md-ellipsis">
     
   
-    Commands
-  
+  Commands
 
     
   </span>
@@ -772,8 +756,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Commands
-  
+  Commands
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -792,8 +775,7 @@
   <span class="md-ellipsis">
     
   
-    Identify
-  
+  Identify
 
     
   </span>
@@ -820,8 +802,7 @@
   <span class="md-ellipsis">
     
   
-    Organize
-  
+  Organize
 
     
   </span>
@@ -848,8 +829,7 @@
   <span class="md-ellipsis">
     
   
-    Enrich
-  
+  Enrich
 
     
   </span>
@@ -876,8 +856,7 @@
   <span class="md-ellipsis">
     
   
-    Audit Logos
-  
+  Audit Logos
 
     
   </span>
@@ -911,8 +890,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
-  
+  Configuration
 
     
   </span>
@@ -938,8 +916,7 @@
   <span class="md-ellipsis">
     
   
-    Places
-  
+  Places
 
     
   </span>
@@ -965,8 +942,7 @@
   <span class="md-ellipsis">
     
   
-    1001Tracklists
-  
+  1001Tracklists
 
     
   </span>
@@ -992,8 +968,7 @@
   <span class="md-ellipsis">
     
   
-    Tag reference
-  
+  Tag reference
 
     
   </span>
@@ -1019,8 +994,7 @@
   <span class="md-ellipsis">
     
   
-    Library layout
-  
+  Library layout
 
     
   </span>
@@ -1046,8 +1020,7 @@
   <span class="md-ellipsis">
     
   
-    Kodi Integration
-  
+  Kodi Integration
 
     
   </span>
@@ -1073,8 +1046,7 @@
   <span class="md-ellipsis">
     
   
-    FAQ
-  
+  FAQ
 
     
   </span>
@@ -1096,10 +1068,24 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1108,16 +1094,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#before-you-start" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Before you start
-      
+      </span>
     </span>
   </a>
   
@@ -1127,9 +1113,9 @@
           <li class="md-nav__item">
   <a href="#python" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Python
-      
+      </span>
     </span>
   </a>
   
@@ -1138,9 +1124,9 @@
           <li class="md-nav__item">
   <a href="#required-tools" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Required tools
-      
+      </span>
     </span>
   </a>
   
@@ -1154,9 +1140,9 @@
         <li class="md-nav__item">
   <a href="#install-cratedigger" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Install CrateDigger
-      
+      </span>
     </span>
   </a>
   
@@ -1166,9 +1152,9 @@
           <li class="md-nav__item">
   <a href="#verify-your-environment-with-check" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        Verify your environment with --check
-      
+      <span class="md-typeset">
+        Verify your environment with <code>--check</code>
+      </span>
     </span>
   </a>
   
@@ -1177,9 +1163,9 @@
           <li class="md-nav__item">
   <a href="#optional-video-frame-sampling" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Optional: video frame sampling
-      
+      </span>
     </span>
   </a>
   
@@ -1193,9 +1179,9 @@
         <li class="md-nav__item">
   <a href="#set-up-your-config-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Set up your config files
-      
+      </span>
     </span>
   </a>
   
@@ -1205,9 +1191,9 @@
           <li class="md-nav__item">
   <a href="#place-definitions" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Place definitions
-      
+      </span>
     </span>
   </a>
   
@@ -1221,9 +1207,9 @@
         <li class="md-nav__item">
   <a href="#preparing-your-recordings" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Preparing your recordings
-      
+      </span>
     </span>
   </a>
   
@@ -1232,9 +1218,9 @@
         <li class="md-nav__item">
   <a href="#the-three-step-workflow" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         The three-step workflow
-      
+      </span>
     </span>
   </a>
   
@@ -1244,9 +1230,9 @@
           <li class="md-nav__item">
   <a href="#step-1-identify" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Step 1: Identify
-      
+      </span>
     </span>
   </a>
   
@@ -1255,9 +1241,9 @@
           <li class="md-nav__item">
   <a href="#step-2-organize" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Step 2: Organize
-      
+      </span>
     </span>
   </a>
   
@@ -1266,9 +1252,9 @@
           <li class="md-nav__item">
   <a href="#step-3-enrich" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Step 3: Enrich
-      
+      </span>
     </span>
   </a>
   
@@ -1277,9 +1263,9 @@
           <li class="md-nav__item">
   <a href="#one-step-organize-enrich" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         One-step organize + enrich
-      
+      </span>
     </span>
   </a>
   
@@ -1293,9 +1279,9 @@
         <li class="md-nav__item">
   <a href="#without-a-1001tracklists-account" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Without a 1001Tracklists account
-      
+      </span>
     </span>
   </a>
   
@@ -1304,9 +1290,9 @@
         <li class="md-nav__item">
   <a href="#what-to-do-next" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What to do next
-      
+      </span>
     </span>
   </a>
   
@@ -1323,25 +1309,36 @@
           
             <div class="md-content" data-md-component="content">
               
+                
+
+
+
+  
+
+
+              
               <article class="md-content__inner md-typeset">
                 
                   
-
-
+  
+    <a href="https://github.com/Rouzax/CrateDigger/edit/main/docs/getting-started.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
   
   
 
 
-<h1 id="getting-started">Getting Started</h1>
+<h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
 <p>CrateDigger is a command-line tool that organizes your DJ set and concert recordings into a
 clean library, then enriches them with artwork, track listings, and metadata.</p>
-<h2 id="before-you-start">Before you start</h2>
-<h3 id="python">Python</h3>
+<h2 id="before-you-start">Before you start<a class="headerlink" href="#before-you-start" title="Permanent link">&para;</a></h2>
+<h3 id="python">Python<a class="headerlink" href="#python" title="Permanent link">&para;</a></h3>
 <p>CrateDigger requires Python 3.11 or newer.</p>
 <p>Check your version:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python3<span class="w"> </span>--version
-</code></pre></div>
-<h3 id="required-tools">Required tools</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python3<span class="w"> </span>--version
+</span></code></pre></div>
+<h3 id="required-tools">Required tools<a class="headerlink" href="#required-tools" title="Permanent link">&para;</a></h3>
 <p>CrateDigger relies on two external programs. Install them before running CrateDigger.</p>
 <table>
 <thead>
@@ -1364,16 +1361,16 @@ clean library, then enriches them with artwork, track listings, and metadata.</p
 <div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Ubuntu / Debian</label><label for="__tabbed_1_2">macOS (Homebrew)</label><label for="__tabbed_1_3">Windows (Scoop)</label><label for="__tabbed_1_4">Windows (manual)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ffmpeg<span class="w"> </span>mkvtoolnix
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ffmpeg<span class="w"> </span>mkvtoolnix
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>brew<span class="w"> </span>install<span class="w"> </span>ffmpeg<span class="w"> </span>mkvtoolnix
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>brew<span class="w"> </span>install<span class="w"> </span>ffmpeg<span class="w"> </span>mkvtoolnix
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">scoop</span> <span class="n">install</span> <span class="n">ffmpeg</span> <span class="n">mkvtoolnix</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">scoop</span> <span class="n">install</span> <span class="n">ffmpeg</span> <span class="n">mkvtoolnix</span>
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
 <p>Download and install each tool, then add their directories to your system PATH:</p>
@@ -1386,30 +1383,30 @@ clean library, then enriches them with artwork, track listings, and metadata.</p
 </div>
 <p>If the tools are installed somewhere other than your system PATH, you can tell CrateDigger
 where to find them. See <a href="../configuration/#tool-paths">Configuration: Tool paths</a>.</p>
-<h2 id="install-cratedigger">Install CrateDigger</h2>
+<h2 id="install-cratedigger">Install CrateDigger<a class="headerlink" href="#install-cratedigger" title="Permanent link">&para;</a></h2>
 <p><strong>pipx (recommended for end users):</strong> pipx installs CrateDigger into an isolated environment and puts the <code>cratedigger</code> command on your PATH automatically.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pipx<span class="w"> </span>install<span class="w"> </span>git+https://github.com/Rouzax/CrateDigger.git
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pipx<span class="w"> </span>install<span class="w"> </span>git+https://github.com/Rouzax/CrateDigger.git
+</span></code></pre></div>
 <p>Upgrade later with:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pipx<span class="w"> </span>upgrade<span class="w"> </span>cratedigger
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pipx<span class="w"> </span>upgrade<span class="w"> </span>cratedigger
+</span></code></pre></div>
 <p><strong>pip (user site or venv):</strong> If you prefer pip or are working inside a virtual environment:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/Rouzax/CrateDigger.git
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/Rouzax/CrateDigger.git
+</span></code></pre></div>
 <p>Upgrade later with:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>git+https://github.com/Rouzax/CrateDigger.git
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>git+https://github.com/Rouzax/CrateDigger.git
+</span></code></pre></div>
 <p>Verify the installation:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cratedigger<span class="w"> </span>--version
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cratedigger<span class="w"> </span>--version
+</span></code></pre></div>
 <p>This prints the installed version and exits. For a quick look at all available subcommands, run:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cratedigger<span class="w"> </span>--help
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cratedigger<span class="w"> </span>--help
+</span></code></pre></div>
 <p>Use <code>--version</code> as the fast confirmation that the install worked. Use <code>--help</code> when you want to browse the full command tree.</p>
-<h3 id="verify-your-environment-with-check">Verify your environment with <code>--check</code></h3>
+<h3 id="verify-your-environment-with-check">Verify your environment with <code>--check</code><a class="headerlink" href="#verify-your-environment-with-check" title="Permanent link">&para;</a></h3>
 <p>After installing CrateDigger, run <code>--check</code> to confirm that all required external tools, config files, credentials, and Python packages are present and reachable:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>--check
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>--check
+</span></code></pre></div>
 <p>CrateDigger prints a grouped report with a status marker for each item:</p>
 <ul>
 <li><code>✓</code> the item is present and working</li>
@@ -1421,7 +1418,7 @@ where to find them. See <a href="../configuration/#tool-paths">Configuration: To
 <p>The command exits with code 0 if all required checks pass. Warnings (optional items missing) do not affect the exit code. The command exits with code 1 if any required tool or Python package is absent.</p>
 <p>Nothing is processed: <code>--check</code> reads your environment and exits without touching any media files or your library.</p>
 <p>Use it after a fresh install to confirm the setup is complete, after updating a <a href="../configuration/">config file</a> to verify the new paths are valid, or in CI to validate the environment before a scheduled run.</p>
-<h3 id="optional-video-frame-sampling">Optional: video frame sampling</h3>
+<h3 id="optional-video-frame-sampling">Optional: video frame sampling<a class="headerlink" href="#optional-video-frame-sampling" title="Permanent link">&para;</a></h3>
 <p>By default, CrateDigger reads artwork that is already embedded in your video files. Files
 without embedded artwork get no thumbnail, and their posters and NFO images are lower
 quality or missing as a result.</p>
@@ -1431,13 +1428,13 @@ opt-in feature, not the default behaviour.</p>
 <p>To include it at install time, use whichever command matches the install path you chose
 in the "Install CrateDigger" section above:</p>
 <p><strong>pipx</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">"cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"</span>
+</span></code></pre></div></p>
 <p><strong>pip</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git&quot;</span>
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"cratedigger[vision] @ git+https://github.com/Rouzax/CrateDigger.git"</span>
+</span></code></pre></div></p>
 <p>The extra pulls in OpenCV, which is the library that scores and selects the frame.</p>
-<h2 id="set-up-your-config-files">Set up your config files</h2>
+<h2 id="set-up-your-config-files">Set up your config files<a class="headerlink" href="#set-up-your-config-files" title="Permanent link">&para;</a></h2>
 <p>CrateDigger stores your settings in a <code>CrateDigger</code> folder. Where that folder lives depends on your platform:</p>
 <table>
 <thead>
@@ -1467,17 +1464,17 @@ everything. Create it only if you want to customize behavior.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Linux / macOS</label><label for="__tabbed_2_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/CrateDigger
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/CrateDigger/config.toml<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/CrateDigger
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/CrateDigger/config.toml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">New-Item</span> <span class="n">-ItemType</span> <span class="n">Directory</span> <span class="n">-Force</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger&quot;</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml&quot;</span> <span class="p">`</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\config.toml&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">New-Item</span> <span class="n">-ItemType</span> <span class="n">Directory</span> <span class="n">-Force</span> <span class="s2">"$env:USERPROFILE\Documents\CrateDigger"</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>  <span class="n">-Uri</span> <span class="s2">"https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml"</span> <span class="p">`</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>  <span class="n">-OutFile</span> <span class="s2">"$env:USERPROFILE\Documents\CrateDigger\config.toml"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
@@ -1485,12 +1482,12 @@ everything. Create it only if you want to customize behavior.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Linux / macOS</label><label for="__tabbed_3_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cp<span class="w"> </span>config.example.toml<span class="w"> </span>~/CrateDigger/config.toml
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cp<span class="w"> </span>config.example.toml<span class="w"> </span>~/CrateDigger/config.toml
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">Copy-Item</span> <span class="n">config</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">toml</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\config.toml&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">Copy-Item</span> <span class="n">config</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">toml</span> <span class="s2">"$env:USERPROFILE\Documents\CrateDigger\config.toml"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
@@ -1505,7 +1502,7 @@ everything. Create it only if you want to customize behavior.</p>
 <li><strong>Default layout</strong>: controls how CrateDigger names and arranges your library folders.</li>
 </ul>
 <p>See <a href="../configuration/">Configuration</a> for all options.</p>
-<h3 id="place-definitions">Place definitions</h3>
+<h3 id="place-definitions">Place definitions<a class="headerlink" href="#place-definitions" title="Permanent link">&para;</a></h3>
 <p>CrateDigger uses a <code>places.json</code> file to recognise festivals, clubs, and other named
 venues that host DJ sets. Built-in knowledge covers the most common electronic music
 festivals. To add your own entries or customize aliases, copy the example file to the
@@ -1513,15 +1510,15 @@ same folder as your config:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Linux / macOS</label><label for="__tabbed_4_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/CrateDigger/places.json<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/CrateDigger/places.json<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json&quot;</span> <span class="p">`</span>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\places.json&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>  <span class="n">-Uri</span> <span class="s2">"https://raw.githubusercontent.com/Rouzax/CrateDigger/main/places.example.json"</span> <span class="p">`</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>  <span class="n">-OutFile</span> <span class="s2">"$env:USERPROFILE\Documents\CrateDigger\places.json"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
@@ -1529,12 +1526,12 @@ same folder as your config:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Linux / macOS</label><label for="__tabbed_5_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>cp<span class="w"> </span>places.example.json<span class="w"> </span>~/CrateDigger/places.json
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>cp<span class="w"> </span>places.example.json<span class="w"> </span>~/CrateDigger/places.json
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">Copy-Item</span> <span class="n">places</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">json</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\places.json&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">Copy-Item</span> <span class="n">places</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">json</span> <span class="s2">"$env:USERPROFILE\Documents\CrateDigger\places.json"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
@@ -1546,23 +1543,23 @@ file, for example), no copy happens and the old <code>festivals.json</code> is i
 anything you still need out of it yourself. Only this shared data folder is migrated, so
 a library-local <code>.cratedigger/festivals.json</code> needs a manual rename.</p>
 <p>See <a href="../places/">Places</a> for how to add entries and what the file format looks like.</p>
-<h2 id="preparing-your-recordings">Preparing your recordings</h2>
+<h2 id="preparing-your-recordings">Preparing your recordings<a class="headerlink" href="#preparing-your-recordings" title="Permanent link">&para;</a></h2>
 <p>CrateDigger works best with MKV files that have an embedded thumbnail. If you are
 downloading sets from YouTube, the following yt-dlp command produces exactly the right
 format:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="6:2"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">Windows (PowerShell)</label><label for="__tabbed_6_2">Linux / macOS</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">yt-dlp</span><span class="p">.</span><span class="n">exe</span> <span class="n">-U</span> <span class="p">-</span><span class="n">-merge-output-format</span> <span class="n">mkv</span> <span class="p">-</span><span class="n">-no-post-overwrites</span> <span class="p">-</span><span class="n">-embed-thumbnail</span> <span class="p">`</span>
-<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>  <span class="p">-</span><span class="n">-convert-thumbnails</span> <span class="n">png</span> <span class="p">-</span><span class="n">-windows-filenames</span> <span class="p">-</span><span class="n">-embed-chapters</span> <span class="p">`</span>
-<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>  <span class="p">-</span><span class="n">-sponsorblock-mark</span> <span class="n">all</span> <span class="n">-P</span> <span class="s2">&quot;$env:USERPROFILE\Downloads\sets&quot;</span> <span class="p">&lt;</span><span class="n">YouTube</span> <span class="n">URL</span><span class="p">&gt;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">yt-dlp</span><span class="p">.</span><span class="n">exe</span> <span class="n">-U</span> <span class="p">-</span><span class="n">-merge-output-format</span> <span class="n">mkv</span> <span class="p">-</span><span class="n">-no-post-overwrites</span> <span class="p">-</span><span class="n">-embed-thumbnail</span> <span class="p">`</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>  <span class="p">-</span><span class="n">-convert-thumbnails</span> <span class="n">png</span> <span class="p">-</span><span class="n">-windows-filenames</span> <span class="p">-</span><span class="n">-embed-chapters</span> <span class="p">`</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>  <span class="p">-</span><span class="n">-sponsorblock-mark</span> <span class="n">all</span> <span class="n">-P</span> <span class="s2">"$env:USERPROFILE\Downloads\sets"</span> <span class="p">&lt;</span><span class="n">YouTube</span> <span class="n">URL</span><span class="p">&gt;</span>
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>yt-dlp<span class="w"> </span>-U<span class="w"> </span>--merge-output-format<span class="w"> </span>mkv<span class="w"> </span>--no-post-overwrites<span class="w"> </span>--embed-thumbnail<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span>--convert-thumbnails<span class="w"> </span>png<span class="w"> </span>--embed-chapters<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span>--sponsorblock-mark<span class="w"> </span>all<span class="w"> </span>-P<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>&lt;YouTube<span class="w"> </span>URL&gt;
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>yt-dlp<span class="w"> </span>-U<span class="w"> </span>--merge-output-format<span class="w"> </span>mkv<span class="w"> </span>--no-post-overwrites<span class="w"> </span>--embed-thumbnail<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span>--convert-thumbnails<span class="w"> </span>png<span class="w"> </span>--embed-chapters<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span>--sponsorblock-mark<span class="w"> </span>all<span class="w"> </span>-P<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>&lt;YouTube<span class="w"> </span>URL&gt;
+</span></code></pre></div>
 </div>
 </div>
 </div>
@@ -1600,12 +1597,12 @@ format:</p>
 <p>The downloaded filename will contain the YouTube video ID in brackets (for example,
 <code>Tiesto Live Miami 2026 [2EQGqEvLAuE].mkv</code>). CrateDigger automatically strips this ID
 from the search query so it does not interfere with matching on 1001Tracklists.</p>
-<h2 id="the-three-step-workflow">The three-step workflow</h2>
+<h2 id="the-three-step-workflow">The three-step workflow<a class="headerlink" href="#the-three-step-workflow" title="Permanent link">&para;</a></h2>
 <p>CrateDigger is designed around three commands you run in order.</p>
-<h3 id="step-1-identify">Step 1: Identify</h3>
+<h3 id="step-1-identify">Step 1: Identify<a class="headerlink" href="#step-1-identify" title="Permanent link">&para;</a></h3>
 <p>Match your recordings against 1001Tracklists, embed chapter markers, and store tracklist metadata:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
+</span></code></pre></div>
 <p><strong>What this does:</strong> CrateDigger scans every MKV and WEBM file in the folder. For each file,
 it searches <a href="https://www.1001tracklists.com">1001Tracklists</a> (a website that logs the tracks
 DJs play during sets), shows you the best matches, and lets you pick the right one. Once you
@@ -1613,14 +1610,14 @@ confirm, CrateDigger embeds chapter markers directly into the file, one chapter 
 along with track names, artist names, genres, and tracklist source details.</p>
 <p><strong>For batch processing without prompts:</strong> Add <code>--auto</code> to let CrateDigger pick the best
 match automatically when it is confident enough:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--auto
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--auto
+</span></code></pre></div>
 <p>See the <a href="../commands/identify/">identify command</a> for all options including how to provide
 a tracklist URL directly.</p>
-<h3 id="step-2-organize">Step 2: Organize</h3>
+<h3 id="step-2-organize">Step 2: Organize<a class="headerlink" href="#step-2-organize" title="Permanent link">&para;</a></h3>
 <p>Move files into a structured library with consistent folder names and filenames:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/
+</span></code></pre></div>
 <p><strong>What this does:</strong> CrateDigger reads each file's metadata (from <code>identify</code>, or from the
 filename if <code>identify</code> was skipped), classifies it as a festival set or concert recording,
 then copies it into your output folder using your configured folder layout. Folder names and
@@ -1628,10 +1625,10 @@ filenames are standardized automatically.</p>
 <p>After organizing, CrateDigger creates a <code>.cratedigger/</code> folder inside your library.
 This marker is required before you can run <code>enrich</code>.</p>
 <p>See the <a href="../commands/organize/">organize command</a> for layout options, move vs. copy, and dry-run.</p>
-<h3 id="step-3-enrich">Step 3: Enrich</h3>
+<h3 id="step-3-enrich">Step 3: Enrich<a class="headerlink" href="#step-3-enrich" title="Permanent link">&para;</a></h3>
 <p>Add artwork, posters, sidecar files, and metadata tags to your library:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>cratedigger<span class="w"> </span>enrich<span class="w"> </span>~/Music/Library/
+</span></code></pre></div>
 <p><strong>What this does:</strong> For each file in your library, CrateDigger:</p>
 <ul>
 <li>Extracts or assigns cover art (from embedded MKV artwork, or a sampled video frame if the
@@ -1655,15 +1652,15 @@ This marker is required before you can run <code>enrich</code>.</p>
 </ul>
 <p>See the <a href="../commands/enrich/">enrich command</a> for details on each operation and how to run
 only specific parts.</p>
-<h3 id="one-step-organize-enrich">One-step organize + enrich</h3>
+<h3 id="one-step-organize-enrich">One-step organize + enrich<a class="headerlink" href="#one-step-organize-enrich" title="Permanent link">&para;</a></h3>
 <p>You can organize and enrich in a single command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
-</code></pre></div>
-<h2 id="without-a-1001tracklists-account">Without a 1001Tracklists account</h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
+</span></code></pre></div>
+<h2 id="without-a-1001tracklists-account">Without a 1001Tracklists account<a class="headerlink" href="#without-a-1001tracklists-account" title="Permanent link">&para;</a></h2>
 <p>You do not need a 1001Tracklists account to use CrateDigger. Skip the <code>identify</code> step and
 run organize and enrich directly:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>cratedigger<span class="w"> </span>organize<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--output<span class="w"> </span>~/Music/Library/<span class="w"> </span>--enrich
+</span></code></pre></div>
 <p>CrateDigger will build your library using metadata from your filenames and any tags already
 embedded in your video files. Your <a href="../places/">places.json</a> entries help it recognize
 festival and venue names in filenames, and your <a href="../configuration/#artist-aliases">artists.json</a>
@@ -1685,7 +1682,7 @@ aliases help normalize artist names.</p>
 <li>DJ artwork from 1001Tracklists</li>
 </ul>
 <p>For the full feature comparison, see <a href="../tracklists/#do-i-need-an-account">Do I need an account?</a>.</p>
-<h2 id="what-to-do-next">What to do next</h2>
+<h2 id="what-to-do-next">What to do next<a class="headerlink" href="#what-to-do-next" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../commands/identify/">identify</a>: detailed options for matching and embedding</li>
 <li><a href="../commands/organize/">organize</a>: layouts, templates, move vs. copy, dry-run</li>
@@ -1706,17 +1703,21 @@ aliases help normalize artist names.</p>
 
 
 
+
+
                 
               </article>
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
   Back to top
 </button>
         
@@ -1724,14 +1725,54 @@ aliases help normalize artist names.</p>
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="./.." class="md-footer__link md-footer__link--prev" aria-label="Previous: Home">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Home
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../commands/identify/" class="md-footer__link md-footer__link--next" aria-label="Next: Identify">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Identify
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -1749,10 +1790,10 @@ aliases help normalize artist names.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.tabs","navigation.sections","navigation.top","navigation.footer","navigation.path","navigation.indexes","search.highlight","search.suggest","content.code.copy","content.code.select","content.code.annotate","content.action.edit","content.tabs.link","content.tooltips"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
     
   </body>

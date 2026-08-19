@@ -21,18 +21,23 @@
       
       
       <link rel="icon" href="../../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
-        <title>Identify - CrateDigger</title>
+        <title>identify - CrateDigger</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.20815dad.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -46,14 +51,14 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
       <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -64,6 +69,8 @@
   
     
     
+      
+    
     
     
     
@@ -72,7 +79,7 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
         
@@ -92,12 +99,12 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../../assets/icon.png" alt="logo">
+  <img src="../../assets/icon.png" alt="CrateDigger">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -109,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Identify
+              identify
             
           </span>
         </div>
@@ -117,63 +124,48 @@
     </div>
     
       
+        <form class="md-header__option" data-md-component="palette">
+  
     
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
       
       
-        <label class="md-header__button md-icon" for="__search">
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -197,9 +189,6 @@
       <a href="../.." class="md-tabs__link">
         
   
-  
-    
-  
   Home
 
       </a>
@@ -216,9 +205,6 @@
       <a href="../../getting-started/" class="md-tabs__link">
         
   
-  
-    
-  
   Getting Started
 
       </a>
@@ -234,11 +220,23 @@
   
   
     
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+        <a href="././" class="md-tabs__link">
           
-  
   
   Commands
 
@@ -257,9 +255,6 @@
       <a href="../../configuration/" class="md-tabs__link">
         
   
-  
-    
-  
   Configuration
 
       </a>
@@ -275,9 +270,6 @@
     <li class="md-tabs__item">
       <a href="../../places/" class="md-tabs__link">
         
-  
-  
-    
   
   Places
 
@@ -295,9 +287,6 @@
       <a href="../../tracklists/" class="md-tabs__link">
         
   
-  
-    
-  
   1001Tracklists
 
       </a>
@@ -313,9 +302,6 @@
     <li class="md-tabs__item">
       <a href="../../tag-reference/" class="md-tabs__link">
         
-  
-  
-    
   
   Tag reference
 
@@ -333,9 +319,6 @@
       <a href="../../library-layout/" class="md-tabs__link">
         
   
-  
-    
-  
   Library layout
 
       </a>
@@ -352,9 +335,6 @@
       <a href="../../kodi-integration/" class="md-tabs__link">
         
   
-  
-    
-  
   Kodi Integration
 
       </a>
@@ -370,9 +350,6 @@
     <li class="md-tabs__item">
       <a href="../../faq/" class="md-tabs__link">
         
-  
-  
-    
   
   FAQ
 
@@ -405,7 +382,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../../assets/icon.png" alt="logo">
+  <img src="../../assets/icon.png" alt="CrateDigger">
 
     </a>
     CrateDigger
@@ -415,7 +392,7 @@
       <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
@@ -439,8 +416,7 @@
   <span class="md-ellipsis">
     
   
-    Home
-  
+  Home
 
     
   </span>
@@ -466,8 +442,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
-  
+  Getting Started
 
     
   </span>
@@ -488,6 +463,16 @@
   
   
     
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -514,8 +499,7 @@
   <span class="md-ellipsis">
     
   
-    Commands
-  
+  Commands
 
     
   </span>
@@ -530,8 +514,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Commands
-  
+  Commands
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -546,7 +529,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
         
@@ -559,8 +542,7 @@
   <span class="md-ellipsis">
     
   
-    Identify
-  
+  Identify
 
     
   </span>
@@ -570,15 +552,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Identify
-  
+  Identify
 
     
   </span>
@@ -589,7 +570,8 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -598,16 +580,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#what-this-is-for" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What this is for
-      
+      </span>
     </span>
   </a>
   
@@ -616,9 +598,9 @@
         <li class="md-nav__item">
   <a href="#before-you-start" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Before you start
-      
+      </span>
     </span>
   </a>
   
@@ -627,9 +609,9 @@
         <li class="md-nav__item">
   <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Usage
-      
+      </span>
     </span>
   </a>
   
@@ -638,9 +620,9 @@
         <li class="md-nav__item">
   <a href="#options" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Options
-      
+      </span>
     </span>
   </a>
   
@@ -649,9 +631,9 @@
         <li class="md-nav__item">
   <a href="#step-by-step-what-happens-when-you-run-identify" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Step-by-step: what happens when you run identify
-      
+      </span>
     </span>
   </a>
   
@@ -661,9 +643,9 @@
           <li class="md-nav__item">
   <a href="#1-re-run-shortcut" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         1. Re-run shortcut
-      
+      </span>
     </span>
   </a>
   
@@ -672,9 +654,9 @@
           <li class="md-nav__item">
   <a href="#2-finding-the-tracklist" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         2. Finding the tracklist
-      
+      </span>
     </span>
   </a>
   
@@ -683,9 +665,9 @@
           <li class="md-nav__item">
   <a href="#3-ranking-and-selection" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         3. Ranking and selection
-      
+      </span>
     </span>
   </a>
   
@@ -694,9 +676,9 @@
           <li class="md-nav__item">
   <a href="#4-picking-the-right-source-for-multi-source-tracklists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         4. Picking the right source for multi-source tracklists
-      
+      </span>
     </span>
   </a>
   
@@ -705,9 +687,9 @@
           <li class="md-nav__item">
   <a href="#5-chapters-and-metadata-are-embedded" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         5. Chapters and metadata are embedded
-      
+      </span>
     </span>
   </a>
   
@@ -717,9 +699,9 @@
           <li class="md-nav__item">
   <a href="#what-becomes-a-chapter" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What becomes a chapter
-      
+      </span>
     </span>
   </a>
   
@@ -738,9 +720,9 @@
         <li class="md-nav__item">
   <a href="#what-you-see-when-it-runs" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What you see when it runs
-      
+      </span>
     </span>
   </a>
   
@@ -750,9 +732,9 @@
           <li class="md-nav__item">
   <a href="#verdict-badges" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Verdict badges
-      
+      </span>
     </span>
   </a>
   
@@ -761,9 +743,9 @@
           <li class="md-nav__item">
   <a href="#summary-panel" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Summary panel
-      
+      </span>
     </span>
   </a>
   
@@ -772,9 +754,9 @@
           <li class="md-nav__item">
   <a href="#summary-email" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Summary email
-      
+      </span>
     </span>
   </a>
   
@@ -783,9 +765,9 @@
           <li class="md-nav__item">
   <a href="#verbosity-and-piping" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Verbosity and piping
-      
+      </span>
     </span>
   </a>
   
@@ -799,9 +781,9 @@
         <li class="md-nav__item">
   <a href="#what-changes-in-your-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What changes in your files
-      
+      </span>
     </span>
   </a>
   
@@ -811,9 +793,9 @@
           <li class="md-nav__item">
   <a href="#multi-source-tracklists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Multi-source tracklists
-      
+      </span>
     </span>
   </a>
   
@@ -822,9 +804,9 @@
           <li class="md-nav__item">
   <a href="#location-and-country-tags" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Location and country tags
-      
+      </span>
     </span>
   </a>
   
@@ -838,9 +820,9 @@
         <li class="md-nav__item">
   <a href="#auto-mode" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Auto mode
-      
+      </span>
     </span>
   </a>
   
@@ -849,9 +831,9 @@
         <li class="md-nav__item">
   <a href="#providing-a-tracklist-directly" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Providing a tracklist directly
-      
+      </span>
     </span>
   </a>
   
@@ -860,9 +842,9 @@
         <li class="md-nav__item">
   <a href="#re-identifying-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Re-identifying files
-      
+      </span>
     </span>
   </a>
   
@@ -872,9 +854,9 @@
           <li class="md-nav__item">
   <a href="#self-healing" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Self-healing
-      
+      </span>
     </span>
   </a>
   
@@ -888,9 +870,9 @@
         <li class="md-nav__item">
   <a href="#preview-mode" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Preview mode
-      
+      </span>
     </span>
   </a>
   
@@ -899,9 +881,9 @@
         <li class="md-nav__item">
   <a href="#common-examples" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Common examples
-      
+      </span>
     </span>
   </a>
   
@@ -910,9 +892,9 @@
         <li class="md-nav__item">
   <a href="#common-problems" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Common problems
-      
+      </span>
     </span>
   </a>
   
@@ -921,9 +903,9 @@
         <li class="md-nav__item">
   <a href="#advanced-details" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Advanced details
-      
+      </span>
     </span>
   </a>
   
@@ -933,9 +915,9 @@
           <li class="md-nav__item">
   <a href="#tag-structure" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Tag structure
-      
+      </span>
     </span>
   </a>
   
@@ -944,9 +926,9 @@
           <li class="md-nav__item">
   <a href="#rate-limiting" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Rate limiting
-      
+      </span>
     </span>
   </a>
   
@@ -960,9 +942,9 @@
         <li class="md-nav__item">
   <a href="#what-to-do-next" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What to do next
-      
+      </span>
     </span>
   </a>
   
@@ -991,8 +973,7 @@
   <span class="md-ellipsis">
     
   
-    Organize
-  
+  Organize
 
     
   </span>
@@ -1019,8 +1000,7 @@
   <span class="md-ellipsis">
     
   
-    Enrich
-  
+  Enrich
 
     
   </span>
@@ -1047,8 +1027,7 @@
   <span class="md-ellipsis">
     
   
-    Audit Logos
-  
+  Audit Logos
 
     
   </span>
@@ -1082,8 +1061,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
-  
+  Configuration
 
     
   </span>
@@ -1109,8 +1087,7 @@
   <span class="md-ellipsis">
     
   
-    Places
-  
+  Places
 
     
   </span>
@@ -1136,8 +1113,7 @@
   <span class="md-ellipsis">
     
   
-    1001Tracklists
-  
+  1001Tracklists
 
     
   </span>
@@ -1163,8 +1139,7 @@
   <span class="md-ellipsis">
     
   
-    Tag reference
-  
+  Tag reference
 
     
   </span>
@@ -1190,8 +1165,7 @@
   <span class="md-ellipsis">
     
   
-    Library layout
-  
+  Library layout
 
     
   </span>
@@ -1217,8 +1191,7 @@
   <span class="md-ellipsis">
     
   
-    Kodi Integration
-  
+  Kodi Integration
 
     
   </span>
@@ -1244,8 +1217,7 @@
   <span class="md-ellipsis">
     
   
-    FAQ
-  
+  FAQ
 
     
   </span>
@@ -1267,10 +1239,24 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1279,16 +1265,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#what-this-is-for" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What this is for
-      
+      </span>
     </span>
   </a>
   
@@ -1297,9 +1283,9 @@
         <li class="md-nav__item">
   <a href="#before-you-start" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Before you start
-      
+      </span>
     </span>
   </a>
   
@@ -1308,9 +1294,9 @@
         <li class="md-nav__item">
   <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Usage
-      
+      </span>
     </span>
   </a>
   
@@ -1319,9 +1305,9 @@
         <li class="md-nav__item">
   <a href="#options" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Options
-      
+      </span>
     </span>
   </a>
   
@@ -1330,9 +1316,9 @@
         <li class="md-nav__item">
   <a href="#step-by-step-what-happens-when-you-run-identify" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Step-by-step: what happens when you run identify
-      
+      </span>
     </span>
   </a>
   
@@ -1342,9 +1328,9 @@
           <li class="md-nav__item">
   <a href="#1-re-run-shortcut" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         1. Re-run shortcut
-      
+      </span>
     </span>
   </a>
   
@@ -1353,9 +1339,9 @@
           <li class="md-nav__item">
   <a href="#2-finding-the-tracklist" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         2. Finding the tracklist
-      
+      </span>
     </span>
   </a>
   
@@ -1364,9 +1350,9 @@
           <li class="md-nav__item">
   <a href="#3-ranking-and-selection" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         3. Ranking and selection
-      
+      </span>
     </span>
   </a>
   
@@ -1375,9 +1361,9 @@
           <li class="md-nav__item">
   <a href="#4-picking-the-right-source-for-multi-source-tracklists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         4. Picking the right source for multi-source tracklists
-      
+      </span>
     </span>
   </a>
   
@@ -1386,9 +1372,9 @@
           <li class="md-nav__item">
   <a href="#5-chapters-and-metadata-are-embedded" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         5. Chapters and metadata are embedded
-      
+      </span>
     </span>
   </a>
   
@@ -1398,9 +1384,9 @@
           <li class="md-nav__item">
   <a href="#what-becomes-a-chapter" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What becomes a chapter
-      
+      </span>
     </span>
   </a>
   
@@ -1419,9 +1405,9 @@
         <li class="md-nav__item">
   <a href="#what-you-see-when-it-runs" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What you see when it runs
-      
+      </span>
     </span>
   </a>
   
@@ -1431,9 +1417,9 @@
           <li class="md-nav__item">
   <a href="#verdict-badges" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Verdict badges
-      
+      </span>
     </span>
   </a>
   
@@ -1442,9 +1428,9 @@
           <li class="md-nav__item">
   <a href="#summary-panel" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Summary panel
-      
+      </span>
     </span>
   </a>
   
@@ -1453,9 +1439,9 @@
           <li class="md-nav__item">
   <a href="#summary-email" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Summary email
-      
+      </span>
     </span>
   </a>
   
@@ -1464,9 +1450,9 @@
           <li class="md-nav__item">
   <a href="#verbosity-and-piping" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Verbosity and piping
-      
+      </span>
     </span>
   </a>
   
@@ -1480,9 +1466,9 @@
         <li class="md-nav__item">
   <a href="#what-changes-in-your-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What changes in your files
-      
+      </span>
     </span>
   </a>
   
@@ -1492,9 +1478,9 @@
           <li class="md-nav__item">
   <a href="#multi-source-tracklists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Multi-source tracklists
-      
+      </span>
     </span>
   </a>
   
@@ -1503,9 +1489,9 @@
           <li class="md-nav__item">
   <a href="#location-and-country-tags" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Location and country tags
-      
+      </span>
     </span>
   </a>
   
@@ -1519,9 +1505,9 @@
         <li class="md-nav__item">
   <a href="#auto-mode" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Auto mode
-      
+      </span>
     </span>
   </a>
   
@@ -1530,9 +1516,9 @@
         <li class="md-nav__item">
   <a href="#providing-a-tracklist-directly" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Providing a tracklist directly
-      
+      </span>
     </span>
   </a>
   
@@ -1541,9 +1527,9 @@
         <li class="md-nav__item">
   <a href="#re-identifying-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Re-identifying files
-      
+      </span>
     </span>
   </a>
   
@@ -1553,9 +1539,9 @@
           <li class="md-nav__item">
   <a href="#self-healing" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Self-healing
-      
+      </span>
     </span>
   </a>
   
@@ -1569,9 +1555,9 @@
         <li class="md-nav__item">
   <a href="#preview-mode" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Preview mode
-      
+      </span>
     </span>
   </a>
   
@@ -1580,9 +1566,9 @@
         <li class="md-nav__item">
   <a href="#common-examples" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Common examples
-      
+      </span>
     </span>
   </a>
   
@@ -1591,9 +1577,9 @@
         <li class="md-nav__item">
   <a href="#common-problems" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Common problems
-      
+      </span>
     </span>
   </a>
   
@@ -1602,9 +1588,9 @@
         <li class="md-nav__item">
   <a href="#advanced-details" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Advanced details
-      
+      </span>
     </span>
   </a>
   
@@ -1614,9 +1600,9 @@
           <li class="md-nav__item">
   <a href="#tag-structure" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Tag structure
-      
+      </span>
     </span>
   </a>
   
@@ -1625,9 +1611,9 @@
           <li class="md-nav__item">
   <a href="#rate-limiting" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Rate limiting
-      
+      </span>
     </span>
   </a>
   
@@ -1641,9 +1627,9 @@
         <li class="md-nav__item">
   <a href="#what-to-do-next" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         What to do next
-      
+      </span>
     </span>
   </a>
   
@@ -1660,19 +1646,85 @@
           
             <div class="md-content" data-md-component="content">
               
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-path__item">
+        <a href="././" class="md-path__link">
+          
+  
+  <span class="md-ellipsis">
+    Commands
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
               <article class="md-content__inner md-typeset">
                 
                   
-
-
+  
+    <a href="https://github.com/Rouzax/CrateDigger/edit/main/docs/commands/identify.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
   
   
 
 
-<h1 id="identify">identify</h1>
+<h1 id="identify">identify<a class="headerlink" href="#identify" title="Permanent link">&para;</a></h1>
 <p>Match your recordings against 1001Tracklists and embed track listings and chapter markers
 directly into your video files.</p>
-<h2 id="what-this-is-for">What this is for</h2>
+<h2 id="what-this-is-for">What this is for<a class="headerlink" href="#what-this-is-for" title="Permanent link">&para;</a></h2>
 <p>When you have a recording of a DJ set, you usually know roughly what it is, but the file
 has no detailed track-by-track information inside it. The <code>identify</code> command fixes that.</p>
 <p>It searches <a href="https://www.1001tracklists.com">1001Tracklists</a> (a community website that
@@ -1686,7 +1738,7 @@ with no track data to parse. The <code>identify</code> command always logs in be
 Without credentials, it exits with an error. See
 <a href="../../tracklists/#do-i-need-an-account">Do I need an account?</a> for what you still get if
 you skip this step.</p>
-<h2 id="before-you-start">Before you start</h2>
+<h2 id="before-you-start">Before you start<a class="headerlink" href="#before-you-start" title="Permanent link">&para;</a></h2>
 <ul>
 <li>A <a href="https://www.1001tracklists.com">1001Tracklists</a> account (free)</li>
 <li>Credentials set in your config or as environment variables. See
@@ -1696,15 +1748,15 @@ you skip this step.</p>
 <li>Your recordings should be in MKV or WEBM format. <code>identify</code> only processes those formats.
   Other file types are skipped silently.</li>
 </ul>
-<h2 id="usage">Usage</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>&lt;folder_or_file&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
-</code></pre></div>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>&lt;folder_or_file&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</span></code></pre></div>
 <p><code>&lt;folder_or_file&gt;</code> can be:</p>
 <ul>
 <li>A single MKV or WEBM file</li>
 <li>A folder. CrateDigger scans it for all MKV and WEBM files and processes each one.</li>
 </ul>
-<h2 id="options">Options</h2>
+<h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1783,13 +1835,13 @@ you skip this step.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="step-by-step-what-happens-when-you-run-identify">Step-by-step: what happens when you run identify</h2>
-<h3 id="1-re-run-shortcut">1. Re-run shortcut</h3>
+<h2 id="step-by-step-what-happens-when-you-run-identify">Step-by-step: what happens when you run identify<a class="headerlink" href="#step-by-step-what-happens-when-you-run-identify" title="Permanent link">&para;</a></h2>
+<h3 id="1-re-run-shortcut">1. Re-run shortcut<a class="headerlink" href="#1-re-run-shortcut" title="Permanent link">&para;</a></h3>
 <p>If the file already carries a stored 1001Tracklists URL from a previous <code>identify</code> run,
 CrateDigger reuses that tracklist rather than searching again. In interactive mode it asks
 whether to proceed, skip, or research a new match first. This is how <code>up-to-date</code> and
 self-healing <code>updated</code> results happen without repeating a full search.</p>
-<h3 id="2-finding-the-tracklist">2. Finding the tracklist</h3>
+<h3 id="2-finding-the-tracklist">2. Finding the tracklist<a class="headerlink" href="#2-finding-the-tracklist" title="Permanent link">&para;</a></h3>
 <p><strong>Primary path (yt-dlp files):</strong> For a file whose name ends with a YouTube video ID in
 brackets, for example <code>[p-nL0FjuCPs]</code>, CrateDigger queries 1001Tracklists with the full
 YouTube watch URL (<code>https://www.youtube.com/watch?v=&lt;id&gt;</code>). 1001Tracklists resolves that
@@ -1809,7 +1861,7 @@ festival abbreviations from your <a href="../../places/">places.json</a> aliases
 "AMF" becomes "Amsterdam Music Festival" and "EDC" becomes "Electric Daisy Carnival". The
 file's duration (read via ffprobe) and year (from an embedded date tag, if present) are
 passed separately to help rank results; they are not part of the search text.</p>
-<h3 id="3-ranking-and-selection">3. Ranking and selection</h3>
+<h3 id="3-ranking-and-selection">3. Ranking and selection<a class="headerlink" href="#3-ranking-and-selection" title="Permanent link">&para;</a></h3>
 <p>Selection only applies when scoring is involved: text-search results, or multiple
 video-linked matches from step 2.</p>
 <p>CrateDigger scores each candidate on: artist-name match, festival or event-name match
@@ -1819,19 +1871,19 @@ the runner-up matters more than the raw score.</p>
 <p>In <strong>automatic mode</strong>, CrateDigger accepts the top result only if its score and its lead
 over second place both clear confidence thresholds. If they do not, the file is skipped.</p>
 <p>In <strong>interactive mode</strong>, you see a numbered table of candidates and a prompt:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Top matches:
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  #   Score  Date        Duration  Title
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  1   314    2026-03-01  2h 19m    Tiësto @ We Belong Here, Miami 2026
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  2   186    2026-03-01  0h 58m    Tiësto @ Main Stage, We Belong Here Miami 2026 (Radio Edit)
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  3   142    2025-02-28  1h 45m    Tiësto @ We Belong Here 2025
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  4   121    2024-11-15  2h 02m    Tiësto @ EDC Orlando 2024
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  5   98     2023-08-12  1h 30m    Tiësto @ Tomorrowland 2023
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Select (1-5, or 0 to skip): 1
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Top matches:
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  #   Score  Date        Duration  Title
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  1   314    2026-03-01  2h 19m    Tiësto @ We Belong Here, Miami 2026
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  2   186    2026-03-01  0h 58m    Tiësto @ Main Stage, We Belong Here Miami 2026 (Radio Edit)
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  3   142    2025-02-28  1h 45m    Tiësto @ We Belong Here 2025
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  4   121    2024-11-15  2h 02m    Tiësto @ EDC Orlando 2024
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  5   98     2023-08-12  1h 30m    Tiësto @ Tomorrowland 2023
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Select (1-5, or 0 to skip): 1
+</span></code></pre></div>
 <p>Type a number to select that tracklist, or <code>0</code> to skip the file. This prompt does not
 appear for a single exact YouTube-ID match.</p>
-<h3 id="4-picking-the-right-source-for-multi-source-tracklists">4. Picking the right source for multi-source tracklists</h3>
+<h3 id="4-picking-the-right-source-for-multi-source-tracklists">4. Picking the right source for multi-source tracklists<a class="headerlink" href="#4-picking-the-right-source-for-multi-source-tracklists" title="Permanent link">&para;</a></h3>
 <p>Some tracklists on 1001Tracklists are cued against more than one video ("Player 1",
 "Player 2"), whose timelines differ. CrateDigger identifies which source your file came
 from, in this priority:</p>
@@ -1846,7 +1898,7 @@ metadata but skips the chapter embed and logs a warning. It leaves any existing 
 untouched and never writes another source's timeline into your file.</p>
 <p>Single-source tracklists are unaffected and chapter normally. See
 <a href="../../tracklists/">Multi-source tracklists</a> for a fuller explanation.</p>
-<h3 id="5-chapters-and-metadata-are-embedded">5. Chapters and metadata are embedded</h3>
+<h3 id="5-chapters-and-metadata-are-embedded">5. Chapters and metadata are embedded<a class="headerlink" href="#5-chapters-and-metadata-are-embedded" title="Permanent link">&para;</a></h3>
 <p>CrateDigger fetches the chosen tracklist, parses the selected source's track list into
 chapters (timestamp and name), and embeds them into the MKV via <code>mkvpropedit</code>. It writes:</p>
 <ul>
@@ -1857,7 +1909,7 @@ chapters (timestamp and name), and embeds them into the MKV via <code>mkvpropedi
 </ul>
 <p>These tags are later read by the <a href="../enrich/"><code>enrich</code></a> command to generate artwork, NFO
 files, and resolve MusicBrainz artist IDs.</p>
-<h4 id="what-becomes-a-chapter">What becomes a chapter</h4>
+<h4 id="what-becomes-a-chapter">What becomes a chapter<a class="headerlink" href="#what-becomes-a-chapter" title="Permanent link">&para;</a></h4>
 <p>Each main track on the tracklist becomes one chapter. "w/" overlay rows (tracks layered
 over a currently-playing main track) are handled according to the <code>overlay_chapters</code> and
 <code>overlay_fold_seconds</code> config keys:</p>
@@ -1875,33 +1927,33 @@ sub-rows, giving each mashup chapter real multi-artist credits.</p>
 the full model and config options.</p>
 <p>If the chosen source has fewer than 2 chapters, CrateDigger skips the chapter embed.
 A single chapter provides no navigation value.</p>
-<h2 id="what-you-see-when-it-runs">What you see when it runs</h2>
+<h2 id="what-you-see-when-it-runs">What you see when it runs<a class="headerlink" href="#what-you-see-when-it-runs" title="Permanent link">&para;</a></h2>
 <p>For each file, CrateDigger prints one verdict line: a padded badge, the file position, the
 filename, a short note, and how long that file took. A transient spinner shows the current
 step (sign-in, search, fetch, embed, throttle) while each file is processed; it disappears
 as soon as the verdict line is printed. At the end a summary panel shows totals and lists
 any files that did not get embedded.</p>
 <p>A real batch of five festival recordings looks like this:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>  done       [ 1/5] Tiesto - Live at We Belong Here Miami 2026.mkv  (12.4s)
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>                    Tiesto @ We Belong Here, Miami 2026 (2026-03-01) - 38 tracks
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  done       [ 2/5] Martin Garrix @ AMF 2026.webm  (9.8s)
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>                    Martin Garrix @ Amsterdam Music Festival 2026 (2026-10-18) - 24 tracks
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  up-to-date [ 3/5] David Guetta @ Tomorrowland 2026.mkv
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  skipped    [ 4/5] unknown_set_001.mkv  (6.5s)
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>                    low confidence (score 84)
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  done       [ 5/5] Armin van Buuren @ ASOT 2026.mkv  (11.2s)
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>                    Armin van Buuren @ A State of Trance 2026 (2026-02-15) - 42 tracks
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>Summary
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>  added: 3  updated: 0  up_to_date: 1  skipped: 1  error: 0  previewed: 0
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>  Metadata tagged: 4 files
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>  Festivals:       Ultra Music Festival Miami (3), Tomorrowland Winter (1)
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>  Unmatched:       1 (unknown_set_001.mkv)
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>  Elapsed: 42.0s
-</code></pre></div>
-<h3 id="verdict-badges">Verdict badges</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>  done       [ 1/5] Tiesto - Live at We Belong Here Miami 2026.mkv  (12.4s)
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>                    Tiesto @ We Belong Here, Miami 2026 (2026-03-01) - 38 tracks
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  done       [ 2/5] Martin Garrix @ AMF 2026.webm  (9.8s)
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>                    Martin Garrix @ Amsterdam Music Festival 2026 (2026-10-18) - 24 tracks
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  up-to-date [ 3/5] David Guetta @ Tomorrowland 2026.mkv
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  skipped    [ 4/5] unknown_set_001.mkv  (6.5s)
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>                    low confidence (score 84)
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  done       [ 5/5] Armin van Buuren @ ASOT 2026.mkv  (11.2s)
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>                    Armin van Buuren @ A State of Trance 2026 (2026-02-15) - 42 tracks
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>Summary
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>  added: 3  updated: 0  up_to_date: 1  skipped: 1  error: 0  previewed: 0
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>  Metadata tagged: 4 files
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>  Festivals:       Ultra Music Festival Miami (3), Tomorrowland Winter (1)
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>  Unmatched:       1 (unknown_set_001.mkv)
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>  Elapsed: 42.0s
+</span></code></pre></div>
+<h3 id="verdict-badges">Verdict badges<a class="headerlink" href="#verdict-badges" title="Permanent link">&para;</a></h3>
 <p>Every file ends with exactly one badge. The badges are padded to a fixed width so the lines
 align in a terminal and stay grep-friendly in log files.</p>
 <table>
@@ -1934,12 +1986,12 @@ align in a terminal and stay grep-friendly in log files.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="summary-panel">Summary panel</h3>
+<h3 id="summary-panel">Summary panel<a class="headerlink" href="#summary-panel" title="Permanent link">&para;</a></h3>
 <p>The summary at the end of a run shows counts for each verdict plus a total <code>Elapsed</code> row.
 The <code>Unmatched</code> list includes both <code>skipped</code> files (with the reason, for example
 <code>low confidence (score 84)</code>) and <code>error</code> files (with the short error), so you can see at a
 glance which files still need attention.</p>
-<h3 id="summary-email">Summary email</h3>
+<h3 id="summary-email">Summary email<a class="headerlink" href="#summary-email" title="Permanent link">&para;</a></h3>
 <p>When the updated-sets summary email is enabled (see
 <a href="../../configuration/#email-notifications">Configuration</a>), it is built and sent after the
 summary panel. The console shows transient progress while it re-analyses each updated set,
@@ -1947,7 +1999,7 @@ resizes poster thumbnails, and sends, then a one-line verdict such as
 <code>Updated-sets email -&gt; sent to 2 recipients</code>. Runs that updated nothing, have no
 recipients, or have the channel disabled print no email line. The progress follows the
 same piping/verbosity rules as the per-file spinner; the verdict still prints.</p>
-<h3 id="verbosity-and-piping">Verbosity and piping</h3>
+<h3 id="verbosity-and-piping">Verbosity and piping<a class="headerlink" href="#verbosity-and-piping" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -2009,7 +2061,7 @@ clean; the verdict lines and summary are identical in every mode.</p>
 <p>The interactive candidate table is unchanged from previous versions. The selection prompt
 itself has been tightened so it no longer collides with the next file's output (previously
 the <code>Select</code> line and the following file could stitch onto one visual line).</p>
-<h2 id="what-changes-in-your-files">What changes in your files</h2>
+<h2 id="what-changes-in-your-files">What changes in your files<a class="headerlink" href="#what-changes-in-your-files" title="Permanent link">&para;</a></h2>
 <p><code>identify</code> modifies only the files it processes. For each matched file:</p>
 <ul>
 <li>Chapter markers are embedded (one per track, with track name and timestamp)</li>
@@ -2018,7 +2070,7 @@ the <code>Select</code> line and the following file could stitch onto one visual
 </ul>
 <p>No files are created, moved, or copied. The original video stream and audio are untouched.
 Only the metadata section of the MKV file changes.</p>
-<h3 id="multi-source-tracklists">Multi-source tracklists</h3>
+<h3 id="multi-source-tracklists">Multi-source tracklists<a class="headerlink" href="#multi-source-tracklists" title="Permanent link">&para;</a></h3>
 <p>When the matched tracklist is cued against multiple source videos (Player 1, Player 2, ...),
 CrateDigger identifies which source matches your file before embedding chapters. If no source
 matches, CrateDigger writes the album-level metadata tags but skips chapter embedding and
@@ -2026,7 +2078,7 @@ logs a WARNING. Any chapters already present in the file are left intact.</p>
 <p>See <a href="../../tracklists/#multi-source-tracklists">Multi-source tracklists</a> for the full
 selection logic (YouTube ID in filename, stored <code>CRATEDIGGER_1001TL_YOUTUBE_ID</code> tag,
 duration fallback) and how to resolve a no-match.</p>
-<h3 id="location-and-country-tags">Location and country tags</h3>
+<h3 id="location-and-country-tags">Location and country tags<a class="headerlink" href="#location-and-country-tags" title="Permanent link">&para;</a></h3>
 <p>CrateDigger records the set's venue or city using two separate tags, in this order of
 preference:</p>
 <ol>
@@ -2053,7 +2105,7 @@ recognised country name, whether a linked source is present or not. Earlier vers
 set the country when no source link existed; now it is extracted unconditionally so
 country-derived downstream logic (organize folder layout, NFO country field) has the
 same signal regardless of whether the tracklist links a dedicated source.</p>
-<h2 id="auto-mode">Auto mode</h2>
+<h2 id="auto-mode">Auto mode<a class="headerlink" href="#auto-mode" title="Permanent link">&para;</a></h2>
 <p>With <code>--auto</code>, CrateDigger picks the top result automatically without prompting. It only
 does this when it is confident:</p>
 <ul>
@@ -2065,19 +2117,19 @@ This makes <code>--auto</code> safe for batch processing. When CrateDigger is un
 than guessing.</p>
 <p>To make auto mode the default without typing <code>--auto</code> every time, set <code>auto_select: true</code>
 in your <a href="../../configuration/#tracklists">config</a>.</p>
-<h2 id="providing-a-tracklist-directly">Providing a tracklist directly</h2>
+<h2 id="providing-a-tracklist-directly">Providing a tracklist directly<a class="headerlink" href="#providing-a-tracklist-directly" title="Permanent link">&para;</a></h2>
 <p>If you already know which tracklist page matches your recording, pass it with <code>--tracklist</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Full URL</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="s2">&quot;https://www.1001tracklists.com/tracklist/xyz&quot;</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Numeric tracklist ID</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="m">1234567</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Free-text query (overrides the auto-generated query)</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="s2">&quot;Tiesto We Belong Here Miami 2026&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Full URL</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="s2">"https://www.1001tracklists.com/tracklist/xyz"</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Numeric tracklist ID</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="m">1234567</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Free-text query (overrides the auto-generated query)</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="s2">"Tiesto We Belong Here Miami 2026"</span>
+</span></code></pre></div>
 <p>Note: credentials are still required even when providing a URL directly.</p>
-<h2 id="re-identifying-files">Re-identifying files</h2>
+<h2 id="re-identifying-files">Re-identifying files<a class="headerlink" href="#re-identifying-files" title="Permanent link">&para;</a></h2>
 <p>By default, if a file already has a stored tracklist URL from a previous run, CrateDigger
 reuses it rather than searching again.</p>
 <ul>
@@ -2085,8 +2137,8 @@ reuses it rather than searching again.</p>
 <li><strong>Auto mode:</strong> the stored URL is used automatically</li>
 </ul>
 <p>Use <code>--regenerate</code> (also accepted as <code>--fresh</code>) to ignore stored results and start fresh:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Music/Library/<span class="w"> </span>--regenerate<span class="w"> </span>--auto
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Music/Library/<span class="w"> </span>--regenerate<span class="w"> </span>--auto
+</span></code></pre></div>
 <p>This is also useful after a CrateDigger update that adds new tag types. <code>--regenerate</code>
 forces a full re-tag even when the chapter structure has not changed.</p>
 <p><strong>Re-running periodically is worthwhile.</strong> 1001Tracklists is a community database that
@@ -2097,38 +2149,38 @@ few months picks up those improvements automatically. Files with a stored trackl
 re-fetched from 1001Tracklists and updated if anything changed; files without a stored URL
 are searched and auto-selected if CrateDigger is confident enough; everything else is left
 alone.</p>
-<h3 id="self-healing">Self-healing</h3>
+<h3 id="self-healing">Self-healing<a class="headerlink" href="#self-healing" title="Permanent link">&para;</a></h3>
 <p>If a file has chapters but is missing some expected per-chapter or album-level tags (for
 example, files identified with an older version of CrateDigger), the full tagging pass
 runs automatically on the next <code>identify</code> run, reusing the stored tracklist URL so your
 curated match is preserved. You do not need <code>--regenerate</code> for this. CrateDigger detects
 the gap and fills it in.</p>
-<h2 id="preview-mode">Preview mode</h2>
+<h2 id="preview-mode">Preview mode<a class="headerlink" href="#preview-mode" title="Permanent link">&para;</a></h2>
 <p><code>--preview</code> shows you what chapters would be embedded without writing anything to disk.
 Useful to check a match before committing:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--preview
-</code></pre></div>
-<h2 id="common-examples">Common examples</h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--preview
+</span></code></pre></div>
+<h2 id="common-examples">Common examples<a class="headerlink" href="#common-examples" title="Permanent link">&para;</a></h2>
 <p><strong>Identify a folder interactively (the default workflow):</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/
+</span></code></pre></div>
 <p>CrateDigger processes each file one at a time, shows you matches, and waits for your selection.</p>
 <p><strong>Batch process a folder with auto-selection:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--auto
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--auto
+</span></code></pre></div>
 <p>Good for large batches. Well-named files get matched automatically; ambiguous ones are
 skipped so you can handle them manually later.</p>
 <p><strong>Pass a tracklist URL to skip searching:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span><span class="s2">&quot;Martin Garrix @ AMF 2024.mkv&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>--tracklist<span class="w"> </span><span class="s2">&quot;https://www.1001tracklists.com/tracklist/abc123&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span><span class="s2">"Martin Garrix @ AMF 2024.mkv"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>--tracklist<span class="w"> </span><span class="s2">"https://www.1001tracklists.com/tracklist/abc123"</span>
+</span></code></pre></div>
 <p><strong>Preview chapters for a single file before embedding:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--preview
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--preview
+</span></code></pre></div>
 <p><strong>Re-identify files that were already processed:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--regenerate
-</code></pre></div>
-<h2 id="common-problems">Common problems</h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>~/Downloads/sets/<span class="w"> </span>--regenerate
+</span></code></pre></div>
+<h2 id="common-problems">Common problems<a class="headerlink" href="#common-problems" title="Permanent link">&para;</a></h2>
 <p><strong>"Error: credentials required"</strong></p>
 <p>Your 1001Tracklists email and password are not configured. Set them in your <code>config.toml</code>
 under <code>[tracklists]</code> (<code>email</code> and <code>password</code>), or via the environment variables
@@ -2149,8 +2201,8 @@ same folder interactively (without <code>--auto</code>) to see the matches and p
 candidate table, or pass <code>--tracklist</code> with the right URL.</p>
 <p><strong>Verdict is <code>skipped (no results)</code></strong></p>
 <p>CrateDigger's generated search returned nothing. Try a broader query:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="s2">&quot;Tiesto Miami 2026&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cratedigger<span class="w"> </span>identify<span class="w"> </span>recording.mkv<span class="w"> </span>--tracklist<span class="w"> </span><span class="s2">"Tiesto Miami 2026"</span>
+</span></code></pre></div>
 <p>If you already know the tracklist, pass the URL or numeric ID directly with <code>--tracklist</code>.</p>
 <p><strong>Verdict is <code>error (mkvpropedit failed)</code></strong></p>
 <p><code>mkvpropedit</code> is missing or could not write to the file. Confirm MKVToolNix is installed
@@ -2169,8 +2221,8 @@ Convert your file to MKV first with FFmpeg or MKVToolNix if needed.</p>
 <p><strong>Tracklist has fewer than 2 tracks</strong></p>
 <p>If the matched tracklist only has one entry, CrateDigger skips the embed. A single chapter
 is not useful for navigation.</p>
-<h2 id="advanced-details">Advanced details</h2>
-<h3 id="tag-structure">Tag structure</h3>
+<h2 id="advanced-details">Advanced details<a class="headerlink" href="#advanced-details" title="Permanent link">&para;</a></h2>
+<h3 id="tag-structure">Tag structure<a class="headerlink" href="#tag-structure" title="Permanent link">&para;</a></h3>
 <p><code>identify</code> writes two types of tags into the MKV container:</p>
 <ul>
 <li>
@@ -2187,12 +2239,14 @@ is not useful for navigation.</p>
 <p>The <code>enrich</code> command's <code>chapter_artist_mbids</code> and <code>album_artist_mbids</code> operations read
 these tags later to resolve MusicBrainz IDs. See the
 <a href="../../tag-reference/">tag reference</a> for the full list.</p>
-<h3 id="rate-limiting">Rate limiting</h3>
+<h3 id="rate-limiting">Rate limiting<a class="headerlink" href="#rate-limiting" title="Permanent link">&para;</a></h3>
 <p>CrateDigger waits between files (default: 5 seconds) to avoid hitting 1001Tracklists rate
 limits. Change this with <code>--delay &lt;seconds&gt;</code> or by setting <code>delay_seconds</code> in your config.</p>
-<h2 id="what-to-do-next">What to do next</h2>
+<h2 id="what-to-do-next">What to do next<a class="headerlink" href="#what-to-do-next" title="Permanent link">&para;</a></h2>
 <p>After identifying your files, run <a href="../organize/"><code>organize</code></a> to move them into your library
 structure, then <a href="../enrich/"><code>enrich</code></a> to add artwork, posters, and NFO files.</p>
+
+
 
 
 
@@ -2210,12 +2264,14 @@ structure, then <a href="../enrich/"><code>enrich</code></a> to add artwork, pos
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
   Back to top
 </button>
         
@@ -2223,14 +2279,54 @@ structure, then <a href="../enrich/"><code>enrich</code></a> to add artwork, pos
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../getting-started/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Getting Started">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Getting Started
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../organize/" class="md-footer__link md-footer__link--next" aria-label="Next: Organize">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Organize
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -2248,10 +2344,10 @@ structure, then <a href="../enrich/"><code>enrich</code></a> to add artwork, pos
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.tabs","navigation.sections","navigation.top","navigation.footer","navigation.path","navigation.indexes","search.highlight","search.suggest","content.code.copy","content.code.select","content.code.annotate","content.action.edit","content.tabs.link","content.tooltips"],"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
     
   </body>

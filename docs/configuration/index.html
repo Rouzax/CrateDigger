@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -29,10 +29,15 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.20815dad.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -46,14 +51,14 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
     
       <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -64,6 +69,8 @@
   
     
     
+      
+    
     
     
     
@@ -72,7 +79,7 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
         
@@ -90,14 +97,14 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-header__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -117,63 +124,48 @@
     </div>
     
       
+        <form class="md-header__option" data-md-component="palette">
+  
     
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
       
       
-        <label class="md-header__button md-icon" for="__search">
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -194,11 +186,8 @@
   
   
     <li class="md-tabs__item">
-      <a href=".." class="md-tabs__link">
+      <a href="./.." class="md-tabs__link">
         
-  
-  
-    
   
   Home
 
@@ -216,9 +205,6 @@
       <a href="../getting-started/" class="md-tabs__link">
         
   
-  
-    
-  
   Getting Started
 
       </a>
@@ -232,11 +218,23 @@
   
   
     
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
     
       <li class="md-tabs__item">
         <a href="../commands/identify/" class="md-tabs__link">
           
-  
   
   Commands
 
@@ -254,11 +252,8 @@
   
   
     <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+      <a href="././" class="md-tabs__link">
         
-  
-  
-    
   
   Configuration
 
@@ -276,9 +271,6 @@
       <a href="../places/" class="md-tabs__link">
         
   
-  
-    
-  
   Places
 
       </a>
@@ -294,9 +286,6 @@
     <li class="md-tabs__item">
       <a href="../tracklists/" class="md-tabs__link">
         
-  
-  
-    
   
   1001Tracklists
 
@@ -314,9 +303,6 @@
       <a href="../tag-reference/" class="md-tabs__link">
         
   
-  
-    
-  
   Tag reference
 
       </a>
@@ -332,9 +318,6 @@
     <li class="md-tabs__item">
       <a href="../library-layout/" class="md-tabs__link">
         
-  
-  
-    
   
   Library layout
 
@@ -352,9 +335,6 @@
       <a href="../kodi-integration/" class="md-tabs__link">
         
   
-  
-    
-  
   Kodi Integration
 
       </a>
@@ -370,9 +350,6 @@
     <li class="md-tabs__item">
       <a href="../faq/" class="md-tabs__link">
         
-  
-  
-    
   
   FAQ
 
@@ -403,9 +380,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
+    <a href="./.." title="CrateDigger" class="md-nav__button md-logo" aria-label="CrateDigger" data-md-component="logo">
       
-  <img src="../assets/icon.png" alt="logo">
+  <img src="../assets/icon.png" alt="CrateDigger">
 
     </a>
     CrateDigger
@@ -415,7 +392,7 @@
       <a href="https://github.com/Rouzax/CrateDigger" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
   </div>
   <div class="md-source__repository">
     Rouzax/CrateDigger
@@ -432,15 +409,14 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="./.." class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
-  
+  Home
 
     
   </span>
@@ -466,8 +442,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
-  
+  Getting Started
 
     
   </span>
@@ -486,6 +461,16 @@
   
   
     
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -509,8 +494,7 @@
   <span class="md-ellipsis">
     
   
-    Commands
-  
+  Commands
 
     
   </span>
@@ -525,8 +509,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Commands
-  
+  Commands
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -545,8 +528,7 @@
   <span class="md-ellipsis">
     
   
-    Identify
-  
+  Identify
 
     
   </span>
@@ -573,8 +555,7 @@
   <span class="md-ellipsis">
     
   
-    Organize
-  
+  Organize
 
     
   </span>
@@ -601,8 +582,7 @@
   <span class="md-ellipsis">
     
   
-    Enrich
-  
+  Enrich
 
     
   </span>
@@ -629,8 +609,7 @@
   <span class="md-ellipsis">
     
   
-    Audit Logos
-  
+  Audit Logos
 
     
   </span>
@@ -660,7 +639,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
         
@@ -673,8 +652,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
-  
+  Configuration
 
     
   </span>
@@ -684,15 +662,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Configuration
-  
+  Configuration
 
     
   </span>
@@ -703,7 +680,8 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -712,16 +690,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#config-file-locations" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Config file locations
-      
+      </span>
     </span>
   </a>
   
@@ -731,9 +709,9 @@
           <li class="md-nav__item">
   <a href="#custom-data-directory" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Custom data directory
-      
+      </span>
     </span>
   </a>
   
@@ -747,9 +725,9 @@
         <li class="md-nav__item">
   <a href="#getting-a-starter-config" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Getting a starter config
-      
+      </span>
     </span>
   </a>
   
@@ -758,9 +736,9 @@
         <li class="md-nav__item">
   <a href="#config-sections" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Config sections
-      
+      </span>
     </span>
   </a>
   
@@ -770,9 +748,9 @@
           <li class="md-nav__item">
   <a href="#default-layout" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Default layout
-      
+      </span>
     </span>
   </a>
   
@@ -781,9 +759,9 @@
           <li class="md-nav__item">
   <a href="#layouts" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Layouts
-      
+      </span>
     </span>
   </a>
   
@@ -792,9 +770,9 @@
           <li class="md-nav__item">
   <a href="#filename-templates" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Filename templates
-      
+      </span>
     </span>
   </a>
   
@@ -803,9 +781,9 @@
           <li class="md-nav__item">
   <a href="#content-type-rules" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Content type rules
-      
+      </span>
     </span>
   </a>
   
@@ -814,9 +792,9 @@
           <li class="md-nav__item">
   <a href="#skip-patterns" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Skip patterns
-      
+      </span>
     </span>
   </a>
   
@@ -825,9 +803,9 @@
           <li class="md-nav__item">
   <a href="#media-extensions" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Media extensions
-      
+      </span>
     </span>
   </a>
   
@@ -836,9 +814,9 @@
           <li class="md-nav__item">
   <a href="#fallback-values" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Fallback values
-      
+      </span>
     </span>
   </a>
   
@@ -847,9 +825,9 @@
           <li class="md-nav__item">
   <a href="#poster-settings" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Poster settings
-      
+      </span>
     </span>
   </a>
   
@@ -858,9 +836,9 @@
           <li class="md-nav__item">
   <a href="#tracklists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Tracklists
-      
+      </span>
     </span>
   </a>
   
@@ -869,9 +847,9 @@
           <li class="md-nav__item">
   <a href="#fanart" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Fanart
-      
+      </span>
     </span>
   </a>
   
@@ -880,9 +858,9 @@
           <li class="md-nav__item">
   <a href="#kodi" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Kodi
-      
+      </span>
     </span>
   </a>
   
@@ -891,9 +869,9 @@
           <li class="md-nav__item">
   <a href="#email-notifications" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Email notifications
-      
+      </span>
     </span>
   </a>
   
@@ -903,9 +881,9 @@
           <li class="md-nav__item">
   <a href="#prerequisites" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Prerequisites
-      
+      </span>
     </span>
   </a>
   
@@ -914,9 +892,9 @@
           <li class="md-nav__item">
   <a href="#configuration_1" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Configuration
-      
+      </span>
     </span>
   </a>
   
@@ -925,9 +903,9 @@
           <li class="md-nav__item">
   <a href="#smtp-password" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         SMTP password
-      
+      </span>
     </span>
   </a>
   
@@ -936,9 +914,9 @@
           <li class="md-nav__item">
   <a href="#verifying-delivery" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Verifying delivery
-      
+      </span>
     </span>
   </a>
   
@@ -947,9 +925,9 @@
           <li class="md-nav__item">
   <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Example
-      
+      </span>
     </span>
   </a>
   
@@ -963,9 +941,9 @@
           <li class="md-nav__item">
   <a href="#nfo-settings" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         NFO settings
-      
+      </span>
     </span>
   </a>
   
@@ -974,9 +952,9 @@
           <li class="md-nav__item">
   <a href="#tool-paths" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Tool paths
-      
+      </span>
     </span>
   </a>
   
@@ -985,9 +963,9 @@
           <li class="md-nav__item">
   <a href="#cache-ttl" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Cache TTL
-      
+      </span>
     </span>
   </a>
   
@@ -1001,9 +979,9 @@
         <li class="md-nav__item">
   <a href="#external-config-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         External config files
-      
+      </span>
     </span>
   </a>
   
@@ -1013,9 +991,9 @@
           <li class="md-nav__item">
   <a href="#placesjson" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         places.json
-      
+      </span>
     </span>
   </a>
   
@@ -1024,9 +1002,9 @@
           <li class="md-nav__item">
   <a href="#artist-aliases" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         artists.json
-      
+      </span>
     </span>
   </a>
   
@@ -1040,9 +1018,9 @@
         <li class="md-nav__item">
   <a href="#artist-mbid-override-file" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Artist MBID override file
-      
+      </span>
     </span>
   </a>
   
@@ -1051,9 +1029,9 @@
         <li class="md-nav__item">
   <a href="#environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Environment variables
-      
+      </span>
     </span>
   </a>
   
@@ -1081,8 +1059,7 @@
   <span class="md-ellipsis">
     
   
-    Places
-  
+  Places
 
     
   </span>
@@ -1108,8 +1085,7 @@
   <span class="md-ellipsis">
     
   
-    1001Tracklists
-  
+  1001Tracklists
 
     
   </span>
@@ -1135,8 +1111,7 @@
   <span class="md-ellipsis">
     
   
-    Tag reference
-  
+  Tag reference
 
     
   </span>
@@ -1162,8 +1137,7 @@
   <span class="md-ellipsis">
     
   
-    Library layout
-  
+  Library layout
 
     
   </span>
@@ -1189,8 +1163,7 @@
   <span class="md-ellipsis">
     
   
-    Kodi Integration
-  
+  Kodi Integration
 
     
   </span>
@@ -1216,8 +1189,7 @@
   <span class="md-ellipsis">
     
   
-    FAQ
-  
+  FAQ
 
     
   </span>
@@ -1239,10 +1211,24 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1251,16 +1237,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#config-file-locations" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Config file locations
-      
+      </span>
     </span>
   </a>
   
@@ -1270,9 +1256,9 @@
           <li class="md-nav__item">
   <a href="#custom-data-directory" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Custom data directory
-      
+      </span>
     </span>
   </a>
   
@@ -1286,9 +1272,9 @@
         <li class="md-nav__item">
   <a href="#getting-a-starter-config" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Getting a starter config
-      
+      </span>
     </span>
   </a>
   
@@ -1297,9 +1283,9 @@
         <li class="md-nav__item">
   <a href="#config-sections" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Config sections
-      
+      </span>
     </span>
   </a>
   
@@ -1309,9 +1295,9 @@
           <li class="md-nav__item">
   <a href="#default-layout" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Default layout
-      
+      </span>
     </span>
   </a>
   
@@ -1320,9 +1306,9 @@
           <li class="md-nav__item">
   <a href="#layouts" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Layouts
-      
+      </span>
     </span>
   </a>
   
@@ -1331,9 +1317,9 @@
           <li class="md-nav__item">
   <a href="#filename-templates" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Filename templates
-      
+      </span>
     </span>
   </a>
   
@@ -1342,9 +1328,9 @@
           <li class="md-nav__item">
   <a href="#content-type-rules" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Content type rules
-      
+      </span>
     </span>
   </a>
   
@@ -1353,9 +1339,9 @@
           <li class="md-nav__item">
   <a href="#skip-patterns" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Skip patterns
-      
+      </span>
     </span>
   </a>
   
@@ -1364,9 +1350,9 @@
           <li class="md-nav__item">
   <a href="#media-extensions" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Media extensions
-      
+      </span>
     </span>
   </a>
   
@@ -1375,9 +1361,9 @@
           <li class="md-nav__item">
   <a href="#fallback-values" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Fallback values
-      
+      </span>
     </span>
   </a>
   
@@ -1386,9 +1372,9 @@
           <li class="md-nav__item">
   <a href="#poster-settings" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Poster settings
-      
+      </span>
     </span>
   </a>
   
@@ -1397,9 +1383,9 @@
           <li class="md-nav__item">
   <a href="#tracklists" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Tracklists
-      
+      </span>
     </span>
   </a>
   
@@ -1408,9 +1394,9 @@
           <li class="md-nav__item">
   <a href="#fanart" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Fanart
-      
+      </span>
     </span>
   </a>
   
@@ -1419,9 +1405,9 @@
           <li class="md-nav__item">
   <a href="#kodi" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Kodi
-      
+      </span>
     </span>
   </a>
   
@@ -1430,9 +1416,9 @@
           <li class="md-nav__item">
   <a href="#email-notifications" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Email notifications
-      
+      </span>
     </span>
   </a>
   
@@ -1442,9 +1428,9 @@
           <li class="md-nav__item">
   <a href="#prerequisites" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Prerequisites
-      
+      </span>
     </span>
   </a>
   
@@ -1453,9 +1439,9 @@
           <li class="md-nav__item">
   <a href="#configuration_1" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Configuration
-      
+      </span>
     </span>
   </a>
   
@@ -1464,9 +1450,9 @@
           <li class="md-nav__item">
   <a href="#smtp-password" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         SMTP password
-      
+      </span>
     </span>
   </a>
   
@@ -1475,9 +1461,9 @@
           <li class="md-nav__item">
   <a href="#verifying-delivery" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Verifying delivery
-      
+      </span>
     </span>
   </a>
   
@@ -1486,9 +1472,9 @@
           <li class="md-nav__item">
   <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Example
-      
+      </span>
     </span>
   </a>
   
@@ -1502,9 +1488,9 @@
           <li class="md-nav__item">
   <a href="#nfo-settings" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         NFO settings
-      
+      </span>
     </span>
   </a>
   
@@ -1513,9 +1499,9 @@
           <li class="md-nav__item">
   <a href="#tool-paths" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Tool paths
-      
+      </span>
     </span>
   </a>
   
@@ -1524,9 +1510,9 @@
           <li class="md-nav__item">
   <a href="#cache-ttl" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Cache TTL
-      
+      </span>
     </span>
   </a>
   
@@ -1540,9 +1526,9 @@
         <li class="md-nav__item">
   <a href="#external-config-files" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         External config files
-      
+      </span>
     </span>
   </a>
   
@@ -1552,9 +1538,9 @@
           <li class="md-nav__item">
   <a href="#placesjson" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         places.json
-      
+      </span>
     </span>
   </a>
   
@@ -1563,9 +1549,9 @@
           <li class="md-nav__item">
   <a href="#artist-aliases" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         artists.json
-      
+      </span>
     </span>
   </a>
   
@@ -1579,9 +1565,9 @@
         <li class="md-nav__item">
   <a href="#artist-mbid-override-file" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Artist MBID override file
-      
+      </span>
     </span>
   </a>
   
@@ -1590,9 +1576,9 @@
         <li class="md-nav__item">
   <a href="#environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Environment variables
-      
+      </span>
     </span>
   </a>
   
@@ -1609,18 +1595,29 @@
           
             <div class="md-content" data-md-component="content">
               
+                
+
+
+
+  
+
+
+              
               <article class="md-content__inner md-typeset">
                 
                   
-
-
+  
+    <a href="https://github.com/Rouzax/CrateDigger/edit/main/docs/configuration.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
   
   
 
 
-<h1 id="configuration">Configuration</h1>
+<h1 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h1>
 <p>CrateDigger works without a config file. Built-in defaults cover everything. Create a config file only to override specific settings.</p>
-<h2 id="config-file-locations">Config file locations</h2>
+<h2 id="config-file-locations">Config file locations<a class="headerlink" href="#config-file-locations" title="Permanent link">&para;</a></h2>
 <p>CrateDigger merges configuration from three layers in this order, with later layers overriding earlier ones:</p>
 <ol>
 <li><strong>Built-in defaults:</strong> always present, covers all settings</li>
@@ -1629,18 +1626,18 @@
 </ol>
 <p>Only include the settings you want to change. Everything else falls back to built-in defaults.</p>
 <p>You can also pass an explicit path with <code>--config &lt;path&gt;</code> on any command. This acts as your user config for that run.</p>
-<h3 id="custom-data-directory">Custom data directory</h3>
+<h3 id="custom-data-directory">Custom data directory<a class="headerlink" href="#custom-data-directory" title="Permanent link">&para;</a></h3>
 <p>Set the <code>CRATEDIGGER_DATA_DIR</code> environment variable to read and write the visible data folder (config, places, artists, logos) from a different location, for example a shared volume or an external drive. Both CrateDigger and TrackSplit honour this variable, so pointing them at the same path keeps them aligned. The directory must already exist; CrateDigger does not create it. If you want your existing data there, move or copy it yourself before setting the variable. CrateDigger falls back to the platform default when the variable is unset, empty, or points at a missing or non-directory path.</p>
 <p>If you have cloned the CrateDigger repository into <code>~/CrateDigger/</code> on Linux or the equivalent default folder on other platforms, CrateDigger will warn at startup that the data folder appears to be a source checkout. Set <code>CRATEDIGGER_DATA_DIR</code> to a separate dedicated folder to resolve the warning and keep your curated data files away from the repository.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Linux / macOS</label><label for="__tabbed_1_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CRATEDIGGER_DATA_DIR</span><span class="o">=</span>/data/cd
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CRATEDIGGER_DATA_DIR</span><span class="o">=</span>/data/cd
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">$env:CRATEDIGGER_DATA_DIR</span> <span class="p">=</span> <span class="s2">&quot;D:\CrateDigger&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">$env:CRATEDIGGER_DATA_DIR</span> <span class="p">=</span> <span class="s2">"D:\CrateDigger"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
@@ -1648,22 +1645,22 @@
 <p class="admonition-title">Caches and logs live in separate platform directories</p>
 <p><code>CRATEDIGGER_DATA_DIR</code> only controls the visible data folder (config, places, artists, logos). Caches (<code>dj_cache.json</code>, <code>mbid_cache.json</code>, artist artwork) and logs follow standard platform conventions and are not affected by this variable. On Linux, they live under <code>~/.cache/CrateDigger/</code> and <code>~/.local/state/CrateDigger/log/</code> respectively. If you need to relocate those as well, set the standard <code>XDG_CACHE_HOME</code> or <code>XDG_STATE_HOME</code> environment variables. Note that these apply system-wide to all XDG-aware applications, and platformdirs appends <code>CrateDigger/</code> automatically, so <code>XDG_CACHE_HOME=/data/cache</code> results in <code>/data/cache/CrateDigger/</code>.</p>
 </div>
-<h2 id="getting-a-starter-config">Getting a starter config</h2>
+<h2 id="getting-a-starter-config">Getting a starter config<a class="headerlink" href="#getting-a-starter-config" title="Permanent link">&para;</a></h2>
 <p>The example config contains all available settings with comments. Copy it to your user config location:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Linux / macOS</label><label for="__tabbed_2_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/CrateDigger
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/CrateDigger/config.toml<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/CrateDigger
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>curl<span class="w"> </span>-o<span class="w"> </span>~/CrateDigger/config.toml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">New-Item</span> <span class="n">-ItemType</span> <span class="n">Directory</span> <span class="n">-Force</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger&quot;</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  <span class="n">-Uri</span> <span class="s2">&quot;https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml&quot;</span> <span class="p">`</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  <span class="n">-OutFile</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\config.toml&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">New-Item</span> <span class="n">-ItemType</span> <span class="n">Directory</span> <span class="n">-Force</span> <span class="s2">"$env:USERPROFILE\Documents\CrateDigger"</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">Invoke-WebRequest</span> <span class="p">`</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  <span class="n">-Uri</span> <span class="s2">"https://raw.githubusercontent.com/Rouzax/CrateDigger/main/config.example.toml"</span> <span class="p">`</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  <span class="n">-OutFile</span> <span class="s2">"$env:USERPROFILE\Documents\CrateDigger\config.toml"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
@@ -1671,82 +1668,82 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Linux / macOS</label><label for="__tabbed_3_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cp<span class="w"> </span>config.example.toml<span class="w"> </span>~/CrateDigger/config.toml
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cp<span class="w"> </span>config.example.toml<span class="w"> </span>~/CrateDigger/config.toml
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">Copy-Item</span> <span class="n">config</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">toml</span> <span class="s2">&quot;$env:USERPROFILE\Documents\CrateDigger\config.toml&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">Copy-Item</span> <span class="n">config</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">toml</span> <span class="s2">"$env:USERPROFILE\Documents\CrateDigger\config.toml"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
-<h2 id="config-sections">Config sections</h2>
-<h3 id="default-layout">Default layout</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">default_layout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;artist_flat&quot;</span>
-</code></pre></div>
+<h2 id="config-sections">Config sections<a class="headerlink" href="#config-sections" title="Permanent link">&para;</a></h2>
+<h3 id="default-layout">Default layout<a class="headerlink" href="#default-layout" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">default_layout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"artist_flat"</span>
+</span></code></pre></div>
 <p>The folder layout used by <code>organize</code> when <code>--layout</code> is not specified. Available values: <code>artist_flat</code>, <code>place_flat</code>, <code>artist_nested</code>, <code>place_nested</code>. The older names <code>festival_flat</code> and <code>festival_nested</code> are silently mapped to <code>place_flat</code> and <code>place_nested</code> when read from this key; the <code>--layout</code> command-line flag accepts only the current names. See <a href="../commands/organize/#layouts">Organize: layouts</a> for what each looks like.</p>
-<h3 id="layouts">Layouts</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[layouts.artist_flat]</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">[layouts.place_flat]</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{place}{ edition}&quot;</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}&quot;</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="k">[layouts.artist_nested]</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}/{place}{ edition}/{year}&quot;</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}/{year} - {title}&quot;</span>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="k">[layouts.place_nested]</span>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{place}{ edition}/{year}/{artist}&quot;</span>
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist}/{year} - {title}&quot;</span>
-</code></pre></div>
+<h3 id="layouts">Layouts<a class="headerlink" href="#layouts" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[layouts.artist_flat]</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{artist}"</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{artist}"</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">[layouts.place_flat]</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{place}{ edition}"</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{artist}"</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="k">[layouts.artist_nested]</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{artist}/{place}{ edition}/{year}"</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{artist}/{year} - {title}"</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="k">[layouts.place_nested]</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{place}{ edition}/{year}/{artist}"</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{artist}/{year} - {title}"</span>
+</span></code></pre></div>
 <p>Folder path templates for each layout and content type. The <code>{place}</code> token resolves to the canonical name of the festival, club, or venue associated with the set. See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for how optional tokens work.</p>
 <p><strong>Deprecated layout names:</strong> a <code>default_layout</code> value of <code>festival_flat</code> or <code>festival_nested</code> is silently mapped to <code>place_flat</code> or <code>place_nested</code> at load time. Custom <code>[layouts.festival_flat]</code> or <code>[layouts.festival_nested]</code> sections are NOT consulted after that mapping; if you carry one in your config, rename the section to the current layout name or your customisations are ignored.</p>
-<h3 id="filename-templates">Filename templates</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">[filename_templates]</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{year} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}&quot;</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{artist} - {title}{ (year)}&quot;</span>
-</code></pre></div>
+<h3 id="filename-templates">Filename templates<a class="headerlink" href="#filename-templates" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">[filename_templates]</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{year} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}"</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">concert_film</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{artist} - {title}{ (year)}"</span>
+</span></code></pre></div>
 <p>Templates for generated filenames. The original file extension is preserved automatically. The <code>{ - place}</code> token is optional: it is included only when a place name is available. See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for field names and optional token syntax.</p>
 <p><strong>Template tokens:</strong> <code>{place}</code> is the routing token for the associated festival, club, or venue. The older <code>{festival}</code> token was removed in 0.15.0: templates that still contain it render the fallback text "Unknown" in its place, so update any custom template to <code>{place}</code>.</p>
 <p><strong>Date tokens:</strong> <code>{date}</code> renders the full event date in ISO <code>yyyy-mm-dd</code> form when known. <code>{month}</code> and <code>{day}</code> render the zero-padded components sliced from that date and stay empty when only the year is known, so the optional-token form degrades gracefully:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">[filename_templates]</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;{year}{-month}{-day} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}&quot;</span>
-</code></pre></div>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">[filename_templates]</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">festival_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"{year}{-month}{-day} - {artist}{ - place}{ edition}{ [stage]}{ - set_title}"</span>
+</span></code></pre></div>
 <p>renders <code>2024-06-15 - Tiesto - Tomorrowland [Mainstage]</code> for a fully dated set and <code>2024 - Tiesto - Tomorrowland [Mainstage]</code> when only the year is known. Any order works, and any punctuation separator (<code>{day-}{month-}{year}</code>, <code>{year}{.month}{.day}</code>). See <a href="../commands/organize/#filename-template-syntax">Organize: template syntax</a> for the full field list.</p>
-<h3 id="content-type-rules">Content type rules</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">[content_type_rules]</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">force_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Adele/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Coldplay/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;U2/*&quot;</span><span class="p">]</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">force_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
-</code></pre></div>
+<h3 id="content-type-rules">Content type rules<a class="headerlink" href="#content-type-rules" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">[content_type_rules]</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">force_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"Adele/*"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Coldplay/*"</span><span class="p">,</span><span class="w"> </span><span class="s2">"U2/*"</span><span class="p">]</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">force_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+</span></code></pre></div>
 <p>Path rules that force a file to be classified as <code>concert_film</code> or <code>festival_set</code>, bypassing automatic classification. Each rule is a pattern matched against the file's path relative to the source root. Use <code>*</code> to match anything within a single folder name, or <code>/*</code> after a folder name to match everything inside it. For example, <code>Coldplay/*</code> matches any file directly inside a <code>Coldplay</code> folder.</p>
-<h3 id="skip-patterns">Skip patterns</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">skip_patterns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;*/BDMV/*&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Dolby*&quot;</span><span class="p">]</span>
-</code></pre></div>
+<h3 id="skip-patterns">Skip patterns<a class="headerlink" href="#skip-patterns" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">skip_patterns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"*/BDMV/*"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Dolby*"</span><span class="p">]</span>
+</span></code></pre></div>
 <p>Path patterns for files and folders to skip during scanning. Matched against the relative path. Useful for ignoring Blu-ray disc structures (<code>*/BDMV/*</code>) or demo content.</p>
-<h3 id="media-extensions">Media extensions</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">[media_extensions]</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">video</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.mp4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.mkv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.webm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.avi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.mov&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.m2ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.ts&quot;</span><span class="p">]</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">audio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;.mp3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.m4a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.flac&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.wav&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.aac&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.ogg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.opus&quot;</span><span class="p">]</span>
-</code></pre></div>
+<h3 id="media-extensions">Media extensions<a class="headerlink" href="#media-extensions" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">[media_extensions]</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">video</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">".mp4"</span><span class="p">,</span><span class="w"> </span><span class="s2">".mkv"</span><span class="p">,</span><span class="w"> </span><span class="s2">".webm"</span><span class="p">,</span><span class="w"> </span><span class="s2">".avi"</span><span class="p">,</span><span class="w"> </span><span class="s2">".mov"</span><span class="p">,</span><span class="w"> </span><span class="s2">".m2ts"</span><span class="p">,</span><span class="w"> </span><span class="s2">".ts"</span><span class="p">]</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">audio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">".mp3"</span><span class="p">,</span><span class="w"> </span><span class="s2">".m4a"</span><span class="p">,</span><span class="w"> </span><span class="s2">".flac"</span><span class="p">,</span><span class="w"> </span><span class="s2">".wav"</span><span class="p">,</span><span class="w"> </span><span class="s2">".aac"</span><span class="p">,</span><span class="w"> </span><span class="s2">".ogg"</span><span class="p">,</span><span class="w"> </span><span class="s2">".opus"</span><span class="p">]</span>
+</span></code></pre></div>
 <p>File extensions recognized as media files, grouped by type. Add extensions here if CrateDigger is not picking up a file type you use.</p>
-<h3 id="fallback-values">Fallback values</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">[fallback_values]</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">unknown_artist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Artist&quot;</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">unknown_place</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;_Needs Review&quot;</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">unknown_year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Year&quot;</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="n">unknown_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Unknown Title&quot;</span>
-</code></pre></div>
+<h3 id="fallback-values">Fallback values<a class="headerlink" href="#fallback-values" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">[fallback_values]</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">unknown_artist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Unknown Artist"</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">unknown_place</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"_Needs Review"</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">unknown_year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Unknown Year"</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="n">unknown_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Unknown Title"</span>
+</span></code></pre></div>
 <p>Placeholder values used in folder and filename templates when metadata is missing. <code>_Needs Review</code> sorts near the top in most file managers, making unclassified files easy to find.</p>
 <p><strong>Removed key:</strong> <code>unknown_festival</code> was replaced by <code>unknown_place</code> in 0.15.0 and is no longer read. Leaving it in your config has no effect on <code>unknown_place</code> and produces no warning, so set <code>unknown_place</code> directly.</p>
-<h3 id="poster-settings">Poster settings</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">[poster_settings]</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">artist_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;dj_artwork&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;fanart_tv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">place_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;curated_logo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">year_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;gradient&quot;</span><span class="p">]</span>
-</code></pre></div>
+<h3 id="poster-settings">Poster settings<a class="headerlink" href="#poster-settings" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">[poster_settings]</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">artist_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"dj_artwork"</span><span class="p">,</span><span class="w"> </span><span class="s2">"fanart_tv"</span><span class="p">,</span><span class="w"> </span><span class="s2">"gradient"</span><span class="p">]</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">place_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"curated_logo"</span><span class="p">,</span><span class="w"> </span><span class="s2">"gradient"</span><span class="p">]</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">year_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"gradient"</span><span class="p">]</span>
+</span></code></pre></div>
 <p>Priority chains for poster background image selection. CrateDigger tries each source in order and uses the first one available.</p>
 <table>
 <thead>
@@ -1776,18 +1773,18 @@
 </table>
 <p><code>place_background_priority</code> controls background selection for festival sets routed by a named place (festival, club, or venue). When the set has no linked place, the <code>artist_background_priority</code> chain is used instead, so the poster comes out as a proper artist poster rather than a plain gradient.</p>
 <p><strong>Removed key:</strong> <code>festival_background_priority</code> was replaced by <code>place_background_priority</code> in 0.15.0 and is no longer read. Setting it is a silent no-op: the value is not copied into <code>place_background_priority</code> and no warning is logged, so rename the key in your <code>config.toml</code>.</p>
-<h3 id="tracklists">Tracklists</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">[tracklists]</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">delay_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
-<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">chapter_language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;eng&quot;</span>
-<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="n">auto_select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="n">genre_top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
-<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="n">overlay_chapters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="n">overlay_fold_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
-<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="n">chapter_title_labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-</code></pre></div>
+<h3 id="tracklists">Tracklists<a class="headerlink" href="#tracklists" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">[tracklists]</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">delay_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">chapter_language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"eng"</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="n">auto_select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="n">genre_top_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="n">overlay_chapters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="n">overlay_fold_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="n">chapter_title_labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+</span></code></pre></div>
 <p>Settings for 1001Tracklists integration. See <a href="../tracklists/">Tracklists integration</a> for account setup details.</p>
 <table>
 <thead>
@@ -1836,11 +1833,11 @@
 </tbody>
 </table>
 <p>Credentials can also be set via environment variables: <code>TRACKLISTS_EMAIL</code> and <code>TRACKLISTS_PASSWORD</code>.</p>
-<h3 id="fanart">Fanart</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">[fanart]</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">personal_api_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-</code></pre></div>
+<h3 id="fanart">Fanart<a class="headerlink" href="#fanart" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">[fanart]</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">personal_api_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</span></code></pre></div>
 <p>Settings for fanart.tv artist artwork lookups. A project API key is built into CrateDigger. Adding your own personal key improves rate limits for large libraries.</p>
 <p>Get a personal API key at <a href="https://fanart.tv/get-an-api-key/">fanart.tv</a>.</p>
 <table>
@@ -1862,14 +1859,14 @@
 </tbody>
 </table>
 <p>Environment variable overrides: <code>FANART_PERSONAL_API_KEY</code>, <code>FANART_PROJECT_API_KEY</code> (for the built-in project key).</p>
-<h3 id="kodi">Kodi</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">[kodi]</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;localhost&quot;</span>
-<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8080</span>
-<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;kodi&quot;</span>
-<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-</code></pre></div>
+<h3 id="kodi">Kodi<a class="headerlink" href="#kodi" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">[kodi]</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"localhost"</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8080</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"kodi"</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span>
+</span></code></pre></div>
 <p>Kodi JSON-RPC connection settings for automatic library refresh after <code>enrich</code> or <code>organize</code>. See <a href="../kodi-integration/">Kodi integration</a> for setup instructions.</p>
 <table>
 <thead>
@@ -1902,7 +1899,7 @@
 </tbody>
 </table>
 <p>All Kodi settings can also be set via environment variables: <code>KODI_HOST</code>, <code>KODI_PORT</code>, <code>KODI_USERNAME</code>, <code>KODI_PASSWORD</code>.</p>
-<h3 id="email-notifications">Email notifications</h3>
+<h3 id="email-notifications">Email notifications<a class="headerlink" href="#email-notifications" title="Permanent link">&para;</a></h3>
 <p>CrateDigger can send HTML run-summary emails after key commands. Emails are sent only when there is something to report; a run that changes nothing sends nothing (except possibly the throttled update reminder described below). Each message includes inline poster thumbnails and a plain-text fallback. No external dependencies are required; emails are sent using Python's standard library over SMTP.</p>
 <p>There are three independent channels. Each has its own recipient list and can be enabled or disabled separately.</p>
 <table>
@@ -1933,30 +1930,30 @@
 </table>
 <p>The <code>update_reminder</code> channel is throttled: you receive at most one email per new release, not one per run. When a content email (<code>new_sets</code> or <code>updated_sets</code>) goes out in the same run, the update banner is embedded in that email instead and the standalone reminder is suppressed.</p>
 <p>The email step runs after the command finishes and reports its progress on the console: a spinner shows the slow phases (resizing a thumbnail for every set, sending), followed by a one-line verdict such as <code>New-sets email -&gt; sent to 2 recipients</code> or, on failure, <code>Email -&gt; send failed (...)</code>. Runs that send nothing stay silent in normal mode.</p>
-<h4 id="prerequisites">Prerequisites</h4>
+<h4 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h4>
 <p>You need an SMTP server that accepts authenticated submissions. A local relay, a self-hosted mail server, or any provider that supports STARTTLS or SSL on port 587/465 works. Gmail, Fastmail, and similar providers work if you generate an app password.</p>
-<h4 id="configuration_1">Configuration</h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="k">[email]</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">smtp_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mail.example.lan&quot;</span>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">smtp_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">587</span>
-<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">smtp_security</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;starttls&quot;</span><span class="w">   </span><span class="c1"># starttls | ssl | none</span>
-<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">smtp_user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cratedigger&quot;</span>
-<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">smtp_password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w">           </span><span class="c1"># leave blank; use CRATEDIGGER_SMTP_PASSWORD instead</span>
-<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="n">from_address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cratedigger@example.lan&quot;</span>
-<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="n">thumbnail_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">140</span>
-<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
-<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="k">[email.new_sets]</span>
-<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;other@example.com&quot;</span><span class="p">]</span>
-<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>
-<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="k">[email.updated_sets]</span>
-<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">]</span>
-<a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a>
-<a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="k">[email.update_reminder]</span>
-<a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;you@example.com&quot;</span><span class="p">]</span>
-</code></pre></div>
+<h4 id="configuration_1">Configuration<a class="headerlink" href="#configuration_1" title="Permanent link">&para;</a></h4>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="k">[email]</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">smtp_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mail.example.lan"</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">smtp_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">587</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">smtp_security</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"starttls"</span><span class="w">   </span><span class="c1"># starttls | ssl | none</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">smtp_user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cratedigger"</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">smtp_password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="w">           </span><span class="c1"># leave blank; use CRATEDIGGER_SMTP_PASSWORD instead</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="n">from_address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cratedigger@example.lan"</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="n">thumbnail_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">140</span>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="k">[email.new_sets]</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"you@example.com"</span><span class="p">,</span><span class="w"> </span><span class="s2">"other@example.com"</span><span class="p">]</span>
+</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="k">[email.updated_sets]</span>
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"you@example.com"</span><span class="p">]</span>
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a>
+</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="k">[email.update_reminder]</span>
+</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"you@example.com"</span><span class="p">]</span>
+</span></code></pre></div>
 <table>
 <thead>
 <tr>
@@ -2022,53 +2019,53 @@
 </tr>
 </tbody>
 </table>
-<h4 id="smtp-password">SMTP password</h4>
+<h4 id="smtp-password">SMTP password<a class="headerlink" href="#smtp-password" title="Permanent link">&para;</a></h4>
 <p>Set the password via the <code>CRATEDIGGER_SMTP_PASSWORD</code> environment variable rather than writing it into <code>config.toml</code>. The environment variable takes precedence over <code>smtp_password</code> in the config file and is never written to logs.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Linux / macOS</label><label for="__tabbed_4_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CRATEDIGGER_SMTP_PASSWORD</span><span class="o">=</span>your-app-password
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CRATEDIGGER_SMTP_PASSWORD</span><span class="o">=</span>your-app-password
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nv">$env:CRATEDIGGER_SMTP_PASSWORD</span> <span class="p">=</span> <span class="s2">&quot;your-app-password&quot;</span>
-</code></pre></div>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nv">$env:CRATEDIGGER_SMTP_PASSWORD</span> <span class="p">=</span> <span class="s2">"your-app-password"</span>
+</span></code></pre></div>
 </div>
 </div>
 </div>
-<h4 id="verifying-delivery">Verifying delivery</h4>
+<h4 id="verifying-delivery">Verifying delivery<a class="headerlink" href="#verifying-delivery" title="Permanent link">&para;</a></h4>
 <p>Run <code>cratedigger --email-test</code> to send a sample email and confirm your SMTP settings and rendering work. It takes no path, does not touch your library, and reports whether the message was sent or why it failed (for example, no recipients configured, or a connection error). It sends to the <code>[email.new_sets]</code> recipient list and works even while that channel is disabled, so you can test before turning it on.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>cratedigger<span class="w"> </span>--email-test
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>cratedigger<span class="w"> </span>--email-test
+</span></code></pre></div>
 <p>You can also force or suppress an email for a single run without changing your config:</p>
 <ul>
 <li><code>--email</code> on <code>organize</code> forces the <code>new_sets</code> email even if no sets were added.</li>
 <li><code>--no-email</code> on <code>organize</code> or <code>identify</code> suppresses the email for that run.</li>
 </ul>
 <p>See <a href="../commands/organize/#options">organize options</a> and <a href="../commands/identify/#options">identify options</a>.</p>
-<h4 id="example">Example</h4>
-<p><img alt="Example CrateDigger run-summary email" src="../assets/example-email.png" /></p>
-<h3 id="nfo-settings">NFO settings</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">[nfo_settings]</span>
-<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">genre_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Electronic&quot;</span>
-<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="n">genre_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Live&quot;</span>
-</code></pre></div>
+<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
+<p><a class="glightbox" data-type="image" href="../assets/example-email.png"><img alt="Example CrateDigger run-summary email" src="../assets/example-email.png" /></a></p>
+<h3 id="nfo-settings">NFO settings<a class="headerlink" href="#nfo-settings" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">[nfo_settings]</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">genre_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Electronic"</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="n">genre_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Live"</span>
+</span></code></pre></div>
 <p>Genre written into NFO files when no genre is available from 1001Tracklists metadata. <code>genre_festival</code> applies to festival sets; <code>genre_concert</code> applies to concert recordings.</p>
-<h3 id="tool-paths">Tool paths</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># [tool_paths]</span>
-<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="c1"># ffprobe = &quot;C:/Program Files/ffmpeg/bin/ffprobe.exe&quot;</span>
-<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="c1"># mkvextract = &quot;&quot;</span>
-<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1"># mkvpropedit = &quot;&quot;</span>
-<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="c1"># mkvmerge = &quot;&quot;</span>
-</code></pre></div>
+<h3 id="tool-paths">Tool paths<a class="headerlink" href="#tool-paths" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># [tool_paths]</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="c1"># ffprobe = "C:/Program Files/ffmpeg/bin/ffprobe.exe"</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="c1"># mkvextract = ""</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1"># mkvpropedit = ""</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="c1"># mkvmerge = ""</span>
+</span></code></pre></div>
 <p>Explicit paths to external tools. Set these only if the tools are installed somewhere not on your system PATH. Omit a key (or leave an empty string) to let CrateDigger find them automatically via PATH.</p>
-<h3 id="cache-ttl">Cache TTL</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="k">[cache_ttl]</span>
-<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">mbid_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
-<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">dj_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
-<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">source_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">365</span>
-<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="n">images_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
-</code></pre></div>
+<h3 id="cache-ttl">Cache TTL<a class="headerlink" href="#cache-ttl" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="k">[cache_ttl]</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">mbid_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">dj_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">source_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">365</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="n">images_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+</span></code></pre></div>
 <p>Base lifetimes for CrateDigger's caches, in days. When a cache entry expires, CrateDigger refreshes it on the next lookup.</p>
 <table>
 <thead>
@@ -2102,7 +2099,7 @@
 </tbody>
 </table>
 <p>Each entry's actual lifetime jitters by ±20% around the base value (for example, <code>mbid_days: 90</code> means entries live 72 to 108 days). This prevents all cached entries from expiring at the same time after a bulk first-run fill, which would cause a large number of network requests in one go.</p>
-<h2 id="external-config-files">External config files</h2>
+<h2 id="external-config-files">External config files<a class="headerlink" href="#external-config-files" title="Permanent link">&para;</a></h2>
 <p>Three JSON files can live alongside your <code>config.toml</code> and control name resolution. They use the same location as your config file:</p>
 <table>
 <thead>
@@ -2126,29 +2123,29 @@
 </tr>
 </tbody>
 </table>
-<h3 id="placesjson">places.json</h3>
+<h3 id="placesjson">places.json<a class="headerlink" href="#placesjson" title="Permanent link">&para;</a></h3>
 <p>Controls place name recognition, aliases, and editions. Places include festivals, clubs, venues, and any other named entities that host DJ sets in your library. CrateDigger includes built-in place knowledge. To add your own entries or customize aliases, place a <code>places.json</code> in the folder above. See <a href="../places/">Places</a> for the file format and how to add entries.</p>
 <p><strong>Curated assets directory:</strong> logo images for each place go in <code>.cratedigger/places/&lt;canonical-name&gt;/logo.&lt;ext&gt;</code> inside your library, or in <code>places/&lt;canonical-name&gt;/logo.&lt;ext&gt;</code> under the folder above for logos shared across every library. Edition-specific logos live in a sibling folder named after the edition display name, <code>places/&lt;canonical-name&gt; &lt;edition&gt;/logo.&lt;ext&gt;</code> (for example <code>places/EDC Las Vegas/</code>), not in a subfolder of the canonical name. CrateDigger tries the edition folder first, then the canonical name, and checks the library-local location before the shared one. Accepted extensions are <code>jpg</code>, <code>jpeg</code>, <code>png</code>, and <code>webp</code>.</p>
 <p><strong>Legacy file:</strong> <code>festivals.json</code> was renamed to <code>places.json</code> in 0.15.0, and nothing reads <code>festivals.json</code> when looking up a place. On startup, if the folder above still holds a <code>festivals.json</code> and has no <code>places.json</code>, CrateDigger copies the old file to <code>places.json</code> once. The copy happens before logging starts, so nothing is printed about it; check that <code>places.json</code> exists in the folder above to confirm it ran. The original file is left untouched, so you can delete it once the copy is in place. Only this shared folder is migrated: a library-local <code>.cratedigger/festivals.json</code> is never copied and never read, so rename that one yourself.</p>
-<h3 id="artist-aliases">artists.json</h3>
+<h3 id="artist-aliases">artists.json<a class="headerlink" href="#artist-aliases" title="Permanent link">&para;</a></h3>
 <p>Controls artist name aliases and B2B group definitions.</p>
 <p>Place it in the folder above (<code>~/CrateDigger/artists.json</code> on Linux or macOS, <code>Documents\CrateDigger\artists.json</code> on Windows). Example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">{</span>
-<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span><span class="nt">&quot;aliases&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">        </span><span class="nt">&quot;Armin van Buuren&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Rising Star&quot;</span><span class="p">],</span>
-<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">        </span><span class="nt">&quot;Martin Garrix&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;GRX&quot;</span><span class="p">],</span>
-<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">        </span><span class="nt">&quot;Nicky Romero&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Monocule&quot;</span><span class="p">]</span>
-<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="w">    </span><span class="nt">&quot;groups&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="w">        </span><span class="s2">&quot;Above &amp; Beyond&quot;</span><span class="p">,</span>
-<a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="w">        </span><span class="s2">&quot;Swedish House Mafia&quot;</span><span class="p">,</span>
-<a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="w">        </span><span class="s2">&quot;W&amp;W&quot;</span>
-<a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="w">    </span><span class="p">]</span>
-<a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a><span class="p">}</span>
-</code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">{</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">        </span><span class="nt">"Armin van Buuren"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Rising Star"</span><span class="p">],</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">        </span><span class="nt">"Martin Garrix"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"GRX"</span><span class="p">],</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">        </span><span class="nt">"Nicky Romero"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Monocule"</span><span class="p">]</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="w">    </span><span class="nt">"groups"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="w">        </span><span class="s2">"Above &amp; Beyond"</span><span class="p">,</span>
+</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="w">        </span><span class="s2">"Swedish House Mafia"</span><span class="p">,</span>
+</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="w">        </span><span class="s2">"W&amp;W"</span>
+</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="w">    </span><span class="p">]</span>
+</span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a><span class="p">}</span>
+</span></code></pre></div>
 <p><strong><code>aliases</code>:</strong> maps a canonical artist name to a list of aliases. When CrateDigger encounters an alias in a filename or tag, it substitutes the canonical name. Matching is case-insensitive and diacritics-insensitive.</p>
 <p><strong><code>groups</code>:</strong> a manual list of act names that should be kept as-is even when they contain <code>&amp;</code>, <code>B2B</code>, <code>vs.</code>, or <code>x</code> separators. As of v0.21.0, any act with a 1001Tracklists profile is kept whole automatically (resolved to its canonical name via the DJ cache), so you do not need a manual entry for those acts. This includes single acts whose name contains <code>&amp;</code> (for example, "Above &amp; Beyond") and named groups (for example, "Swedish House Mafia"). Manual entries are mainly useful for acts with no 1001Tracklists profile (for example, <code>"W&amp;W"</code> if it has no profile) or to correct a name the DJ cache gets wrong. When an act is neither in <code>groups</code> nor known to 1001Tracklists, CrateDigger splits on the separator and uses only the first artist as the folder name.</p>
-<h2 id="artist-mbid-override-file">Artist MBID override file</h2>
+<h2 id="artist-mbid-override-file">Artist MBID override file<a class="headerlink" href="#artist-mbid-override-file" title="Permanent link">&para;</a></h2>
 <p><code>artist_mbids.json</code> is a flat JSON map from artist display name to MusicBrainz artist ID. It lives in the same folder as your config file:</p>
 <table>
 <thead>
@@ -2173,11 +2170,11 @@
 </tbody>
 </table>
 <p>It is checked first by both the <code>chapter_artist_mbids</code> and <code>album_artist_mbids</code> enrich operations, before the auto cache and any live MusicBrainz search.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="p">{</span>
-<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">    </span><span class="nt">&quot;Afrojack&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3abb6f9f-5b6a-4f1f-8a2d-1111111111aa&quot;</span><span class="p">,</span>
-<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">    </span><span class="nt">&quot;Oliver Heldens&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6e7dde91-4c02-47ea-a2b4-2222222222bb&quot;</span>
-<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="p">}</span>
-</code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="p">{</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">    </span><span class="nt">"Afrojack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3abb6f9f-5b6a-4f1f-8a2d-1111111111aa"</span><span class="p">,</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">    </span><span class="nt">"Oliver Heldens"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6e7dde91-4c02-47ea-a2b4-2222222222bb"</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="p">}</span>
+</span></code></pre></div>
 <table>
 <thead>
 <tr>
@@ -2211,7 +2208,7 @@
 <p><strong>Distinction from the auto MBID cache:</strong> the auto cache is populated from MusicBrainz search results and expires after <code>cache_ttl.mbid_days</code>. It can be deleted and will refill. <code>artist_mbids.json</code> is your curated override list for artists that MusicBrainz searches misidentify or fail to find.</p>
 <p><strong>When a lookup fails:</strong> a search that finds nothing is remembered as a miss until the TTL expires, so CrateDigger does not re-query the same unknown name on every run. Two things are deliberately excluded from that. A lookup that could not be completed at all (MusicBrainz returning 503 after its retries) is never remembered, so a temporary outage cannot pin an artist to "no ID" for the next 90 days; it is logged as a warning and retried on the following run. And remembered misses are discarded automatically whenever the matching logic improves, so artists that a previous version could not resolve are looked up again rather than waiting out the TTL.</p>
 <p>See <a href="../commands/enrich/#chapter_artist_mbids-per-track-artist-ids">enrich: chapter_artist_mbids</a> for the fix workflow.</p>
-<h2 id="environment-variables">Environment variables</h2>
+<h2 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2274,17 +2271,21 @@
 
 
 
+
+
                 
               </article>
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
   Back to top
 </button>
         
@@ -2292,14 +2293,54 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../commands/audit-logos/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Audit Logos">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Audit Logos
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../places/" class="md-footer__link md-footer__link--next" aria-label="Next: Places">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Places
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -2317,10 +2358,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.tabs","navigation.sections","navigation.top","navigation.footer","navigation.path","navigation.indexes","search.highlight","search.suggest","content.code.copy","content.code.select","content.code.annotate","content.action.edit","content.tabs.link","content.tooltips"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
     
   </body>
