@@ -113,6 +113,17 @@ img { display: block; max-width: 100%; }
 }
 .nav-links a:hover { color: var(--text-primary); }
 
+/* The one nav item that is not a section anchor: tinted with the accent and
+   given a small cup glyph so it reads as an action rather than another
+   heading. Hidden below 768px along with every other text link. */
+.nav-links a.nav-support {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--accent);
+}
+.nav-links a.nav-support:hover { color: var(--accent-soft); }
+
 .nav-gh {
   display: flex;
   align-items: center;

@@ -45,6 +45,17 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+# Renders a small icon row in the footer of every page. Icon names resolve
+# against the sets Zensical bundles under templates/.icons.
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Rouzax/CrateDigger
+      name: CrateDigger on GitHub
+    - icon: fontawesome/brands/ko-fi
+      link: https://ko-fi.com/O0W221GBUG
+      name: Support CrateDigger on Ko-fi
+
 markdown_extensions:
   - abbr
   - admonition

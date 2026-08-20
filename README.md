@@ -4,6 +4,7 @@
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="GPL-3.0">
   <img src="https://img.shields.io/badge/version-v0.35.1-orange" alt="v0.35.1">
+  <a href="https://ko-fi.com/O0W221GBUG"><img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?logo=kofi&logoColor=white" alt="Support on Ko-fi"></a>
 </p>
 
 <p align="center"><em>Festival set & concert library manager. Organize, enrich, and curate your collection with professional artwork, metadata, and chapter markers.</em></p>
@@ -165,6 +166,12 @@ No telemetry: the check is a read-only request to the GitHub Releases API. See t
 ## Disclaimer
 
 Artwork displayed in this project is sourced from fanart.tv and 1001Tracklists. All artwork, logos, and trademarks belong to their respective owners. CrateDigger is not affiliated with any festival, artist, or platform shown.
+
+## Support
+
+Building tools that solve my own problems and sharing them in the hope they solve yours too. If CrateDigger saved you an evening of tagging, a coffee is always appreciated.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/O0W221GBUG)
 
 ## License
 

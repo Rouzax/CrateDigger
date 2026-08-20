@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- A Ko-fi link for anyone who wants to support the project. It appears as GitHub's native Sponsor button (via `.github/FUNDING.yml`), a badge in the README badge row alongside a `Support` section above the license, a footer icon on every documentation page, and a `Support` entry in the landing page navigation and footer. Nothing about using CrateDigger changes: there is no prompt, no runtime notice, and no telemetry attached to any of it.
+
 ### Changed
 
 - Recurring jargon in the documentation now carries a hover definition. `NFO`, `MBID`, `MBIDs`, `TTV`, `B2B` and `TTL` are defined once in `includes/abbreviations.md`, which is appended to every page at build time, so a reader meeting `B2B` or `TTV` for the first time does not have to hunt for the page that explains it. Only prose is affected: occurrences inside code spans and fenced blocks are left alone, which is why `1001TL` was left out, 36 of its 37 occurrences being config keys. `MKV` was left out as well, being both widely understood and by far the most repeated term. Page text is unchanged; the terms are only wrapped for the tooltip.
