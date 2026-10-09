@@ -68,7 +68,9 @@ gh label list --repo "$REPO" --limit 200 --json name --jq '.[].name' | while IFS
     fi
 done
 
-existing="$(gh api "repos/$REPO/milestones?state=all&per_page=100" --jq '.[].title')"
+# Every release leaves a closed milestone behind, so read all pages: a "Next" past
+# the first page would otherwise look missing and fail as a duplicate title.
+existing="$(gh api --paginate "repos/$REPO/milestones?state=all&per_page=100" --jq '.[].title')"
 while IFS='|' read -r title description; do
     if grep -qxF "$title" <<< "$existing"; then
         echo "ok       milestone $title"
