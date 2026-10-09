@@ -41,8 +41,6 @@ scripts/build-showcase-assets.py
 C:/
 config.json
 config.toml
-docs/plans/
-docs/superpowers/
 
 # Local-only app-icon builder
 scripts/build-icons.py
