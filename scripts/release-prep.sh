@@ -5,6 +5,8 @@
 # Shows:
 #   - commits since the most recent vX.Y.Z tag
 #   - current contents of the [Unreleased] section
+#   - the "Next" milestone: open items must be done or moved before a
+#     release, closed ones are a cross-check for the CHANGELOG
 
 set -euo pipefail
 
@@ -29,3 +31,17 @@ awk '
     found && /^## \[/ { exit }
     found { print }
 ' CHANGELOG.md
+
+echo
+echo "=== Milestone \"Next\": open (finish or move before releasing) ==="
+echo
+gh issue list --milestone Next --state open --limit 200 \
+    --json number,title --jq '.[] | "#\(.number) \(.title)"'
+
+echo
+echo "=== Milestone \"Next\": closed (each user-visible one belongs in the CHANGELOG) ==="
+echo
+gh issue list --milestone Next --state closed --limit 200 \
+    --json number,title --jq '.[] | "#\(.number) \(.title)"'
+gh pr list --search 'milestone:Next' --state merged --limit 200 \
+    --json number,title --jq '.[] | "PR #\(.number) \(.title)"'

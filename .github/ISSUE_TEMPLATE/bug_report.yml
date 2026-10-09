@@ -1,7 +1,17 @@
 name: Bug Report
 description: Report a bug or unexpected behavior
+type: Bug
 labels: ["bug"]
 body:
+  - type: input
+    id: version
+    attributes:
+      label: CrateDigger version
+      description: Output of `cratedigger --version`
+      placeholder: e.g. 0.35.1
+    validations:
+      required: true
+
   - type: textarea
     id: description
     attributes:
@@ -39,9 +49,8 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: CrateDigger version, Python version, OS
+      description: Python version, OS
       placeholder: |
-        CrateDigger version:
         Python version:
         OS:
     validations:

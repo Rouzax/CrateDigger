@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: TrackSplit
+    url: https://github.com/Rouzax/TrackSplit/issues
+    about: Problems or ideas for extracting FLAC albums from sets. TrackSplit is a separate tool with its own tracker.
+  - name: Documentation
+    url: https://rouzax.github.io/CrateDigger/docs/
+    about: Setup, configuration, commands and troubleshooting.
