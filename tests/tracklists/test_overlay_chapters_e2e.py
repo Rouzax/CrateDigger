@@ -41,7 +41,7 @@ def _make_export() -> TracklistExport:
       a timed overlay 5s after the 02:00 host  (folds into host),
       a timed overlay 30s after the host       (breaks out as its own chapter),
       a positionless (cue 0) overlay           (folds into the current anchor),
-      a mashup main at 04:00 with two tlpSubTog children (group 7).
+      a mashup main at 04:00 followed by its two tlpSubTog children.
 
     supplement_chapters_from_tracks lifts the mashup main into an anchor.
     """
@@ -100,13 +100,12 @@ def _make_export() -> TracklistExport:
     mashup_main = Track(
         start_ms=240_000,  # 04:00
         raw_text="A vs. B - Mashup Main",
-        artist_slugs=["junk-mega-slug"],
-        artist_names=["Junk Mega"],
+        artist_slugs=["component-a", "component-b", "editor"],
+        artist_names=["Component A", "Component B", "Editor"],
         title="Mashup Main",
         label="MEGA",
         genres=[],
         is_mashup=True,
-        group_id=7,
     )
     sub_a = Track(
         start_ms=0,
@@ -117,7 +116,6 @@ def _make_export() -> TracklistExport:
         genres=["Bass"],
         is_overlay=True,
         is_subcomponent=True,
-        group_id=7,
     )
     sub_b = Track(
         start_ms=0,
@@ -128,7 +126,6 @@ def _make_export() -> TracklistExport:
         genres=["Dubstep"],
         is_overlay=True,
         is_subcomponent=True,
-        group_id=7,
     )
 
     tracks = [
@@ -158,8 +155,8 @@ def _make_session(export: TracklistExport) -> MagicMock:
     return sess
 
 
-def _run(config, tmp_path, *, duration_seconds=600.0):
-    export = _make_export()
+def _run(config, tmp_path, *, duration_seconds=600.0, export=None):
+    export = export or _make_export()
     session = _make_session(export)
     captured: dict = {}
 
@@ -232,14 +229,13 @@ def test_overlays_enabled_folds_breaks_out_and_merges_mashup(tmp_path):
     assert assembled is not None
     assert len(assembled) == len(chapters)
 
-    # The mashup chapter's merged per-chapter tags carry the component artists,
-    # not the junk mega-slug.
+    # The mashup chapter's merged per-chapter tags carry the mashup row's
+    # artists (its editor credit included) and the components' genres.
     mashup_ac = assembled[3]
     tags = merge_chapter_tags(mashup_ac.primary, mashup_ac.contributors)
     slugs = tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"].split("|")
     names = tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"].split("|")
-    assert "component-a" in slugs and "component-b" in slugs
-    assert "junk-mega-slug" not in slugs
+    assert slugs == ["component-a", "component-b", "editor"]
     assert len(slugs) == len(names)
     assert set(tags["CRATEDIGGER_TRACK_GENRE"].split("|")) == {"Bass", "Dubstep"}
 
@@ -261,8 +257,7 @@ def test_overlays_disabled_anchor_count_but_mashup_still_merges(tmp_path):
     mashup_ac = assembled[2]
     tags = merge_chapter_tags(mashup_ac.primary, mashup_ac.contributors)
     slugs = tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"].split("|")
-    assert "component-a" in slugs and "component-b" in slugs
-    assert "junk-mega-slug" not in slugs
+    assert slugs == ["component-a", "component-b", "editor"]
 
 
 def test_chapter_title_labels_default_strips_brackets(tmp_path):
@@ -430,3 +425,34 @@ def test_stale_per_chapter_tags_self_heal_without_regenerate(tmp_path):
 
     assert status == "updated"
     assert "refreshed stale per-chapter tags" in reason
+
+
+def _export_with_closer_length(duration_ms: int) -> TracklistExport:
+    export = _make_export()
+    closer = next(t for t in export.tracks if t.raw_text == "A vs. B - Mashup Main")
+    closer.duration_ms = duration_ms
+    return export
+
+
+def test_last_chapter_overrunning_its_track_logs_warning(tmp_path, caplog):
+    # The 04:00 closer is a 1-minute track, but the video runs 16 more minutes.
+    cfg = _make_config()
+    export = _export_with_closer_length(60_000)
+    with caplog.at_level("WARNING", logger="festival_organizer.tracklists.cli_handler"):
+        captured = _run(cfg, tmp_path, duration_seconds=1200.0, export=export)
+
+    assert captured["status"] == "updated"
+    warnings = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+    assert warnings == [
+        "identify.chapters.tail_overrun: file=dj.mkv last_chapter_s=960 "
+        "track_s=60 excess_s=900"
+    ]
+
+
+def test_last_chapter_within_its_track_length_logs_nothing(tmp_path, caplog):
+    cfg = _make_config()
+    export = _export_with_closer_length(300_000)
+    with caplog.at_level("WARNING", logger="festival_organizer.tracklists.cli_handler"):
+        _run(cfg, tmp_path, duration_seconds=600.0, export=export)
+
+    assert not [r for r in caplog.records if r.levelname == "WARNING"]

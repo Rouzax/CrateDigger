@@ -372,8 +372,8 @@ def test_embed_chapters_assembled_path_builds_per_chapter_tags(tmp_path):
     primary = Track(
         start_ms=0,
         raw_text="A vs. B - Mega",
-        artist_slugs=["a-vs-b-mega"],
-        artist_names=["A vs. B"],
+        artist_slugs=["artist-a", "artist-b"],
+        artist_names=["Artist A", "Artist B"],
         genres=[],
         title="Mega",
         is_mashup=True,
@@ -420,8 +420,9 @@ def test_embed_chapters_assembled_path_builds_per_chapter_tags(tmp_path):
 
     chapter_tags = mock_wmt.call_args.kwargs["chapter_tags"]
     assert chapter_tags is not None
-    # Mashup metadata harvested from the child sub-component, keyed by ChapterUID.
-    assert chapter_tags[555]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "artist-a"
+    # Per-chapter tags come from the assembled chapter, keyed by ChapterUID.
+    assert chapter_tags[555]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "artist-a|artist-b"
+    assert chapter_tags[555]["CRATEDIGGER_TRACK_GENRE"] == "House"
 
 
 def test_embed_chapters_uses_merged_tags(tmp_path):

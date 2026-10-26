@@ -63,7 +63,9 @@ def _title_segments(members: list[Track]) -> tuple[str, str, list[str]]:
         if artist and artist not in seen_artists:
             seen_artists.add(artist)
             artists.append(artist)
-        titles.append(title)
+        # The qualifier ("(ID Remix)", an editor note) sits outside the row's
+        # name text but belongs to its title, as on the page and in the export.
+        titles.append(f"{title} {member.qualifier}" if member.qualifier else title)
         label = member.label
         if label and label not in seen_labels:
             seen_labels.add(label)
@@ -104,12 +106,12 @@ def merge_chapter_tags(
     source tracks, deduplicating by slug (first occurrence wins) while keeping
     the parallel name list index-aligned with the slug list.
 
-    For a mashup main WITH ``tlpSubTog`` sub-components the artist/genre source
-    is the contributors (the real per-component rows), dropping the mashup
-    primary whose only slug is a junk concatenated mega-slug and whose genres
-    are empty. Otherwise the source is ``[primary] + contributors``. Labels are
-    always the distinct labels across ``[primary] + contributors`` (including a
-    mashup primary's real label), order-preserving.
+    The artist/genre source is ``[primary] + contributors``, so the primary's
+    artists lead. A mashup primary links each of its artists and the mashup's
+    own credit ("DJs From Mars Bootleg"), which its ``tlpSubTog`` components do
+    not carry; the components then add only artists the mashup row leaves out
+    (a featured singer). Labels are the distinct labels across the same
+    tracks, order-preserving.
 
     The single-value display tags (``CRATEDIGGER_TRACK_PERFORMER`` and
     ``CRATEDIGGER_TRACK_TITLE``) mirror the display title: they are the artist
@@ -136,16 +138,16 @@ def merge_chapter_tags(
     if lead is None:
         lead = next((c for c in contributors if not c.is_subcomponent), None)
 
-    use_children = (
-        primary is not None
-        and primary.is_mashup
-        and any(c.is_subcomponent for c in contributors)
-    )
-    if use_children:
-        artist_genre_source = contributors
-    else:
-        artist_genre_source = ([primary] if primary is not None else []) + contributors
+    artist_genre_source = ([primary] if primary is not None else []) + contributors
 
+    # A mashup row shortens names to fit ("Tiesto", "HEL:BRG" for "Ahmed
+    # Helmy & Doppenberg pres. HEL:BRG"); a component row credits its track in
+    # full. Order follows the source list, but a component's spelling wins.
+    component_name: dict[str, str] = {}
+    for track in contributors:
+        if track.is_subcomponent:
+            for slug, name in zip(track.artist_slugs, track.artist_names, strict=True):
+                component_name.setdefault(slug, name)
     slugs: list[str] = []
     names: list[str] = []
     seen_slugs: set[str] = set()
@@ -155,7 +157,7 @@ def merge_chapter_tags(
                 continue
             seen_slugs.add(slug)
             slugs.append(slug)
-            names.append(name)
+            names.append(component_name.get(slug, name))
 
     genres: list[str] = []
     seen_genres: set[str] = set()
@@ -166,11 +168,9 @@ def merge_chapter_tags(
             seen_genres.add(genre)
             genres.append(genre)
 
-    # Labels always come from primary + contributors (even a mashup primary's).
-    label_source = ([primary] if primary is not None else []) + contributors
     labels: list[str] = []
     seen_labels: set[str] = set()
-    for track in label_source:
+    for track in artist_genre_source:
         label = track.label
         if label and label not in seen_labels:
             seen_labels.add(label)
@@ -250,8 +250,9 @@ def assemble(
     ``fold_seconds`` of it (or on its exact second); otherwise it breaks out as
     its own chapter, joining an immediately preceding breakout when within
     ``fold_seconds`` of it. Positionless overlays fold into the current anchor.
-    ``tlpSubTog`` sub-components attach to the anchor whose mashup-main shares
-    their ``group_id``. Returns chapters in ascending ``start_ms`` order.
+    ``tlpSubTog`` sub-components attach to whichever chapter holds the mashup
+    row they follow in page order. Returns chapters in ascending ``start_ms``
+    order.
 
     When ``fold_seconds is None`` (overlays-disabled mode) both the timed and
     positionless overlay passes are skipped entirely: no overlay is folded into
@@ -351,18 +352,29 @@ def assemble(
                 )
                 breakouts.append(cur_breakout)
 
-    # 3. Sub-components attach to the anchor whose mashup-main shares group_id.
+    # 3. Sub-components attach to the chapter holding their mashup row: the
+    # nearest preceding non-subcomponent row in page order. The shared
+    # trRow<N> class cannot be the key: 1001TL puts a main and a timed "w/"
+    # mashup layered over it in one trRow group, so matching on it hands a
+    # breakout mashup's components to the main's chapter. A mashup row that
+    # is in no chapter (an overlay with overlays disabled) has nowhere to
+    # take its components, so they are dropped with it.
+    chapter_of: dict[int, AssembledChapter] = {}
+    for ac in anchor_chapters + breakouts:
+        for member in ([ac.primary] if ac.primary is not None else []) + list(
+            ac.contributors
+        ):
+            chapter_of.setdefault(id(member), ac)
+    parent: Track | None = None
     for t in tracks:
         if not t.is_subcomponent:
+            parent = t
             continue
-        for ac in anchor_chapters:
-            if (
-                ac.primary is not None
-                and ac.primary.group_id == t.group_id
-                and t.group_id != -1
-            ):
-                ac.contributors.append(t)
-                break
+        if parent is None or not parent.is_mashup:
+            continue
+        host_chapter = chapter_of.get(id(parent))
+        if host_chapter is not None:
+            host_chapter.contributors.append(t)
 
     # 4. Titles. Sub-components are excluded from title members.
     for ac in anchor_chapters + breakouts:

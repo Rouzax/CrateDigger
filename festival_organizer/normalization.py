@@ -157,6 +157,19 @@ def _artist_key(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", s)
 
 
+def artist_slug_from_name(name: str) -> str:
+    """Build a 1001TL-style /artist/ slug from a display name.
+
+    Mirrors the 2026 slug form: transliterated, diacritics folded, lowercased,
+    whitespace runs turned into single hyphens, punctuation such as ``&`` and
+    ``.`` kept (``Matisse & Sadko`` -> ``matisse-&-sadko``, ``Arsnøvä`` ->
+    ``arsnova``). Only used for an artist 1001TL gives no page of its own, so
+    there is no real slug to prefer.
+    """
+    s = strip_diacritics(name.translate(_ARTIST_TRANSLIT)).lower()
+    return re.sub(r"\s+", "-", s.strip())
+
+
 def folder_slug(slug: str) -> str:
     """Make a real 1001TL slug safe as a directory name.
 

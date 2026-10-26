@@ -555,7 +555,7 @@ def test_parse_tracks_sets_is_mashup_on_subPosTog_rows():
         )
 
 
-# --- Overlay / sub-component flags + group_id (Task 2) ---
+# --- Overlay / sub-component flags ---
 
 
 def test_parse_tracks_con_row_with_valid_cue_is_overlay():
@@ -601,10 +601,10 @@ def test_parse_tracks_con_row_with_zero_cue_is_parsed_as_overlay():
     assert overlay.start_ms == 0
 
 
-def test_parse_tracks_tlpsubtog_row_is_subcomponent_with_group_id():
+def test_parse_tracks_tlpsubtog_row_is_subcomponent():
     """A 'tlpSubTog' row is a mashup sub-component: is_subcomponent True,
-    is_overlay True (it carries 'con'), start_ms 0, and group_id equal to its
-    trRow<N> number."""
+    is_overlay True (it carries 'con'), start_ms 0, and it directly follows
+    its mashup main in page order."""
     html = """<div id="tlTab">
 <div class="tlpItem tlpTog subPosTog trRow7">
 <input id="tlp1_cue_seconds" value="300">
@@ -626,17 +626,14 @@ def test_parse_tracks_tlpsubtog_row_is_subcomponent_with_group_id():
         assert s.is_subcomponent is True
         assert s.is_overlay is True
         assert s.start_ms == 0
-        assert s.group_id == 7
-    # The mashup main shares the group id and is flagged is_mashup.
     main = [t for t in tracks if t.is_mashup][0]
-    assert main.group_id == 7
+    assert tracks.index(main) == 0
     assert main.is_subcomponent is False
     assert main.is_overlay is False
 
 
 def test_parse_tracks_plain_main_has_default_overlay_fields():
-    """A plain main row has is_overlay/is_subcomponent/is_mashup False and
-    group_id -1 when it has no trRow class."""
+    """A plain main row has is_overlay/is_subcomponent/is_mashup False."""
     html = """<div id="tlTab">
 <div class="tlpItem tlpTog">
 <input id="tlp1_cue_seconds" value="100">
@@ -649,21 +646,23 @@ def test_parse_tracks_plain_main_has_default_overlay_fields():
     assert t.is_overlay is False
     assert t.is_subcomponent is False
     assert t.is_mashup is False
-    assert t.group_id == -1
 
 
-def test_parse_tracks_afrojack_mashup_mains_and_children_share_group_id():
-    """In the real Afrojack EDC fixture, every tlpSubTog child shares a
-    group_id with a subPosTog mashup main."""
+def test_parse_tracks_afrojack_subcomponents_follow_a_mashup_row():
+    """In the real Afrojack EDC fixture, every tlpSubTog child follows a
+    subPosTog mashup row in page order; assemble relies on that to find
+    each component's parent."""
     tracks = _parse_tracks(FIXTURE.read_text(encoding="utf-8"))
     subs = [t for t in tracks if t.is_subcomponent]
-    mains = [t for t in tracks if t.is_mashup]
     assert subs, "expected tlpSubTog sub-components in fixture"
-    assert mains, "expected subPosTog mashup mains in fixture"
-    main_group_ids = {t.group_id for t in mains}
-    assert all(s.group_id in main_group_ids for s in subs), (
-        "every sub-component should share a group_id with a mashup main"
-    )
+    parent = None
+    for t in tracks:
+        if not t.is_subcomponent:
+            parent = t
+            continue
+        assert parent is not None and parent.is_mashup, (
+            f"sub-component {t.raw_text!r} does not follow a mashup row"
+        )
     # Sub-components carry the con overlay flag and sit at cue 0.
     for s in subs:
         assert s.is_overlay is True
@@ -788,3 +787,128 @@ def test_parse_tracks_label_full_empty_without_labels():
     html = _row('<meta itemprop="name" content="A - B">')
     tracks = _parse_tracks(html)
     assert tracks[0].label_full == ""
+
+
+# --- Whole-credit link targets ---------------------------------------------
+#
+# 1001TL links an artist that has no page of its own to a slug built from the
+# row's entire artist credit. That slug names no artist, so the visible name is
+# kept and paired with a slug derived from it instead.
+
+AMF_FIXTURE = Path(__file__).parent / "fixtures" / "guetta_amf_2026.html"
+PAIRED_2WTSW119 = Path(__file__).parent / "fixtures" / "paired" / "2wtsw119.html"
+
+
+def _track_by_prefix(tracks, raw_prefix: str):
+    return next(t for t in tracks if t.raw_text.startswith(raw_prefix))
+
+
+def test_whole_credit_link_keeps_each_visible_name():
+    tracks = _parse_tracks(AMF_FIXTURE.read_text(encoding="utf-8"))
+    row = _track_by_prefix(tracks, "LMFAO & Lauren Bennett & Goonrock vs.")
+    assert list(zip(row.artist_slugs, row.artist_names, strict=True)) == [
+        ("lmfao", "LMFAO"),
+        ("lauren-bennett", "Lauren Bennett"),
+        ("goonrock", "Goonrock"),
+        ("matisse-&-sadko", "Matisse & Sadko"),
+        ("vion-konger", "Vion Konger"),
+        ("scrufizzer", "Scrufizzer"),
+        ("david-guetta", "David Guetta"),
+    ]
+
+
+def test_whole_credit_link_on_subcomponent_row_transliterates_slug():
+    tracks = _parse_tracks(PAIRED_2WTSW119.read_text(encoding="utf-8"))
+    row = next(
+        t
+        for t in tracks
+        if t.is_subcomponent and t.raw_text.startswith("Matisse & Sadko & Ars")
+    )
+    assert ("arsnova", "Arsnøvä") in list(
+        zip(row.artist_slugs, row.artist_names, strict=True)
+    )
+    assert "matisse-&-sadko-&-arsnova" not in row.artist_slugs
+
+
+def test_single_artist_whose_slug_equals_the_credit_is_kept():
+    html = """<div id="tlTab">
+<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="100">
+<meta itemprop="name" content="Matisse &amp; Sadko - Persona">
+<span class="trackValue notranslate blueTxt"><span class="notranslate blueTxt" translate="no">Matisse &amp; Sadko<span class="tgHid spL"><a class="notranslate tgHid" href="/artist/matisse-&amp;-sadko/tracks.html"></a></span></span></span>
+</div>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].artist_slugs == ["matisse-&-sadko"]
+    assert tracks[0].artist_names == ["Matisse & Sadko"]
+
+
+def test_remix_credit_artist_page_is_not_a_whole_credit_link():
+    tracks = _parse_tracks(AMF_FIXTURE.read_text(encoding="utf-8"))
+    row = _track_by_prefix(tracks, "Zombie Nation - Kernkraft 400")
+    assert "david-guetta-&-marten-horger-pres.-men-machine" in row.artist_slugs
+
+
+# --- Names that carry more than the linked artist ----------------------------
+
+
+def test_aka_credit_names_the_linked_alias():
+    # 1001TL renders "Marlon Hoffstadt aka DJ Daddy Trance" as one span linked
+    # only to /artist/dj-daddy-trance/; the name for that slug is the alias.
+    tracks = _parse_tracks(AMF_FIXTURE.read_text(encoding="utf-8"))
+    row = _track_by_prefix(tracks, "Marlon Hoffstadt aka DJ Daddy Trance")
+    assert row.artist_slugs == ["dj-daddy-trance"]
+    assert row.artist_names == ["DJ Daddy Trance"]
+
+
+def test_span_text_without_a_slug_match_is_kept_whole():
+    html = """<div id="tlTab">
+<div class="tlpItem tlpTog trRow1">
+<input id="tlp1_cue_seconds" value="100">
+<meta itemprop="name" content="Storm - Storm">
+<span class="trackValue notranslate blueTxt"><span class="notranslate blueTxt" translate="no">Storm<span class="tgHid spL"><a class="notranslate tgHid" href="/artist/storm-(de)/tracks.html"></a></span></span></span>
+</div>
+</div>"""
+    tracks = _parse_tracks(html)
+    assert tracks[0].artist_names == ["Storm"]
+
+
+# --- release length -----------------------------------------------------------
+
+
+def test_parse_tracks_reads_release_length_from_duration_meta():
+    tracks = _parse_tracks(AMF_FIXTURE.read_text(encoding="utf-8"))
+    last = _track_by_prefix(tracks, "David Guetta ft. Usher - Without You")
+    assert last.duration_ms == 308_000  # PT5M8S
+
+
+def test_parse_tracks_release_length_zero_without_duration_meta():
+    tracks = _parse_tracks(AMF_FIXTURE.read_text(encoding="utf-8"))
+    row = _track_by_prefix(tracks, "Flo Rida ft. David Guetta - Club Can't Handle Me")
+    assert row.duration_ms == 0
+
+
+# --- names past 1001TL's 255-character cap -------------------------------------
+
+PAIRED_2WRMG6F1 = Path(__file__).parent / "fixtures" / "paired" / "2wrmg6f1.html"
+
+
+def test_name_past_the_255_character_cap_is_recovered_whole():
+    # 1001TL keeps only the last 255 characters of meta itemprop=name, cutting
+    # this mashup's credit mid-word ("K & MC Ambush" for "AFROJACK & MC Ambush").
+    tracks = _parse_tracks(PAIRED_2WRMG6F1.read_text(encoding="utf-8"))
+    row = _track_by_prefix(tracks, "David Guetta & Sia & Bebe Rexha vs. Lazy Rich")
+    assert row.raw_text.endswith("Footrocker (AFROJACK Edit)")
+    assert "W&W & Hardwell & AFROJACK & MC Ambush vs." in row.raw_text
+    assert row.title.startswith("Titanium vs. Flash")
+    # With the whole credit back, the whole-credit link on Space92 is caught too.
+    assert ("space92", "Space92") in list(
+        zip(row.artist_slugs, row.artist_names, strict=True)
+    )
+
+
+def test_name_under_the_cap_keeps_the_meta_text():
+    tracks = _parse_tracks(AMF_FIXTURE.read_text(encoding="utf-8"))
+    row = _track_by_prefix(tracks, "David Guetta ft. Sia - Titanium")
+    # The visible text adds "(Co-Prod. by AFROJACK)"; the meta name does not.
+    assert row.raw_text == "David Guetta ft. Sia - Titanium (Alesso Remix)"

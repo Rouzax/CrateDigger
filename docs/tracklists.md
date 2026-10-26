@@ -195,6 +195,34 @@ This means 1001tracklists.com has changed its page structure in a way that the p
 
 **What you do not need to worry about:** the scraper still tries to extract whatever it can, so chapter markers and core tracklist data may still be present even when the canary fires. One WARNING is emitted per unique breakage per run, regardless of how many files are processed, so a single warning does not mean every file in the batch is broken.
 
+### Chapters are out of sync with the video
+
+Every chapter starts a little early (or late) by the same amount, so a track's name appears minutes before you hear it. `identify` may also have warned:
+
+```
+WARNING  identify.chapters.tail_overrun: file=2026-10-24 - David Guetta - AMF.mkv last_chapter_s=959 track_s=308 excess_s=651
+```
+
+The warning means the last chapter runs far longer than its track's release length (here 16 minutes for a 5-minute track). There are two possible causes:
+
+- **The video has an intro the tracklist leaves out.** Tracklist cue times start when the music starts. If your video opens with a stage show, countdown or crowd footage, every chapter lands that much too early. Many 1001Tracklists pages are cued against an audio recording rather than a video, so nothing ties their timeline to your file.
+- **The tracklist stops before the set does.** The last tracks have not been added to 1001Tracklists yet, so the final chapter stretches over all of them.
+
+To tell them apart, play the file at the first chapter. If the first track starts later than its chapter, it is an intro.
+
+**To remove an intro**, cut it off with `mkvmerge` (part of MKVToolNix, which CrateDigger already needs), then let `identify` write the chapters again. The cue times on 1001Tracklists already start at 0:00, so they fit the trimmed file:
+
+```
+mkvmerge -o "Set (trimmed).mkv" --no-chapters --split parts:00:11:56- "Set.mkv"
+cratedigger identify "Set (trimmed).mkv"
+```
+
+Replace `00:11:56` with the length of the intro. `mkvmerge` copies the streams without re-encoding, cuts at the nearest keyframe, and keeps the cover art, the stored tracklist URL and the other tags. `--no-chapters` drops the old chapters, which would otherwise be shifted along with the video and be wrong again. Check the trimmed file plays correctly, then replace the original with it under the original name so the NFO and artwork still match. Any audio album TrackSplit made from the old chapters needs rebuilding with `tracksplit --force`.
+
+Avoid `ffmpeg -map 0 -c copy` for this: it turns the embedded cover images into extra video tracks.
+
+**If the tracklist is incomplete**, there is nothing to fix in the file. Re-run `identify` once the missing tracks are on 1001Tracklists.
+
 ## See also
 
 - [identify command](commands/identify.md): command reference, flags, interactive and auto selection, examples

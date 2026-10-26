@@ -155,7 +155,7 @@ def _overlay(start_ms: int, raw_text: str, label: str = "") -> Track:
     )
 
 
-def _subcomponent(start_ms: int, raw_text: str, group_id: int) -> Track:
+def _subcomponent(start_ms: int, raw_text: str) -> Track:
     return Track(
         start_ms=start_ms,
         raw_text=raw_text,
@@ -163,7 +163,6 @@ def _subcomponent(start_ms: int, raw_text: str, group_id: int) -> Track:
         genres=[],
         is_overlay=True,
         is_subcomponent=True,
-        group_id=group_id,
     )
 
 
@@ -240,12 +239,11 @@ def test_overlay_at_exact_host_second_folds_no_duplicate() -> None:
     assert result[0].contributors == [overlay]
 
 
-def test_subcomponents_attach_to_matching_group_id_never_a_chapter() -> None:
+def test_subcomponents_attach_to_preceding_mashup_never_a_chapter() -> None:
     host = _anchor_track(10_000, "Host - Mashup")
-    host.group_id = 7
     host.is_mashup = True
-    sub_a = _subcomponent(0, "Comp A - Part A", group_id=7)
-    sub_b = _subcomponent(0, "Comp B - Part B", group_id=7)
+    sub_a = _subcomponent(0, "Comp A - Part A")
+    sub_b = _subcomponent(0, "Comp B - Part B")
     anchors = [_anchor_chapter(10_000, "Host - Mashup")]
     result = assemble(anchors, {10_000: host}, [host, sub_a, sub_b], fold_seconds=20)
     assert len(result) == 1
@@ -255,11 +253,60 @@ def test_subcomponents_attach_to_matching_group_id_never_a_chapter() -> None:
     assert chapter.title == "Host - Mashup"
 
 
-def test_subcomponent_with_no_matching_anchor_is_skipped() -> None:
+def test_subcomponent_without_preceding_mashup_is_skipped() -> None:
     host = _anchor_track(10_000, "Host - Main")
-    sub = _subcomponent(0, "Comp - Part", group_id=99)
+    sub = _subcomponent(0, "Comp - Part")
     anchors = [_anchor_chapter(10_000, "Host - Main")]
     result = assemble(anchors, {10_000: host}, [host, sub], fold_seconds=20)
+    assert len(result) == 1
+    assert result[0].contributors == []
+
+
+def _timed_mashup_overlay(start_ms: int, raw_text: str) -> Track:
+    return Track(
+        start_ms=start_ms,
+        raw_text=raw_text,
+        artist_slugs=[],
+        genres=[],
+        is_overlay=True,
+        is_mashup=True,
+    )
+
+
+def test_subcomponents_of_breakout_mashup_attach_to_breakout_not_host() -> None:
+    # 1001TL renders a timed "w/" mashup inside a plain main's trRow group: the
+    # main, the mashup overlay, then the mashup's components.
+    host = _anchor_track(758_000, "Guetta - Where Them Girls At (2026 Remix)")
+    mashup = _timed_mashup_overlay(
+        875_000, "Avicii vs. Guetta - Levels vs. Where Them Girls At"
+    )
+    sub_a = _subcomponent(0, "Avicii - Levels")
+    sub_b = _subcomponent(0, "Guetta - Where Them Girls At")
+    anchors = [_anchor_chapter(758_000, "Guetta - Where Them Girls At (2026 Remix)")]
+    result = assemble(
+        anchors, {758_000: host}, [host, mashup, sub_a, sub_b], fold_seconds=20
+    )
+    assert [c.start_ms for c in result] == [758_000, 875_000]
+    assert result[0].contributors == []
+    assert result[1].contributors == [mashup, sub_a, sub_b]
+
+
+def test_subcomponents_of_folded_mashup_attach_to_its_host() -> None:
+    host = _anchor_track(10_000, "Host - Main")
+    mashup = _timed_mashup_overlay(15_000, "A vs. B - X vs. Y")
+    sub = _subcomponent(0, "A - X")
+    anchors = [_anchor_chapter(10_000, "Host - Main")]
+    result = assemble(anchors, {10_000: host}, [host, mashup, sub], fold_seconds=20)
+    assert len(result) == 1
+    assert result[0].contributors == [mashup, sub]
+
+
+def test_subcomponents_of_overlay_mashup_dropped_when_overlays_disabled() -> None:
+    host = _anchor_track(10_000, "Host - Main")
+    mashup = _timed_mashup_overlay(60_000, "A vs. B - X vs. Y")
+    sub = _subcomponent(0, "A - X")
+    anchors = [_anchor_chapter(10_000, "Host - Main")]
+    result = assemble(anchors, {10_000: host}, [host, mashup, sub], fold_seconds=None)
     assert len(result) == 1
     assert result[0].contributors == []
 
@@ -403,19 +450,21 @@ def test_merge_empty_inputs_returns_empty() -> None:
 
 
 def test_merge_mashup_main_with_subcomponents() -> None:
+    # A mashup row links each of its artists plus the mashup's own credit
+    # ("DJs From Mars Bootleg"); the components repeat some of them.
     primary = _meta_track(
-        raw_text="A vs. B vs. C - Mega Mashup",
-        artist_slugs=["a-vs-b-vs-c-mega"],
-        artist_names=["A vs. B vs. C"],
-        title="Mega Mashup",
+        raw_text="Artist A vs. Artist B - Part A vs. Part B (Editor Bootleg)",
+        artist_slugs=["artist-a", "artist-b", "editor"],
+        artist_names=["Artist A", "Artist B", "Editor"],
+        title="Part A vs. Part B (Editor Bootleg)",
         label="Spinnin",
         genres=[],
         is_mashup=True,
     )
     child_a = _meta_track(
-        raw_text="Artist A - Part A",
-        artist_slugs=["artist-a"],
-        artist_names=["Artist A"],
+        raw_text="Artist A ft. Singer - Part A",
+        artist_slugs=["artist-a", "singer"],
+        artist_names=["Artist A", "Singer"],
         title="Part A",
         label="Label A",
         genres=["House", "Tech House"],
@@ -433,18 +482,49 @@ def test_merge_mashup_main_with_subcomponents() -> None:
 
     tags = merge_chapter_tags(primary, [child_a, child_b])
 
-    # Children's real slugs/names; mega-slug absent; aligned and equal length.
-    assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "artist-a|artist-b"
-    assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Artist A|Artist B"
-    assert "a-vs-b-vs-c-mega" not in tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"]
-    # Genre = order-preserving union of children genres.
+    # The mashup row's artists first (its editor credit included), then any
+    # artist only a component names; aligned and deduplicated.
+    assert (
+        tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "artist-a|artist-b|editor|singer"
+    )
+    assert (
+        tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Artist A|Artist B|Editor|Singer"
+    )
+    # Genre = order-preserving union; the mashup row itself carries none.
     assert tags["CRATEDIGGER_TRACK_GENRE"] == "House|Tech House|Techno"
-    # Label = distinct labels across primary + children (mashup primary's real
-    # label IS included).
+    # Label = distinct labels across primary + children.
     assert tags["CRATEDIGGER_TRACK_LABEL"] == "Spinnin|Label A|Label B"
     # Display + title derive from the lead (the primary mashup main).
-    assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "A vs. B vs. C"
-    assert tags["CRATEDIGGER_TRACK_TITLE"] == "Mega Mashup"
+    assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "Artist A vs. Artist B"
+    assert tags["CRATEDIGGER_TRACK_TITLE"] == "Part A vs. Part B (Editor Bootleg)"
+
+
+def test_merge_mashup_artists_lead_folded_overlay_artists() -> None:
+    # Guetta AMF 2026 "I Gotta Feeling" chapter: a mashup main, a positionless
+    # overlay folded onto it, then the mashup's components.
+    primary = _meta_track(
+        raw_text="Black Eyed Peas vs. Rihanna - I Gotta Feeling vs. We Found Love (David Guetta Mashup)",
+        artist_slugs=["black-eyed-peas", "rihanna", "david-guetta"],
+        artist_names=["Black Eyed Peas", "Rihanna", "David Guetta"],
+        is_mashup=True,
+    )
+    overlay = _meta_track(
+        raw_text="The Chemical Brothers - Hey Boy, Hey Girl (ARTBAT Remix)",
+        artist_slugs=["the-chemical-brothers", "artbat"],
+        artist_names=["The Chemical Brothers", "ARTBAT"],
+    )
+    child = _meta_track(
+        raw_text="Black Eyed Peas - I Gotta Feeling",
+        artist_slugs=["black-eyed-peas"],
+        artist_names=["Black Eyed Peas"],
+        is_subcomponent=True,
+    )
+
+    tags = merge_chapter_tags(primary, [overlay, child])
+
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == (
+        "black-eyed-peas|rihanna|david-guetta|the-chemical-brothers|artbat"
+    )
 
 
 def test_merge_normal_anchor_with_folded_overlay() -> None:
@@ -562,21 +642,20 @@ def test_merge_breakout_primary_none_uses_lead_contributor() -> None:
 # --- assemble(fold_seconds=None) overlays-disabled mode ------------------
 
 
-def _mashup_anchor_track(start_ms: int, raw_text: str, group_id: int) -> Track:
+def _mashup_anchor_track(start_ms: int, raw_text: str) -> Track:
     return Track(
         start_ms=start_ms,
         raw_text=raw_text,
         artist_slugs=[],
         genres=[],
         is_mashup=True,
-        group_id=group_id,
     )
 
 
 def test_assemble_fold_none_skips_overlays_keeps_subcomponents() -> None:
     # Anchors: a plain main and a mashup main with two tlpSubTog children.
     plain = _anchor_track(0, "Opener - Intro")
-    mashup = _mashup_anchor_track(60_000, "A vs. B - Mega", group_id=7)
+    mashup = _mashup_anchor_track(60_000, "A vs. B - Mega")
     anchors = [
         _anchor_chapter(0, "Opener - Intro"),
         _anchor_chapter(60_000, "A vs. B - Mega"),
@@ -586,8 +665,8 @@ def test_assemble_fold_none_skips_overlays_keeps_subcomponents() -> None:
     # (would break out @20). Plus the mashup's two sub-components.
     timed_overlay = _overlay(5_000, "Overlay - Acapella")
     far_overlay = _overlay(120_000, "Far - Solo")
-    sub_a = _subcomponent(0, "Artist A - Part A", group_id=7)
-    sub_b = _subcomponent(0, "Artist B - Part B", group_id=7)
+    sub_a = _subcomponent(0, "Artist A - Part A")
+    sub_b = _subcomponent(0, "Artist B - Part B")
     tracks = [plain, timed_overlay, mashup, sub_a, sub_b, far_overlay]
 
     result = assemble(anchors, anchor_tracks, tracks, fold_seconds=None)
@@ -608,7 +687,7 @@ def test_assemble_fold_none_skips_overlays_keeps_subcomponents() -> None:
 
 def test_assemble_fold_20_on_same_data_still_folds_and_breaks_out() -> None:
     plain = _anchor_track(0, "Opener - Intro")
-    mashup = _mashup_anchor_track(60_000, "A vs. B - Mega", group_id=7)
+    mashup = _mashup_anchor_track(60_000, "A vs. B - Mega")
     anchors = [
         _anchor_chapter(0, "Opener - Intro"),
         _anchor_chapter(60_000, "A vs. B - Mega"),
@@ -616,8 +695,8 @@ def test_assemble_fold_20_on_same_data_still_folds_and_breaks_out() -> None:
     anchor_tracks = {0: plain, 60_000: mashup}
     timed_overlay = _overlay(5_000, "Overlay - Acapella")
     far_overlay = _overlay(120_000, "Far - Solo")
-    sub_a = _subcomponent(0, "Artist A - Part A", group_id=7)
-    sub_b = _subcomponent(0, "Artist B - Part B", group_id=7)
+    sub_a = _subcomponent(0, "Artist A - Part A")
+    sub_b = _subcomponent(0, "Artist B - Part B")
     tracks = [plain, timed_overlay, mashup, sub_a, sub_b, far_overlay]
 
     result = assemble(anchors, anchor_tracks, tracks, fold_seconds=20)
@@ -639,8 +718,8 @@ def test_assemble_fold_20_on_same_data_still_folds_and_breaks_out() -> None:
 def test_build_chapter_tags_from_assembled_maps_uids() -> None:
     primary = _meta_track(
         raw_text="A vs. B - Mega",
-        artist_slugs=["a-vs-b-mega"],
-        artist_names=["A vs. B"],
+        artist_slugs=["artist-a", "artist-b"],
+        artist_names=["Artist A", "Artist B"],
         title="Mega",
         is_mashup=True,
     )
@@ -674,3 +753,57 @@ def test_build_chapter_tags_from_assembled_maps_uids() -> None:
     assert set(result.keys()) == {111}
     assert result[111]["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == "artist-a|artist-b"
     assert 222 not in result
+
+
+# --- qualifiers ("(ID Remix)", editor notes) -----------------------------
+
+
+def test_combined_title_keeps_member_qualifier_after_its_title() -> None:
+    # 1001TL marks an unreleased remix with a trackStatus span; without it the
+    # chapter reads as the original release.
+    track = _track("Storm - Storm", label="DANCE POOL")
+    track.qualifier = "(ID Remix)"
+    assert combined_title([track]) == "Storm - Storm (ID Remix) [DANCE POOL]"
+
+
+def test_merge_title_tag_keeps_qualifier() -> None:
+    primary = _meta_track(
+        raw_text="will.i.am & Britney Spears - Scream & Shout",
+        artist_slugs=["will.i.am", "britney-spears"],
+        artist_names=["will.i.am", "Britney Spears"],
+    )
+    primary.qualifier = "(ID Remix)"
+    tags = merge_chapter_tags(primary, [])
+    assert tags["CRATEDIGGER_TRACK_TITLE"] == "Scream & Shout (ID Remix)"
+
+
+def test_merge_names_prefer_component_spelling_over_mashup_row() -> None:
+    # A mashup row shortens names ("Tiesto", "HEL:BRG"); the component row
+    # credits the track in full. Artist order stays mashup-first.
+    primary = _meta_track(
+        raw_text="Dan Cooper vs. Tiesto - Recuperation 303 vs. Lethal Industry",
+        artist_slugs=["dan-cooper", "tiesto", "ahmed-helmy-&-doppenberg-pres.-helbrg"],
+        artist_names=["Dan Cooper", "Tiesto", "HEL:BRG"],
+        is_mashup=True,
+    )
+    child = _meta_track(
+        raw_text="Tiësto - Lethal Industry",
+        artist_slugs=["tiesto"],
+        artist_names=["Tiësto"],
+        is_subcomponent=True,
+    )
+    child_b = _meta_track(
+        raw_text="Ahmed Helmy & Doppenberg pres. HEL:BRG - Break It Down",
+        artist_slugs=["ahmed-helmy-&-doppenberg-pres.-helbrg"],
+        artist_names=["Ahmed Helmy & Doppenberg pres. HEL:BRG"],
+        is_subcomponent=True,
+    )
+
+    tags = merge_chapter_tags(primary, [child, child_b])
+
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == (
+        "dan-cooper|tiesto|ahmed-helmy-&-doppenberg-pres.-helbrg"
+    )
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == (
+        "Dan Cooper|Tiësto|Ahmed Helmy & Doppenberg pres. HEL:BRG"
+    )

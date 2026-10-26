@@ -13,6 +13,11 @@ timestamp bytes; downstream parsing is insensitive to all of those.
 Timestamps compare at second granularity because the export renders
 minute-precision-friendly forms ("[02:25]", "[2:14:27]") while synthesis
 emits HH:MM:SS.mmm; both parse to the same seconds value.
+
+One deliberate divergence: 1001TL caps a track name at its last 255
+characters, and the export carried that cut. Synthesis recovers the whole
+name from the visible row text, so for a row whose exported name hit the cap
+the export text need only be the tail of the synthesized text.
 """
 
 import re
@@ -20,13 +25,18 @@ from pathlib import Path
 
 import pytest
 
-from festival_organizer.tracklists.api import _parse_tracks, _synthesize_export_lines
+from festival_organizer.tracklists.api import (
+    _META_NAME_CAP,
+    _parse_tracks,
+    _synthesize_export_lines,
+)
 from festival_organizer.tracklists.players import partition_lines_by_player
 
 FIXTURES = Path(__file__).parent / "fixtures" / "paired"
 PAIR_IDS = ["1pn8l919", "2wrmg6f1", "2wtsw119"]
 
 _TS_RE = re.compile(r"^\s*\[([0-9:.]+)\]\s*(.+?)\s*$")
+_LABEL_SUFFIX_RE = re.compile(r" \[[^\]]*\]$")
 
 
 def _ts_seconds(ts: str) -> int:
@@ -56,8 +66,15 @@ def test_synthesized_lines_match_real_export(pair_id):
     synthesized = _synthesize_export_lines(_parse_tracks(html))
 
     exp_rows = _timed_rows(export_lines)
+    syn_rows = _timed_rows(synthesized)
     assert exp_rows, "fixture yielded no timed rows"
-    assert _timed_rows(synthesized) == exp_rows
+    assert [r[:2] for r in syn_rows] == [r[:2] for r in exp_rows]
+    for (_, _, syn_text), (_, _, exp_text) in zip(syn_rows, exp_rows, strict=True):
+        if syn_text == exp_text:
+            continue
+        exported_name = _LABEL_SUFFIX_RE.sub("", exp_text)
+        assert len(exported_name) >= _META_NAME_CAP, (syn_text, exp_text)
+        assert syn_text.casefold().endswith(exp_text.casefold())
 
 
 @pytest.mark.parametrize("pair_id", PAIR_IDS)

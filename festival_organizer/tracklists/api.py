@@ -93,8 +93,6 @@ class Track:
         (timed "w/" overlays and positionless component acappellas/samples)
     is_subcomponent: True for "tlpSubTog" rows (a mashup main's component
         breakdown); these are metadata contributors, never their own chapter
-    group_id: the trRow<N> number shared by a mashup main and its tlpSubTog
-        children, used to link sub-components to their parent; -1 when absent
     qualifier: page-only annotation spans appended to the export text:
         span.trackStatus ("(ID Remix)") and span.trackEditData
         ("(Intro Edit)", "(Bad Girls)"), joined in document order
@@ -105,6 +103,9 @@ class Track:
     label_full: every span.trackLabel on the row joined with "/", as the
         export renders multi-label rows. `label` keeps first-span-only
         semantics because CRATEDIGGER_TRACK_LABEL is written from it.
+    duration_ms: the released track's length from <meta itemprop="duration">
+        (ISO 8601, "PT5M8S"); 0 when 1001TL gives none. This is the release,
+        not how long the DJ played it.
     """
 
     start_ms: int
@@ -118,10 +119,10 @@ class Track:
     player: int = 0  # 1001TL "Player N" ordinal; 0 when no per-player marker
     is_overlay: bool = False
     is_subcomponent: bool = False
-    group_id: int = -1
     qualifier: str = ""
     cue_unset: bool = False
     label_full: str = ""
+    duration_ms: int = 0
 
 
 @dataclass
@@ -201,6 +202,62 @@ def split_artist_title(raw_text: str) -> tuple[str, str]:
     return artist.strip(), title.strip()
 
 
+# Joining words between artists in a credit. Dropped from both sides when a
+# slug is compared against a whole credit, because 1001TL's credit slugs keep
+# some ("&", "vs.") and spell others differently ("+" becomes "and").
+_CREDIT_CONNECTORS = frozenset(
+    {"&", "and", "+", "vs", "vs.", "ft", "ft.", "feat", "feat.", "x"}
+)
+
+
+def _credit_key(text: str) -> str:
+    """Match-key for a whole artist credit or a slug made from one."""
+    from festival_organizer.normalization import _artist_key
+
+    words = re.split(r"[\s-]+", text.lower())
+    return _artist_key(" ".join(w for w in words if w not in _CREDIT_CONNECTORS))
+
+
+def _slug_matching_run(text: str, slug: str) -> str:
+    """The shortest run of words in ``text`` that names ``slug``, or ``""``.
+
+    1001TL can render more than the linked artist in one span: "Marlon
+    Hoffstadt aka DJ Daddy Trance" is a single span linked only to
+    ``dj-daddy-trance``. The words that match the slug are that artist's
+    name. Returns ``""`` when the whole text already matches the slug (keep it
+    as rendered) or when no run matches (a name 1001TL spells differently
+    from its slug, such as ``Storm`` for ``storm-(de)``, is kept whole).
+    """
+    from festival_organizer.normalization import _artist_key
+
+    slug_key = _artist_key(slug)
+    if not slug_key or _artist_key(text) == slug_key:
+        return ""
+    words = text.split()
+    for size in range(1, len(words)):
+        for start in range(len(words) - size + 1):
+            run = " ".join(words[start : start + size])
+            if _artist_key(run) == slug_key:
+                return run
+    return ""
+
+
+def _is_whole_credit_slug(slug: str, display: str, credit: str) -> bool:
+    """True when an anchor's slug is the row's whole artist credit, not one artist.
+
+    1001TL links an artist that has no page of its own to a slug built from
+    the entire credit (``lmfao-&-lauren-bennett-&-goonrock-vs.-matisse-...``),
+    on plain, mashup and component rows alike. The anchor's own visible name
+    is then just one artist in that credit. An act whose visible name IS the
+    whole credit (``Matisse & Sadko`` alone, or a combined ``A & B pres. C``
+    act) keeps its slug: that page is the act's own.
+    """
+    if not credit or not display:
+        return False
+    credit_key = _credit_key(credit)
+    return _credit_key(slug) == credit_key and _credit_key(display) != credit_key
+
+
 def _parse_tracks(html) -> list["Track"]:
     """Extract chapter-aligned per-track rows from a 1001TL tracklist page.
 
@@ -214,13 +271,14 @@ def _parse_tracks(html) -> list["Track"]:
         component (acappella/sample) that folds into its host.
       - 'tlpSubTog' rows are a mashup main's component breakdown
         (Track.is_subcomponent, always 'con' with cue 0). They are metadata
-        contributors, linked to their parent main by the shared trRow<N>
-        group_id, and never become chapters themselves.
+        contributors, linked to their parent mashup row by page order (they
+        directly follow it), and never become chapters themselves.
     Returns Track objects in page order with start_ms taken from the row's
     cue_seconds input (float seconds * 1000).
     """
     from festival_organizer.normalization import (
         _artist_key,
+        artist_slug_from_name,
         fix_mojibake,
         normalize_genre,
     )
@@ -256,29 +314,25 @@ def _parse_tracks(html) -> list["Track"]:
             start_ms = int(float(_attr_str(cue_el, "value", "0")) * 1000)
         except ValueError:
             continue
-        # group_id ties a mashup main to its tlpSubTog children via the shared
-        # trRow<N> class; -1 when the row has no trRow marker.
-        group_id = -1
-        for cls in classes:
-            gm = re.fullmatch(r"trRow(\d+)", cls)
-            if gm:
-                group_id = int(gm.group(1))
-                break
         name_meta = row.select_one('meta[itemprop="name"]')
         raw_text = fix_mojibake(_attr_str(name_meta, "content")) if name_meta else ""
         if not raw_text:
             # Un-ID'd rows (e.g. "ID - ID") carry no itemprop="name" meta, so the
-            # line above leaves raw_text empty. Recover the visible track text
-            # from span.trackValue; otherwise the row is silently blanked and
-            # assemble would drop the chapter title (ID mains) or dangle a "vs."
-            # (folded ID overlays). span.trackValue renders inner padding such as
-            # "Title ( Remix )", so collapse it to the meta form "Title (Remix)".
-            value_el = row.select_one("span.trackValue")
-            if value_el is not None:
-                recovered = re.sub(r"\s+", " ", value_el.get_text(" ", strip=True))
-                recovered = recovered.replace("( ", "(").replace(" )", ")")
-                recovered = recovered.replace("[ ", "[").replace(" ]", "]")
-                raw_text = fix_mojibake(recovered.strip())
+            # line above leaves raw_text empty. Recover the visible track text;
+            # otherwise the row is silently blanked and assemble would drop the
+            # chapter title (ID mains) or dangle a "vs." (folded ID overlays).
+            raw_text = _visible_track_text(row)
+        elif len(raw_text) >= _META_NAME_CAP:
+            # 1001TL stores only the last _META_NAME_CAP characters, cutting a
+            # long mashup credit mid-word at the front. The visible text is
+            # whole; it differs only in case where 1001TL has since restyled a
+            # name ("POPOF" for "Popof"). Anything else means the two are not
+            # the same text, so the meta name stays.
+            visible = _visible_track_text(row)
+            if len(visible) > len(raw_text) and visible.casefold().endswith(
+                raw_text.casefold()
+            ):
+                raw_text = visible
         genres = [
             normalize_genre(fix_mojibake(_attr_str(m, "content")))
             for m in row.select('meta[itemprop="genre"]')
@@ -287,6 +341,7 @@ def _parse_tracks(html) -> list["Track"]:
         # Walk artist anchors in document order; capture (slug, display_name)
         # pairs. Display name is the stripped text of the nearest ancestor
         # <span class="notranslate"> that wraps the anchor.
+        credit, _ = split_artist_title(raw_text)
         slugs: list[str] = []
         names: list[str] = []
         for a in row.select("a[href^='/artist/']"):
@@ -297,8 +352,6 @@ def _parse_tracks(html) -> list["Track"]:
             if not m:
                 continue
             slug = m.group(1)
-            if slug in slugs:
-                continue
             # Extract the per-artist display name. 1001TL renders three
             # distinct shapes around artist anchors and we handle each:
             #
@@ -380,15 +433,20 @@ def _parse_tracks(html) -> list["Track"]:
                     ):
                         candidate = parent.get_text(" ", strip=True)
                         if not (candidate.startswith("(") and candidate.endswith(")")):
-                            display = candidate
+                            display = _slug_matching_run(candidate, slug) or candidate
                         break
             display = re.sub(
                 r"^(ft\.?\s+|feat\.?\s+)", "", display, flags=re.IGNORECASE
             )
             if not display:
                 display = slug.replace("-", " ").title()
+            display = fix_mojibake(display)
+            if _is_whole_credit_slug(slug, display, credit):
+                slug = artist_slug_from_name(display)
+            if slug in slugs:
+                continue
             slugs.append(slug)
-            names.append(fix_mojibake(display))
+            names.append(display)
         # Title: the part after the FIRST " - " (see split_artist_title). 1001TL
         # titles can carry their own " - " (subtitles, remix suffixes), so the
         # first separator is the artist/title boundary, not the last.
@@ -414,6 +472,12 @@ def _parse_tracks(html) -> list["Track"]:
         # visible display div is the only uncued signal. Fail open (False)
         # when the div is missing so markup drift keeps rows instead of
         # dropping them; the canary flags the drift.
+        duration_meta = row.select_one('meta[itemprop="duration"]')
+        duration_ms = (
+            _iso_duration_ms(_attr_str(duration_meta, "content"))
+            if duration_meta
+            else 0
+        )
         cue_display = row.select_one("div[onclick*='toggleCue']")
         cue_unset = cue_display is not None and not cue_display.get_text(strip=True)
         tracks.append(
@@ -429,13 +493,46 @@ def _parse_tracks(html) -> list["Track"]:
                 player=current_player,
                 is_overlay="con" in classes,
                 is_subcomponent="tlpSubTog" in classes,
-                group_id=group_id,
                 qualifier=qualifier,
                 cue_unset=cue_unset,
                 label_full=label_full,
+                duration_ms=duration_ms,
             )
         )
     return tracks
+
+
+_ISO_DURATION_RE = re.compile(r"^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$")
+
+
+def _iso_duration_ms(value: str) -> int:
+    """``PT1H2M3S`` -> milliseconds; 0 for anything else, including ``PT``."""
+    m = _ISO_DURATION_RE.match(value.strip())
+    if not m:
+        return 0
+    hours, minutes, seconds = (int(g) if g else 0 for g in m.groups())
+    return ((hours * 60 + minutes) * 60 + seconds) * 1000
+
+
+# 1001TL truncates meta itemprop="name" to this many characters, keeping the end.
+_META_NAME_CAP = 255
+
+
+def _visible_track_text(row) -> str:
+    """A row's span.trackValue text in the meta-name form, or "" without one.
+
+    The span renders inner padding such as "Title ( Remix )", collapsed here to
+    "Title (Remix)" so it compares and reads like the meta name.
+    """
+    from festival_organizer.normalization import fix_mojibake
+
+    value_el = row.select_one("span.trackValue")
+    if value_el is None:
+        return ""
+    text = re.sub(r"\s+", " ", value_el.get_text(" ", strip=True))
+    text = text.replace("( ", "(").replace(" )", ")")
+    text = text.replace("[ ", "[").replace(" ]", "]")
+    return fix_mojibake(text.strip())
 
 
 def _label_span_texts(row) -> list[str]:

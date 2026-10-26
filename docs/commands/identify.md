@@ -163,7 +163,16 @@ over a currently-playing main track) are handled according to the `overlay_chapt
   `Artist A vs. Artist B - Title A vs. Title B`.
 
 "vs." mashup rows harvest per-component artist and genre data from the page's expandable
-sub-rows, giving each mashup chapter real multi-artist credits.
+sub-rows, giving each mashup chapter real multi-artist credits. A "w/" mashup that becomes its
+own chapter keeps its components; they are not credited to the track it was layered over.
+
+Chapter titles keep the notes 1001Tracklists shows beside a track, such as `(ID Remix)` for
+an unreleased remix or an editor's `(Intro Edit)`.
+
+If the last chapter runs far longer than its track (more than 5 minutes past the release
+length), `identify` logs a WARNING: the video probably has an intro the tracklist leaves out,
+or the tracklist stops before the set does. See
+[Chapters are out of sync with the video](../tracklists.md#chapters-are-out-of-sync-with-the-video).
 
 Set `overlay_chapters = false` to ignore overlays and write only main-track chapters. See
 [Layered ("w/") tracks and mashups](../tracklists.md#layered-w-tracks-and-mashups) for

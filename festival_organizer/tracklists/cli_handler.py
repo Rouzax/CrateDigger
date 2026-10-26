@@ -12,6 +12,7 @@ Logging:
         - identify.fetch (INFO): Tracklist fetch initiated
         - identify.player.match (INFO): Multi-source tracklist; selected the source matching this file (by yt_id or duration)
         - identify.player.no_match (WARNING): Multi-source tracklist; no source matched this file, so metadata is written but chapters are skipped
+        - identify.chapters.tail_overrun (WARNING): Last chapter runs far past its track's release length: either the video has an intro the tracklist's timeline lacks (every chapter starts early) or the tracklist is missing tracks at the end
         - identify.skip (DEBUG): Early return before embed (parse_failed/no_chapters/single_chapter)
         - identify.chapters_match (DEBUG): Chapter identity comparison result
         - identify.chapters_no_stored (DEBUG): Chapters match but no stored tags found
@@ -73,7 +74,7 @@ from festival_organizer.tracklists.chapters import (
     strip_chapter_label,
     supplement_chapters_from_tracks,
 )
-from festival_organizer.tracklists.overlays import assemble
+from festival_organizer.tracklists.overlays import AssembledChapter, assemble
 from festival_organizer.tracklists.players import (
     partition_lines_by_player,
     select_player,
@@ -95,6 +96,37 @@ logger = logging.getLogger(__name__)
 
 AUTO_SELECT_MIN_SCORE = 150
 AUTO_SELECT_MIN_GAP = 20
+
+
+# How far the last chapter may run past its track's release length before
+# identify warns. A set's closer is often extended or followed by an outro, so
+# a few minutes is normal. Beyond that, either the video has an intro the
+# tracklist's timeline does not include (every chapter then starts that much
+# early) or the tracklist stops before the set does. Both need a human look.
+TAIL_OVERRUN_WARN_SECONDS = 300
+
+
+def _tail_overrun(
+    assembled: list[AssembledChapter], duration_seconds: float | None
+) -> tuple[int, int] | None:
+    """``(chapter_s, track_s)`` when the last chapter overruns its track.
+
+    The track is the chapter's primary, or its lead contributor for a
+    breakout. Returns None when nothing can be compared (no chapters, unknown
+    media length, no release length on 1001TL) or the overrun is within
+    TAIL_OVERRUN_WARN_SECONDS.
+    """
+    if not assembled or duration_seconds is None:
+        return None
+    last = assembled[-1]
+    track = last.primary or next(iter(last.contributors), None)
+    if track is None or not track.duration_ms:
+        return None
+    chapter_s = int(duration_seconds - last.start_ms / 1000)
+    track_s = track.duration_ms // 1000
+    if chapter_s - track_s <= TAIL_OVERRUN_WARN_SECONDS:
+        return None
+    return chapter_s, track_s
 
 
 def _build_search_expansion(config: Config) -> dict[str, str]:
@@ -952,6 +984,17 @@ def _fetch_and_embed(
                 duration_seconds,
             )
         assembled = kept
+
+    overrun = _tail_overrun(assembled, duration_seconds)
+    if overrun is not None:
+        chapter_s, track_s = overrun
+        logger.warning(
+            "identify.chapters.tail_overrun: file=%s last_chapter_s=%d track_s=%d excess_s=%d",
+            filepath.name,
+            chapter_s,
+            track_s,
+            chapter_s - track_s,
+        )
 
     chapters = [
         Chapter(

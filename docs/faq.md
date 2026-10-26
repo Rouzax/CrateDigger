@@ -143,6 +143,10 @@ Chapter embedding requires:
 2. `mkvpropedit` must be installed and on your PATH.
 3. The matched tracklist must have at least 2 tracks with timing data. Single-track or unresolved tracklists are skipped because they provide no chapter navigation value.
 
+### Why do my chapters start before the tracks do?
+
+Usually the video opens with an intro (a stage show, countdown or crowd footage) that the tracklist's timeline leaves out, so every chapter lands that much too early. `identify` warns when the last chapter runs far past its track. See [Chapters are out of sync with the video](tracklists.md#chapters-are-out-of-sync-with-the-video) for how to tell and how to trim the intro.
+
 ### Why did my file get metadata but no chapters?
 
 The tracklist CrateDigger matched is cued against multiple source videos (Player 1, Player 2, ...) and none of them matched your file. CrateDigger wrote the album-level metadata tags but skipped chapter embedding and logged a WARNING. Any chapters that were already in the file were left intact.

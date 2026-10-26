@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- A "w/" mashup that becomes its own chapter no longer credits its component artists to the track it was layered over. On David Guetta's AMF 2026 set, Avicii was listed as a performer of "Where Them Girls At" because the "Levels vs. Where Them Girls At" mashup two minutes later shared its tracklist group. Components now attach to the chapter that holds their own mashup row. On the Swedish House Mafia sets tested, whole mashups' worth of artists move this way, for example Chicane, Axwell and Opus III off "Pryda - The Return" and onto the "Offshore" mashup.
+
+- Mashup chapters list the mashup's own artists again, including whoever made it. The per-chapter artist list was built from the component tracks only, on the assumption that 1001Tracklists links a mashup row to one junk combined slug. That stopped being true with the 2026 page redesign, so credits such as `DJs From Mars` on a `DJs From Mars Bootleg` were dropped, and artists folded in from an overlay were listed before the mashup's own. The mashup's artists now come first; names are spelled as the component tracks credit them, since a mashup row shortens them (`Tiesto`, `HEL:BRG`).
+
+- Artists without a 1001Tracklists page of their own keep their names. 1001Tracklists links such an artist to a slug made from the track's whole artist credit (`lmfao-&-lauren-bennett-&-goonrock-vs.-matisse-...`). CrateDigger paired that slug with the first such name and dropped the rest, so `Goonrock` vanished and `Lauren Bennett` carried a slug naming nobody. Each visible name is now kept with a slug built from it (`lauren-bennett`, `goonrock`). An act whose name is the whole credit, such as `Matisse & Sadko`, keeps its own slug.
+
+- A credit such as `Marlon Hoffstadt aka DJ Daddy Trance`, linked only to DJ Daddy Trance, is now named `DJ Daddy Trance` instead of the whole phrase. The whole phrase matched no MusicBrainz artist, so the chapter got no MusicBrainz ID; `DJ Daddy Trance` resolves through its MusicBrainz alias to Marlon Hoffstadt.
+
+- Chapter titles and `CRATEDIGGER_TRACK_TITLE` keep the notes 1001Tracklists shows beside a track, such as `(ID Remix)` for an unreleased remix or an editor's `(Intro Edit)` and `(Acappella)`. Without them an ID remix read as the original release.
+
+- Very long mashup titles are no longer cut off at the front. 1001Tracklists stores only the last 255 characters of a track's name, so a chapter for a nine-track mashup began mid-word (`K & MC Ambush vs. ...` for `... AFROJACK & MC Ambush vs. ...`) and lost its first artists. The full name is now taken from the visible track text when the stored one hits that limit.
+
+The fixes above change per-chapter tags and titles on files that are already identified. The next `identify` run rewrites the chapters of the affected sets; TrackSplit albums built from them pick up the changes on their next rebuild.
+
 ### Added
+
+- `identify` warns when a set's last chapter runs more than five minutes past its track's release length (`identify.chapters.tail_overrun`). That usually means the video has an intro the tracklist leaves out, so every chapter starts early, or that the tracklist is missing its final tracks. The chapters are still written. The tracklist troubleshooting page explains how to tell the two apart and how to trim an intro with `mkvmerge`.
 
 - A Ko-fi link for anyone who wants to support the project. It appears as GitHub's native Sponsor button (via `.github/FUNDING.yml`), a badge in the README badge row alongside a `Support` section above the license, a footer icon on every documentation page, and a `Support` entry in the landing page navigation and footer. Nothing about using CrateDigger changes: there is no prompt, no runtime notice, and no telemetry attached to any of it.
 
