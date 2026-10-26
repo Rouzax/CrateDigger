@@ -167,33 +167,40 @@ def test_parse_tracks_track_value_fallback_normalizes_padding():
     assert tracks[0].raw_text == "Artist - Title (Acappella)"
 
 
-FIXTURE_FT_CREDIT = Path(__file__).parent / "fixtures" / "play_hard_ft_credit_row.html"
+FIXTURE_FT_CREDIT = Path(__file__).parent / "fixtures" / "ft_credit_row.html"
 FIXTURE_PRES_COMBINED = (
     Path(__file__).parent / "fixtures" / "pres_combined_artist_row.html"
 )
 
 
 def test_parse_tracks_shared_ft_wrapper_splits_per_anchor():
-    """Real 'David Guetta ft. Ne-Yo & Akon - Play Hard (... MORTEN ... Remix)' row:
-    Ne-Yo and Akon share one feature-credit wrapper. Each anchor must get its own
-    name, not the combined 'Ne-Yo & Akon' twice. The primary (David Guetta, spL)
-    and the remix credit (MORTEN, spR) are unchanged, proving isolation."""
+    """Real 'Kid Cudi ft. MGMT & Ratatat - Pursuit Of Happiness (Steve Aoki
+    Remix)' row: MGMT and Ratatat share one feature-credit wrapper. Each anchor
+    must get its own name, not the combined 'MGMT & Ratatat' twice. The primary
+    (Kid Cudi, spL) and the remix credit (Steve Aoki, spR) are unchanged,
+    proving isolation."""
     tracks = _parse_tracks(FIXTURE_FT_CREDIT.read_text(encoding="utf-8"))
     t = tracks[0]
-    assert t.artist_slugs == ["david-guetta", "ne-yo", "akon", "morten"]
-    assert t.artist_names == ["David Guetta", "Ne-Yo", "Akon", "MORTEN"]
+    assert t.artist_slugs == ["kid-cudi", "mgmt", "ratatat", "steve-aoki"]
+    assert t.artist_names == ["Kid Cudi", "MGMT", "Ratatat", "Steve Aoki"]
     assert len(t.artist_names) == len(t.artist_slugs)
 
 
 def test_parse_tracks_source_combined_anchor_unchanged():
-    """Real 'David Guetta & MARTEN HØRGER pres. Men Machine' row: 1001TL registers
-    the whole pres. act as a single anchor with one combined slug. It is a primary
-    (spL) anchor with no preceding text node, so the slug-anchored path never fires;
-    the combined name is preserved (a source limitation B does not touch)."""
+    """Real 'David Guetta & MARTEN HØRGER pres. Men Machine ft. Vitalic' row:
+    1001TL renders the whole pres. act as one name on one combined-slug anchor.
+    It is a primary (spL) anchor with no preceding text node, and its name is
+    the whole credit up to the feature, so the combined name is preserved."""
     tracks = _parse_tracks(FIXTURE_PRES_COMBINED.read_text(encoding="utf-8"))
     t = tracks[0]
-    assert t.artist_slugs == ["david-guetta-marten-horger-pres.-men-machine"]
-    assert t.artist_names == ["David Guetta & MARTEN HØRGER pres. Men Machine"]
+    assert t.artist_slugs == [
+        "david-guetta-&-marten-horger-pres.-men-machine",
+        "vitalic",
+    ]
+    assert t.artist_names == [
+        "David Guetta & MARTEN HØRGER pres. Men Machine",
+        "Vitalic",
+    ]
 
 
 def test_parse_tracks_ampersand_in_feature_member_name():
