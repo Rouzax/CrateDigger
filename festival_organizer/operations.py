@@ -19,7 +19,7 @@ from festival_organizer.cache_maintenance import (
     fetch_deezer_artwork,
     preferred_artist_image,
 )
-from festival_organizer.cache_ttl import hashed_jitter_factor
+from festival_organizer.cache_ttl import hashed_jitter_factor, path_jitter_factor
 from festival_organizer.config import Config
 from festival_organizer.deezer import DeezerUnavailable
 from festival_organizer.fanart import lookup_mbid, spotify_urls_by_name
@@ -827,10 +827,18 @@ class AlbumPosterOperation(Operation):
         """
         if not self.config.deezer_enabled or not media_file.artist:
             return None
-        name = media_file.artists[0] if media_file.artists else media_file.artist
         slug = media_file.artist_slugs[0] if media_file.artist_slugs else None
         dj_cache = self.config.dj_cache
-        key = paths.artist_cache_folder_key(name, slug=slug, dj_cache=dj_cache)
+        # The same folder as the DJ artwork and the poster's change detection
+        # (keyed by the full artist). MusicBrainz is asked about the first
+        # artist, by the DJ cache's name when there is one, as the end-of-enrich
+        # refresh does, so overrides and caches keyed by name agree.
+        key = paths.artist_cache_folder_key(
+            media_file.artist, slug=slug, dj_cache=dj_cache
+        )
+        name = media_file.artists[0] if media_file.artists else media_file.artist
+        if dj_cache is not None and slug and slug in dj_cache.slugs():
+            name = dj_cache.canonical_name(slug, fallback=name)
         if self._deezer_deps is None:
             from festival_organizer.deezer import DeezerCache, DeezerOverrides
             from festival_organizer.fanart import ArtistMbidOverrides, MBIDCache
@@ -1142,7 +1150,7 @@ class FanartOperation(Operation):
         if not path.exists():
             return True
         age_days = (time.time() - path.stat().st_mtime) / 86400
-        effective_ttl = self._ttl_days * hashed_jitter_factor(path.name)
+        effective_ttl = self._ttl_days * path_jitter_factor(path)
         return age_days > effective_ttl
 
     def _artist_dir(self, key: str) -> Path:

@@ -294,3 +294,33 @@ def test_payload_without_id_does_not_crash(cache, no_overrides):
     entry = cache.get(MBID)
     assert entry is not None
     assert entry["deezer_id"] == 56125
+
+
+def test_pinned_page_answer_is_cached(cache, tmp_path):
+    (tmp_path / "artist_deezer_ids.json").write_text(json.dumps({"Bart Skils": 468677}))
+    overrides = DeezerOverrides(overrides_dir=tmp_path)
+    cover = _Deezer(
+        {468677: _artist(468677, "Bart Skils", 9493, OTHER_PHOTO)},
+        frozenset({OTHER_PHOTO}),
+    )
+    _run("Bart Skils", None, cache, overrides, [], cover)
+    again = _Deezer({})
+    photo, _ = _run("Bart Skils", None, cache, overrides, [], again)
+    assert photo == ""
+    assert again.asked == []
+
+
+def test_found_photo_logs_the_fan_count(cache, no_overrides, caplog):
+    import logging
+
+    deezer = _Deezer({56125: _artist(56125, "FISHER", 87716, PHOTO)})
+    with caplog.at_level(logging.INFO, logger="festival_organizer.deezer"):
+        _run(
+            "FISHER",
+            MBID,
+            cache,
+            no_overrides,
+            ["https://www.deezer.com/artist/56125"],
+            deezer,
+        )
+    assert any("fans=87716" in m for m in caplog.messages)

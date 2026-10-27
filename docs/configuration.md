@@ -253,7 +253,7 @@ Artist posters use the artist's Deezer photo when there is one, ahead of the 100
 
 **When Deezer's picture is not used.** Some Deezer artists have no photo: Deezer then shows a blank grey outline or one of the artist's own album covers. CrateDigger recognises both and moves on to the next source.
 
-**What it creates.** The photo is saved as `deezer-artist.jpg` in the artist's folder of the artwork cache, square and 550 pixels, the same as the DJ photo. Which Deezer page belongs to which artist is remembered for `cache_ttl.deezer_days`; the photo itself is refreshed after `cache_ttl.images_days`.
+**What it creates.** The photo is saved as `deezer-artist.jpg` in the artist's folder of the artwork cache, square and 550 pixels, the same as the DJ photo. Which Deezer page belongs to which artist is remembered for `cache_ttl.deezer_days`, and the saved photo is downloaded again after `cache_ttl.images_days`. A photo the artist changed on Deezer is therefore picked up once both have passed. A `null` pin in the override file, or a Deezer picture that has stopped being a photo, removes the saved photo on the next run.
 
 | Key | Description |
 |-----|-------------|

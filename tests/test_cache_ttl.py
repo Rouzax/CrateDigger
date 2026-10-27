@@ -66,3 +66,18 @@ def test_hashed_jitter_factor_has_variance():
 def test_hashed_jitter_factor_custom_jitter():
     samples = [hashed_jitter_factor(f"k{i}", jitter_pct=0.5) for i in range(200)]
     assert all(0.5 <= s <= 1.5 for s in samples)
+
+
+def test_path_jitter_differs_between_artists_sharing_a_file_name():
+    # Every artist folder holds a "deezer-artist.jpg"; keyed by name alone
+    # they would all expire on the same day.
+    from pathlib import Path
+
+    from festival_organizer.cache_ttl import path_jitter_factor
+
+    factors = {
+        path_jitter_factor(Path("/cache/artists") / slug / "deezer-artist.jpg")
+        for slug in ("argy", "fisher", "anyma", "hugel", "maddix")
+    }
+    assert len(factors) > 1
+    assert all(0.8 <= f <= 1.2 for f in factors)

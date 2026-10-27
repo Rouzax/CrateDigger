@@ -43,7 +43,7 @@ _PUNCT_FOLD = {
 }
 
 
-def _fold_name(name: str) -> str:
+def fold_artist_name(name: str) -> str:
     """Casefold a name for comparison, ignoring diacritics and punctuation style.
 
     Used only to compare a query against MusicBrainz's own candidate names,
@@ -361,21 +361,21 @@ def _match_candidate(
     mismatch, but an alias alone is too weak to tell same-named artists apart.
     """
     lower = name.lower()
-    folded = _fold_name(name)
+    folded = fold_artist_name(name)
 
     def alias_match(a: dict) -> bool:
         # Compared whole, never as a substring: MusicBrainz lists
         # '¥$, Kanye West & Ty Dolla $ign' as an alias of the duo '¥$', and a
         # substring rule would bind Kanye West to it.
         return any(
-            _fold_name(alias.get("name") or "") == folded
+            fold_artist_name(alias.get("name") or "") == folded
             for alias in a.get("aliases") or []
         )
 
     name_tiers = (
         ("exact", lambda a: a.get("name") == name),
         ("case_insensitive", lambda a: a.get("name", "").lower() == lower),
-        ("folded", lambda a: _fold_name(a.get("name", "")) == folded),
+        ("folded", lambda a: fold_artist_name(a.get("name", "")) == folded),
     )
     tiers = (*name_tiers, ("alias", alias_match))
     if country is None:

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.37.0] - 2026-10-27
 
 ### Added
 
@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Each artist's chosen image is saved as `portrait.jpg` in their artwork cache folder at the end of every `enrich` run, following `artist_background_priority`. TrackSplit reads it for its artist covers from its next release, so covers and posters show the same photo.
 
 On the first `enrich` after updating, every folder poster (`folder.jpg`) is regenerated once, so artist posters pick up their Deezer photo on that run; the layout does not change, only the picture. Each DJ in the DJ cache costs a few requests to MusicBrainz and Deezer once, and later runs reuse the cached answers. If Deezer or MusicBrainz stops answering, the rest of that run uses what is already cached and the next run tries again.
+
+### Fixed
+
+- Cached artist images (the 1001Tracklists DJ photo, fanart.tv's background and logo, and now the Deezer photo) no longer all expire on the same day. Their lifetimes were meant to be spread around `cache_ttl.images_days` so a large library does not re-download everything in one run, but the spread was keyed on the file name, which every artist folder shares. It is now keyed per artist. Existing images keep their files; only the day each one is next refreshed shifts.
 
 ## [0.36.1] - 2026-10-27
 

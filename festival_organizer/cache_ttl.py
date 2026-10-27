@@ -48,3 +48,13 @@ def hashed_jitter_factor(key: str, jitter_pct: float = 0.2) -> float:
     int_val = int.from_bytes(digest[:8], "big")
     unit = int_val / 0xFFFFFFFFFFFFFFFF  # [0, 1]
     return 1.0 + (unit - 0.5) * 2 * jitter_pct
+
+
+def path_jitter_factor(path) -> float:
+    """hashed_jitter_factor for a cached file, keyed by its folder and name.
+
+    Per-artist caches reuse one file name in every artist folder
+    (``deezer-artist.jpg``, ``fanart.jpg``); keyed by the name alone, every
+    artist's copy would expire on the same day.
+    """
+    return hashed_jitter_factor(f"{path.parent.name}/{path.name}")

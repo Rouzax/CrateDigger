@@ -21,7 +21,7 @@ import shutil
 import time
 from pathlib import Path
 
-from festival_organizer.cache_ttl import hashed_jitter_factor
+from festival_organizer.cache_ttl import path_jitter_factor
 from festival_organizer.deezer import DeezerUnavailable, resolve_deezer_photo
 from festival_organizer.fanart import lookup_mbid
 from festival_organizer.normalization import folder_slug
@@ -54,7 +54,7 @@ def _is_fresh_image(dest: Path, ttl_days: float) -> bool:
     if not dest.exists():
         return False
     age_days = (time.time() - dest.stat().st_mtime) / 86400
-    return age_days <= ttl_days * hashed_jitter_factor(dest.name)
+    return age_days <= ttl_days * path_jitter_factor(dest)
 
 
 def _cache_square_image(
@@ -88,7 +88,7 @@ def _cache_square_image(
             "enrich.%s_cache: status=stale age_days=%d ttl=%.1f artist=%s",
             event,
             int(age_days),
-            ttl_days * hashed_jitter_factor(dest.name),
+            ttl_days * path_jitter_factor(dest),
             artist_label,
         )
     try:

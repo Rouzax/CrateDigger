@@ -5,6 +5,9 @@ from unittest.mock import MagicMock, patch
 from PIL import Image
 
 from festival_organizer import paths as paths_mod
+from festival_organizer.cache_maintenance import (
+    fetch_deezer_artwork as _REAL_FETCH_DEEZER_ARTWORK,
+)
 from festival_organizer.config import DEFAULT_CONFIG, Config, load_config
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
@@ -2286,3 +2289,101 @@ def test_existing_folder_posters_regenerate_once_for_deezer():
         poster_type="artist", name="Argy", year="", edition=""
     )
     assert before != after
+
+
+def test_deezer_photo_shares_the_dj_artwork_folder_without_slugs(tmp_path, monkeypatch):
+    # A set without 1001TL slugs: the photo must land where the poster's
+    # change detection and the DJ artwork look (keyed by the full artist),
+    # while MusicBrainz is asked about the first artist only.
+    keys = []
+    monkeypatch.setattr(
+        paths_mod, "artist_cache_dir", lambda key: keys.append(key) or tmp_path / key
+    )
+    op = AlbumPosterOperation(_deezer_config())
+    mf = _make_mf(artist="Armin van Buuren & KI/KI")
+    mf.artists = ["Armin van Buuren", "KI/KI"]
+    mf.artist_slugs = []
+    with patch("festival_organizer.operations.fetch_deezer_artwork") as fetch:
+        op._try_background_source("deezer", tmp_path, mf)
+    name, dest = fetch.call_args.args
+    assert name == "Armin van Buuren"
+    expected_key = paths_mod.artist_cache_folder_key(
+        "Armin van Buuren & KI/KI", slug=None, dj_cache=op.config.dj_cache
+    )
+    assert dest.parent.name == expected_key
+
+
+def test_deezer_lookup_uses_the_dj_cache_name_like_the_refresh(tmp_path, monkeypatch):
+    # Overrides and the MBID cache are keyed by name; the poster and the
+    # end-of-enrich refresh must ask with the same one.
+    monkeypatch.setattr(paths_mod, "artist_cache_dir", lambda key: tmp_path / key)
+    dj_cache = MagicMock()
+    dj_cache.spotify_url.return_value = ""
+    dj_cache.slugs.return_value = {"tiesto"}
+    dj_cache.canonical_name.side_effect = lambda slug, fallback=None: "Tiësto"
+    op = AlbumPosterOperation(_deezer_config())
+    mf = _make_mf(artist="Tiesto")
+    mf.artists = ["Tiesto"]
+    mf.artist_slugs = ["tiesto"]
+    with (
+        patch.object(Config, "dj_cache", dj_cache),
+        patch("festival_organizer.operations.fetch_deezer_artwork") as fetch,
+    ):
+        op._try_background_source("deezer", tmp_path, mf)
+    assert fetch.call_args.args[0] == "Tiësto"
+
+
+def test_deezer_poster_path_end_to_end(tmp_path, monkeypatch):
+    """Poster source through the real fetch, MBID and Deezer code, HTTP faked."""
+    import io
+    import json as _json
+
+    from PIL import Image
+
+    from festival_organizer import cache_maintenance
+
+    # The module-level import holds the real function; the conftest fixture
+    # stubs the module attribute for every other test.
+    monkeypatch.setattr(
+        "festival_organizer.operations.fetch_deezer_artwork", _REAL_FETCH_DEEZER_ARTWORK
+    )
+    monkeypatch.setattr(paths_mod, "cache_dir", lambda: tmp_path / "cache")
+    monkeypatch.setattr(paths_mod, "data_dir", lambda: tmp_path / "data")
+    monkeypatch.setattr(
+        paths_mod, "artist_cache_dir", lambda key: tmp_path / "artists" / key
+    )
+    monkeypatch.setattr("festival_organizer.fanart.time.sleep", lambda s: None)
+    monkeypatch.setattr("festival_organizer.deezer.time.sleep", lambda s: None)
+    monkeypatch.setattr(cache_maintenance, "lookup_mbid", lambda *a, **k: "mbid-fisher")
+    buf = io.BytesIO()
+    Image.new("RGB", (1000, 1000), (1, 2, 3)).save(buf, "JPEG")
+    photo = "https://cdn-images.dzcdn.net/images/artist/e71e56891f8a5bf21c9b78ce31d70a8c/1000x1000-000000-80-0-0.jpg"
+    bodies = {
+        "https://musicbrainz.org/ws/2/artist/mbid-fisher": {
+            "relations": [{"url": {"resource": "https://www.deezer.com/artist/56125"}}]
+        },
+        "https://api.deezer.com/artist/56125": {
+            "id": 56125,
+            "name": "FISHER",
+            "nb_fan": 87716,
+            "picture_xl": photo,
+        },
+        "https://api.deezer.com/artist/56125/albums": {"data": []},
+    }
+
+    def fake_get(url, *args, **kwargs):
+        resp = MagicMock(status_code=200)
+        resp.raise_for_status = MagicMock()
+        if url == photo:
+            resp.content = buf.getvalue()
+        else:
+            resp.json.return_value = _json.loads(_json.dumps(bodies[url]))
+        return resp
+
+    monkeypatch.setattr("requests.get", fake_get)
+    op = AlbumPosterOperation(_deezer_config())
+    mf = _make_mf(artist="FISHER")
+    result = op._try_background_source("deezer", tmp_path, mf)
+    assert result is not None and result.name == "deezer-artist.jpg"
+    with Image.open(result) as img:
+        assert img.size == (550, 550)

@@ -24,7 +24,7 @@ from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 from festival_organizer.fanart import (
     USER_AGENT,
     MusicBrainzError,
-    _fold_name,
+    fold_artist_name,
     mb_url_relations,
 )
 
@@ -140,7 +140,8 @@ class DeezerCache:
     """Persistent MBID-to-Deezer-photo mapping with TTL-based expiry.
 
     Keyed by MBID because the photo is reached through the artist's
-    MusicBrainz links. A miss (no link, or no real photo) is cached too, so
+    MusicBrainz links; a page pinned in the overrides file is keyed
+    ``deezer:<id>``. A miss (no link, or no real photo) is cached too, so
     it is not asked again before the TTL; a lookup Deezer or MusicBrainz
     could not answer is never cached.
     """
@@ -225,8 +226,8 @@ class DeezerOverrides:
         return self._data.get(artist_name.lower())
 
 
-def _best_photo(artist_name: str, deezer_ids: list[int]) -> tuple[int | None, str]:
-    """(deezer_id, photo URL) of the linked page to use, or (None, "").
+def _best_photo(artist_name: str, deezer_ids: list[int]) -> tuple[int | None, str, int]:
+    """(deezer_id, photo URL, fans) of the linked page to use, or (None, "", 0).
 
     Among pages with a real photo: the one named like the artist, then the
     one with the most fans. Raises DeezerError when Deezer cannot be asked.
@@ -241,16 +242,16 @@ def _best_photo(artist_name: str, deezer_ids: list[int]) -> tuple[int | None, st
         if photo:
             candidates.append((deezer_id, artist, photo))
     if not candidates:
-        return (deezer_ids[0] if deezer_ids else None), ""
-    wanted = _fold_name(artist_name)
-    deezer_id, _, photo = max(
+        return (deezer_ids[0] if deezer_ids else None), "", 0
+    wanted = fold_artist_name(artist_name)
+    deezer_id, artist, photo = max(
         candidates,
         key=lambda c: (
-            _fold_name(str(c[1].get("name", ""))) == wanted,
+            fold_artist_name(str(c[1].get("name", ""))) == wanted,
             c[1].get("nb_fan") or 0,
         ),
     )
-    return deezer_id, photo
+    return deezer_id, photo, int(artist.get("nb_fan") or 0)
 
 
 def resolve_deezer_photo(
@@ -273,11 +274,19 @@ def resolve_deezer_photo(
             pinned = overrides.get(artist_name)
             if pinned is None:
                 return ""
-            _, photo = _best_photo(artist_name, [pinned])
+            # A pinned page's answer is cached under the page, so a pin whose
+            # picture is not a photo is not asked about again every run.
+            pin_key = f"deezer:{pinned}"
+            cached = cache.get(pin_key)
+            if cached is not None:
+                return str(cached.get("picture_url") or "")
+            _, photo, fans = _best_photo(artist_name, [pinned])
+            cache.put(pin_key, pinned, photo, "override")
             logger.info(
-                'enrich.deezer_lookup: artist="%s" route=override deezer_id=%d status=%s',
+                'enrich.deezer_lookup: artist="%s" route=override deezer_id=%d fans=%d status=%s',
                 artist_name,
                 pinned,
+                fans,
                 "found" if photo else "no_photo",
             )
             return photo
@@ -296,7 +305,7 @@ def resolve_deezer_photo(
             for url in mb_url_relations(mbid)
             if (i := deezer_id_from_url(url)) is not None
         ]
-        deezer_id, photo = _best_photo(artist_name, list(dict.fromkeys(ids)))
+        deezer_id, photo, fans = _best_photo(artist_name, list(dict.fromkeys(ids)))
     except (DeezerError, MusicBrainzError) as e:
         logger.warning(
             'enrich.deezer_lookup: artist="%s" status=unavailable error="%s"',
@@ -307,9 +316,10 @@ def resolve_deezer_photo(
     cache.put(mbid, deezer_id, photo, "linked")
     if photo:
         logger.info(
-            'enrich.deezer_lookup: artist="%s" route=linked deezer_id=%d status=found',
+            'enrich.deezer_lookup: artist="%s" route=linked deezer_id=%d fans=%d status=found',
             artist_name,
             deezer_id,
+            fans,
         )
     else:
         logger.info(
