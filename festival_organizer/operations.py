@@ -13,7 +13,12 @@ from pathlib import Path
 import requests
 
 from festival_organizer import paths
-from festival_organizer.cache_maintenance import cache_dj_artwork
+from festival_organizer.cache_maintenance import (
+    ARTIST_IMAGE_FILES,
+    cache_dj_artwork,
+    fetch_deezer_artwork,
+    preferred_artist_image,
+)
 from festival_organizer.cache_ttl import hashed_jitter_factor
 from festival_organizer.config import Config
 from festival_organizer.fanart import lookup_mbid, spotify_urls_by_name
@@ -466,6 +471,8 @@ class AlbumPosterOperation(Operation):
         self._completed_folders: set[Path] = set()
         self._logo_hits: dict[str, Path] = {}  # place -> logo path
         self._logo_misses: set[str] = set()  # places without curated logo
+        # MBID and Deezer caches, created on the first Deezer lookup.
+        self._deezer_deps: dict | None = None
 
     @property
     def generated_folders(self) -> set[Path]:
@@ -605,12 +612,10 @@ class AlbumPosterOperation(Operation):
             key = paths.artist_cache_folder_key(
                 mf.artist, slug=slug, dj_cache=self.config.dj_cache
             )
-            artist_dir = paths.artist_cache_dir(key)
-            for name in ("dj-artwork.jpg", "fanart.jpg"):
-                cand = artist_dir / name
-                if cand.exists():
-                    path = cand
-                    break
+            path = preferred_artist_image(
+                paths.artist_cache_dir(key),
+                self._get_priority_chain_for_poster_type("artist"),
+            )
         if path and path.exists():
             st = path.stat()
             return f"{path.name}:{int(st.st_mtime)}:{st.st_size}"
@@ -811,6 +816,36 @@ class AlbumPosterOperation(Operation):
                         return result
         return None
 
+    def _find_deezer_artwork(self, media_file: MediaFile) -> Path | None:
+        """The Deezer photo of the folder's (first) artist, cached per artist.
+
+        Same artist as the DJ artwork: the first name and its 1001TL slug.
+        """
+        if not self.config.deezer_enabled or not media_file.artist:
+            return None
+        name = media_file.artists[0] if media_file.artists else media_file.artist
+        slug = media_file.artist_slugs[0] if media_file.artist_slugs else None
+        dj_cache = self.config.dj_cache
+        key = paths.artist_cache_folder_key(name, slug=slug, dj_cache=dj_cache)
+        if self._deezer_deps is None:
+            from festival_organizer.deezer import DeezerCache, DeezerOverrides
+            from festival_organizer.fanart import ArtistMbidOverrides, MBIDCache
+
+            ttl = self.config.cache_ttl
+            self._deezer_deps = {
+                "mbid_cache": MBIDCache(ttl_days=ttl.get("mbid_days", 90)),
+                "mbid_overrides": ArtistMbidOverrides(),
+                "deezer_cache": DeezerCache(ttl_days=ttl.get("deezer_days", 90)),
+                "deezer_overrides": DeezerOverrides(),
+            }
+        return fetch_deezer_artwork(
+            name,
+            paths.artist_cache_dir(key) / ARTIST_IMAGE_FILES["deezer"],
+            spotify_url=dj_cache.spotify_url(slug) if dj_cache and slug else "",
+            ttl_days=self._ttl_days,
+            **self._deezer_deps,
+        )
+
     def _warm_dj_artwork_cache(self, folder: Path) -> None:
         """Download DJ artwork for all artists in a folder."""
         from festival_organizer.analyzer import analyse_file
@@ -908,6 +943,8 @@ class AlbumPosterOperation(Operation):
         """Try a single background source. Returns path or None."""
         if source == "curated_logo":
             return self._find_curated_logo(media_file.place, media_file.edition)
+        elif source == "deezer":
+            return self._find_deezer_artwork(media_file)
         elif source == "dj_artwork":
             return self._find_dj_artwork(folder)
         elif source == "fanart_tv":

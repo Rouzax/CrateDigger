@@ -60,6 +60,18 @@ def _reset_per_process_state():
     _paths_module._migrated_this_process = False
 
 
+@pytest.fixture(autouse=True)
+def _no_deezer_lookups(monkeypatch):
+    """Artist posters try Deezer first, which asks MusicBrainz and Deezer and
+    reads the user's real caches. Tests that render posters get no Deezer
+    photo; tests of the Deezer source patch fetch_deezer_artwork themselves.
+    """
+    monkeypatch.setattr(
+        "festival_organizer.operations.fetch_deezer_artwork",
+        lambda *args, **kwargs: None,
+    )
+
+
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
 _artists = json.loads((_REPO_ROOT / "artists.example.json").read_text(encoding="utf-8"))

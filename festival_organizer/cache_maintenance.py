@@ -9,6 +9,8 @@ Logging:
         - enrich.dj_artwork_download (INFO): a DJ artwork image was downloaded
         - enrich.dj_artwork (DEBUG): crop/resize applied to a downloaded image
         - enrich.dj_artwork_cache (DEBUG): a stale cached image was replaced
+        - enrich.deezer_download, enrich.deezer, enrich.deezer_cache: the same
+          three for a Deezer artist photo
 """
 
 import logging
@@ -17,45 +19,73 @@ import time
 from pathlib import Path
 
 from festival_organizer.cache_ttl import hashed_jitter_factor
+from festival_organizer.deezer import resolve_deezer_photo
+from festival_organizer.fanart import lookup_mbid
 from festival_organizer.normalization import folder_slug
 
 logger = logging.getLogger(__name__)
 
 
-def cache_dj_artwork(
+# Each artist image source's file in an artist's cache directory, keyed by its
+# token in artist_background_priority.
+ARTIST_IMAGE_FILES = {
+    "deezer": "deezer-artist.jpg",
+    "dj_artwork": "dj-artwork.jpg",
+    "fanart_tv": "fanart.jpg",
+}
+
+
+def preferred_artist_image(artist_dir: Path, priority: list[str]) -> Path | None:
+    """The first cached image in ``priority`` order, or None.
+
+    Tokens without a cached file (``gradient``, place sources) are skipped.
+    """
+    for source in priority:
+        name = ARTIST_IMAGE_FILES.get(source)
+        if name and (artist_dir / name).exists():
+            return artist_dir / name
+    return None
+
+
+def _is_fresh_image(dest: Path, ttl_days: float) -> bool:
+    if not dest.exists():
+        return False
+    age_days = (time.time() - dest.stat().st_mtime) / 86400
+    return age_days <= ttl_days * hashed_jitter_factor(dest.name)
+
+
+def _cache_square_image(
     url: str,
     dest: Path,
     ttl_days: float,
     *,
-    artist_label: str = "",
-    log: logging.Logger | None = None,
+    event: str,
+    artist_label: str,
+    log: logging.Logger,
 ) -> Path | None:
-    """Download DJ artwork to ``dest``, center-crop to square, resize to 550, save JPEG.
+    """Download an artist image to ``dest``: center-crop to square, cap at 550, JPEG.
 
-    ``dest`` is ``.../artists/<slug>/dj-artwork.jpg``. Honours a jittered TTL: a
-    fresh cached file is reused as-is (returned without re-downloading); a stale
-    one is replaced. Returns ``dest`` on success (cached or freshly written),
-    or ``None`` on download/decode failure.
-
-    ``log`` lets callers route the ``enrich.dj_artwork*`` events through their own
-    logger so existing per-file logging output is preserved; defaults to this
-    module's logger.
+    Both artist covers (CrateDigger's poster tile and TrackSplit's photo) are
+    drawn 550 px square, so a larger source gains nothing. Honours a jittered
+    TTL: a fresh cached file is reused as-is; a stale one is replaced. Returns
+    ``dest`` on success (cached or freshly written), or None on
+    download/decode failure. Log events are ``enrich.<event>_download``,
+    ``enrich.<event>`` and ``enrich.<event>_cache``.
     """
     import io
 
-    out = log or logger
     if not url:
         return None
     if dest.exists():
-        age_days = (time.time() - dest.stat().st_mtime) / 86400
-        effective_ttl = ttl_days * hashed_jitter_factor(dest.name)
-        if age_days <= effective_ttl:
+        if _is_fresh_image(dest, ttl_days):
             return dest
+        age_days = (time.time() - dest.stat().st_mtime) / 86400
         dest.unlink()
-        out.debug(
-            "enrich.dj_artwork_cache: status=stale age_days=%d ttl=%.1f artist=%s",
+        log.debug(
+            "enrich.%s_cache: status=stale age_days=%d ttl=%.1f artist=%s",
+            event,
             int(age_days),
-            effective_ttl,
+            ttl_days * hashed_jitter_factor(dest.name),
             artist_label,
         )
     try:
@@ -73,8 +103,9 @@ def cache_dj_artwork(
                 left = (w - side) // 2
                 top = (h - side) // 2
                 img = img.crop((left, top, left + side, top + side))
-                out.debug(
-                    "enrich.dj_artwork: action=crop from=%dx%d to=%dx%d",
+                log.debug(
+                    "enrich.%s: action=crop from=%dx%d to=%dx%d",
+                    event,
                     w,
                     h,
                     side,
@@ -83,23 +114,88 @@ def cache_dj_artwork(
             max_side = 550
             if img.width > max_side:
                 img = img.resize((max_side, max_side), Image.Resampling.LANCZOS)
-                out.debug(
-                    "enrich.dj_artwork: action=resize to=%dx%d", max_side, max_side
+                log.debug(
+                    "enrich.%s: action=resize to=%dx%d", event, max_side, max_side
                 )
             img.save(dest, "JPEG", quality=90)
-        out.info(
-            "enrich.dj_artwork_download: status=ok artist=%s target=%s",
+        log.info(
+            "enrich.%s_download: status=ok artist=%s target=%s",
+            event,
             artist_label,
             dest,
         )
         return dest
     except Exception as e:
-        out.debug(
-            'enrich.dj_artwork_download: status=failed artist=%s error="%s"',
+        log.debug(
+            'enrich.%s_download: status=failed artist=%s error="%s"',
+            event,
             artist_label,
             e,
         )
         return None
+
+
+def cache_dj_artwork(
+    url: str,
+    dest: Path,
+    ttl_days: float,
+    *,
+    artist_label: str = "",
+    log: logging.Logger | None = None,
+) -> Path | None:
+    """Download DJ artwork to ``dest`` (``.../artists/<slug>/dj-artwork.jpg``).
+
+    See :func:`_cache_square_image`. ``log`` lets callers route the
+    ``enrich.dj_artwork*`` events through their own logger so existing
+    per-file logging output is preserved; defaults to this module's logger.
+    """
+    return _cache_square_image(
+        url,
+        dest,
+        ttl_days,
+        event="dj_artwork",
+        artist_label=artist_label,
+        log=log or logger,
+    )
+
+
+def cache_deezer_artwork(
+    url: str, dest: Path, ttl_days: float, *, artist_label: str = ""
+) -> Path | None:
+    """Download a Deezer artist photo to ``dest`` (``.../deezer-artist.jpg``)."""
+    return _cache_square_image(
+        url, dest, ttl_days, event="deezer", artist_label=artist_label, log=logger
+    )
+
+
+def fetch_deezer_artwork(
+    artist_name: str,
+    dest: Path,
+    *,
+    spotify_url: str,
+    mbid_cache,
+    mbid_overrides,
+    deezer_cache,
+    deezer_overrides,
+    ttl_days: float,
+) -> Path | None:
+    """The artist's Deezer photo cached at ``dest``, resolving it when needed.
+
+    A fresh cached photo is used without any request. Otherwise the artist's
+    MBID (through their Spotify page when known) leads to their Deezer photo.
+    None when the artist has no Deezer photo or it could not be had; a
+    previously cached photo is then left for its TTL rather than removed,
+    since "no photo" and "Deezer did not answer" look the same here.
+    """
+    if _is_fresh_image(dest, ttl_days):
+        return dest
+    mbid = lookup_mbid(
+        artist_name, mbid_cache, overrides=mbid_overrides, spotify_url=spotify_url
+    )
+    url = resolve_deezer_photo(artist_name, mbid, deezer_cache, deezer_overrides)
+    if not url:
+        return None
+    return cache_deezer_artwork(url, dest, ttl_days, artist_label=artist_name)
 
 
 def warm_artist_cache_from_dj_cache(

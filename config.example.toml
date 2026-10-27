@@ -57,7 +57,7 @@ unknown_title = "Unknown Title"
 
 # Background image priority chains for poster generation.
 [poster_settings]
-artist_background_priority = ["dj_artwork", "fanart_tv", "gradient"]
+artist_background_priority = ["deezer", "dj_artwork", "fanart_tv", "gradient"]
 # place_background_priority sets the order CrateDigger tries when generating
 # a poster background for a place folder (festival, venue, club, etc.).
 place_background_priority = ["curated_logo", "gradient"]
@@ -82,6 +82,11 @@ overlay_fold_seconds = 20
 # chapter_title_labels: include the record-company [Label] in the visible chapter
 # title. false (default) writes the label only to the CRATEDIGGER_TRACK_LABEL tag.
 chapter_title_labels = false
+
+# Deezer artist photos, found through the artist's MusicBrainz entry. No account
+# or key needed. Set enabled = false to never ask Deezer.
+[deezer]
+enabled = true
 
 # fanart.tv settings. The project API key is built in.
 # Add your personal key for faster cache updates (get one at https://fanart.tv/get-an-api-key/).
@@ -146,3 +151,4 @@ mbid_days = 90
 dj_days = 90
 source_days = 365
 images_days = 90
+deezer_days = 90

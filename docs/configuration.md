@@ -171,7 +171,7 @@ Placeholder values used in folder and filename templates when metadata is missin
 
 ```toml
 [poster_settings]
-artist_background_priority = ["dj_artwork", "fanart_tv", "gradient"]
+artist_background_priority = ["deezer", "dj_artwork", "fanart_tv", "gradient"]
 place_background_priority = ["curated_logo", "gradient"]
 year_background_priority = ["gradient"]
 ```
@@ -180,6 +180,7 @@ Priority chains for poster background image selection. CrateDigger tries each so
 
 | Source | Description |
 |--------|-------------|
+| `deezer` | The artist's photo on Deezer, found through the Deezer link on their MusicBrainz entry (see [Deezer](#deezer)) |
 | `dj_artwork` | DJ photo from 1001Tracklists (embedded during identify) |
 | `fanart_tv` | Artist artwork from fanart.tv |
 | `curated_logo` | Hand-placed place logo (see [audit-logos](commands/audit-logos.md)) |
@@ -238,6 +239,27 @@ Get a personal API key at [fanart.tv](https://fanart.tv/get-an-api-key/).
 | `enabled` | Set to `false` to disable fanart.tv lookups entirely (default: `true`) |
 
 Environment variable overrides: `FANART_PERSONAL_API_KEY`, `FANART_PROJECT_API_KEY` (for the built-in project key).
+
+### Deezer
+
+```toml
+[deezer]
+enabled = true
+```
+
+Artist posters use the artist's Deezer photo when there is one, ahead of the 1001Tracklists DJ photo. Deezer photos are usually larger and kept more up to date. No account or key is needed.
+
+**How the artist is found.** Only through the Deezer link on the artist's MusicBrainz entry, never by searching Deezer for the name: Deezer has many artists of the same name, and a name search would put the wrong person on the poster. An artist with no MusicBrainz ID, or whose MusicBrainz entry has no Deezer link, simply gets the next source in `artist_background_priority`.
+
+**When Deezer's picture is not used.** Some Deezer artists have no photo: Deezer then shows a blank grey outline or one of the artist's own album covers. CrateDigger recognises both and moves on to the next source.
+
+**What it creates.** The photo is saved as `deezer-artist.jpg` in the artist's folder of the artwork cache, square and 550 pixels, the same as the DJ photo. Which Deezer page belongs to which artist is remembered for `cache_ttl.deezer_days`; the photo itself is refreshed after `cache_ttl.images_days`.
+
+| Key | Description |
+|-----|-------------|
+| `enabled` | Set to `false` to never contact Deezer; the `deezer` source is then skipped (default: `true`) |
+
+To leave Deezer out of posters but keep it enabled, remove `"deezer"` from `artist_background_priority`. To correct or block the photo for one artist, see [Deezer override file](#deezer-override-file).
 
 ### Kodi
 
@@ -389,6 +411,7 @@ mbid_days = 90
 dj_days = 90
 source_days = 365
 images_days = 90
+deezer_days = 90
 ```
 
 Base lifetimes for CrateDigger's caches, in days. When a cache entry expires, CrateDigger refreshes it on the next lookup.
@@ -399,6 +422,7 @@ Base lifetimes for CrateDigger's caches, in days. When a cache entry expires, Cr
 | `dj_days` | DJ name and alias cache | 90 |
 | `source_days` | Source and venue name cache | 365 |
 | `images_days` | Downloaded artwork and images | 90 |
+| `deezer_days` | Which Deezer photo belongs to each artist | 90 |
 
 Each entry's actual lifetime jitters by ±20% around the base value (for example, `mbid_days: 90` means entries live 72 to 108 days). This prevents all cached entries from expiring at the same time after a bulk first-run fill, which would cause a large number of network requests in one go.
 
@@ -477,6 +501,19 @@ It is checked first by both the `chapter_artist_mbids` and `album_artist_mbids` 
 **When a lookup fails:** a search that finds nothing is remembered as a miss until the TTL expires, so CrateDigger does not re-query the same unknown name on every run. Two things are deliberately excluded from that. A lookup that could not be completed at all (MusicBrainz returning 503 after its retries) is never remembered, so a temporary outage cannot pin an artist to "no ID" for the next 90 days; it is logged as a warning and retried on the following run. And remembered misses are discarded automatically whenever the matching logic improves, so artists that a previous version could not resolve are looked up again rather than waiting out the TTL.
 
 See [enrich: chapter_artist_mbids](commands/enrich.md#chapter_artist_mbids-per-track-artist-ids) for the fix workflow.
+
+## Deezer override file
+
+`artist_deezer_ids.json` lives next to `artist_mbids.json` and pins an artist to a Deezer artist ID, or to no Deezer photo at all. Use it when the Deezer link on MusicBrainz leads to the wrong page or a photo you do not want.
+
+```json
+{
+    "Bart Skils": 468677,
+    "Argy": null
+}
+```
+
+The number is the ID in the artist's Deezer address (`https://www.deezer.com/artist/468677`). `null` means "no Deezer photo", so the next source in `artist_background_priority` is used. Names match case-insensitively; the file never expires and CrateDigger never writes to it. A pinned page whose picture is not a photo is still skipped.
 
 ## Environment variables
 

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from PIL import Image
 
+from festival_organizer import paths as paths_mod
 from festival_organizer.config import DEFAULT_CONFIG, Config, load_config
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import (
@@ -815,7 +816,6 @@ def test_year_level_stamp_name_place_vs_artist():
 
 def test_album_poster_regenerates_on_artwork_change(tmp_path, monkeypatch):
     """An artist folder poster regenerates when its DJ artwork changes (bg fingerprint)."""
-    from festival_organizer import paths as paths_mod
     from festival_organizer.poster import inject_poster_stamp
 
     video = tmp_path / "test.mkv"
@@ -837,6 +837,101 @@ def test_album_poster_regenerates_on_artwork_change(tmp_path, monkeypatch):
     # Refreshed artwork (different size) -> fingerprint changes -> regenerate.
     (art_dir / "dj-artwork.jpg").write_bytes(b"x" * 200)
     assert op.is_needed(video, mf) is True
+
+
+def _deezer_config(enabled: bool = True, chain: list[str] | None = None) -> Config:
+    from festival_organizer.config import DEFAULT_CONFIG
+
+    data = {**DEFAULT_CONFIG, "deezer": {"enabled": enabled}}
+    if chain is not None:
+        data["poster_settings"] = {
+            **DEFAULT_CONFIG["poster_settings"],
+            "artist_background_priority": chain,
+        }
+    return Config(data)
+
+
+def test_artist_chain_uses_deezer_before_dj_artwork(tmp_path):
+    deezer_img = tmp_path / "deezer-artist.jpg"
+    op = AlbumPosterOperation(_deezer_config())
+    with (
+        patch(
+            "festival_organizer.operations.fetch_deezer_artwork",
+            return_value=deezer_img,
+        ),
+        patch.object(op, "_find_dj_artwork", return_value=tmp_path / "dj.jpg"),
+    ):
+        bg, source = op._resolve_background(
+            op._get_priority_chain_for_poster_type("artist"), tmp_path, _make_mf()
+        )
+    assert (bg, source) == (deezer_img, "deezer")
+
+
+def test_artist_chain_falls_back_to_dj_artwork_without_deezer_photo(tmp_path):
+    dj_img = tmp_path / "dj-artwork.jpg"
+    op = AlbumPosterOperation(_deezer_config())
+    with (
+        patch("festival_organizer.operations.fetch_deezer_artwork", return_value=None),
+        patch.object(op, "_find_dj_artwork", return_value=dj_img),
+    ):
+        bg, source = op._resolve_background(
+            op._get_priority_chain_for_poster_type("artist"), tmp_path, _make_mf()
+        )
+    assert (bg, source) == (dj_img, "dj_artwork")
+
+
+def test_deezer_lookup_uses_the_first_artist_and_its_spotify_link(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(paths_mod, "artist_cache_dir", lambda key: tmp_path / key)
+    dj_cache = MagicMock()
+    dj_cache.spotify_url.side_effect = {"argy": "https://sp/argy"}.get
+    op = AlbumPosterOperation(_deezer_config())
+    mf = _make_mf(artist="Argy & Omnya")
+    mf.artists = ["Argy", "Omnya"]
+    mf.artist_slugs = ["argy", "omnya"]
+    with (
+        patch.object(Config, "dj_cache", dj_cache),
+        patch("festival_organizer.operations.fetch_deezer_artwork") as fetch,
+    ):
+        op._try_background_source("deezer", tmp_path, mf)
+    args, kwargs = fetch.call_args
+    assert args[0] == "Argy"
+    assert args[1].name == "deezer-artist.jpg"
+    assert kwargs["spotify_url"] == "https://sp/argy"
+
+
+def test_custom_chain_without_deezer_never_asks_deezer(tmp_path):
+    op = AlbumPosterOperation(_deezer_config(chain=["dj_artwork", "gradient"]))
+    with (
+        patch("festival_organizer.operations.fetch_deezer_artwork") as fetch,
+        patch.object(op, "_find_dj_artwork", return_value=None),
+    ):
+        op._resolve_background(
+            op._get_priority_chain_for_poster_type("artist"), tmp_path, _make_mf()
+        )
+    fetch.assert_not_called()
+
+
+def test_deezer_disabled_skips_the_source(tmp_path):
+    op = AlbumPosterOperation(_deezer_config(enabled=False))
+    with patch("festival_organizer.operations.fetch_deezer_artwork") as fetch:
+        assert op._try_background_source("deezer", tmp_path, _make_mf()) is None
+    fetch.assert_not_called()
+
+
+def test_bg_fingerprint_follows_chain_order(tmp_path, monkeypatch):
+    (tmp_path / "dj-artwork.jpg").write_bytes(b"d" * 10)
+    (tmp_path / "deezer-artist.jpg").write_bytes(b"z" * 20)
+    monkeypatch.setattr(paths_mod, "artist_cache_dir", lambda key: tmp_path)
+    op = AlbumPosterOperation(_deezer_config())
+    assert op._expected_bg_fingerprint("artist", _make_mf()).startswith(
+        "deezer-artist.jpg:"
+    )
+    op = AlbumPosterOperation(_deezer_config(chain=["dj_artwork", "gradient"]))
+    assert op._expected_bg_fingerprint("artist", _make_mf()).startswith(
+        "dj-artwork.jpg:"
+    )
 
 
 def test_bg_fingerprint_empty_for_year():
@@ -969,7 +1064,7 @@ def test_priority_chain_artist_returns_artist_chain():
     cfg = load_config()
     op = AlbumPosterOperation(cfg, library_root=Path("/tmp"))
     chain = op._get_priority_chain_for_poster_type("artist")
-    assert chain == ["dj_artwork", "fanart_tv", "gradient"]
+    assert chain == ["deezer", "dj_artwork", "fanart_tv", "gradient"]
 
 
 def test_priority_chain_year_returns_year_chain():
@@ -1061,7 +1156,12 @@ def test_album_poster_config_priority_defaults():
 
     config = Config(DEFAULT_CONFIG)
     ps = config.poster_settings
-    assert ps["artist_background_priority"] == ["dj_artwork", "fanart_tv", "gradient"]
+    assert ps["artist_background_priority"] == [
+        "deezer",
+        "dj_artwork",
+        "fanart_tv",
+        "gradient",
+    ]
     assert ps["place_background_priority"] == ["curated_logo", "gradient"]
     assert ps["year_background_priority"] == ["gradient"]
 

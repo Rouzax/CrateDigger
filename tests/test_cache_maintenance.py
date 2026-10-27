@@ -2,7 +2,10 @@ import io
 
 from festival_organizer import cache_maintenance
 from festival_organizer.cache_maintenance import (
+    cache_deezer_artwork,
     cache_dj_artwork,
+    fetch_deezer_artwork,
+    preferred_artist_image,
     reconcile_artist_cache,
     warm_artist_cache_from_dj_cache,
 )
@@ -174,3 +177,103 @@ def test_warm_keying_parity_with_reconcile(tmp_path, monkeypatch):
 
     assert removed == []
     assert (root / "somethingelse-br" / "dj-artwork.jpg").exists()
+
+
+def test_cache_deezer_artwork_squares_and_caps_at_550(tmp_path, monkeypatch):
+    from PIL import Image
+
+    monkeypatch.setattr(
+        "requests.get", lambda *a, **k: _fake_image_response(1000, 1000)
+    )
+    dest = tmp_path / "artists" / "argy" / "deezer-artist.jpg"
+    assert cache_deezer_artwork("https://x/a.jpg", dest, ttl_days=90) == dest
+    with Image.open(dest) as img:
+        assert img.size == (550, 550)
+
+
+def _touch(path, data=b"x"):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
+    return path
+
+
+def test_preferred_artist_image_follows_chain(tmp_path):
+    deezer = _touch(tmp_path / "deezer-artist.jpg")
+    dj = _touch(tmp_path / "dj-artwork.jpg")
+    assert (
+        preferred_artist_image(tmp_path, ["deezer", "dj_artwork", "gradient"]) == deezer
+    )
+    assert preferred_artist_image(tmp_path, ["dj_artwork", "deezer"]) == dj
+
+
+def test_preferred_artist_image_none_when_empty(tmp_path):
+    assert (
+        preferred_artist_image(tmp_path, ["deezer", "dj_artwork", "fanart_tv"]) is None
+    )
+
+
+def test_fetch_deezer_artwork_resolves_and_downloads(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "requests.get", lambda *a, **k: _fake_image_response(1000, 1000)
+    )
+    dest = tmp_path / "argy" / "deezer-artist.jpg"
+    seen = {}
+
+    def fake_lookup(name, cache, overrides=None, spotify_url=""):
+        seen["spotify_url"] = spotify_url
+        return "mbid-argy"
+
+    monkeypatch.setattr(cache_maintenance, "lookup_mbid", fake_lookup)
+    monkeypatch.setattr(
+        cache_maintenance,
+        "resolve_deezer_photo",
+        lambda name, mbid, cache, overrides: "https://x/argy.jpg" if mbid else "",
+    )
+    result = fetch_deezer_artwork(
+        "Argy",
+        dest,
+        spotify_url="https://open.spotify.com/artist/x",
+        mbid_cache=None,
+        mbid_overrides=None,
+        deezer_cache=None,
+        deezer_overrides=None,
+        ttl_days=90,
+    )
+    assert result == dest
+    assert seen["spotify_url"] == "https://open.spotify.com/artist/x"
+
+
+def test_fetch_deezer_artwork_fresh_image_makes_no_requests(tmp_path, monkeypatch):
+    dest = _touch(tmp_path / "argy" / "deezer-artist.jpg")
+
+    def boom(*a, **k):
+        raise AssertionError("no lookup expected")
+
+    monkeypatch.setattr(cache_maintenance, "lookup_mbid", boom)
+    result = fetch_deezer_artwork(
+        "Argy",
+        dest,
+        spotify_url="",
+        mbid_cache=None,
+        mbid_overrides=None,
+        deezer_cache=None,
+        deezer_overrides=None,
+        ttl_days=90,
+    )
+    assert result == dest
+
+
+def test_fetch_deezer_artwork_without_photo_is_none(tmp_path, monkeypatch):
+    monkeypatch.setattr(cache_maintenance, "lookup_mbid", lambda *a, **k: "mbid")
+    monkeypatch.setattr(cache_maintenance, "resolve_deezer_photo", lambda *a, **k: "")
+    result = fetch_deezer_artwork(
+        "Bart Skils",
+        tmp_path / "bart-skils" / "deezer-artist.jpg",
+        spotify_url="",
+        mbid_cache=None,
+        mbid_overrides=None,
+        deezer_cache=None,
+        deezer_overrides=None,
+        ttl_days=90,
+    )
+    assert result is None

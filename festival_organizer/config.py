@@ -76,7 +76,7 @@ DEFAULT_CONFIG = {
         "unknown_title": "Unknown Title",
     },
     "poster_settings": {
-        "artist_background_priority": ["dj_artwork", "fanart_tv", "gradient"],
+        "artist_background_priority": ["deezer", "dj_artwork", "fanart_tv", "gradient"],
         "place_background_priority": ["curated_logo", "gradient"],
         "year_background_priority": ["gradient"],
     },
@@ -115,6 +115,7 @@ DEFAULT_CONFIG = {
         # [Label] (legacy).
         "chapter_title_labels": False,
     },
+    "deezer": {"enabled": True},
     "fanart": {
         "project_api_key": "9fb9273dbec3739bd0fdb49f10d6a129",
         "personal_api_key": "",
@@ -150,6 +151,7 @@ DEFAULT_CONFIG = {
         "dj_days": 90,
         "source_days": 365,
         "images_days": 90,
+        "deezer_days": 90,
     },
 }
 
@@ -648,6 +650,10 @@ class Config:
     @property
     def fanart_enabled(self) -> bool:
         return self.fanart_settings.get("enabled", True)
+
+    @property
+    def deezer_enabled(self) -> bool:
+        return self._data.get("deezer", {}).get("enabled", True)
 
     @property
     def kodi_settings(self) -> dict:
