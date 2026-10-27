@@ -1568,7 +1568,7 @@ when the file is missing.</p>
 <tbody>
 <tr>
 <td>Artist folder</td>
-<td>DJ artwork from 1001Tracklists, then fanart.tv, then gradient</td>
+<td>The artist's Deezer photo, then DJ artwork from 1001Tracklists, then fanart.tv, then gradient (order set by <a href="../../configuration/#poster-settings"><code>artist_background_priority</code></a>)</td>
 </tr>
 <tr>
 <td>Festival folder</td>
@@ -1712,7 +1712,7 @@ An entry in that file fixes the ID everywhere, per-chapter and album-level alike
 </tr>
 </tbody>
 </table>
-<p>Artist artwork is cached to <code>~/.cache/CrateDigger/artists/{artist}/</code> (Linux), <code>~/Library/Caches/CrateDigger/artists/{artist}/</code> (macOS), or <code>$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\</code> (Windows) and reused across runs.
+<p>Artist artwork is cached to <code>~/.cache/CrateDigger/artists/{artist}/</code> (Linux), <code>~/Library/Caches/CrateDigger/artists/{artist}/</code> (macOS), or <code>$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\</code> (Windows) and reused across runs. At the end of every <code>enrich</code> run, each artist folder there gets a <code>portrait.jpg</code>: a copy of the first image found in <code>artist_background_priority</code> order (<code>deezer-artist.jpg</code>, <code>dj-artwork.jpg</code>, <code>fanart.jpg</code>). <a href="https://github.com/Rouzax/TrackSplit">TrackSplit</a> uses it for its artist covers, so they show the same photo as your posters. If <code>artist_background_priority</code> lists no image source at all (for example only <code>"gradient"</code>), no <code>portrait.jpg</code> is written and TrackSplit falls back to its own order, <code>dj-artwork.jpg</code> then <code>fanart.jpg</code>. The same step fetches the Deezer photo of every DJ <code>identify</code> has seen, unless Deezer is disabled or left out of the chain.
 MKV tag changes (<code>tags</code>, <code>chapter_artist_mbids</code>, <code>album_artist_mbids</code>) are written
 directly into the MKV file's metadata section. The video and audio streams are not touched.</p>
 <h2 id="common-examples">Common examples<a class="headerlink" href="#common-examples" title="Permanent link">&para;</a></h2>

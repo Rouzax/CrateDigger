@@ -856,6 +856,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#deezer" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Deezer
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#kodi" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1020,6 +1031,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Artist MBID override file
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deezer-override-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Deezer override file
       </span>
     </span>
   </a>
@@ -1403,6 +1425,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#deezer" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Deezer
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#kodi" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1567,6 +1600,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Artist MBID override file
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deezer-override-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Deezer override file
       </span>
     </span>
   </a>
@@ -1740,7 +1784,7 @@
 <p><strong>Removed key:</strong> <code>unknown_festival</code> was replaced by <code>unknown_place</code> in 0.15.0 and is no longer read. Leaving it in your config has no effect on <code>unknown_place</code> and produces no warning, so set <code>unknown_place</code> directly.</p>
 <h3 id="poster-settings">Poster settings<a class="headerlink" href="#poster-settings" title="Permanent link">&para;</a></h3>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">[poster_settings]</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">artist_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"dj_artwork"</span><span class="p">,</span><span class="w"> </span><span class="s2">"fanart_tv"</span><span class="p">,</span><span class="w"> </span><span class="s2">"gradient"</span><span class="p">]</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">artist_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"deezer"</span><span class="p">,</span><span class="w"> </span><span class="s2">"dj_artwork"</span><span class="p">,</span><span class="w"> </span><span class="s2">"fanart_tv"</span><span class="p">,</span><span class="w"> </span><span class="s2">"gradient"</span><span class="p">]</span>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">place_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"curated_logo"</span><span class="p">,</span><span class="w"> </span><span class="s2">"gradient"</span><span class="p">]</span>
 </span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">year_background_priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"gradient"</span><span class="p">]</span>
 </span></code></pre></div>
@@ -1753,6 +1797,10 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>deezer</code></td>
+<td>The artist's photo on Deezer, found through the Deezer link on their MusicBrainz entry (see <a href="#deezer">Deezer</a>)</td>
+</tr>
 <tr>
 <td><code>dj_artwork</code></td>
 <td>DJ photo from 1001Tracklists (embedded during identify)</td>
@@ -1859,13 +1907,36 @@
 </tbody>
 </table>
 <p>Environment variable overrides: <code>FANART_PERSONAL_API_KEY</code>, <code>FANART_PROJECT_API_KEY</code> (for the built-in project key).</p>
+<h3 id="deezer">Deezer<a class="headerlink" href="#deezer" title="Permanent link">&para;</a></h3>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">[deezer]</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</span></code></pre></div>
+<p>Artist posters use the artist's Deezer photo when there is one, ahead of the 1001Tracklists DJ photo. Deezer photos are usually larger and kept more up to date. No account or key is needed.</p>
+<p><strong>How the artist is found.</strong> Only through the Deezer link on the artist's MusicBrainz entry, never by searching Deezer for the name: Deezer has many artists of the same name, and a name search would put the wrong person on the poster. An artist with no MusicBrainz ID, or whose MusicBrainz entry has no Deezer link, simply gets the next source in <code>artist_background_priority</code>.</p>
+<p><strong>When Deezer's picture is not used.</strong> Some Deezer artists have no photo: Deezer then shows a blank grey outline or one of the artist's own album covers. CrateDigger recognises both and moves on to the next source.</p>
+<p><strong>What it creates.</strong> The photo is saved as <code>deezer-artist.jpg</code> in the artist's folder of the artwork cache, square and 550 pixels, the same as the DJ photo. Which Deezer page belongs to which artist is remembered for <code>cache_ttl.deezer_days</code>, and the saved photo is downloaded again after <code>cache_ttl.images_days</code>. A photo the artist changed on Deezer is therefore picked up once both have passed. A <code>null</code> pin in the override file, or a Deezer picture that has stopped being a photo, removes the saved photo on the next run.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>enabled</code></td>
+<td>Set to <code>false</code> to never contact Deezer; the <code>deezer</code> source is then skipped (default: <code>true</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>To leave Deezer out of posters but keep it enabled, remove <code>"deezer"</code> from <code>artist_background_priority</code>. To correct or block the photo for one artist, see <a href="#deezer-override-file">Deezer override file</a>.</p>
 <h3 id="kodi">Kodi<a class="headerlink" href="#kodi" title="Permanent link">&para;</a></h3>
-<div class="language-toml highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">[kodi]</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"localhost"</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8080</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"kodi"</span>
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="k">[kodi]</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"localhost"</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8080</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"kodi"</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span>
 </span></code></pre></div>
 <p>Kodi JSON-RPC connection settings for automatic library refresh after <code>enrich</code> or <code>organize</code>. See <a href="../kodi-integration/">Kodi integration</a> for setup instructions.</p>
 <table>
@@ -1933,26 +2004,26 @@
 <h4 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h4>
 <p>You need an SMTP server that accepts authenticated submissions. A local relay, a self-hosted mail server, or any provider that supports STARTTLS or SSL on port 587/465 works. Gmail, Fastmail, and similar providers work if you generate an app password.</p>
 <h4 id="configuration_1">Configuration<a class="headerlink" href="#configuration_1" title="Permanent link">&para;</a></h4>
-<div class="language-toml highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="k">[email]</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">smtp_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mail.example.lan"</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">smtp_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">587</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">smtp_security</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"starttls"</span><span class="w">   </span><span class="c1"># starttls | ssl | none</span>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">smtp_user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cratedigger"</span>
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">smtp_password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="w">           </span><span class="c1"># leave blank; use CRATEDIGGER_SMTP_PASSWORD instead</span>
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="n">from_address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cratedigger@example.lan"</span>
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="n">thumbnail_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">140</span>
-</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
-</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="k">[email.new_sets]</span>
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"you@example.com"</span><span class="p">,</span><span class="w"> </span><span class="s2">"other@example.com"</span><span class="p">]</span>
-</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>
-</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="k">[email.updated_sets]</span>
-</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"you@example.com"</span><span class="p">]</span>
-</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a>
-</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="k">[email.update_reminder]</span>
-</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"you@example.com"</span><span class="p">]</span>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">[email]</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">smtp_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mail.example.lan"</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">smtp_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">587</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="n">smtp_security</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"starttls"</span><span class="w">   </span><span class="c1"># starttls | ssl | none</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="n">smtp_user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cratedigger"</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="n">smtp_password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="w">           </span><span class="c1"># leave blank; use CRATEDIGGER_SMTP_PASSWORD instead</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="n">from_address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cratedigger@example.lan"</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="n">thumbnail_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">140</span>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="k">[email.new_sets]</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"you@example.com"</span><span class="p">,</span><span class="w"> </span><span class="s2">"other@example.com"</span><span class="p">]</span>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="k">[email.updated_sets]</span>
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"you@example.com"</span><span class="p">]</span>
+</span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a>
+</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="k">[email.update_reminder]</span>
+</span><span id="__span-19-19"><a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-19-20"><a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"you@example.com"</span><span class="p">]</span>
 </span></code></pre></div>
 <table>
 <thead>
@@ -2024,18 +2095,18 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Linux / macOS</label><label for="__tabbed_4_2">Windows (PowerShell)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CRATEDIGGER_SMTP_PASSWORD</span><span class="o">=</span>your-app-password
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CRATEDIGGER_SMTP_PASSWORD</span><span class="o">=</span>your-app-password
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nv">$env:CRATEDIGGER_SMTP_PASSWORD</span> <span class="p">=</span> <span class="s2">"your-app-password"</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nv">$env:CRATEDIGGER_SMTP_PASSWORD</span> <span class="p">=</span> <span class="s2">"your-app-password"</span>
 </span></code></pre></div>
 </div>
 </div>
 </div>
 <h4 id="verifying-delivery">Verifying delivery<a class="headerlink" href="#verifying-delivery" title="Permanent link">&para;</a></h4>
 <p>Run <code>cratedigger --email-test</code> to send a sample email and confirm your SMTP settings and rendering work. It takes no path, does not touch your library, and reports whether the message was sent or why it failed (for example, no recipients configured, or a connection error). It sends to the <code>[email.new_sets]</code> recipient list and works even while that channel is disabled, so you can test before turning it on.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>cratedigger<span class="w"> </span>--email-test
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>cratedigger<span class="w"> </span>--email-test
 </span></code></pre></div>
 <p>You can also force or suppress an email for a single run without changing your config:</p>
 <ul>
@@ -2046,25 +2117,26 @@
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
 <p><a class="glightbox" data-type="image" href="../assets/example-email.png"><img alt="Example CrateDigger run-summary email" src="../assets/example-email.png" /></a></p>
 <h3 id="nfo-settings"><abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> settings<a class="headerlink" href="#nfo-settings" title="Permanent link">&para;</a></h3>
-<div class="language-toml highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">[nfo_settings]</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">genre_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Electronic"</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="n">genre_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Live"</span>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="k">[nfo_settings]</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">genre_festival</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Electronic"</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="n">genre_concert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Live"</span>
 </span></code></pre></div>
 <p>Genre written into <abbr title="Sidecar metadata file written next to each video, read by Kodi, Jellyfin and Plex">NFO</abbr> files when no genre is available from 1001Tracklists metadata. <code>genre_festival</code> applies to festival sets; <code>genre_concert</code> applies to concert recordings.</p>
 <h3 id="tool-paths">Tool paths<a class="headerlink" href="#tool-paths" title="Permanent link">&para;</a></h3>
-<div class="language-toml highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># [tool_paths]</span>
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="c1"># ffprobe = "C:/Program Files/ffmpeg/bin/ffprobe.exe"</span>
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="c1"># mkvextract = ""</span>
-</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1"># mkvpropedit = ""</span>
-</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="c1"># mkvmerge = ""</span>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># [tool_paths]</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="c1"># ffprobe = "C:/Program Files/ffmpeg/bin/ffprobe.exe"</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="c1"># mkvextract = ""</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="c1"># mkvpropedit = ""</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="c1"># mkvmerge = ""</span>
 </span></code></pre></div>
 <p>Explicit paths to external tools. Set these only if the tools are installed somewhere not on your system PATH. Omit a key (or leave an empty string) to let CrateDigger find them automatically via PATH.</p>
 <h3 id="cache-ttl">Cache <abbr title="Time to live, how long a cached entry stays valid before it is fetched again">TTL</abbr><a class="headerlink" href="#cache-ttl" title="Permanent link">&para;</a></h3>
-<div class="language-toml highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="k">[cache_ttl]</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">mbid_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">dj_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">source_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">365</span>
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="n">images_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="k">[cache_ttl]</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="n">mbid_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="n">dj_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="n">source_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">365</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="n">images_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="n">deezer_days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">90</span>
 </span></code></pre></div>
 <p>Base lifetimes for CrateDigger's caches, in days. When a cache entry expires, CrateDigger refreshes it on the next lookup.</p>
 <table>
@@ -2094,6 +2166,11 @@
 <tr>
 <td><code>images_days</code></td>
 <td>Downloaded artwork and images</td>
+<td>90</td>
+</tr>
+<tr>
+<td><code>deezer_days</code></td>
+<td>Which Deezer photo belongs to each artist</td>
 <td>90</td>
 </tr>
 </tbody>
@@ -2130,18 +2207,18 @@
 <h3 id="artist-aliases">artists.json<a class="headerlink" href="#artist-aliases" title="Permanent link">&para;</a></h3>
 <p>Controls artist name aliases and <abbr title="Back to back, a set performed by two or more DJs together">B2B</abbr> group definitions.</p>
 <p>Place it in the folder above (<code>~/CrateDigger/artists.json</code> on Linux or macOS, <code>Documents\CrateDigger\artists.json</code> on Windows). Example:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">{</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">        </span><span class="nt">"Armin van Buuren"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Rising Star"</span><span class="p">],</span>
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">        </span><span class="nt">"Martin Garrix"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"GRX"</span><span class="p">],</span>
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">        </span><span class="nt">"Nicky Romero"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Monocule"</span><span class="p">]</span>
-</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">    </span><span class="p">},</span>
-</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="w">    </span><span class="nt">"groups"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="w">        </span><span class="s2">"Above &amp; Beyond"</span><span class="p">,</span>
-</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="w">        </span><span class="s2">"Swedish House Mafia"</span><span class="p">,</span>
-</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="w">        </span><span class="s2">"W&amp;W"</span>
-</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="w">    </span><span class="p">]</span>
-</span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a><span class="p">}</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="p">{</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">    </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">        </span><span class="nt">"Armin van Buuren"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Rising Star"</span><span class="p">],</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="w">        </span><span class="nt">"Martin Garrix"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"GRX"</span><span class="p">],</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="w">        </span><span class="nt">"Nicky Romero"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Monocule"</span><span class="p">]</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="w">    </span><span class="nt">"groups"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="w">        </span><span class="s2">"Above &amp; Beyond"</span><span class="p">,</span>
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a><span class="w">        </span><span class="s2">"Swedish House Mafia"</span><span class="p">,</span>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a><span class="w">        </span><span class="s2">"W&amp;W"</span>
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a><span class="w">    </span><span class="p">]</span>
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a><span class="p">}</span>
 </span></code></pre></div>
 <p><strong><code>aliases</code>:</strong> maps a canonical artist name to a list of aliases. When CrateDigger encounters an alias in a filename or tag, it substitutes the canonical name. Matching is case-insensitive and diacritics-insensitive.</p>
 <p><strong><code>groups</code>:</strong> a manual list of act names that should be kept as-is even when they contain <code>&amp;</code>, <code>B2B</code>, <code>vs.</code>, or <code>x</code> separators. As of v0.21.0, any act with a 1001Tracklists profile is kept whole automatically (resolved to its canonical name via the DJ cache), so you do not need a manual entry for those acts. This includes single acts whose name contains <code>&amp;</code> (for example, "Above &amp; Beyond") and named groups (for example, "Swedish House Mafia"). Manual entries are mainly useful for acts with no 1001Tracklists profile (for example, <code>"W&amp;W"</code> if it has no profile) or to correct a name the DJ cache gets wrong. When an act is neither in <code>groups</code> nor known to 1001Tracklists, CrateDigger splits on the separator and uses only the first artist as the folder name.</p>
@@ -2170,10 +2247,10 @@
 </tbody>
 </table>
 <p>It is checked first by both the <code>chapter_artist_mbids</code> and <code>album_artist_mbids</code> enrich operations, before the auto cache and any live MusicBrainz search.</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="p">{</span>
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">    </span><span class="nt">"Afrojack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3abb6f9f-5b6a-4f1f-8a2d-1111111111aa"</span><span class="p">,</span>
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">    </span><span class="nt">"Oliver Heldens"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6e7dde91-4c02-47ea-a2b4-2222222222bb"</span>
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="p">}</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="p">{</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="w">    </span><span class="nt">"Afrojack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3abb6f9f-5b6a-4f1f-8a2d-1111111111aa"</span><span class="p">,</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">    </span><span class="nt">"Oliver Heldens"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6e7dde91-4c02-47ea-a2b4-2222222222bb"</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <table>
 <thead>
@@ -2208,6 +2285,14 @@
 <p><strong>Distinction from the auto <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> cache:</strong> the auto cache is populated from MusicBrainz search results and expires after <code>cache_ttl.mbid_days</code>. It can be deleted and will refill. <code>artist_mbids.json</code> is your curated override list for artists that MusicBrainz searches misidentify or fail to find.</p>
 <p><strong>When a lookup fails:</strong> a search that finds nothing is remembered as a miss until the <abbr title="Time to live, how long a cached entry stays valid before it is fetched again">TTL</abbr> expires, so CrateDigger does not re-query the same unknown name on every run. Two things are deliberately excluded from that. A lookup that could not be completed at all (MusicBrainz returning 503 after its retries) is never remembered, so a temporary outage cannot pin an artist to "no ID" for the next 90 days; it is logged as a warning and retried on the following run. And remembered misses are discarded automatically whenever the matching logic improves, so artists that a previous version could not resolve are looked up again rather than waiting out the <abbr title="Time to live, how long a cached entry stays valid before it is fetched again">TTL</abbr>.</p>
 <p>See <a href="../commands/enrich/#chapter_artist_mbids-per-track-artist-ids">enrich: chapter_artist_mbids</a> for the fix workflow.</p>
+<h2 id="deezer-override-file">Deezer override file<a class="headerlink" href="#deezer-override-file" title="Permanent link">&para;</a></h2>
+<p><code>artist_deezer_ids.json</code> lives next to <code>artist_mbids.json</code> and pins an artist to a Deezer artist ID, or to no Deezer photo at all. Use it when the Deezer link on MusicBrainz leads to the wrong page or a photo you do not want.</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="p">{</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="w">    </span><span class="nt">"Bart Skils"</span><span class="p">:</span><span class="w"> </span><span class="mi">468677</span><span class="p">,</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">    </span><span class="nt">"Argy"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>The number is the ID in the artist's Deezer address (<code>https://www.deezer.com/artist/468677</code>). <code>null</code> means "no Deezer photo", so the next source in <code>artist_background_priority</code> is used. Names match case-insensitively; the file never expires and CrateDigger never writes to it. A pinned page whose picture is not a photo is still skipped.</p>
 <h2 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
