@@ -1532,8 +1532,9 @@ how to install the <code>vision</code> extra.</p>
 site with artist logos, backgrounds, and thumbnails). These are saved to a shared cache
 folder (<code>~/.cache/CrateDigger/artists/{artist}/</code> on Linux, <code>~/Library/Caches/CrateDigger/artists/{artist}/</code> on macOS, <code>$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\</code> on Windows) and used as backgrounds in poster generation.</p>
 <p>To find an artist's images on fanart.tv, CrateDigger first resolves their MusicBrainz ID.
-It uses the same lookup chain as the <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> operations: your override file first, then the
-auto-cache, then a live MusicBrainz search. This lookup is used only for image retrieval
+It uses the same lookup chain as the <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> operations (see the lookup order under
+<code>chapter_artist_mbids</code> below): your override file first, then the artist's Spotify page,
+then the auto-cache, then a live MusicBrainz search. This lookup is used only for image retrieval
 and is not written to your MKV files. For that, see <code>chapter_artist_mbids</code> and
 <code>album_artist_mbids</code> below. Artists whose name cannot be resolved to a MusicBrainz ID
 are skipped.</p>
@@ -1643,6 +1644,11 @@ is what embeds the per-chapter performer names.</p>
 <ol>
 <li>Your override file (<code>~/CrateDigger/artist_mbids.json</code> on Linux and macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows): manually curated, never
    expires, never auto-written by CrateDigger</li>
+<li>The artist's Spotify page, for artists whose 1001Tracklists profile <code>identify</code> has
+   fetched (the set's own DJs). MusicBrainz is asked which artist that page belongs to,
+   which tells apart two artists of exactly the same name (the Greek and the Welsh
+   <code>Argy</code>). Artists that only appear inside a set, and pages MusicBrainz does not know,
+   go on to the next steps.</li>
 <li>Auto cache (in <code>~/.cache/CrateDigger/</code> on Linux, <code>~/Library/Caches/CrateDigger/</code> on macOS, <code>$env:LOCALAPPDATA\CrateDigger\Cache\</code> on Windows): populated automatically by MusicBrainz
    searches, expires after 90 days by default</li>
 <li>Live MusicBrainz search: result is saved to the auto cache</li>

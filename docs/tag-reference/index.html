@@ -1442,7 +1442,7 @@
 <tr>
 <td><code>CRATEDIGGER_ALBUMARTIST_MBIDS</code></td>
 <td>enrich</td>
-<td>Pipe-separated MusicBrainz artist IDs, positionally aligned with <code>CRATEDIGGER_1001TL_ARTISTS</code>. Empty slot <code>""</code> for unresolved names.</td>
+<td>Pipe-separated MusicBrainz artist IDs, positionally aligned with <code>CRATEDIGGER_1001TL_ARTISTS</code>. Empty slot <code>""</code> for unresolved names. Each DJ is identified through the Spotify page their 1001Tracklists profile links, so two artists with exactly the same name (the Greek and the Welsh <code>Argy</code>) are told apart; the name search is the fallback.</td>
 <td><code>477b8c0c-...\|&lt;kiki-mbid&gt;</code></td>
 </tr>
 </tbody>
@@ -1481,7 +1481,7 @@
 <tr>
 <td><code>MUSICBRAINZ_ARTISTIDS</code></td>
 <td>enrich</td>
-<td>Pipe-separated MusicBrainz artist IDs, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code>. Empty slot <code>""</code> for unresolved names. A name with a 1001Tracklists country tag (<code>VLTRA (IT)</code>) is searched as written, then without the tag, preferring an artist from that country; when same-named artists cannot be told apart the slot stays empty rather than guessing.</td>
+<td>Pipe-separated MusicBrainz artist IDs, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code>. Empty slot <code>""</code> for unresolved names. A performer who is also one of the set's DJs is identified through their Spotify page, as for <code>CRATEDIGGER_ALBUMARTIST_MBIDS</code>. A name with a 1001Tracklists country tag (<code>VLTRA (IT)</code>) is searched as written, then without the tag, preferring an artist from that country; when same-named artists cannot be told apart the slot stays empty rather than guessing.</td>
 <td><code>&lt;afrojack-mbid&gt;\|&lt;heldens-mbid&gt;</code></td>
 </tr>
 <tr>

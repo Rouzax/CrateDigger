@@ -2015,7 +2015,7 @@ action on your 1001Tracklists account is needed.</p>
 </span></code></pre></div>
 <p>Find the correct <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> at <a href="https://musicbrainz.org">musicbrainz.org</a>.</p>
 <h3 id="musicbrainz-ids-are-not-resolving-for-some-artists">MusicBrainz IDs are not resolving for some artists<a class="headerlink" href="#musicbrainz-ids-are-not-resolving-for-some-artists" title="Permanent link">&para;</a></h3>
-<p>CrateDigger looks up <abbr title="MusicBrainz Identifiers, the stable IDs MusicBrainz assigns to artists and recordings">MBIDs</abbr> in this order: your override file (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows), the auto cache, then a live MusicBrainz search. If an artist is not resolving:</p>
+<p>CrateDigger looks up <abbr title="MusicBrainz Identifiers, the stable IDs MusicBrainz assigns to artists and recordings">MBIDs</abbr> in this order: your override file (<code>~/CrateDigger/artist_mbids.json</code> on Linux or macOS, <code>Documents\CrateDigger\artist_mbids.json</code> on Windows), the Spotify page linked from the artist's 1001Tracklists profile (for a set's own DJs), the auto cache, then a live MusicBrainz search. If an artist is not resolving:</p>
 <ol>
 <li>Check if the search is returning the wrong artist (a name collision). Run with <code>--verbose</code> to see what MusicBrainz returns.</li>
 <li>Look up the correct <abbr title="MusicBrainz Identifier, the stable ID MusicBrainz assigns to an artist or recording">MBID</abbr> at <a href="https://musicbrainz.org">musicbrainz.org</a> and add it to your override file:</li>
