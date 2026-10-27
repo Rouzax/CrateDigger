@@ -20,12 +20,18 @@ from festival_organizer.cache_ttl import is_fresh, jittered_ttl_seconds
 
 logger = logging.getLogger(__name__)
 
+# Stamped on every entry by put(). An entry from before the current version
+# lacks a field the profile parser now records (2: spotify_url), so it reads as
+# a miss and identify fetches the profile again.
+ENTRY_VERSION = 2
+
 
 class DjCache:
     """Read-through cache for 1001TL DJ profile data with TTL-based expiry.
 
     Keyed by DJ slug (e.g. "tiesto", "arminvanbuuren"). Each entry stores
-    name, artwork_url, aliases, member_of groups, and group members.
+    name, artwork_url, spotify_url, aliases, member_of groups, and group
+    members.
     Persists under `paths.cache_dir()` (see `festival_organizer.paths`).
     """
 
@@ -61,7 +67,7 @@ class DjCache:
         )
 
     def _is_fresh(self, entry: dict) -> bool:
-        return is_fresh(entry, self._ttl_seconds)
+        return entry.get("v", 1) >= ENTRY_VERSION and is_fresh(entry, self._ttl_seconds)
 
     def get(self, slug: str) -> dict | None:
         entry = self._data.get(slug)
@@ -72,6 +78,7 @@ class DjCache:
     def put(self, slug: str, entry: dict) -> None:
         entry["ts"] = time.time()
         entry["ttl"] = jittered_ttl_seconds(self._ttl_days)
+        entry["v"] = ENTRY_VERSION
         self._data[slug] = entry
         self._save()
 
@@ -136,6 +143,15 @@ class DjCache:
             for slug, entry in self._data.items()
             if entry.get("artwork_url")
         }
+
+    def spotify_url(self, slug: str) -> str:
+        """The artist's Spotify page from their profile, or "" when unknown.
+
+        Freshness-agnostic like :meth:`all_artwork_urls`: a link does not go
+        bad with the entry's TTL.
+        """
+        entry = self._data.get(slug)
+        return str(entry.get("spotify_url") or "") if entry else ""
 
     def derive_entry_names(self) -> set[str]:
         """Lowercased canonical names of every cached entry.

@@ -64,7 +64,7 @@ def test_execute_writes_aligned_mbids(tmp_path):
     mkv.write_bytes(b"")
     existing_70 = {"CRATEDIGGER_1001TL_ARTISTS": "Armin van Buuren|KI/KI|Mystery"}
 
-    def fake_lookup(name, cache, overrides=None):
+    def fake_lookup(name, cache, overrides=None, spotify_url=""):
         return {"Armin van Buuren": "armin-mbid", "KI/KI": "kiki-mbid"}.get(name)
 
     extract_p, tvals_p = _mock_tags(existing_70)
@@ -112,7 +112,7 @@ def test_execute_skipped_when_mbids_already_current(tmp_path):
         "CRATEDIGGER_ALBUMARTIST_MBIDS": "armin-mbid|kiki-mbid",
     }
 
-    def fake_lookup(name, cache, overrides=None):
+    def fake_lookup(name, cache, overrides=None, spotify_url=""):
         return {"Armin van Buuren": "armin-mbid", "KI/KI": "kiki-mbid"}.get(name)
 
     extract_p, tvals_p = _mock_tags(existing_70)
@@ -173,3 +173,48 @@ def test_force_rewrites_when_stale_mbids_present(tmp_path):
     assert result.status == "done"
     _, tags_dict = write_fn.call_args.args
     assert tags_dict == {70: {"CRATEDIGGER_ALBUMARTIST_MBIDS": "FRESH"}}
+
+
+class _DjCache:
+    """The DJ cache's Spotify accessor, for the slugs identify fetched."""
+
+    def __init__(self, links: dict[str, str]):
+        self._links = links
+
+    def spotify_url(self, slug: str) -> str:
+        return self._links.get(slug, "")
+
+
+class _Config:
+    cache_ttl = {"mbid_days": 90}
+
+    def __init__(self, links: dict[str, str]):
+        self.dj_cache = _DjCache(links)
+
+
+def test_execute_passes_each_artists_spotify_link(tmp_path):
+    # Same-named artists are told apart by the Spotify page their 1001TL
+    # profile links, looked up by the slug stored beside the name.
+    mkv = tmp_path / "set.mkv"
+    mkv.write_bytes(b"")
+    existing_70 = {
+        "CRATEDIGGER_1001TL_ARTISTS": "Argy|Anyma",
+        "CRATEDIGGER_ALBUMARTIST_SLUGS": "argy|anyma",
+    }
+    seen: dict[str, str] = {}
+
+    def fake_lookup(name, cache, overrides=None, spotify_url=""):
+        seen[name] = spotify_url
+        return name.lower()
+
+    extract_p, tvals_p = _mock_tags(existing_70)
+    with (
+        extract_p,
+        tvals_p,
+        patch("festival_organizer.mkv_tags.write_merged_tags"),
+        patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup),
+    ):
+        op = AlbumArtistMbidsOperation(config=_Config({"argy": "https://sp/argy"}))
+        op.execute(mkv, _make_mf())
+
+    assert seen == {"Argy": "https://sp/argy", "Anyma": ""}

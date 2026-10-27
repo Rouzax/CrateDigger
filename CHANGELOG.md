@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.36.1] - 2026-10-27
+
+### Fixed
+
+- A DJ who shares their exact name with another artist now gets their own MusicBrainz ID. MusicBrainz has two artists called `Argy`, the Greek Afterlife DJ and a Welsh DJ, and its search ranks the Welsh one first, so the Greek Argy's sets carried the Welsh Argy's ID in `CRATEDIGGER_ALBUMARTIST_MBIDS` and the per-chapter `MUSICBRAINZ_ARTISTIDS`, and their artist images were looked up for the wrong person. A DJ's 1001Tracklists profile links their Spotify page, and MusicBrainz knows which artist that page belongs to, so a set's own DJs are now identified that way; the name search remains the fallback for everyone else. Checked against a library of 76 DJs: Argy's ID changes and every other ID stays the same.
+
+  The DJ profiles cached by `identify` gain the Spotify link, so each cached profile is fetched once more on the next `identify` run. The corrected IDs are written by the `enrich` run after that.
+
+- The artist images step (`fanart`) now honours your `artist_mbids.json` overrides, as the documentation already said it did. It looked artists up through the cache and MusicBrainz only, so a pinned ID corrected the tags but not the images.
+
 ## [0.36.0] - 2026-10-27
 
 ### Fixed

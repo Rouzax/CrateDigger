@@ -232,13 +232,21 @@ def lookup_mbid(
     artist_name: str,
     cache: MBIDCache,
     overrides: "ArtistMbidOverrides | None" = None,
+    spotify_url: str = "",
 ) -> str | None:
     """Look up MusicBrainz ID for an artist name.
 
-    Precedence: user override (never expires, never written to) > local
+    Precedence: user override (never expires, never written to) > the
+    artist's Spotify page, when their 1001TL profile links one > local
     cache (TTL-bound) > MusicBrainz search. Overrides are returned as-is
     and are NOT promoted into the cache: that keeps the curated file the
     single source of truth and prevents a TTL refresh from stomping a pin.
+
+    A name search cannot tell same-named artists apart (MusicBrainz ranks the
+    Welsh "Argy" above the Greek one), while the Spotify page belongs to one
+    artist. Its answer is cached under the page, not the name, since two
+    artists of one name each have their own page. A page MusicBrainz does not
+    know falls back to the name.
     """
     if overrides is not None:
         pinned = overrides.get(artist_name)
@@ -254,6 +262,11 @@ def lookup_mbid(
     if is_unidentified_artist(artist_name):
         logger.debug('fanart.mbid: source=placeholder artist="%s"', artist_name)
         return None
+
+    if spotify_url:
+        mbid = _lookup_by_spotify(artist_name, spotify_url, cache)
+        if mbid:
+            return mbid
 
     if cache.has(artist_name):
         mbid = cache.get(artist_name)
@@ -281,6 +294,36 @@ def lookup_mbid(
         )
     else:
         logger.info('fanart.mbid_lookup: artist="%s" status=not_found', artist_name)
+    return mbid
+
+
+def _lookup_by_spotify(
+    artist_name: str, spotify_url: str, cache: MBIDCache
+) -> str | None:
+    """MBID linked to the artist's Spotify page, from cache or MusicBrainz.
+
+    None means none is known for the page; an outage is logged and not
+    cached, so the next run asks again.
+    """
+    key = f"spotify:{spotify_url.rstrip('/').rsplit('/', 1)[-1]}"
+    if cache.has(key):
+        return cache.get(key)
+    try:
+        mbid = _mb_by_spotify(spotify_url, artist_name)
+    except MusicBrainzError as e:
+        logger.warning(
+            'fanart.mbid_lookup: artist="%s" route=spotify status=unavailable error="%s"',
+            artist_name,
+            e,
+        )
+        return None
+    cache.put(key, mbid)
+    logger.info(
+        'fanart.mbid_lookup: artist="%s" route=spotify status=%s mbid=%s',
+        artist_name,
+        "found" if mbid else "not_found",
+        mbid or "",
+    )
     return mbid
 
 
@@ -363,9 +406,7 @@ def _mb_candidates(search_name: str, artist_name: str) -> list[dict]:
     Raises MusicBrainzError when MusicBrainz cannot be reached; an empty list
     means it answered and nothing qualified.
     """
-    _mb_rate_limit()
 
-    url = f"{MB_BASE_URL}/artist/"
     # Query without a type filter, then post-filter in code. An AND type:...
     # clause would drop MB entries whose type field is null, which is common
     # for mid-profile DJs whose MB entry has never been type-tagged (e.g.
@@ -375,14 +416,39 @@ def _mb_candidates(search_name: str, artist_name: str) -> list[dict]:
     # artist:"Kanye West" returns a tribute band and a collaboration, while
     # alias:"Kanye West" returns "Ye", the artist actually wanted.
     query = f'artist:"{search_name}" OR alias:"{search_name}"'
-    params = {"query": query, "fmt": "json", "limit": "25"}
-    headers = {"User-Agent": USER_AGENT}
+    data = _mb_get(
+        f"{MB_BASE_URL}/artist/",
+        {"query": query, "fmt": "json", "limit": "25"},
+        artist_name,
+    )
+    artists = (data or {}).get("artists", [])
 
     # Reject explicit non-artist types so results don't include record labels,
     # orchestras, characters, etc. Missing type ("" or None) is allowed because
     # real artists often have no type set on MB.
     non_artist_types = {"Orchestra", "Choir", "Character", "Other"}
+    candidates = [
+        a
+        for a in artists
+        if a.get("score", 0) >= 80 and (a.get("type") or "") not in non_artist_types
+    ]
+    if artists and not candidates:
+        logger.debug(
+            'fanart.mb_search: status=low_score best=%d artist="%s"',
+            artists[0].get("score", 0),
+            artist_name,
+        )
+    return candidates
 
+
+def _mb_get(url: str, params: dict[str, str], artist_name: str) -> dict | None:
+    """GET a MusicBrainz web-service URL, retrying a busy server.
+
+    Returns the JSON body, or None when MusicBrainz answers 404 (it knows no
+    such resource). Raises MusicBrainzError when it cannot be reached.
+    """
+    _mb_rate_limit()
+    headers = {"User-Agent": USER_AGENT}
     for attempt in range(3):
         try:
             resp = requests.get(url, params=params, headers=headers, timeout=30)
@@ -391,21 +457,10 @@ def _mb_candidates(search_name: str, artist_name: str) -> list[dict]:
                 logger.debug("fanart.mb_retry: code=503 wait=%ds", wait)
                 time.sleep(wait)
                 continue
+            if resp.status_code == 404:
+                return None
             resp.raise_for_status()
-            artists = resp.json().get("artists", [])
-            candidates = [
-                a
-                for a in artists
-                if a.get("score", 0) >= 80
-                and (a.get("type") or "") not in non_artist_types
-            ]
-            if artists and not candidates:
-                logger.debug(
-                    'fanart.mb_search: status=low_score best=%d artist="%s"',
-                    artists[0].get("score", 0),
-                    artist_name,
-                )
-            return candidates
+            return resp.json()
         except requests.RequestException as e:
             if attempt < 2:
                 time.sleep(2**attempt + 1)
@@ -419,6 +474,27 @@ def _mb_candidates(search_name: str, artist_name: str) -> list[dict]:
     raise MusicBrainzError(
         f"MusicBrainz unavailable (503) after retries for '{artist_name}'"
     )
+
+
+def _mb_by_spotify(spotify_url: str, artist_name: str) -> str | None:
+    """MBID of the artist MusicBrainz links to this Spotify page, or None.
+
+    Several artists can share a Spotify link (a duo and a member, a renamed
+    act); then the one named like the 1001TL artist is taken, else none.
+    Raises MusicBrainzError when MusicBrainz cannot be reached.
+    """
+    data = _mb_get(
+        f"{MB_BASE_URL}/url",
+        {"resource": spotify_url, "inc": "artist-rels", "fmt": "json"},
+        artist_name,
+    )
+    linked = [
+        rel["artist"] for rel in (data or {}).get("relations", []) if rel.get("artist")
+    ]
+    if len(linked) == 1:
+        return linked[0]["id"]
+    match = _match_candidate(linked, artist_name)
+    return match[0]["id"] if match else None
 
 
 def _mb_search(artist_name: str) -> str | None:
@@ -711,6 +787,25 @@ def download_artist_images(
                     bg_ok = _download_image(bg_url, fanart_path)
 
     return (logo_ok, bg_ok)
+
+
+def spotify_urls_by_name(
+    names: list[str], slugs: list[str], dj_cache
+) -> dict[str, str]:
+    """Each artist's Spotify page from their cached 1001TL profile, by name.
+
+    ``names`` and ``slugs`` are a file's aligned name and slug tags; when their
+    lengths differ the pairing is unknown and nothing is returned. Only artists
+    whose profile identify fetched (headliners) have a page; the rest map to
+    nothing and keep the name search.
+    """
+    if dj_cache is None or len(names) != len(slugs):
+        return {}
+    links: dict[str, str] = {}
+    for name, slug in zip(names, slugs, strict=True):
+        if name and slug and (url := dj_cache.spotify_url(slug)):
+            links.setdefault(name, url)
+    return links
 
 
 def resolve_mbids_aligned(

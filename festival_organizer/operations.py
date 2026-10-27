@@ -16,7 +16,7 @@ from festival_organizer import paths
 from festival_organizer.cache_maintenance import cache_dj_artwork
 from festival_organizer.cache_ttl import hashed_jitter_factor
 from festival_organizer.config import Config
-from festival_organizer.fanart import lookup_mbid
+from festival_organizer.fanart import lookup_mbid, spotify_urls_by_name
 from festival_organizer.models import MediaFile
 from festival_organizer.paths import same_library_path
 
@@ -1074,6 +1074,7 @@ class FanartOperation(Operation):
         self._ttl_days = ttl_days
         self._completed_artists: set[str] = set()
         self._cache = mbid_cache
+        self._overrides = None
 
     def _get_cache(self):
         if self._cache is None:
@@ -1082,6 +1083,13 @@ class FanartOperation(Operation):
             ttl = self.config.cache_ttl.get("mbid_days", 90)
             self._cache = MBIDCache(ttl_days=ttl)
         return self._cache
+
+    def _get_overrides(self):
+        if self._overrides is None:
+            from festival_organizer.fanart import ArtistMbidOverrides
+
+            self._overrides = ArtistMbidOverrides()
+        return self._overrides
 
     def _is_stale(self, path: Path) -> bool:
         """Check if a cached file is missing or older than jittered TTL."""
@@ -1143,18 +1151,25 @@ class FanartOperation(Operation):
         from festival_organizer.fanart import (
             download_artist_images,
             fetch_artist_images,
-            lookup_mbid,
             pick_best_background,
             pick_best_logo,
         )
 
+        spotify = spotify_urls_by_name(
+            media_file.artists, media_file.artist_slugs, self.config.dj_cache
+        )
         fetched = []
         for artist, key in self._artist_targets(media_file):
             if artist in self._completed_artists:
                 continue
             d = self._artist_dir(key)
             try:
-                mbid = lookup_mbid(artist, self._get_cache())
+                mbid = lookup_mbid(
+                    artist,
+                    self._get_cache(),
+                    overrides=self._get_overrides(),
+                    spotify_url=spotify.get(artist, ""),
+                )
 
                 # Fetch fanart.tv data once, extract URLs and pass to downloader
                 fanart_data = None
@@ -1307,9 +1322,18 @@ class ChapterArtistMbidsOperation(Operation):
 
         cache = self._get_cache()
         overrides = self._get_overrides()
+        dj_cache = self.config.dj_cache if self.config is not None else None
+        spotify: dict[str, str] = {}
+        for block in existing.values():
+            names = (block.get("CRATEDIGGER_TRACK_PERFORMER_NAMES") or "").split("|")
+            slugs = (block.get("CRATEDIGGER_TRACK_PERFORMER_SLUGS") or "").split("|")
+            for name, url in spotify_urls_by_name(names, slugs, dj_cache).items():
+                spotify.setdefault(name, url)
 
         def resolver(name: str) -> str | None:
-            return lookup_mbid(name, cache, overrides=overrides)
+            return lookup_mbid(
+                name, cache, overrides=overrides, spotify_url=spotify.get(name, "")
+            )
 
         new_mbid_tags = compute_chapter_mbid_tags(existing, resolver)
         if not new_mbid_tags:
@@ -1418,9 +1442,16 @@ class AlbumArtistMbidsOperation(Operation):
 
         cache = self._get_cache()
         overrides = self._get_overrides()
+        spotify = spotify_urls_by_name(
+            names_str.split("|"),
+            existing_70.get("CRATEDIGGER_ALBUMARTIST_SLUGS", "").split("|"),
+            self.config.dj_cache if self.config is not None else None,
+        )
 
         def resolver(name: str) -> str | None:
-            return lookup_mbid(name, cache, overrides=overrides)
+            return lookup_mbid(
+                name, cache, overrides=overrides, spotify_url=spotify.get(name, "")
+            )
 
         mbids = resolve_mbids_aligned(names, resolver)
         if not any(mbids):

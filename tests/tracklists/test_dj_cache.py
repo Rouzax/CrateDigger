@@ -4,7 +4,7 @@ import json
 import time
 from unittest.mock import patch
 
-from festival_organizer.tracklists.dj_cache import DjCache
+from festival_organizer.tracklists.dj_cache import ENTRY_VERSION, DjCache
 
 
 def test_put_stamps_ttl_field(tmp_path):
@@ -24,7 +24,9 @@ def test_get_honours_per_entry_ttl(tmp_path):
 
 
 def test_get_legacy_entry_uses_class_default(tmp_path):
-    raw = {"tiesto": {"name": "Tiesto", "ts": time.time() - 10}}
+    # No "ttl" of its own: the cache's TTL applies. Stamped with the current
+    # entry version, which an older entry lacks (see test_dj_cache.py).
+    raw = {"tiesto": {"name": "Tiesto", "ts": time.time() - 10, "v": ENTRY_VERSION}}
     (tmp_path / "dj_cache.json").write_text(json.dumps(raw))
     cache = DjCache(cache_path=tmp_path / "dj_cache.json", ttl_days=90)
     assert cache.get("tiesto") is not None

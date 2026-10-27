@@ -270,7 +270,7 @@ Find the correct MBID at [musicbrainz.org](https://musicbrainz.org).
 
 ### MusicBrainz IDs are not resolving for some artists
 
-CrateDigger looks up MBIDs in this order: your override file (`~/CrateDigger/artist_mbids.json` on Linux or macOS, `Documents\CrateDigger\artist_mbids.json` on Windows), the auto cache, then a live MusicBrainz search. If an artist is not resolving:
+CrateDigger looks up MBIDs in this order: your override file (`~/CrateDigger/artist_mbids.json` on Linux or macOS, `Documents\CrateDigger\artist_mbids.json` on Windows), the Spotify page linked from the artist's 1001Tracklists profile (for a set's own DJs), the auto cache, then a live MusicBrainz search. If an artist is not resolving:
 
 1. Check if the search is returning the wrong artist (a name collision). Run with `--verbose` to see what MusicBrainz returns.
 2. Look up the correct MBID at [musicbrainz.org](https://musicbrainz.org) and add it to your override file:

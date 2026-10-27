@@ -69,6 +69,12 @@ _ARTIST_HREF_RE = re.compile(r"/artist/([^/]+)/[^/]+\.html$")
 # index.html, for every artist.
 _ARTIST_ID_HREF_RE = re.compile(r"/artist/[^/]+/([^/]+)/")
 
+# The artist's Spotify page as linked from their 1001TL profile. The site's own
+# footer links open.spotify.com/user/1001tracklists, which this skips.
+_SPOTIFY_ARTIST_HREF_RE = re.compile(
+    r'href="https?://open\.spotify\.com/artist/([A-Za-z0-9]+)'
+)
+
 # Short pause between consecutive 1001TL requests inside one file's processing
 # (page GET, per-source and per-DJ fetches). Keeps the post-selection burst
 # modest without dominating wall-clock time on fresh caches. Between-files
@@ -1220,10 +1226,15 @@ class TracklistSession:
         empty defaults, and after a re-identify pass all embedded slugs are
         new-form.
 
-        Returns dict with artwork_url, aliases, and member_of.
-        On failure returns empty defaults.
+        Returns the _parse_dj_profile dict. On failure returns empty defaults.
         """
-        empty = {"artwork_url": "", "aliases": [], "member_of": [], "members": []}
+        empty = {
+            "artwork_url": "",
+            "spotify_url": "",
+            "aliases": [],
+            "member_of": [],
+            "members": [],
+        }
         url = f"{BASE_URL}/artist/{dj_slug}/tracklists.html"
         try:
             resp = self._request("GET", url, max_retries=2)
@@ -1557,6 +1568,7 @@ def _parse_dj_profile(html: str) -> dict:
 
     Returns dict with:
         artwork_url: str, og:image URL (empty if placeholder)
+        spotify_url: str, the artist's Spotify page (empty if none or ambiguous)
         aliases: list of {"slug": str, "name": str}
         member_of: list of {"slug": str, "name": str}
         members: list of {"slug": str, "name": str} (the group's lineup)
@@ -1625,8 +1637,18 @@ def _parse_dj_profile(html: str) -> dict:
                 return entries
         return []
 
+    # Two different Spotify artists on one profile leave no telling which is the
+    # artist's own, so neither is used.
+    spotify_ids = set(_SPOTIFY_ARTIST_HREF_RE.findall(html))
+    spotify_url = (
+        f"https://open.spotify.com/artist/{spotify_ids.pop()}"
+        if len(spotify_ids) == 1
+        else ""
+    )
+
     return {
         "artwork_url": artwork_url,
+        "spotify_url": spotify_url,
         "aliases": _extract_section("Aliases"),
         "member_of": _first_nonempty("Member Of Projects", "Member Of"),
         "members": _first_nonempty("Project Members", "Group Members"),
@@ -1726,7 +1748,7 @@ def _is_rate_limited(text: str) -> bool:
     return "sent too many requests" in lower or "captcha to unblock" in lower
 
 
-def _parse_duration_string(dur_str: str) -> int | None:
+def _parse_duration_string(dur_str: str | None) -> int | None:
     """Parse "1h 15m" or "58m" to minutes."""
     if not dur_str or not dur_str.strip():
         return None

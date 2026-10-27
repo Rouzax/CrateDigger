@@ -160,7 +160,7 @@ def test_nfo_op_preserves_dateadded_on_regen(tmp_path):
     op = NfoOperation(config)
     op.execute(video, _make_mf(stage="Freedom"))
     root = ET.fromstring((tmp_path / "test.nfo").read_text(encoding="utf-8"))
-    assert root.find("dateadded").text == original_ts
+    assert root.findtext("dateadded") == original_ts
 
 
 def test_nfo_op_needed_when_nfo_is_corrupt(tmp_path):
@@ -1378,7 +1378,9 @@ def test_fanart_op_stores_urls_on_mediafile(tmp_path):
     with patch(
         "festival_organizer.fanart.download_artist_images", return_value=(True, True)
     ):
-        with patch("festival_organizer.fanart.lookup_mbid", return_value="mbid-123"):
+        with patch(
+            "festival_organizer.operations.lookup_mbid", return_value="mbid-123"
+        ):
             with patch("festival_organizer.fanart.fetch_artist_images") as mock_fetch:
                 mock_fetch.return_value = {
                     "hdmusiclogo": [
@@ -1398,6 +1400,72 @@ def test_fanart_op_stores_urls_on_mediafile(tmp_path):
 
     assert mf.fanart_url == "https://fanart.tv/bg.jpg"
     assert mf.clearlogo_url == "https://fanart.tv/logo.png"
+
+
+def test_fanart_op_looks_artists_up_by_their_spotify_link(tmp_path):
+    """Each artist's MBID lookup gets the Spotify page of the slug beside it."""
+    config = Config(
+        {
+            **DEFAULT_CONFIG,
+            "fanart": {"enabled": True, "project_api_key": "test-key"},
+        }
+    )
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    mf = _make_mf(artist="Argy & Anyma")
+    mf.artists = ["Argy", "Anyma"]
+    mf.artist_slugs = ["argy", "anyma"]
+    dj_cache = MagicMock()
+    dj_cache.spotify_url.side_effect = {"argy": "https://sp/argy"}.get
+    seen: dict[str, str] = {}
+
+    def fake_lookup(name, cache, overrides=None, spotify_url=""):
+        seen[name] = spotify_url
+        return None
+
+    with (
+        patch.object(Config, "dj_cache", dj_cache),
+        patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup),
+        patch(
+            "festival_organizer.fanart.download_artist_images",
+            return_value=(False, False),
+        ),
+    ):
+        FanartOperation(config, lib).execute(tmp_path / "set.mkv", mf)
+
+    assert seen == {"Argy": "https://sp/argy", "Anyma": ""}
+
+
+def test_fanart_op_honours_the_mbid_override_file(tmp_path):
+    """A pin in artist_mbids.json applies to artist images too, as documented."""
+    config = Config(
+        {
+            **DEFAULT_CONFIG,
+            "fanart": {"enabled": True, "project_api_key": "test-key"},
+        }
+    )
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    pinned = MagicMock()
+    seen = []
+
+    def fake_lookup(name, cache, overrides=None, spotify_url=""):
+        seen.append(overrides)
+        return None
+
+    with (
+        patch("festival_organizer.fanart.ArtistMbidOverrides", return_value=pinned),
+        patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup),
+        patch(
+            "festival_organizer.fanart.download_artist_images",
+            return_value=(False, False),
+        ),
+    ):
+        FanartOperation(config, lib).execute(
+            tmp_path / "set.mkv", _make_mf(artist="Argy")
+        )
+
+    assert seen == [pinned]
 
 
 def test_artist_dir_uses_global_cache(tmp_path):

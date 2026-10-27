@@ -67,8 +67,9 @@ site with artist logos, backgrounds, and thumbnails). These are saved to a share
 folder (`~/.cache/CrateDigger/artists/{artist}/` on Linux, `~/Library/Caches/CrateDigger/artists/{artist}/` on macOS, `$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\` on Windows) and used as backgrounds in poster generation.
 
 To find an artist's images on fanart.tv, CrateDigger first resolves their MusicBrainz ID.
-It uses the same lookup chain as the MBID operations: your override file first, then the
-auto-cache, then a live MusicBrainz search. This lookup is used only for image retrieval
+It uses the same lookup chain as the MBID operations (see the lookup order under
+`chapter_artist_mbids` below): your override file first, then the artist's Spotify page,
+then the auto-cache, then a live MusicBrainz search. This lookup is used only for image retrieval
 and is not written to your MKV files. For that, see `chapter_artist_mbids` and
 `album_artist_mbids` below. Artists whose name cannot be resolved to a MusicBrainz ID
 are skipped.
@@ -191,9 +192,14 @@ is what embeds the per-chapter performer names.
 
 1. Your override file (`~/CrateDigger/artist_mbids.json` on Linux and macOS, `Documents\CrateDigger\artist_mbids.json` on Windows): manually curated, never
    expires, never auto-written by CrateDigger
-2. Auto cache (in `~/.cache/CrateDigger/` on Linux, `~/Library/Caches/CrateDigger/` on macOS, `$env:LOCALAPPDATA\CrateDigger\Cache\` on Windows): populated automatically by MusicBrainz
+2. The artist's Spotify page, for artists whose 1001Tracklists profile `identify` has
+   fetched (the set's own DJs). MusicBrainz is asked which artist that page belongs to,
+   which tells apart two artists of exactly the same name (the Greek and the Welsh
+   `Argy`). Artists that only appear inside a set, and pages MusicBrainz does not know,
+   go on to the next steps.
+3. Auto cache (in `~/.cache/CrateDigger/` on Linux, `~/Library/Caches/CrateDigger/` on macOS, `$env:LOCALAPPDATA\CrateDigger\Cache\` on Windows): populated automatically by MusicBrainz
    searches, expires after 90 days by default
-3. Live MusicBrainz search: result is saved to the auto cache
+4. Live MusicBrainz search: result is saved to the auto cache
 
 If an artist cannot be resolved, a WARNING is logged and an empty slot is left in the
 tag so the alignment with performer names is preserved.

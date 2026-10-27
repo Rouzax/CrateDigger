@@ -97,8 +97,32 @@ def test_dj_cache_put_get(tmp_path):
         },
     )
     entry = cache.get("tiesto")
+    assert entry is not None
     assert entry["name"] == "Tiesto"
     assert entry["aliases"][0]["name"] == "VER:WEST"
+
+
+def test_dj_cache_entry_without_spotify_url_is_refetched(tmp_path):
+    # Written before profiles recorded the Spotify link: a miss, so identify
+    # fetches the profile again and the link reaches the MBID lookup.
+    import time
+
+    path = tmp_path / "dj_cache.json"
+    _write_cache(
+        path,
+        {"argy": {"name": "Argy", "artwork_url": "", "ts": time.time(), "ttl": 9e6}},
+    )
+    assert DjCache(path).get("argy") is None
+
+
+def test_dj_cache_spotify_url(tmp_path):
+    cache = DjCache(tmp_path / "dj_cache.json")
+    cache.put(
+        "argy", {"name": "Argy", "spotify_url": "https://open.spotify.com/artist/x"}
+    )
+    assert cache.get("argy") is not None
+    assert cache.spotify_url("argy") == "https://open.spotify.com/artist/x"
+    assert cache.spotify_url("unknown") == ""
 
 
 def test_dj_cache_persistence(tmp_path):
@@ -107,8 +131,9 @@ def test_dj_cache_persistence(tmp_path):
     cache1.put(
         "tiesto", {"name": "Tiesto", "artwork_url": "", "aliases": [], "member_of": []}
     )
-    cache2 = DjCache(path)
-    assert cache2.get("tiesto")["name"] == "Tiesto"
+    entry = DjCache(path).get("tiesto")
+    assert entry is not None
+    assert entry["name"] == "Tiesto"
 
 
 def test_dj_cache_derive_aliases(tmp_path):
@@ -370,6 +395,48 @@ def test_parse_dj_profile_no_sections():
     assert result["aliases"] == []
     assert result["member_of"] == []
     assert result["artwork_url"] == "https://example.com/art.jpg"
+
+
+# The profile page's link row, as on /artist/argy/tracklists.html, plus the
+# site footer's own Spotify link.
+_SPOTIFY_ROW = (
+    '<a href="https://soundcloud.com/argyofficial" target="_blank" '
+    'title="SoundCloud Link">SoundCloud</a> &#32; '
+    '<a href="https://open.spotify.com/artist/1NaQOKgddaJipUtmptb7GI" '
+    'target="_blank" title="Spotify Link">Spotify</a>'
+    '<a href="https://open.spotify.com/user/1001tracklists">1001TL on Spotify</a>'
+)
+
+
+def test_parse_dj_profile_spotify_url():
+    result = _parse_dj_profile(_SPOTIFY_ROW)
+    assert (
+        result["spotify_url"]
+        == "https://open.spotify.com/artist/1NaQOKgddaJipUtmptb7GI"
+    )
+
+
+def test_parse_dj_profile_spotify_url_drops_query_string():
+    html = (
+        '<a href="https://open.spotify.com/artist/1NaQOKgddaJipUtmptb7GI?si=abc">S</a>'
+    )
+    assert (
+        _parse_dj_profile(html)["spotify_url"]
+        == "https://open.spotify.com/artist/1NaQOKgddaJipUtmptb7GI"
+    )
+
+
+def test_parse_dj_profile_without_spotify_link():
+    assert _parse_dj_profile("<div class='h'>Aliases</div>")["spotify_url"] == ""
+
+
+def test_parse_dj_profile_two_spotify_artists_is_no_link():
+    # Which of two is the artist's own cannot be told, so neither is used.
+    html = (
+        '<a href="https://open.spotify.com/artist/1NaQOKgddaJipUtmptb7GI">A</a>'
+        '<a href="https://open.spotify.com/artist/1I3oulnGqrVHplhYRyJyE1">B</a>'
+    )
+    assert _parse_dj_profile(html)["spotify_url"] == ""
 
 
 def test_parse_dj_profile_skip_placeholder_artwork():

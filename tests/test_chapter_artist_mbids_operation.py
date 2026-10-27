@@ -50,7 +50,7 @@ def test_execute_writes_mbids_aligned_with_names(tmp_path):
         },
     }
 
-    def fake_lookup(name, cache, overrides=None):
+    def fake_lookup(name, cache, overrides=None, spotify_url=""):
         return {"Afrojack": "A", "Oliver Heldens": "O", "Tiësto": "T"}.get(name)
 
     mkv = tmp_path / "set.mkv"
@@ -195,3 +195,48 @@ def test_force_rewrites_when_stale_mbids_present(tmp_path):
     assert result.status == "done"
     _, merged = write_fn.call_args.args
     assert merged[111]["MUSICBRAINZ_ARTISTIDS"] == "FRESH"
+
+
+class _DjCache:
+    def __init__(self, links: dict[str, str]):
+        self._links = links
+
+    def spotify_url(self, slug: str) -> str:
+        return self._links.get(slug, "")
+
+
+class _Config:
+    cache_ttl = {"mbid_days": 90}
+
+    def __init__(self, links: dict[str, str]):
+        self.dj_cache = _DjCache(links)
+
+
+def test_execute_passes_each_performers_spotify_link(tmp_path):
+    # Only headliners have a cached profile; other performers keep the name.
+    existing = {
+        111: {
+            "CRATEDIGGER_TRACK_PERFORMER_SLUGS": "argy|omnya",
+            "CRATEDIGGER_TRACK_PERFORMER_NAMES": "Argy|Omnya",
+        },
+    }
+    seen: dict[str, str] = {}
+
+    def fake_lookup(name, cache, overrides=None, spotify_url=""):
+        seen[name] = spotify_url
+        return name.lower()
+
+    mkv = tmp_path / "set.mkv"
+    mkv.write_bytes(b"")
+    with (
+        patch(
+            "festival_organizer.mkv_tags.extract_chapter_tags_by_uid",
+            return_value=existing,
+        ),
+        patch("festival_organizer.operations.write_chapter_mbid_tags"),
+        patch("festival_organizer.operations.lookup_mbid", side_effect=fake_lookup),
+    ):
+        op = ChapterArtistMbidsOperation(config=_Config({"argy": "https://sp/argy"}))
+        op.execute(mkv, _make_mf())
+
+    assert seen == {"Argy": "https://sp/argy", "Omnya": ""}
