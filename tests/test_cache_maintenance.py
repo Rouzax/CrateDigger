@@ -7,7 +7,9 @@ from festival_organizer.cache_maintenance import (
     fetch_deezer_artwork,
     preferred_artist_image,
     reconcile_artist_cache,
+    refresh_artist_images,
     warm_artist_cache_from_dj_cache,
+    write_portrait,
 )
 from festival_organizer.normalization import folder_slug
 from festival_organizer.tracklists.dj_cache import DjCache
@@ -277,3 +279,112 @@ def test_fetch_deezer_artwork_without_photo_is_none(tmp_path, monkeypatch):
         ttl_days=90,
     )
     assert result is None
+
+
+def test_write_portrait_copies_chain_winner(tmp_path):
+    _touch(tmp_path / "dj-artwork.jpg", b"dj")
+    _touch(tmp_path / "deezer-artist.jpg", b"deezer")
+    portrait = write_portrait(tmp_path, ["deezer", "dj_artwork", "gradient"])
+    assert portrait == tmp_path / "portrait.jpg"
+    assert (tmp_path / "portrait.jpg").read_bytes() == b"deezer"
+
+
+def test_write_portrait_leaves_identical_file_untouched(tmp_path):
+    import os
+
+    _touch(tmp_path / "dj-artwork.jpg", b"dj")
+    portrait = _touch(tmp_path / "portrait.jpg", b"dj")
+    os.utime(portrait, (1_000_000, 1_000_000))
+    write_portrait(tmp_path, ["deezer", "dj_artwork"])
+    assert portrait.stat().st_mtime == 1_000_000
+
+
+def test_write_portrait_removes_stale_when_no_source(tmp_path):
+    _touch(tmp_path / "portrait.jpg", b"old")
+    assert write_portrait(tmp_path, ["deezer", "dj_artwork", "fanart_tv"]) is None
+    assert not (tmp_path / "portrait.jpg").exists()
+
+
+def test_write_portrait_follows_custom_chain(tmp_path):
+    # A chain without "deezer" never puts the Deezer photo on TrackSplit's cover.
+    _touch(tmp_path / "deezer-artist.jpg", b"deezer")
+    _touch(tmp_path / "dj-artwork.jpg", b"dj")
+    portrait = write_portrait(tmp_path, ["dj_artwork", "fanart_tv", "gradient"])
+    assert portrait is not None
+    assert portrait.read_bytes() == b"dj"
+
+
+def _deezer_config(tmp_path, enabled=True):
+    from festival_organizer.config import DEFAULT_CONFIG, Config
+
+    return Config({**DEFAULT_CONFIG, "deezer": {"enabled": enabled}})
+
+
+def test_refresh_artist_images_resolves_each_cached_dj(tmp_path, monkeypatch):
+    dj_cache = DjCache(tmp_path / "dj_cache.json")
+    dj_cache.put("argy", {"name": "Argy", "spotify_url": "https://sp/argy"})
+    dj_cache.put("anyma", {"name": "Anyma", "spotify_url": ""})
+    calls = {}
+
+    def fake_fetch(name, dest, **kwargs):
+        calls[name] = (dest, kwargs["spotify_url"])
+        return _touch(dest, name.encode())
+
+    monkeypatch.setattr(cache_maintenance, "fetch_deezer_artwork", fake_fetch)
+    root = tmp_path / "artists"
+    refresh_artist_images(root, dj_cache, _deezer_config(tmp_path))
+
+    assert calls == {
+        "Argy": (root / "argy" / "deezer-artist.jpg", "https://sp/argy"),
+        "Anyma": (root / "anyma" / "deezer-artist.jpg", ""),
+    }
+    assert (root / "argy" / "portrait.jpg").read_bytes() == b"Argy"
+
+
+def test_refresh_artist_images_skips_deezer_when_disabled(tmp_path, monkeypatch):
+    dj_cache = DjCache(tmp_path / "dj_cache.json")
+    dj_cache.put("argy", {"name": "Argy"})
+    root = tmp_path / "artists"
+    _touch(root / "argy" / "dj-artwork.jpg", b"dj")
+
+    def boom(*a, **k):
+        raise AssertionError("Deezer must not be asked")
+
+    monkeypatch.setattr(cache_maintenance, "fetch_deezer_artwork", boom)
+    refresh_artist_images(root, dj_cache, _deezer_config(tmp_path, enabled=False))
+    assert (root / "argy" / "portrait.jpg").read_bytes() == b"dj"
+
+
+def test_refresh_artist_images_writes_portrait_for_every_artist_dir(
+    tmp_path, monkeypatch
+):
+    # Artists outside the DJ cache (a non-1001TL set) get a portrait too.
+    monkeypatch.setattr(cache_maintenance, "fetch_deezer_artwork", lambda *a, **k: None)
+    root = tmp_path / "artists"
+    _touch(root / "some-band" / "fanart.jpg", b"fanart")
+    refresh_artist_images(
+        root, DjCache(tmp_path / "dj_cache.json"), _deezer_config(tmp_path)
+    )
+    assert (root / "some-band" / "portrait.jpg").read_bytes() == b"fanart"
+
+
+def test_refresh_artist_images_skips_deezer_when_not_in_chain(tmp_path, monkeypatch):
+    from festival_organizer.config import DEFAULT_CONFIG, Config
+
+    dj_cache = DjCache(tmp_path / "dj_cache.json")
+    dj_cache.put("argy", {"name": "Argy"})
+
+    def boom(*a, **k):
+        raise AssertionError("Deezer must not be asked")
+
+    monkeypatch.setattr(cache_maintenance, "fetch_deezer_artwork", boom)
+    config = Config(
+        {
+            **DEFAULT_CONFIG,
+            "poster_settings": {
+                **DEFAULT_CONFIG["poster_settings"],
+                "artist_background_priority": ["dj_artwork", "gradient"],
+            },
+        }
+    )
+    refresh_artist_images(tmp_path / "artists", dj_cache, config)

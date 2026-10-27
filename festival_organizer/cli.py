@@ -1358,6 +1358,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
         from festival_organizer import paths as _paths
         from festival_organizer.cache_maintenance import (
             reconcile_artist_cache,
+            refresh_artist_images,
             warm_artist_cache_from_dj_cache,
         )
         from festival_organizer.normalization import folder_slug
@@ -1394,6 +1395,7 @@ def _run_command(args: types.SimpleNamespace) -> int:
                         )
                     )
             reconcile_artist_cache(_artists_root, valid)
+            refresh_artist_images(_artists_root, dj_cache, config)
 
     # Pass unresolved artist names to enrich progress for summary
     if isinstance(progress, EnrichContractProgress):

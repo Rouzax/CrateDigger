@@ -101,7 +101,7 @@ The background image used for each poster depends on the folder type:
 
 | Folder type | Background sources tried in order |
 |-------------|----------------------------------|
-| Artist folder | DJ artwork from 1001Tracklists, then fanart.tv, then gradient |
+| Artist folder | The artist's Deezer photo, then DJ artwork from 1001Tracklists, then fanart.tv, then gradient (order set by [`artist_background_priority`](../configuration.md#poster-settings)) |
 | Festival folder | Curated festival logo, then gradient |
 | Year folder | Gradient + colorful year badge |
 
@@ -245,7 +245,7 @@ For each video, `enrich` may create or update:
 | `cover.jpg` attachment inside the MKV | `cover` (portrait set poster) |
 | `cover_land.<ext>` attachment inside the MKV | `cover` (original landscape thumbnail, preserved) |
 
-Artist artwork is cached to `~/.cache/CrateDigger/artists/{artist}/` (Linux), `~/Library/Caches/CrateDigger/artists/{artist}/` (macOS), or `$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\` (Windows) and reused across runs.
+Artist artwork is cached to `~/.cache/CrateDigger/artists/{artist}/` (Linux), `~/Library/Caches/CrateDigger/artists/{artist}/` (macOS), or `$env:LOCALAPPDATA\CrateDigger\Cache\artists\{artist}\` (Windows) and reused across runs. At the end of every `enrich` run, each artist folder there gets a `portrait.jpg`: a copy of the first image found in `artist_background_priority` order (`deezer-artist.jpg`, `dj-artwork.jpg`, `fanart.jpg`). [TrackSplit](https://github.com/Rouzax/TrackSplit) uses it for its artist covers, so they show the same photo as your posters. The same step fetches the Deezer photo of every DJ `identify` has seen, unless Deezer is disabled or left out of the chain.
 MKV tag changes (`tags`, `chapter_artist_mbids`, `album_artist_mbids`) are written
 directly into the MKV file's metadata section. The video and audio streams are not touched.
 

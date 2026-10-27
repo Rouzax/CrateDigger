@@ -11,6 +11,7 @@ Logging:
         - enrich.dj_artwork_cache (DEBUG): a stale cached image was replaced
         - enrich.deezer_download, enrich.deezer, enrich.deezer_cache: the same
           three for a Deezer artist photo
+        - cache.portrait (DEBUG): an artist's portrait.jpg was written or removed
 """
 
 import logging
@@ -196,6 +197,68 @@ def fetch_deezer_artwork(
     if not url:
         return None
     return cache_deezer_artwork(url, dest, ttl_days, artist_label=artist_name)
+
+
+# The artist's preferred image under artist_background_priority, read first by
+# TrackSplit for its artist covers. Not "artist.jpg": TrackSplit writes its own
+# artist.jpg cover into album folders.
+PORTRAIT_FILE = "portrait.jpg"
+
+
+def write_portrait(artist_dir: Path, priority: list[str]) -> Path | None:
+    """Copy the chain's winning image to ``portrait.jpg``; None when there is none.
+
+    An unchanged winner leaves the file untouched, so TrackSplit (which
+    rebuilds a cover when its source's hash changes) does no needless work. A
+    portrait whose sources are all gone is removed.
+    """
+    portrait = artist_dir / PORTRAIT_FILE
+    source = preferred_artist_image(artist_dir, priority)
+    if source is None:
+        if portrait.exists():
+            portrait.unlink()
+            logger.debug("cache.portrait: status=removed dir=%s", artist_dir)
+        return None
+    data = source.read_bytes()
+    if not portrait.exists() or portrait.read_bytes() != data:
+        portrait.write_bytes(data)
+        logger.debug(
+            "cache.portrait: status=written dir=%s source=%s", artist_dir, source.name
+        )
+    return portrait
+
+
+def refresh_artist_images(artists_root: Path, dj_cache, config) -> None:
+    """Fetch every cached DJ's Deezer photo, then write each artist's portrait.
+
+    Runs at the end of enrich, after the per-file steps, so TrackSplit finds
+    a portrait for every artist even when no poster was regenerated. Deezer
+    lookups are TTL-gated, so a repeat run makes no requests for artists
+    already resolved.
+    """
+    priority = config.poster_settings["artist_background_priority"]
+    if config.deezer_enabled and "deezer" in priority:
+        from festival_organizer.deezer import DeezerCache, DeezerOverrides
+        from festival_organizer.fanart import ArtistMbidOverrides, MBIDCache
+
+        ttl = config.cache_ttl
+        deps = {
+            "mbid_cache": MBIDCache(ttl_days=ttl.get("mbid_days", 90)),
+            "mbid_overrides": ArtistMbidOverrides(),
+            "deezer_cache": DeezerCache(ttl_days=ttl.get("deezer_days", 90)),
+            "deezer_overrides": DeezerOverrides(),
+        }
+        for slug in sorted(dj_cache.slugs()):
+            fetch_deezer_artwork(
+                dj_cache.canonical_name(slug),
+                artists_root / folder_slug(slug) / ARTIST_IMAGE_FILES["deezer"],
+                spotify_url=dj_cache.spotify_url(slug),
+                ttl_days=ttl.get("images_days", 90),
+                **deps,
+            )
+    if artists_root.is_dir():
+        for artist_dir in sorted(p for p in artists_root.iterdir() if p.is_dir()):
+            write_portrait(artist_dir, priority)
 
 
 def warm_artist_cache_from_dj_cache(

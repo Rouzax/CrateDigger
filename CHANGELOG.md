@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Artist posters now use the artist's Deezer photo when there is one, ahead of the 1001Tracklists DJ photo, which is often small (300 to 550 pixels) and seldom updated. The Deezer artist is found only through the Deezer link on the artist's MusicBrainz entry, never by searching Deezer for the name, so a same-named artist cannot end up on the poster. Deezer pictures that are not a photo (a blank outline, or one of the artist's own album covers) are skipped, and the next source is used. No account or key is needed. The new default order is `artist_background_priority = ["deezer", "dj_artwork", "fanart_tv", "gradient"]`; a config that sets its own order keeps it and never contacts Deezer. Turn Deezer off with `[deezer] enabled = false`, and pin or block one artist's Deezer page in `artist_deezer_ids.json`. Which page belongs to whom is remembered for `cache_ttl.deezer_days` (90).
+
+- Each artist's chosen image is saved as `portrait.jpg` in their artwork cache folder at the end of every `enrich` run, following `artist_background_priority`. TrackSplit reads it for its artist covers from its next release, so covers and posters show the same photo.
+
+On the first `enrich` after updating, artist posters whose artist has a Deezer photo are regenerated with it, and each DJ in the DJ cache costs a few requests to MusicBrainz and Deezer once; later runs reuse the cached answers. The poster layout does not change, only the picture.
+
 ## [0.36.1] - 2026-10-27
 
 ### Fixed

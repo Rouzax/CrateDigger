@@ -62,14 +62,16 @@ def _reset_per_process_state():
 
 @pytest.fixture(autouse=True)
 def _no_deezer_lookups(monkeypatch):
-    """Artist posters try Deezer first, which asks MusicBrainz and Deezer and
-    reads the user's real caches. Tests that render posters get no Deezer
-    photo; tests of the Deezer source patch fetch_deezer_artwork themselves.
+    """Artist posters and enrich's artist-image refresh try Deezer, which asks
+    MusicBrainz and Deezer and reads the user's real caches. Tests get no
+    Deezer photo; tests of the Deezer path patch fetch_deezer_artwork
+    themselves.
     """
-    monkeypatch.setattr(
-        "festival_organizer.operations.fetch_deezer_artwork",
-        lambda *args, **kwargs: None,
-    )
+    for module in ("operations", "cache_maintenance"):
+        monkeypatch.setattr(
+            f"festival_organizer.{module}.fetch_deezer_artwork",
+            lambda *args, **kwargs: None,
+        )
 
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
