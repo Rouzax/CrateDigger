@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="GPL-3.0">
-  <img src="https://img.shields.io/badge/version-v0.35.1-orange" alt="v0.35.1">
+  <img src="https://img.shields.io/badge/version-v0.36.0-orange" alt="v0.36.0">
   <a href="https://ko-fi.com/O0W221GBUG"><img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?logo=kofi&logoColor=white" alt="Support on Ko-fi"></a>
 </p>
 

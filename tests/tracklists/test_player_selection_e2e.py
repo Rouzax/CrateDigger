@@ -94,7 +94,7 @@ def test_fetch_and_embed_matched_multisource_embeds_player1_block(tmp_path):
     def fake_embed(filepath, chapters, **kwargs):
         captured["chapters"] = chapters
         captured["youtube_id"] = kwargs.get("youtube_id")
-        captured["tracks"] = kwargs.get("tracks")
+        captured["assembled"] = kwargs.get("assembled")
         return True
 
     # A real on-disk file: extract_existing_chapters reads it, but we patch
@@ -139,9 +139,14 @@ def test_fetch_and_embed_matched_multisource_embeds_player1_block(tmp_path):
     assert all("Catharina" not in t for t in titles)
     # Source id persisted is Player 1's.
     assert captured["youtube_id"] == "p-nL0FjuCPs"
-    # Tracks were scoped to Player 1 as well.
-    assert captured["tracks"]
-    assert all(t.player == 1 for t in captured["tracks"])
+    # The tracks behind the chapter tags were scoped to Player 1 as well.
+    members = [
+        m
+        for ac in captured["assembled"]
+        for m in ([ac.primary] if ac.primary else []) + ac.contributors
+    ]
+    assert members
+    assert all(m.player == 1 for m in members)
 
 
 def test_fetch_and_embed_no_match_multisource_skips_without_erasing(tmp_path):

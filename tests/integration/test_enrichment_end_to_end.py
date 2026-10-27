@@ -229,10 +229,15 @@ def _run_enrich(
     from festival_organizer.config import load_config
     from festival_organizer.tracklists.api import TracklistSession
     from festival_organizer.tracklists.chapters import (
+        Chapter,
+        _ms_to_timestamp,
         embed_chapters,
         parse_tracklist_lines,
+        strip_chapter_label,
+        supplement_chapters_from_tracks,
     )
     from festival_organizer.tracklists.dj_cache import DjCache
+    from festival_organizer.tracklists.overlays import assemble
     from festival_organizer.tracklists.source_cache import SourceCache
 
     cfg = load_config(config_path=CONFIG)
@@ -247,8 +252,25 @@ def _run_enrich(
     sess.login(email, password)
 
     export = sess.export_tracklist(tracklist_id)
-    chapters = parse_tracklist_lines(export.lines)
-    assert chapters, "parse_tracklist_lines returned no chapters"
+    anchors = supplement_chapters_from_tracks(
+        parse_tracklist_lines(export.lines), export.tracks
+    )
+    assert anchors, "parse_tracklist_lines returned no chapters"
+    # Assemble the chapters the way identify does, so the per-chapter tags
+    # under test are the ones identify writes.
+    anchor_tracks = {}
+    for t in export.tracks:
+        if not t.is_overlay and not t.is_subcomponent:
+            anchor_tracks.setdefault(t.start_ms, t)
+    assembled = assemble(anchors, anchor_tracks, export.tracks, fold_seconds=20)
+    chapters = [
+        Chapter(
+            timestamp=_ms_to_timestamp(ac.start_ms),
+            title=strip_chapter_label(ac.title),
+            language=ac.language,
+        )
+        for ac in assembled
+    ]
 
     ok = embed_chapters(
         mkv,
@@ -263,8 +285,8 @@ def _run_enrich(
         sources_by_type=export.sources_by_type,
         dj_artists=export.dj_artists,
         country=export.country,
-        tracks=export.tracks,
         dj_cache=dj_cache,
+        assembled=assembled,
     )
     assert ok, "embed_chapters returned False"
 

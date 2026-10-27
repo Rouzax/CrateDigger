@@ -181,7 +181,6 @@ def test_reidentify_clears_stale_location_when_linked_event_location_appears(tmp
             sources_by_type=export.sources_by_type,
             country=export.country,
             location=export.location,
-            tracks=export.tracks,
         )
 
     # write_merged_tags is called with tags keyed by target-type value; 70
@@ -253,7 +252,6 @@ def test_reidentify_writes_location_when_no_linked_location_source(tmp_path):
             sources_by_type=export.sources_by_type,
             country=export.country,
             location=export.location,
-            tracks=export.tracks,
         )
 
     album_tags = mock_write.call_args[0][1][70]
@@ -320,7 +318,6 @@ def test_export_keeps_weekend_designator_despite_linked_festival(tmp_path):
             sources_by_type=export.sources_by_type,
             country=export.country,
             location=export.location,
-            tracks=export.tracks,
         )
 
     album_tags = mock_write.call_args[0][1][70]

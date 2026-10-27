@@ -7,6 +7,7 @@ prefix is ever emitted: folds and clusters use ``vs.``.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from .api import Track, split_artist_title
@@ -155,6 +156,12 @@ def merge_chapter_tags(
         for slug, name in zip(track.artist_slugs, track.artist_names, strict=True):
             if slug in seen_slugs:
                 continue
+            if (
+                track is primary
+                and slug in track.pageless_slugs
+                and _part_of_component_act(name, component_name)
+            ):
+                continue
             seen_slugs.add(slug)
             slugs.append(slug)
             names.append(component_name.get(slug, name))
@@ -195,6 +202,22 @@ def merge_chapter_tags(
     if genres:
         entry["CRATEDIGGER_TRACK_GENRE"] = "|".join(genres)
     return entry
+
+
+def _part_of_component_act(name: str, component_name: dict[str, str]) -> bool:
+    """True when ``name`` is only part of a longer act name a component credits.
+
+    A mashup row links "Dick Dale" and "His Del-Tones" to its own whole-credit
+    page, so they parse as two page-less artists, while the component row
+    credits "Dick Dale & His Del-Tones". The caller asks only about page-less
+    artists: one with its own page (Vini Vici beside a component crediting
+    "Dimitri Vegas & Like Mike vs. Vini Vici") is a real artist and stays.
+    """
+    word = re.compile(rf"(?<!\w){re.escape(name.casefold())}(?!\w)")
+    return any(
+        len(full) > len(name) and word.search(full.casefold())
+        for full in component_name.values()
+    )
 
 
 def build_chapter_tags_from_assembled(
@@ -292,6 +315,12 @@ def assemble(
             if t.is_subcomponent:
                 continue
             if not t.is_overlay:
+                # An uncued main other than the opener is no chapter, and its
+                # start of 0 would wrongly find the opening chapter by time,
+                # so its overlays are dropped with it.
+                if t.cue_unset and anchor_tracks.get(t.start_ms) is not t:
+                    last_anchor_in_order = None
+                    continue
                 # Anchor candidate: only count it when it maps to an anchor.
                 ac = anchor_by_ms.get(t.start_ms)
                 if ac is not None:

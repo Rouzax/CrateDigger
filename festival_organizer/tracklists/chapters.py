@@ -33,7 +33,6 @@ from festival_organizer.mkv_tags import (
     write_merged_tags,
 )
 from festival_organizer.subprocess_utils import tracked_run
-from festival_organizer.tracklists.api import split_artist_title
 from festival_organizer.tracklists.source_cache import SOURCE_TYPE_TO_TAG
 
 logger = logging.getLogger(__name__)
@@ -457,76 +456,6 @@ def chapter_tags_need_refresh(
     return False
 
 
-def _build_chapter_tags_map(
-    chapters: list[Chapter],
-    chapter_uids: list[int],
-    tracks: list["Track"],
-    dj_cache: "DjCache | None",
-) -> dict[int, dict[str, str]]:
-    """Match each chapter to a track by exact start_ms; build TTV=30 tag map.
-
-    chapters[i] pairs with chapter_uids[i]. For each chapter we look up a
-    Track whose start_ms equals the chapter's timestamp-in-ms. Unmatched
-    chapters produce no tag block. The returned dict is keyed by ChapterUID.
-
-    Alias resolution is deliberately not applied to any per-chapter tag.
-    A persona is its own artist: MusicBrainz gives NLW, Kapuchon, Cirez D
-    and Pryda MBIDs distinct from AFROJACK's and Eric Prydz's, so folding a
-    track credit into the primary act would merge separate artists and
-    leave the name disagreeing with the MBID written beside it. Alias to
-    canonical substitution is a library-routing concern and happens at the
-    album level (Config.resolve_artist), not here.
-    """
-    tracks_by_ms: dict[int, Track] = {}
-    for t in tracks:
-        tracks_by_ms.setdefault(t.start_ms, t)  # first wins on ties
-    result: dict[int, dict[str, str]] = {}
-    for chapter, uid in zip(chapters, chapter_uids, strict=True):
-        chapter_ms = int(_timestamp_to_seconds(chapter.timestamp) * 1000)
-        track = tracks_by_ms.get(chapter_ms)
-        if track is None:
-            continue
-        entry: dict[str, str] = {}
-        if track.artist_slugs:
-            # CrateDigger-prefixed per-chapter names avoid mediainfo's
-            # flattening behavior: standard Matroska slot names (PERFORMER,
-            # LABEL, GENRE) at TTV=30 get promoted into mediainfo's General
-            # section (last-wins), making files look like they carry the
-            # last chapter's artist/label at file level. Prefixed names are
-            # unknown to mediainfo so they stay scoped where we put them.
-            entry["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] = "|".join(track.artist_slugs)
-            # Length must match CRATEDIGGER_TRACK_PERFORMER_SLUGS: enrich zips SLUGS/NAMES/MBIDS by index.
-            if track.artist_names and len(track.artist_names) == len(
-                track.artist_slugs
-            ):
-                entry["CRATEDIGGER_TRACK_PERFORMER_NAMES"] = "|".join(
-                    track.artist_names
-                )
-            # CRATEDIGGER_TRACK_PERFORMER is the full artist display line
-            # exactly as 1001TL renders it: everything before the FIRST
-            # " - " in raw_text (see split_artist_title; the title may carry
-            # its own " - "). Covers solo ("AFROJACK ft. Eva Simons"),
-            # multi-artist ("Fred again.. & Jamie T"), and mashup composites
-            # ("NLW & MureKian vs. ... vs. RÜFÜS DU SOL") in one rule.
-            # Alias resolution is deliberately NOT applied here: this tag
-            # preserves the 1001TL display form so players can show what the
-            # DJ / crowd knows the track as. Alias -> canonical substitution
-            # (e.g. SOMETHING ELSE -> ALOK) is only for filesystem routing
-            # and happens at the top-level ARTIST tag, not here.
-            artist, title = split_artist_title(track.raw_text)
-            display = artist or title or track.artist_slugs[0]
-            entry["CRATEDIGGER_TRACK_PERFORMER"] = display
-        if track.title:
-            entry["CRATEDIGGER_TRACK_TITLE"] = track.title
-        if track.label:
-            entry["CRATEDIGGER_TRACK_LABEL"] = track.label
-        if track.genres:
-            entry["CRATEDIGGER_TRACK_GENRE"] = "|".join(track.genres)
-        if entry:
-            result[uid] = entry
-    return result
-
-
 _MANAGED_1001TL_TAGS = frozenset(
     {
         "CRATEDIGGER_1001TL_URL",
@@ -651,7 +580,6 @@ def embed_chapters(
     dj_artists: list[tuple[str, str]] | None = None,
     country: str = "",
     location: str = "",
-    tracks: list["Track"] | None = None,
     dj_cache: "DjCache | None" = None,
     assembled: list["AssembledChapter"] | None = None,
 ) -> bool:
@@ -718,10 +646,6 @@ def embed_chapters(
 
                 chapter_tags = build_chapter_tags_from_assembled(
                     assembled, chapter_uids
-                )
-            elif tracks and chapters and chapter_uids:
-                chapter_tags = _build_chapter_tags_map(
-                    chapters, chapter_uids, tracks, dj_cache
                 )
             return write_merged_tags(filepath, {70: tags}, chapter_tags=chapter_tags)
 

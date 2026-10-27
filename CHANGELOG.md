@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.36.0] - 2026-10-27
 
 ### Fixed
 
@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Mashup chapters list the mashup's own artists again, including whoever made it. The per-chapter artist list was built from the component tracks only, on the assumption that 1001Tracklists links a mashup row to one junk combined slug. That stopped being true with the 2026 page redesign, so credits such as `DJs From Mars` on a `DJs From Mars Bootleg` were dropped, and artists folded in from an overlay were listed before the mashup's own. The mashup's artists now come first; names are spelled as the component tracks credit them, since a mashup row shortens them (`Tiesto`, `HEL:BRG`).
 
 - Artists without a 1001Tracklists page of their own keep their names. 1001Tracklists links such an artist to a slug made from the track's whole artist credit (`lmfao-&-lauren-bennett-&-goonrock-vs.-matisse-...`). CrateDigger paired that slug with the first such name and dropped the rest, so `Goonrock` vanished and `Lauren Bennett` carried a slug naming nobody. Each visible name is now kept with a slug built from it (`lauren-bennett`, `goonrock`). An act whose name is the whole credit, such as `Matisse & Sadko`, keeps its own slug.
+
+- A band whose name 1001Tracklists splits on a joining word is one artist again. 1001Tracklists shows `Ricchi E Poveri` as "Ricchi" and "Poveri", and `Dick Dale & His Del-Tones` as "Dick Dale" and "His Del-Tones", each part linking to the band's own page. When the names linked to one page spell its slug, they are now one artist named as the credit writes it (`ricchi-e-poveri`, "Ricchi E Poveri"). On a mashup chapter, parts a component track credits as a whole act are dropped in favour of that act; an artist with a page of their own stays.
+
+- On a tracklist where only some tracks are cued, the opening chapter no longer collects the "w/" tracks played over later, uncued tracks. An uncued track never becomes a chapter, but its "w/" rows were matched to the opening chapter, so on NERVO's Tomorrowland 2025 set the first chapter's title listed Zerb, Technotronic and LÜRUM, which play much later. Those rows are now left out, along with the track they belong to.
+
+- Artists whose 1001Tracklists name carries a country tag (`VLTRA (IT)`, `Charles D (USA)`) now get a MusicBrainz ID far more often. 1001Tracklists adds the tag to tell same-named artists apart; MusicBrainz usually stores the name without it. The name is still searched as written first, because MusicBrainz names some artists that way (`Foley (UK)`), and only then without the tag, choosing among same-named artists by their MusicBrainz country and leaving the slot empty rather than guessing when that cannot decide. Names that earlier runs failed to resolve are looked up again on the next `enrich`. The name written to the file is unchanged.
 
 - A credit such as `Marlon Hoffstadt aka DJ Daddy Trance`, linked only to DJ Daddy Trance, is now named `DJ Daddy Trance` instead of the whole phrase. The whole phrase matched no MusicBrainz artist, so the chapter got no MusicBrainz ID; `DJ Daddy Trance` resolves through its MusicBrainz alias to Marlon Hoffstadt.
 
@@ -30,6 +36,8 @@ The fixes above change per-chapter tags and titles on files that are already ide
 - A Ko-fi link for anyone who wants to support the project. It appears as GitHub's native Sponsor button (via `.github/FUNDING.yml`), a badge in the README badge row alongside a `Support` section above the license, a footer icon on every documentation page, and a `Support` entry in the landing page navigation and footer. Nothing about using CrateDigger changes: there is no prompt, no runtime notice, and no telemetry attached to any of it.
 
 ### Changed
+
+- Removed the second, unused way of building per-chapter tags. `embed_chapters` kept a fallback that matched chapters to tracks by start time whenever it was handed tracks but no assembled chapters, and `identify` never called it that way, so the tags it described (and the tests that covered it) did not match what is actually written. Its `tracks` parameter is gone with it; the behaviours its tests protected are now tested on the path identify uses. No behaviour changes.
 
 - Recurring jargon in the documentation now carries a hover definition. `NFO`, `MBID`, `MBIDs`, `TTV`, `B2B` and `TTL` are defined once in `includes/abbreviations.md`, which is appended to every page at build time, so a reader meeting `B2B` or `TTV` for the first time does not have to hunt for the page that explains it. Only prose is affected: occurrences inside code spans and fenced blocks are left alone, which is why `1001TL` was left out, 36 of its 37 occurrences being config keys. `MKV` was left out as well, being both widely understood and by far the most repeated term. Page text is unchanged; the terms are only wrapped for the tooltip.
 

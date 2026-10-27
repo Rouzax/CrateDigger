@@ -39,7 +39,13 @@ from pathlib import Path
 import requests
 
 from festival_organizer import paths
-from festival_organizer.normalization import SUB_EVENT_WEEKEND
+from festival_organizer.normalization import (
+    SUB_EVENT_WEEKEND,
+    _artist_key,
+    artist_slug_from_name,
+    fix_mojibake,
+    normalize_genre,
+)
 from festival_organizer.tracklists import canary
 from festival_organizer.tracklists.scoring import SearchResult
 
@@ -50,13 +56,18 @@ USER_AGENT = (
 )
 BASE_URL = "https://www.1001tracklists.com"
 
-# New-form artist href introduced by the 2026 site redesign:
-# /artist/{slug}/{leaf}.html, 2 path segments, leaf varies
-# (tracklists.html on h1/profile links, tracks.html on track rows).
-# Slugs are hyphenated and may contain '&' (matisse-&-sadko) or doubled
-# hyphens (third--party). Old 3-segment /artist/{id}/{slug}/index.html
-# track hrefs do not match (the extra '/' breaks the leaf pattern).
+# Artist href since the 2026 site redesign: /artist/{slug}/{leaf}.html, the
+# leaf varying (tracklists.html on h1/profile links, tracks.html on track
+# rows). Slugs are hyphenated and may contain '&' (matisse-&-sadko) or doubled
+# hyphens (third--party). Id-prefixed /artist/{id}/{slug}/... hrefs do not
+# match (the extra '/' breaks the leaf pattern); see _ARTIST_ID_HREF_RE.
 _ARTIST_HREF_RE = re.compile(r"/artist/([^/]+)/[^/]+\.html$")
+
+# Id-prefixed artist href, /artist/{id}/{slug}/tracks.html. 1001TL still uses
+# it for the whole-credit slug it links artists without a page of their own to
+# (see _is_whole_credit_slug); the pre-redesign site used it, ending in
+# index.html, for every artist.
+_ARTIST_ID_HREF_RE = re.compile(r"/artist/[^/]+/([^/]+)/")
 
 # Short pause between consecutive 1001TL requests inside one file's processing
 # (page GET, per-source and per-DJ fetches). Keeps the post-selection burst
@@ -103,6 +114,8 @@ class Track:
     label_full: every span.trackLabel on the row joined with "/", as the
         export renders multi-label rows. `label` keeps first-span-only
         semantics because CRATEDIGGER_TRACK_LABEL is written from it.
+    pageless_slugs: the slugs in artist_slugs built from a name because 1001TL
+        links that artist to the whole credit's page, having none of its own.
     duration_ms: the released track's length from <meta itemprop="duration">
         (ISO 8601, "PT5M8S"); 0 when 1001TL gives none. This is the release,
         not how long the DJ played it.
@@ -123,6 +136,7 @@ class Track:
     cue_unset: bool = False
     label_full: str = ""
     duration_ms: int = 0
+    pageless_slugs: frozenset[str] = frozenset()
 
 
 @dataclass
@@ -212,8 +226,6 @@ _CREDIT_CONNECTORS = frozenset(
 
 def _credit_key(text: str) -> str:
     """Match-key for a whole artist credit or a slug made from one."""
-    from festival_organizer.normalization import _artist_key
-
     words = re.split(r"[\s-]+", text.lower())
     return _artist_key(" ".join(w for w in words if w not in _CREDIT_CONNECTORS))
 
@@ -228,8 +240,6 @@ def _slug_matching_run(text: str, slug: str) -> str:
     as rendered) or when no run matches (a name 1001TL spells differently
     from its slug, such as ``Storm`` for ``storm-(de)``, is kept whole).
     """
-    from festival_organizer.normalization import _artist_key
-
     slug_key = _artist_key(slug)
     if not slug_key or _artist_key(text) == slug_key:
         return ""
@@ -240,6 +250,75 @@ def _slug_matching_run(text: str, slug: str) -> str:
             if _artist_key(run) == slug_key:
                 return run
     return ""
+
+
+# Keys of the words 1001TL's renderer splits a credit on, as they appear inside
+# a slug's _artist_key ("&" becomes "and"; "Ricchi E Poveri" keeps its "e").
+_JOINER_KEYS = ("and", "pres", "with", "und", "et", "vs", "x", "e", "y")
+
+
+def _spells_slug(names: list[str], slug: str) -> bool:
+    """True when ``names``, in order and joined by joining words, spell ``slug``.
+
+    "Ricchi" + "Poveri" spell ``ricchi-e-poveri``; "Dick Dale" + "His
+    Del-Tones" spell ``dick-dale-&-his-del-tones``. "Lauren Bennett" +
+    "Goonrock" do not spell a whole-credit slug that also names LMFAO.
+    """
+    rest = _artist_key(slug)
+    for i, name in enumerate(names):
+        key = _artist_key(name)
+        if not key:
+            return False
+        if i and not rest.startswith(key):
+            joiner = next((j for j in _JOINER_KEYS if rest.startswith(j + key)), None)
+            if joiner is None:
+                return False
+            rest = rest[len(joiner) :]
+        if not rest.startswith(key):
+            return False
+        rest = rest[len(key) :]
+    return rest == ""
+
+
+def _resolve_row_artists(
+    anchors: list[tuple[str, str]], credit: str
+) -> tuple[list[str], list[str], frozenset[str]]:
+    """Turn a row's ``(slug, name)`` anchors into aligned slug and name lists.
+
+    1001TL's renderer splits a credit on joining words into separate names
+    even when every part links to one page. When the distinct names linked to
+    a page spell its slug, that page is one act ("Ricchi E Poveri"), named as
+    the credit writes it. Otherwise a name linked to the row's whole-credit
+    slug keeps its own name with a slug made from it. Repeats of a slug (an
+    artist credited again for its own remix or mashup) keep the first. The
+    third value holds the slugs made from a name.
+    """
+    names_by_slug: dict[str, list[str]] = {}
+    for slug, name in anchors:
+        group = names_by_slug.setdefault(slug, [])
+        if name not in group:
+            group.append(name)
+    slugs: list[str] = []
+    names: list[str] = []
+    pageless: set[str] = set()
+    for slug, name in anchors:
+        group = names_by_slug[slug]
+        if len(group) > 1 and _spells_slug(group, slug):
+            start = credit.find(group[0])
+            end = credit.find(group[-1], start + 1) if start >= 0 else -1
+            name = (
+                credit[start : end + len(group[-1])]
+                if start >= 0 and end >= 0
+                else " & ".join(group)
+            )
+        elif _is_whole_credit_slug(slug, name, credit):
+            slug = artist_slug_from_name(name)
+            pageless.add(slug)
+        if slug in slugs:
+            continue
+        slugs.append(slug)
+        names.append(name)
+    return slugs, names, frozenset(pageless)
 
 
 def _is_whole_credit_slug(slug: str, display: str, credit: str) -> bool:
@@ -276,13 +355,6 @@ def _parse_tracks(html) -> list["Track"]:
     Returns Track objects in page order with start_ms taken from the row's
     cue_seconds input (float seconds * 1000).
     """
-    from festival_organizer.normalization import (
-        _artist_key,
-        artist_slug_from_name,
-        fix_mojibake,
-        normalize_genre,
-    )
-
     soup = _to_soup(html)
     tracks: list[Track] = []
     # Multi-source pages interleave "Player N" headers (div.bItmH) between
@@ -342,13 +414,10 @@ def _parse_tracks(html) -> list["Track"]:
         # pairs. Display name is the stripped text of the nearest ancestor
         # <span class="notranslate"> that wraps the anchor.
         credit, _ = split_artist_title(raw_text)
-        slugs: list[str] = []
-        names: list[str] = []
+        anchors: list[tuple[str, str]] = []
         for a in row.select("a[href^='/artist/']"):
             href = _attr_str(a, "href")
-            # Legacy 3-segment /artist/{id}/{slug}/index.html first, then the
-            # 2026 2-segment /artist/{slug}/tracks.html form.
-            m = re.match(r"/artist/[^/]+/([^/]+)/", href) or _ARTIST_HREF_RE.match(href)
+            m = _ARTIST_ID_HREF_RE.match(href) or _ARTIST_HREF_RE.match(href)
             if not m:
                 continue
             slug = m.group(1)
@@ -440,13 +509,8 @@ def _parse_tracks(html) -> list["Track"]:
             )
             if not display:
                 display = slug.replace("-", " ").title()
-            display = fix_mojibake(display)
-            if _is_whole_credit_slug(slug, display, credit):
-                slug = artist_slug_from_name(display)
-            if slug in slugs:
-                continue
-            slugs.append(slug)
-            names.append(display)
+            anchors.append((slug, fix_mojibake(display)))
+        slugs, names, pageless_slugs = _resolve_row_artists(anchors, credit)
         # Title: the part after the FIRST " - " (see split_artist_title). 1001TL
         # titles can carry their own " - " (subtitles, remix suffixes), so the
         # first separator is the artist/title boundary, not the last.
@@ -497,6 +561,7 @@ def _parse_tracks(html) -> list["Track"]:
                 cue_unset=cue_unset,
                 label_full=label_full,
                 duration_ms=duration_ms,
+                pageless_slugs=pageless_slugs,
             )
         )
     return tracks
@@ -524,8 +589,6 @@ def _visible_track_text(row) -> str:
     The span renders inner padding such as "Title ( Remix )", collapsed here to
     "Title (Remix)" so it compares and reads like the meta name.
     """
-    from festival_organizer.normalization import fix_mojibake
-
     value_el = row.select_one("span.trackValue")
     if value_el is None:
         return ""
@@ -546,8 +609,6 @@ def _label_span_texts(row) -> list[str]:
     'ARMIND (ARMADA)', not 'ARMIND(ARMADA)'.
     """
     from bs4 import BeautifulSoup
-
-    from festival_organizer.normalization import fix_mojibake
 
     texts: list[str] = []
     for span in row.select("span.trackLabel"):

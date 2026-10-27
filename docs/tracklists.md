@@ -102,6 +102,8 @@ Artist A vs. Artist B - Title A vs. Title B
 
 Multiple consecutive overlays that all fold into the same host are combined in order, so a three-way mashup reads `Artist A vs. B vs. C - Title A vs. B vs. C`.
 
+An overlay with no timestamp whose host track is not cued either is left out. A host track without a cue gets no chapter (except the first track of a set, which starts at 0:00), so there is nothing to fold the overlay into.
+
 **Standalone overlay chapters** are ones that enter at least `overlay_fold_seconds` after the host main track starts. They become their own chapters titled by their own track (`Artist - Title`), so media player chapter lists show them as distinct navigation points.
 
 You can tune the threshold for your own taste:

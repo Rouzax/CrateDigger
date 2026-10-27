@@ -322,6 +322,49 @@ def test_positionless_overlay_before_any_anchor_is_dropped() -> None:
     assert result[0].contributors == []
 
 
+def _uncued_main(raw_text: str) -> Track:
+    return Track(
+        start_ms=0, raw_text=raw_text, artist_slugs=[], genres=[], cue_unset=True
+    )
+
+
+def test_positionless_overlay_of_an_uncued_main_does_not_join_the_opening_chapter() -> (
+    None
+):
+    # NERVO Tomorrowland 2025 WE1: the opening main and most later mains are
+    # uncued. A later uncued main reads start 0 like the opening one, but it is
+    # no chapter, so its "w/" rows go with it rather than onto the opener.
+    opener = _uncued_main("Madonna - Like A Prayer (Acappella)")
+    opener_overlay = _overlay(0, "Nicky Romero & NERVO - Like Home")
+    later = _uncued_main("Heerhorst - Wimbo")
+    later_overlay = _overlay(0, "Zerb ft. Sofiya Nzau - Mwaki")
+    cued = _anchor_track(1_950_000, "Nervo & 22Bullets - Destination Unknown")
+    anchors = [
+        _anchor_chapter(0, opener.raw_text),
+        _anchor_chapter(1_950_000, cued.raw_text),
+    ]
+    result = assemble(
+        anchors,
+        {0: opener, 1_950_000: cued},
+        [opener, opener_overlay, cued, later, later_overlay],
+        fold_seconds=20,
+    )
+    assert [ac.contributors for ac in result] == [[opener_overlay], []]
+
+
+def test_positionless_overlay_of_an_uncued_main_does_not_join_the_cued_main_before_it() -> (
+    None
+):
+    host = _anchor_track(10_000, "Host - Main")
+    later = _uncued_main("Later - Uncued")
+    later_overlay = _overlay(0, "Other - Acapella")
+    anchors = [_anchor_chapter(10_000, "Host - Main")]
+    result = assemble(
+        anchors, {10_000: host}, [host, later, later_overlay], fold_seconds=20
+    )
+    assert result[0].contributors == []
+
+
 def test_chapters_returned_in_ascending_start_ms_order() -> None:
     host_a = _anchor_track(10_000, "A - One")
     host_b = _anchor_track(100_000, "B - Two")
@@ -807,3 +850,93 @@ def test_merge_names_prefer_component_spelling_over_mashup_row() -> None:
     assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == (
         "Dan Cooper|Tiësto|Ahmed Helmy & Doppenberg pres. HEL:BRG"
     )
+
+
+# --- single-track chapters ---------------------------------------------------
+
+
+def test_merge_single_track_keeps_full_display_line_and_diacritics() -> None:
+    track = _meta_track(
+        raw_text="Fred again.. & Jamie T - Lights Burn Dimmer (Tiësto Remix)",
+        artist_slugs=["fred-again..", "jamie-t", "tiesto"],
+        artist_names=["Fred again..", "Jamie T", "Tiësto"],
+        label="ATLANTIC",
+    )
+    tags = merge_chapter_tags(track, [])
+    assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "Fred again.. & Jamie T"
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "Fred again..|Jamie T|Tiësto"
+    assert tags["CRATEDIGGER_TRACK_TITLE"] == "Lights Burn Dimmer (Tiësto Remix)"
+    assert tags["CRATEDIGGER_TRACK_LABEL"] == "ATLANTIC"
+
+
+def test_merge_keeps_persona_as_credited_not_canonical_act() -> None:
+    # A persona is its own MusicBrainz artist; alias -> canonical substitution
+    # (SOMETHING ELSE -> ALOK) is library routing, never a per-chapter tag.
+    track = _meta_track(
+        raw_text="SOMETHING ELSE - Ignite",
+        artist_slugs=["somethingelse-br"],
+        artist_names=["SOMETHING ELSE"],
+    )
+    tags = merge_chapter_tags(track, [])
+    assert tags["CRATEDIGGER_TRACK_PERFORMER"] == "SOMETHING ELSE"
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == "SOMETHING ELSE"
+
+
+def test_merge_omits_label_when_track_has_none() -> None:
+    track = _meta_track(
+        raw_text="Artist - Song", artist_slugs=["artist"], artist_names=["Artist"]
+    )
+    assert "CRATEDIGGER_TRACK_LABEL" not in merge_chapter_tags(track, [])
+
+
+def test_merge_drops_mashup_row_parts_of_an_act_a_component_names() -> None:
+    # The mashup row links "Dick Dale" and "His Del-Tones" to its own
+    # whole-credit page, so they parse as two artists; the component row
+    # credits the band. The mashup's own credit (The Chainsmokers) stays.
+    primary = _meta_track(
+        raw_text="Ray Volpe vs. Dick Dale & His Del-Tones - Song Request vs. Misirlou",
+        artist_slugs=["ray-volpe", "dick-dale", "his-del-tones", "the-chainsmokers"],
+        artist_names=["Ray Volpe", "Dick Dale", "His Del-Tones", "The Chainsmokers"],
+        is_mashup=True,
+    )
+    primary.pageless_slugs = frozenset({"dick-dale", "his-del-tones"})
+    band = _meta_track(
+        raw_text="Dick Dale & His Del-Tones - Misirlou",
+        artist_slugs=["dick-dale-&-his-del-tones"],
+        artist_names=["Dick Dale & His Del-Tones"],
+        is_subcomponent=True,
+    )
+    volpe = _meta_track(
+        raw_text="Ray Volpe - Song Request",
+        artist_slugs=["ray-volpe"],
+        artist_names=["Ray Volpe"],
+        is_subcomponent=True,
+    )
+
+    tags = merge_chapter_tags(primary, [band, volpe])
+
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"] == (
+        "ray-volpe|the-chainsmokers|dick-dale-&-his-del-tones"
+    )
+    assert tags["CRATEDIGGER_TRACK_PERFORMER_NAMES"] == (
+        "Ray Volpe|The Chainsmokers|Dick Dale & His Del-Tones"
+    )
+
+
+def test_merge_keeps_mashup_row_artist_with_own_page_inside_a_component_act() -> None:
+    # Vini Vici links to its own page on the mashup row; a component credits
+    # 1001TL's combined "Dimitri Vegas & Like Mike vs. Vini Vici" page.
+    primary = _meta_track(
+        raw_text="Dimitri Vegas & Like Mike vs. Vini Vici - Untz Untz vs. Get Low",
+        artist_slugs=["dimitri-vegas-&-like-mike", "vini-vici"],
+        artist_names=["Dimitri Vegas & Like Mike", "Vini Vici"],
+        is_mashup=True,
+    )
+    collab = _meta_track(
+        raw_text="Dimitri Vegas & Like Mike vs. Vini Vici - Untz Untz",
+        artist_slugs=["dimitri-vegas-&-like-mike-vs.-vini-vici"],
+        artist_names=["Dimitri Vegas & Like Mike vs. Vini Vici"],
+        is_subcomponent=True,
+    )
+    tags = merge_chapter_tags(primary, [collab])
+    assert "vini-vici" in tags["CRATEDIGGER_TRACK_PERFORMER_SLUGS"].split("|")

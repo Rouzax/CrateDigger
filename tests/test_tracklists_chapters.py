@@ -11,7 +11,6 @@ from festival_organizer.mkv_tags import CLEAR_TAG
 from festival_organizer.tracklists.api import Track
 from festival_organizer.tracklists.chapters import (
     Chapter,
-    _build_chapter_tags_map,
     _ms_to_timestamp,
     _timestamp_to_seconds,
     build_1001tl_tags,
@@ -229,13 +228,14 @@ def test_build_chapter_xml_structure():
     assert len(atoms) == 2
 
     # First chapter
-    assert atoms[0].find("ChapterTimeStart").text == "00:03:45.000"
-    assert atoms[0].find("ChapterDisplay/ChapterString").text == "Track One"
-    assert atoms[0].find("ChapterDisplay/ChapterLanguage").text == "eng"
+    assert atoms[0].findtext("ChapterTimeStart") == "00:03:45.000"
+    assert atoms[0].findtext("ChapterDisplay/ChapterString") == "Track One"
+    assert atoms[0].findtext("ChapterDisplay/ChapterLanguage") == "eng"
 
     # UIDs should be present and unique
-    uid1 = atoms[0].find("ChapterUID").text
-    uid2 = atoms[1].find("ChapterUID").text
+    uid1 = atoms[0].findtext("ChapterUID")
+    uid2 = atoms[1].findtext("ChapterUID")
+    assert uid1 and uid2
     assert uid1 != uid2
 
 
@@ -244,7 +244,7 @@ def test_build_chapter_xml_escapes_special_chars():
     xml_str = build_chapter_xml(chapters)
     # Should be parseable (ET handles escaping)
     root = ET.fromstring(xml_str)
-    title = root.find(".//ChapterString").text
+    title = root.findtext(".//ChapterString")
     assert title == "Artist & Other <Live>"
 
 
@@ -334,28 +334,6 @@ def test_strip_chapter_label_no_bracket_unchanged():
 
 
 # --- _build_chapter_tags_map (legacy non-overlay path) ---
-
-
-def test_build_chapter_tags_map_splits_performer_on_first_separator():
-    """A title containing ' - ' must stay whole in TITLE and never bleed into
-    PERFORMER: the legacy per-chapter builder splits on the FIRST ' - '."""
-    raw = (
-        "Kölsch ft. Troels Abrahamsen - "
-        "All that Matters (Symphony of Unity - strings reimagined)"
-    )
-    title = "All that Matters (Symphony of Unity - strings reimagined)"
-    track = Track(
-        start_ms=0,
-        raw_text=raw,
-        artist_slugs=["kolsch"],
-        artist_names=["Kölsch"],
-        genres=[],
-        title=title,
-    )
-    chapter = Chapter("00:00:00.000", "ignored")
-    tags = _build_chapter_tags_map([chapter], [1], [track], None)
-    assert tags[1]["CRATEDIGGER_TRACK_PERFORMER"] == "Kölsch ft. Troels Abrahamsen"
-    assert tags[1]["CRATEDIGGER_TRACK_TITLE"] == title
 
 
 # --- embed_chapters assembled-path ---
@@ -611,7 +589,7 @@ def test_build_chapter_xml_uids_match_xml():
     xml_str, uids = build_chapter_xml(chapters, return_uids=True)
     root = ET.fromstring(xml_str[xml_str.index("<Chapters>") :])
     atoms = root.findall(".//ChapterAtom")
-    xml_uids = [int(a.find("ChapterUID").text) for a in atoms]
+    xml_uids = [int(a.findtext("ChapterUID", default="")) for a in atoms]
     assert xml_uids == uids
 
 

@@ -85,7 +85,8 @@ class FanartAPIError(FanartError):
 #
 # 2: punctuation-folded name matching (U+2010 vs ASCII hyphen) and alias
 #    matching, which resolve names that previously cached as misses.
-MBID_RESOLVER_VERSION = 2
+# 3: 1001TL country tags ("Yuna (US)") searched without the tag.
+MBID_RESOLVER_VERSION = 3
 
 
 class MBIDCache:
@@ -283,13 +284,84 @@ def lookup_mbid(
     return mbid
 
 
-def _mb_search(artist_name: str) -> str | None:
-    """Query MusicBrainz search API. Returns best-match MBID or None.
+# 1001TL tells same-named artists apart with a trailing country code ("Yuna
+# (US)", "FOLEY (UK)"). MusicBrainz stores names without it and records the
+# country as ISO 3166-1 alpha-2, which spells two of 1001TL's codes differently.
+_COUNTRY_TAG_RE = re.compile(r"^(.*\S)\s+\(([A-Z]{2,3})\)$")
+_COUNTRY_TAG_TO_ISO = {"UK": "GB", "USA": "US"}
 
-    Uses tiered name matching across candidates (score >= 80):
-    1. Exact case match
-    2. Case-insensitive match
-    3. Diacritics-insensitive match
+
+def _split_country_tag(name: str) -> tuple[str, str | None]:
+    """``"Yuna (US)"`` -> ``("Yuna", "US")``; a name without a tag is unchanged."""
+    m = _COUNTRY_TAG_RE.match(name)
+    if not m:
+        return name, None
+    return m.group(1), _COUNTRY_TAG_TO_ISO.get(m.group(2), m.group(2))
+
+
+def _match_candidate(
+    candidates: list[dict], name: str, country: str | None = None
+) -> tuple[dict, str] | None:
+    """The best acceptable candidate for ``name``, as ``(candidate, tier)``.
+
+    Tiers run from most to least certain: exact name, case-insensitive,
+    diacritics- and punctuation-folded, then exact alias, so any canonical-name
+    hit beats an alias. Without ``country`` the first candidate of the first
+    matching tier wins.
+
+    ``country`` comes from a 1001TL tag ("Yuna (US)"), which means several
+    artists share this name, so case or accents cannot tell them apart. The
+    first candidate from that country wins, in tier order. Failing that, a
+    candidate with no country on record is accepted when it is the only one
+    whose name (not merely an alias) matches without being placed elsewhere:
+    search results often omit an artist's country, so a missing country is no
+    mismatch, but an alias alone is too weak to tell same-named artists apart.
+    """
+    lower = name.lower()
+    folded = _fold_name(name)
+
+    def alias_match(a: dict) -> bool:
+        # Compared whole, never as a substring: MusicBrainz lists
+        # '¥$, Kanye West & Ty Dolla $ign' as an alias of the duo '¥$', and a
+        # substring rule would bind Kanye West to it.
+        return any(
+            _fold_name(alias.get("name") or "") == folded
+            for alias in a.get("aliases") or []
+        )
+
+    name_tiers = (
+        ("exact", lambda a: a.get("name") == name),
+        ("case_insensitive", lambda a: a.get("name", "").lower() == lower),
+        ("folded", lambda a: _fold_name(a.get("name", "")) == folded),
+    )
+    tiers = (*name_tiers, ("alias", alias_match))
+    if country is None:
+        for tier, matches in tiers:
+            for a in candidates:
+                if matches(a):
+                    return a, tier
+        return None
+
+    for tier, matches in tiers:
+        for a in candidates:
+            if matches(a) and a.get("country") == country:
+                return a, tier
+    unplaced = [
+        a
+        for a in candidates
+        if not a.get("country") and any(m(a) for _, m in name_tiers)
+    ]
+    if len(unplaced) == 1:
+        only = unplaced[0]
+        return only, next(t for t, m in name_tiers if m(only))
+    return None
+
+
+def _mb_candidates(search_name: str, artist_name: str) -> list[dict]:
+    """Artist-like MusicBrainz search hits for ``search_name`` scoring >= 80.
+
+    Raises MusicBrainzError when MusicBrainz cannot be reached; an empty list
+    means it answered and nothing qualified.
     """
     _mb_rate_limit()
 
@@ -302,7 +374,7 @@ def _mb_search(artist_name: str) -> str | None:
     # old name as an alias, so an artist:-only query misses them entirely:
     # artist:"Kanye West" returns a tribute band and a collaboration, while
     # alias:"Kanye West" returns "Ye", the artist actually wanted.
-    query = f'artist:"{artist_name}" OR alias:"{artist_name}"'
+    query = f'artist:"{search_name}" OR alias:"{search_name}"'
     params = {"query": query, "fmt": "json", "limit": "25"}
     headers = {"User-Agent": USER_AGENT}
 
@@ -320,79 +392,20 @@ def _mb_search(artist_name: str) -> str | None:
                 time.sleep(wait)
                 continue
             resp.raise_for_status()
-            data = resp.json()
-            artists = data.get("artists", [])
-            if not artists:
-                return None
-
-            # Filter: drop non-artist types; require score >= 80.
+            artists = resp.json().get("artists", [])
             candidates = [
                 a
                 for a in artists
                 if a.get("score", 0) >= 80
                 and (a.get("type") or "") not in non_artist_types
             ]
-            if not candidates:
+            if artists and not candidates:
                 logger.debug(
                     'fanart.mb_search: status=low_score best=%d artist="%s"',
                     artists[0].get("score", 0),
                     artist_name,
                 )
-                return None
-
-            # Tier 1: exact case match
-            for a in candidates:
-                if a.get("name") == artist_name:
-                    logger.debug(
-                        'fanart.mb_match: artist="%s" mbid=%s tier=exact',
-                        a["name"],
-                        a["id"],
-                    )
-                    return a["id"]
-
-            # Tier 2: case-insensitive match
-            query_lower = artist_name.lower()
-            for a in candidates:
-                if a.get("name", "").lower() == query_lower:
-                    logger.debug(
-                        'fanart.mb_match: artist="%s" mbid=%s tier=case_insensitive',
-                        a["name"],
-                        a["id"],
-                    )
-                    return a["id"]
-
-            # Tier 3: diacritics- and punctuation-insensitive match
-            query_folded = _fold_name(artist_name)
-            for a in candidates:
-                if _fold_name(a.get("name", "")) == query_folded:
-                    logger.debug(
-                        'fanart.mb_match: artist="%s" mbid=%s tier=folded',
-                        a["name"],
-                        a["id"],
-                    )
-                    return a["id"]
-
-            # Tier 4: exact alias match, last so any canonical-name hit wins.
-            # Compared whole, never as a substring: MusicBrainz lists
-            # '¥$, Kanye West & Ty Dolla $ign' as an alias of the duo '¥$',
-            # and a substring rule would bind Kanye West to it.
-            for a in candidates:
-                for alias in a.get("aliases") or []:
-                    if _fold_name(alias.get("name") or "") == query_folded:
-                        logger.debug(
-                            'fanart.mb_match: artist="%s" mbid=%s tier=alias alias="%s"',
-                            a["name"],
-                            a["id"],
-                            alias.get("name"),
-                        )
-                        return a["id"]
-
-            logger.debug(
-                'fanart.mb_search: status=no_match candidates=%d artist="%s"',
-                len(candidates),
-                artist_name,
-            )
-            return None
+            return candidates
         except requests.RequestException as e:
             if attempt < 2:
                 time.sleep(2**attempt + 1)
@@ -406,6 +419,48 @@ def _mb_search(artist_name: str) -> str | None:
     raise MusicBrainzError(
         f"MusicBrainz unavailable (503) after retries for '{artist_name}'"
     )
+
+
+def _mb_search(artist_name: str) -> str | None:
+    """Query MusicBrainz search API. Returns best-match MBID or None.
+
+    Uses tiered name matching across candidates (score >= 80):
+    1. Exact case match
+    2. Case-insensitive match
+    3. Diacritics-insensitive match
+    4. Exact alias match
+
+    A name carrying a 1001TL country tag ("FOLEY (UK)") is searched as written
+    first, because MusicBrainz names some artists that way ("Foley (UK)").
+    Only when that finds nothing is it searched without the tag, picking
+    between same-named artists by their MusicBrainz country.
+    """
+    searches: list[tuple[str, str | None]] = [(artist_name, None)]
+    bare, country = _split_country_tag(artist_name)
+    if country is not None:
+        searches.append((bare, country))
+
+    candidates: list[dict] = []
+    for search_name, search_country in searches:
+        candidates = _mb_candidates(search_name, artist_name)
+        match = _match_candidate(candidates, search_name, search_country)
+        if match is not None:
+            chosen, tier = match
+            logger.debug(
+                'fanart.mb_match: artist="%s" mbid=%s tier=%s country=%s',
+                chosen["name"],
+                chosen["id"],
+                tier,
+                search_country or "",
+            )
+            return chosen["id"]
+
+    logger.debug(
+        'fanart.mb_search: status=no_match candidates=%d artist="%s"',
+        len(candidates),
+        artist_name,
+    )
+    return None
 
 
 # --- fanart.tv Client ---

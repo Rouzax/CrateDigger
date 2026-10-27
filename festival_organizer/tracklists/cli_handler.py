@@ -883,7 +883,6 @@ def _fetch_and_embed(
                     dj_artists=export.dj_artists,
                     country=export.country,
                     location=export.location,
-                    tracks=export.tracks,
                     dj_cache=session._dj_cache,
                     youtube_id=persisted_youtube_id,
                 )
@@ -952,7 +951,6 @@ def _fetch_and_embed(
                 dj_artists=export.dj_artists,
                 country=export.country,
                 location=export.location,
-                tracks=export_tracks,
                 dj_cache=session._dj_cache,
                 youtube_id=persisted_youtube_id,
             )
@@ -1034,7 +1032,6 @@ def _fetch_and_embed(
                 dj_artists=export.dj_artists,
                 country=export.country,
                 location=export.location,
-                tracks=export_tracks,
                 dj_cache=session._dj_cache,
                 youtube_id=persisted_youtube_id,
             )
@@ -1210,7 +1207,6 @@ def _fetch_and_embed(
                 dj_artists=export.dj_artists,
                 country=export.country,
                 location=export.location,
-                tracks=export_tracks,
                 dj_cache=session._dj_cache,
                 youtube_id=persisted_youtube_id,
                 assembled=assembled,
@@ -1259,7 +1255,6 @@ def _fetch_and_embed(
         dj_artists=export.dj_artists,
         country=export.country,
         location=export.location,
-        tracks=export_tracks,
         dj_cache=session._dj_cache,
         youtube_id=persisted_youtube_id,
         assembled=assembled,

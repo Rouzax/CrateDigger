@@ -214,9 +214,9 @@ def test_parse_tracks_ampersand_in_feature_member_name():
         '<meta itemprop="name" content="Host - Track">'
         '<span class="trackValue notranslate blueTxt">Host'
         '<span class="notranslate"> ft. W&amp;W'
-        '<a class="notranslate tgHid" href="/artist/x/wandw/index.html"><i></i></a>'
+        '<a class="notranslate tgHid" href="/artist/wandw/tracks.html"><i></i></a>'
         " &amp; Akon"
-        '<a class="notranslate tgHid" href="/artist/y/akon/index.html"><i></i></a>'
+        '<a class="notranslate tgHid" href="/artist/akon/tracks.html"><i></i></a>'
         "</span> - Track</span></div>"
     )
     t = _parse_tracks(html)[0]
@@ -236,7 +236,7 @@ def test_parse_tracks_empty_keyed_slug_does_not_steal_junk_run():
         '<meta itemprop="name" content="Host - Track">'
         '<span class="trackValue notranslate blueTxt">Host'
         '<span class="notranslate"> ft. Real ++'
-        '<a class="notranslate tgHid" href="/artist/x/--/index.html"><i></i></a>'
+        '<a class="notranslate tgHid" href="/artist/--/tracks.html"><i></i></a>'
         "</span> - Track</span></div>"
     )
     t = _parse_tracks(html)[0]
@@ -376,9 +376,9 @@ def test_artist_names_uses_inner_per_artist_notranslate_wrapper():
 <input id="tlp1_cue_seconds" value="0">
 <meta itemprop="name" content="AFROJACK ft. Eva Simons - Take Over Control">
 <span class="trackValue notranslate blueTxt">
-  <span class="notranslate blueTxt">AFROJACK<span class="tgHid spL"><a href="/artist/kdl3un/afrojack/index.html"></a></span></span>
+  <span class="notranslate blueTxt">AFROJACK<span class="tgHid spL"><a href="/artist/afrojack/tracks.html"></a></span></span>
   ft.
-  <span class="notranslate blueTxt">Eva Simons<span class="tgHid spL"><a href="/artist/eva/eva-simons/index.html"></a></span></span>
+  <span class="notranslate blueTxt">Eva Simons<span class="tgHid spL"><a href="/artist/eva-simons/tracks.html"></a></span></span>
   - Take Over Control
 </span>
 </div>"""
@@ -395,11 +395,11 @@ def test_artist_names_fall_back_to_slug_when_wrapper_missing():
 <input id="tlp1_cue_seconds" value="0">
 <meta itemprop="name" content="Hannah Laing &amp; Marlon Hoffstadt ft. Caroline Roxy - Stomp Your Feet">
 <span class="trackValue notranslate blueTxt">
-  <a href="/artist/h1/hannah-laing/index.html">Hannah Laing</a>
+  <a href="/artist/hannah-laing/tracks.html">Hannah Laing</a>
   &amp;
-  <a href="/artist/m1/marlon-hoffstadt/index.html">Marlon Hoffstadt</a>
+  <a href="/artist/marlon-hoffstadt/tracks.html">Marlon Hoffstadt</a>
   ft.
-  <a href="/artist/c1/caroline-roxy/index.html">Caroline Roxy</a>
+  <a href="/artist/caroline-roxy/tracks.html">Caroline Roxy</a>
   - Stomp Your Feet
 </span>
 </div>"""
@@ -424,11 +424,11 @@ def test_artist_names_fall_back_to_slug_preserves_alignment_with_slugs():
 <input id="tlp1_cue_seconds" value="0">
 <meta itemprop="name" content="Armin van Buuren &amp; Hannah Laing &amp; Wippenberg - U Got 2 Know">
 <span class="trackValue notranslate blueTxt">
-  <span class="notranslate blueTxt">Armin van Buuren<span class="tgHid spL"><a href="/artist/avb/armin-van-buuren/index.html"></a></span></span>
+  <span class="notranslate blueTxt">Armin van Buuren<span class="tgHid spL"><a href="/artist/armin-van-buuren/tracks.html"></a></span></span>
   &amp;
-  <a href="/artist/h1/hannah-laing/index.html">Hannah Laing</a>
+  <a href="/artist/hannah-laing/tracks.html">Hannah Laing</a>
   &amp;
-  <a href="/artist/w1/wippenberg/index.html">Wippenberg</a>
+  <a href="/artist/wippenberg/tracks.html">Wippenberg</a>
   - U Got 2 Know
 </span>
 </div>"""
@@ -449,10 +449,10 @@ def test_artist_names_remix_credit_uses_preceding_blueTxt_sibling():
 <input id="tlp1_cue_seconds" value="0">
 <meta itemprop="name" content="Madonna - Frozen ( LAWTON Lick )">
 <span class="trackValue notranslate">
-  <span class="notranslate blueTxt">Madonna<span class="tgHid spL"><a href="/artist/u/madonna/index.html"></a></span></span>
+  <span class="notranslate blueTxt">Madonna<span class="tgHid spL"><a href="/artist/madonna/tracks.html"></a></span></span>
   <span class="notranslate"> - </span>
   <span class="blueTxt">Frozen</span>
-  <span class="notranslate"> (<span class="blueTxt">LAWTON</span><span class="tgHid spR"><a href="/artist/l/lawton/index.html"></a></span><span class="remixValue"> Lick</span>)</span>
+  <span class="notranslate"> (<span class="blueTxt">LAWTON</span><span class="tgHid spR"><a href="/artist/lawton/tracks.html"></a></span><span class="remixValue"> Lick</span>)</span>
 </span>
 </div>"""
     tracks = _parse_tracks(html)
@@ -467,10 +467,10 @@ def test_artist_names_remix_credit_preserves_diacritics_and_punctuation():
 <input id="tlp1_cue_seconds" value="0">
 <meta itemprop="name" content="Artist - Track ( Kø:lab Rave Edit )">
 <span class="trackValue notranslate">
-  <span class="notranslate blueTxt">Artist<span class="tgHid spL"><a href="/artist/a/artist/index.html"></a></span></span>
+  <span class="notranslate blueTxt">Artist<span class="tgHid spL"><a href="/artist/artist/tracks.html"></a></span></span>
   <span class="notranslate"> - </span>
   <span class="blueTxt">Track</span>
-  <span class="notranslate"> (<span class="blueTxt">Kø:lab</span><span class="tgHid spR"><a href="/artist/k/kolab/index.html"></a></span><span class="remixValue"> Rave Edit</span>)</span>
+  <span class="notranslate"> (<span class="blueTxt">Kø:lab</span><span class="tgHid spR"><a href="/artist/kolab/tracks.html"></a></span><span class="remixValue"> Rave Edit</span>)</span>
 </span>
 </div>"""
     tracks = _parse_tracks(html)
@@ -822,6 +822,8 @@ def test_whole_credit_link_keeps_each_visible_name():
         ("scrufizzer", "Scrufizzer"),
         ("david-guetta", "David Guetta"),
     ]
+    # Slugs built from a name, because 1001TL gives that artist no page.
+    assert row.pageless_slugs == {"lauren-bennett", "goonrock"}
 
 
 def test_whole_credit_link_on_subcomponent_row_transliterates_slug():
@@ -919,3 +921,52 @@ def test_name_under_the_cap_keeps_the_meta_text():
     row = _track_by_prefix(tracks, "David Guetta ft. Sia - Titanium")
     # The visible text adds "(Co-Prod. by AFROJACK)"; the meta name does not.
     assert row.raw_text == "David Guetta ft. Sia - Titanium (Alesso Remix)"
+
+
+# --- names that share one artist page ---------------------------------------
+#
+# 1001TL's renderer splits a credit on joining words ("E", "&", "pres.") into
+# separate names even when they all link to one page, which is then the act's.
+
+
+def _shared_page_row(raw: str, names: list[str], connectors: list[str], href: str):
+    spans = ""
+    for i, name in enumerate(names):
+        if i:
+            spans += f'<span class="spLR"> {connectors[i - 1]} </span>'
+        spans += (
+            f'<span class="notranslate" translate="no">{name}'
+            f'<span class="tgHid spL"><a class="notranslate tgHid" href="{href}"></a>'
+            "</span></span>"
+        )
+    return f"""<div id="tlTab">
+<div class="tlpItem tlpTog trRow1 con">
+<input id="tlp1_cue_seconds" value="0">
+<meta itemprop="name" content="{raw}">
+<span class="trackValue notranslate blueTxt">{spans}<span class="notranslate"> - </span></span>
+</div>
+</div>"""
+
+
+def test_names_spelling_their_shared_page_are_one_act():
+    html = _shared_page_row(
+        "Ricchi E Poveri - Sarà Perché Ti Amo",
+        ["Ricchi", "Poveri"],
+        ["E"],
+        "/artist/ricchi-e-poveri/tracks.html",
+    )
+    t = _parse_tracks(html)[0]
+    assert t.artist_slugs == ["ricchi-e-poveri"]
+    assert t.artist_names == ["Ricchi E Poveri"]
+
+
+def test_band_page_split_on_ampersand_is_one_act():
+    html = _shared_page_row(
+        "Dick Dale &amp; His Del-Tones - Misirlou",
+        ["Dick Dale", "His Del-Tones"],
+        ["&amp;"],
+        "/artist/dick-dale-&amp;-his-del-tones/tracks.html",
+    )
+    t = _parse_tracks(html)[0]
+    assert t.artist_slugs == ["dick-dale-&-his-del-tones"]
+    assert t.artist_names == ["Dick Dale & His Del-Tones"]
