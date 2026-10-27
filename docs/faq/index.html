@@ -988,6 +988,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#why-do-my-chapters-start-before-the-tracks-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why do my chapters start before the tracks do?
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#why-did-my-file-get-metadata-but-no-chapters" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1468,6 +1479,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#why-do-my-chapters-start-before-the-tracks-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why do my chapters start before the tracks do?
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#why-did-my-file-get-metadata-but-no-chapters" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1920,6 +1942,8 @@
 <li><code>mkvpropedit</code> must be installed and on your PATH.</li>
 <li>The matched tracklist must have at least 2 tracks with timing data. Single-track or unresolved tracklists are skipped because they provide no chapter navigation value.</li>
 </ol>
+<h3 id="why-do-my-chapters-start-before-the-tracks-do">Why do my chapters start before the tracks do?<a class="headerlink" href="#why-do-my-chapters-start-before-the-tracks-do" title="Permanent link">&para;</a></h3>
+<p>Usually the video opens with an intro (a stage show, countdown or crowd footage) that the tracklist's timeline leaves out, so every chapter lands that much too early. <code>identify</code> warns when the last chapter runs far past its track. See <a href="../tracklists/#chapters-are-out-of-sync-with-the-video">Chapters are out of sync with the video</a> for how to tell and how to trim the intro.</p>
 <h3 id="why-did-my-file-get-metadata-but-no-chapters">Why did my file get metadata but no chapters?<a class="headerlink" href="#why-did-my-file-get-metadata-but-no-chapters" title="Permanent link">&para;</a></h3>
 <p>The tracklist CrateDigger matched is cued against multiple source videos (Player 1, Player 2, ...) and none of them matched your file. CrateDigger wrote the album-level metadata tags but skipped chapter embedding and logged a WARNING. Any chapters that were already in the file were left intact.</p>
 <p>To fix this, rename the file to include the <code>[youtubeid]</code> suffix from the correct source video (for example, <code>Set Name [dQw4w9WgXcQ].mkv</code>) and re-run <code>identify</code>. Alternatively, if your file's duration is close to one of the listed source durations, CrateDigger may match by duration automatically on the next run. See <a href="../tracklists/#multi-source-tracklists">Multi-source tracklists</a> for the full matching priority.</p>

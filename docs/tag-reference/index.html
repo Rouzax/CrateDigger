@@ -1469,25 +1469,25 @@
 <tr>
 <td><code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code></td>
 <td>identify</td>
-<td>Pipe-separated 1001Tracklists slugs for every artist on the track. For mashup chapters, all per-component artists are listed.</td>
+<td>Pipe-separated 1001Tracklists slugs for every artist on the track. For mashup chapters, the mashup's own artists come first, including whoever made the mashup (<code>DJs From Mars</code> in a <code>DJs From Mars Bootleg</code>), followed by any artist only a component track names. An artist 1001Tracklists gives no page of its own gets a slug built from its name in the same form (<code>Lauren Bennett</code> -&gt; <code>lauren-bennett</code>).</td>
 <td><code>afrojack\|oliver-heldens</code></td>
 </tr>
 <tr>
 <td><code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code></td>
 <td>identify</td>
-<td>Pipe-separated display names for every artist, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code>. For mashup chapters, each component artist is listed individually. Artists sharing one <code>ft. A &amp; B</code> credit each get their own name (not the combined text repeated). Acts 1001Tracklists registers as a single combined entity (e.g. an <code>A &amp; B pres. C</code> alias with one slug) remain one combined name.</td>
+<td>Pipe-separated display names for every artist, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_SLUGS</code>. For mashup chapters, each artist is listed individually, spelled as the component track credits it (a mashup row shortens names, such as <code>Tiesto</code> for <code>Tiësto</code>). Artists sharing one <code>ft. A &amp; B</code> credit each get their own name (not the combined text repeated). Acts 1001Tracklists registers as a single combined entity (e.g. an <code>A &amp; B pres. C</code> alias with one slug) remain one combined name. When a credit names more than the linked artist, such as <code>Marlon Hoffstadt aka DJ Daddy Trance</code> linked only to DJ Daddy Trance, the name is the linked artist's (<code>DJ Daddy Trance</code>). A band 1001Tracklists displays in parts that all link to its page (<code>Ricchi</code> and <code>Poveri</code>) is one name (<code>Ricchi E Poveri</code>).</td>
 <td><code>Afrojack\|Oliver Heldens</code></td>
 </tr>
 <tr>
 <td><code>MUSICBRAINZ_ARTISTIDS</code></td>
 <td>enrich</td>
-<td>Pipe-separated MusicBrainz artist IDs, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code>. Empty slot <code>""</code> for unresolved names.</td>
+<td>Pipe-separated MusicBrainz artist IDs, aligned with <code>CRATEDIGGER_TRACK_PERFORMER_NAMES</code>. Empty slot <code>""</code> for unresolved names. A name with a 1001Tracklists country tag (<code>VLTRA (IT)</code>) is searched as written, then without the tag, preferring an artist from that country; when same-named artists cannot be told apart the slot stays empty rather than guessing.</td>
 <td><code>&lt;afrojack-mbid&gt;\|&lt;heldens-mbid&gt;</code></td>
 </tr>
 <tr>
 <td><code>CRATEDIGGER_TRACK_TITLE</code></td>
 <td>identify</td>
-<td>Track title with the artist prefix stripped. For a mashup or folded-overlay ("w/") chapter this is the <code>vs.</code>-joined title segment of the chapter title (the appended component included), matching <code>CRATEDIGGER_TRACK_PERFORMER</code>.</td>
+<td>Track title with the artist prefix stripped, plus any note 1001Tracklists shows beside it, such as <code>(ID Remix)</code> for an unreleased remix or an editor's <code>(Intro Edit)</code>. For a mashup or folded-overlay ("w/") chapter this is the <code>vs.</code>-joined title segment of the chapter title (the appended component included), matching <code>CRATEDIGGER_TRACK_PERFORMER</code>.</td>
 <td><code>Take Over Control</code> or <code>Jump Around vs. Stephanie (HNTR VIP)</code></td>
 </tr>
 <tr>
