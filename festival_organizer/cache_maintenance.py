@@ -11,16 +11,18 @@ Logging:
         - enrich.dj_artwork_cache (DEBUG): a stale cached image was replaced
         - enrich.deezer_download, enrich.deezer, enrich.deezer_cache: the same
           three for a Deezer artist photo
-        - cache.portrait (DEBUG): an artist's portrait.jpg was written or removed
+        - cache.portrait (DEBUG): an artist's portrait.jpg was written or removed;
+          WARNING when it could not be written
 """
 
 import logging
+import os
 import shutil
 import time
 from pathlib import Path
 
 from festival_organizer.cache_ttl import hashed_jitter_factor
-from festival_organizer.deezer import resolve_deezer_photo
+from festival_organizer.deezer import DeezerUnavailable, resolve_deezer_photo
 from festival_organizer.fanart import lookup_mbid
 from festival_organizer.normalization import folder_slug
 
@@ -184,17 +186,31 @@ def fetch_deezer_artwork(
 
     A fresh cached photo is used without any request. Otherwise the artist's
     MBID (through their Spotify page when known) leads to their Deezer photo.
-    None when the artist has no Deezer photo or it could not be had; a
-    previously cached photo is then left for its TTL rather than removed,
-    since "no photo" and "Deezer did not answer" look the same here.
+    A definite "no photo" (a null pin, or Deezer's answer) removes a cached
+    one, since it would otherwise keep winning portrait.jpg. An artist
+    without an MBID keeps what is cached: lookup_mbid also returns None while
+    MusicBrainz is down. Raises DeezerUnavailable when Deezer or MusicBrainz
+    could not answer, leaving the cached photo in place.
     """
+    if (
+        deezer_overrides is not None
+        and deezer_overrides.has(artist_name)
+        and deezer_overrides.get(artist_name) is None
+    ):
+        dest.unlink(missing_ok=True)
+        return None
     if _is_fresh_image(dest, ttl_days):
         return dest
     mbid = lookup_mbid(
         artist_name, mbid_cache, overrides=mbid_overrides, spotify_url=spotify_url
     )
+    if not mbid:
+        return dest if dest.exists() else None
     url = resolve_deezer_photo(artist_name, mbid, deezer_cache, deezer_overrides)
+    if url is None:
+        raise DeezerUnavailable(artist_name)
     if not url:
+        dest.unlink(missing_ok=True)
         return None
     return cache_deezer_artwork(url, dest, ttl_days, artist_label=artist_name)
 
@@ -221,7 +237,11 @@ def write_portrait(artist_dir: Path, priority: list[str]) -> Path | None:
         return None
     data = source.read_bytes()
     if not portrait.exists() or portrait.read_bytes() != data:
-        portrait.write_bytes(data)
+        # Written aside and renamed into place, so TrackSplit never reads a
+        # half-written portrait.
+        partial = artist_dir / (PORTRAIT_FILE + ".part")
+        partial.write_bytes(data)
+        os.replace(partial, portrait)
         logger.debug(
             "cache.portrait: status=written dir=%s source=%s", artist_dir, source.name
         )
@@ -234,10 +254,12 @@ def refresh_artist_images(artists_root: Path, dj_cache, config) -> None:
     Runs at the end of enrich, after the per-file steps, so TrackSplit finds
     a portrait for every artist even when no poster was regenerated. Deezer
     lookups are TTL-gated, so a repeat run makes no requests for artists
-    already resolved.
+    already resolved. Once Deezer or MusicBrainz stops answering, the rest of
+    the sweep is skipped rather than timing out per artist. A failure for
+    one artist is logged and the sweep goes on: this runs unattended.
     """
-    priority = config.poster_settings["artist_background_priority"]
-    if config.deezer_enabled and "deezer" in priority:
+    priority = config.artist_background_priority
+    if "deezer" in priority:
         from festival_organizer.deezer import DeezerCache, DeezerOverrides
         from festival_organizer.fanart import ArtistMbidOverrides, MBIDCache
 
@@ -248,17 +270,38 @@ def refresh_artist_images(artists_root: Path, dj_cache, config) -> None:
             "deezer_cache": DeezerCache(ttl_days=ttl.get("deezer_days", 90)),
             "deezer_overrides": DeezerOverrides(),
         }
-        for slug in sorted(dj_cache.slugs()):
-            fetch_deezer_artwork(
-                dj_cache.canonical_name(slug),
-                artists_root / folder_slug(slug) / ARTIST_IMAGE_FILES["deezer"],
-                spotify_url=dj_cache.spotify_url(slug),
-                ttl_days=ttl.get("images_days", 90),
-                **deps,
-            )
+        slugs = sorted(dj_cache.slugs())
+        for i, slug in enumerate(slugs):
+            name = dj_cache.canonical_name(slug)
+            try:
+                fetch_deezer_artwork(
+                    name,
+                    artists_root / folder_slug(slug) / ARTIST_IMAGE_FILES["deezer"],
+                    spotify_url=dj_cache.spotify_url(slug),
+                    ttl_days=ttl.get("images_days", 90),
+                    **deps,
+                )
+            except DeezerUnavailable:
+                logger.warning(
+                    'enrich.deezer_lookup: artist="%s" status=unavailable skipped=%d',
+                    name,
+                    len(slugs) - i - 1,
+                )
+                break
+            except (OSError, KeyError, ValueError) as e:
+                logger.warning(
+                    'enrich.deezer_lookup: artist="%s" status=failed error="%s"',
+                    name,
+                    e,
+                )
     if artists_root.is_dir():
         for artist_dir in sorted(p for p in artists_root.iterdir() if p.is_dir()):
-            write_portrait(artist_dir, priority)
+            try:
+                write_portrait(artist_dir, priority)
+            except OSError as e:
+                logger.warning(
+                    'cache.portrait: status=failed dir=%s error="%s"', artist_dir, e
+                )
 
 
 def warm_artist_cache_from_dj_cache(

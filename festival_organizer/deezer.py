@@ -58,6 +58,14 @@ class DeezerError(Exception):
     """Deezer could not answer, so finding nothing is not a real miss."""
 
 
+class DeezerUnavailable(Exception):
+    """Deezer or MusicBrainz could not answer for an artist this run.
+
+    Raised by the caching layer so a sweep over many artists can stop asking
+    instead of waiting out a timeout for each of them.
+    """
+
+
 def _throttle() -> None:
     global _last_request
     wait = _last_request + _DEEZER_INTERVAL - time.monotonic()
@@ -223,41 +231,45 @@ def _best_photo(artist_name: str, deezer_ids: list[int]) -> tuple[int | None, st
     Among pages with a real photo: the one named like the artist, then the
     one with the most fans. Raises DeezerError when Deezer cannot be asked.
     """
-    candidates: list[tuple[dict, str]] = []
+    candidates: list[tuple[int, dict, str]] = []
     for deezer_id in deezer_ids:
         artist = deezer_artist(deezer_id)
         if artist is None:
             continue
-        photo = photo_url(artist)
+        # photo_url checks the releases of this id, the page asked for.
+        photo = photo_url({**artist, "id": deezer_id})
         if photo:
-            candidates.append((artist, photo))
+            candidates.append((deezer_id, artist, photo))
     if not candidates:
         return (deezer_ids[0] if deezer_ids else None), ""
     wanted = _fold_name(artist_name)
-    artist, photo = max(
+    deezer_id, _, photo = max(
         candidates,
         key=lambda c: (
-            _fold_name(str(c[0].get("name", ""))) == wanted,
-            c[0].get("nb_fan") or 0,
+            _fold_name(str(c[1].get("name", ""))) == wanted,
+            c[1].get("nb_fan") or 0,
         ),
     )
-    return int(artist["id"]), photo
+    return deezer_id, photo
 
 
 def resolve_deezer_photo(
     artist_name: str,
     mbid: str | None,
     cache: DeezerCache,
-    overrides: DeezerOverrides,
-) -> str:
-    """The artist's Deezer photo URL, or "" when there is none to use.
+    overrides: DeezerOverrides | None,
+) -> str | None:
+    """The artist's Deezer photo URL, "" when there is none, None when unknown.
+
+    None means Deezer or MusicBrainz could not answer, so nothing is settled
+    (and nothing cached); "" is a definite answer that there is no photo.
 
     Precedence: user override > cache > the Deezer pages the artist's
     MusicBrainz entry links. There is no search by name: Deezer has many
     artists of one name and its fan count cannot tell them apart.
     """
     try:
-        if overrides.has(artist_name):
+        if overrides is not None and overrides.has(artist_name):
             pinned = overrides.get(artist_name)
             if pinned is None:
                 return ""
@@ -291,7 +303,7 @@ def resolve_deezer_photo(
             artist_name,
             e,
         )
-        return ""
+        return None
     cache.put(mbid, deezer_id, photo, "linked")
     if photo:
         logger.info(

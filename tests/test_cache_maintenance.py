@@ -388,3 +388,142 @@ def test_refresh_artist_images_skips_deezer_when_not_in_chain(tmp_path, monkeypa
         }
     )
     refresh_artist_images(tmp_path / "artists", dj_cache, config)
+
+
+# --- Final review fixes: the cached Deezer photo's lifecycle ---
+
+
+class _Pins:
+    def __init__(self, pins: dict):
+        self._pins = {k.lower(): v for k, v in pins.items()}
+
+    def has(self, name):
+        return name.lower() in self._pins
+
+    def get(self, name):
+        return self._pins.get(name.lower())
+
+
+def _fetch(dest, *, overrides=None):
+    return fetch_deezer_artwork(
+        "Argy",
+        dest,
+        spotify_url="",
+        mbid_cache=None,
+        mbid_overrides=None,
+        deezer_cache=None,
+        deezer_overrides=overrides,
+        ttl_days=90,
+    )
+
+
+def test_null_pin_removes_a_fresh_cached_photo(tmp_path, monkeypatch):
+    dest = _touch(tmp_path / "argy" / "deezer-artist.jpg", b"OLD-DEEZER")
+    monkeypatch.setattr(cache_maintenance, "lookup_mbid", lambda *a, **k: "mbid")
+    assert _fetch(dest, overrides=_Pins({"Argy": None})) is None
+    assert not dest.exists()
+
+
+def test_definite_miss_removes_a_stale_cached_photo(tmp_path, monkeypatch):
+    import os
+
+    dest = _touch(tmp_path / "argy" / "deezer-artist.jpg", b"OLD-DEEZER")
+    os.utime(dest, (0, 0))
+    monkeypatch.setattr(cache_maintenance, "lookup_mbid", lambda *a, **k: "mbid")
+    monkeypatch.setattr(cache_maintenance, "resolve_deezer_photo", lambda *a, **k: "")
+    assert _fetch(dest) is None
+    assert not dest.exists()
+
+
+def test_unavailable_keeps_the_cached_photo_and_raises(tmp_path, monkeypatch):
+    import os
+
+    import pytest
+
+    from festival_organizer.deezer import DeezerUnavailable
+
+    dest = _touch(tmp_path / "argy" / "deezer-artist.jpg", b"OLD-DEEZER")
+    os.utime(dest, (0, 0))
+    monkeypatch.setattr(cache_maintenance, "lookup_mbid", lambda *a, **k: "mbid")
+    monkeypatch.setattr(cache_maintenance, "resolve_deezer_photo", lambda *a, **k: None)
+    with pytest.raises(DeezerUnavailable):
+        _fetch(dest)
+    assert dest.read_bytes() == b"OLD-DEEZER"
+
+
+def test_no_mbid_keeps_the_cached_photo(tmp_path, monkeypatch):
+    # lookup_mbid also returns None while MusicBrainz is down; that must not
+    # delete a photo found on an earlier run.
+    import os
+
+    dest = _touch(tmp_path / "argy" / "deezer-artist.jpg", b"OLD-DEEZER")
+    os.utime(dest, (0, 0))
+    monkeypatch.setattr(cache_maintenance, "lookup_mbid", lambda *a, **k: None)
+    assert _fetch(dest) == dest
+    assert dest.exists()
+
+
+def test_disabled_deezer_drops_its_photo_from_the_portrait(tmp_path, monkeypatch):
+    root = tmp_path / "artists"
+    _touch(root / "argy" / "deezer-artist.jpg", b"deezer")
+    _touch(root / "argy" / "dj-artwork.jpg", b"dj")
+    refresh_artist_images(
+        root,
+        DjCache(tmp_path / "dj_cache.json"),
+        _deezer_config(tmp_path, enabled=False),
+    )
+    assert (root / "argy" / "portrait.jpg").read_bytes() == b"dj"
+
+
+def test_refresh_stops_asking_deezer_once_it_is_unavailable(
+    tmp_path, monkeypatch, caplog
+):
+    from festival_organizer.deezer import DeezerUnavailable
+
+    dj_cache = DjCache(tmp_path / "dj_cache.json")
+    for slug in ("a", "b", "c"):
+        dj_cache.put(slug, {"name": slug.upper()})
+    asked = []
+
+    def down(name, dest, **kwargs):
+        asked.append(name)
+        raise DeezerUnavailable(name)
+
+    monkeypatch.setattr(cache_maintenance, "fetch_deezer_artwork", down)
+    refresh_artist_images(tmp_path / "artists", dj_cache, _deezer_config(tmp_path))
+    assert asked == ["A"]
+    assert any("skipped=2" in m for m in caplog.messages)
+
+
+def test_refresh_survives_an_unexpected_error_per_artist(tmp_path, monkeypatch):
+    dj_cache = DjCache(tmp_path / "dj_cache.json")
+    dj_cache.put("a", {"name": "A"})
+    dj_cache.put("b", {"name": "B"})
+    root = tmp_path / "artists"
+
+    def flaky(name, dest, **kwargs):
+        if name == "A":
+            raise OSError("disk full")
+        return _touch(dest, b"b-photo")
+
+    monkeypatch.setattr(cache_maintenance, "fetch_deezer_artwork", flaky)
+    refresh_artist_images(root, dj_cache, _deezer_config(tmp_path))
+    assert (root / "b" / "portrait.jpg").read_bytes() == b"b-photo"
+
+
+def test_refresh_survives_a_portrait_that_cannot_be_written(tmp_path, monkeypatch):
+    root = tmp_path / "artists"
+    _touch(root / "a" / "dj-artwork.jpg", b"a")
+    _touch(root / "b" / "dj-artwork.jpg", b"b")
+    real = cache_maintenance.write_portrait
+
+    def locked(artist_dir, priority):
+        if artist_dir.name == "a":
+            raise PermissionError("in use")
+        return real(artist_dir, priority)
+
+    monkeypatch.setattr(cache_maintenance, "write_portrait", locked)
+    refresh_artist_images(
+        root, DjCache(tmp_path / "dj_cache.json"), _deezer_config(tmp_path)
+    )
+    assert (root / "b" / "portrait.jpg").read_bytes() == b"b"

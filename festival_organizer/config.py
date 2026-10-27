@@ -656,6 +656,16 @@ class Config:
         return self._data.get("deezer", {}).get("enabled", True)
 
     @property
+    def artist_background_priority(self) -> list[str]:
+        """The artist image chain, without ``deezer`` while Deezer is disabled.
+
+        Posters, their staleness fingerprint and portrait.jpg all read this, so
+        a disabled Deezer's cached photo is never shown or tracked.
+        """
+        chain = self.poster_settings["artist_background_priority"]
+        return chain if self.deezer_enabled else [s for s in chain if s != "deezer"]
+
+    @property
     def kodi_settings(self) -> dict:
         return self._data.get("kodi", {})
 

@@ -21,6 +21,7 @@ from festival_organizer.cache_maintenance import (
 )
 from festival_organizer.cache_ttl import hashed_jitter_factor
 from festival_organizer.config import Config
+from festival_organizer.deezer import DeezerUnavailable
 from festival_organizer.fanart import lookup_mbid, spotify_urls_by_name
 from festival_organizer.models import MediaFile
 from festival_organizer.paths import same_library_path
@@ -473,6 +474,9 @@ class AlbumPosterOperation(Operation):
         self._logo_misses: set[str] = set()  # places without curated logo
         # MBID and Deezer caches, created on the first Deezer lookup.
         self._deezer_deps: dict | None = None
+        # Set when Deezer or MusicBrainz stops answering; later posters this
+        # run use what is cached instead of waiting out a timeout each.
+        self._deezer_down = False
 
     @property
     def generated_folders(self) -> set[Path]:
@@ -838,13 +842,20 @@ class AlbumPosterOperation(Operation):
                 "deezer_cache": DeezerCache(ttl_days=ttl.get("deezer_days", 90)),
                 "deezer_overrides": DeezerOverrides(),
             }
-        return fetch_deezer_artwork(
-            name,
-            paths.artist_cache_dir(key) / ARTIST_IMAGE_FILES["deezer"],
-            spotify_url=dj_cache.spotify_url(slug) if dj_cache and slug else "",
-            ttl_days=self._ttl_days,
-            **self._deezer_deps,
-        )
+        dest = paths.artist_cache_dir(key) / ARTIST_IMAGE_FILES["deezer"]
+        if self._deezer_down:
+            return dest if dest.exists() else None
+        try:
+            return fetch_deezer_artwork(
+                name,
+                dest,
+                spotify_url=dj_cache.spotify_url(slug) if dj_cache and slug else "",
+                ttl_days=self._ttl_days,
+                **self._deezer_deps,
+            )
+        except DeezerUnavailable:
+            self._deezer_down = True
+            return dest if dest.exists() else None
 
     def _warm_dj_artwork_cache(self, folder: Path) -> None:
         """Download DJ artwork for all artists in a folder."""
@@ -956,9 +967,7 @@ class AlbumPosterOperation(Operation):
     def _get_priority_chain_for_poster_type(self, poster_type: str) -> list[str]:
         ps = self.config.poster_settings
         if poster_type == "artist":
-            return ps.get(
-                "artist_background_priority", ["dj_artwork", "fanart_tv", "gradient"]
-            )
+            return self.config.artist_background_priority
         if poster_type == "festival":
             return ps.get("place_background_priority", ["curated_logo", "gradient"])
         return ps.get("year_background_priority", ["gradient"])

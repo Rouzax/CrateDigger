@@ -886,10 +886,10 @@ def test_darken_for_white_text_preserves_hue_family():
 # --- folder-poster stamp tests (Phase B) ---
 
 
-def test_folder_poster_version_is_1():
+def test_folder_poster_version_is_2():
     from festival_organizer.poster import FOLDER_POSTER_VERSION
 
-    assert FOLDER_POSTER_VERSION == 1
+    assert FOLDER_POSTER_VERSION == 2
 
 
 def test_build_folder_stamp_distinct_fields():

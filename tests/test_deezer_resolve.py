@@ -178,7 +178,7 @@ def test_deezer_error_is_not_cached(cache, no_overrides):
             "festival_organizer.deezer.deezer_artist", side_effect=DeezerError("Quota")
         ),
     ):
-        assert resolve_deezer_photo("FISHER", MBID, cache, no_overrides) == ""
+        assert resolve_deezer_photo("FISHER", MBID, cache, no_overrides) is None
     assert cache.get(MBID) is None
 
 
@@ -187,7 +187,7 @@ def test_musicbrainz_outage_is_not_cached(cache, no_overrides):
         "festival_organizer.deezer.mb_url_relations",
         side_effect=MusicBrainzError("503"),
     ):
-        assert resolve_deezer_photo("FISHER", MBID, cache, no_overrides) == ""
+        assert resolve_deezer_photo("FISHER", MBID, cache, no_overrides) is None
     assert cache.get(MBID) is None
 
 
@@ -270,3 +270,27 @@ def test_mb_url_relations_lists_every_link():
             "https://open.spotify.com/artist/x",
         ]
     assert get.call_args.kwargs["params"]["inc"] == "url-rels"
+
+
+def test_unavailable_is_none_not_empty(cache, no_overrides):
+    with patch(
+        "festival_organizer.deezer.mb_url_relations",
+        side_effect=MusicBrainzError("503"),
+    ):
+        assert resolve_deezer_photo("FISHER", MBID, cache, no_overrides) is None
+
+
+def test_payload_without_id_does_not_crash(cache, no_overrides):
+    deezer = _Deezer({56125: {"name": "FISHER", "nb_fan": 1, "picture_xl": PHOTO}})
+    photo, _ = _run(
+        "FISHER",
+        MBID,
+        cache,
+        no_overrides,
+        ["https://www.deezer.com/artist/56125"],
+        deezer,
+    )
+    assert photo == PHOTO
+    entry = cache.get(MBID)
+    assert entry is not None
+    assert entry["deezer_id"] == 56125

@@ -2245,3 +2245,44 @@ def test_poster_op_passes_billed_artists_not_resolved(tmp_path):
     )
     kwargs = _run_poster_and_capture_kwargs(tmp_path, mf)
     assert kwargs["artists_1001tl"] == ["SOMETHING ELSE", "R3HAB"]
+
+
+def test_deezer_outage_keeps_existing_photo_and_stops_asking(tmp_path, monkeypatch):
+    from festival_organizer.deezer import DeezerUnavailable
+
+    monkeypatch.setattr(paths_mod, "artist_cache_dir", lambda key: tmp_path / key)
+    op = AlbumPosterOperation(_deezer_config())
+    existing = tmp_path / "test" / "deezer-artist.jpg"
+    existing.parent.mkdir(parents=True)
+    existing.write_bytes(b"old")
+    with patch(
+        "festival_organizer.operations.fetch_deezer_artwork",
+        side_effect=DeezerUnavailable("down"),
+    ) as fetch:
+        assert op._try_background_source("deezer", tmp_path, _make_mf()) == existing
+        op._try_background_source("deezer", tmp_path, _make_mf())
+    assert fetch.call_count == 1
+
+
+def test_deezer_disabled_drops_deezer_from_the_artist_chain():
+    op = AlbumPosterOperation(_deezer_config(enabled=False))
+    assert op._get_priority_chain_for_poster_type("artist") == [
+        "dj_artwork",
+        "fanart_tv",
+        "gradient",
+    ]
+
+
+def test_existing_folder_posters_regenerate_once_for_deezer():
+    # Deezer photos are fetched while a poster renders, so existing folder
+    # posters must re-render on the first run to pick them up.
+    from festival_organizer import poster
+
+    with patch.object(poster, "FOLDER_POSTER_VERSION", 1):
+        before = poster.build_folder_stamp(
+            poster_type="artist", name="Argy", year="", edition=""
+        )
+    after = poster.build_folder_stamp(
+        poster_type="artist", name="Argy", year="", edition=""
+    )
+    assert before != after

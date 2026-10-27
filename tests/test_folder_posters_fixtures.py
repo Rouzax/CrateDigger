@@ -18,7 +18,7 @@ from festival_organizer.config import load_config
 from festival_organizer.library import cleanup_empty_dirs
 from festival_organizer.models import MediaFile
 from festival_organizer.operations import AlbumPosterOperation
-from festival_organizer.poster import read_poster_stamp
+from festival_organizer.poster import FOLDER_POSTER_VERSION, read_poster_stamp
 from festival_organizer.templates import render_filename, render_folder
 
 FIX = Path(__file__).parent / "fixtures" / "folder_posters"
@@ -26,6 +26,8 @@ pytestmark = pytest.mark.skipif(
     shutil.which("ffprobe") is None or not list(FIX.glob("*.mkv")),
     reason="ffprobe + committed folder-poster fixtures required",
 )
+
+_STAMP_HEAD = f"CDFOLDER{FOLDER_POSTER_VERSION}"
 
 
 def _config():
@@ -83,25 +85,25 @@ def test_place_nested_all_levels_and_edition(tmp_path):
     for fj in jpgs:
         with Image.open(fj) as img:
             assert img.size == (1000, 1500)
-        assert _stamp(fj)[0] == "CDFOLDER1"
+        assert _stamp(fj)[0] == _STAMP_HEAD
 
     # place_nested {place}{ edition}/{year}/{artist}: typed per depth.
     assert _stamp(lib / "EDC Las Vegas" / "folder.jpg")[:5] == [
-        "CDFOLDER1",
+        _STAMP_HEAD,
         "festival",
         "EDC Las Vegas",
         "",
         "",
     ]
     assert _stamp(lib / "EDC Las Vegas" / "2025" / "folder.jpg")[:5] == [
-        "CDFOLDER1",
+        _STAMP_HEAD,
         "year",
         "EDC Las Vegas",
         "2025",
         "",
     ]
     assert _stamp(lib / "EDC Las Vegas" / "2025" / "AFROJACK" / "folder.jpg")[:5] == [
-        "CDFOLDER1",
+        _STAMP_HEAD,
         "artist",
         "AFROJACK",
         "",
@@ -110,14 +112,14 @@ def test_place_nested_all_levels_and_edition(tmp_path):
 
     # Edition set: place resolves to Tomorrowland + Winter; the year folder carries it.
     assert _stamp(lib / "Tomorrowland Winter" / "folder.jpg")[:5] == [
-        "CDFOLDER1",
+        _STAMP_HEAD,
         "festival",
         "Tomorrowland",
         "",
         "Winter",
     ]
     assert _stamp(lib / "Tomorrowland Winter" / "2026" / "folder.jpg")[:5] == [
-        "CDFOLDER1",
+        _STAMP_HEAD,
         "year",
         "Tomorrowland",
         "2026",
@@ -154,17 +156,17 @@ def test_layout_change_place_to_artist_regenerates(tmp_path):
     # Re-enrich: posters regenerate, now typed for artist_nested {artist}/{place}/{year}.
     _enrich_posters(lib, relocated, config)
     assert _stamp(lib / "AFROJACK" / "folder.jpg")[:3] == [
-        "CDFOLDER1",
+        _STAMP_HEAD,
         "artist",
         "AFROJACK",
     ]
     assert _stamp(lib / "AFROJACK" / "EDC Las Vegas" / "folder.jpg")[:3] == [
-        "CDFOLDER1",
+        _STAMP_HEAD,
         "festival",
         "EDC Las Vegas",
     ]
     assert _stamp(lib / "AFROJACK" / "EDC Las Vegas" / "2025" / "folder.jpg")[:5] == [
-        "CDFOLDER1",
+        _STAMP_HEAD,
         "year",
         "EDC Las Vegas",
         "2025",

@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Each artist's chosen image is saved as `portrait.jpg` in their artwork cache folder at the end of every `enrich` run, following `artist_background_priority`. TrackSplit reads it for its artist covers from its next release, so covers and posters show the same photo.
 
-On the first `enrich` after updating, artist posters whose artist has a Deezer photo are regenerated with it, and each DJ in the DJ cache costs a few requests to MusicBrainz and Deezer once; later runs reuse the cached answers. The poster layout does not change, only the picture.
+On the first `enrich` after updating, every folder poster (`folder.jpg`) is regenerated once, so artist posters pick up their Deezer photo on that run; the layout does not change, only the picture. Each DJ in the DJ cache costs a few requests to MusicBrainz and Deezer once, and later runs reuse the cached answers. If Deezer or MusicBrainz stops answering, the rest of that run uses what is already cached and the next run tries again.
 
 ## [0.36.1] - 2026-10-27
 

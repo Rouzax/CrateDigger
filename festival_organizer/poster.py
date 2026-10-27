@@ -73,7 +73,8 @@ def build_cover_stamp(
 
 # Bump FOLDER_POSTER_VERSION whenever the folder-poster (folder.jpg) composition or
 # per-level layout changes so existing folder posters re-render on the next enrich run.
-FOLDER_POSTER_VERSION = 1
+# 2: artist photos from Deezer, which are fetched while a poster renders.
+FOLDER_POSTER_VERSION = 2
 
 _FOLDER_STAMP_PREFIX = "CDFOLDER"
 
