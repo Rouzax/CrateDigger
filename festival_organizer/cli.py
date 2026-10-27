@@ -89,6 +89,12 @@ _CD_ASSETS: list[tuple[str, Callable[[], Path], str, str]] = [
         "curated MBID overrides",
         "info",
     ),
+    (
+        "artist_deezer_ids.json",
+        lambda: paths.artist_deezer_ids_file(),
+        "curated Deezer artist overrides",
+        "info",
+    ),
 ]
 
 

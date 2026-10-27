@@ -476,6 +476,22 @@ def _mb_get(url: str, params: dict[str, str], artist_name: str) -> dict | None:
     )
 
 
+def mb_url_relations(mbid: str) -> list[str]:
+    """Every external link MusicBrainz records for the artist.
+
+    Raises MusicBrainzError when MusicBrainz cannot be reached; an unknown
+    MBID has no links.
+    """
+    data = _mb_get(
+        f"{MB_BASE_URL}/artist/{mbid}", {"inc": "url-rels", "fmt": "json"}, mbid
+    )
+    return [
+        rel["url"]["resource"]
+        for rel in (data or {}).get("relations", [])
+        if isinstance(rel.get("url"), dict) and rel["url"].get("resource")
+    ]
+
+
 def _mb_by_spotify(spotify_url: str, artist_name: str) -> str | None:
     """MBID of the artist MusicBrainz links to this Spotify page, or None.
 

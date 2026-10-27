@@ -120,6 +120,11 @@ def artist_mbids_file() -> Path:
     return data_dir() / "artist_mbids.json"
 
 
+def artist_deezer_ids_file() -> Path:
+    """Return the user-curated artist_deezer_ids.json override path."""
+    return data_dir() / "artist_deezer_ids.json"
+
+
 def places_logo_dir() -> Path:
     """Return the user-global curated place logos directory (primary, since 0.15.0).
 

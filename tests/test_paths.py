@@ -116,6 +116,10 @@ class TestCuratedDataFiles:
         with patch("festival_organizer.paths.data_dir", return_value=tmp_path):
             assert paths.artist_mbids_file() == tmp_path / "artist_mbids.json"
 
+    def test_artist_deezer_ids_file(self, tmp_path: Path):
+        with patch("festival_organizer.paths.data_dir", return_value=tmp_path):
+            assert paths.artist_deezer_ids_file() == tmp_path / "artist_deezer_ids.json"
+
     def test_festivals_logo_dir(self, tmp_path: Path):
         with patch("festival_organizer.paths.data_dir", return_value=tmp_path):
             assert paths.festivals_logo_dir() == tmp_path / "festivals"
